@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════════════════════════════
+   JUREXIA - Global Styles (Harvey.AI Inspired)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Colors */
+  --cream-bg: #f5f4f0;
+  --cream-light: #fdfbf7;
+  --charcoal: #1a1a1a;
+  --charcoal-light: #404040;
+  --accent-brown: #8b7355;
+  --accent-gold: #c9a962;
+
+  /* Typography */
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Spacing */
+  --container-max: 1280px;
+  --chat-max: 800px;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--cream-bg);
+  color: var(--charcoal);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography overrides */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   COMPONENTS
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Chat Input Container - Harvey style */
+.chat-input-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.03),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.chat-input-container:focus-within {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+/* Chat Message Bubbles */
+.message-user {
+  background: var(--charcoal);
+  color: white;
+  border-radius: 16px 16px 4px 16px;
+}
+
+.message-assistant {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px 16px 16px 4px;
+}
+
+/* Chip/Badge buttons - Harvey style */
+.chip {
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium;
+  @apply bg-white border border-gray-200 text-gray-700;
+  @apply hover:bg-gray-50 hover:border-gray-300 transition-all duration-200;
+  @apply cursor-pointer select-none;
+}
+
+.chip-active {
+  @apply bg-charcoal-900 text-white border-charcoal-900;
+}
+
+/* Primary Button */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+  @apply bg-charcoal-900 text-white font-medium rounded-full;
+  @apply hover:bg-charcoal-800 transition-colors duration-200;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3;
+  @apply bg-white text-charcoal-900 font-medium rounded-full border border-gray-200;
+  @apply hover:bg-gray-50 transition-colors duration-200;
+}
+
+/* Submit button (arrow) */
+.btn-submit {
+  @apply w-10 h-10 flex items-center justify-center rounded-full;
+  @apply bg-charcoal-900 text-white;
+  @apply hover:bg-charcoal-800 transition-colors duration-200;
+  @apply disabled:opacity-30 disabled:cursor-not-allowed;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════════════════════════════════════ */
+
+@keyframes typing {
+
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+  }
+
+  30% {
+    opacity: 1;
+  }
+}
+
+.typing-indicator span {
+  animation: typing 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Streaming cursor */
+.streaming-cursor::after {
+  content: '▌';
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MARKDOWN RENDERING
+   ══════════════════════════════════════════════════════════════════ */
+
+.prose-legal {
+  @apply text-charcoal-900 leading-relaxed;
+}
+
+.prose-legal h1,
+.prose-legal h2,
+.prose-legal h3 {
+  @apply font-serif font-medium mt-6 mb-3;
+}
+
+.prose-legal p {
+  @apply mb-4;
+}
+
+.prose-legal ul,
+.prose-legal ol {
+  @apply pl-6 mb-4;
+}
+
+.prose-legal li {
+  @apply mb-2;
+}
+
+.prose-legal blockquote {
+  @apply pl-4 border-l-4 border-accent-brown italic text-charcoal-700 my-4;
+}
+
+.prose-legal code {
+  @apply bg-cream-300 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.prose-legal pre {
+  @apply bg-charcoal-900 text-white p-4 rounded-lg overflow-x-auto my-4;
+}
+
+/* Citation styling */
+.citation {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md;
+  @apply bg-blue-50 text-blue-700 text-sm font-medium;
+  @apply hover:bg-blue-100 cursor-pointer transition-colors;
+}
+
+/* Clickable citation badges - compact numbered references [1] [2] */
+.citation-badge {
+  @apply inline-flex items-center justify-center;
+  @apply text-xs font-bold text-blue-600;
+  @apply cursor-pointer transition-all duration-200;
+  @apply hover:text-blue-800 hover:bg-blue-100;
+  @apply rounded px-1 py-0.5;
+  @apply align-super;
+  font-family: inherit;
+  font-size: 0.7em;
+  vertical-align: super;
+  background: transparent;
+  border: none;
+}
+
+.citation-badge:hover {
+  text-decoration: underline;
+  transform: scale(1.1);
+}
+
+.citation-badge:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 1px;
+}
