@@ -12,15 +12,15 @@ export default function PlataformaPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <div className="flex items-center justify-between h-16">
                         <Link href="/" className="flex items-center gap-2 group">
-                            <Scale className="w-7 h-7 text-charcoal-900 group-hover:text-accent-brown transition-colors" />
-                            <span className="font-serif text-xl font-semibold text-charcoal-900">
-                                Jurexia
+                            <span className="font-serif text-2xl font-semibold text-charcoal-900">
+                                Jurex<span className="text-accent-gold">ia</span>
                             </span>
                         </Link>
                         <div className="hidden md:flex items-center gap-8">
                             <span className="text-sm font-medium text-charcoal-900 border-b-2 border-charcoal-900">Plataforma</span>
-                            <Link href="/#features" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Soluciones</Link>
-                            <Link href="/#pricing" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Precios</Link>
+                            <Link href="/soluciones" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Soluciones</Link>
+                            <Link href="/precios" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Precios</Link>
+                            <Link href="/seguridad" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Seguridad</Link>
                         </div>
                         <div className="hidden md:flex items-center gap-4">
                             <Link href="/chat" className="btn-primary text-sm py-2 px-5">
@@ -36,13 +36,12 @@ export default function PlataformaPage() {
                 <div className="max-w-5xl mx-auto">
                     <p className="text-accent-brown font-medium mb-4 tracking-wide">PLATAFORMA</p>
                     <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
-                        Diseñado para
+                        Diseñada para
                         <br />
                         <span className="text-charcoal-500">el Derecho Mexicano</span>
                     </h1>
-                    <p className="text-xl text-charcoal-600 max-w-2xl mb-12">
-                        Jurexia es la plataforma de inteligencia artificial más avanzada para profesionales del derecho en México.
-                        Navegamos la complejidad del sistema jurídico mexicano con precisión y profundidad.
+                    <p className="text-xl text-charcoal-600 max-w-3xl mb-12">
+                        Jurexia está diseñada especialmente para el sistema jurídico mexicano. Es una plataforma de inteligencia artificial legal creada para ayudar a entender, ordenar y preparar asuntos dentro del marco normativo de México. Está pensada tanto para profesionales del derecho como para personas sin conocimientos jurídicos que necesitan una primera orientación.
                     </p>
 
                     {/* Platform Preview */}
@@ -79,39 +78,74 @@ export default function PlataformaPage() {
                 </div>
             </section>
 
+            {/* Purpose Section */}
+            <section className="py-16 bg-white border-t border-black/5">
+                <div className="max-w-5xl mx-auto px-4">
+                    <div className="grid md:grid-cols-2 gap-16">
+                        <div>
+                            <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-6">
+                                Para Profesionales en derecho
+                            </h2>
+                            <p className="text-charcoal-600 leading-relaxed">
+                                Jurexia no tiene el propósito de reemplazar al profesional del derecho. Es una herramienta impulsada por inteligencia artificial, especializada en el sistema jurídico mexicano, que potencia la eficiencia en el trabajo legal al ofrecer precisión extrema en investigación, análisis y redacción.
+                            </p>
+                        </div>
+                        <div className="border-l-4 border-accent-brown pl-8">
+                            <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-6">
+                                Para usuarios que buscan orientación legal
+                            </h2>
+                            <p className="text-charcoal-600 leading-relaxed">
+                                Para personas sin conocimientos jurídicos, Jurexia funciona como una herramienta de <strong>orientación</strong>: ubica la situación jurídica, explica rutas posibles y ayuda a reunir información para que un abogado acompañe y ejecute la estrategia con comunicación más clara y efectiva.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Zero Hallucinations Section */}
+            <section className="py-16 bg-charcoal-900 text-white">
+                <div className="max-w-5xl mx-auto px-4 text-center">
+                    <p className="text-accent-brown font-medium mb-4 tracking-wide">ARQUITECTURA VERIFICADA</p>
+                    <h3 className="font-serif text-3xl md:text-4xl font-medium mb-6">Cero alucinaciones.</h3>
+                    <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                        Jurexia opera bajo una arquitectura estricta diseñada por profesionales del derecho mexicanos. Todas las respuestas se generan exclusivamente a partir de <strong className="text-white">fuentes jurídicas verificadas</strong> dentro de nuestra base documental, con trazabilidad y fundamento.
+                    </p>
+                </div>
+            </section>
+
             {/* Feature 1: Búsqueda Híbrida */}
             <FeatureSection
                 id="busqueda-hibrida"
                 badge="MOTOR DE BÚSQUEDA"
                 title="Búsqueda Híbrida Inteligente"
                 subtitle="Precisión milimétrica en cada consulta"
-                description="Nuestra tecnología combina búsqueda semántica con algoritmos BM25 para encontrar exactamente lo que necesitas. No más resultados irrelevantes."
+                description="Sistema de búsqueda híbrida cuidadosamente programada y verificada por el equipo profesional de Jurexia, diseñado para encontrar exactamente lo que necesitas en el derecho mexicano."
                 features={[
-                    "Búsqueda semántica: Entiende el significado, no solo palabras",
-                    "BM25 (Sparse Vectors): Captura términos técnicos exactos",
+                    "Comprensión contextual: Entiende el significado de tu consulta, no solo palabras aisladas",
+                    "Precisión técnica: Captura términos jurídicos exactos con alta fidelidad",
                     "Ranking inteligente: Los mejores resultados primero",
-                    "Cobertura completa: Leyes, códigos, jurisprudencia y tesis"
+                    "Sin alucinaciones: si la fuente no existe, Jurexia lo indica y solicita el dato faltante"
                 ]}
                 visual={<HybridSearchVisual />}
-                bgColor="bg-white"
+                bgColor="bg-cream-300"
             />
 
-            {/* Feature 2: Agente Centinela */}
+            {/* Feature 2: Agente de Análisis */}
             <FeatureSection
-                id="agente-centinela"
+                id="agente-analisis"
                 badge="ANÁLISIS INTELIGENTE"
-                title="Agente Centinela"
-                subtitle="Tu auditor legal con IA"
-                description="Analiza demandas y sentencias automáticamente. Identifica fortalezas, debilidades y sugiere mejoras con fundamento legal sólido."
+                title="Agente de Análisis"
+                subtitle="Tu analista legal especializado con IA"
+                description="Analiza automáticamente demandas, sentencias, impugnaciones y amparos. Identifica fortalezas, debilidades, contradicciones y áreas de mejora, proponiendo ajustes con fundamento jurídico y coherencia argumentativa."
                 features={[
                     "Análisis automatizado de demandas completas",
-                    "Detección de debilidades argumentativas",
+                    "Detección de debilidades y contradicciones argumentativas",
                     "Identificación de fortalezas y puntos clave",
                     "Sugerencias de mejora con fundamento legal",
-                    "Evaluación de riesgo: Bajo, Medio o Alto"
+                    "Sin alucinaciones: cada sugerencia se apoya en material del repositorio jurídico"
                 ]}
                 visual={<SentinelAgentVisual />}
-                bgColor="bg-cream-300"
+                bgColor="bg-white"
                 reverse
             />
 
@@ -121,16 +155,16 @@ export default function PlataformaPage() {
                 badge="SEGURIDAD JURÍDICA"
                 title="Filtros Jurisdiccionales"
                 subtitle="Resultados precisos por estado"
-                description="Garantiza seguridad jurídica absoluta. Si trabajas en Jalisco, solo verás jurisprudencia y normativa aplicable a Jalisco (más la federal)."
+                description="Asegura que los resultados se ajusten a la jurisdicción aplicable. Si trabajas en Jalisco, verás normativa y criterios aplicables a Jalisco, además del marco federal correspondiente."
                 features={[
                     "32 estados + legislación federal",
                     "Aislamiento perfecto entre jurisdicciones",
                     "Sin contaminación de resultados de otros estados",
                     "Leyes federales siempre disponibles",
-                    "Jurisprudencia nacional filtrable por materia"
+                    "Sin alucinaciones: todo resultado se limita a fuentes verificadas y filtradas por jurisdicción"
                 ]}
                 visual={<JurisdictionalFiltersVisual />}
-                bgColor="bg-white"
+                bgColor="bg-cream-300"
             />
 
             {/* Data Sources Section */}
@@ -169,6 +203,84 @@ export default function PlataformaPage() {
                 </div>
             </section>
 
+            {/* Premium Legal Assistance Section */}
+            <section className="py-24 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-t border-amber-100">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="text-center mb-16">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-full mb-6">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            EXCLUSIVO PLATINUM
+                        </div>
+                        <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
+                            Más que tecnología:
+                            <br />
+                            <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                                acompañamiento humano
+                            </span>
+                        </h2>
+                        <p className="text-xl text-charcoal-600 max-w-3xl mx-auto">
+                            La plataforma te da las herramientas. Nuestro equipo legal te ayuda a perfeccionar la estrategia.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-8">
+                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-amber-100 hover:shadow-xl transition-shadow">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6">
+                                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                            </div>
+                            <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">
+                                Consulta telefónica directa
+                            </h3>
+                            <p className="text-charcoal-600 leading-relaxed">
+                                Habla con un abogado especializado que revisa tu caso y afina la estrategia que ideaste con la plataforma.
+                            </p>
+                        </div>
+
+                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-amber-100 hover:shadow-xl transition-shadow">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6">
+                                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">
+                                Respaldo profesional formal
+                            </h3>
+                            <p className="text-charcoal-600 leading-relaxed">
+                                Contrato de prestación de servicios profesionales que garantiza formalidad y confidencialidad en cada interacción.
+                            </p>
+                        </div>
+
+                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-amber-100 hover:shadow-xl transition-shadow">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6">
+                                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">
+                                Abogados especializados
+                            </h3>
+                            <p className="text-charcoal-600 leading-relaxed">
+                                Profesionales con dominio profundo del derecho mexicano, listos para orientarte con precisión y experiencia.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="text-center mt-12">
+                        <Link
+                            href="/precios"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl"
+                        >
+                            Conocer Plan Platinum
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
             {/* CTA Section */}
             <section className="py-20 bg-cream-300">
                 <div className="max-w-4xl mx-auto text-center px-4">
@@ -180,11 +292,14 @@ export default function PlataformaPage() {
                     </p>
                     <Link
                         href="/chat"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-full hover:bg-charcoal-800 transition-colors"
+                        className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-full hover:bg-charcoal-800 transition-colors mb-8"
                     >
                         Comenzar ahora
                         <ArrowRight className="w-5 h-5" />
                     </Link>
+                    <p className="text-sm text-charcoal-500 max-w-2xl mx-auto mt-6">
+                        <strong>Nota de uso responsable:</strong> Jurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
+                    </p>
                 </div>
             </section>
 
@@ -194,7 +309,7 @@ export default function PlataformaPage() {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
                             <Scale className="w-6 h-6" />
-                            <span className="font-serif text-xl font-medium">Jurexia</span>
+                            <span className="font-serif text-xl font-semibold">Jurex<span className="text-accent-gold">ia</span></span>
                         </div>
                         <p className="text-sm text-charcoal-500">
                             © 2026 Jurexia. Todos los derechos reservados.
@@ -330,7 +445,7 @@ function HybridSearchVisual() {
             <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
                 <span className="flex items-center gap-1">
                     <Zap className="w-4 h-4 text-yellow-500" />
-                    Semántico + BM25
+                    Búsqueda Híbrida Verificada
                 </span>
             </div>
         </div>
@@ -400,8 +515,8 @@ function JurisdictionalFiltersVisual() {
                         <div
                             key={state.name}
                             className={`flex items-center justify-between p-3 rounded-lg transition-all ${state.active
-                                    ? 'bg-emerald-50 border border-emerald-200'
-                                    : 'bg-gray-50 border border-gray-100 opacity-50'
+                                ? 'bg-emerald-50 border border-emerald-200'
+                                : 'bg-gray-50 border border-gray-100 opacity-50'
                                 }`}
                         >
                             <span className={`text-sm ${state.active ? 'text-emerald-700 font-medium' : 'text-gray-400'}`}>

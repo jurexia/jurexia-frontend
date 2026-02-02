@@ -184,7 +184,7 @@ h6 {
 }
 
 .prose-legal p {
-  @apply mb-4;
+  @apply mb-2;
 }
 
 .prose-legal ul,
@@ -193,11 +193,11 @@ h6 {
 }
 
 .prose-legal li {
-  @apply mb-2;
+  @apply mb-1;
 }
 
 .prose-legal blockquote {
-  @apply pl-4 border-l-4 border-accent-brown italic text-charcoal-700 my-4;
+  @apply pl-4 border-l-4 border-accent-brown italic text-charcoal-700 my-2;
 }
 
 .prose-legal code {

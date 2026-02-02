@@ -5,7 +5,7 @@ import { Message, streamChat, SearchResult } from '@/lib/api';
 
 interface UseChatOptions {
     estado?: string;
-    topK?: number;
+    topK?: number;  // Default: 20 for better document retrieval
 }
 
 interface UseChatReturn {
@@ -14,6 +14,7 @@ interface UseChatReturn {
     error: string | null;
     sendMessage: (content: string) => Promise<void>;
     clearMessages: () => void;
+    setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
 export function useChat(options: UseChatOptions = {}): UseChatReturn {
@@ -75,5 +76,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         error,
         sendMessage,
         clearMessages,
+        setMessages,
     };
 }

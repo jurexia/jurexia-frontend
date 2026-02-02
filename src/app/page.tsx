@@ -10,21 +10,20 @@ export default function HomePage() {
             {/* Hero Section - Harvey.AI Style */}
             <section className="pt-32 pb-20 px-4">
                 <div className="max-w-4xl mx-auto text-center">
-                    {/* Headline */}
-                    <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-medium text-charcoal-900 leading-tight mb-6">
-                        <span className="text-charcoal-900">Jurexia es IA diseñada para</span>
-                        <br />
-                        <span className="text-charcoal-900">el Derecho Mexicano.</span>
-                        {' '}
-                        <span className="text-charcoal-500">
-                            Avanza tu práctica jurídica con una plataforma segura y precisa.
-                        </span>
+                    {/* Logo */}
+                    <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-bold mb-6">
+                        Jurex<span className="text-accent-gold">ia</span>
                     </h1>
 
+                    {/* Headline */}
+                    <p className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-charcoal-900 leading-tight mb-6">
+                        La inteligencia artificial más precisa para el sistema jurídico Mexicano
+                    </p>
+
                     {/* Subheadline */}
-                    <p className="text-lg text-charcoal-600 max-w-2xl mx-auto mb-12">
-                        Investigación jurídica, análisis de documentos y consultoría legal
-                        potenciada por inteligencia artificial especializada.
+                    <p className="text-lg text-charcoal-600 max-w-3xl mx-auto mb-12">
+                        Poderosa herramienta de investigación jurídica, análisis de documentos y consultoría legal
+                        potenciada por inteligencia artificial especializada para el sistema jurídico mexicano.
                     </p>
                 </div>
 
@@ -50,13 +49,10 @@ export default function HomePage() {
                             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
                                 <div className="flex items-center gap-3 text-sm text-gray-500">
                                     <span className="flex items-center gap-1.5">
-                                        <span>📎</span> Archivos
+                                        <span>📎</span> Subir documento
                                     </span>
                                     <span className="flex items-center gap-1.5 text-blue-600 font-medium">
                                         <span>🔍</span> Buscar
-                                    </span>
-                                    <span className="flex items-center gap-1.5">
-                                        <span>✨</span> Mejorar
                                     </span>
                                 </div>
                                 <div className="w-10 h-10 bg-charcoal-900 rounded-full flex items-center justify-center">
@@ -68,12 +64,29 @@ export default function HomePage() {
                         </div>
                     </Link>
 
-                    {/* Quick chips */}
-                    <div className="flex flex-wrap justify-center gap-3 mt-8">
-                        <QuickAccessChip icon="⚖️" label="Leyes Federales" />
-                        <QuickAccessChip icon="📚" label="Jurisprudencia SCJN" />
-                        <QuickAccessChip icon="🏛️" label="Códigos Estatales" />
-                        <QuickAccessChip icon="📋" label="Formatos Legales" />
+                </div>
+            </section>
+
+            {/* Demo Video Section */}
+            <section className="py-16 bg-white">
+                <div className="max-w-5xl mx-auto px-4">
+                    <h2 className="font-serif text-2xl md:text-3xl font-medium text-center text-charcoal-900 mb-4">
+                        Mira cómo funciona
+                    </h2>
+                    <p className="text-center text-charcoal-600 mb-8 max-w-2xl mx-auto">
+                        Desde la selección de jurisdicción hasta consultar documentos fuente, todo en segundos.
+                    </p>
+                    <div className="rounded-2xl overflow-hidden shadow-2xl border border-cream-300">
+                        <video
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full"
+                        >
+                            <source src="/demo/jurexia-demo.mp4" type="video/mp4" />
+                            Tu navegador no soporta video.
+                        </video>
                     </div>
                 </div>
             </section>
@@ -93,8 +106,8 @@ export default function HomePage() {
                         />
                         <FeatureCard
                             icon="🛡️"
-                            title="Agente Centinela"
-                            description="Audita demandas y sentencias automáticamente. Identifica fortalezas, debilidades y sugiere mejoras con fundamento legal."
+                            title="Agente de Análisis"
+                            description="Analiza demandas y sentencias automáticamente. Identifica fortalezas, debilidades y sugiere mejoras con fundamento legal."
                         />
                         <FeatureCard
                             icon="📍"
@@ -131,7 +144,7 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
-                            <span className="font-serif text-xl font-medium">⚖️ Jurexia</span>
+                            <span className="font-serif text-xl font-semibold">Jurex<span className="text-accent-gold">ia</span></span>
                         </div>
                         <div className="flex gap-8 text-sm text-charcoal-600">
                             <Link href="#" className="hover:text-charcoal-900 transition-colors">Privacidad</Link>

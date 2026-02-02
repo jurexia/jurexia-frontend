@@ -2,7 +2,7 @@
  * API Client for Jurexia FastAPI Backend
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
 export interface Message {
     role: 'user' | 'assistant' | 'system';
@@ -76,7 +76,7 @@ export async function search(
 export async function* streamChat(
     messages: Message[],
     estado?: string,
-    topK: number = 10
+    topK: number = 4  // Reduced to stay within 8k token limit
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);
@@ -156,3 +156,37 @@ export async function getDocument(docId: string): Promise<DocumentResponse> {
     if (!response.ok) throw new Error(`Document not found: ${docId}`);
     return response.json();
 }
+
+/**
+ * Enhance response interface
+ */
+export interface EnhanceResponse {
+    texto_mejorado: string;
+    documentos_usados: number;
+    tokens_usados: number;
+}
+
+/**
+ * Enhance legal text with RAG
+ */
+export async function enhanceText(
+    texto: string,
+    tipoDocumento: string = 'demanda',
+    estado?: string
+): Promise<EnhanceResponse> {
+    const response = await fetch(`${API_URL}/enhance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            texto,
+            tipo_documento: tipoDocumento,
+            estado
+        }),
+    });
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Enhancement failed: ${errorText}`);
+    }
+    return response.json();
+}
+

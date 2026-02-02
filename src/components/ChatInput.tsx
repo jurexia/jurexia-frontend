@@ -6,29 +6,45 @@ import {
     Paperclip,
     Search,
     Sparkles,
-    FileText,
-    Building,
-    Scale,
-    BookOpen
+    Shield
 } from 'lucide-react';
+import FileUploadModal from './FileUploadModal';
+import { FileText, X } from 'lucide-react';
+import TextEnhanceModal from './TextEnhanceModal';
+import { enhanceText } from '@/lib/api';
 
 interface ChatInputProps {
     onSubmit: (message: string) => void;
     isLoading?: boolean;
     placeholder?: string;
+    estado?: string;
 }
 
 export default function ChatInput({
     onSubmit,
     isLoading = false,
-    placeholder = "Escribe tu consulta legal..."
+    placeholder = "Escribe tu consulta legal o sube tu documento para análisis",
+    estado
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
+    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance'>('search');
+    const [showFileModal, setShowFileModal] = useState(false);
+    const [showEnhanceModal, setShowEnhanceModal] = useState(false);
+    const [attachedDocument, setAttachedDocument] = useState<{ text: string; fileName: string } | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const handleSubmit = () => {
-        if (message.trim() && !isLoading) {
-            onSubmit(message.trim());
+        if (!isLoading && (message.trim() || attachedDocument)) {
+            let finalMessage = message.trim();
+
+            // If there's an attached document, prepend it to the message
+            if (attachedDocument) {
+                const userPrompt = finalMessage || 'Analiza este documento';
+                finalMessage = `[DOCUMENTO ADJUNTO: "${attachedDocument.fileName}"]\n\n${userPrompt}\n\n---CONTENIDO DEL DOCUMENTO---\n${attachedDocument.text.slice(0, 8000)}`;
+                setAttachedDocument(null); // Clear after sending
+            }
+
+            onSubmit(finalMessage);
             setMessage('');
             if (textareaRef.current) {
                 textareaRef.current.style.height = 'auto';
@@ -51,93 +67,151 @@ export default function ChatInput({
         }
     };
 
+    const handleFileExtracted = (text: string, fileName: string) => {
+        // Attach document instead of sending immediately
+        setAttachedDocument({ text, fileName });
+        setActiveMode('search');
+    };
+
+    const handleEnhanceText = async (text: string, docType: string): Promise<string> => {
+        const response = await enhanceText(text, docType, estado);
+        return response.texto_mejorado;
+    };
+
+    const handleModeClick = (mode: 'search' | 'files' | 'enhance') => {
+        setActiveMode(mode);
+        if (mode === 'files') {
+            setShowFileModal(true);
+        } else if (mode === 'enhance') {
+            setShowEnhanceModal(true);
+        }
+    };
+
     return (
-        <div className="w-full max-w-3xl mx-auto">
-            {/* Main Input Container - Harvey Style */}
-            <div className="chat-input-container p-4">
-                {/* File attachment preview area (optional) */}
-                {/* <div className="mb-3 flex gap-2">
-          <FilePreview name="Demanda.pdf" size="2.4 MB" />
-        </div> */}
+        <>
+            <div className="w-full max-w-3xl mx-auto">
+                {/* Main Input Container - Harvey Style */}
+                <div className="chat-input-container p-4">
+                    {/* Attached Document Chip */}
+                    {attachedDocument && (
+                        <div className="flex items-center gap-2 mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                            <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                            <span className="text-sm text-blue-800 font-medium truncate flex-1">
+                                {attachedDocument.fileName}
+                            </span>
+                            <button
+                                onClick={() => setAttachedDocument(null)}
+                                className="p-1 hover:bg-blue-100 rounded transition-colors"
+                                title="Quitar documento"
+                            >
+                                <X className="w-4 h-4 text-blue-600" />
+                            </button>
+                        </div>
+                    )}
 
-                {/* Text Input */}
-                <div className="flex items-end gap-3">
-                    <div className="flex-1 relative">
-                        <textarea
-                            ref={textareaRef}
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            onInput={handleInput}
-                            placeholder={placeholder}
-                            disabled={isLoading}
-                            rows={1}
-                            className="w-full resize-none bg-transparent text-charcoal-900 placeholder:text-gray-400 
-                         focus:outline-none text-base leading-relaxed py-2
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ minHeight: '24px', maxHeight: '200px' }}
-                        />
-                    </div>
+                    {/* Text Input */}
+                    <div className="flex items-end gap-3">
+                        <div className="flex-1 relative">
+                            <textarea
+                                ref={textareaRef}
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                onInput={handleInput}
+                                placeholder={attachedDocument ? "Escribe qué quieres hacer con el documento..." : placeholder}
+                                disabled={isLoading}
+                                rows={1}
+                                className="w-full resize-none bg-transparent text-charcoal-900 placeholder:text-gray-400 
+                             focus:outline-none text-base leading-relaxed py-2
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ minHeight: '24px', maxHeight: '200px' }}
+                            />
+                        </div>
 
-                    {/* Submit Button */}
-                    <button
-                        onClick={handleSubmit}
-                        disabled={!message.trim() || isLoading}
-                        className="btn-submit flex-shrink-0"
-                        aria-label="Enviar mensaje"
-                    >
-                        {isLoading ? (
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            <ArrowRight className="w-5 h-5" />
-                        )}
-                    </button>
-                </div>
-
-                {/* Action Buttons Row */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                    <div className="flex items-center gap-2">
-                        <ActionButton icon={Paperclip} label="Archivos" />
-                        <ActionButton icon={Search} label="Buscar" active />
-                        <ActionButton icon={Sparkles} label="Mejorar" />
-                    </div>
-
-                    {/* Settings/Options */}
-                    <div className="flex items-center gap-2 text-gray-400">
-                        <button className="p-2 hover:text-gray-600 transition-colors" title="Configuración">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
+                        {/* Submit Button */}
+                        <button
+                            onClick={handleSubmit}
+                            disabled={!message.trim() || isLoading}
+                            className="btn-submit flex-shrink-0"
+                            aria-label="Enviar mensaje"
+                        >
+                            {isLoading ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <ArrowRight className="w-5 h-5" />
+                            )}
                         </button>
                     </div>
+
+                    {/* Action Buttons Row */}
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                            {/* Subir Documentos para Análisis */}
+                            <ActionButton
+                                icon={Paperclip}
+                                label="Subir documento"
+                                active={activeMode === 'files'}
+                                onClick={() => handleModeClick('files')}
+                            />
+                            <ActionButton
+                                icon={Search}
+                                label="Buscar"
+                                active={activeMode === 'search'}
+                                onClick={() => handleModeClick('search')}
+                            />
+                        </div>
+
+                        {/* Settings/Options */}
+                        <div className="flex items-center gap-2 text-gray-400">
+                            <button className="p-2 hover:text-gray-600 transition-colors" title="Configuración">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Quick Access Chips - Harvey Style */}
-            <div className="flex flex-wrap justify-center gap-2 mt-6">
-                <QuickChip icon={Scale} label="Leyes Federales" />
-                <QuickChip icon={BookOpen} label="Jurisprudencia" />
-                <QuickChip icon={Building} label="Estatales" />
-                <QuickChip icon={FileText} label="Mis Casos" />
-            </div>
-        </div>
+            {/* Modals */}
+            <FileUploadModal
+                isOpen={showFileModal}
+                onClose={() => {
+                    setShowFileModal(false);
+                    setActiveMode('search');
+                }}
+                onTextExtracted={handleFileExtracted}
+            />
+
+            <TextEnhanceModal
+                isOpen={showEnhanceModal}
+                onClose={() => {
+                    setShowEnhanceModal(false);
+                    setActiveMode('search');
+                }}
+                onEnhance={handleEnhanceText}
+            />
+        </>
     );
 }
 
 function ActionButton({
     icon: Icon,
     label,
-    active = false
+    active = false,
+    onClick
 }: {
     icon: React.ElementType;
     label: string;
     active?: boolean;
+    onClick?: () => void;
 }) {
     return (
         <button
+            onClick={onClick}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium
                   transition-colors duration-200
                   ${active
@@ -146,21 +220,6 @@ function ActionButton({
                 }`}
         >
             <Icon className="w-4 h-4" />
-            <span>{label}</span>
-        </button>
-    );
-}
-
-function QuickChip({
-    icon: Icon,
-    label
-}: {
-    icon: React.ElementType;
-    label: string;
-}) {
-    return (
-        <button className="chip">
-            <Icon className="w-4 h-4 text-gray-400" />
             <span>{label}</span>
         </button>
     );

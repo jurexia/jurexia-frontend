@@ -1,11 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { UserAvatar } from './UserAvatar';
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { data: session, status } = useSession();
+    const isLoggedIn = !!session?.user;
+    const isLoading = status === 'loading';
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
@@ -13,33 +18,40 @@ export default function Navbar() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 group">
-                        <Scale className="w-7 h-7 text-charcoal-900 group-hover:text-accent-brown transition-colors" />
-                        <span className="font-serif text-xl font-semibold text-charcoal-900">
-                            Jurexia
+                        <span className="font-serif text-2xl font-semibold text-charcoal-900">
+                            Jurex<span className="text-accent-gold">ia</span>
                         </span>
                     </Link>
 
                     <div className="hidden md:flex items-center gap-8">
                         <NavLink href="/plataforma">Plataforma</NavLink>
-                        <NavLink href="/#features">Soluciones</NavLink>
-                        <NavLink href="/#pricing">Precios</NavLink>
-                        <NavLink href="/#security">Seguridad</NavLink>
+                        <NavLink href="/soluciones">Soluciones</NavLink>
+                        <NavLink href="/precios">Precios</NavLink>
+                        <NavLink href="/seguridad">Seguridad</NavLink>
                     </div>
 
-                    {/* Desktop CTA */}
+                    {/* Desktop CTA / User Menu */}
                     <div className="hidden md:flex items-center gap-4">
-                        <Link
-                            href="/login"
-                            className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900 transition-colors"
-                        >
-                            Iniciar Sesión
-                        </Link>
-                        <Link
-                            href="/chat"
-                            className="btn-primary text-sm py-2 px-5"
-                        >
-                            Probar Gratis
-                        </Link>
+                        {isLoading ? (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+                        ) : isLoggedIn ? (
+                            <UserAvatar />
+                        ) : (
+                            <>
+                                <Link
+                                    href="/login"
+                                    className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900 transition-colors"
+                                >
+                                    Iniciar Sesión
+                                </Link>
+                                <Link
+                                    href="/registro"
+                                    className="btn-primary text-sm py-2 px-5"
+                                >
+                                    Probar Gratis
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile menu button */}
@@ -62,20 +74,39 @@ export default function Navbar() {
                             <MobileNavLink href="/plataforma" onClick={() => setIsMenuOpen(false)}>
                                 Plataforma
                             </MobileNavLink>
-                            <MobileNavLink href="/#features" onClick={() => setIsMenuOpen(false)}>
+                            <MobileNavLink href="/soluciones" onClick={() => setIsMenuOpen(false)}>
                                 Soluciones
                             </MobileNavLink>
-                            <MobileNavLink href="/#pricing" onClick={() => setIsMenuOpen(false)}>
+                            <MobileNavLink href="/precios" onClick={() => setIsMenuOpen(false)}>
                                 Precios
                             </MobileNavLink>
+                            <MobileNavLink href="/seguridad" onClick={() => setIsMenuOpen(false)}>
+                                Seguridad
+                            </MobileNavLink>
+
                             <div className="pt-4 border-t border-black/5">
-                                <Link
-                                    href="/chat"
-                                    className="btn-primary w-full text-center text-sm"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    Probar Gratis
-                                </Link>
+                                {isLoggedIn ? (
+                                    <div className="flex items-center gap-3">
+                                        <UserAvatar />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <Link
+                                            href="/login"
+                                            className="block text-center py-2 text-charcoal-700 font-medium"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            Iniciar Sesión
+                                        </Link>
+                                        <Link
+                                            href="/registro"
+                                            className="btn-primary w-full text-center text-sm"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            Probar Gratis
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
