@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { stripe, getPlanFromSubscription } from '@/lib/stripe';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function GET() {
     try {
@@ -49,12 +49,14 @@ export async function GET() {
 
         const subscription = subscriptions.data[0];
         const planId = getPlanFromSubscription(subscription);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sub = subscription as any;
 
         return NextResponse.json({
             plan: planId,
             status: subscription.status,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            currentPeriodEnd: new Date(sub.current_period_end * 1000).toISOString(),
+            cancelAtPeriodEnd: sub.cancel_at_period_end,
         });
     } catch (error) {
         console.error('Subscription fetch error:', error);
