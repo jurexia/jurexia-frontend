@@ -68,7 +68,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         return { processedContent: content, docIdMap };
     }, [message.content, isUser]);
 
-    // Generate document header with logo
+    // Generate document header with logo (text-based for reliable export)
     const generateHeader = () => {
         const date = new Date().toLocaleDateString('es-MX', {
             year: 'numeric',
@@ -76,12 +76,13 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             day: 'numeric'
         });
         return `
-            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #8B5E3C;">
-                <img src="/logo-jurexia.png" alt="Jurexia" style="height: 48px; width: auto;" />
-                <div>
-                    <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #1a1a1a; font-family: serif;">Jurexia</h1>
-                    <p style="margin: 4px 0 0; font-size: 12px; color: #666;">Consulta Legal - ${date}</p>
-                </div>
+            <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #C9A227;">
+                <h1 style="margin: 0; font-size: 32px; font-weight: 600; font-family: 'Georgia', serif;">
+                    <span style="color: #1a1a1a;">Jurex</span><span style="color: #C9A227;">ia</span>
+                </h1>
+                <p style="margin: 8px 0 0; font-size: 14px; color: #666; font-family: 'Georgia', serif;">
+                    Consulta Legal - ${date}
+                </p>
             </div>
         `;
     };
@@ -144,10 +145,18 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     new Paragraph({
                         children: [
                             new TextRun({
-                                text: "Jurexia",
+                                text: "Jurex",
                                 bold: true,
                                 size: 48,
-                                font: "Times New Roman"
+                                font: "Georgia",
+                                color: "1a1a1a"
+                            }),
+                            new TextRun({
+                                text: "ia",
+                                bold: true,
+                                size: 48,
+                                font: "Georgia",
+                                color: "C9A227"
                             })
                         ],
                         heading: HeadingLevel.TITLE
