@@ -18,21 +18,13 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
 
     const allowedTypes = [
         'application/pdf',
+        'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ];
-    const allowedExtensions = ['.pdf', '.docx'];
+    const allowedExtensions = ['.pdf', '.doc', '.docx'];
 
     const validateFile = (file: File): boolean => {
         const extension = '.' + file.name.split('.').pop()?.toLowerCase();
-
-        // Check if it's an old .doc format (not supported)
-        if (extension === '.doc') {
-            setError(
-                'El formato .doc (Word 97-2003) no es compatible. ' +
-                'Por favor, abre el archivo en Word y guárdalo como .docx (Documento de Word).'
-            );
-            return false;
-        }
 
         if (!allowedExtensions.includes(extension)) {
             setError(`Formato no soportado. Usa: ${allowedExtensions.join(', ')}`);
@@ -116,6 +108,27 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
         return result.value;
     };
 
+    const extractTextFromDOCServer = async (file: File): Promise<string> => {
+        // Send .doc file to backend for processing (browser can't handle .doc format)
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${API_URL}/extract-text`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }));
+            throw new Error(errorData.detail || `Error del servidor: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.text;
+    };
+
     const processFile = async () => {
         if (!selectedFile) return;
 
@@ -131,11 +144,8 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
             } else if (extension === 'docx') {
                 extractedText = await extractTextFromDOCX(selectedFile);
             } else if (extension === 'doc') {
-                // Old .doc format is not supported - mammoth only works with .docx
-                throw new Error(
-                    'El formato .doc (Word 97-2003) no es compatible. ' +
-                    'Por favor, abre el archivo en Word y guárdalo como .docx (Word moderno).'
-                );
+                // Use backend API for .doc (old Word format) - can't be processed in browser
+                extractedText = await extractTextFromDOCServer(selectedFile);
             }
 
             if (!extractedText.trim()) {
@@ -201,7 +211,7 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept=".pdf,.docx"
+                            accept=".pdf,.doc,.docx"
                             onChange={handleFileSelect}
                             className="hidden"
                         />
@@ -242,12 +252,9 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
                                 </div>
                                 <div className="flex gap-2 mt-2">
                                     <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">.pdf</span>
+                                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">.doc</span>
                                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">.docx</span>
-                                    <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded line-through">.doc</span>
                                 </div>
-                                <p className="text-xs text-charcoal-400 mt-1">
-                                    Word 97-2003 (.doc) requiere conversión a .docx
-                                </p>
                             </div>
                         )}
                     </div>
