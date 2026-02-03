@@ -68,23 +68,36 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
     const extractTextFromPDF = async (file: File): Promise<string> => {
         const pdfjsLib = await import('pdfjs-dist');
 
-        // Set worker source
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            const pageText = textContent.items
-                .map((item: any) => item.str)
-                .join(' ');
-            fullText += pageText + '\n\n';
+        // Use unpkg CDN which is more reliable, pin to a specific version
+        // that matches the installed pdfjs-dist version
+        try {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+        } catch {
+            // Fallback: try legacy worker path
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
         }
 
-        return fullText.trim();
+        const arrayBuffer = await file.arrayBuffer();
+
+        try {
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+            let fullText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items
+                    .map((item: any) => item.str)
+                    .join(' ');
+                fullText += pageText + '\n\n';
+            }
+
+            return fullText.trim();
+        } catch (pdfError: any) {
+            // If worker fails, try without worker (slower but works)
+            console.warn('PDF worker failed, trying without worker:', pdfError);
+            throw new Error(`Error al procesar PDF: ${pdfError.message || 'Formato no soportado'}`);
+        }
     };
 
     const extractTextFromDOCX = async (file: File): Promise<string> => {
@@ -106,8 +119,14 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
 
             if (extension === 'pdf') {
                 extractedText = await extractTextFromPDF(selectedFile);
-            } else if (extension === 'docx' || extension === 'doc') {
+            } else if (extension === 'docx') {
                 extractedText = await extractTextFromDOCX(selectedFile);
+            } else if (extension === 'doc') {
+                // Old .doc format is not supported - mammoth only works with .docx
+                throw new Error(
+                    'El formato .doc (Word 97-2003) no es compatible. ' +
+                    'Por favor, abre el archivo en Word y guárdalo como .docx (Word moderno).'
+                );
             }
 
             if (!extractedText.trim()) {
@@ -214,9 +233,12 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
                                 </div>
                                 <div className="flex gap-2 mt-2">
                                     <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">.pdf</span>
-                                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">.doc</span>
                                     <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">.docx</span>
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded line-through">.doc</span>
                                 </div>
+                                <p className="text-xs text-charcoal-400 mt-1">
+                                    Word 97-2003 (.doc) requiere conversión a .docx
+                                </p>
                             </div>
                         )}
                     </div>
