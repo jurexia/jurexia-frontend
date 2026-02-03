@@ -18,13 +18,22 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
 
     const allowedTypes = [
         'application/pdf',
-        'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ];
-    const allowedExtensions = ['.pdf', '.doc', '.docx'];
+    const allowedExtensions = ['.pdf', '.docx'];
 
     const validateFile = (file: File): boolean => {
         const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+
+        // Check if it's an old .doc format (not supported)
+        if (extension === '.doc') {
+            setError(
+                'El formato .doc (Word 97-2003) no es compatible. ' +
+                'Por favor, abre el archivo en Word y guárdalo como .docx (Documento de Word).'
+            );
+            return false;
+        }
+
         if (!allowedExtensions.includes(extension)) {
             setError(`Formato no soportado. Usa: ${allowedExtensions.join(', ')}`);
             return false;
@@ -192,7 +201,7 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept=".pdf,.doc,.docx"
+                            accept=".pdf,.docx"
                             onChange={handleFileSelect}
                             className="hidden"
                         />
