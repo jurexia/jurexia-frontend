@@ -46,8 +46,11 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
             // Markers for reasoning phase - handles both document analysis and normal queries
             const reasoningHeader = '💭 *Proceso de razonamiento:*\n\n> ';
-            // Match either "Análisis Legal" or "Respuesta Legal"
-            const analysisMarkerRegex = /## ⚖️ (Análisis|Respuesta) Legal/;
+            // Match either:
+            // - "## ⚖️ Análisis Legal" or "## ⚖️ Respuesta Legal" (DeepSeek Reasoner format)
+            // - "## 1. Conceptualización" or similar numbered header (old format)
+            // - "---" followed by content transition
+            const analysisMarkerRegex = /## ⚖️ (Análisis|Respuesta) Legal|## \d+\. Conceptualización|---\s*\n\n## /;
 
             for await (const chunk of streamChat(
                 updatedMessages,
