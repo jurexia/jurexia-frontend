@@ -31,6 +31,16 @@ export default function RootLayout({
         <html lang="es">
             <head>
                 <link rel="icon" href="/favicon.ico" />
+                {/* Content categorization for web filters */}
+                <meta name="classification" content="Legal, Education, Business, Professional Services" />
+                <meta name="category" content="LegalTech, Legal Research, Law, Professional Services, Education" />
+                <meta name="rating" content="General" />
+                <meta name="robots" content="index, follow" />
+                {/* Dublin Core metadata for academic/institutional recognition */}
+                <meta name="DC.type" content="Service" />
+                <meta name="DC.subject" content="Legal Technology, Mexican Law, Legal Research, Artificial Intelligence" />
+                <meta name="DC.creator" content="Jurexia" />
+                <meta name="DC.language" content="es-MX" />
             </head>
             <body className="min-h-screen bg-cream-300">
                 <AuthProvider>
