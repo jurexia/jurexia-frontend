@@ -384,17 +384,11 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                                 </div>
                             ) : (
                                 <div className="bg-cream-200 rounded-lg p-4 mb-6 grid grid-cols-2 gap-3 text-sm">
-                                    {document.ref && (
-                                        <div className="flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-accent-brown" />
-                                            <span className="font-medium">Referencia:</span>
-                                            <span className="text-charcoal-700">{document.ref}</span>
-                                        </div>
-                                    )}
+                                    {/* For state laws, show Ley name (origen) as primary */}
                                     {document.origen && (
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 col-span-2">
                                             <Scale className="w-4 h-4 text-accent-brown" />
-                                            <span className="font-medium">Origen:</span>
+                                            <span className="font-medium">Ley:</span>
                                             <span className="text-charcoal-700">{document.origen.replace(/\.txt$/i, '')}</span>
                                         </div>
                                     )}
@@ -423,6 +417,8 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                             ) : (
                                 <div className="prose-legal text-charcoal-800 leading-relaxed whitespace-pre-wrap">
                                     {document.texto
+                                        // Remove law name prefix like [Ley de Hacienda del Estado de Querétaro]
+                                        .replace(/^\[[^\]]+\]\s*/gm, '')
                                         .replace(/^#{1,4}\s*/gm, '')  // Remove markdown headers
                                         .split(/\n/)
                                         .map((line, i) => {

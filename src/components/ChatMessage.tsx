@@ -13,6 +13,18 @@ interface ChatMessageProps {
 // UUID regex for document IDs
 const UUID_REGEX = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi;
 
+// Filter out document content from user messages (content between markers is hidden)
+function filterDocumentContent(content: string): string {
+    // Remove content between <!-- DOCUMENTO_INICIO --> and <!-- DOCUMENTO_FIN -->
+    const filtered = content.replace(/<!-- DOCUMENTO_INICIO -->[\s\S]*?<!-- DOCUMENTO_FIN -->/g, '');
+
+    // Also handle the legacy format
+    const legacyFiltered = filtered.replace(/---CONTENIDO DEL DOCUMENTO---[\s\S]*/g, '');
+
+    // Clean up any extra whitespace
+    return legacyFiltered.trim();
+}
+
 export default function ChatMessage({ message, isStreaming = false, onCitationClick }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
@@ -23,46 +35,75 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         let content = message.content;
 
-        // Find all unique document IDs in the content
-        const foundIds = content.match(UUID_REGEX) || [];
-        const uniqueIds = Array.from(new Set(foundIds.map(id => id.toLowerCase())));
-
-        // Create a map of unique IDs to citation numbers
+        // Create map to track citation numbers in order of FIRST APPEARANCE
         const docIdMap = new Map<string, number>();
-        uniqueIds.forEach((id, index) => {
-            docIdMap.set(id, index + 1);
-        });
+        let citationCounter = 0;
 
-        // Replace citation patterns with numbered badges
-        // Pattern 1: [Doc ID: uuid]
+        // Helper function to get or assign citation number
+        const getCitationNumber = (uuid: string): number => {
+            const normalizedUuid = uuid.toLowerCase();
+            if (!docIdMap.has(normalizedUuid)) {
+                citationCounter++;
+                docIdMap.set(normalizedUuid, citationCounter);
+            }
+            return docIdMap.get(normalizedUuid)!;
+        };
+
+        // STEP 1: Process VALID Doc IDs first (before removing malformed ones)
+        // Pattern A: [Doc ID: uuid] - most common format (36 char UUID)
         content = content.replace(
             /\[Doc ID:\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\]/gi,
             (_, uuid) => {
-                const num = docIdMap.get(uuid.toLowerCase()) || 1;
-                return `<sup class="citation-badge" data-doc-id="${uuid}">[${num}]</sup>`;
+                const num = getCitationNumber(uuid);
+                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
             }
         );
 
-        // Pattern 2: Doc uuid (standalone)
+        // Pattern B: Doc uuid (standalone)
         content = content.replace(
             /(?<![a-f0-9-])Doc\s+([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(?![a-f0-9-])/gi,
             (_, uuid) => {
-                const num = docIdMap.get(uuid.toLowerCase()) || 1;
-                return `<sup class="citation-badge" data-doc-id="${uuid}">[${num}]</sup>`;
+                const num = getCitationNumber(uuid);
+                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
             }
         );
 
-        // Pattern 3: Lone UUID not already in a citation-badge
+        // Pattern C: Lone UUID not already in a citation-badge
         content = content.replace(
             /(?<!data-doc-id=")(?!\/document\/)([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(?!")/gi,
-            (uuid) => {
-                // Check if this UUID is already wrapped
-                if (content.includes(`data-doc-id="${uuid}"`)) {
-                    return uuid;
+            (match, uuid) => {
+                // Skip if this UUID is already wrapped
+                if (content.includes(`data-doc-id="${uuid.toLowerCase()}"`)) {
+                    return match;
                 }
-                const num = docIdMap.get(uuid.toLowerCase()) || 1;
-                return `<sup class="citation-badge" data-doc-id="${uuid}">[${num}]</sup>`;
+                const num = getCitationNumber(uuid);
+                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
             }
+        );
+
+        // STEP 2: Remove ALL malformed/leftover Doc IDs AFTER processing valid ones
+        // Remove UUIDs missing first segment like [-53b4-5b76-b7ea-ef9db1b4ead8]
+        content = content.replace(/\[-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\]/gi, '');
+
+        // Remove short/partial Doc IDs like [Doc ID: 9396d0c8]
+        content = content.replace(/\[Doc ID:\s*[a-f0-9]{1,35}\]/gi, '');
+
+        // Remove parenthetical partial UUIDs like (Doc ID: xxxxx)
+        content = content.replace(/\(Doc ID:\s*[a-f0-9-]+\)/gi, '');
+
+        // Remove standalone partial refs like [-985d-5043-8e4e-b43aaee99c66]
+        content = content.replace(/\[-[a-f0-9-]{10,35}\]/gi, '');
+
+        // Remove multi-Doc ID brackets like [Doc ID: uuid; Doc ID: uuid]
+        content = content.replace(/\[Doc ID:[^\]]*;[^\]]*\]/gi, '');
+
+        // Remove any remaining raw "Doc ID:" text that wasn't properly formatted
+        content = content.replace(/Doc ID:\s*[a-f0-9-]+/gi, '');
+
+        // Replace "## ⚖️ Análisis Legal" or "## ⚖️ Respuesta Legal" with Jurexia® branded header
+        content = content.replace(
+            /##\s*⚖️?\s*(Análisis|Respuesta) Legal/gi,
+            (_, type) => `<div class="jurexia-analysis-header"><span class="jurexia-brand">Jurex<span class="jurexia-accent">ia</span><sup>®</sup></span> <span class="jurexia-title">${type} Legal</span></div>`
         );
 
         return { processedContent: content, docIdMap };
@@ -122,11 +163,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             .save();
     }, []);
 
-    // Export to DOCX
+    // Export to DOCX with proper formatting
     const handleExportDOCX = useCallback(async () => {
         if (!contentRef.current) return;
 
-        const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = await import('docx');
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } = await import('docx');
 
         const date = new Date().toLocaleDateString('es-MX', {
             year: 'numeric',
@@ -134,73 +175,314 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             day: 'numeric'
         });
 
-        // Convert HTML content to plain text with basic formatting
-        const plainText = contentRef.current.innerText || '';
-        const paragraphs = plainText.split('\n\n').filter(p => p.trim());
+        // Get the raw message content (with markdown)
+        const rawContent = message.content;
 
-        const doc = new Document({
-            sections: [{
-                properties: {},
+        // Parse markdown content into structured paragraphs
+        const lines = rawContent.split('\n');
+        const docChildren: any[] = [];
+
+        // Header
+        docChildren.push(
+            new Paragraph({
                 children: [
+                    new TextRun({
+                        text: "Jurex",
+                        bold: true,
+                        size: 56,
+                        font: "Georgia",
+                        color: "1a1a1a"
+                    }),
+                    new TextRun({
+                        text: "ia",
+                        bold: true,
+                        size: 56,
+                        font: "Georgia",
+                        color: "C9A227"
+                    })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 100 }
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: "Plataforma de IA Legal para México",
+                        size: 22,
+                        color: "666666",
+                        italics: true
+                    })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 200 }
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: `Documento generado el ${date}`,
+                        size: 20,
+                        color: "888888"
+                    })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 400 }
+            }),
+            new Paragraph({
+                border: {
+                    bottom: { color: "C9A227", size: 12, style: BorderStyle.SINGLE }
+                },
+                spacing: { after: 400 }
+            })
+        );
+
+        // Process each line
+        let currentParagraphLines: string[] = [];
+
+        const flushParagraph = () => {
+            if (currentParagraphLines.length > 0) {
+                const text = currentParagraphLines.join(' ').trim();
+                if (text) {
+                    docChildren.push(createFormattedParagraph(text, Paragraph, TextRun, AlignmentType));
+                }
+                currentParagraphLines = [];
+            }
+        };
+
+        // Patterns for legal document sections
+        const mainSectionPattern = /^\*\*(PROEMIO|DECLARACIONES|CLÁUSULAS|CIERRE|ENCABEZADO|FIRMAS|PRESTACIONES|HECHOS|DERECHO|PRUEBAS|PUNTOS PETITORIOS|RESULTANDO|CONSIDERANDO|RESUELVE)\*\*$/i;
+        const clausePattern = /^(PRIMERA|SEGUNDA|TERCERA|CUARTA|QUINTA|SEXTA|SÉPTIMA|OCTAVA|NOVENA|DÉCIMA|I\.|II\.|III\.|IV\.|V\.|VI\.|VII\.|VIII\.|IX\.|X\.)[\.\-\s]/i;
+        const romanNumeralDeclaration = /^([IVX]+)\.\s*(DE|DEL)\s/i;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmedLine = line.trim();
+
+            // Skip empty lines - they mark paragraph breaks
+            if (!trimmedLine) {
+                flushParagraph();
+                continue;
+            }
+
+            // Skip citation badges like [Doc ID: ...]
+            if (trimmedLine.match(/^\[Doc ID:/)) {
+                continue;
+            }
+
+            // Main section headers like **PROEMIO**, **CLÁUSULAS**, etc.
+            if (mainSectionPattern.test(trimmedLine)) {
+                flushParagraph();
+                const headerText = trimmedLine.replace(/\*\*/g, '').toUpperCase();
+                docChildren.push(
                     new Paragraph({
                         children: [
                             new TextRun({
-                                text: "Jurex",
+                                text: headerText,
                                 bold: true,
-                                size: 48,
-                                font: "Georgia",
-                                color: "1a1a1a"
-                            }),
-                            new TextRun({
-                                text: "ia",
-                                bold: true,
-                                size: 48,
-                                font: "Georgia",
-                                color: "C9A227"
+                                size: 26,
+                                font: "Arial"
                             })
                         ],
-                        heading: HeadingLevel.TITLE
-                    }),
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 400, after: 200 }
+                    })
+                );
+                continue;
+            }
+
+            // H2 Headers (## Section) - Main document title or sections
+            if (trimmedLine.startsWith('## ')) {
+                flushParagraph();
+                const headerText = trimmedLine.replace(/^##\s*/, '').replace(/\*\*/g, '').toUpperCase();
+                docChildren.push(
                     new Paragraph({
                         children: [
                             new TextRun({
-                                text: `Consulta Legal - ${date}`,
-                                size: 22,
-                                color: "666666"
+                                text: headerText,
+                                bold: true,
+                                size: 28,
+                                font: "Arial"
                             })
                         ],
-                        spacing: { after: 400 }
-                    }),
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 400, after: 300 }
+                    })
+                );
+                continue;
+            }
+
+            // H3 Headers (### Subsection)
+            if (trimmedLine.startsWith('### ')) {
+                flushParagraph();
+                const headerText = trimmedLine.replace(/^###\s*/, '').replace(/\*\*/g, '');
+                docChildren.push(
                     new Paragraph({
-                        children: [new TextRun({ text: "─".repeat(60) })],
-                        spacing: { after: 400 }
-                    }),
-                    ...paragraphs.map(p => new Paragraph({
                         children: [
                             new TextRun({
-                                text: p.trim(),
+                                text: headerText,
+                                bold: true,
+                                size: 24,
+                                font: "Arial"
+                            })
+                        ],
+                        spacing: { before: 300, after: 150 }
+                    })
+                );
+                continue;
+            }
+
+            // Roman numeral declarations (I. DE LA VENDEDORA, II. DEL COMPRADOR)
+            if (romanNumeralDeclaration.test(trimmedLine)) {
+                flushParagraph();
+                const cleanText = trimmedLine.replace(/\*\*/g, '');
+                docChildren.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: cleanText,
+                                bold: true,
                                 size: 24,
                                 font: "Times New Roman"
                             })
                         ],
-                        spacing: { after: 200 }
-                    })),
-                    new Paragraph({
-                        children: [new TextRun({ text: "─".repeat(60) })],
-                        spacing: { before: 400, after: 200 }
-                    }),
+                        alignment: AlignmentType.JUSTIFIED,
+                        spacing: { before: 200, after: 100 }
+                    })
+                );
+                continue;
+            }
+
+            // Numbered clauses (PRIMERA.-, SEGUNDA.-, etc.)
+            if (clausePattern.test(trimmedLine)) {
+                flushParagraph();
+                const cleanText = trimmedLine.replace(/\*\*/g, '');
+                // Find where the clause number ends
+                const match = cleanText.match(clausePattern);
+                if (match) {
+                    const clauseNumber = match[0];
+                    const restOfText = cleanText.slice(clauseNumber.length);
+                    docChildren.push(
+                        new Paragraph({
+                            children: [
+                                new TextRun({
+                                    text: clauseNumber,
+                                    bold: true,
+                                    size: 24,
+                                    font: "Times New Roman"
+                                }),
+                                new TextRun({
+                                    text: restOfText,
+                                    size: 24,
+                                    font: "Times New Roman"
+                                })
+                            ],
+                            alignment: AlignmentType.JUSTIFIED,
+                            spacing: { before: 150, after: 100 }
+                        })
+                    );
+                    continue;
+                }
+            }
+
+            // Blockquotes (> "Artículo...")
+            if (trimmedLine.startsWith('> ') || trimmedLine.startsWith('>')) {
+                flushParagraph();
+                const quoteText = trimmedLine.replace(/^>\s*/, '');
+                docChildren.push(
                     new Paragraph({
                         children: [
                             new TextRun({
-                                text: "Documento generado por Jurexia - IA Jurídica Mexicana | jurexiagtp.com",
-                                size: 18,
-                                color: "999999",
-                                italics: true
+                                text: quoteText.replace(/\*\*/g, ''),
+                                italics: true,
+                                size: 22,
+                                font: "Times New Roman",
+                                color: "333333"
                             })
                         ],
-                        alignment: 'center' as const
+                        indent: { left: 480 },  // Slight left indent
+                        alignment: AlignmentType.JUSTIFIED,
+                        spacing: { before: 100, after: 100 }
                     })
-                ]
+                );
+                continue;
+            }
+
+            // Regular line - accumulate for paragraph
+            currentParagraphLines.push(trimmedLine);
+        }
+
+        // Flush remaining paragraph
+        flushParagraph();
+
+        // Footer
+        docChildren.push(
+            new Paragraph({
+                border: {
+                    top: { color: "C9A227", size: 12, style: BorderStyle.SINGLE }
+                },
+                spacing: { before: 400, after: 200 }
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: "Jurex",
+                        bold: true,
+                        size: 18,
+                        font: "Georgia",
+                        color: "1a1a1a"
+                    }),
+                    new TextRun({
+                        text: "ia",
+                        bold: true,
+                        size: 18,
+                        font: "Georgia",
+                        color: "C9A227"
+                    }),
+                    new TextRun({
+                        text: " - Inteligencia Artificial Legal",
+                        size: 18,
+                        color: "666666"
+                    })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 100 }
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: "Este documento fue generado con información de nuestra base jurídica verificada.",
+                        size: 16,
+                        color: "888888",
+                        italics: true
+                    })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 50 }
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: "jurexiagtp.com",
+                        size: 16,
+                        color: "C9A227"
+                    })
+                ],
+                alignment: AlignmentType.CENTER
+            })
+        );
+
+        const doc = new Document({
+            sections: [{
+                properties: {
+                    page: {
+                        margin: {
+                            top: 1440,    // 1 inch
+                            bottom: 1440,
+                            left: 1440,
+                            right: 1440
+                        }
+                    }
+                },
+                children: docChildren
             }]
         });
 
@@ -211,7 +493,47 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         a.download = `jurexia-consulta-${Date.now()}.docx`;
         a.click();
         URL.revokeObjectURL(url);
-    }, []);
+    }, [message.content]);
+
+    // Helper function to create formatted paragraphs with bold text support
+    function createFormattedParagraph(text: string, Paragraph: any, TextRun: any, AlignmentType: any) {
+        // Parse **bold** patterns
+        const parts: { text: string; bold: boolean }[] = [];
+        const boldRegex = /\*\*([^*]+)\*\*/g;
+        let lastIndex = 0;
+        let match;
+
+        while ((match = boldRegex.exec(text)) !== null) {
+            // Add text before bold
+            if (match.index > lastIndex) {
+                parts.push({ text: text.slice(lastIndex, match.index), bold: false });
+            }
+            // Add bold text
+            parts.push({ text: match[1], bold: true });
+            lastIndex = match.index + match[0].length;
+        }
+
+        // Add remaining text
+        if (lastIndex < text.length) {
+            parts.push({ text: text.slice(lastIndex), bold: false });
+        }
+
+        // If no bold patterns found, just use the whole text
+        if (parts.length === 0) {
+            parts.push({ text, bold: false });
+        }
+
+        return new Paragraph({
+            children: parts.map(part => new TextRun({
+                text: part.text,
+                bold: part.bold,
+                size: 24,
+                font: "Times New Roman"
+            })),
+            alignment: AlignmentType.JUSTIFIED,
+            spacing: { after: 200, line: 360 }  // 1.5 line spacing
+        });
+    }
 
     // Print with header
     const handlePrint = useCallback(() => {
@@ -306,7 +628,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             >
                 {isUser ? (
                     <p className="text-sm sm:text-base whitespace-pre-wrap px-4 py-3">
-                        {message.content}
+                        {filterDocumentContent(message.content)}
                     </p>
                 ) : (
                     <>
@@ -372,9 +694,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
  */
 function formatMarkdown(text: string): string {
     return text
-        // Headers
+        // Skip headers that contain "Jurexia" or already processed branded headers
+        // Headers - but skip lines that already have HTML or branded headers
         .replace(/^### (.*$)/gm, '<h3 class="text-lg font-serif font-medium mt-4 mb-2">$1</h3>')
-        .replace(/^## (.*$)/gm, '<h2 class="text-xl font-serif font-medium mt-5 mb-3">$1</h2>')
+        // Skip "Respuesta Legal" or "Análisis Legal" H2s since they're already branded
+        .replace(/^## (?!.*(Respuesta|Análisis) Legal)(.*$)/gm, '<h2 class="text-xl font-serif font-medium mt-5 mb-3">$2</h2>')
         .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-serif font-medium mt-6 mb-4">$1</h1>')
         // Bold
         .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')

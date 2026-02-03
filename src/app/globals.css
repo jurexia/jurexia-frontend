@@ -239,3 +239,51 @@ h6 {
   outline: 2px solid rgba(59, 130, 246, 0.5);
   outline-offset: 1px;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   JUREXIA ANALYSIS HEADER
+   ══════════════════════════════════════════════════════════════════ */
+
+.jurexia-analysis-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  margin: 16px 0;
+  border-bottom: 2px solid var(--accent-gold, #c9a962);
+}
+
+.jurexia-logo-inline {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.jurexia-brand {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--charcoal, #1a1a1a);
+  letter-spacing: -0.02em;
+}
+
+.jurexia-brand .jurexia-accent {
+  color: var(--accent-gold, #c9a962);
+}
+
+.jurexia-brand sup {
+  font-size: 0.5em;
+  vertical-align: super;
+  color: var(--charcoal-light, #404040);
+  font-weight: 400;
+}
+
+.jurexia-title {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--charcoal-light, #404040);
+  margin-left: 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--charcoal-light, #404040);
+}

@@ -6,11 +6,13 @@ import {
     Paperclip,
     Search,
     Sparkles,
-    Shield
+    Shield,
+    FileEdit
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
 import TextEnhanceModal from './TextEnhanceModal';
+import DraftModal, { DraftRequest } from './DraftModal';
 import { enhanceText } from '@/lib/api';
 
 interface ChatInputProps {
@@ -27,23 +29,36 @@ export default function ChatInput({
     estado
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
-    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance'>('search');
+    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft'>('search');
     const [showFileModal, setShowFileModal] = useState(false);
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
+    const [showDraftModal, setShowDraftModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ text: string; fileName: string } | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const handleSubmit = () => {
         if (!isLoading && (message.trim() || attachedDocument)) {
             let finalMessage = message.trim();
+            let displayMessage = message.trim(); // What user sees in chat
 
-            // If there's an attached document, prepend it to the message
+            // If there's an attached document, format differently for display vs AI
             if (attachedDocument) {
                 const userPrompt = finalMessage || 'Analiza este documento';
-                finalMessage = `[DOCUMENTO ADJUNTO: "${attachedDocument.fileName}"]\n\n${userPrompt}\n\n---CONTENIDO DEL DOCUMENTO---\n${attachedDocument.text.slice(0, 8000)}`;
+                displayMessage = `📄 **Documento adjunto:** ${attachedDocument.fileName}\n\n${userPrompt}`;
+
+                // Full message for AI includes document content (hidden from user)
+                // Limit: 120,000 chars (~30 pages full text, ~20K words)
+                // For longer documents, only the first portion is analyzed
+                const docContent = attachedDocument.text.slice(0, 120000);
+                const truncationNote = attachedDocument.text.length > 120000
+                    ? `\n\n[NOTA: Documento truncado. Mostrando ${Math.round(120000 / attachedDocument.text.length * 100)}% del contenido original (${attachedDocument.text.length.toLocaleString()} caracteres totales)]`
+                    : '';
+                finalMessage = `[DOCUMENTO ADJUNTO: "${attachedDocument.fileName}"]${truncationNote}\n\n${userPrompt}\n\n<!-- DOCUMENTO_INICIO -->\n${docContent}\n<!-- DOCUMENTO_FIN -->`;
+
                 setAttachedDocument(null); // Clear after sending
             }
 
+            // We pass the full message but the UI should filter out document content
             onSubmit(finalMessage);
             setMessage('');
             if (textareaRef.current) {
@@ -78,13 +93,29 @@ export default function ChatInput({
         return response.texto_mejorado;
     };
 
-    const handleModeClick = (mode: 'search' | 'files' | 'enhance') => {
+    const handleModeClick = (mode: 'search' | 'files' | 'enhance' | 'draft') => {
         setActiveMode(mode);
         if (mode === 'files') {
             setShowFileModal(true);
         } else if (mode === 'enhance') {
             setShowEnhanceModal(true);
+        } else if (mode === 'draft') {
+            setShowDraftModal(true);
         }
+    };
+
+    const handleDraft = (draftRequest: DraftRequest) => {
+        // Create a special message that triggers draft mode in the backend
+        const draftMessage = `[REDACTAR_DOCUMENTO]
+Tipo: ${draftRequest.tipo}
+Subtipo: ${draftRequest.subtipo}
+Jurisdicción: ${draftRequest.estado}
+
+Descripción del caso:
+${draftRequest.descripcion}`;
+
+        onSubmit(draftMessage);
+        setActiveMode('search');
     };
 
     return (
@@ -159,6 +190,12 @@ export default function ChatInput({
                                 active={activeMode === 'search'}
                                 onClick={() => handleModeClick('search')}
                             />
+                            <ActionButton
+                                icon={FileEdit}
+                                label="Redactar"
+                                active={activeMode === 'draft'}
+                                onClick={() => handleModeClick('draft')}
+                            />
                         </div>
 
                         {/* Settings/Options */}
@@ -193,6 +230,16 @@ export default function ChatInput({
                     setActiveMode('search');
                 }}
                 onEnhance={handleEnhanceText}
+            />
+
+            <DraftModal
+                isOpen={showDraftModal}
+                onClose={() => {
+                    setShowDraftModal(false);
+                    setActiveMode('search');
+                }}
+                onDraft={handleDraft}
+                estado={estado}
             />
         </>
     );

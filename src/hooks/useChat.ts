@@ -40,6 +40,14 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
         try {
             let fullResponse = '';
+            let reasoningBuffer = '';  // Accumulates all reasoning
+            let finalContent = '';      // Accumulates final analysis
+            let reasoningCleared = false;
+
+            // Markers for reasoning phase - handles both document analysis and normal queries
+            const reasoningHeader = '💭 *Proceso de razonamiento:*\n\n> ';
+            // Match either "Análisis Legal" or "Respuesta Legal"
+            const analysisMarkerRegex = /## ⚖️ (Análisis|Respuesta) Legal/;
 
             for await (const chunk of streamChat(
                 updatedMessages,
@@ -47,11 +55,40 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 options.topK
             )) {
                 fullResponse += chunk;
+
+                // Check if we've hit the transition to final analysis/response
+                const markerMatch = fullResponse.match(analysisMarkerRegex);
+                if (!reasoningCleared && markerMatch) {
+                    // Clear the reasoning, keep only final analysis
+                    const markerIndex = fullResponse.indexOf(markerMatch[0]);
+                    finalContent = fullResponse.substring(markerIndex);
+                    reasoningCleared = true;
+                } else if (reasoningCleared) {
+                    // Already in final content phase - keep accumulating
+                    finalContent += chunk;
+                } else if (fullResponse.includes('> ')) {
+                    // Still in reasoning phase - show only last ~2 paragraphs
+                    reasoningBuffer = fullResponse;
+
+                    // Extract just the reasoning part (after the header)
+                    const headerEnd = reasoningBuffer.indexOf('> ');
+                    if (headerEnd !== -1) {
+                        const reasoningText = reasoningBuffer.substring(headerEnd);
+                        // Split by paragraph breaks and keep only last 2
+                        const paragraphs = reasoningText.split('\n> \n> ');
+                        const lastParagraphs = paragraphs.slice(-2).join('\n> \n> ');
+                        fullResponse = reasoningHeader.slice(0, -2) + lastParagraphs;
+                    }
+                }
+
+                // If we've transitioned to final content, only show that
+                const displayContent = reasoningCleared ? finalContent : fullResponse;
+
                 setMessages(prev => {
                     const newMessages = [...prev];
                     newMessages[newMessages.length - 1] = {
                         role: 'assistant',
-                        content: fullResponse,
+                        content: displayContent,
                     };
                     return newMessages;
                 });

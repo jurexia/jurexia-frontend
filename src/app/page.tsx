@@ -15,6 +15,18 @@ export default function HomePage() {
                         Jurex<span className="text-accent-gold">ia</span>
                     </h1>
 
+                    {/* Promotional Video */}
+                    <div className="mb-8 rounded-2xl overflow-hidden shadow-xl max-w-2xl mx-auto">
+                        <video
+                            controls
+                            playsInline
+                            className="w-full"
+                            poster="/video-poster.jpg"
+                        >
+                            <source src="/0202.mp4" type="video/mp4" />
+                        </video>
+                    </div>
+
                     {/* Headline */}
                     <p className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-charcoal-900 leading-tight mb-6">
                         La inteligencia artificial más precisa para el sistema jurídico Mexicano

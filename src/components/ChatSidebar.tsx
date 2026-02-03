@@ -178,7 +178,7 @@ export default function ChatSidebar({
             {/* Sidebar - Desktop */}
             <aside
                 className={`hidden md:flex flex-col bg-cream-100 border-r border-cream-300 
-                          transition-all duration-300 h-screen
+                          transition-all duration-300 fixed top-0 left-0 h-screen z-40
                           ${isCollapsed ? 'w-16' : 'w-72'}`}
             >
                 <SidebarContent />

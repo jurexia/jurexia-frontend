@@ -151,29 +151,44 @@ export default function ChatPage() {
 
         if (id === activeConversationId) {
             if (remaining.length > 0) {
-                handleSelectConversation(remaining[0].id);
+                // Don't scroll when switching after delete - just load the conversation quietly
+                const conv = getConversation(remaining[0].id);
+                if (conv) {
+                    setMessages(conv.messages);
+                    setActiveConvId(remaining[0].id);
+                    if (conv.estado) {
+                        setSelectedEstado(conv.estado);
+                    }
+                }
             } else {
                 setActiveConvId(null);
                 clearMessages();
             }
         }
-    }, [activeConversationId, clearMessages, handleSelectConversation]);
+    }, [activeConversationId, clearMessages, setMessages]);
 
     // Handle citation click
     const handleCitationClick = useCallback((docId: string) => {
         setSelectedDocId(docId);
     }, []);
 
-    // Auto-scroll to bottom
+    // Track if we should scroll - only scroll for new messages, not conversation switches
+    const prevMessagesLengthRef = useRef(messages.length);
+
+    // Auto-scroll to bottom only when NEW messages are added (not on conversation switch)
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        // Only scroll if messages increased (new message added), not decreased or changed completely
+        if (messages.length > prevMessagesLengthRef.current && messages.length > 0) {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+        prevMessagesLengthRef.current = messages.length;
     }, [messages]);
 
     const hasMessages = messages.length > 0;
     const selectedEstadoLabel = ESTADOS_MEXICO.find(e => e.value === selectedEstado)?.label || 'Seleccionar jurisdicción';
 
     return (
-        <div className="min-h-screen bg-cream-300 flex">
+        <div className="min-h-screen bg-cream-300">
             {/* Sidebar */}
             <ChatSidebar
                 conversations={conversations}
@@ -183,8 +198,8 @@ export default function ChatPage() {
                 onDeleteConversation={handleDeleteConversation}
             />
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-h-screen">
+            {/* Main Content - offset for fixed sidebar */}
+            <div className="flex flex-col h-screen md:ml-72">
                 {/* Header */}
                 <header className="fixed top-0 left-0 right-0 md:left-72 z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 transition-all duration-300">
                     <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -273,8 +288,8 @@ export default function ChatPage() {
                     </>
                 )}
 
-                {/* Main Content Area */}
-                <main className="flex-1 pt-14 pb-40 overflow-hidden">
+                {/* Main Content Area - Scrollable */}
+                <main className="flex-1 pt-14 pb-40 overflow-y-auto">
                     {!hasMessages ? (
                         // Empty State - Welcome Screen
                         <div className="h-full flex flex-col items-center justify-center px-4">
