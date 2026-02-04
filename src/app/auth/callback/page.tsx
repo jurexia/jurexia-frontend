@@ -70,7 +70,15 @@ export default function AuthCallbackPage() {
         <main className="min-h-screen bg-cream-300 flex items-center justify-center">
             <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-brown mx-auto mb-4"></div>
-                <p className="text-charcoal-600">{status}</p>
+                <p className="text-charcoal-600 mb-4">{status}</p>
+
+                {/* Fallback button in case auto-redirect is blocked */}
+                <button
+                    onClick={() => window.location.href = '/chat'}
+                    className="text-xs text-gray-400 hover:text-gray-600 underline"
+                >
+                    Si no redirige automáticamente, haz clic aquí (v2.1)
+                </button>
             </div>
         </main>
     );
