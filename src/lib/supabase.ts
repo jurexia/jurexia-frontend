@@ -5,8 +5,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-        flowType: 'implicit', // Use implicit flow - tokens come in URL hash, no code exchange needed
-        detectSessionInUrl: true, // Auto-detect tokens in URL hash
         persistSession: true,
         autoRefreshToken: true,
     }
