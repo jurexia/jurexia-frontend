@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthCallbackPage() {
-    const router = useRouter();
     const [status, setStatus] = useState('Procesando autenticación...');
     const [error, setError] = useState<string | null>(null);
 
@@ -17,26 +15,44 @@ export default function AuthCallbackPage() {
 
         if (errorParam) {
             setError(errorDesc || errorParam);
-            setTimeout(() => router.replace('/login'), 3000);
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 3000);
             return;
         }
 
         // Listen for auth state changes from the Supabase client
-        // The client automatically handles the code exchange if detectSessionInUrl is true (default)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 if (event === 'SIGNED_IN' && session) {
-                    setStatus('¡Autenticación exitosa!');
-                    window.history.replaceState({}, '', '/auth/callback'); // Clean URL
-                    setTimeout(() => router.replace('/chat'), 500);
+                    setStatus('¡Autenticación exitosa! Entrando...');
+                    // Use window.location.href to force a full page reload and ensure state is fresh
+                    // This bypasses Next.js client-side router issues during auth transitions
+                    setTimeout(() => {
+                        window.location.href = '/chat';
+                    }, 500);
                 }
             }
         );
 
+        // Fallback: check session manually if event doesn't fire immediately
+        // (common if session was already recovered from local storage)
+        const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                setStatus('Sesión verificada. Entrando...');
+                setTimeout(() => {
+                    window.location.href = '/chat';
+                }, 500);
+            }
+        };
+
+        checkSession();
+
         return () => {
             subscription.unsubscribe();
         };
-    }, [router]);
+    }, []);
 
     if (error) {
         return (
