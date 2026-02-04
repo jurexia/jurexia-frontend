@@ -8,68 +8,35 @@ export default function AuthCallbackPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Handle potential errors directly from URL
         const params = new URLSearchParams(window.location.search);
         const errorParam = params.get('error');
         const errorDesc = params.get('error_description');
 
         if (errorParam) {
             setError(errorDesc || errorParam);
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 3000);
+            setTimeout(() => window.location.href = '/login', 3000);
             return;
         }
 
-        // Standard Flow (v5.0):
-        // Wait for BOTH the auth state change AND verify session is in storage
-        let hasRedirected = false;
+        // V6.0: Simplified - trust Supabase auto-exchange and redirect after reasonable delay
+        let redirected = false;
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                if (event === 'SIGNED_IN' && session && !hasRedirected) {
-                    setStatus('¡Autenticación exitosa! Verificando...');
-                    window.history.replaceState({}, '', '/auth/callback'); // Clean URL
+            (event, session) => {
+                if (event === 'SIGNED_IN' && session && !redirected) {
+                    redirected = true;
+                    setStatus('¡Autenticación exitosa! Entrando al chat...');
 
-                    // CRITICAL: Wait for session to be persisted in localStorage
-                    // This prevents /chat from redirecting back to /login
-                    let attempts = 0;
-                    const maxAttempts = 10;
-
-                    const checkSessionPersisted = async () => {
-                        const { data: { session: storedSession } } = await supabase.auth.getSession();
-
-                        if (storedSession) {
-                            // Session is confirmed in storage!
-                            hasRedirected = true;
-                            setStatus('Sesión confirmada. Entrando...');
-                            setTimeout(() => {
-                                window.location.href = '/chat';
-                            }, 300);
-                        } else if (attempts < maxAttempts) {
-                            // Not yet, try again
-                            attempts++;
-                            setTimeout(checkSessionPersisted, 200);
-                        } else {
-                            // Gave up after 2 seconds
-                            setError('No se pudo confirmar la sesión');
-                            setTimeout(() => {
-                                window.location.href = '/login';
-                            }, 2000);
-                        }
-                    };
-
-                    // Start checking
-                    checkSessionPersisted();
-                } else if (event === 'SIGNED_OUT') {
-                    // Ignore
+                    // Give Supabase enough time to persist session to localStorage
+                    // Then do a HARD redirect to ensure /chat gets fresh state
+                    setTimeout(() => {
+                        window.location.href = '/chat';
+                    }, 1500); // Increased delay
                 }
             }
         );
 
-        return () => {
-            subscription.unsubscribe();
-        };
+        return () => subscription.unsubscribe();
     }, []);
 
     if (error) {
@@ -93,7 +60,7 @@ export default function AuthCallbackPage() {
                     onClick={() => window.location.href = '/chat'}
                     className="text-xs text-gray-400 hover:text-gray-600 underline"
                 >
-                    Si no redirige automáticamente, haz clic aquí (v5.0 Session Check)
+                    Entrar manualmente (v6.0)
                 </button>
             </div>
         </main>
