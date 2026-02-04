@@ -12,10 +12,15 @@ export default function AuthCallbackPage() {
     useEffect(() => {
         const handleCallback = async () => {
             try {
-                // Check for error in URL first
-                const params = new URLSearchParams(window.location.search);
-                const errorParam = params.get('error');
-                const errorDesc = params.get('error_description');
+                // For implicit flow, tokens are in the URL hash fragment
+                // Supabase client with detectSessionInUrl:true should auto-process them
+
+                // Check for errors in URL (both search params and hash)
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const searchParams = new URLSearchParams(window.location.search);
+
+                const errorParam = hashParams.get('error') || searchParams.get('error');
+                const errorDesc = hashParams.get('error_description') || searchParams.get('error_description');
 
                 if (errorParam) {
                     setError(errorDesc || errorParam);
@@ -23,41 +28,43 @@ export default function AuthCallbackPage() {
                     return;
                 }
 
-                // Get the code from URL
-                const code = params.get('code');
+                // Give Supabase time to process the hash params
+                setStatus('Verificando sesión...');
 
-                if (code) {
-                    setStatus('Verificando código...');
+                // Wait a moment for Supabase to process
+                await new Promise(resolve => setTimeout(resolve, 500));
 
-                    // Exchange code for session using the SAME supabase client as login
-                    // This ensures we access the same code_verifier in localStorage
-                    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+                // Now check for session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-                    if (exchangeError) {
-                        console.error('Exchange error:', exchangeError);
-                        setError(exchangeError.message);
-                        setTimeout(() => router.replace('/login'), 2000);
-                        return;
-                    }
-
-                    if (data.session) {
-                        setStatus('¡Éxito! Redirigiendo...');
-                        // Clean URL and redirect
-                        window.history.replaceState({}, '', '/auth/callback');
-                        setTimeout(() => {
-                            router.replace('/chat');
-                        }, 300);
-                        return;
-                    }
+                if (sessionError) {
+                    console.error('Session error:', sessionError);
+                    setError(sessionError.message);
+                    setTimeout(() => router.replace('/login'), 2000);
+                    return;
                 }
 
-                // No code in URL, check for existing session
-                const { data: { session } } = await supabase.auth.getSession();
-
                 if (session) {
-                    router.replace('/chat');
+                    setStatus('¡Éxito! Redirigiendo...');
+                    // Clean URL and redirect
+                    window.history.replaceState({}, '', '/auth/callback');
+                    setTimeout(() => {
+                        router.replace('/chat');
+                    }, 300);
+                    return;
+                }
+
+                // If no session yet, wait a bit more and try again
+                setStatus('Esperando confirmación...');
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                const { data: { session: retrySession } } = await supabase.auth.getSession();
+
+                if (retrySession) {
+                    setStatus('¡Éxito! Redirigiendo...');
+                    setTimeout(() => router.replace('/chat'), 300);
                 } else {
-                    setError('No se encontró sesión válida');
+                    setError('No se pudo completar la autenticación');
                     setTimeout(() => router.replace('/login'), 2000);
                 }
             } catch (err) {
@@ -67,7 +74,6 @@ export default function AuthCallbackPage() {
             }
         };
 
-        // Execute immediately
         handleCallback();
     }, [router]);
 
