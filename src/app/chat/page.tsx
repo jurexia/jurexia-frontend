@@ -9,7 +9,7 @@ import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
-import { useSession } from 'next-auth/react';
+import { useRequireAuth } from '@/lib/useAuth';
 import {
     Conversation,
     getConversations,
@@ -60,6 +60,9 @@ const ESTADOS_MEXICO = [
 ];
 
 export default function ChatPage() {
+    // Auth protection - redirects to login if not authenticated
+    const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
+
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showEstadoSelector, setShowEstadoSelector] = useState(false);
 
@@ -75,8 +78,13 @@ export default function ChatPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
 
+    // Track if we should scroll - only scroll for new messages, not conversation switches
+    const prevMessagesLengthRef = useRef(messages.length);
+
     // Load conversations on mount
     useEffect(() => {
+        if (authLoading) return; // Don't load until auth is ready
+
         const loadedConversations = getConversations();
         setConversations(loadedConversations);
 
@@ -91,7 +99,7 @@ export default function ChatPage() {
                 }
             }
         }
-    }, [setMessages]);
+    }, [setMessages, authLoading]);
 
     // Save messages to conversation when they change
     useEffect(() => {
@@ -121,6 +129,15 @@ export default function ChatPage() {
             }
         }
     }, [messages, activeConversationId, selectedEstado]);
+
+    // Auto-scroll to bottom only when NEW messages are added (not on conversation switch)
+    useEffect(() => {
+        // Only scroll if messages increased (new message added), not decreased or changed completely
+        if (messages.length > prevMessagesLengthRef.current && messages.length > 0) {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+        prevMessagesLengthRef.current = messages.length;
+    }, [messages]);
 
     // Handle new conversation
     const handleNewConversation = useCallback(() => {
@@ -172,20 +189,25 @@ export default function ChatPage() {
         setSelectedDocId(docId);
     }, []);
 
-    // Track if we should scroll - only scroll for new messages, not conversation switches
-    const prevMessagesLengthRef = useRef(messages.length);
-
-    // Auto-scroll to bottom only when NEW messages are added (not on conversation switch)
-    useEffect(() => {
-        // Only scroll if messages increased (new message added), not decreased or changed completely
-        if (messages.length > prevMessagesLengthRef.current && messages.length > 0) {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }
-        prevMessagesLengthRef.current = messages.length;
-    }, [messages]);
-
     const hasMessages = messages.length > 0;
     const selectedEstadoLabel = ESTADOS_MEXICO.find(e => e.value === selectedEstado)?.label || 'Seleccionar jurisdicción';
+
+    // Show loading while checking auth
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-cream-300 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-charcoal-900 mx-auto mb-4"></div>
+                    <p className="text-charcoal-600">Verificando sesión...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // If not authenticated, useRequireAuth will redirect
+    if (!isAuthenticated) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-cream-300">

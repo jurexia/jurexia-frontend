@@ -41,7 +41,7 @@ export default function HomePage() {
 
                 {/* Chat Input Demo - Harvey Style */}
                 <div className="max-w-3xl mx-auto mt-8">
-                    <Link href="/chat">
+                    <Link href="/login">
                         <div className="chat-input-container p-6 cursor-pointer hover:shadow-lg transition-shadow">
                             {/* Sample prompt preview */}
                             <div className="flex items-start gap-3 mb-4">
@@ -140,7 +140,7 @@ export default function HomePage() {
                         Únete a los profesionales del derecho que ya utilizan IA especializada.
                     </p>
                     <Link
-                        href="/chat"
+                        href="/login"
                         className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-full hover:bg-gray-100 transition-colors"
                     >
                         Probar Gratis
@@ -176,7 +176,7 @@ export default function HomePage() {
 function QuickAccessChip({ icon, label }: { icon: string; label: string }) {
     return (
         <Link
-            href="/chat"
+            href="/login"
             className="chip hover:bg-charcoal-900 hover:text-white hover:border-charcoal-900 transition-all"
         >
             <span>{icon}</span>
