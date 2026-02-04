@@ -8,75 +8,42 @@ export default function AuthCallbackPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const handleCallback = async () => {
-            try {
-                // Check for error in URL first
-                const params = new URLSearchParams(window.location.search);
-                const errorParam = params.get('error');
-                const errorDesc = params.get('error_description');
+        // Handle potential errors directly from URL
+        const params = new URLSearchParams(window.location.search);
+        const errorParam = params.get('error');
+        const errorDesc = params.get('error_description');
 
-                if (errorParam) {
-                    setError(errorDesc || errorParam);
-                    setTimeout(() => {
-                        window.location.href = '/login';
-                    }, 3000);
-                    return;
-                }
+        if (errorParam) {
+            setError(errorDesc || errorParam);
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 3000);
+            return;
+        }
 
-                // Get the code from URL for MANUAL exchange
-                // (Since we disabled detectSessionInUrl in supabase.ts)
-                const code = params.get('code');
+        // Standard Flow (v4.0):
+        // 1. We enabled detectSessionInUrl: true in supabase.ts
+        // 2. Supabase client will auto-detect the code and exchange it
+        // 3. We just listen for the result
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    setStatus('¡Autenticación exitosa! Entrando...');
+                    window.history.replaceState({}, '', '/auth/callback'); // Clean URL
 
-                if (code) {
-                    setStatus('Verificando código de seguridad...');
-
-                    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-
-                    if (exchangeError) {
-                        console.error('Exchange error:', exchangeError);
-                        setError(exchangeError.message);
-                        setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 3000);
-                        return;
-                    }
-
-                    if (data.session) {
-                        setStatus('¡Autenticación exitosa! Entrando...');
-                        // Clean URL
-                        window.history.replaceState({}, '', '/auth/callback');
-                        // Hard redirect
-                        setTimeout(() => {
-                            window.location.href = '/chat';
-                        }, 500);
-                        return;
-                    }
-                }
-
-                // No code, check for existing session
-                const { data: { session } } = await supabase.auth.getSession();
-
-                if (session) {
-                    setStatus('Sesión activa. Redirigiendo...');
+                    // Force hard redirect to ensure clean state
                     setTimeout(() => {
                         window.location.href = '/chat';
                     }, 500);
-                } else {
-                    // Only show error if we also didn't have a code
-                    if (!code) {
-                        setError('No se encontró sesión válida');
-                        setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 2000);
-                    }
+                } else if (event === 'SIGNED_OUT') {
+                    // Sometimes happens during exchange? Ignore.
                 }
-            } catch (err) {
-                console.error('Callback error:', err);
-                setError('Error procesando autenticación');
             }
-        };
+        );
 
-        handleCallback();
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     if (error) {
@@ -100,7 +67,7 @@ export default function AuthCallbackPage() {
                     onClick={() => window.location.href = '/chat'}
                     className="text-xs text-gray-400 hover:text-gray-600 underline"
                 >
-                    Si no redirige automáticamente, haz clic aquí (v3.0 Manual Exchange)
+                    Si no redirige automáticamente, haz clic aquí (v4.0 Standard Flow)
                 </button>
             </div>
         </main>
