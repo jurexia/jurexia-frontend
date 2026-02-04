@@ -2,20 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
-
-// Create a separate Supabase client for callback that doesn't auto-detect session in URL
-const callbackSupabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-        auth: {
-            detectSessionInUrl: false, // Don't auto-detect - we'll handle it manually
-            persistSession: true,
-            autoRefreshToken: true,
-        }
-    }
-);
+import { supabase } from '@/lib/supabase';
 
 export default function AuthCallbackPage() {
     const router = useRouter();
@@ -42,8 +29,9 @@ export default function AuthCallbackPage() {
                 if (code) {
                     setStatus('Verificando código...');
 
-                    // Exchange code for session using our non-auto-detecting client
-                    const { data, error: exchangeError } = await callbackSupabase.auth.exchangeCodeForSession(code);
+                    // Exchange code for session using the SAME supabase client as login
+                    // This ensures we access the same code_verifier in localStorage
+                    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
                     if (exchangeError) {
                         console.error('Exchange error:', exchangeError);
@@ -64,7 +52,7 @@ export default function AuthCallbackPage() {
                 }
 
                 // No code in URL, check for existing session
-                const { data: { session } } = await callbackSupabase.auth.getSession();
+                const { data: { session } } = await supabase.auth.getSession();
 
                 if (session) {
                     router.replace('/chat');
