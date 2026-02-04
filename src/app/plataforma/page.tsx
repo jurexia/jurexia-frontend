@@ -13,7 +13,7 @@ export default function PlataformaPage() {
                     <div className="flex items-center justify-between h-16">
                         <Link href="/" className="flex items-center gap-2 group">
                             <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                                Jurex<span className="text-accent-gold">ia</span>
+                                Iurex<span className="text-accent-gold">ia</span>
                             </span>
                         </Link>
                         <div className="hidden md:flex items-center gap-8">
@@ -33,15 +33,15 @@ export default function PlataformaPage() {
 
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-4">
-                <div className="max-w-5xl mx-auto">
+                <div className="max-w-5xl mx-auto text-center">
                     <p className="text-accent-brown font-medium mb-4 tracking-wide">PLATAFORMA</p>
                     <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
                         Diseñada para
                         <br />
                         <span className="text-charcoal-500">el Derecho Mexicano</span>
                     </h1>
-                    <p className="text-xl text-charcoal-600 max-w-3xl mb-12">
-                        Jurexia está diseñada especialmente para el sistema jurídico mexicano. Es una plataforma de inteligencia artificial legal creada para ayudar a entender, ordenar y preparar asuntos dentro del marco normativo de México. Está pensada tanto para profesionales del derecho como para personas sin conocimientos jurídicos que necesitan una primera orientación.
+                    <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
+                        Iurexia está diseñada especialmente para el sistema jurídico mexicano. Es una plataforma de inteligencia artificial legal creada para ayudar a entender, ordenar y preparar asuntos dentro del marco normativo de México. Está pensada tanto para profesionales del derecho como para personas sin conocimientos jurídicos que necesitan una primera orientación.
                     </p>
 
                     {/* Platform Preview */}
@@ -54,12 +54,12 @@ export default function PlataformaPage() {
                                         <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                                         <div className="w-3 h-3 rounded-full bg-green-400"></div>
                                     </div>
-                                    <div className="flex-1 text-center text-xs text-gray-400">jurexia.app</div>
+                                    <div className="flex-1 text-center text-xs text-gray-400">Iurexia.app</div>
                                 </div>
                                 <div className="p-8">
                                     <div className="flex items-center gap-4 mb-6">
                                         <Scale className="w-8 h-8 text-charcoal-900" />
-                                        <span className="font-serif text-2xl text-charcoal-900">Jurexia</span>
+                                        <span className="font-serif text-2xl text-charcoal-900">Iurexia</span>
                                     </div>
                                     <div className="bg-cream-300/50 rounded-xl p-4 mb-4">
                                         <p className="text-charcoal-600">
@@ -87,7 +87,7 @@ export default function PlataformaPage() {
                                 Para Profesionales en derecho
                             </h2>
                             <p className="text-charcoal-600 leading-relaxed">
-                                Jurexia no tiene el propósito de reemplazar al profesional del derecho. Es una herramienta impulsada por inteligencia artificial, especializada en el sistema jurídico mexicano, que potencia la eficiencia en el trabajo legal al ofrecer precisión extrema en investigación, análisis y redacción.
+                                Iurexia no tiene el propósito de reemplazar al profesional del derecho. Es una herramienta impulsada por inteligencia artificial, especializada en el sistema jurídico mexicano, que potencia la eficiencia en el trabajo legal al ofrecer precisión extrema en investigación, análisis y redacción.
                             </p>
                         </div>
                         <div className="border-l-4 border-accent-brown pl-8">
@@ -95,7 +95,7 @@ export default function PlataformaPage() {
                                 Para usuarios que buscan orientación legal
                             </h2>
                             <p className="text-charcoal-600 leading-relaxed">
-                                Para personas sin conocimientos jurídicos, Jurexia funciona como una herramienta de <strong>orientación</strong>: ubica la situación jurídica, explica rutas posibles y ayuda a reunir información para que un abogado acompañe y ejecute la estrategia con comunicación más clara y efectiva.
+                                Para personas sin conocimientos jurídicos, Iurexia funciona como una herramienta de <strong>orientación</strong>: ubica la situación jurídica, explica rutas posibles y ayuda a reunir información para que un abogado acompañe y ejecute la estrategia con comunicación más clara y efectiva.
                             </p>
                         </div>
                     </div>
@@ -108,7 +108,7 @@ export default function PlataformaPage() {
                     <p className="text-accent-brown font-medium mb-4 tracking-wide">ARQUITECTURA VERIFICADA</p>
                     <h3 className="font-serif text-3xl md:text-4xl font-medium mb-6">Cero alucinaciones.</h3>
                     <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                        Jurexia opera bajo una arquitectura estricta diseñada por profesionales del derecho mexicanos. Todas las respuestas se generan exclusivamente a partir de <strong className="text-white">fuentes jurídicas verificadas</strong> dentro de nuestra base documental, con trazabilidad y fundamento.
+                        Iurexia opera bajo una arquitectura estricta diseñada por profesionales del derecho mexicanos. Todas las respuestas se generan exclusivamente a partir de <strong className="text-white">fuentes jurídicas verificadas</strong> dentro de nuestra base documental, con trazabilidad y fundamento.
                     </p>
                 </div>
             </section>
@@ -119,12 +119,12 @@ export default function PlataformaPage() {
                 badge="MOTOR DE BÚSQUEDA"
                 title="Búsqueda Híbrida Inteligente"
                 subtitle="Precisión milimétrica en cada consulta"
-                description="Sistema de búsqueda híbrida cuidadosamente programada y verificada por el equipo profesional de Jurexia, diseñado para encontrar exactamente lo que necesitas en el derecho mexicano."
+                description="Sistema de búsqueda híbrida cuidadosamente programada y verificada por el equipo profesional de Iurexia, diseñado para encontrar exactamente lo que necesitas en el derecho mexicano."
                 features={[
                     "Comprensión contextual: Entiende el significado de tu consulta, no solo palabras aisladas",
                     "Precisión técnica: Captura términos jurídicos exactos con alta fidelidad",
                     "Ranking inteligente: Los mejores resultados primero",
-                    "Sin alucinaciones: si la fuente no existe, Jurexia lo indica y solicita el dato faltante"
+                    "Sin alucinaciones: si la fuente no existe, Iurexia lo indica y solicita el dato faltante"
                 ]}
                 visual={<HybridSearchVisual />}
                 bgColor="bg-cream-300"
@@ -298,7 +298,7 @@ export default function PlataformaPage() {
                         <ArrowRight className="w-5 h-5" />
                     </Link>
                     <p className="text-sm text-charcoal-500 max-w-2xl mx-auto mt-6">
-                        <strong>Nota de uso responsable:</strong> Jurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
+                        <strong>Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
                     </p>
                 </div>
             </section>
@@ -309,10 +309,10 @@ export default function PlataformaPage() {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
                             <Scale className="w-6 h-6" />
-                            <span className="font-serif text-xl font-semibold">Jurex<span className="text-accent-gold">ia</span></span>
+                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
                         </div>
                         <p className="text-sm text-charcoal-500">
-                            © 2026 Jurexia. Todos los derechos reservados.
+                            © 2026 Iurexia. Todos los derechos reservados.
                         </p>
                     </div>
                 </div>

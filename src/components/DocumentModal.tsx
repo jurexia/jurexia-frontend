@@ -181,7 +181,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
             <!DOCTYPE html>
             <html>
             <head>
-                <title>${document.ref || 'Documento Legal'} - Jurexia</title>
+                <title>${document.ref || 'Documento Legal'} - Iurexia</title>
                 <style>
                     @page { 
                         margin: 2.5cm 2cm; 
@@ -267,7 +267,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
             </head>
             <body>
                 <div class="header">
-                    <div class="logo-text">Jurex<span class="highlight">ia</span></div>
+                    <div class="logo-text">Iurex<span class="highlight">ia</span></div>
                     <div class="subtitle">Plataforma de IA Legal para México</div>
                 </div>
                 
@@ -278,7 +278,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                 ${contentHTML}
                 
                 <div class="footer">
-                    <p class="footer-logo">Jurex<span class="highlight">ia</span> - Inteligencia Artificial Legal</p>
+                    <p class="footer-logo">Iurex<span class="highlight">ia</span> - Inteligencia Artificial Legal</p>
                     <p>Este documento fue recuperado de nuestra base de datos jurídica verificada.</p>
                     <p class="timestamp">ID: ${document.id} | Generado: ${new Date().toLocaleDateString('es-MX', { dateStyle: 'full' })}</p>
                 </div>
@@ -301,7 +301,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                 <div className="flex items-center justify-between px-6 py-4 border-b border-cream-300">
                     <div className="flex items-center gap-3">
                         <span className="font-serif text-xl font-semibold text-charcoal-900">
-                            Jurex<span className="text-accent-gold">ia</span>
+                            Iurex<span className="text-accent-gold">ia</span>
                         </span>
                         <span className="text-lg font-serif font-medium text-charcoal-600 ml-2">
                             | {isJurisprudencia ? 'Jurisprudencia' : 'Documento Legal'}

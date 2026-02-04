@@ -41,7 +41,7 @@ export default function LoginPage() {
                 {/* Logo */}
                 <Link href="/" className="flex items-center justify-center gap-2 mb-8">
                     <span className="font-serif text-3xl font-semibold text-charcoal-900">
-                        Jurex<span className="text-accent-gold">ia</span>
+                        Iurex<span className="text-accent-gold">ia</span>
                     </span>
                 </Link>
 

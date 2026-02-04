@@ -13,8 +13,8 @@ export interface Conversation {
 }
 
 // Storage key prefix
-const STORAGE_KEY = 'jurexia_conversations';
-const ACTIVE_CONVERSATION_KEY = 'jurexia_active_conversation';
+const STORAGE_KEY = 'Iurexia_conversations';
+const ACTIVE_CONVERSATION_KEY = 'Iurexia_active_conversation';
 
 // Generate unique ID
 export function generateId(): string {

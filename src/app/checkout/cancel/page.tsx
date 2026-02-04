@@ -27,7 +27,7 @@ export default function CheckoutCancelPage() {
                 <div className="bg-white rounded-2xl p-6 mb-8 text-left">
                     <h3 className="font-medium text-charcoal-900 mb-4 flex items-center gap-2">
                         <HelpCircle className="w-5 h-5 text-accent-brown" />
-                        ¿Por qué elegir Jurexia Pro?
+                        ¿Por qué elegir Iurexia Pro?
                     </h3>
                     <ul className="space-y-2 text-sm text-charcoal-600">
                         <li>• Hasta 170 consultas mensuales (vs 5 en plan gratuito)</li>
@@ -58,7 +58,7 @@ export default function CheckoutCancelPage() {
                 {/* Support link */}
                 <p className="mt-8 text-sm text-charcoal-500">
                     ¿Tienes problemas con el pago?{' '}
-                    <a href="mailto:soporte@jurexiagtp.com" className="text-accent-brown hover:underline">
+                    <a href="mailto:soporte@Iurexiagtp.com" className="text-accent-brown hover:underline">
                         Contáctanos
                     </a>
                 </p>

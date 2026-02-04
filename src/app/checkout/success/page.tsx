@@ -60,7 +60,7 @@ function CheckoutSuccessContent() {
 
             {/* Title */}
             <h1 className="font-serif text-4xl font-medium text-charcoal-900 mb-4">
-                ¡Bienvenido a Jurexia Pro!
+                ¡Bienvenido a Iurexia Pro!
             </h1>
 
             {/* Description */}
@@ -68,7 +68,7 @@ function CheckoutSuccessContent() {
                 Tu suscripción ha sido activada exitosamente.
             </p>
             <p className="text-charcoal-500 mb-8">
-                Ahora tienes acceso completo a todas las funciones premium de Jurexia.
+                Ahora tienes acceso completo a todas las funciones premium de Iurexia.
                 Recibirás un correo de confirmación con los detalles de tu suscripción.
             </p>
 
@@ -97,7 +97,7 @@ function CheckoutSuccessContent() {
                     href="/chat"
                     className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent-brown text-white rounded-full font-medium hover:bg-accent-brown/90 transition-colors"
                 >
-                    Comenzar a usar Jurexia
+                    Comenzar a usar Iurexia
                     <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link

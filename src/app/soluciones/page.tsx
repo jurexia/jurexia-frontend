@@ -12,7 +12,7 @@ export default function SolucionesPage() {
                     <div className="flex items-center justify-between h-16">
                         <Link href="/" className="flex items-center gap-2 group">
                             <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                                Jurex<span className="text-accent-gold">ia</span>
+                                Iurex<span className="text-accent-gold">ia</span>
                             </span>
                         </Link>
                         <div className="hidden md:flex items-center gap-8">
@@ -40,7 +40,7 @@ export default function SolucionesPage() {
                         <span className="text-charcoal-500">estrategia legal</span>
                     </h1>
                     <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
-                        Jurexia transforma tareas rutinarias en ventajas estratégicas para tu práctica jurídica.
+                        Iurexia transforma tareas rutinarias en ventajas estratégicas para tu práctica jurídica.
                         Acelera tu trabajo legal con precisión y fundamento.
                     </p>
                 </div>
@@ -75,10 +75,10 @@ export default function SolucionesPage() {
                     <div className="text-center mb-16">
                         <p className="text-accent-brown font-medium mb-4 tracking-wide">APLICACIONES</p>
                         <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
-                            Cómo usan Jurexia los profesionales
+                            Cómo usan Iurexia los profesionales
                         </h2>
                         <p className="text-xl text-charcoal-600 max-w-2xl mx-auto">
-                            Desde investigación hasta análisis de demandas, Jurexia potencia cada etapa del trabajo legal.
+                            Desde investigación hasta análisis de demandas, Iurexia potencia cada etapa del trabajo legal.
                         </p>
                     </div>
 
@@ -126,7 +126,7 @@ export default function SolucionesPage() {
                             Herramientas diseñadas para el éxito
                         </h2>
                         <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                            Cada funcionalidad de Jurexia está construida específicamente para el sistema jurídico mexicano.
+                            Cada funcionalidad de Iurexia está construida específicamente para el sistema jurídico mexicano.
                         </p>
                     </div>
 
@@ -158,7 +158,7 @@ export default function SolucionesPage() {
                             Seguridad de nivel empresarial
                         </h3>
                         <p className="text-charcoal-600 max-w-2xl mx-auto">
-                            Jurexia cumple con los estándares más altos de seguridad y privacidad para proteger tu información.
+                            Iurexia cumple con los estándares más altos de seguridad y privacidad para proteger tu información.
                         </p>
                     </div>
 
@@ -201,7 +201,7 @@ export default function SolucionesPage() {
                                 </span>
                             </h2>
                             <p className="text-lg text-charcoal-600 mb-8 leading-relaxed">
-                                Más allá de la tecnología, Jurexia te conecta con <strong>abogados altamente especializados</strong> que refinan contigo la estrategia legal que ideaste en la plataforma. Una llamada telefónica para pulir cada detalle de tu caso.
+                                Más allá de la tecnología, Iurexia te conecta con <strong>abogados altamente especializados</strong> que refinan contigo la estrategia legal que ideaste en la plataforma. Una llamada telefónica para pulir cada detalle de tu caso.
                             </p>
 
                             <div className="space-y-4 mb-8">
@@ -224,7 +224,7 @@ export default function SolucionesPage() {
                                     </div>
                                     <div>
                                         <h4 className="font-medium text-charcoal-900">Contrato de servicios profesionales</h4>
-                                        <p className="text-charcoal-600 text-sm">Formalidad y respaldo legal en cada interacción con el equipo de Jurexia.</p>
+                                        <p className="text-charcoal-600 text-sm">Formalidad y respaldo legal en cada interacción con el equipo de Iurexia.</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
@@ -260,7 +260,7 @@ export default function SolucionesPage() {
                                         </svg>
                                     </div>
                                     <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
-                                        Equipo Legal Jurexia
+                                        Equipo Legal Iurexia
                                     </h3>
                                     <p className="text-charcoal-500 text-sm">
                                         Especialistas a tu disposición
@@ -296,7 +296,7 @@ export default function SolucionesPage() {
                         Transforma tu práctica legal con IA
                     </h2>
                     <p className="text-lg text-charcoal-600 mb-8">
-                        Únete a los profesionales del derecho que ya optimizan su trabajo con Jurexia.
+                        Únete a los profesionales del derecho que ya optimizan su trabajo con Iurexia.
                     </p>
                     <Link
                         href="/chat"
@@ -314,10 +314,10 @@ export default function SolucionesPage() {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
                             <Scale className="w-6 h-6" />
-                            <span className="font-serif text-xl font-semibold">Jurex<span className="text-accent-gold">ia</span></span>
+                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
                         </div>
                         <p className="text-sm text-charcoal-500">
-                            © 2026 Jurexia. Todos los derechos reservados.
+                            © 2026 Iurexia. Todos los derechos reservados.
                         </p>
                     </div>
                 </div>

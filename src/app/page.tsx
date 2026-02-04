@@ -12,7 +12,7 @@ export default function HomePage() {
                 <div className="max-w-4xl mx-auto text-center">
                     {/* Logo */}
                     <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-bold mb-6">
-                        Jurex<span className="text-accent-gold">ia</span>
+                        Iurex<span className="text-accent-gold">ia</span>
                     </h1>
 
                     {/* Promotional Video */}
@@ -96,7 +96,7 @@ export default function HomePage() {
                             playsInline
                             className="w-full"
                         >
-                            <source src="/demo/jurexia-demo.mp4" type="video/mp4" />
+                            <source src="/demo/Iurexia-demo.mp4" type="video/mp4" />
                             Tu navegador no soporta video.
                         </video>
                     </div>
@@ -134,7 +134,7 @@ export default function HomePage() {
             <section className="py-20 bg-charcoal-900 text-white">
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                        Comienza hoy con Jurexia
+                        Comienza hoy con Iurexia
                     </h2>
                     <p className="text-lg text-gray-300 mb-8">
                         Únete a los profesionales del derecho que ya utilizan IA especializada.
@@ -156,7 +156,7 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
-                            <span className="font-serif text-xl font-semibold">Jurex<span className="text-accent-gold">ia</span></span>
+                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
                         </div>
                         <div className="flex gap-8 text-sm text-charcoal-600">
                             <Link href="#" className="hover:text-charcoal-900 transition-colors">Privacidad</Link>
@@ -164,7 +164,7 @@ export default function HomePage() {
                             <Link href="#" className="hover:text-charcoal-900 transition-colors">Contacto</Link>
                         </div>
                         <p className="text-sm text-charcoal-500">
-                            © 2026 Jurexia. Todos los derechos reservados.
+                            © 2026 Iurexia. Todos los derechos reservados.
                         </p>
                     </div>
                 </div>

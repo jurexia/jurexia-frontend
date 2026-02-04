@@ -1,5 +1,5 @@
 /**
- * API Client for Jurexia FastAPI Backend
+ * API Client for Iurexia FastAPI Backend
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';

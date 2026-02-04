@@ -110,7 +110,7 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
 
     const extractTextFromDOCServer = async (file: File): Promise<string> => {
         // Send .doc file to backend for processing (browser can't handle .doc format)
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://Iurexia-api.onrender.com';
 
         const formData = new FormData();
         formData.append('file', file);

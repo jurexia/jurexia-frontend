@@ -13,7 +13,7 @@ export default function SeguridadPage() {
                     <div className="flex items-center justify-between h-16">
                         <Link href="/" className="flex items-center gap-2 group">
                             <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                                Jurex<span className="text-accent-gold">ia</span>
+                                Iurex<span className="text-accent-gold">ia</span>
                             </span>
                         </Link>
                         <div className="hidden md:flex items-center gap-8">
@@ -41,7 +41,7 @@ export default function SeguridadPage() {
                         <span className="text-charcoal-500">nivel empresarial</span>
                     </h1>
                     <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
-                        Tu información legal es confidencial. Jurexia está diseñada con los más altos estándares de seguridad para proteger tus consultas, documentos y transacciones.
+                        Tu información legal es confidencial. Iurexia está diseñada con los más altos estándares de seguridad para proteger tus consultas, documentos y transacciones.
                     </p>
                 </div>
             </section>
@@ -67,7 +67,7 @@ export default function SeguridadPage() {
                             La seguridad es nuestra prioridad
                         </h2>
                         <p className="text-xl text-charcoal-600 max-w-2xl mx-auto">
-                            Hemos construido Jurexia desde cero con la protección de tu información como pilar central.
+                            Hemos construido Iurexia desde cero con la protección de tu información como pilar central.
                         </p>
                     </div>
 
@@ -75,12 +75,12 @@ export default function SeguridadPage() {
                         <SecurityCard
                             icon={<Lock className="w-8 h-8" />}
                             title="Confidencialidad Total"
-                            description="Tus consultas y documentos son completamente privados. Nadie en Jurexia puede ver el contenido de tus búsquedas ni los archivos que subes."
+                            description="Tus consultas y documentos son completamente privados. Nadie en Iurexia puede ver el contenido de tus búsquedas ni los archivos que subes."
                         />
                         <SecurityCard
                             icon={<Eye className="w-8 h-8" />}
                             title="Sin Entrenamiento en tus Datos"
-                            description="Jurexia garantiza contractualmente que tus datos jamás se utilizan para entrenar modelos de IA. Tu información permanece exclusivamente tuya."
+                            description="Iurexia garantiza contractualmente que tus datos jamás se utilizan para entrenar modelos de IA. Tu información permanece exclusivamente tuya."
                         />
                         <SecurityCard
                             icon={<Server className="w-8 h-8" />}
@@ -116,7 +116,7 @@ export default function SeguridadPage() {
                                 ¿Qué sucede con tu información?
                             </h3>
                             <p className="text-charcoal-600 leading-relaxed mb-8">
-                                Cuando realizas una consulta en Jurexia, tu pregunta se procesa de forma segura para buscar en nuestra base de datos jurídica verificada. Los resultados se generan sin almacenar el contenido de tu consulta a largo plazo.
+                                Cuando realizas una consulta en Iurexia, tu pregunta se procesa de forma segura para buscar en nuestra base de datos jurídica verificada. Los resultados se generan sin almacenar el contenido de tu consulta a largo plazo.
                             </p>
                             <ul className="space-y-4">
                                 <li className="flex items-start gap-3">
@@ -156,16 +156,16 @@ export default function SeguridadPage() {
 
                     <div className="space-y-4">
                         <FAQItem
-                            question="¿Jurexia puede ver mis consultas y documentos?"
-                            answer="No. Tu información está cifrada y es completamente privada. El equipo de Jurexia no tiene acceso al contenido de tus consultas ni a los documentos que subes. Solo tú puedes ver tu información."
+                            question="¿Iurexia puede ver mis consultas y documentos?"
+                            answer="No. Tu información está cifrada y es completamente privada. El equipo de Iurexia no tiene acceso al contenido de tus consultas ni a los documentos que subes. Solo tú puedes ver tu información."
                         />
                         <FAQItem
                             question="¿Mis datos se usan para entrenar modelos de IA?"
-                            answer="Jamás. Jurexia garantiza contractualmente que tus consultas, respuestas y documentos no se utilizan para entrenar ningún modelo de inteligencia artificial. Tu información permanece exclusivamente tuya."
+                            answer="Jamás. Iurexia garantiza contractualmente que tus consultas, respuestas y documentos no se utilizan para entrenar ningún modelo de inteligencia artificial. Tu información permanece exclusivamente tuya."
                         />
                         <FAQItem
                             question="¿Dónde se almacenan mis datos?"
-                            answer="Jurexia utiliza infraestructura de servidores seguros con centros de datos que cumplen con estándares internacionales de seguridad. Todos los datos se cifran tanto en tránsito como en reposo."
+                            answer="Iurexia utiliza infraestructura de servidores seguros con centros de datos que cumplen con estándares internacionales de seguridad. Todos los datos se cifran tanto en tránsito como en reposo."
                         />
                         <FAQItem
                             question="¿Cómo se protegen mis pagos?"
@@ -176,7 +176,7 @@ export default function SeguridadPage() {
                             answer="Sí. Tienes control total sobre tus datos. Puedes eliminar tu historial de consultas, documentos subidos, y tu cuenta completa en cualquier momento desde la configuración de tu perfil."
                         />
                         <FAQItem
-                            question="¿Jurexia comparte datos con terceros?"
+                            question="¿Iurexia comparte datos con terceros?"
                             answer="No vendemos ni compartimos tu información personal o profesional con terceros. Los únicos datos que se procesan externamente son los pagos (a través de Stripe) con los más altos estándares de seguridad."
                         />
                     </div>
@@ -187,7 +187,7 @@ export default function SeguridadPage() {
             <section className="py-20 bg-charcoal-900 text-white">
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                        Tu información está segura con Jurexia
+                        Tu información está segura con Iurexia
                     </h2>
                     <p className="text-lg text-gray-400 mb-8">
                         Comienza a trabajar con la tranquilidad de saber que tu información está protegida.
@@ -208,10 +208,10 @@ export default function SeguridadPage() {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
                             <Scale className="w-6 h-6" />
-                            <span className="font-serif text-xl font-semibold">Jurex<span className="text-accent-gold">ia</span></span>
+                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
                         </div>
                         <p className="text-sm text-charcoal-500">
-                            © 2026 Jurexia. Todos los derechos reservados.
+                            © 2026 Iurexia. Todos los derechos reservados.
                         </p>
                     </div>
                 </div>

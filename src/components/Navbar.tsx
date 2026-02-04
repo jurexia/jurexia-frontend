@@ -19,7 +19,7 @@ export default function Navbar() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 group">
                         <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                            Jurex<span className="text-accent-gold">ia</span>
+                            Iurex<span className="text-accent-gold">ia</span>
                         </span>
                     </Link>
 

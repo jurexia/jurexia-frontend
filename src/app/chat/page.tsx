@@ -296,7 +296,7 @@ export default function ChatPage() {
                             <div className="max-w-2xl text-center">
                                 <div className="mb-6">
                                     <span className="font-serif text-5xl font-semibold text-charcoal-900">
-                                        Jurex<span className="text-accent-gold">ia</span>
+                                        Iurex<span className="text-accent-gold">ia</span>
                                     </span>
                                 </div>
                                 <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-4">

@@ -100,10 +100,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Remove any remaining raw "Doc ID:" text that wasn't properly formatted
         content = content.replace(/Doc ID:\s*[a-f0-9-]+/gi, '');
 
-        // Replace "## ⚖️ Análisis Legal" or "## ⚖️ Respuesta Legal" with Jurexia® branded header
+        // Replace "## ⚖️ Análisis Legal" or "## ⚖️ Respuesta Legal" with Iurexia® branded header
         content = content.replace(
             /##\s*⚖️?\s*(Análisis|Respuesta) Legal/gi,
-            (_, type) => `<div class="jurexia-analysis-header"><span class="jurexia-brand">Jurex<span class="jurexia-accent">ia</span><sup>®</sup></span> <span class="jurexia-title">${type} Legal</span></div>`
+            (_, type) => `<div class="Iurexia-analysis-header"><span class="Iurexia-brand">Iurex<span class="Iurexia-accent">ia</span><sup>®</sup></span> <span class="Iurexia-title">${type} Legal</span></div>`
         );
 
         return { processedContent: content, docIdMap };
@@ -119,7 +119,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         return `
             <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #C9A227;">
                 <h1 style="margin: 0; font-size: 32px; font-weight: 600; font-family: 'Georgia', serif;">
-                    <span style="color: #1a1a1a;">Jurex</span><span style="color: #C9A227;">ia</span>
+                    <span style="color: #1a1a1a;">Iurex</span><span style="color: #C9A227;">ia</span>
                 </h1>
                 <p style="margin: 8px 0 0; font-size: 14px; color: #666; font-family: 'Georgia', serif;">
                     Consulta Legal - ${date}
@@ -143,7 +143,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     ${content}
                 </div>
                 <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 10px; color: #999; text-align: center;">
-                    Documento generado por Jurexia - IA Jurídica Mexicana | jurexiagtp.com
+                    Documento generado por Iurexia - IA Jurídica Mexicana | Iurexiagtp.com
                 </div>
             </div>
         `;
@@ -154,7 +154,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         html2pdf()
             .set({
                 margin: [10, 10, 10, 10],
-                filename: `jurexia-consulta-${Date.now()}.pdf`,
+                filename: `Iurexia-consulta-${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -187,7 +187,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             new Paragraph({
                 children: [
                     new TextRun({
-                        text: "Jurex",
+                        text: "Iurex",
                         bold: true,
                         size: 56,
                         font: "Georgia",
@@ -424,7 +424,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             new Paragraph({
                 children: [
                     new TextRun({
-                        text: "Jurex",
+                        text: "Iurex",
                         bold: true,
                         size: 18,
                         font: "Georgia",
@@ -461,7 +461,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             new Paragraph({
                 children: [
                     new TextRun({
-                        text: "jurexiagtp.com",
+                        text: "Iurexiagtp.com",
                         size: 16,
                         color: "C9A227"
                     })
@@ -490,7 +490,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `jurexia-consulta-${Date.now()}.docx`;
+        a.download = `Iurexia-consulta-${Date.now()}.docx`;
         a.click();
         URL.revokeObjectURL(url);
     }, [message.content]);
@@ -547,7 +547,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Jurexia - Consulta Legal</title>
+                <title>Iurexia - Consulta Legal</title>
                 <style>
                     @media print {
                         body { margin: 0; padding: 40px; }
@@ -590,9 +590,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             </head>
             <body>
                 <div class="header">
-                    <img src="/logo-jurexia.png" alt="Jurexia" />
+                    <img src="/logo-Iurexia.png" alt="Iurexia" />
                     <div>
-                        <h1>Jurexia</h1>
+                        <h1>Iurexia</h1>
                         <p>Consulta Legal - ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     </div>
                 </div>
@@ -600,7 +600,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     ${content}
                 </div>
                 <div class="footer">
-                    Documento generado por Jurexia - IA Jurídica Mexicana | jurexiagtp.com
+                    Documento generado por Iurexia - IA Jurídica Mexicana | Iurexiagtp.com
                 </div>
             </body>
             </html>
@@ -694,7 +694,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
  */
 function formatMarkdown(text: string): string {
     return text
-        // Skip headers that contain "Jurexia" or already processed branded headers
+        // Skip headers that contain "Iurexia" or already processed branded headers
         // Headers - but skip lines that already have HTML or branded headers
         .replace(/^### (.*$)/gm, '<h3 class="text-lg font-serif font-medium mt-4 mb-2">$1</h3>')
         // Skip "Respuesta Legal" or "Análisis Legal" H2s since they're already branded

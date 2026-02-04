@@ -15,7 +15,7 @@ export default function PreciosPage() {
                     <div className="flex items-center justify-between h-16">
                         <Link href="/" className="flex items-center gap-2 group">
                             <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                                Jurex<span className="text-accent-gold">ia</span>
+                                Iurex<span className="text-accent-gold">ia</span>
                             </span>
                         </Link>
                         <div className="hidden md:flex items-center gap-8">
@@ -127,7 +127,7 @@ export default function PreciosPage() {
                             features={[
                                 "Todo lo del Plan Pro incluido",
                                 "Consultas ilimitadas",
-                                "Consulta personalizada con equipo legal de Jurexia",
+                                "Consulta personalizada con equipo legal de Iurexia",
                                 "Contrato de prestación de servicios profesionales",
                                 "Asesoría legal especializada",
                                 "Soporte VIP dedicado"
@@ -217,11 +217,11 @@ export default function PreciosPage() {
                     <div className="space-y-4">
                         <FAQItem
                             question="¿Qué incluye una consulta?"
-                            answer="Una consulta es cada pregunta o solicitud que haces a Jurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo."
+                            answer="Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo."
                         />
                         <FAQItem
                             question="¿Qué incluye el Plan Platinum?"
-                            answer="El Plan Platinum incluye todo lo del Plan Pro más consultas ilimitadas y asesoría personalizada con el equipo legal de Jurexia. Esto se formaliza mediante un contrato de prestación de servicios profesionales para garantizar una atención especializada y dedicada."
+                            answer="El Plan Platinum incluye todo lo del Plan Pro más consultas ilimitadas y asesoría personalizada con el equipo legal de Iurexia. Esto se formaliza mediante un contrato de prestación de servicios profesionales para garantizar una atención especializada y dedicada."
                         />
                         <FAQItem
                             question="¿Puedo cambiar de plan en cualquier momento?"
@@ -250,7 +250,7 @@ export default function PreciosPage() {
                         Comienza gratis hoy
                     </h2>
                     <p className="text-lg text-gray-400 mb-8">
-                        Prueba Jurexia con 5 consultas gratuitas. Sin tarjeta de crédito.
+                        Prueba Iurexia con 5 consultas gratuitas. Sin tarjeta de crédito.
                     </p>
                     <Link
                         href="/chat"
@@ -268,10 +268,10 @@ export default function PreciosPage() {
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
                             <Scale className="w-6 h-6" />
-                            <span className="font-serif text-xl font-semibold">Jurex<span className="text-accent-gold">ia</span></span>
+                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
                         </div>
                         <p className="text-sm text-charcoal-500">
-                            © 2026 Jurexia. Todos los derechos reservados.
+                            © 2026 Iurexia. Todos los derechos reservados.
                         </p>
                     </div>
                 </div>
