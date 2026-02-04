@@ -40,10 +40,16 @@ export function useAuth() {
 
                     if (!currentSession) {
                         // Try to restore session using refresh token
-                        await supabase.auth.setSession({
+                        const { error: setError } = await supabase.auth.setSession({
                             access_token: cookieAccessToken,
                             refresh_token: cookieRefreshToken,
                         });
+
+                        if (!setError) {
+                            // CRITICAL: Wait for session to be persisted to localStorage
+                            // before calling getSession() below
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        }
                     }
                 }
 
