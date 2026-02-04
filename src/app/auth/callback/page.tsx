@@ -27,11 +27,14 @@ export default function AuthCallbackPage() {
                     redirected = true;
                     setStatus('¡Autenticación exitosa! Guardando sesión...');
 
-                    // FALLBACK: Save access token to cookie in case localStorage fails
-                    // This handles cross-domain issues (www vs non-www)
+                    // FALLBACK: Save access token to cookie with ROOT DOMAIN
+                    // Using .iurexia.com (with dot) makes the cookie available on both www and non-www
                     try {
-                        document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=3600; SameSite=Lax`;
-                        document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=2592000; SameSite=Lax`;
+                        const domain = window.location.hostname.includes('iurexia.com') ? '.iurexia.com' : '';
+                        const domainAttr = domain ? `; domain=${domain}` : '';
+
+                        document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=3600; SameSite=Lax${domainAttr}`;
+                        document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=2592000; SameSite=Lax${domainAttr}`;
                     } catch (e) {
                         console.error('Could not set cookie:', e);
                     }
