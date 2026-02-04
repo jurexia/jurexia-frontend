@@ -18,20 +18,30 @@ export default function AuthCallbackPage() {
             return;
         }
 
-        // V6.0: Simplified - trust Supabase auto-exchange and redirect after reasonable delay
+        // V7.0: Add cookie fallback for session persistence
         let redirected = false;
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, session) => {
+            async (event, session) => {
                 if (event === 'SIGNED_IN' && session && !redirected) {
                     redirected = true;
-                    setStatus('¡Autenticación exitosa! Entrando al chat...');
+                    setStatus('¡Autenticación exitosa! Guardando sesión...');
 
-                    // Give Supabase enough time to persist session to localStorage
-                    // Then do a HARD redirect to ensure /chat gets fresh state
+                    // FALLBACK: Save access token to cookie in case localStorage fails
+                    // This handles cross-domain issues (www vs non-www)
+                    try {
+                        document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=3600; SameSite=Lax`;
+                        document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=2592000; SameSite=Lax`;
+                    } catch (e) {
+                        console.error('Could not set cookie:', e);
+                    }
+
+                    setStatus('Sesión guardada. Entrando...');
+
+                    // Give time for both localStorage AND cookie to be set
                     setTimeout(() => {
                         window.location.href = '/chat';
-                    }, 1500); // Increased delay
+                    }, 1000);
                 }
             }
         );
@@ -60,7 +70,7 @@ export default function AuthCallbackPage() {
                     onClick={() => window.location.href = '/chat'}
                     className="text-xs text-gray-400 hover:text-gray-600 underline"
                 >
-                    Entrar manualmente (v6.0)
+                    Entrar manualmente (v7.0 Cookie Fallback)
                 </button>
             </div>
         </main>

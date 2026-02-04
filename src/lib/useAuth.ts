@@ -24,6 +24,29 @@ export function useAuth() {
         // Get initial session
         const initAuth = async () => {
             try {
+                // First, check for cookie fallback tokens
+                const getCookie = (name: string) => {
+                    const value = `; ${document.cookie}`;
+                    const parts = value.split(`; ${name}=`);
+                    if (parts.length === 2) return parts.pop()?.split(';').shift();
+                };
+
+                const cookieAccessToken = getCookie('sb-access-token');
+                const cookieRefreshToken = getCookie('sb-refresh-token');
+
+                // If we have cookie tokens but no localStorage session, restore from cookie
+                if (cookieAccessToken && cookieRefreshToken) {
+                    const { data: { session: currentSession } } = await supabase.auth.getSession();
+
+                    if (!currentSession) {
+                        // Try to restore session using refresh token
+                        await supabase.auth.setSession({
+                            access_token: cookieAccessToken,
+                            refresh_token: cookieRefreshToken,
+                        });
+                    }
+                }
+
                 // Use getSession() which is more reliable for detecting auth state
                 const { data: { session } } = await supabase.auth.getSession();
 
