@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/useAuth';
 import { UserAvatar } from './UserAvatar';
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const { data: session, status } = useSession();
-    const isLoggedIn = !!session?.user;
-    const isLoading = status === 'loading';
+    const { user, loading } = useAuth();
+    const isLoggedIn = !!user;
+    const isLoading = loading;
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">

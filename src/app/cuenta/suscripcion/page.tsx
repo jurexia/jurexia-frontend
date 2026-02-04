@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/useAuth';
 import Link from 'next/link';
 import {
     ArrowLeft,
@@ -23,18 +23,18 @@ interface SubscriptionInfo {
 }
 
 export default function SubscriptionPage() {
-    const { data: session, status } = useSession();
+    const { user, loading: authLoading, isAuthenticated } = useAuth();
     const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [portalLoading, setPortalLoading] = useState(false);
 
     useEffect(() => {
-        if (status === 'authenticated') {
+        if (!authLoading && isAuthenticated) {
             fetchSubscriptionInfo();
-        } else if (status === 'unauthenticated') {
+        } else if (!authLoading && !isAuthenticated) {
             setLoading(false);
         }
-    }, [status]);
+    }, [authLoading, isAuthenticated]);
 
     const fetchSubscriptionInfo = async () => {
         try {
@@ -62,7 +62,7 @@ export default function SubscriptionPage() {
         }
     };
 
-    if (status === 'loading' || loading) {
+    if (authLoading || loading) {
         return (
             <main className="min-h-screen bg-cream-300 pt-20">
                 <div className="max-w-2xl mx-auto px-4 py-12 text-center">
@@ -73,7 +73,7 @@ export default function SubscriptionPage() {
         );
     }
 
-    if (!session) {
+    if (!isAuthenticated) {
         return (
             <main className="min-h-screen bg-cream-300 pt-20">
                 <div className="max-w-2xl mx-auto px-4 py-12 text-center">
@@ -94,7 +94,7 @@ export default function SubscriptionPage() {
         );
     }
 
-    const userPlan = (session.user as any)?.plan || 'gratuito';
+    const userPlan = (user as any)?.user_metadata?.plan || 'gratuito';
     const isPaidPlan = userPlan !== 'gratuito';
 
     return (
@@ -131,8 +131,8 @@ export default function SubscriptionPage() {
                             </h2>
                         </div>
                         <div className={`px-3 py-1 rounded-full text-sm font-medium ${isPaidPlan
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-600'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-100 text-gray-600'
                             }`}>
                             {isPaidPlan ? 'Activo' : 'Gratuito'}
                         </div>

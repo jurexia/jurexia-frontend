@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Scale, ArrowRight, Check, Zap, Crown, Star, Calendar, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
 
 export default function PreciosPage() {
@@ -310,14 +310,14 @@ function PricingCard({
     badge?: string;
 }) {
     const [loading, setLoading] = useState(false);
-    const { data: session } = useSession();
+    const { user } = useAuth();
 
     const handleSubscribe = async () => {
         if (!priceId) return;
 
         setLoading(true);
         try {
-            await redirectToCheckout(priceId, session?.user?.email || undefined);
+            await redirectToCheckout(priceId, user?.email || undefined);
         } catch (error) {
             console.error('Checkout error:', error);
             alert('Error al procesar el pago. Por favor intenta de nuevo.');
