@@ -10,75 +10,53 @@ export default function AuthCallbackPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Listen for auth state changes - Supabase will auto-process the URL
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                console.log('Auth event:', event);
+        let redirected = false;
 
-                if (event === 'SIGNED_IN' && session) {
-                    console.log('User signed in, redirecting to chat...');
-                    setStatus('¡Autenticación exitosa! Redirigiendo...');
-                    // Small delay to show success message
-                    setTimeout(() => {
-                        router.replace('/chat');
-                    }, 500);
-                } else if (event === 'TOKEN_REFRESHED') {
-                    // Token was refreshed, check if we have a session
-                    if (session) {
-                        router.replace('/chat');
-                    }
+        // Check for errors first
+        const params = new URLSearchParams(window.location.search);
+        const errorParam = params.get('error');
+        const errorDesc = params.get('error_description');
+
+        if (errorParam) {
+            setError(errorDesc || errorParam);
+            setTimeout(() => router.replace('/login'), 2000);
+            return;
+        }
+
+        // Set up the auth state listener FIRST before anything else
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+                console.log('Auth state change:', event, session ? 'has session' : 'no session');
+
+                if (!redirected && session) {
+                    redirected = true;
+                    setStatus('¡Autenticación exitosa!');
+                    // Use replace to avoid back button issues
+                    setTimeout(() => router.replace('/chat'), 300);
                 }
             }
         );
 
-        // Also check for existing session after a moment
-        // (in case auth state change already happened before listener was set up)
-        const checkSession = async () => {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-            if (sessionError) {
-                console.error('Session check error:', sessionError);
-                setError(sessionError.message);
-                setTimeout(() => router.replace('/login'), 2000);
-                return;
-            }
-
-            if (session) {
-                console.log('Session found on check, redirecting...');
-                router.replace('/chat');
-            } else {
-                // No session after 1 second, might be an error
-                console.log('No session found, checking URL for errors...');
-                const params = new URLSearchParams(window.location.search);
-                const errorParam = params.get('error');
-                const errorDesc = params.get('error_description');
-
-                if (errorParam) {
-                    setError(errorDesc || errorParam);
-                    setTimeout(() => router.replace('/login'), 2000);
-                } else {
-                    // Give more time for the auth state to settle
-                    setStatus('Procesando autenticación...');
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-
-                    // Check one more time
-                    const { data: { session: retrySession } } = await supabase.auth.getSession();
-                    if (retrySession) {
+        // Give Supabase time to process the URL and trigger auth state change
+        // The Supabase client automatically detects auth params in the URL
+        const timeout = setTimeout(() => {
+            if (!redirected) {
+                // After 5 seconds, manually check for session
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                    if (!redirected && session) {
+                        redirected = true;
                         router.replace('/chat');
-                    } else {
+                    } else if (!redirected) {
                         setError('No se pudo completar la autenticación');
                         setTimeout(() => router.replace('/login'), 2000);
                     }
-                }
+                });
             }
-        };
-
-        checkSession();
+        }, 5000);
 
         return () => {
             subscription.unsubscribe();
+            clearTimeout(timeout);
         };
     }, [router]);
 
