@@ -14,11 +14,6 @@ const nextConfig = {
         ignoreBuildErrors: true,
     },
 
-    // Disable static optimization for API routes
-    experimental: {
-        outputStandalone: true,
-    },
-
     // Environment variables accessible client-side
     env: {
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
