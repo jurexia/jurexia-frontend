@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, getCurrentUser, getUserProfile, UserProfile } from './supabase';
-import type { User } from '@supabase/supabase-js';
+import { supabase, getUserProfile, UserProfile } from './supabase';
+import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthState {
     user: User | null;
@@ -21,12 +21,48 @@ export function useAuth() {
     });
 
     useEffect(() => {
-        // Get initial session
+        let isMounted = true;
+
+        const setAuthenticatedState = async (session: Session) => {
+            if (!isMounted) return;
+            try {
+                const profile = await getUserProfile(session.user.id);
+                if (isMounted) {
+                    setAuthState({
+                        user: session.user,
+                        profile,
+                        loading: false,
+                        isAuthenticated: true,
+                    });
+                }
+            } catch (err) {
+                console.error('[AUTH] Error getting profile:', err);
+                if (isMounted) {
+                    setAuthState({
+                        user: session.user,
+                        profile: null,
+                        loading: false,
+                        isAuthenticated: true,
+                    });
+                }
+            }
+        };
+
+        const setUnauthenticatedState = () => {
+            if (!isMounted) return;
+            setAuthState({
+                user: null,
+                profile: null,
+                loading: false,
+                isAuthenticated: false,
+            });
+        };
+
         const initAuth = async () => {
             try {
-                console.log('[AUTH DEBUG] === Starting auth initialization ===');
+                console.log('[AUTH] === Starting auth initialization ===');
 
-                // First, check for cookie fallback tokens
+                // Helper to get cookie value
                 const getCookie = (name: string) => {
                     const value = `; ${document.cookie}`;
                     const parts = value.split(`; ${name}=`);
@@ -36,71 +72,58 @@ export function useAuth() {
                 const cookieAccessToken = getCookie('sb-access-token');
                 const cookieRefreshToken = getCookie('sb-refresh-token');
 
-                console.log('[AUTH DEBUG] Cookies found:', {
+                console.log('[AUTH] Cookies:', {
                     hasAccessToken: !!cookieAccessToken,
                     hasRefreshToken: !!cookieRefreshToken,
-                    accessTokenPreview: cookieAccessToken?.slice(0, 20) + '...',
                 });
 
-                // If we have cookie tokens but no localStorage session, restore from cookie
-                if (cookieAccessToken && cookieRefreshToken) {
-                    const { data: { session: currentSession } } = await supabase.auth.getSession();
-                    console.log('[AUTH DEBUG] Current session before cookie restore:', !!currentSession);
+                // First check if we already have a session
+                const { data: { session: existingSession } } = await supabase.auth.getSession();
+                console.log('[AUTH] Existing session:', !!existingSession);
 
-                    if (!currentSession) {
-                        console.log('[AUTH DEBUG] No session found, attempting cookie restore...');
-                        // Try to restore session using refresh token
-                        const { data, error: setError } = await supabase.auth.setSession({
+                if (existingSession?.user) {
+                    console.log('[AUTH] Using existing session');
+                    await setAuthenticatedState(existingSession);
+                    return;
+                }
+
+                // If we have cookies but no session, try to restore
+                if (cookieAccessToken && cookieRefreshToken) {
+                    console.log('[AUTH] Attempting to restore session from cookies...');
+                    try {
+                        const { data, error } = await supabase.auth.setSession({
                             access_token: cookieAccessToken,
                             refresh_token: cookieRefreshToken,
                         });
-                        console.log('[AUTH DEBUG] setSession result:', {
-                            success: !setError,
-                            error: setError?.message,
-                            hasSession: !!data?.session
-                        });
 
-                        if (!setError) {
-                            // CRITICAL: Wait for session to be persisted to localStorage
-                            // before calling getSession() below
-                            await new Promise(resolve => setTimeout(resolve, 500));
+                        if (error) {
+                            console.error('[AUTH] setSession error:', error.message);
+                            // Clear invalid cookies
+                            document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.onrender.com';
+                            document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.onrender.com';
+                            setUnauthenticatedState();
+                            return;
                         }
+
+                        if (data?.session) {
+                            console.log('[AUTH] Session restored from cookies successfully');
+                            await setAuthenticatedState(data.session);
+                            return;
+                        }
+                    } catch (err) {
+                        console.error('[AUTH] Cookie restore failed:', err);
+                        setUnauthenticatedState();
+                        return;
                     }
-                } else {
-                    console.log('[AUTH DEBUG] No cookies found, checking localStorage directly...');
                 }
 
-                // Use getSession() which is more reliable for detecting auth state
-                const { data: { session } } = await supabase.auth.getSession();
-                console.log('[AUTH DEBUG] Final session check:', {
-                    hasSession: !!session,
-                    userEmail: session?.user?.email
-                });
+                // No session found
+                console.log('[AUTH] No session available');
+                setUnauthenticatedState();
 
-                if (session?.user) {
-                    const profile = await getUserProfile(session.user.id);
-                    setAuthState({
-                        user: session.user,
-                        profile,
-                        loading: false,
-                        isAuthenticated: true,
-                    });
-                } else {
-                    setAuthState({
-                        user: null,
-                        profile: null,
-                        loading: false,
-                        isAuthenticated: false,
-                    });
-                }
             } catch (error) {
-                console.error('Auth error:', error);
-                setAuthState({
-                    user: null,
-                    profile: null,
-                    loading: false,
-                    isAuthenticated: false,
-                });
+                console.error('[AUTH] Init error:', error);
+                setUnauthenticatedState();
             }
         };
 
@@ -109,26 +132,17 @@ export function useAuth() {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
+                console.log('[AUTH] Auth state changed:', event, !!session);
                 if (session?.user) {
-                    const profile = await getUserProfile(session.user.id);
-                    setAuthState({
-                        user: session.user,
-                        profile,
-                        loading: false,
-                        isAuthenticated: true,
-                    });
+                    await setAuthenticatedState(session);
                 } else {
-                    setAuthState({
-                        user: null,
-                        profile: null,
-                        loading: false,
-                        isAuthenticated: false,
-                    });
+                    setUnauthenticatedState();
                 }
             }
         );
 
         return () => {
+            isMounted = false;
             subscription.unsubscribe();
         };
     }, []);
