@@ -24,11 +24,13 @@ export function useAuth() {
         // Get initial session
         const initAuth = async () => {
             try {
-                const user = await getCurrentUser();
-                if (user) {
-                    const profile = await getUserProfile(user.id);
+                // Use getSession() which is more reliable for detecting auth state
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session?.user) {
+                    const profile = await getUserProfile(session.user.id);
                     setAuthState({
-                        user,
+                        user: session.user,
                         profile,
                         loading: false,
                         isAuthenticated: true,

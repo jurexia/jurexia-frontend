@@ -1,52 +1,85 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthCallbackPage() {
     const router = useRouter();
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const handleCallback = async () => {
             try {
-                // Get the session from URL hash (Supabase OAuth puts tokens here)
-                const { data, error } = await supabase.auth.getSession();
+                // Check for error in URL params
+                const params = new URLSearchParams(window.location.search);
+                const errorParam = params.get('error');
+                const errorDescription = params.get('error_description');
 
-                if (error) {
-                    console.error('Auth callback error:', error);
-                    router.push('/login?error=auth_failed');
+                if (errorParam) {
+                    console.error('OAuth error:', errorParam, errorDescription);
+                    setError(errorDescription || errorParam);
+                    setTimeout(() => router.push('/login'), 3000);
                     return;
                 }
 
-                if (data.session) {
-                    // Session exists, redirect to chat
-                    router.push('/chat');
-                } else {
-                    // No session, try to exchange code from URL
-                    const params = new URLSearchParams(window.location.search);
-                    const code = params.get('code');
+                // For PKCE flow, Supabase stores the session in localStorage automatically
+                // after the redirect. We need to detect the auth state change.
 
-                    if (code) {
-                        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-                        if (exchangeError) {
-                            console.error('Code exchange error:', exchangeError);
-                            router.push('/login?error=exchange_failed');
-                            return;
-                        }
-                        router.push('/chat');
-                    } else {
-                        router.push('/login');
+                // First, check if we have a code in the URL (code exchange flow)
+                const code = params.get('code');
+
+                if (code) {
+                    console.log('Exchanging code for session...');
+                    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+                    if (exchangeError) {
+                        console.error('Code exchange error:', exchangeError);
+                        setError(exchangeError.message);
+                        setTimeout(() => router.push('/login'), 3000);
+                        return;
                     }
+                }
+
+                // Now check if we have a valid session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+                if (sessionError) {
+                    console.error('Session error:', sessionError);
+                    setError(sessionError.message);
+                    setTimeout(() => router.push('/login'), 3000);
+                    return;
+                }
+
+                if (session) {
+                    console.log('Session found, redirecting to chat...');
+                    // Use replace to avoid back button issues
+                    router.replace('/chat');
+                } else {
+                    console.log('No session found, redirecting to login...');
+                    router.replace('/login');
                 }
             } catch (err) {
                 console.error('Callback error:', err);
-                router.push('/login?error=unknown');
+                setError('Error de autenticación');
+                setTimeout(() => router.push('/login'), 3000);
             }
         };
 
-        handleCallback();
+        // Small delay to ensure Supabase has processed any hash fragments
+        const timer = setTimeout(handleCallback, 100);
+        return () => clearTimeout(timer);
     }, [router]);
+
+    if (error) {
+        return (
+            <main className="min-h-screen bg-cream-300 flex items-center justify-center">
+                <div className="text-center p-8 bg-white rounded-2xl shadow-lg">
+                    <p className="text-red-600 mb-4">{error}</p>
+                    <p className="text-charcoal-500">Redirigiendo al login...</p>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-cream-300 flex items-center justify-center">
