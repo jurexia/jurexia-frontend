@@ -68,10 +68,11 @@ export default function AuthCallbackPage() {
                         setTimeout(() => router.push('/login'), 3000);
                     }, 10000);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Callback error:', err);
-                setError('Error inesperado durante autenticación');
-                setTimeout(() => router.push('/login'), 3000);
+                const errorMessage = err?.message || err?.toString() || 'Error desconocido';
+                setError(`Error inesperado: ${errorMessage}`);
+                setTimeout(() => router.push('/login'), 5000);
             }
         };
 
