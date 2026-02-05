@@ -1,6 +1,7 @@
 import Navbar from '@/components/Navbar';
 import ChatInput from '@/components/ChatInput';
 import Link from 'next/link';
+import { HeroCTA } from '@/components/HeroCTA';
 
 export default function HomePage() {
     return (
@@ -39,43 +40,9 @@ export default function HomePage() {
                     </p>
                 </div>
 
-                {/* Chat Input Demo - Harvey Style */}
+                {/* Chat Input Demo - Harvey Style (Conditional for auth) */}
                 <div className="max-w-3xl mx-auto mt-8">
-                    <Link href="/login">
-                        <div className="chat-input-container p-6 cursor-pointer hover:shadow-lg transition-shadow">
-                            {/* Sample prompt preview */}
-                            <div className="flex items-start gap-3 mb-4">
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-lg">
-                                    <span className="text-red-500">📄</span>
-                                    <span className="text-sm text-charcoal-700">Demanda.pdf</span>
-                                    <span className="text-xs text-gray-400">2.4 MB</span>
-                                </div>
-                            </div>
-
-                            <p className="text-charcoal-600 text-base leading-relaxed">
-                                Analiza esta demanda de amparo indirecto y encuentra la jurisprudencia
-                                aplicable de la Suprema Corte...
-                            </p>
-
-                            {/* Action buttons */}
-                            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-                                <div className="flex items-center gap-3 text-sm text-gray-500">
-                                    <span className="flex items-center gap-1.5">
-                                        <span>📎</span> Subir documento
-                                    </span>
-                                    <span className="flex items-center gap-1.5 text-blue-600 font-medium">
-                                        <span>🔍</span> Buscar
-                                    </span>
-                                </div>
-                                <div className="w-10 h-10 bg-charcoal-900 rounded-full flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </Link>
-
+                    <HeroCTA />
                 </div>
             </section>
 
