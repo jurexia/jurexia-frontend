@@ -127,9 +127,8 @@ export default function PreciosPage() {
                             features={[
                                 "Todo lo del Plan Pro incluido",
                                 "Consultas ilimitadas",
-                                "Consulta personalizada con equipo legal de Iurexia",
-                                "Contrato de prestación de servicios profesionales",
-                                "Asesoría legal especializada",
+                                "Consulta personalizada con equipo legal de Iurexia (vía correo)",
+                                "Asesoría legal sobre estrategia (un abogado te contestará a la brevedad)",
                                 "Soporte VIP dedicado"
                             ]}
                             buttonText="Elegir Platinum"
@@ -150,7 +149,7 @@ export default function PreciosPage() {
                             features={[
                                 "Todo lo del Plan Platinum incluido",
                                 "Consultas ilimitadas todo el año",
-                                "Asesoría legal personalizada continua",
+                                "Asesoría legal personalizada continua (vía correo)",
                                 "Ahorro de $4,810 MXN al año",
                                 "Precio fijo garantizado",
                                 "Soporte VIP dedicado"
@@ -197,8 +196,8 @@ export default function PreciosPage() {
                                 <ComparisonRow feature="Auditoría de demandas" free="—" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Sugerencias con fundamento" free="—" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Soporte prioritario" free="—" pro="✓" proAnual="✓" platinum="VIP" />
-                                <ComparisonRow feature="Consulta con equipo legal" free="—" pro="—" proAnual="—" platinum="✓" />
-                                <ComparisonRow feature="Contrato de servicios profesionales" free="—" pro="—" proAnual="—" platinum="✓" />
+                                <ComparisonRow feature="Consulta con equipo legal (vía correo)" free="—" pro="—" proAnual="—" platinum="✓" />
+                                <ComparisonRow feature="Asesoría legal sobre estrategia" free="—" pro="—" proAnual="—" platinum="✓" />
                             </tbody>
                         </table>
                     </div>
@@ -221,7 +220,7 @@ export default function PreciosPage() {
                         />
                         <FAQItem
                             question="¿Qué incluye el Plan Platinum?"
-                            answer="El Plan Platinum incluye todo lo del Plan Pro más consultas ilimitadas y asesoría personalizada con el equipo legal de Iurexia. Esto se formaliza mediante un contrato de prestación de servicios profesionales para garantizar una atención especializada y dedicada."
+                            answer="El Plan Platinum incluye todo lo del Plan Pro más consultas ilimitadas y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal."
                         />
                         <FAQItem
                             question="¿Puedo cambiar de plan en cualquier momento?"
