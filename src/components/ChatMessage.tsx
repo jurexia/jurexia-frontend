@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useCallback } from 'react';
+import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
 import { User, Scale, FileText, FileDown, Printer } from 'lucide-react';
 import type { Message } from '@/lib/api';
 
@@ -104,6 +104,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // (These are redundant - the user already knows this is a legal response from Iurexia)
         content = content.replace(/^---\s*$/gm, ''); // Remove standalone dashes
         content = content.replace(/##\s*⚖️?\s*(Análisis|Respuesta) Legal/gi, '');
+
+        // Clean up leading whitespace/newlines left after removing headers
+        content = content.replace(/^\s+/, '').trim();
 
         return { processedContent: content, docIdMap };
     }, [message.content, isUser]);
@@ -725,7 +728,24 @@ function formatMarkdown(text: string): string {
 }
 
 // Typing indicator component with informative message
+// Typing indicator component with animated progressive text
 export function TypingIndicator() {
+    const [textIndex, setTextIndex] = useState(0);
+    const loadingTexts = [
+        "Analizando tu consulta...",
+        "Buscando en nuestra base de datos jurídica...",
+        "Consultando legislación federal y estatal...",
+        "Revisando jurisprudencia relevante...",
+        "Preparando respuesta legal..."
+    ];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTextIndex((prev) => (prev + 1) % loadingTexts.length);
+        }, 2500);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div className="flex gap-4 justify-start animate-slide-up">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-charcoal-900 flex items-center justify-center">
@@ -738,13 +758,13 @@ export function TypingIndicator() {
                         <div className="w-5 h-5 border-2 border-accent-brown/20 rounded-full"></div>
                         <div className="w-5 h-5 border-2 border-accent-brown border-t-transparent rounded-full absolute top-0 left-0 animate-spin"></div>
                     </div>
-                    {/* Message */}
-                    <div className="flex flex-col">
-                        <span className="text-charcoal-700 font-medium text-sm">
-                            Analizando tu consulta...
+                    {/* Animated Message */}
+                    <div className="flex flex-col min-w-[280px]">
+                        <span className="text-charcoal-700 font-medium text-sm transition-opacity duration-300">
+                            {loadingTexts[textIndex]}
                         </span>
-                        <span className="text-charcoal-500 text-xs">
-                            Consultando base de datos legal
+                        <span className="text-charcoal-500 text-xs mt-0.5">
+                            Esto puede tomar unos segundos
                         </span>
                     </div>
                 </div>
