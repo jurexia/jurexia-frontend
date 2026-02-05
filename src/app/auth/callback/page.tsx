@@ -10,6 +10,8 @@ export default function AuthCallbackPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        let isMounted = true;
+
         const handleCallback = async () => {
             try {
                 // Check for error in URL
@@ -18,33 +20,35 @@ export default function AuthCallbackPage() {
                 const errorDesc = params.get('error_description');
 
                 if (errorParam) {
-                    setError(errorDesc || errorParam);
-                    setTimeout(() => router.push('/login'), 3000);
+                    if (isMounted) {
+                        setError(errorDesc || errorParam);
+                        setTimeout(() => router.push('/login'), 3000);
+                    }
                     return;
                 }
 
                 // PKCE Flow: Supabase automatically handles the hash fragment
-                // The URL contains #access_token=... which Supabase reads and stores
-
-                setStatus('Verificando sesión...');
+                if (isMounted) setStatus('Verificando sesión...');
 
                 // Wait a moment for Supabase to process the hash
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                if (!isMounted) return;
 
                 // Now check if we have a session
                 const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
+                if (!isMounted) return;
+
                 if (sessionError) {
                     console.error('Session error:', sessionError);
-                    setError('Error al obtener sesión');
+                    setError('Error al obtener sesión: ' + sessionError.message);
                     setTimeout(() => router.push('/login'), 3000);
                     return;
                 }
 
                 if (session) {
                     setStatus('¡Autenticación exitosa! Redirigiendo...');
-                    // Use router.push for client-side navigation
-                    // This preserves the auth state
                     router.push('/chat');
                 } else {
                     // No session found - might need to wait for onAuthStateChange
@@ -53,6 +57,7 @@ export default function AuthCallbackPage() {
                     // Set up a listener for auth state change
                     const { data: { subscription } } = supabase.auth.onAuthStateChange(
                         (event, newSession) => {
+                            if (!isMounted) return;
                             if (event === 'SIGNED_IN' && newSession) {
                                 setStatus('¡Sesión confirmada! Redirigiendo...');
                                 router.push('/chat');
@@ -63,12 +68,19 @@ export default function AuthCallbackPage() {
 
                     // Timeout after 10 seconds
                     setTimeout(() => {
+                        if (!isMounted) return;
                         subscription.unsubscribe();
                         setError('Tiempo de espera agotado. Por favor intenta de nuevo.');
                         setTimeout(() => router.push('/login'), 3000);
                     }, 10000);
                 }
             } catch (err: any) {
+                if (!isMounted) return;
+                // Ignore abort errors (from React Strict Mode double-execution)
+                if (err?.message?.includes('abort') || err?.name === 'AbortError') {
+                    console.log('Request aborted (likely React Strict Mode), ignoring...');
+                    return;
+                }
                 console.error('Callback error:', err);
                 const errorMessage = err?.message || err?.toString() || 'Error desconocido';
                 setError(`Error inesperado: ${errorMessage}`);
@@ -77,6 +89,10 @@ export default function AuthCallbackPage() {
         };
 
         handleCallback();
+
+        return () => {
+            isMounted = false;
+        };
     }, [router]);
 
     if (error) {
