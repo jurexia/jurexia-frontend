@@ -126,9 +126,9 @@ export default function HomePage() {
                             <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
                         </div>
                         <div className="flex gap-8 text-sm text-charcoal-600">
-                            <Link href="#" className="hover:text-charcoal-900 transition-colors">Privacidad</Link>
-                            <Link href="#" className="hover:text-charcoal-900 transition-colors">Términos</Link>
-                            <Link href="#" className="hover:text-charcoal-900 transition-colors">Contacto</Link>
+                            <Link href="/privacidad" className="hover:text-charcoal-900 transition-colors">Privacidad</Link>
+                            <Link href="/terminos" className="hover:text-charcoal-900 transition-colors">Términos</Link>
+                            <a href="mailto:contacto@iurexiagtp.com" className="hover:text-charcoal-900 transition-colors">Contacto</a>
                         </div>
                         <p className="text-sm text-charcoal-500">
                             © 2026 Iurexia. Todos los derechos reservados.
