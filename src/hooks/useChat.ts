@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Message, streamChat, SearchResult } from '@/lib/api';
+import { getSession } from '@/lib/supabase';
 
 interface UseChatOptions {
     estado?: string;
@@ -39,6 +40,10 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setMessages([...updatedMessages, assistantMessage]);
 
         try {
+            // Get Supabase session for auth token
+            const session = await getSession();
+            const accessToken = session?.access_token;
+
             let fullResponse = '';
             let reasoningBuffer = '';  // Accumulates all reasoning
             let finalContent = '';      // Accumulates final analysis
@@ -55,7 +60,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             for await (const chunk of streamChat(
                 updatedMessages,
                 options.estado,
-                options.topK
+                options.topK,
+                accessToken  // Pass auth token for backend validation
             )) {
                 fullResponse += chunk;
 

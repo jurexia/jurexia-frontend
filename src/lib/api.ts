@@ -76,15 +76,26 @@ export async function search(
 export async function* streamChat(
     messages: Message[],
     estado?: string,
-    topK: number = 4  // Reduced to stay within 8k token limit
+    topK: number = 4,  // Reduced to stay within 8k token limit
+    accessToken?: string  // Optional Supabase access token for auth
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);
 
+    // Build headers with optional auth
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+
+    if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
     try {
         const response = await fetch(`${API_URL}/chat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
+            credentials: 'include',  // Enable cookies for CORS with credentials
             body: JSON.stringify({ messages, estado, top_k: topK }),
         });
 

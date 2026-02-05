@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
+import { WakeUpProvider } from '@/components/WakeUpProvider'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://iurexia.com'),
@@ -58,7 +59,9 @@ export default function RootLayout({
             </head>
             <body className="min-h-screen bg-cream-300">
                 <AuthProvider>
-                    {children}
+                    <WakeUpProvider>
+                        {children}
+                    </WakeUpProvider>
                 </AuthProvider>
             </body>
         </html>

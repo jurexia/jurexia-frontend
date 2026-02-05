@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { MessageSquare, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface HeroCTAProps {
     className?: string;
@@ -11,9 +12,20 @@ interface HeroCTAProps {
 // Conditional CTA that shows "Ir al chat" for logged-in users, login prompt for guests
 export function HeroCTA({ className = '' }: HeroCTAProps) {
     const { isAuthenticated, loading } = useAuth();
+    const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-    // While loading, show a neutral state
-    if (loading) {
+    // Fallback: if loading takes more than 2s, show unauthenticated state
+    useEffect(() => {
+        if (loading) {
+            const timer = setTimeout(() => setLoadingTimeout(true), 2000);
+            return () => clearTimeout(timer);
+        } else {
+            setLoadingTimeout(false);
+        }
+    }, [loading]);
+
+    // While loading (and not timed out), show a neutral state
+    if (loading && !loadingTimeout) {
         return (
             <div className={`chat-input-container p-6 ${className}`}>
                 <div className="animate-pulse">
