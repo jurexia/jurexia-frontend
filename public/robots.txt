@@ -1,0 +1,9 @@
+# Iurexia - Bloqueo temporal de indexación
+# Remover este bloqueo cuando estés listo para aparecer en Google
+
+User-agent: *
+Disallow: /
+
+# Nota: Cuando quieras que Google te indexe, cambia a:
+# User-agent: *
+# Allow: /
