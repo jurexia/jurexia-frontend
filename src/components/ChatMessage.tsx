@@ -725,18 +725,29 @@ function formatMarkdown(text: string): string {
         });
 }
 
-// Typing indicator component
+// Typing indicator component with informative message
 export function TypingIndicator() {
     return (
         <div className="flex gap-4 justify-start animate-slide-up">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-charcoal-900 flex items-center justify-center">
                 <Scale className="w-4 h-4 text-white" />
             </div>
-            <div className="message-assistant px-4 py-3">
-                <div className="typing-indicator flex gap-1">
-                    <span className="w-2 h-2 bg-charcoal-400 rounded-full"></span>
-                    <span className="w-2 h-2 bg-charcoal-400 rounded-full"></span>
-                    <span className="w-2 h-2 bg-charcoal-400 rounded-full"></span>
+            <div className="message-assistant px-4 py-4">
+                <div className="flex items-center gap-3">
+                    {/* Spinner */}
+                    <div className="relative">
+                        <div className="w-5 h-5 border-2 border-accent-brown/20 rounded-full"></div>
+                        <div className="w-5 h-5 border-2 border-accent-brown border-t-transparent rounded-full absolute top-0 left-0 animate-spin"></div>
+                    </div>
+                    {/* Message */}
+                    <div className="flex flex-col">
+                        <span className="text-charcoal-700 font-medium text-sm">
+                            Analizando tu consulta...
+                        </span>
+                        <span className="text-charcoal-500 text-xs">
+                            Consultando base de datos legal
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
