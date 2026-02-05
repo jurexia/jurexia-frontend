@@ -209,7 +209,7 @@ export default function TerminosPage() {
                             </h2>
                             <p className="text-charcoal-700 leading-relaxed">
                                 Para cualquier duda o aclaración sobre estos Términos y Condiciones, puede
-                                contactarnos a través de: <a href="mailto:legal@iurexiagtp.com" className="text-accent-brown hover:underline">legal@iurexiagtp.com</a>
+                                contactarnos a través de: <a href="mailto:soporte@iurexia.com" className="text-accent-brown hover:underline">soporte@iurexia.com</a>
                             </p>
                         </section>
 

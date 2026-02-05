@@ -128,7 +128,7 @@ export default function HomePage() {
                         <div className="flex gap-8 text-sm text-charcoal-600">
                             <Link href="/privacidad" className="hover:text-charcoal-900 transition-colors">Privacidad</Link>
                             <Link href="/terminos" className="hover:text-charcoal-900 transition-colors">Términos</Link>
-                            <a href="mailto:contacto@iurexiagtp.com" className="hover:text-charcoal-900 transition-colors">Contacto</a>
+                            <a href="mailto:soporte@iurexia.com" className="hover:text-charcoal-900 transition-colors">Contacto</a>
                         </div>
                         <p className="text-sm text-charcoal-500">
                             © 2026 Iurexia. Todos los derechos reservados.

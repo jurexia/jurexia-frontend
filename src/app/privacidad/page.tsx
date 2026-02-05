@@ -60,8 +60,8 @@ export default function PrivacidadPage() {
                             </p>
                             <p className="text-charcoal-700 leading-relaxed">
                                 <strong>Contacto para asuntos de privacidad:</strong>{' '}
-                                <a href="mailto:privacidad@iurexiagtp.com" className="text-accent-brown hover:underline">
-                                    privacidad@iurexiagtp.com
+                                <a href="mailto:soporte@iurexia.com" className="text-accent-brown hover:underline">
+                                    soporte@iurexia.com
                                 </a>
                             </p>
                         </section>
@@ -212,8 +212,8 @@ export default function PrivacidadPage() {
 
                             <p className="text-charcoal-700 leading-relaxed">
                                 Para ejercer estos derechos, envíe una solicitud a{' '}
-                                <a href="mailto:privacidad@iurexiagtp.com" className="text-accent-brown hover:underline">
-                                    privacidad@iurexiagtp.com
+                                <a href="mailto:soporte@iurexia.com" className="text-accent-brown hover:underline">
+                                    soporte@iurexia.com
                                 </a>{' '}
                                 con los siguientes datos: nombre completo, correo electrónico registrado,
                                 descripción clara del derecho que desea ejercer, y documentos que acrediten
