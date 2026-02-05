@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import {
     MessageSquarePlus,
     Trash2,
@@ -43,11 +45,33 @@ export default function ChatSidebar({
 
     const SidebarContent = () => (
         <div className="flex flex-col h-full">
-            {/* Header */}
+            {/* Home Button with Logo */}
             <div className="p-4 border-b border-cream-300">
-                <div className="flex items-center justify-between">
+                <Link
+                    href="/"
+                    className={`flex items-center gap-2 p-2 -m-2 hover:bg-cream-300 rounded-lg transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+                    title="Ir al inicio"
+                >
+                    <Image
+                        src="/logo-iurexia.png"
+                        alt="Iurexia"
+                        width={32}
+                        height={32}
+                        className="flex-shrink-0"
+                    />
                     {!isCollapsed && (
                         <span className="font-serif text-lg font-semibold text-charcoal-900">
+                            Iurex<span className="text-accent-gold">ia</span>
+                        </span>
+                    )}
+                </Link>
+            </div>
+
+            {/* Header with Historial title */}
+            <div className="px-4 pt-3 pb-2">
+                <div className="flex items-center justify-between">
+                    {!isCollapsed && (
+                        <span className="text-xs font-medium text-charcoal-500 uppercase tracking-wide">
                             Historial
                         </span>
                     )}

@@ -100,11 +100,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Remove any remaining raw "Doc ID:" text that wasn't properly formatted
         content = content.replace(/Doc ID:\s*[a-f0-9-]+/gi, '');
 
-        // Replace "## ⚖️ Análisis Legal" or "## ⚖️ Respuesta Legal" with Iurexia® branded header
-        content = content.replace(
-            /##\s*⚖️?\s*(Análisis|Respuesta) Legal/gi,
-            (_, type) => `<div class="Iurexia-analysis-header"><span class="Iurexia-brand">Iurex<span class="Iurexia-accent">ia</span><sup>®</sup></span> <span class="Iurexia-title">${type} Legal</span></div>`
-        );
+        // Remove any "## ⚖️ Análisis Legal" or "## ⚖️ Respuesta Legal" headers completely
+        // (These are redundant - the user already knows this is a legal response from Iurexia)
+        content = content.replace(/^---\s*$/gm, ''); // Remove standalone dashes
+        content = content.replace(/##\s*⚖️?\s*(Análisis|Respuesta) Legal/gi, '');
 
         return { processedContent: content, docIdMap };
     }, [message.content, isUser]);

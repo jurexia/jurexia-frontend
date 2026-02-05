@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, Trash2, MapPin, ChevronDown, Check, Scale, Building2 } from 'lucide-react';
+import { Trash2, MapPin, ChevronDown, Check, Scale, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
@@ -261,21 +261,9 @@ export default function ChatPage() {
 
             {/* Main Content - offset for fixed sidebar */}
             <div className="flex flex-col h-screen md:ml-72">
-                {/* Header */}
+                {/* Header - Minimal, only shows counter and user */}
                 <header className="fixed top-0 left-0 right-0 md:left-72 z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 transition-all duration-300">
-                    <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Link
-                                href="/"
-                                className="p-2 -ml-2 hover:bg-black/5 rounded-lg transition-colors"
-                                title="Volver al inicio"
-                            >
-                                <ArrowLeft className="w-5 h-5 text-charcoal-700" />
-                            </Link>
-                            <h1 className="font-serif text-lg font-medium text-charcoal-900">
-                                Nueva Consulta
-                            </h1>
-                        </div>
+                    <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-end">
 
                         <div className="flex items-center gap-2">
 
