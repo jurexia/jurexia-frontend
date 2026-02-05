@@ -3,7 +3,7 @@ import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://iurexiagtp.com'),
+    metadataBase: new URL('https://iurexia.com'),
     title: 'Iurexia - IA para el Derecho Mexicano',
     description: 'Plataforma de inteligencia artificial diseñada para profesionales del derecho en México. Investigación jurídica, análisis de documentos y consultoría legal avanzada.',
     keywords: ['derecho mexicano', 'inteligencia artificial', 'legal tech', 'jurisprudencia', 'abogados'],
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Iurexia - IA para el Derecho Mexicano',
         description: 'Avanza tu práctica jurídica con IA especializada en Derecho Mexicano',
-        url: 'https://iurexiagtp.com',
+        url: 'https://iurexia.com',
         siteName: 'Iurexia',
         locale: 'es_MX',
         type: 'website',
