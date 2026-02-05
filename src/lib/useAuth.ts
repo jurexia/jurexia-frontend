@@ -27,20 +27,43 @@ export function useAuth() {
         const initAuth = async () => {
             try {
                 // Get current session from Supabase (it handles localStorage)
-                const { data: { session } } = await supabase.auth.getSession();
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+                if (sessionError) {
+                    console.error('Session error:', sessionError);
+                }
 
                 if (!isMounted) return;
 
                 if (session?.user) {
-                    // Get user profile
-                    const profile = await getUserProfile(session.user.id);
-                    if (isMounted) {
-                        setAuthState({
-                            user: session.user,
-                            profile,
-                            loading: false,
-                            isAuthenticated: true,
-                        });
+                    // Get user profile with timeout
+                    try {
+                        const profilePromise = getUserProfile(session.user.id);
+                        const timeoutPromise = new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+                        );
+
+                        const profile = await Promise.race([profilePromise, timeoutPromise]) as any;
+
+                        if (isMounted) {
+                            setAuthState({
+                                user: session.user,
+                                profile,
+                                loading: false,
+                                isAuthenticated: true,
+                            });
+                        }
+                    } catch (profileError) {
+                        console.warn('Profile fetch failed, continuing without profile:', profileError);
+                        // Still authenticate even if profile fails
+                        if (isMounted) {
+                            setAuthState({
+                                user: session.user,
+                                profile: null,
+                                loading: false,
+                                isAuthenticated: true,
+                            });
+                        }
                     }
                 } else {
                     setAuthState({
