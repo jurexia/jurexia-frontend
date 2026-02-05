@@ -10,6 +10,7 @@ import ChatSidebar from '@/components/ChatSidebar';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
+import { incrementQueryCount, checkCanQuery } from '@/lib/supabase';
 import {
     Conversation,
     getConversations,
@@ -78,8 +79,22 @@ export default function ChatPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
 
+    // Query limits state
+    const [queriesUsed, setQueriesUsed] = useState<number>(0);
+    const [queriesLimit, setQueriesLimit] = useState<number>(5);
+    const [showLimitModal, setShowLimitModal] = useState(false);
+    const isUnlimited = profile?.subscription_type === 'premium' || profile?.subscription_type === 'enterprise';
+
     // Track if we should scroll - only scroll for new messages, not conversation switches
     const prevMessagesLengthRef = useRef(messages.length);
+
+    // Sync query counts from profile
+    useEffect(() => {
+        if (profile) {
+            setQueriesUsed(profile.queries_used || 0);
+            setQueriesLimit(profile.queries_limit || 5);
+        }
+    }, [profile]);
 
     // Load conversations on mount
     useEffect(() => {
@@ -189,8 +204,32 @@ export default function ChatPage() {
         setSelectedDocId(docId);
     }, []);
 
+    // Wrapped send function with limit check and increment
+    const handleSendMessage = useCallback(async (content: string) => {
+        if (!user) return;
+
+        // Check limit before sending (skip for unlimited plans)
+        if (!isUnlimited) {
+            const { canQuery, remaining } = await checkCanQuery(user.id);
+            if (!canQuery) {
+                setShowLimitModal(true);
+                return;
+            }
+        }
+
+        // Send the message
+        await sendMessage(content);
+
+        // Increment counter after successful send (skip for unlimited)
+        if (!isUnlimited && user) {
+            await incrementQueryCount(user.id);
+            setQueriesUsed(prev => prev + 1);
+        }
+    }, [user, isUnlimited, sendMessage]);
+
     const hasMessages = messages.length > 0;
     const selectedEstadoLabel = ESTADOS_MEXICO.find(e => e.value === selectedEstado)?.label || 'Seleccionar jurisdicción';
+    const queriesRemaining = isUnlimited ? -1 : Math.max(0, queriesLimit - queriesUsed);
 
     // Show loading while checking auth
     if (authLoading) {
@@ -249,6 +288,17 @@ export default function ChatPage() {
                                     <Trash2 className="w-5 h-5" />
                                 </button>
                             )}
+                            {/* Query Counter */}
+                            <div className="flex items-center gap-1 px-2 py-1 bg-cream-100 rounded-lg text-xs font-medium">
+                                <span className="text-charcoal-600">Consultas:</span>
+                                {isUnlimited ? (
+                                    <span className="text-accent-brown" title="Ilimitado">∞</span>
+                                ) : (
+                                    <span className={queriesRemaining <= 1 ? 'text-red-600' : 'text-accent-brown'}>
+                                        {queriesRemaining}/{queriesLimit}
+                                    </span>
+                                )}
+                            </div>
                             <UserAvatar />
                         </div>
                     </div>
@@ -432,7 +482,7 @@ export default function ChatPage() {
                 {/* Fixed Input at Bottom */}
                 <div className="fixed bottom-0 left-0 right-0 md:left-72 bg-gradient-to-t from-cream-300 via-cream-300 to-transparent pt-8 pb-6 px-4 transition-all duration-300">
                     <ChatInput
-                        onSubmit={sendMessage}
+                        onSubmit={handleSendMessage}
                         isLoading={isLoading}
                         placeholder={hasMessages ? "Escribe tu siguiente pregunta..." : "Escribe tu consulta legal..."}
                         estado={selectedEstado || undefined}
@@ -445,6 +495,40 @@ export default function ChatPage() {
                     onClose={() => setSelectedDocId(null)}
                 />
             </div>
+
+            {/* Limit Reached Modal */}
+            {showLimitModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md mx-4 p-6">
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Scale className="w-8 h-8 text-red-600" />
+                            </div>
+                            <h3 className="text-xl font-serif font-semibold text-charcoal-900 mb-2">
+                                Límite de consultas alcanzado
+                            </h3>
+                            <p className="text-charcoal-600 mb-6">
+                                Has utilizado todas tus consultas gratuitas este mes.
+                                Actualiza tu plan para continuar usando Iurexia.
+                            </p>
+                            <div className="flex gap-3 justify-center">
+                                <button
+                                    onClick={() => setShowLimitModal(false)}
+                                    className="px-4 py-2 rounded-lg border border-charcoal-300 text-charcoal-700 hover:bg-charcoal-50 transition-colors"
+                                >
+                                    Cerrar
+                                </button>
+                                <Link
+                                    href="/precios"
+                                    className="px-4 py-2 rounded-lg bg-accent-brown text-white hover:bg-accent-brown/90 transition-colors"
+                                >
+                                    Ver planes
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
