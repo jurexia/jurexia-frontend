@@ -95,7 +95,6 @@ export async function* streamChat(
         const response = await fetch(`${API_URL}/chat`, {
             method: 'POST',
             headers,
-            credentials: 'include',  // Enable cookies for CORS with credentials
             body: JSON.stringify({ messages, estado, top_k: topK }),
         });
 
