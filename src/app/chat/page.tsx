@@ -264,6 +264,9 @@ export default function ChatPage() {
         // Save user message to database
         if (convId) {
             await addMessageToConversation(convId, { role: 'user', content });
+            // Refresh conversations to update message count
+            const updatedConvs = await getConversations();
+            setConversations(updatedConvs);
         }
 
         // Send the message (response will be saved by useEffect when isLoading changes)
