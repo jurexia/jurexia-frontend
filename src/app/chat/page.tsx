@@ -486,7 +486,7 @@ export default function ChatPage() {
                         </div>
                     ) : (
                         // Messages Container
-                        <div className="max-w-3xl mx-auto px-4 py-6 pb-24 space-y-6">
+                        <div className="max-w-3xl mx-auto px-4 py-6 pb-48 space-y-6">
                             {/* Active jurisdiction indicator */}
                             <div className="flex justify-center">
                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-cream-200 rounded-full text-xs text-charcoal-600">
