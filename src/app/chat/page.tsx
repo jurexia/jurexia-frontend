@@ -1,12 +1,13 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, ChevronDown, Check, Scale, Building2 } from 'lucide-react';
+import { Trash2, MapPin, ChevronDown, Check, Scale, Building2, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
 import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
+import PromptGuide from '@/components/PromptGuide';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
@@ -66,6 +67,7 @@ export default function ChatPage() {
 
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showEstadoSelector, setShowEstadoSelector] = useState(false);
+    const [showPromptGuide, setShowPromptGuide] = useState(false);
 
     // Conversation history state
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -396,7 +398,7 @@ export default function ChatPage() {
                 )}
 
                 {/* Main Content Area - Scrollable */}
-                <main className="flex-1 pt-14 pb-40 overflow-y-auto">
+                <main className="flex-1 pt-14 pb-32 overflow-y-auto">
                     {!hasMessages ? (
                         // Empty State - Welcome Screen
                         <div className="h-full flex flex-col items-center justify-center px-4">
@@ -435,7 +437,7 @@ export default function ChatPage() {
                                 </div>
 
                                 {/* Jurisdiction Info */}
-                                <div className="mb-8 p-4 bg-cream-200 rounded-xl inline-block">
+                                <div className="mb-6 p-4 bg-cream-200 rounded-xl inline-block">
                                     <p className="text-sm text-charcoal-600 mb-2">
                                         <strong>Buscando en:</strong>
                                     </p>
@@ -452,28 +454,18 @@ export default function ChatPage() {
                                     </div>
                                 </div>
 
-                                {/* Specialized Suggestion chips */}
-                                <div className="flex flex-wrap justify-center gap-3">
-                                    <SuggestionChip
-                                        onClick={() => sendMessage("¿Qué jurisprudencia resuelve si procede el juicio de amparo indirecto contra la clausura de mi negocio?")}
+                                {/* Disclaimer with Prompt Guide Link */}
+                                <div className="max-w-md mx-auto text-center">
+                                    <p className="text-sm text-charcoal-500 mb-2">
+                                        Iurexia asegura no incurrir en alucinaciones, pero la calidad de los resultados depende directamente de la calidad de tu pregunta.
+                                    </p>
+                                    <button
+                                        onClick={() => setShowPromptGuide(true)}
+                                        className="inline-flex items-center gap-1.5 text-sm text-accent-brown hover:text-accent-gold transition-colors font-medium"
                                     >
-                                        ⚖️ Amparo vs clausura de negocio
-                                    </SuggestionChip>
-                                    <SuggestionChip
-                                        onClick={() => sendMessage("¿Cuáles son los requisitos de procedencia de una demanda de amparo para evitar el desechamiento o sobreseimiento?")}
-                                    >
-                                        📋 Requisitos para no desechen mi amparo
-                                    </SuggestionChip>
-                                    <SuggestionChip
-                                        onClick={() => sendMessage("¿Qué criterios jurisprudenciales existen sobre la suspensión del acto reclamado en amparo?")}
-                                    >
-                                        ⏸️ Suspensión del acto en amparo
-                                    </SuggestionChip>
-                                    <SuggestionChip
-                                        onClick={() => sendMessage("¿Cuál es el plazo para interponer amparo directo y cómo se computan los días?")}
-                                    >
-                                        ⏰ Plazos en amparo directo
-                                    </SuggestionChip>
+                                        <HelpCircle className="w-4 h-4" />
+                                        ¿Cómo hacer mejores consultas?
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -529,6 +521,12 @@ export default function ChatPage() {
                     docId={selectedDocId}
                     onClose={() => setSelectedDocId(null)}
                 />
+
+                {/* Prompt Guide Modal */}
+                <PromptGuide
+                    isOpen={showPromptGuide}
+                    onClose={() => setShowPromptGuide(false)}
+                />
             </div>
 
             {/* Limit Reached Modal */}
@@ -565,22 +563,5 @@ export default function ChatPage() {
                 </div>
             )}
         </div>
-    );
-}
-
-function SuggestionChip({
-    children,
-    onClick
-}: {
-    children: React.ReactNode;
-    onClick: () => void;
-}) {
-    return (
-        <button
-            onClick={onClick}
-            className="chip hover:bg-charcoal-900 hover:text-white hover:border-charcoal-900 transition-all text-sm"
-        >
-            {children}
-        </button>
     );
 }
