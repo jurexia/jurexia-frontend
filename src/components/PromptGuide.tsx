@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Lightbulb, MapPin, FileText, MessageSquare, Scale } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Lightbulb, Scale, Briefcase, Users } from 'lucide-react';
 
 interface PromptGuideProps {
     isOpen: boolean;
@@ -10,40 +10,49 @@ interface PromptGuideProps {
 
 const PROMPT_TIPS = [
     {
-        icon: MapPin,
-        title: "Sé específico con la jurisdicción",
-        example: {
-            bad: "¿Cuál es la pena por robo?",
-            good: "¿Cuál es la pena por robo con violencia en Jalisco?"
-        },
-        tip: "Selecciona tu estado en el menú de jurisdicción para obtener leyes estatales precisas."
-    },
-    {
-        icon: FileText,
-        title: "Menciona el tipo de fuente que buscas",
-        example: {
-            bad: "¿Qué dice sobre el amparo?",
-            good: "¿Qué jurisprudencia existe sobre la suspensión provisional en amparo?"
-        },
-        tip: "Especifica si necesitas artículos de ley, tesis, jurisprudencia o criterios de tribunales."
-    },
-    {
-        icon: MessageSquare,
-        title: "Incluye el contexto de tu caso",
-        example: {
-            bad: "¿Procede el amparo?",
-            good: "¿Procede el amparo contra una multa de tránsito impuesta sin audiencia previa?"
-        },
-        tip: "Describe brevemente los hechos relevantes para respuestas más precisas."
-    },
-    {
         icon: Scale,
-        title: "Usa términos técnicos cuando los conozcas",
-        example: {
-            bad: "¿Cómo hago que paren el acto?",
-            good: "¿Cómo solicito la suspensión provisional del acto reclamado?"
-        },
-        tip: "Los términos jurídicos precisos mejoran significativamente la búsqueda en nuestra base documental."
+        category: "Para profesionales",
+        title: "Pregunta sobre problemas jurídicos complejos",
+        description: "Iurexia contiene criterios jurisprudenciales que resuelven controversias profundas del derecho mexicano.",
+        examples: [
+            "¿Qué jurisprudencia define los elementos del delito de abuso de confianza equiparado?",
+            "¿Existe tesis sobre la procedencia del amparo contra resoluciones del IMSS que niegan pensión?",
+            "¿Cuáles son los criterios para determinar la competencia en conflictos de arrendamiento inmobiliario?"
+        ]
+    },
+    {
+        icon: Briefcase,
+        category: "Para litigantes",
+        title: "Consulta estrategias procesales",
+        description: "Encuentra criterios sobre procedimientos, plazos, excepciones y recursos que fortalezcan tu estrategia.",
+        examples: [
+            "¿Qué dice la jurisprudencia sobre la suplencia de la queja deficiente en amparo laboral?",
+            "¿Cuándo procede la suspensión provisional contra el cierre de un establecimiento mercantil?",
+            "¿Qué criterios existen sobre la caducidad de la instancia en juicios civiles?"
+        ]
+    },
+    {
+        icon: Users,
+        category: "Para ciudadanos",
+        title: "Consultas claras y específicas",
+        description: "No necesitas ser abogado. Describe tu situación con detalle y Iurexia encontrará la información relevante.",
+        examples: [
+            "En Guanajuato, ¿qué requisitos necesito para tramitar un divorcio y cuál es el procedimiento?",
+            "¿En qué delito incurre una persona que, abusando de mi confianza, robó dinero de mi negocio?",
+            "¿Qué derechos tengo si mi arrendador quiere desalojarme sin previo aviso en Jalisco?"
+        ]
+    },
+    {
+        icon: Lightbulb,
+        category: "Consejos generales",
+        title: "Maximiza la precisión de tus resultados",
+        description: "Pequeños ajustes en tu pregunta pueden mejorar significativamente la calidad de la respuesta.",
+        tips: [
+            "Menciona el estado si tu consulta involucra leyes estatales",
+            "Especifica si buscas leyes, jurisprudencia o ambas",
+            "Incluye hechos relevantes de tu caso para respuestas más precisas",
+            "Usa términos técnicos si los conoces (ej. 'suspensión provisional' vs 'que paren el acto')"
+        ]
     }
 ];
 
@@ -92,61 +101,81 @@ export default function PromptGuide({ isOpen, onClose }: PromptGuideProps) {
                     </div>
 
                     {/* Content */}
-                    <div className="p-6">
-                        {/* Slide Counter */}
-                        <div className="text-center mb-4">
-                            <span className="text-xs font-medium text-charcoal-500 bg-cream-200 px-3 py-1 rounded-full">
-                                {currentSlide + 1} de {PROMPT_TIPS.length}
+                    <div className="p-5">
+                        {/* Category & Counter */}
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-medium text-accent-brown bg-accent-brown/10 px-2.5 py-1 rounded-full">
+                                {currentTip.category}
+                            </span>
+                            <span className="text-xs text-charcoal-400">
+                                {currentSlide + 1} / {PROMPT_TIPS.length}
                             </span>
                         </div>
 
                         {/* Tip Content */}
-                        <div className="text-center mb-6">
-                            <div className="w-14 h-14 bg-accent-brown/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Icon className="w-7 h-7 text-accent-brown" />
+                        <div className="mb-4">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 bg-accent-brown/10 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <Icon className="w-5 h-5 text-accent-brown" />
+                                </div>
+                                <h3 className="font-serif text-lg font-semibold text-charcoal-900">
+                                    {currentTip.title}
+                                </h3>
                             </div>
-                            <h3 className="font-serif text-xl font-semibold text-charcoal-900 mb-4">
-                                {currentTip.title}
-                            </h3>
+                            <p className="text-sm text-charcoal-600 mb-4">
+                                {currentTip.description}
+                            </p>
                         </div>
 
-                        {/* Example Box */}
-                        <div className="bg-cream-200 rounded-xl p-4 mb-4 space-y-3">
-                            <div className="flex items-start gap-3">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold">✗</span>
-                                <p className="text-sm text-charcoal-600 italic">"{currentTip.example.bad}"</p>
-                            </div>
-                            <div className="flex items-start gap-3">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">✓</span>
-                                <p className="text-sm text-charcoal-800 font-medium">"{currentTip.example.good}"</p>
-                            </div>
+                        {/* Examples or Tips */}
+                        <div className="bg-cream-200 rounded-xl p-4 space-y-2.5 min-h-[140px]">
+                            {'examples' in currentTip ? (
+                                <>
+                                    <p className="text-xs font-medium text-charcoal-500 uppercase tracking-wide mb-2">
+                                        Ejemplos de consultas:
+                                    </p>
+                                    {currentTip.examples.map((example, idx) => (
+                                        <div key={idx} className="flex items-start gap-2">
+                                            <span className="text-accent-gold mt-0.5">→</span>
+                                            <p className="text-sm text-charcoal-700 italic">"{example}"</p>
+                                        </div>
+                                    ))}
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-xs font-medium text-charcoal-500 uppercase tracking-wide mb-2">
+                                        Consejos:
+                                    </p>
+                                    {currentTip.tips?.map((tip, idx) => (
+                                        <div key={idx} className="flex items-start gap-2">
+                                            <span className="text-green-600 font-bold">✓</span>
+                                            <p className="text-sm text-charcoal-700">{tip}</p>
+                                        </div>
+                                    ))}
+                                </>
+                            )}
                         </div>
-
-                        {/* Tip */}
-                        <p className="text-sm text-charcoal-600 text-center">
-                            💡 {currentTip.tip}
-                        </p>
                     </div>
 
                     {/* Navigation */}
-                    <div className="px-6 pb-6">
+                    <div className="px-5 pb-3">
                         <div className="flex items-center justify-between">
                             <button
                                 onClick={goToPrevious}
                                 className="p-2 rounded-full hover:bg-cream-200 transition-colors text-charcoal-600"
                             >
-                                <ChevronLeft className="w-6 h-6" />
+                                <ChevronLeft className="w-5 h-5" />
                             </button>
 
                             {/* Dots */}
-                            <div className="flex gap-2">
+                            <div className="flex gap-1.5">
                                 {PROMPT_TIPS.map((_, index) => (
                                     <button
                                         key={index}
                                         onClick={() => setCurrentSlide(index)}
-                                        className={`w-2.5 h-2.5 rounded-full transition-all ${index === currentSlide
-                                                ? 'bg-accent-brown w-6'
-                                                : 'bg-cream-400 hover:bg-cream-500'
+                                        className={`h-2 rounded-full transition-all ${index === currentSlide
+                                                ? 'bg-accent-brown w-5'
+                                                : 'bg-cream-400 hover:bg-cream-500 w-2'
                                             }`}
                                     />
                                 ))}
@@ -156,16 +185,16 @@ export default function PromptGuide({ isOpen, onClose }: PromptGuideProps) {
                                 onClick={goToNext}
                                 className="p-2 rounded-full hover:bg-cream-200 transition-colors text-charcoal-600"
                             >
-                                <ChevronRight className="w-6 h-6" />
+                                <ChevronRight className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
 
                     {/* Footer */}
-                    <div className="px-6 pb-6">
+                    <div className="px-5 pb-5">
                         <button
                             onClick={onClose}
-                            className="w-full py-3 bg-accent-brown text-white font-medium rounded-xl hover:bg-accent-brown/90 transition-colors"
+                            className="w-full py-2.5 bg-accent-brown text-white font-medium rounded-xl hover:bg-accent-brown/90 transition-colors text-sm"
                         >
                             ¡Entendido!
                         </button>

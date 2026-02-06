@@ -398,34 +398,33 @@ export default function ChatPage() {
                 )}
 
                 {/* Main Content Area - Scrollable */}
-                <main className="flex-1 pt-14 pb-32 overflow-y-auto">
+                <main className="flex-1 pt-14 overflow-y-auto">
                     {!hasMessages ? (
                         // Empty State - Welcome Screen
-                        <div className="h-full flex flex-col items-center justify-center px-4">
-                            <div className="max-w-2xl text-center">
-                                <div className="mb-6">
+                        <div className="h-full flex flex-col items-center justify-center px-4 -mt-8">
+                            <div className="max-w-2xl w-full text-center">
+                                <div className="mb-4">
                                     <span className="font-serif text-5xl font-semibold text-charcoal-900">
                                         Iurex<span className="text-accent-gold">ia</span>
                                     </span>
                                 </div>
-                                <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-4">
+                                <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-3">
                                     ¿En qué te puedo ayudar?
                                 </h2>
-                                <p className="text-charcoal-600 mb-4">
-                                    Realiza consultas legales, analiza documentos o busca jurisprudencia
-                                    relevante en la normativa mexicana.
+                                <p className="text-charcoal-600 text-sm mb-4">
+                                    Consulta leyes, analiza documentos o busca jurisprudencia en la normativa mexicana.
                                 </p>
 
-                                {/* Jurisdiction Tip and Selector */}
-                                <div className="mb-6">
+                                {/* Jurisdiction Selector */}
+                                <div className="mb-4">
                                     {!selectedEstado && (
-                                        <p className="text-sm text-accent-brown mb-3">
+                                        <p className="text-xs text-accent-brown mb-2">
                                             💡 Selecciona un estado para resultados más precisos
                                         </p>
                                     )}
                                     <button
                                         onClick={() => setShowEstadoSelector(!showEstadoSelector)}
-                                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedEstado
+                                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${selectedEstado
                                             ? 'bg-accent-brown text-white'
                                             : 'bg-cream-300 text-charcoal-700 hover:bg-cream-400 border border-cream-400'
                                             }`}
@@ -437,33 +436,46 @@ export default function ChatPage() {
                                 </div>
 
                                 {/* Jurisdiction Info */}
-                                <div className="mb-6 p-4 bg-cream-200 rounded-xl inline-block">
-                                    <p className="text-sm text-charcoal-600 mb-2">
+                                <div className="mb-6 p-3 bg-cream-200 rounded-xl inline-block">
+                                    <p className="text-xs text-charcoal-600 mb-1.5">
                                         <strong>Buscando en:</strong>
                                     </p>
-                                    <div className="flex flex-wrap justify-center gap-2 text-xs">
-                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                                    <div className="flex flex-wrap justify-center gap-1.5 text-xs">
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
                                             <Building2 className="w-3 h-3" /> Leyes Federales
                                         </span>
-                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
-                                            <Scale className="w-3 h-3" /> Jurisprudencia Nacional
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">
+                                            <Scale className="w-3 h-3" /> Jurisprudencia
                                         </span>
-                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-accent-brown/20 text-accent-brown rounded-full">
-                                            <MapPin className="w-3 h-3" /> {selectedEstado ? `Leyes de ${selectedEstadoLabel}` : 'Todas las entidades'}
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent-brown/20 text-accent-brown rounded-full">
+                                            <MapPin className="w-3 h-3" /> {selectedEstado ? selectedEstadoLabel : 'Todas las entidades'}
                                         </span>
                                     </div>
                                 </div>
 
-                                {/* Disclaimer with Prompt Guide Link */}
+                                {/* Inline Chat Input */}
+                                <div className="mb-4">
+                                    <ChatInput
+                                        onSubmit={handleSendMessage}
+                                        isLoading={isLoading}
+                                        placeholder="Escribe tu consulta legal..."
+                                        estado={selectedEstado || undefined}
+                                    />
+                                </div>
+
+                                {/* Disclaimer below input */}
                                 <div className="max-w-md mx-auto text-center">
-                                    <p className="text-sm text-charcoal-500 mb-2">
-                                        Iurexia asegura no incurrir en alucinaciones, pero la calidad de los resultados depende directamente de la calidad de tu pregunta.
+                                    <p className="text-xs text-charcoal-400 mb-1">
+                                        Iurexia minimiza al máximo las alucinaciones mediante verificación con fuentes.
+                                    </p>
+                                    <p className="text-xs text-charcoal-500 font-medium mb-2">
+                                        Mejor pregunta = mejor resultado.
                                     </p>
                                     <button
                                         onClick={() => setShowPromptGuide(true)}
-                                        className="inline-flex items-center gap-1.5 text-sm text-accent-brown hover:text-accent-gold transition-colors font-medium"
+                                        className="inline-flex items-center gap-1 text-xs text-accent-brown hover:text-accent-gold transition-colors font-medium"
                                     >
-                                        <HelpCircle className="w-4 h-4" />
+                                        <HelpCircle className="w-3.5 h-3.5" />
                                         ¿Cómo hacer mejores consultas?
                                     </button>
                                 </div>
@@ -506,15 +518,17 @@ export default function ChatPage() {
                     )}
                 </main>
 
-                {/* Fixed Input at Bottom */}
-                <div className="fixed bottom-0 left-0 right-0 md:left-72 bg-gradient-to-t from-cream-300 via-cream-300 to-transparent pt-8 pb-6 px-4 transition-all duration-300">
-                    <ChatInput
-                        onSubmit={handleSendMessage}
-                        isLoading={isLoading}
-                        placeholder={hasMessages ? "Escribe tu siguiente pregunta..." : "Escribe tu consulta legal..."}
-                        estado={selectedEstado || undefined}
-                    />
-                </div>
+                {/* Fixed Input at Bottom - Only when there are messages */}
+                {hasMessages && (
+                    <div className="fixed bottom-0 left-0 right-0 md:left-72 bg-gradient-to-t from-cream-300 via-cream-300 to-transparent pt-8 pb-6 px-4 transition-all duration-300">
+                        <ChatInput
+                            onSubmit={handleSendMessage}
+                            isLoading={isLoading}
+                            placeholder="Escribe tu siguiente pregunta..."
+                            estado={selectedEstado || undefined}
+                        />
+                    </div>
+                )}
 
                 {/* Document Modal */}
                 <DocumentModal
