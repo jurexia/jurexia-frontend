@@ -24,7 +24,7 @@ export default function HomePage() {
                             className="w-full"
                             poster="/video-poster.jpg"
                         >
-                            <source src="/0202.mp4" type="video/mp4" />
+                            <source src="/iurexia-front.mp4" type="video/mp4" />
                         </video>
                     </div>
 
