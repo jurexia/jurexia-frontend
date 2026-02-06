@@ -15,9 +15,9 @@ import {
     Conversation,
     getConversations,
     getConversation,
-    saveConversation,
     deleteConversation,
     createConversation,
+    addMessageToConversation,
     getActiveConversationId,
     setActiveConversationId,
     generateTitle
@@ -70,6 +70,7 @@ export default function ChatPage() {
     // Conversation history state
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeConversationId, setActiveConvId] = useState<string | null>(null);
+    const [conversationsLoading, setConversationsLoading] = useState(true);
 
     const { messages, isLoading, error, sendMessage, clearMessages, setMessages } = useChat({
         estado: selectedEstado || undefined,
@@ -98,52 +99,52 @@ export default function ChatPage() {
 
     // Load conversations on mount
     useEffect(() => {
-        if (authLoading) return; // Don't load until auth is ready
+        if (authLoading || !isAuthenticated) return; // Don't load until auth is ready
 
-        const loadedConversations = getConversations();
-        setConversations(loadedConversations);
+        const loadConversations = async () => {
+            setConversationsLoading(true);
+            try {
+                const loadedConversations = await getConversations();
+                setConversations(loadedConversations);
 
-        const activeId = getActiveConversationId();
-        if (activeId) {
-            const activeConv = getConversation(activeId);
-            if (activeConv) {
-                setActiveConvId(activeId);
-                setMessages(activeConv.messages);
-                if (activeConv.estado) {
-                    setSelectedEstado(activeConv.estado);
-                }
-            }
-        }
-    }, [setMessages, authLoading]);
-
-    // Save messages to conversation when they change
-    useEffect(() => {
-        if (messages.length > 0) {
-            let convId = activeConversationId;
-
-            // If no active conversation exists, create one automatically
-            if (!convId) {
-                const newConv = createConversation(selectedEstado || undefined);
-                convId = newConv.id;
-                setActiveConvId(convId);
-                setConversations(getConversations());
-            }
-
-            const conv = getConversation(convId);
-            if (conv) {
-                conv.messages = messages;
-                conv.updatedAt = new Date().toISOString();
-                if (conv.title === 'Nueva conversación') {
-                    const firstUserMsg = messages.find(m => m.role === 'user');
-                    if (firstUserMsg) {
-                        conv.title = generateTitle(firstUserMsg.content);
+                const activeId = getActiveConversationId();
+                if (activeId) {
+                    const activeConv = await getConversation(activeId);
+                    if (activeConv) {
+                        setActiveConvId(activeId);
+                        setMessages(activeConv.messages);
+                        if (activeConv.estado) {
+                            setSelectedEstado(activeConv.estado);
+                        }
                     }
                 }
-                saveConversation(conv);
-                setConversations(getConversations());
+            } catch (err) {
+                console.error('Error loading conversations:', err);
+            } finally {
+                setConversationsLoading(false);
             }
-        }
-    }, [messages, activeConversationId, selectedEstado]);
+        };
+
+        loadConversations();
+    }, [setMessages, authLoading, isAuthenticated]);
+
+    // Messages are now saved directly to database in addMessageToConversation
+    // This effect only handles creating new conversations when needed
+    useEffect(() => {
+        const ensureConversation = async () => {
+            if (messages.length > 0 && !activeConversationId) {
+                // If no active conversation exists, create one automatically
+                const newConv = await createConversation(selectedEstado || undefined);
+                if (newConv) {
+                    setActiveConvId(newConv.id);
+                    const updatedConvs = await getConversations();
+                    setConversations(updatedConvs);
+                }
+            }
+        };
+
+        ensureConversation();
+    }, [messages.length, activeConversationId, selectedEstado]);
 
     // Auto-scroll to bottom only when NEW messages are added (not on conversation switch)
     useEffect(() => {
@@ -154,17 +155,47 @@ export default function ChatPage() {
         prevMessagesLengthRef.current = messages.length;
     }, [messages]);
 
+    // Track previous loading state for detecting when response completes
+    const wasLoadingRef = useRef(false);
+
+    // Save messages to database when assistant finishes responding
+    useEffect(() => {
+        const saveMessagesAfterResponse = async () => {
+            // Detect transition from loading=true to loading=false
+            if (wasLoadingRef.current && !isLoading && activeConversationId && messages.length >= 2) {
+                // Get the last two messages (user question + assistant response)
+                const lastMessages = messages.slice(-2);
+                const userMsg = lastMessages.find(m => m.role === 'user');
+                const assistantMsg = lastMessages.find(m => m.role === 'assistant');
+
+                // Save assistant response if we have one
+                if (assistantMsg && assistantMsg.content.trim().length > 0) {
+                    await addMessageToConversation(activeConversationId, assistantMsg);
+                    // Refresh conversations to update title/timestamp
+                    const updatedConvs = await getConversations();
+                    setConversations(updatedConvs);
+                }
+            }
+            wasLoadingRef.current = isLoading;
+        };
+
+        saveMessagesAfterResponse();
+    }, [isLoading, activeConversationId, messages]);
+
     // Handle new conversation
-    const handleNewConversation = useCallback(() => {
-        const newConv = createConversation(selectedEstado || undefined);
-        setActiveConvId(newConv.id);
-        clearMessages();
-        setConversations(getConversations());
+    const handleNewConversation = useCallback(async () => {
+        const newConv = await createConversation(selectedEstado || undefined);
+        if (newConv) {
+            setActiveConvId(newConv.id);
+            clearMessages();
+            const updatedConvs = await getConversations();
+            setConversations(updatedConvs);
+        }
     }, [selectedEstado, clearMessages]);
 
     // Handle select conversation
-    const handleSelectConversation = useCallback((id: string) => {
-        const conv = getConversation(id);
+    const handleSelectConversation = useCallback(async (id: string) => {
+        const conv = await getConversation(id);
         if (conv) {
             setActiveConvId(id);
             setActiveConversationId(id);
@@ -176,15 +207,15 @@ export default function ChatPage() {
     }, [setMessages]);
 
     // Handle delete conversation
-    const handleDeleteConversation = useCallback((id: string) => {
-        deleteConversation(id);
-        const remaining = getConversations();
+    const handleDeleteConversation = useCallback(async (id: string) => {
+        await deleteConversation(id);
+        const remaining = await getConversations();
         setConversations(remaining);
 
         if (id === activeConversationId) {
             if (remaining.length > 0) {
                 // Don't scroll when switching after delete - just load the conversation quietly
-                const conv = getConversation(remaining[0].id);
+                const conv = await getConversation(remaining[0].id);
                 if (conv) {
                     setMessages(conv.messages);
                     setActiveConvId(remaining[0].id);
@@ -210,14 +241,30 @@ export default function ChatPage() {
 
         // Check limit before sending (skip for unlimited plans)
         if (!isUnlimited) {
-            const { canQuery, remaining } = await checkCanQuery(user.id);
+            const { canQuery } = await checkCanQuery(user.id);
             if (!canQuery) {
                 setShowLimitModal(true);
                 return;
             }
         }
 
-        // Send the message
+        // Ensure we have a conversation before sending
+        let convId = activeConversationId;
+        if (!convId) {
+            const newConv = await createConversation(selectedEstado || undefined);
+            if (newConv) {
+                convId = newConv.id;
+                setActiveConvId(convId);
+                setActiveConversationId(convId);
+            }
+        }
+
+        // Save user message to database
+        if (convId) {
+            await addMessageToConversation(convId, { role: 'user', content });
+        }
+
+        // Send the message (response will be saved by useEffect when isLoading changes)
         await sendMessage(content);
 
         // Increment counter after successful send (skip for unlimited)
@@ -225,7 +272,7 @@ export default function ChatPage() {
             await incrementQueryCount(user.id);
             setQueriesUsed(prev => prev + 1);
         }
-    }, [user, isUnlimited, sendMessage]);
+    }, [user, isUnlimited, sendMessage, activeConversationId, selectedEstado]);
 
     const hasMessages = messages.length > 0;
     const selectedEstadoLabel = ESTADOS_MEXICO.find(e => e.value === selectedEstado)?.label || 'Seleccionar jurisdicción';
