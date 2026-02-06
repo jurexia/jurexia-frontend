@@ -175,6 +175,7 @@ h6 {
 
 .prose-legal {
   @apply text-charcoal-900 leading-relaxed;
+  text-align: justify;
 }
 
 .prose-legal h1,

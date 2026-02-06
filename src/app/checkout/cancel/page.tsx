@@ -58,7 +58,7 @@ export default function CheckoutCancelPage() {
                 {/* Support link */}
                 <p className="mt-8 text-sm text-charcoal-500">
                     ¿Tienes problemas con el pago?{' '}
-                    <a href="mailto:soporte@Iurexiagtp.com" className="text-accent-brown hover:underline">
+                    <a href="mailto:soporte@Iurexia.com" className="text-accent-brown hover:underline">
                         Contáctanos
                     </a>
                 </p>

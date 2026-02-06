@@ -141,11 +141,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         const fullHtml = `
             <div style="font-family: 'Times New Roman', serif; padding: 40px; max-width: 800px;">
                 ${generateHeader()}
-                <div style="line-height: 1.6; color: #333;">
+                <div style="line-height: 1.6; color: #333; text-align: justify;">
                     ${content}
                 </div>
                 <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 10px; color: #999; text-align: center;">
-                    Documento generado por Iurexia - IA Jurídica Mexicana | Iurexiagtp.com
+                    Documento generado por Iurexia - IA Jurídica Mexicana | Iurexia.com
                 </div>
             </div>
         `;
@@ -463,7 +463,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             new Paragraph({
                 children: [
                     new TextRun({
-                        text: "Iurexiagtp.com",
+                        text: "Iurexia.com",
                         size: 16,
                         color: "C9A227"
                     })
@@ -602,7 +602,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     ${content}
                 </div>
                 <div class="footer">
-                    Documento generado por Iurexia - IA Jurídica Mexicana | Iurexiagtp.com
+                    Documento generado por Iurexia - IA Jurídica Mexicana | Iurexia.com
                 </div>
             </body>
             </html>
