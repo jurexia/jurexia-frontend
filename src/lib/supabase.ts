@@ -5,9 +5,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-        detectSessionInUrl: true, // Auto-detect session (standard flow)
+        detectSessionInUrl: true,
         persistSession: true,
         autoRefreshToken: true,
+        storageKey: 'iurexia-auth', // Consistent storage key
+        flowType: 'pkce', // More secure auth flow
     }
 })
 
