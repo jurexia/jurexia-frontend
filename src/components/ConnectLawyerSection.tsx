@@ -383,8 +383,8 @@ export default function ConnectLawyerSection({
                     {/* Validation Result */}
                     {cedulaResult && (
                         <div className={`flex items-start gap-3 p-4 rounded-xl border ${cedulaResult.valid
-                                ? 'bg-green-50 border-green-200'
-                                : 'bg-red-50 border-red-200'
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-red-50 border-red-200'
                             }`}>
                             {cedulaResult.valid ? (
                                 <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -395,7 +395,7 @@ export default function ConnectLawyerSection({
                                 {cedulaResult.valid ? (
                                     <>
                                         <p className="font-medium text-green-800">Cédula válida ✓</p>
-                                        <p className="text-sm text-green-700 mt-0.5">{cedulaResult.nombre}</p>
+                                        <p className="text-sm text-green-700 mt-0.5">{cedulaResult.nombre || userName}</p>
                                         <p className="text-xs text-green-600 mt-0.5">{cedulaResult.profesion}</p>
                                         {cedulaResult.institucion && (
                                             <p className="text-xs text-green-600">{cedulaResult.institucion}</p>
@@ -411,10 +411,10 @@ export default function ConnectLawyerSection({
                         </div>
                     )}
 
-                    {/* Test cédulas hint */}
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-                        <p className="text-xs text-amber-700">
-                            <strong>Demo:</strong> Usa cédulas de prueba: <code className="bg-amber-100 px-1 rounded">12345678</code>, <code className="bg-amber-100 px-1 rounded">87654321</code>, o <code className="bg-amber-100 px-1 rounded">11223344</code>
+                    {/* Info note */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+                        <p className="text-xs text-blue-700">
+                            <strong>Nota:</strong> La validación de tu cédula se verificará con la base de datos de la SEP. Tu perfil aparecerá como verificado en el directorio.
                         </p>
                     </div>
                 </div>
@@ -426,7 +426,7 @@ export default function ConnectLawyerSection({
                     {/* Cédula confirmed */}
                     <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
                         <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        <span className="text-sm text-green-700 font-medium">{cedulaResult.nombre}</span>
+                        <span className="text-sm text-green-700 font-medium">{cedulaResult.nombre || userName}</span>
                         <span className="text-xs text-green-500 ml-auto">Cédula: {cedulaResult.cedula}</span>
                     </div>
 
@@ -442,8 +442,8 @@ export default function ConnectLawyerSection({
                                     key={spec}
                                     onClick={() => toggleSpecialty(spec)}
                                     className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${selectedSpecialties.includes(spec)
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white text-charcoal-600 border-cream-300 hover:border-blue-300'
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white text-charcoal-600 border-cream-300 hover:border-blue-300'
                                         }`}
                                 >
                                     {spec}
