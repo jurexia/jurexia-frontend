@@ -14,6 +14,7 @@ import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
 import TextEnhanceModal from './TextEnhanceModal';
 import DraftModal, { DraftRequest } from './DraftModal';
+import SentenciaModal from './SentenciaModal';
 import { enhanceText } from '@/lib/api';
 
 interface ChatInputProps {
@@ -30,10 +31,11 @@ export default function ChatInput({
     estado
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
-    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft'>('search');
+    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia'>('search');
     const [showFileModal, setShowFileModal] = useState(false);
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
+    const [showSentenciaModal, setShowSentenciaModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ text: string; fileName: string } | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -94,7 +96,7 @@ export default function ChatInput({
         return response.texto_mejorado;
     };
 
-    const handleModeClick = (mode: 'search' | 'files' | 'enhance' | 'draft') => {
+    const handleModeClick = (mode: 'search' | 'files' | 'enhance' | 'draft' | 'sentencia') => {
         setActiveMode(mode);
         if (mode === 'files') {
             setShowFileModal(true);
@@ -102,6 +104,8 @@ export default function ChatInput({
             setShowEnhanceModal(true);
         } else if (mode === 'draft') {
             setShowDraftModal(true);
+        } else if (mode === 'sentencia') {
+            setShowSentenciaModal(true);
         }
     };
 
@@ -116,6 +120,11 @@ Descripción del caso:
 ${draftRequest.descripcion}`;
 
         onSubmit(draftMessage);
+        setActiveMode('search');
+    };
+
+    const handleSentenciaSubmit = (sentenciaMessage: string) => {
+        onSubmit(sentenciaMessage);
         setActiveMode('search');
     };
 
@@ -197,10 +206,12 @@ ${draftRequest.descripcion}`;
                                 active={activeMode === 'draft'}
                                 onClick={() => handleModeClick('draft')}
                             />
-                            <a href="/sentencia" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 text-gray-500 hover:text-amber-700 hover:bg-amber-50">
-                                <Gavel className="w-4 h-4" />
-                                <span>Revisar Sentencia</span>
-                            </a>
+                            <ActionButton
+                                icon={Gavel}
+                                label="Revisar Sentencia"
+                                active={activeMode === 'sentencia'}
+                                onClick={() => handleModeClick('sentencia')}
+                            />
                         </div>
                     </div>
                 </div>
@@ -232,6 +243,16 @@ ${draftRequest.descripcion}`;
                     setActiveMode('search');
                 }}
                 onDraft={handleDraft}
+                estado={estado}
+            />
+
+            <SentenciaModal
+                isOpen={showSentenciaModal}
+                onClose={() => {
+                    setShowSentenciaModal(false);
+                    setActiveMode('search');
+                }}
+                onSubmit={handleSentenciaSubmit}
                 estado={estado}
             />
         </>

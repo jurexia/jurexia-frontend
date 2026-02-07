@@ -46,10 +46,10 @@ export function useAuth() {
 
         const initAuth = async () => {
             try {
-                // Try to get session with timeout (5 seconds max)
+                // Try to get session with timeout (10 seconds max for slow connections)
                 const { data: { session } } = await withTimeout(
                     supabase.auth.getSession(),
-                    5000
+                    10000
                 );
 
                 if (!isMounted) return;
@@ -65,15 +65,22 @@ export function useAuth() {
                     if (expiresAt && expiresAt - now < fiveMinutes) {
                         // Token expiring soon, try to refresh
                         console.log('Token expiring soon, refreshing...');
-                        validSession = await refreshSession();
+                        const refreshed = await refreshSession();
+                        // If refresh fails, still use current session if not fully expired
+                        validSession = refreshed || (expiresAt > now ? session : null);
                     }
 
                     if (validSession?.user) {
-                        // Get user profile with timeout
-                        const profile = await withTimeout(
-                            getUserProfile(validSession.user.id),
-                            5000
-                        );
+                        // Get user profile — non-fatal if it fails
+                        let profile = null;
+                        try {
+                            profile = await withTimeout(
+                                getUserProfile(validSession.user.id),
+                                10000
+                            );
+                        } catch (profileError) {
+                            console.warn('Profile fetch failed (non-fatal):', profileError);
+                        }
 
                         if (isMounted) {
                             setAuthState({
@@ -84,7 +91,7 @@ export function useAuth() {
                             });
                         }
                     } else {
-                        // Session invalid, clear state
+                        // Session truly invalid
                         if (isMounted) {
                             setAuthState({
                                 user: null,
@@ -108,13 +115,8 @@ export function useAuth() {
             } catch (error) {
                 console.error('Auth init error:', error);
 
-                // On timeout or error, try to clear potentially corrupted session
-                try {
-                    await supabase.auth.signOut({ scope: 'local' });
-                } catch (signOutError) {
-                    console.error('Sign out error:', signOutError);
-                }
-
+                // NEVER sign out on transient errors — just mark loading as done
+                // The session tokens in storage remain intact for next attempt
                 if (isMounted) {
                     setAuthState({
                         user: null,
