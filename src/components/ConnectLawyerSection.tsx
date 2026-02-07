@@ -437,9 +437,12 @@ export default function ConnectLawyerSection({
                             <span className="text-sm text-green-800 font-semibold">Cédula verificada</span>
                             <span className="text-xs text-green-500 ml-auto">N.° {cedulaResult.cedula}</span>
                         </div>
-                        {cedulaResult.nombre && (
-                            <p className="text-sm text-green-700">
-                                <span className="font-medium">Nombre:</span> {cedulaResult.nombre}
+                        <p className="text-sm text-green-700">
+                            <span className="font-medium">Nombre:</span> {cedulaResult.nombre || userName}
+                        </p>
+                        {cedulaResult.profesion && (
+                            <p className="text-xs text-green-600 mt-0.5">
+                                <span className="font-medium">Profesión:</span> {cedulaResult.profesion}
                             </p>
                         )}
                         {cedulaResult.institucion && (
