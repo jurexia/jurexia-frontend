@@ -11,7 +11,7 @@ import PromptGuide from '@/components/PromptGuide';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
-import { incrementQueryCount, checkCanQuery } from '@/lib/supabase';
+import { incrementQueryCount } from '@/lib/supabase';
 import {
     Conversation,
     getConversations,
@@ -238,46 +238,60 @@ export default function ChatPage() {
     }, []);
 
     // Wrapped send function with limit check and increment
+    // Optimized: fires sendMessage IMMEDIATELY, persists conversation in background
     const handleSendMessage = useCallback(async (content: string) => {
         if (!user) return;
 
-        // Check limit before sending (skip for unlimited plans)
+        // Check limit from local state (no network call) — skip for unlimited plans
         if (!isUnlimited) {
-            const { canQuery } = await checkCanQuery(user.id);
-            if (!canQuery) {
+            const remaining = queriesLimit - queriesUsed;
+            if (remaining <= 0) {
                 setShowLimitModal(true);
                 return;
             }
         }
 
-        // Ensure we have a conversation before sending
-        let convId = activeConversationId;
-        if (!convId) {
-            const newConv = await createConversation(selectedEstado || undefined);
-            if (newConv) {
-                convId = newConv.id;
-                setActiveConvId(convId);
-                setActiveConversationId(convId);
-            }
-        }
+        // 1) Fire the AI message IMMEDIATELY — no blocking I/O before this
+        const sendPromise = sendMessage(content);
 
-        // Save user message to database
-        if (convId) {
-            await addMessageToConversation(convId, { role: 'user', content });
-            // Refresh conversations to update message count
-            const updatedConvs = await getConversations();
-            setConversations(updatedConvs);
-        }
-
-        // Send the message (response will be saved by useEffect when isLoading changes)
-        await sendMessage(content);
-
-        // Increment counter after successful send (skip for unlimited)
-        if (!isUnlimited && user) {
-            await incrementQueryCount(user.id);
+        // 2) Optimistically increment the local counter
+        if (!isUnlimited) {
             setQueriesUsed(prev => prev + 1);
         }
-    }, [user, isUnlimited, sendMessage, activeConversationId, selectedEstado]);
+
+        // 3) Persist conversation data in the background (non-blocking)
+        (async () => {
+            try {
+                let convId = activeConversationId;
+                if (!convId) {
+                    const newConv = await createConversation(selectedEstado || undefined);
+                    if (newConv) {
+                        convId = newConv.id;
+                        setActiveConvId(convId);
+                        setActiveConversationId(convId);
+                    }
+                }
+
+                if (convId) {
+                    await addMessageToConversation(convId, { role: 'user', content });
+                    const updatedConvs = await getConversations();
+                    setConversations(updatedConvs);
+                }
+            } catch (err) {
+                console.error('Error persisting conversation:', err);
+            }
+        })();
+
+        // 4) Wait for the AI response to finish streaming
+        await sendPromise;
+
+        // 5) Increment counter on the server in the background (skip for unlimited)
+        if (!isUnlimited && user) {
+            incrementQueryCount(user.id).catch(err =>
+                console.error('Error incrementing query count:', err)
+            );
+        }
+    }, [user, isUnlimited, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
 
     const hasMessages = messages.length > 0;
     const selectedEstadoLabel = ESTADOS_MEXICO.find(e => e.value === selectedEstado)?.label || 'Seleccionar jurisdicción';
