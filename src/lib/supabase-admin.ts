@@ -36,7 +36,8 @@ export const PLAN_CONFIG = {
 export type PlanType = keyof typeof PLAN_CONFIG;
 
 /**
- * Update a user's subscription in Supabase based on Stripe events
+ * Update a user's subscription in Supabase based on Stripe events.
+ * Includes row-count verification and fallback diagnostics.
  */
 export async function updateUserSubscription(
     email: string,
@@ -44,34 +45,98 @@ export async function updateUserSubscription(
     stripeCustomerId?: string,
     stripeSubscriptionId?: string,
 ) {
+    const normalizedEmail = email.toLowerCase().trim();
     const config = PLAN_CONFIG[subscriptionType];
 
-    const { error } = await getSupabaseAdmin()
+    console.log(`🔄 updateUserSubscription called:`, {
+        email: normalizedEmail,
+        subscriptionType,
+        queriesLimit: config.queriesLimit,
+        stripeCustomerId,
+        stripeSubscriptionId,
+    });
+
+    const updatePayload = {
+        subscription_type: subscriptionType,
+        queries_limit: config.queriesLimit,
+        queries_used: 0,
+        stripe_customer_id: stripeCustomerId || undefined,
+        stripe_subscription_id: stripeSubscriptionId || undefined,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+    } as Record<string, unknown>;
+
+    const { data, error } = await getSupabaseAdmin()
         .from('user_profiles')
-        .update({
-            subscription_type: subscriptionType,
-            queries_limit: config.queriesLimit,
-            queries_used: 0,
-            stripe_customer_id: stripeCustomerId || undefined,
-            stripe_subscription_id: stripeSubscriptionId || undefined,
-            is_active: true,
-            updated_at: new Date().toISOString(),
-        } as Record<string, unknown>)
-        .eq('email', email);
+        .update(updatePayload)
+        .eq('email', normalizedEmail)
+        .select();
 
     if (error) {
-        console.error(`Failed to update subscription for ${email}:`, error);
+        console.error(`❌ Supabase UPDATE error for ${normalizedEmail}:`, {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+        });
         throw error;
     }
 
-    console.log(`✅ Updated subscription for ${email}: ${subscriptionType} (limit: ${config.queriesLimit})`);
+    // Check if any rows were actually updated
+    if (!data || data.length === 0) {
+        console.error(`⚠️ UPDATE affected 0 rows for email "${normalizedEmail}"`);
+
+        // Diagnostic: check if the profile exists at all
+        const { data: existing, error: lookupError } = await getSupabaseAdmin()
+            .from('user_profiles')
+            .select('id, email, subscription_type')
+            .ilike('email', normalizedEmail);
+
+        if (lookupError) {
+            console.error(`❌ Diagnostic lookup failed:`, lookupError);
+        } else if (!existing || existing.length === 0) {
+            console.error(`❌ No user_profiles row found for email "${normalizedEmail}" — profile may not have been created on signup`);
+        } else {
+            console.log(`🔍 Found ${existing.length} profile(s) for "${normalizedEmail}":`, existing);
+            // The row exists but the update didn't match — could be case sensitivity
+            // Retry with ilike match on the actual id
+            const profileId = existing[0].id;
+            console.log(`🔄 Retrying update using profile id: ${profileId}`);
+
+            const { data: retryData, error: retryError } = await getSupabaseAdmin()
+                .from('user_profiles')
+                .update(updatePayload)
+                .eq('id', profileId)
+                .select();
+
+            if (retryError) {
+                console.error(`❌ Retry UPDATE by id failed:`, retryError);
+                throw retryError;
+            }
+
+            if (retryData && retryData.length > 0) {
+                console.log(`✅ Retry succeeded! Updated profile for ${normalizedEmail} via id:`, retryData[0]);
+                return;
+            }
+
+            console.error(`❌ Retry also matched 0 rows — possible constraint violation`);
+        }
+
+        throw new Error(`Failed to update subscription: no rows matched for email "${normalizedEmail}"`);
+    }
+
+    console.log(`✅ Updated subscription for ${normalizedEmail}: ${subscriptionType} (limit: ${config.queriesLimit})`, {
+        updatedRow: data[0],
+    });
 }
 
 /**
  * Downgrade a user to the free plan
  */
 export async function downgradeToFree(email: string) {
-    const { error } = await getSupabaseAdmin()
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const { data, error } = await getSupabaseAdmin()
         .from('user_profiles')
         .update({
             subscription_type: 'gratuito',
@@ -80,48 +145,62 @@ export async function downgradeToFree(email: string) {
             stripe_subscription_id: null,
             updated_at: new Date().toISOString(),
         } as Record<string, unknown>)
-        .eq('email', email);
+        .eq('email', normalizedEmail)
+        .select();
 
     if (error) {
-        console.error(`Failed to downgrade ${email}:`, error);
+        console.error(`❌ Failed to downgrade ${normalizedEmail}:`, error);
         throw error;
     }
 
-    console.log(`✅ Downgraded ${email} to free plan`);
+    if (!data || data.length === 0) {
+        console.error(`⚠️ downgradeToFree: 0 rows updated for ${normalizedEmail}`);
+    } else {
+        console.log(`✅ Downgraded ${normalizedEmail} to free plan`, { updatedRow: data[0] });
+    }
 }
 
 /**
  * Reset the query count for a user (called on successful payment renewal)
  */
 export async function resetUserQueries(email: string) {
-    const { error } = await getSupabaseAdmin()
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const { data, error } = await getSupabaseAdmin()
         .from('user_profiles')
         .update({
             queries_used: 0,
             updated_at: new Date().toISOString(),
         } as Record<string, unknown>)
-        .eq('email', email);
+        .eq('email', normalizedEmail)
+        .select();
 
     if (error) {
-        console.error(`Failed to reset queries for ${email}:`, error);
+        console.error(`❌ Failed to reset queries for ${normalizedEmail}:`, error);
         throw error;
     }
 
-    console.log(`✅ Reset query count for ${email}`);
+    if (!data || data.length === 0) {
+        console.error(`⚠️ resetUserQueries: 0 rows updated for ${normalizedEmail}`);
+    } else {
+        console.log(`✅ Reset query count for ${normalizedEmail}`);
+    }
 }
 
 /**
  * Get user profile by email (server-side, bypasses RLS)
  */
 export async function getUserByEmail(email: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+
     const { data, error } = await getSupabaseAdmin()
         .from('user_profiles')
         .select('*')
-        .eq('email', email)
+        .ilike('email', normalizedEmail)
         .single();
 
     if (error) {
-        console.error(`Failed to get user by email ${email}:`, error);
+        console.error(`Failed to get user by email ${normalizedEmail}:`, error);
         return null;
     }
 
