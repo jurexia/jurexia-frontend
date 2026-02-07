@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
 import { getStripe } from '@/lib/stripe';
 import { User, CreditCard, Shield, AlertTriangle, Check, X } from 'lucide-react';
+import ConnectLawyerSection from '@/components/ConnectLawyerSection';
 
 const planColors: Record<string, { bg: string; text: string; label: string }> = {
     gratuito: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Gratuito' },
@@ -57,6 +58,7 @@ export default function PerfilPage() {
     const queryPercentage = profile.queries_limit === -1
         ? 0
         : (profile.queries_used / profile.queries_limit) * 100;
+    const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual'].includes(profile.subscription_type);
 
     const handleSaveName = async () => {
         if (!newName.trim()) return;
@@ -320,6 +322,15 @@ export default function PerfilPage() {
                         </div>
                     </div>
                 </section>
+
+                {/* IUREXIA Connect — Solo para PRO/Platinum */}
+                {isPro && (
+                    <ConnectLawyerSection
+                        userId={user.id}
+                        userName={profile.full_name || user.email || ''}
+                        avatarUrl={user.user_metadata?.avatar_url}
+                    />
+                )}
 
                 {/* Detalles de Cuenta */}
                 <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
