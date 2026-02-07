@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, ChevronDown, Check, Scale, Building2, HelpCircle, Gavel } from 'lucide-react';
+import { Trash2, MapPin, ChevronDown, Check, Scale, Building2, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
@@ -318,14 +318,6 @@ export default function ChatPage() {
                     <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-end">
 
                         <div className="flex items-center gap-2">
-                            <Link
-                                href="/sentencia"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20 transition-colors"
-                                title="Revisar Sentencia"
-                            >
-                                <Gavel className="w-4 h-4" />
-                                <span className="hidden sm:inline">Revisar Sentencia</span>
-                            </Link>
 
                             {hasMessages && (
                                 <button

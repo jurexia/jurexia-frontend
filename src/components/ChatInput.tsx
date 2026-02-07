@@ -7,7 +7,8 @@ import {
     Search,
     Sparkles,
     Shield,
-    FileEdit
+    FileEdit,
+    Gavel
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -196,6 +197,10 @@ ${draftRequest.descripcion}`;
                                 active={activeMode === 'draft'}
                                 onClick={() => handleModeClick('draft')}
                             />
+                            <a href="/sentencia" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 text-gray-500 hover:text-amber-700 hover:bg-amber-50">
+                                <Gavel className="w-4 h-4" />
+                                <span>Revisar Sentencia</span>
+                            </a>
                         </div>
                     </div>
                 </div>
