@@ -24,11 +24,17 @@ export const stripe = {
     get subscriptions() { return getStripe().subscriptions; },
 };
 
+// Resolve price IDs at runtime (NOT at module load/build time)
+function getPriceId(envVar: string): string | null {
+    return process.env[envVar] || null;
+}
+
 // Plan definitions with Stripe Price IDs
+// NOTE: priceId is a getter to ensure env vars are resolved at runtime, not build time
 export const PLANS = {
     gratuito: {
         name: 'Plan Gratuito',
-        priceId: null, // No Stripe price for free plan
+        get priceId() { return null; },
         price: 0,
         currency: 'MXN',
         interval: null,
@@ -42,7 +48,7 @@ export const PLANS = {
     },
     pro_monthly: {
         name: 'Plan Pro',
-        priceId: process.env.STRIPE_PRICE_PRO_MONTHLY,
+        get priceId() { return getPriceId('STRIPE_PRICE_PRO_MONTHLY'); },
         price: 149,
         currency: 'MXN',
         interval: 'month' as const,
@@ -57,7 +63,7 @@ export const PLANS = {
     },
     pro_annual: {
         name: 'Plan Pro Anual',
-        priceId: process.env.STRIPE_PRICE_PRO_ANNUAL,
+        get priceId() { return getPriceId('STRIPE_PRICE_PRO_ANNUAL'); },
         price: 1490,
         currency: 'MXN',
         interval: 'year' as const,
@@ -72,7 +78,7 @@ export const PLANS = {
     },
     platinum_monthly: {
         name: 'Plan Platinum',
-        priceId: process.env.STRIPE_PRICE_PLATINUM_MONTHLY,
+        get priceId() { return getPriceId('STRIPE_PRICE_PLATINUM_MONTHLY'); },
         price: 599,
         currency: 'MXN',
         interval: 'month' as const,
@@ -87,7 +93,7 @@ export const PLANS = {
     },
     platinum_annual: {
         name: 'Plan Platinum Anual',
-        priceId: process.env.STRIPE_PRICE_PLATINUM_ANNUAL,
+        get priceId() { return getPriceId('STRIPE_PRICE_PLATINUM_ANNUAL'); },
         price: 5990,
         currency: 'MXN',
         interval: 'year' as const,
@@ -100,24 +106,35 @@ export const PLANS = {
             'Soporte VIP dedicado'
         ]
     }
-} as const;
+};
 
 export type PlanId = keyof typeof PLANS;
 
 // Get plan type from Stripe subscription
 export function getPlanFromSubscription(subscription: Stripe.Subscription | null): PlanId {
-    if (!subscription || subscription.status !== 'active') {
+    if (!subscription) {
+        console.log('⚠️ getPlanFromSubscription: subscription is null');
         return 'gratuito';
     }
 
-    const priceId = subscription.items.data[0]?.price.id;
+    // Log the subscription status - don't reject non-active yet, as newly created subs
+    // from checkout may briefly be in 'incomplete' or 'trialing' status
+    console.log(`🔍 getPlanFromSubscription: status=${subscription.status}, id=${subscription.id}`);
 
+    const priceId = subscription.items.data[0]?.price.id;
+    console.log(`🔍 getPlanFromSubscription: subscription priceId = ${priceId}`);
+
+    // Log all configured price IDs for comparison
     for (const [planId, plan] of Object.entries(PLANS)) {
-        if (plan.priceId === priceId) {
+        const configuredPriceId = plan.priceId;
+        console.log(`🔍   ${planId}: configured priceId = ${configuredPriceId}`);
+        if (configuredPriceId && configuredPriceId === priceId) {
+            console.log(`✅ getPlanFromSubscription: matched plan = ${planId}`);
             return planId as PlanId;
         }
     }
 
+    console.error(`❌ getPlanFromSubscription: no plan matched for priceId ${priceId}. Check STRIPE_PRICE_* env vars!`);
     return 'gratuito';
 }
 
