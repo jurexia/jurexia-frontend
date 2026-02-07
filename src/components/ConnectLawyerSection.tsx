@@ -395,10 +395,18 @@ export default function ConnectLawyerSection({
                                 {cedulaResult.valid ? (
                                     <>
                                         <p className="font-medium text-green-800">Cédula válida ✓</p>
-                                        <p className="text-sm text-green-700 mt-0.5">{cedulaResult.nombre || userName}</p>
-                                        <p className="text-xs text-green-600 mt-0.5">{cedulaResult.profesion}</p>
+                                        {cedulaResult.nombre && (
+                                            <p className="text-sm text-green-700 mt-1">
+                                                <span className="font-semibold">Nombre:</span> {cedulaResult.nombre}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-green-600 mt-0.5">
+                                            <span className="font-semibold">Profesión:</span> {cedulaResult.profesion}
+                                        </p>
                                         {cedulaResult.institucion && (
-                                            <p className="text-xs text-green-600">{cedulaResult.institucion}</p>
+                                            <p className="text-xs text-green-600 mt-0.5">
+                                                <span className="font-semibold">Institución:</span> {cedulaResult.institucion}
+                                            </p>
                                         )}
                                     </>
                                 ) : (
@@ -423,11 +431,22 @@ export default function ConnectLawyerSection({
             {/* Step 2: Profile Form */}
             {step === 'form' && cedulaResult?.valid && (
                 <div className="space-y-5">
-                    {/* Cédula confirmed */}
-                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        <span className="text-sm text-green-700 font-medium">{cedulaResult.nombre || userName}</span>
-                        <span className="text-xs text-green-500 ml-auto">Cédula: {cedulaResult.cedula}</span>
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            <span className="text-sm text-green-800 font-semibold">Cédula verificada</span>
+                            <span className="text-xs text-green-500 ml-auto">N.° {cedulaResult.cedula}</span>
+                        </div>
+                        {cedulaResult.nombre && (
+                            <p className="text-sm text-green-700">
+                                <span className="font-medium">Nombre:</span> {cedulaResult.nombre}
+                            </p>
+                        )}
+                        {cedulaResult.institucion && (
+                            <p className="text-xs text-green-600 mt-0.5">
+                                <span className="font-medium">Institución:</span> {cedulaResult.institucion}
+                            </p>
+                        )}
                     </div>
 
                     {/* Specialties */}
