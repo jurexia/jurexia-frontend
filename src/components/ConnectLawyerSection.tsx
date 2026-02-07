@@ -191,7 +191,7 @@ export default function ConnectLawyerSection({
         setSubmitError('');
 
         try {
-            // 1. Insert into Supabase
+            // 1. Insert into Supabase (critical — must succeed)
             const { error: dbError } = await supabase
                 .from('lawyer_profiles')
                 .upsert({
@@ -211,15 +211,20 @@ export default function ConnectLawyerSection({
                 throw new Error(dbError.message);
             }
 
-            // 2. Index in Qdrant for semantic search
-            await indexLawyerProfile({
-                cedula_number: cedulaResult.cedula,
-                full_name: cedulaResult.nombre || userName,
-                specialties: selectedSpecialties,
-                bio: bio.trim(),
-                office_address: { estado, municipio, cp },
-                avatar_url: avatarUrl,
-            });
+            // 2. Index in Qdrant for semantic search (non-blocking — best effort)
+            try {
+                await indexLawyerProfile({
+                    cedula_number: cedulaResult.cedula,
+                    full_name: cedulaResult.nombre || userName,
+                    specialties: selectedSpecialties,
+                    bio: bio.trim(),
+                    office_address: { estado, municipio, cp },
+                    avatar_url: avatarUrl,
+                });
+            } catch (indexErr) {
+                // Indexing failure is non-fatal — profile is already saved in Supabase
+                console.warn('[Connect] Qdrant indexing failed (non-blocking):', indexErr);
+            }
 
             // 3. Update local state
             setExistingProfile({
