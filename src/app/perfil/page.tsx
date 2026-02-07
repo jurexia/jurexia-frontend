@@ -40,7 +40,8 @@ export default function PerfilPage() {
         }
     }, [profile]);
 
-    if (loading || !isAuthenticated || !user || !profile) {
+    // Show skeleton ONLY while auth is initializing
+    if (loading) {
         return (
             <div className="min-h-screen bg-cream-200">
                 <Navbar />
@@ -48,6 +49,33 @@ export default function PerfilPage() {
                     <div className="animate-pulse space-y-6">
                         <div className="h-8 bg-gray-200 rounded w-1/4"></div>
                         <div className="h-64 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Not authenticated — useEffect redirect will fire, render nothing
+    if (!isAuthenticated || !user) {
+        return null;
+    }
+
+    // Authenticated but profile failed to load — show retry UI
+    if (!profile) {
+        return (
+            <div className="min-h-screen bg-cream-200">
+                <Navbar />
+                <div className="max-w-4xl mx-auto px-4 py-12">
+                    <div className="bg-white rounded-2xl shadow-sm border border-cream-300 p-8 text-center">
+                        <p className="text-charcoal-700 mb-4">
+                            No se pudo cargar tu perfil. Esto puede ocurrir por una conexión lenta.
+                        </p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-6 py-2 bg-charcoal-900 text-white rounded-lg hover:bg-charcoal-800 transition-colors"
+                        >
+                            Reintentar
+                        </button>
                     </div>
                 </div>
             </div>
