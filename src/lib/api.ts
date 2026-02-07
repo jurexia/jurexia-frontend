@@ -200,3 +200,62 @@ export async function enhanceText(
     return response.json();
 }
 
+
+/**
+ * Sentencia Audit types
+ */
+export interface SentenciaHallazgo {
+    tipo: string;
+    severidad: string;
+    descripcion: string;
+    fundamento: string;
+    protocolo_origen: string;
+}
+
+export interface SentenciaPerfilado {
+    materia: string;
+    sentido_fallo: string;
+    modo_revision: string;
+    acto_reclamado: string;
+}
+
+export interface SentenciaAuditResponse {
+    viabilidad_sentencia: string;
+    perfil_sentencia: SentenciaPerfilado;
+    hallazgos_criticos: SentenciaHallazgo[];
+    analisis_jurisprudencial: {
+        jurisprudencia_contradictoria_encontrada: boolean;
+        detalle: string;
+    };
+    analisis_convencional: {
+        derechos_en_juego: string[];
+        tratados_aplicables: string[];
+        restriccion_constitucional_aplica: boolean;
+        detalle: string;
+    };
+    analisis_metodologico: {
+        interpretacion_conforme_aplicada: boolean;
+        detalle: string;
+    };
+    sugerencia_proyectista: string;
+    resumen_ejecutivo: string;
+}
+
+/**
+ * Audit a sentencia (hierarchical analysis)
+ */
+export async function auditSentencia(
+    documento: string,
+    estado?: string
+): Promise<SentenciaAuditResponse> {
+    const response = await fetch(`${API_URL}/audit/sentencia`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documento, estado }),
+    });
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Sentencia audit failed: ${errorText}`);
+    }
+    return response.json();
+}
