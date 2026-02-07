@@ -8,7 +8,8 @@ import {
     Sparkles,
     Shield,
     FileEdit,
-    Gavel
+    Gavel,
+    Users
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -213,6 +214,22 @@ ${draftRequest.descripcion}`;
                                 onClick={() => handleModeClick('sentencia')}
                             />
                         </div>
+                    </div>
+
+                    {/* Connect Badge — Free Plan CTA */}
+                    <div className="mt-3 pt-3 border-t border-gray-50">
+                        <a
+                            href="/connect"
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 hover:border-blue-200 transition-all group"
+                        >
+                            <Users className="w-4 h-4 text-blue-500" />
+                            <span className="text-xs text-charcoal-600">
+                                Busca un abogado especializado en tu zona
+                            </span>
+                            <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full uppercase tracking-wide ml-auto">
+                                Nuevo
+                            </span>
+                        </a>
                     </div>
                 </div>
             </div>

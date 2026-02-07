@@ -259,3 +259,157 @@ export async function auditSentencia(
     }
     return response.json();
 }
+
+// ══════════════════════════════════════════════════════════════
+// IUREXIA CONNECT — API
+// ══════════════════════════════════════════════════════════════
+
+export interface CedulaValidationResponse {
+    valid: boolean;
+    cedula: string;
+    nombre?: string;
+    profesion?: string;
+    institucion?: string;
+    error?: string;
+}
+
+export interface SepomexResponse {
+    cp: string;
+    estado: string;
+    municipio: string;
+    colonia?: string;
+}
+
+export interface LawyerProfile {
+    id: string;
+    full_name: string;
+    cedula_number: string;
+    specialties: string[];
+    bio: string;
+    office_address: { estado?: string; municipio?: string; cp?: string };
+    verification_status: string;
+    is_pro_active: boolean;
+    avatar_url?: string;
+    score?: number;
+}
+
+export interface LawyerSearchResponse {
+    lawyers: LawyerProfile[];
+    total: number;
+    note?: string;
+}
+
+export interface ConnectStartResponse {
+    system_message: string;
+    dossier: Record<string, unknown>;
+    status: string;
+}
+
+export interface PrivacyCheckResponse {
+    original: string;
+    sanitized: string;
+    has_contact_info: boolean;
+    detections: Array<{ type: string; value: string }>;
+}
+
+/**
+ * Validate a cédula profesional
+ */
+export async function validateCedula(cedula: string): Promise<CedulaValidationResponse> {
+    const response = await fetch(`${API_URL}/connect/validate-cedula`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cedula }),
+    });
+    if (!response.ok) throw new Error('Cedula validation failed');
+    return response.json();
+}
+
+/**
+ * SEPOMEX postal code lookup
+ */
+export async function sepomexLookup(cp: string): Promise<SepomexResponse> {
+    const response = await fetch(`${API_URL}/connect/sepomex/${cp}`);
+    if (!response.ok) throw new Error('CP not found');
+    return response.json();
+}
+
+/**
+ * Search lawyers by legal problem (semantic search)
+ */
+export async function searchLawyers(
+    query: string,
+    estado?: string,
+    limit: number = 10
+): Promise<LawyerSearchResponse> {
+    const response = await fetch(`${API_URL}/connect/lawyers/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, estado, limit }),
+    });
+    if (!response.ok) throw new Error('Lawyer search failed');
+    return response.json();
+}
+
+/**
+ * Start a Connect chat (generates system message with dossier)
+ */
+export async function startConnectChat(
+    lawyerId: string,
+    dossierSummary: Record<string, unknown> = {}
+): Promise<ConnectStartResponse> {
+    const response = await fetch(`${API_URL}/connect/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lawyer_id: lawyerId, dossier_summary: dossierSummary }),
+    });
+    if (!response.ok) throw new Error('Connect start failed');
+    return response.json();
+}
+
+/**
+ * Privacy check on a message before sending
+ */
+export async function privacyCheck(content: string): Promise<PrivacyCheckResponse> {
+    const response = await fetch(`${API_URL}/connect/privacy-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+    });
+    if (!response.ok) throw new Error('Privacy check failed');
+    return response.json();
+}
+
+/**
+ * Index a lawyer profile for semantic search
+ */
+export async function indexLawyerProfile(profile: {
+    cedula_number: string;
+    full_name: string;
+    specialties: string[];
+    bio: string;
+    office_address: { estado?: string; municipio?: string; cp?: string };
+    avatar_url?: string;
+}): Promise<{ indexed: boolean; point_id: string }> {
+    const response = await fetch(`${API_URL}/connect/lawyers/index`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile),
+    });
+    if (!response.ok) throw new Error('Lawyer indexing failed');
+    return response.json();
+}
+
+/**
+ * Connect module health check
+ */
+export async function connectHealth(): Promise<{
+    module: string;
+    status: string;
+    lawyers_indexed: number;
+    services: Record<string, string>;
+}> {
+    const response = await fetch(`${API_URL}/connect/health`);
+    if (!response.ok) throw new Error('Connect health check failed');
+    return response.json();
+}

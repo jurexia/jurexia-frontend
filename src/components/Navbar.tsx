@@ -26,6 +26,7 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center gap-8">
                         <NavLink href="/plataforma">Plataforma</NavLink>
                         <NavLink href="/soluciones">Soluciones</NavLink>
+                        <NavLink href="/connect">Connect</NavLink>
                         <NavLink href="/precios">Precios</NavLink>
                         <NavLink href="/seguridad">Seguridad</NavLink>
                     </div>
@@ -76,6 +77,9 @@ export default function Navbar() {
                             </MobileNavLink>
                             <MobileNavLink href="/soluciones" onClick={() => setIsMenuOpen(false)}>
                                 Soluciones
+                            </MobileNavLink>
+                            <MobileNavLink href="/connect" onClick={() => setIsMenuOpen(false)}>
+                                Connect
                             </MobileNavLink>
                             <MobileNavLink href="/precios" onClick={() => setIsMenuOpen(false)}>
                                 Precios
