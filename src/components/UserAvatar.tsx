@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { LogOut, User, CreditCard, Settings } from 'lucide-react';
+import { LogOut, User, CreditCard } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { signOut } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -133,15 +133,7 @@ export function UserAvatar() {
                             className="flex items-center gap-3 px-4 py-2 text-charcoal-700 hover:bg-gray-50 transition-colors"
                         >
                             <CreditCard className="w-4 h-4" />
-                            <span>Planes y facturación</span>
-                        </Link>
-                        <Link
-                            href="/configuracion"
-                            onClick={() => setIsOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 text-charcoal-700 hover:bg-gray-50 transition-colors"
-                        >
-                            <Settings className="w-4 h-4" />
-                            <span>Configuración</span>
+                            <span>Planes</span>
                         </Link>
                     </div>
 
