@@ -394,16 +394,20 @@ export default function ConnectLawyerSection({
                             <div>
                                 {cedulaResult.valid ? (
                                     <>
-                                        <p className="font-medium text-green-800">Cédula aceptada ✓</p>
-                                        <p className="text-sm text-green-700 mt-1">
-                                            <span className="font-semibold">N.°:</span> {cedulaResult.cedula}
-                                        </p>
+                                        <p className="font-medium text-green-800">Cédula verificada ✓</p>
+                                        {cedulaResult.nombre && (
+                                            <p className="text-sm text-green-700 mt-1">
+                                                <span className="font-semibold">Nombre:</span> {cedulaResult.nombre}
+                                            </p>
+                                        )}
                                         <p className="text-xs text-green-600 mt-0.5">
                                             <span className="font-semibold">Profesión:</span> {cedulaResult.profesion}
                                         </p>
-                                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                                            ⏳ Verificación pendiente — tu perfil será revisado por el equipo.
-                                        </p>
+                                        {cedulaResult.institucion && (
+                                            <p className="text-xs text-green-600 mt-0.5">
+                                                <span className="font-semibold">Institución:</span> {cedulaResult.institucion}
+                                            </p>
+                                        )}
                                     </>
                                 ) : (
                                     <>
@@ -418,16 +422,7 @@ export default function ConnectLawyerSection({
                     {/* Info note */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
                         <p className="text-xs text-blue-700">
-                            <strong>Nota:</strong> Tu cédula será verificada manualmente contra el{' '}
-                            <a
-                                href="https://cedulaprofesional.sep.gob.mx"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline font-semibold hover:text-blue-900"
-                            >
-                                Registro Nacional de Profesionistas (SEP)
-                            </a>
-                            . Tu perfil aparecerá como verificado una vez completada la revisión.
+                            <strong>Nota:</strong> Tu cédula se verifica automáticamente contra el Registro Nacional de Profesionistas de la SEP.
                         </p>
                     </div>
                 </div>
