@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, MapPin, Shield, Star, BadgeCheck, Users, ArrowRight, ChevronDown, Check } from 'lucide-react';
+import {
+    Search, MapPin, Shield, Star, BadgeCheck, Users, ArrowRight,
+    ChevronDown, Check, X, Loader2, Phone, Mail, MessageSquare,
+    CheckCircle2
+} from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
-import { searchLawyers, LawyerProfile } from '@/lib/api';
+import { searchLawyers, LawyerProfile, sendConnectRequest } from '@/lib/api';
 import { UserAvatar } from '@/components/UserAvatar';
 
 // Mexican states for filter
@@ -74,6 +78,9 @@ export default function ConnectPage() {
     const [isSearching, setIsSearching] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const [totalResults, setTotalResults] = useState(0);
+
+    // Contact modal state
+    const [contactLawyer, setContactLawyer] = useState<LawyerProfile | null>(null);
 
     const handleSearch = async () => {
         if (!searchQuery.trim() || searchQuery.trim().length < 3) return;
@@ -259,7 +266,11 @@ export default function ConnectPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {lawyers.map((lawyer) => (
-                                    <LawyerCard key={lawyer.id} lawyer={lawyer} />
+                                    <LawyerCard
+                                        key={lawyer.id}
+                                        lawyer={lawyer}
+                                        onContact={() => setContactLawyer(lawyer)}
+                                    />
                                 ))}
                             </div>
                         </>
@@ -289,6 +300,16 @@ export default function ConnectPage() {
                     )}
                 </div>
             </section>
+
+            {/* Contact Request Modal */}
+            {contactLawyer && (
+                <ContactModal
+                    lawyer={contactLawyer}
+                    searchQuery={searchQuery}
+                    userId={user?.id}
+                    onClose={() => setContactLawyer(null)}
+                />
+            )}
         </div>
     );
 }
@@ -297,7 +318,7 @@ export default function ConnectPage() {
 // Lawyer Card Component
 // ─────────────────────────────────────────
 
-function LawyerCard({ lawyer }: { lawyer: LawyerProfile }) {
+function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: () => void }) {
     const estado = lawyer.office_address?.estado || '';
     const municipio = lawyer.office_address?.municipio || '';
     const location = [municipio, ESTADOS.find(e => e.value === estado)?.label].filter(Boolean).join(', ');
@@ -375,10 +396,237 @@ function LawyerCard({ lawyer }: { lawyer: LawyerProfile }) {
             )}
 
             {/* CTA */}
-            <button className="w-full flex items-center justify-center gap-2 py-2.5 bg-charcoal-900 text-white rounded-xl text-sm font-medium hover:bg-charcoal-800 transition-colors group-hover:bg-blue-600 group-hover:shadow-md">
+            <button
+                onClick={onContact}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-charcoal-900 text-white rounded-xl text-sm font-medium hover:bg-charcoal-800 transition-colors group-hover:bg-blue-600 group-hover:shadow-md"
+            >
                 <span>Contactar</span>
                 <ArrowRight className="w-4 h-4" />
             </button>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────
+// Contact Request Modal
+// ─────────────────────────────────────────
+
+function ContactModal({
+    lawyer,
+    searchQuery,
+    userId,
+    onClose,
+}: {
+    lawyer: LawyerProfile;
+    searchQuery: string;
+    userId?: string;
+    onClose: () => void;
+}) {
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [message, setMessage] = useState('');
+    const [sending, setSending] = useState(false);
+    const [sent, setSent] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+
+        if (!name.trim() || !email.trim() || !phone.trim() || !message.trim()) {
+            setError('Todos los campos son obligatorios');
+            return;
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setError('Email inválido');
+            return;
+        }
+
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+            setError('Teléfono inválido (mínimo 10 dígitos)');
+            return;
+        }
+
+        setSending(true);
+        try {
+            await sendConnectRequest({
+                lawyer_id: lawyer.id,
+                client_id: userId,
+                client_name: name.trim(),
+                client_email: email.trim(),
+                client_phone: phone.trim(),
+                message: message.trim(),
+                search_query: searchQuery || undefined,
+            });
+            setSent(true);
+        } catch (err: unknown) {
+            const errMsg = err instanceof Error ? err.message : 'Error al enviar la solicitud';
+            setError(errMsg);
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const initials = lawyer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
+            {/* Modal */}
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                {/* Close button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 p-1 text-charcoal-400 hover:text-charcoal-700 transition-colors z-10"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+
+                {/* Success State */}
+                {sent ? (
+                    <div className="p-8 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-green-50 rounded-2xl flex items-center justify-center">
+                            <CheckCircle2 className="w-8 h-8 text-green-600" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-charcoal-900 mb-2">
+                            ¡Solicitud enviada!
+                        </h3>
+                        <p className="text-charcoal-500 mb-6">
+                            Tu solicitud fue enviada a <strong>{lawyer.full_name}</strong>.
+                            El abogado recibirá una notificación y podrá contactarte directamente.
+                        </p>
+                        <button
+                            onClick={onClose}
+                            className="px-6 py-2.5 bg-charcoal-900 text-white rounded-xl text-sm font-medium hover:bg-charcoal-800 transition-colors"
+                        >
+                            Cerrar
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {/* Header */}
+                        <div className="p-6 pb-4 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-charcoal-700 to-charcoal-900 flex items-center justify-center text-white font-bold">
+                                    {initials}
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-charcoal-900">
+                                        Contactar a {lawyer.full_name}
+                                    </h2>
+                                    <p className="text-xs text-charcoal-500">
+                                        {lawyer.specialties.slice(0, 3).join(' · ')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            {/* Name */}
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
+                                    Nombre completo *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                    placeholder="Tu nombre completo"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-charcoal-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 transition-all"
+                                    required
+                                />
+                            </div>
+
+                            {/* Email + Phone row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
+                                        <Mail className="w-3.5 h-3.5 inline mr-1 opacity-50" />
+                                        Email *
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        placeholder="correo@ejemplo.com"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-charcoal-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 transition-all"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
+                                        <Phone className="w-3.5 h-3.5 inline mr-1 opacity-50" />
+                                        Teléfono *
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={phone}
+                                        onChange={e => setPhone(e.target.value)}
+                                        placeholder="55 1234 5678"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-charcoal-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 transition-all"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Message */}
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
+                                    <MessageSquare className="w-3.5 h-3.5 inline mr-1 opacity-50" />
+                                    Describe tu caso *
+                                </label>
+                                <textarea
+                                    value={message}
+                                    onChange={e => setMessage(e.target.value)}
+                                    placeholder="Describe brevemente tu situación legal para que el abogado pueda evaluar tu caso..."
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-charcoal-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 transition-all resize-none"
+                                    required
+                                />
+                            </div>
+
+                            {/* Error */}
+                            {error && (
+                                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl border border-red-100">
+                                    <X className="w-4 h-4 flex-shrink-0" />
+                                    <span>{error}</span>
+                                </div>
+                            )}
+
+                            {/* Privacy note */}
+                            <p className="text-xs text-charcoal-400">
+                                Tu información será compartida únicamente con el abogado seleccionado.
+                                Al enviar, aceptas nuestros <Link href="/terminos" className="underline hover:text-charcoal-600">Términos</Link> y <Link href="/privacidad" className="underline hover:text-charcoal-600">Política de Privacidad</Link>.
+                            </p>
+
+                            {/* Submit */}
+                            <button
+                                type="submit"
+                                disabled={sending}
+                                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {sending ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Enviando...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ArrowRight className="w-4 h-4" />
+                                        <span>Enviar solicitud</span>
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </>
+                )}
+            </div>
         </div>
     );
 }

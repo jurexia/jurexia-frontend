@@ -414,3 +414,95 @@ export async function connectHealth(): Promise<{
     if (!response.ok) throw new Error('Connect health check failed');
     return response.json();
 }
+
+
+// ══════════════════════════════════════════════════════════════
+// CONNECT REQUESTS — API
+// ══════════════════════════════════════════════════════════════
+
+export interface ConnectRequest {
+    id: string;
+    lawyer_id: string;
+    client_id: string | null;
+    client_name: string;
+    client_email: string;
+    client_phone: string;
+    message: string;
+    search_query: string | null;
+    status: 'pending' | 'read' | 'accepted' | 'rejected';
+    created_at: string;
+    updated_at: string;
+}
+
+export interface SendConnectRequestData {
+    lawyer_id: string;
+    client_id?: string;
+    client_name: string;
+    client_email: string;
+    client_phone: string;
+    message: string;
+    search_query?: string;
+}
+
+/**
+ * Send a connect request to a lawyer
+ */
+export async function sendConnectRequest(data: SendConnectRequestData): Promise<{
+    success: boolean;
+    request_id: string;
+    message: string;
+}> {
+    const response = await fetch('/api/connect/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Error al enviar solicitud');
+    }
+    return response.json();
+}
+
+/**
+ * Get connect requests for the authenticated lawyer
+ */
+export async function getConnectRequests(accessToken: string): Promise<{
+    requests: ConnectRequest[];
+    total: number;
+}> {
+    const response = await fetch('/api/connect/requests', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+        },
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Error al obtener solicitudes');
+    }
+    return response.json();
+}
+
+/**
+ * Update the status of a connect request (lawyer only)
+ */
+export async function updateConnectRequestStatus(
+    requestId: string,
+    status: 'pending' | 'read' | 'accepted' | 'rejected',
+    accessToken: string
+): Promise<{ success: boolean; request: ConnectRequest }> {
+    const response = await fetch(`/api/connect/requests/${requestId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ status }),
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Error al actualizar solicitud');
+    }
+    return response.json();
+}
