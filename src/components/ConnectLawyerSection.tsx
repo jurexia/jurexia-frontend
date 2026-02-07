@@ -23,6 +23,19 @@ import {
     CedulaValidationResponse,
 } from '@/lib/api';
 
+// reCAPTCHA v3 site key (SEP's official key)
+const RECAPTCHA_SITE_KEY = '6Leb1M4rAAAAAP_gRcAyMiOo99-j6eqQajKuMlB9';
+
+// Declare grecaptcha global
+declare global {
+    interface Window {
+        grecaptcha: {
+            ready: (cb: () => void) => void;
+            execute: (siteKey: string, options: { action: string }) => Promise<string>;
+        };
+    }
+}
+
 // ─────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────
@@ -118,15 +131,40 @@ export default function ConnectLawyerSection({
         checkExistingProfile();
     }, [userId]);
 
+    // ── Load reCAPTCHA v3 script ──
+    useEffect(() => {
+        if (typeof window !== 'undefined' && !document.getElementById('recaptcha-sep')) {
+            const script = document.createElement('script');
+            script.id = 'recaptcha-sep';
+            script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+            script.async = true;
+            document.head.appendChild(script);
+        }
+    }, []);
+
     // ── Cédula Validation ──
     const handleValidateCedula = async () => {
-        if (!cedula.trim() || cedula.trim().length < 5) return;
+        if (!cedula.trim() || cedula.trim().length < 7) return;
 
         setValidating(true);
         setCedulaResult(null);
 
         try {
-            const result = await validateCedula(cedula.trim());
+            // Generate reCAPTCHA v3 token
+            let recaptchaToken: string | undefined;
+            try {
+                if (window.grecaptcha) {
+                    recaptchaToken = await new Promise<string>((resolve) => {
+                        window.grecaptcha.ready(() => {
+                            window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'buscar_cedula' }).then(resolve);
+                        });
+                    });
+                }
+            } catch (e) {
+                console.warn('reCAPTCHA token generation failed:', e);
+            }
+
+            const result = await validateCedula(cedula.trim(), recaptchaToken);
             setCedulaResult(result);
 
             if (result.valid) {
