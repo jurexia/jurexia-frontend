@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { stripe, PLANS } from '@/lib/stripe';
-import { authOptions } from '@/lib/auth';
+import { getStripe } from '@/lib/stripe';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        const { priceId, email } = await request.json();
+        const { priceId, email: providedEmail } = await request.json();
 
         if (!priceId) {
             return NextResponse.json(
@@ -15,8 +13,24 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Use session email or provided email
-        const customerEmail = session?.user?.email || email;
+        // Try to get email from Supabase Auth token
+        let customerEmail = providedEmail;
+
+        const authHeader = request.headers.get('authorization');
+        if (authHeader?.startsWith('Bearer ')) {
+            try {
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                );
+                const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+                if (user?.email) {
+                    customerEmail = user.email;
+                }
+            } catch {
+                // Fall back to provided email
+            }
+        }
 
         if (!customerEmail) {
             return NextResponse.json(
@@ -24,6 +38,8 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
+
+        const stripe = getStripe();
 
         // Check if customer already exists
         const existingCustomers = await stripe.customers.list({
@@ -37,6 +53,9 @@ export async function POST(request: NextRequest) {
             customerId = existingCustomers.data[0].id;
         }
 
+        // Determine the base URL for redirects
+        const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://iurexia.com';
+
         // Create Stripe Checkout Session
         const checkoutSession = await stripe.checkout.sessions.create({
             mode: 'subscription',
@@ -49,8 +68,8 @@ export async function POST(request: NextRequest) {
                     quantity: 1,
                 },
             ],
-            success_url: `${process.env.NEXTAUTH_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.NEXTAUTH_URL}/checkout/cancel`,
+            success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${origin}/checkout/cancel`,
             metadata: {
                 userEmail: customerEmail,
             },
@@ -59,8 +78,6 @@ export async function POST(request: NextRequest) {
                     userEmail: customerEmail,
                 },
             },
-            // Enable automatic tax calculation if needed
-            // automatic_tax: { enabled: true },
             // Allow promotion codes
             allow_promotion_codes: true,
             // Billing address collection

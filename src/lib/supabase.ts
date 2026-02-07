@@ -76,11 +76,13 @@ export interface UserProfile {
     id: string;
     email: string;
     full_name: string | null;
-    subscription_type: 'gratuito' | 'basico' | 'premium' | 'enterprise';
+    subscription_type: 'gratuito' | 'pro_monthly' | 'pro_annual' | 'platinum_monthly' | 'platinum_annual';
     queries_used: number;
     queries_limit: number;
     subscription_start: string;
     subscription_end: string | null;
+    stripe_customer_id: string | null;
+    stripe_subscription_id: string | null;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -114,7 +116,7 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
 }
 
 export async function incrementQueryCount(userId: string) {
-    const { data, error } = await supabase.rpc('increment_query_count', { user_id: userId })
+    const { data, error } = await supabase.rpc('increment_query_count', { p_user_id: userId })
 
     // Fallback if RPC doesn't exist
     if (error) {
@@ -137,8 +139,8 @@ export async function checkCanQuery(userId: string): Promise<{ canQuery: boolean
         return { canQuery: false, remaining: 0 }
     }
 
-    // Premium and enterprise have unlimited
-    if (profile.subscription_type === 'premium' || profile.subscription_type === 'enterprise') {
+    // Platinum plans have unlimited queries
+    if (profile.subscription_type === 'platinum_monthly' || profile.subscription_type === 'platinum_annual') {
         return { canQuery: true, remaining: -1 } // -1 = unlimited
     }
 
@@ -158,8 +160,14 @@ export async function getSubscriptionInfo(userId: string) {
         type: profile.subscription_type,
         queriesUsed: profile.queries_used,
         queriesLimit: profile.queries_limit,
+        isUnlimited: profile.subscription_type === 'platinum_monthly' || profile.subscription_type === 'platinum_annual',
         isActive: profile.is_active,
         startDate: profile.subscription_start,
         endDate: profile.subscription_end
     }
+}
+
+// Helper to check if a plan type is unlimited
+export function isUnlimitedPlan(subscriptionType: string): boolean {
+    return subscriptionType === 'platinum_monthly' || subscriptionType === 'platinum_annual';
 }

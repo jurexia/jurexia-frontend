@@ -1,15 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import Stripe from 'stripe';
-import { stripe, getPlanFromSubscription } from '@/lib/stripe';
+import { getStripe, getPlanFromSubscription, PLANS, PlanId } from '@/lib/stripe';
+import {
+    updateUserSubscription,
+    downgradeToFree,
+    resetUserQueries,
+    PlanType,
+    PLAN_CONFIG,
+} from '@/lib/supabase-admin';
 
 // Disable body parsing, we need the raw body for webhook verification
 export const dynamic = 'force-dynamic';
 
+// Map Stripe PlanId to Supabase PlanType
+function mapPlanIdToSubscriptionType(planId: PlanId): PlanType {
+    const mapping: Record<PlanId, PlanType> = {
+        gratuito: 'gratuito',
+        pro_monthly: 'pro_monthly',
+        pro_annual: 'pro_annual',
+        platinum_monthly: 'platinum_monthly',
+        platinum_annual: 'platinum_annual',
+    };
+    return mapping[planId] || 'gratuito';
+}
+
 export async function POST(request: NextRequest) {
     const body = await request.text();
-    const headersList = headers();
-    const signature = headersList.get('stripe-signature');
+    const signature = request.headers.get('stripe-signature');
 
     if (!signature) {
         return NextResponse.json(
@@ -19,6 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     let event: Stripe.Event;
+    const stripe = getStripe();
 
     try {
         event = stripe.webhooks.constructEvent(
@@ -82,7 +100,8 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// Handler functions
+// ─── Handler Functions ──────────────────────────────────────────────
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.log('✅ Checkout completed:', {
         sessionId: session.id,
@@ -90,7 +109,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         subscriptionId: session.subscription,
     });
 
-    // Get customer email
     const email = session.customer_email || session.metadata?.userEmail;
 
     if (!email) {
@@ -98,18 +116,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         return;
     }
 
-    // Get subscription details
     if (session.subscription) {
+        const stripe = getStripe();
         const subscription = await stripe.subscriptions.retrieve(
             session.subscription as string
         );
 
         const planId = getPlanFromSubscription(subscription);
+        const subscriptionType = mapPlanIdToSubscriptionType(planId);
+        const config = PLAN_CONFIG[subscriptionType];
 
-        console.log(`📧 User ${email} subscribed to plan: ${planId}`);
+        console.log(`📧 User ${email} subscribed to plan: ${planId} → ${subscriptionType}`);
 
-        // TODO: Update your database here
-        // await updateUserSubscription(email, planId, subscription.id);
+        await updateUserSubscription(
+            email,
+            subscriptionType,
+            session.customer as string,
+            session.subscription as string,
+        );
     }
 }
 
@@ -121,16 +145,26 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     });
 
     const planId = getPlanFromSubscription(subscription);
+    const subscriptionType = mapPlanIdToSubscriptionType(planId);
 
     // Get customer email
+    const stripe = getStripe();
     const customer = await stripe.customers.retrieve(subscription.customer as string);
     const email = (customer as Stripe.Customer).email;
 
     if (email) {
-        console.log(`📧 User ${email} subscription updated to: ${planId}, status: ${subscription.status}`);
+        console.log(`📧 User ${email} subscription updated to: ${subscriptionType}, status: ${subscription.status}`);
 
-        // TODO: Update your database here
-        // await updateUserSubscription(email, planId, subscription.id, subscription.status);
+        if (subscription.status === 'active') {
+            await updateUserSubscription(
+                email,
+                subscriptionType,
+                subscription.customer as string,
+                subscription.id,
+            );
+        } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+            await downgradeToFree(email);
+        }
     }
 }
 
@@ -140,15 +174,13 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
         customerId: subscription.customer,
     });
 
-    // Get customer email
+    const stripe = getStripe();
     const customer = await stripe.customers.retrieve(subscription.customer as string);
     const email = (customer as Stripe.Customer).email;
 
     if (email) {
-        console.log(`📧 User ${email} subscription canceled`);
-
-        // TODO: Downgrade user to free plan in your database
-        // await updateUserSubscription(email, 'gratuito', null, 'canceled');
+        console.log(`📧 User ${email} subscription canceled → downgrading to free`);
+        await downgradeToFree(email);
     }
 }
 
@@ -159,13 +191,11 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         customerEmail: invoice.customer_email,
     });
 
-    // Reset monthly query count on successful payment
+    // Reset monthly query count on successful renewal payment
     const email = invoice.customer_email;
-    if (email) {
-        console.log(`📧 Resetting query count for ${email}`);
-
-        // TODO: Reset query count in your database
-        // await resetUserQueryCount(email);
+    if (email && invoice.billing_reason === 'subscription_cycle') {
+        console.log(`📧 Resetting query count for ${email} (subscription renewal)`);
+        await resetUserQueries(email);
     }
 }
 
@@ -173,8 +203,11 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     console.log('⚠️ Payment failed:', {
         invoiceId: invoice.id,
         customerEmail: invoice.customer_email,
+        attemptCount: invoice.attempt_count,
     });
 
-    // TODO: Send notification to user about failed payment
-    // await sendPaymentFailedEmail(invoice.customer_email);
+    // After multiple failed attempts, Stripe will cancel the subscription
+    // which triggers handleSubscriptionDeleted → downgrade to free
+    // For now we just log the failure
+    console.log(`⚠️ Payment failed for ${invoice.customer_email} (attempt ${invoice.attempt_count})`);
 }

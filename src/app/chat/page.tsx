@@ -86,7 +86,7 @@ export default function ChatPage() {
     const [queriesUsed, setQueriesUsed] = useState<number>(0);
     const [queriesLimit, setQueriesLimit] = useState<number>(5);
     const [showLimitModal, setShowLimitModal] = useState(false);
-    const isUnlimited = profile?.subscription_type === 'premium' || profile?.subscription_type === 'enterprise';
+    const isUnlimited = profile?.subscription_type === 'platinum_monthly' || profile?.subscription_type === 'platinum_annual';
 
     // Track if we should scroll - only scroll for new messages, not conversation switches
     const prevMessagesLengthRef = useRef(messages.length);

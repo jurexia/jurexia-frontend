@@ -9,9 +9,10 @@ import { useRouter } from 'next/navigation';
 
 const planColors: Record<string, { bg: string; text: string; label: string }> = {
     gratuito: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Gratuito' },
-    basico: { bg: 'bg-green-100', text: 'text-green-700', label: 'Básico' },
-    premium: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Premium' },
-    enterprise: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Enterprise' },
+    pro_monthly: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Pro' },
+    pro_annual: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Pro Anual' },
+    platinum_monthly: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum' },
+    platinum_annual: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum Anual' },
 };
 
 export function UserAvatar() {
