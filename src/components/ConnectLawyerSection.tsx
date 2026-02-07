@@ -13,6 +13,7 @@ import {
     ChevronDown,
     ExternalLink,
     Inbox,
+    Pencil,
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -312,15 +313,43 @@ export default function ConnectLawyerSection({
                     )}
                 </div>
 
-                {/* CTA — Bandeja de Solicitudes */}
-                <Link
-                    href="/connect/inbox"
-                    className="flex items-center justify-center gap-2 w-full py-3 bg-charcoal-900 text-white rounded-xl font-medium hover:bg-charcoal-800 transition-colors"
-                >
-                    <Inbox className="w-4 h-4" />
-                    <span>Ver Bandeja de Solicitudes</span>
-                    <ExternalLink className="w-4 h-4" />
-                </Link>
+                {/* CTA Buttons */}
+                <div className="flex gap-3">
+                    <Link
+                        href="/connect/inbox"
+                        className="flex items-center justify-center gap-2 flex-1 py-3 bg-charcoal-900 text-white rounded-xl font-medium hover:bg-charcoal-800 transition-colors"
+                    >
+                        <Inbox className="w-4 h-4" />
+                        <span>Ver Bandeja de Solicitudes</span>
+                        <ExternalLink className="w-4 h-4" />
+                    </Link>
+                    <button
+                        onClick={() => {
+                            // Pre-fill form with existing data
+                            setCedula(existingProfile.cedula_number);
+                            setCedulaResult({
+                                valid: true,
+                                cedula: existingProfile.cedula_number,
+                                nombre: existingProfile.full_name,
+                                profesion: 'LICENCIADO EN DERECHO',
+                            });
+                            setSelectedSpecialties(existingProfile.specialties || []);
+                            setBio(existingProfile.bio || '');
+                            if (existingProfile.office_address) {
+                                setCp(existingProfile.office_address.cp || '');
+                                setEstado(existingProfile.office_address.estado || '');
+                                setMunicipio(existingProfile.office_address.municipio || '');
+                                setCpLookedUp(true);
+                            }
+                            setPhone(existingProfile.phone || '');
+                            setStep('form');
+                        }}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 text-blue-700 rounded-xl font-medium hover:bg-blue-100 transition-colors border border-blue-200"
+                    >
+                        <Pencil className="w-4 h-4" />
+                        <span>Editar</span>
+                    </button>
+                </div>
 
                 <p className="text-xs text-charcoal-400 text-center mt-3">
                     Tu perfil está visible en el directorio de IUREXIA Connect
