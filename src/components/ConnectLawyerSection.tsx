@@ -23,19 +23,6 @@ import {
     CedulaValidationResponse,
 } from '@/lib/api';
 
-// reCAPTCHA v3 site key (SEP's official key)
-const RECAPTCHA_SITE_KEY = '6Leb1M4rAAAAAP_gRcAyMiOo99-j6eqQajKuMlB9';
-
-// Declare grecaptcha global
-declare global {
-    interface Window {
-        grecaptcha: {
-            ready: (cb: () => void) => void;
-            execute: (siteKey: string, options: { action: string }) => Promise<string>;
-        };
-    }
-}
-
 // ─────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────
@@ -131,17 +118,6 @@ export default function ConnectLawyerSection({
         checkExistingProfile();
     }, [userId]);
 
-    // ── Load reCAPTCHA v3 script ──
-    useEffect(() => {
-        if (typeof window !== 'undefined' && !document.getElementById('recaptcha-sep')) {
-            const script = document.createElement('script');
-            script.id = 'recaptcha-sep';
-            script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
-            script.async = true;
-            document.head.appendChild(script);
-        }
-    }, []);
-
     // ── Cédula Validation ──
     const handleValidateCedula = async () => {
         if (!cedula.trim() || cedula.trim().length < 7) return;
@@ -150,21 +126,7 @@ export default function ConnectLawyerSection({
         setCedulaResult(null);
 
         try {
-            // Generate reCAPTCHA v3 token
-            let recaptchaToken: string | undefined;
-            try {
-                if (window.grecaptcha) {
-                    recaptchaToken = await new Promise<string>((resolve) => {
-                        window.grecaptcha.ready(() => {
-                            window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'buscar_cedula' }).then(resolve);
-                        });
-                    });
-                }
-            } catch (e) {
-                console.warn('reCAPTCHA token generation failed:', e);
-            }
-
-            const result = await validateCedula(cedula.trim(), recaptchaToken);
+            const result = await validateCedula(cedula.trim());
             setCedulaResult(result);
 
             if (result.valid) {
@@ -432,20 +394,16 @@ export default function ConnectLawyerSection({
                             <div>
                                 {cedulaResult.valid ? (
                                     <>
-                                        <p className="font-medium text-green-800">Cédula válida ✓</p>
-                                        {cedulaResult.nombre && (
-                                            <p className="text-sm text-green-700 mt-1">
-                                                <span className="font-semibold">Nombre:</span> {cedulaResult.nombre}
-                                            </p>
-                                        )}
+                                        <p className="font-medium text-green-800">Cédula aceptada ✓</p>
+                                        <p className="text-sm text-green-700 mt-1">
+                                            <span className="font-semibold">N.°:</span> {cedulaResult.cedula}
+                                        </p>
                                         <p className="text-xs text-green-600 mt-0.5">
                                             <span className="font-semibold">Profesión:</span> {cedulaResult.profesion}
                                         </p>
-                                        {cedulaResult.institucion && (
-                                            <p className="text-xs text-green-600 mt-0.5">
-                                                <span className="font-semibold">Institución:</span> {cedulaResult.institucion}
-                                            </p>
-                                        )}
+                                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                                            ⏳ Verificación pendiente — tu perfil será revisado por el equipo.
+                                        </p>
                                     </>
                                 ) : (
                                     <>
@@ -460,7 +418,16 @@ export default function ConnectLawyerSection({
                     {/* Info note */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
                         <p className="text-xs text-blue-700">
-                            <strong>Nota:</strong> La validación de tu cédula se verificará con la base de datos de la SEP. Tu perfil aparecerá como verificado en el directorio.
+                            <strong>Nota:</strong> Tu cédula será verificada manualmente contra el{' '}
+                            <a
+                                href="https://cedulaprofesional.sep.gob.mx"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline font-semibold hover:text-blue-900"
+                            >
+                                Registro Nacional de Profesionistas (SEP)
+                            </a>
+                            . Tu perfil aparecerá como verificado una vez completada la revisión.
                         </p>
                     </div>
                 </div>

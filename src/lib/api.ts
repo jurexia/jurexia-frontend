@@ -313,14 +313,14 @@ export interface PrivacyCheckResponse {
 }
 
 /**
- * Validate a cédula profesional via SEP's official API.
- * Requires a reCAPTCHA v3 token generated in the frontend.
+ * Validate a cédula profesional format (7-8 digits).
+ * Returns validation result with pending verification status.
  */
-export async function validateCedula(cedula: string, recaptcha_token?: string): Promise<CedulaValidationResponse> {
+export async function validateCedula(cedula: string): Promise<CedulaValidationResponse> {
     const response = await fetch(`${API_URL}/connect/validate-cedula`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cedula, recaptcha_token }),
+        body: JSON.stringify({ cedula }),
     });
     if (!response.ok) throw new Error('Cedula validation failed');
     return response.json();
