@@ -190,15 +190,6 @@ export default function SeguridadPage() {
                 </div>
             </section>
 
-            {/* Nota de uso responsable */}
-            <section className="py-8 bg-charcoal-800">
-                <div className="max-w-4xl mx-auto text-center px-4">
-                    <p className="text-sm text-gray-400">
-                        <strong className="text-gray-300">Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
-                    </p>
-                </div>
-            </section>
-
             {/* Footer */}
             <footer className="py-12 bg-cream-300 border-t border-black/5">
                 <div className="max-w-6xl mx-auto px-4">
