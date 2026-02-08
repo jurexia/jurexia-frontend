@@ -6,10 +6,7 @@ const nextConfig = {
     // Standalone output for serverless deployment
     output: 'standalone',
 
-    // Ignore ESLint and TypeScript errors during build (for faster deployment)
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
+    // Ignore TypeScript errors during build (for faster deployment)
     typescript: {
         ignoreBuildErrors: true,
     },

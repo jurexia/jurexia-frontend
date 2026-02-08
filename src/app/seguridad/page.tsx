@@ -2,34 +2,13 @@
 
 import Link from 'next/link';
 import { Scale, ArrowRight, Shield, Lock, Eye, CreditCard, Server, FileCheck, CheckCircle, ChevronDown } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 import { useState } from 'react';
 
 export default function SeguridadPage() {
     return (
         <main className="min-h-screen bg-cream-300">
-            {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="flex items-center justify-between h-16">
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                                Iurex<span className="text-accent-gold">ia</span>
-                            </span>
-                        </Link>
-                        <div className="hidden md:flex items-center gap-8">
-                            <Link href="/plataforma" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Plataforma</Link>
-                            <Link href="/#features" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Soluciones</Link>
-                            <Link href="/#pricing" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Precios</Link>
-                            <span className="text-sm font-medium text-charcoal-900 border-b-2 border-charcoal-900">Seguridad</span>
-                        </div>
-                        <div className="hidden md:flex items-center gap-4">
-                            <Link href="/chat" className="btn-primary text-sm py-2 px-5">
-                                Probar Gratis
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <Navbar />
 
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-4">
@@ -199,6 +178,24 @@ export default function SeguridadPage() {
                         Comenzar ahora
                         <ArrowRight className="w-5 h-5" />
                     </Link>
+                </div>
+            </section>
+
+            {/* Nota de uso responsable */}
+            <section className="py-8 bg-charcoal-800">
+                <div className="max-w-4xl mx-auto text-center px-4">
+                    <p className="text-sm text-gray-400">
+                        <strong className="text-gray-300">Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
+                    </p>
+                </div>
+            </section>
+
+            {/* Nota de uso responsable */}
+            <section className="py-8 bg-charcoal-800">
+                <div className="max-w-4xl mx-auto text-center px-4">
+                    <p className="text-sm text-gray-400">
+                        <strong className="text-gray-300">Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
+                    </p>
                 </div>
             </section>
 

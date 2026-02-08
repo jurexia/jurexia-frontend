@@ -41,7 +41,7 @@ export default function PreciosPage() {
                             description="Ideal para probar la plataforma"
                             features={[
                                 "5 consultas/mes",
-                                "Búsqueda jurídica con RAG",
+                                "Búsqueda con IA en legislación mexicana verificada",
                                 "Filtros de jurisdicción",
                                 "Acceso a base documental completa"
                             ]}
@@ -60,10 +60,10 @@ export default function PreciosPage() {
                             description="Para profesionales que necesitan potencia"
                             features={[
                                 "170 consultas/mes",
-                                "RAG jurídico sin alucinaciones",
+                                "Registra tu cédula para conectar con clientes de tu zona",
+                                "Búsqueda con IA en legislación mexicana verificada y en constante actualización",
                                 "Análisis de documentos (auditoría y mejoras)",
                                 "Filtros por entidad federativa + marco federal",
-                                "Registra tu cédula para conectar con clientes de tu zona",
                                 "Soporte prioritario"
                             ]}
                             buttonText="Elegir Plan Pro"
@@ -82,8 +82,8 @@ export default function PreciosPage() {
                             description="Máximo ahorro por pago adelantado"
                             features={[
                                 "170 consultas/mes (2,040/año)",
-                                "Todo lo del Plan Pro incluido",
                                 "Registra tu cédula para conectar con clientes de tu zona",
+                                "Todo lo del Plan Pro incluido",
                                 "Ahorro de $910 MXN al año",
                                 "Precio fijo garantizado",
                                 "Soporte prioritario"
@@ -106,9 +106,9 @@ export default function PreciosPage() {
                             period="MXN/mes"
                             description="Asesoría personalizada con equipo legal"
                             features={[
-                                "Todo lo del Plan Pro incluido",
                                 "Consultas ilimitadas",
                                 "Registra tu cédula para conectar con clientes de tu zona",
+                                "Todo lo del Plan Pro incluido",
                                 "Consulta personalizada con equipo legal de Iurexia (vía correo)",
                                 "Asesoría legal sobre estrategia (un abogado te contestará a la brevedad)",
                                 "Soporte VIP dedicado"
@@ -129,9 +129,9 @@ export default function PreciosPage() {
                             period="MXN/año"
                             description="Máximo ahorro + asesoría premium"
                             features={[
-                                "Todo lo del Plan Platinum incluido",
                                 "Consultas ilimitadas todo el año",
                                 "Registra tu cédula para conectar con clientes de tu zona",
+                                "Todo lo del Plan Platinum incluido",
                                 "Asesoría legal personalizada continua (vía correo)",
                                 "Ahorro de $4,810 MXN al año",
                                 "Precio fijo garantizado",
@@ -172,7 +172,7 @@ export default function PreciosPage() {
                             </thead>
                             <tbody>
                                 <ComparisonRow feature="Consultas/mes" free="5" pro="170" proAnual="170" platinum="Ilimitadas" />
-                                <ComparisonRow feature="Búsqueda híbrida RAG" free="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                <ComparisonRow feature="Búsqueda con IA verificada" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Filtros jurisdiccionales" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Base documental completa" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Análisis de documentos" free="—" pro="✓" proAnual="✓" platinum="✓" />
@@ -241,6 +241,15 @@ export default function PreciosPage() {
                         Probar Gratis
                         <ArrowRight className="w-5 h-5" />
                     </Link>
+                </div>
+            </section>
+
+            {/* Nota de uso responsable */}
+            <section className="py-8 bg-cream-200">
+                <div className="max-w-4xl mx-auto text-center px-4">
+                    <p className="text-sm text-charcoal-500">
+                        <strong>Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
+                    </p>
                 </div>
             </section>
 

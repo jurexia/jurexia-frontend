@@ -1,35 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe } from 'lucide-react';
+import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 import { useEffect, useRef, useState } from 'react';
 
 export default function PlataformaPage() {
     return (
         <main className="min-h-screen bg-cream-300">
-            {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="flex items-center justify-between h-16">
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                                Iurex<span className="text-accent-gold">ia</span>
-                            </span>
-                        </Link>
-                        <div className="hidden md:flex items-center gap-8">
-                            <span className="text-sm font-medium text-charcoal-900 border-b-2 border-charcoal-900">Plataforma</span>
-                            <Link href="/soluciones" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Soluciones</Link>
-                            <Link href="/precios" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Precios</Link>
-                            <Link href="/seguridad" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Seguridad</Link>
-                        </div>
-                        <div className="hidden md:flex items-center gap-4">
-                            <Link href="/chat" className="btn-primary text-sm py-2 px-5">
-                                Probar Gratis
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <Navbar />
 
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-4">
@@ -180,7 +159,7 @@ export default function PlataformaPage() {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                         <DataSourceCard
                             icon={<FileText className="w-8 h-8" />}
                             title="Leyes Federales"
@@ -198,6 +177,12 @@ export default function PlataformaPage() {
                             title="Jurisprudencia"
                             description="Tesis y jurisprudencia de la SCJN, Tribunales Colegiados y Plenos de Circuito."
                             count="17,000+"
+                        />
+                        <DataSourceCard
+                            icon={<Shield className="w-8 h-8" />}
+                            title="Bloque de Constitucionalidad"
+                            description="Constitución PEUM, Tratados internacionales, Cuadernillos de la Corte Interamericana de Derechos Humanos y Resumen de casos de la CIDH."
+                            count="Nuevo"
                         />
                     </div>
                 </div>
@@ -228,15 +213,13 @@ export default function PlataformaPage() {
                     <div className="grid md:grid-cols-3 gap-8">
                         <div className="bg-white rounded-3xl p-8 shadow-lg border border-amber-100 hover:shadow-xl transition-shadow">
                             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6">
-                                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                </svg>
+                                <MessageSquare className="w-7 h-7 text-white" />
                             </div>
                             <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">
-                                Consulta telefónica directa
+                                Consulta directa mediante la plataforma
                             </h3>
                             <p className="text-charcoal-600 leading-relaxed">
-                                Habla con un abogado especializado que revisa tu caso y afina la estrategia que ideaste con la plataforma.
+                                Escribe a un abogado especializado que revisa tu caso y afina la estrategia que ideaste con la plataforma, directamente desde Iurexia.
                             </p>
                         </div>
 

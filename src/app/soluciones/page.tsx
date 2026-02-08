@@ -2,33 +2,12 @@
 
 import Link from 'next/link';
 import { Scale, ArrowRight, Zap, Users, Shield, FileSearch, Gavel, FileCheck, Compass, BookOpen, MapPin, CheckCircle, Lock, Eye, Server } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 
 export default function SolucionesPage() {
     return (
         <main className="min-h-screen bg-cream-300">
-            {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="flex items-center justify-between h-16">
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                                Iurex<span className="text-accent-gold">ia</span>
-                            </span>
-                        </Link>
-                        <div className="hidden md:flex items-center gap-8">
-                            <Link href="/plataforma" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Plataforma</Link>
-                            <span className="text-sm font-medium text-charcoal-900 border-b-2 border-charcoal-900">Soluciones</span>
-                            <Link href="/precios" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Precios</Link>
-                            <Link href="/seguridad" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Seguridad</Link>
-                        </div>
-                        <div className="hidden md:flex items-center gap-4">
-                            <Link href="/chat" className="btn-primary text-sm py-2 px-5">
-                                Probar Gratis
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <Navbar />
 
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-4">
@@ -201,19 +180,19 @@ export default function SolucionesPage() {
                                 </span>
                             </h2>
                             <p className="text-lg text-charcoal-600 mb-8 leading-relaxed">
-                                Más allá de la tecnología, Iurexia te conecta con <strong>abogados altamente especializados</strong> que refinan contigo la estrategia legal que ideaste en la plataforma. Una llamada telefónica para pulir cada detalle de tu caso.
+                                Más allá de la tecnología, Iurexia te conecta con <strong>abogados altamente especializados</strong> que refinan contigo la estrategia legal que ideaste en la plataforma. Una consulta directa desde la plataforma para pulir cada detalle de tu caso.
                             </p>
 
                             <div className="space-y-4 mb-8">
                                 <div className="flex items-start gap-4">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <h4 className="font-medium text-charcoal-900">Consulta telefónica directa</h4>
-                                        <p className="text-charcoal-600 text-sm">Habla con un especialista que conoce tu caso y afina tu estrategia en tiempo real.</p>
+                                        <h4 className="font-medium text-charcoal-900">Consulta directa mediante la plataforma</h4>
+                                        <p className="text-charcoal-600 text-sm">Escribe a un especialista que conoce tu caso y afina tu estrategia directamente desde Iurexia.</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
@@ -305,6 +284,15 @@ export default function SolucionesPage() {
                         Probar Gratis
                         <ArrowRight className="w-5 h-5" />
                     </Link>
+                </div>
+            </section>
+
+            {/* Nota de uso responsable */}
+            <section className="py-8 bg-cream-200">
+                <div className="max-w-4xl mx-auto text-center px-4">
+                    <p className="text-sm text-charcoal-500">
+                        <strong>Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
+                    </p>
                 </div>
             </section>
 
