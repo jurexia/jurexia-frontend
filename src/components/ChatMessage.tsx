@@ -14,16 +14,43 @@ interface ChatMessageProps {
 const UUID_REGEX = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi;
 
 // Filter out document content from user messages (content between markers is hidden)
+// For AUDITAR_SENTENCIA, show a compact card with file info
 function filterDocumentContent(content: string): string {
+    // Check if this is a sentencia audit message
+    if (content.includes('[AUDITAR_SENTENCIA]')) {
+        // Extract file name from the header
+        const fileNameMatch = content.match(/Archivo:\s*(.+)/);
+        const fileName = fileNameMatch ? fileNameMatch[1].trim() : 'Sentencia';
+
+        // Determine file type from extension
+        const extension = fileName.split('.').pop()?.toLowerCase() || 'txt';
+        const typeLabel = extension === 'pdf' ? 'PDF' :
+            extension === 'docx' ? 'DOCX' :
+                extension === 'doc' ? 'DOC' : 'TXT';
+
+        // Return a compact card HTML instead of the full text
+        return `📄 Documento adjunto: ${fileName} (${typeLabel})`;
+    }
+
     // Remove content between <!-- DOCUMENTO_INICIO --> and <!-- DOCUMENTO_FIN -->
     const filtered = content.replace(/<!-- DOCUMENTO_INICIO -->[\s\S]*?<!-- DOCUMENTO_FIN -->/g, '');
 
+    // Remove content between <!-- SENTENCIA_INICIO --> and <!-- SENTENCIA_FIN -->
+    const sentenciaFiltered = filtered.replace(/<!-- SENTENCIA_INICIO -->[\s\S]*?<!-- SENTENCIA_FIN -->/g, '');
+
     // Also handle the legacy format
-    const legacyFiltered = filtered.replace(/---CONTENIDO DEL DOCUMENTO---[\s\S]*/g, '');
+    const legacyFiltered = sentenciaFiltered.replace(/---CONTENIDO DEL DOCUMENTO---[\s\S]*/g, '');
+
+    // Clean up the [AUDITAR_SENTENCIA] header and metadata lines
+    const cleanedContent = legacyFiltered
+        .replace(/\[AUDITAR_SENTENCIA\]/g, '')
+        .replace(/Archivo:.*$/gm, '')
+        .replace(/Estado:.*$/gm, '');
 
     // Clean up any extra whitespace
-    return legacyFiltered.trim();
+    return cleanedContent.trim();
 }
+
 
 export default function ChatMessage({ message, isStreaming = false, onCitationClick }: ChatMessageProps) {
     const isUser = message.role === 'user';
