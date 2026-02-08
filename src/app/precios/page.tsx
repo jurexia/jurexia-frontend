@@ -5,33 +5,12 @@ import { Scale, ArrowRight, Check, Zap, Crown, Star, Calendar, Loader2 } from 'l
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
+import Navbar from '@/components/Navbar';
 
 export default function PreciosPage() {
     return (
         <main className="min-h-screen bg-cream-300">
-            {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="flex items-center justify-between h-16">
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                                Iurex<span className="text-accent-gold">ia</span>
-                            </span>
-                        </Link>
-                        <div className="hidden md:flex items-center gap-8">
-                            <Link href="/plataforma" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Plataforma</Link>
-                            <Link href="/soluciones" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Soluciones</Link>
-                            <span className="text-sm font-medium text-charcoal-900 border-b-2 border-charcoal-900">Precios</span>
-                            <Link href="/seguridad" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900">Seguridad</Link>
-                        </div>
-                        <div className="hidden md:flex items-center gap-4">
-                            <Link href="/chat" className="btn-primary text-sm py-2 px-5">
-                                Probar Gratis
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            <Navbar />
 
             {/* Hero Section */}
             <section className="pt-32 pb-12 px-4">
@@ -84,6 +63,7 @@ export default function PreciosPage() {
                                 "RAG jurídico sin alucinaciones",
                                 "Análisis de documentos (auditoría y mejoras)",
                                 "Filtros por entidad federativa + marco federal",
+                                "Registra tu cédula para conectar con clientes de tu zona",
                                 "Soporte prioritario"
                             ]}
                             buttonText="Elegir Plan Pro"
@@ -103,6 +83,7 @@ export default function PreciosPage() {
                             features={[
                                 "170 consultas/mes (2,040/año)",
                                 "Todo lo del Plan Pro incluido",
+                                "Registra tu cédula para conectar con clientes de tu zona",
                                 "Ahorro de $910 MXN al año",
                                 "Precio fijo garantizado",
                                 "Soporte prioritario"
@@ -127,6 +108,7 @@ export default function PreciosPage() {
                             features={[
                                 "Todo lo del Plan Pro incluido",
                                 "Consultas ilimitadas",
+                                "Registra tu cédula para conectar con clientes de tu zona",
                                 "Consulta personalizada con equipo legal de Iurexia (vía correo)",
                                 "Asesoría legal sobre estrategia (un abogado te contestará a la brevedad)",
                                 "Soporte VIP dedicado"
@@ -149,6 +131,7 @@ export default function PreciosPage() {
                             features={[
                                 "Todo lo del Plan Platinum incluido",
                                 "Consultas ilimitadas todo el año",
+                                "Registra tu cédula para conectar con clientes de tu zona",
                                 "Asesoría legal personalizada continua (vía correo)",
                                 "Ahorro de $4,810 MXN al año",
                                 "Precio fijo garantizado",

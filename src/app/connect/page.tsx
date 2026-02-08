@@ -9,7 +9,7 @@ import {
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { searchLawyers, LawyerProfile, sendConnectRequest } from '@/lib/api';
-import { UserAvatar } from '@/components/UserAvatar';
+import Navbar from '@/components/Navbar';
 
 // Mexican states for filter
 const ESTADOS = [
@@ -101,29 +101,7 @@ export default function ConnectPage() {
 
     return (
         <div className="min-h-screen bg-cream-300">
-            {/* Header */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2">
-                        <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                            Iurex<span className="text-accent-gold">ia</span>
-                        </span>
-                        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 uppercase tracking-wide">
-                            Connect
-                        </span>
-                    </Link>
-                    <div className="flex items-center gap-4">
-                        <Link href="/chat" className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900 transition-colors">
-                            Chat IA
-                        </Link>
-                        {user ? <UserAvatar /> : (
-                            <Link href="/login" className="btn-primary text-sm py-2 px-5">
-                                Iniciar Sesión
-                            </Link>
-                        )}
-                    </div>
-                </div>
-            </header>
+            <Navbar />
 
             {/* Hero Section */}
             <section className="pt-28 pb-16 px-4">
