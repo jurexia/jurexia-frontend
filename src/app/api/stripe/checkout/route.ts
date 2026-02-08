@@ -82,6 +82,10 @@ export async function POST(request: NextRequest) {
             allow_promotion_codes: true,
             // Billing address collection
             billing_address_collection: 'required',
+            // Tax ID collection (RFC for Mexico)
+            tax_id_collection: {
+                enabled: true,
+            },
             // Locale
             locale: 'es',
         });

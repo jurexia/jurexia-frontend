@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
-import { getStripe } from '@/lib/stripe';
-import { User, CreditCard, Shield, AlertTriangle, Check, X } from 'lucide-react';
+import { User, CreditCard, Shield, AlertTriangle, Check, X, FileText, Building2 } from 'lucide-react';
 import ConnectLawyerSection from '@/components/ConnectLawyerSection';
 
 const planColors: Record<string, { bg: string; text: string; label: string }> = {
@@ -16,6 +15,27 @@ const planColors: Record<string, { bg: string; text: string; label: string }> = 
     platinum_monthly: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum Mensual' },
     platinum_annual: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum Anual' },
 };
+
+const REGIMENES_FISCALES = [
+    { clave: '601', nombre: 'General de Ley Personas Morales' },
+    { clave: '603', nombre: 'Personas Morales con Fines no Lucrativos' },
+    { clave: '605', nombre: 'Sueldos y Salarios' },
+    { clave: '606', nombre: 'Arrendamiento' },
+    { clave: '612', nombre: 'Personas Físicas con Actividades Empresariales y Profesionales' },
+    { clave: '616', nombre: 'Sin obligaciones fiscales' },
+    { clave: '620', nombre: 'Sociedades Cooperativas de Producción' },
+    { clave: '621', nombre: 'Incorporación Fiscal' },
+    { clave: '625', nombre: 'Régimen de las Actividades Empresariales (plataformas)' },
+    { clave: '626', nombre: 'Régimen Simplificado de Confianza (RESICO)' },
+];
+
+const USOS_CFDI = [
+    { clave: 'G01', nombre: 'Adquisición de mercancías' },
+    { clave: 'G03', nombre: 'Gastos en general' },
+    { clave: 'I04', nombre: 'Equipo de computo y accesorios' },
+    { clave: 'P01', nombre: 'Por definir' },
+    { clave: 'S01', nombre: 'Sin efectos fiscales' },
+];
 
 export default function PerfilPage() {
     const { user, profile, loading, isAuthenticated } = useAuth();
@@ -28,6 +48,19 @@ export default function PerfilPage() {
     const [deleteConfirmation, setDeleteConfirmation] = useState('');
     const [loadingPortal, setLoadingPortal] = useState(false);
 
+    // Fiscal data state
+    const [showFiscalForm, setShowFiscalForm] = useState(false);
+    const [fiscalData, setFiscalData] = useState({
+        rfc: '',
+        razon_social: '',
+        regimen_fiscal: '',
+        codigo_postal_fiscal: '',
+        uso_cfdi: 'G03',
+    });
+    const [fiscalSaving, setFiscalSaving] = useState(false);
+    const [fiscalMessage, setFiscalMessage] = useState('');
+    const [fiscalLoaded, setFiscalLoaded] = useState(false);
+
     useEffect(() => {
         if (!loading && !isAuthenticated) {
             router.push('/login');
@@ -39,6 +72,40 @@ export default function PerfilPage() {
             setNewName(profile.full_name);
         }
     }, [profile]);
+
+    // Load existing fiscal data
+    useEffect(() => {
+        if (!user || fiscalLoaded) return;
+
+        const loadFiscalData = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
+
+                const response = await fetch('/api/fiscal/save', {
+                    headers: { 'Authorization': `Bearer ${session.access_token}` },
+                });
+
+                if (response.ok) {
+                    const { data } = await response.json();
+                    if (data?.rfc) {
+                        setFiscalData({
+                            rfc: data.rfc || '',
+                            razon_social: data.razon_social || '',
+                            regimen_fiscal: data.regimen_fiscal || '',
+                            codigo_postal_fiscal: data.codigo_postal_fiscal || '',
+                            uso_cfdi: data.uso_cfdi || 'G03',
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading fiscal data:', err);
+            }
+            setFiscalLoaded(true);
+        };
+
+        loadFiscalData();
+    }, [user, fiscalLoaded]);
 
     // Show skeleton ONLY while auth is initializing
     if (loading) {
@@ -136,6 +203,45 @@ export default function PerfilPage() {
         }
 
         setLoadingPortal(false);
+    };
+
+    const handleSaveFiscal = async () => {
+        setFiscalSaving(true);
+        setFiscalMessage('');
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                setFiscalMessage('Error: no hay sesión activa');
+                setFiscalSaving(false);
+                return;
+            }
+
+            const response = await fetch('/api/fiscal/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify(fiscalData),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                setFiscalMessage(result.error || 'Error al guardar');
+            } else {
+                setFiscalMessage(result.synced_to_stripe
+                    ? 'Datos fiscales guardados y sincronizados con Stripe ✓'
+                    : 'Datos fiscales guardados ✓ (se sincronizarán con Stripe cuando tengas suscripción activa)');
+                setTimeout(() => setFiscalMessage(''), 5000);
+            }
+        } catch (err) {
+            console.error('Error saving fiscal data:', err);
+            setFiscalMessage('Error de conexión');
+        }
+
+        setFiscalSaving(false);
     };
 
     const handleDeleteAccount = async () => {
@@ -349,6 +455,170 @@ export default function PerfilPage() {
                             )}
                         </div>
                     </div>
+                </section>
+
+                {/* Datos Fiscales */}
+                <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-charcoal-700" />
+                            <h2 className="font-serif text-2xl font-medium text-charcoal-900">
+                                Datos Fiscales
+                            </h2>
+                        </div>
+                        <button
+                            onClick={() => setShowFiscalForm(!showFiscalForm)}
+                            className="text-sm text-charcoal-600 hover:text-charcoal-900 transition-colors"
+                        >
+                            {showFiscalForm ? 'Ocultar' : (fiscalData.rfc ? 'Editar' : 'Agregar datos')}
+                        </button>
+                    </div>
+
+                    {/* Summary when collapsed */}
+                    {!showFiscalForm && fiscalData.rfc && (
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-charcoal-600">RFC</span>
+                                <span className="text-charcoal-900 font-mono">{fiscalData.rfc}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-charcoal-600">Razón Social</span>
+                                <span className="text-charcoal-900">{fiscalData.razon_social}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-charcoal-600">Régimen Fiscal</span>
+                                <span className="text-charcoal-900">
+                                    {REGIMENES_FISCALES.find(r => r.clave === fiscalData.regimen_fiscal)?.nombre || fiscalData.regimen_fiscal}
+                                </span>
+                            </div>
+                            <p className="text-xs text-green-600 mt-3 flex items-center gap-1">
+                                <Check className="w-3 h-3" />
+                                Datos fiscales configurados
+                            </p>
+                        </div>
+                    )}
+
+                    {!showFiscalForm && !fiscalData.rfc && (
+                        <p className="text-sm text-charcoal-500">
+                            Agrega tus datos fiscales para que tus facturas incluyan tu RFC y razón social.
+                        </p>
+                    )}
+
+                    {/* Fiscal Data Form */}
+                    {showFiscalForm && (
+                        <div className="space-y-4">
+                            {/* RFC */}
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal-700 mb-1">
+                                    RFC <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={fiscalData.rfc}
+                                    onChange={(e) => setFiscalData({ ...fiscalData, rfc: e.target.value.toUpperCase() })}
+                                    placeholder="XAXX010101000"
+                                    maxLength={13}
+                                    className="w-full px-4 py-2 border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-charcoal-900 font-mono uppercase"
+                                />
+                                <p className="text-xs text-charcoal-400 mt-1">12 caracteres (persona moral) o 13 (persona física)</p>
+                            </div>
+
+                            {/* Razón Social */}
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal-700 mb-1">
+                                    Razón Social / Nombre <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={fiscalData.razon_social}
+                                    onChange={(e) => setFiscalData({ ...fiscalData, razon_social: e.target.value })}
+                                    placeholder="Nombre como aparece en la Constancia de Situación Fiscal"
+                                    className="w-full px-4 py-2 border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-charcoal-900"
+                                />
+                            </div>
+
+                            {/* Régimen Fiscal */}
+                            <div>
+                                <label className="block text-sm font-medium text-charcoal-700 mb-1">
+                                    Régimen Fiscal <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={fiscalData.regimen_fiscal}
+                                    onChange={(e) => setFiscalData({ ...fiscalData, regimen_fiscal: e.target.value })}
+                                    className="w-full px-4 py-2 border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-charcoal-900 bg-white"
+                                >
+                                    <option value="">Selecciona un régimen</option>
+                                    {REGIMENES_FISCALES.map((r) => (
+                                        <option key={r.clave} value={r.clave}>
+                                            {r.clave} — {r.nombre}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Código Postal Fiscal */}
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal-700 mb-1">
+                                        Código Postal Fiscal <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={fiscalData.codigo_postal_fiscal}
+                                        onChange={(e) => setFiscalData({ ...fiscalData, codigo_postal_fiscal: e.target.value.replace(/\D/g, '') })}
+                                        placeholder="06600"
+                                        maxLength={5}
+                                        className="w-full px-4 py-2 border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-charcoal-900 font-mono"
+                                    />
+                                </div>
+
+                                {/* Uso del CFDI */}
+                                <div>
+                                    <label className="block text-sm font-medium text-charcoal-700 mb-1">
+                                        Uso del CFDI
+                                    </label>
+                                    <select
+                                        value={fiscalData.uso_cfdi}
+                                        onChange={(e) => setFiscalData({ ...fiscalData, uso_cfdi: e.target.value })}
+                                        className="w-full px-4 py-2 border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-charcoal-900 bg-white"
+                                    >
+                                        {USOS_CFDI.map((u) => (
+                                            <option key={u.clave} value={u.clave}>
+                                                {u.clave} — {u.nombre}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Save button */}
+                            <div className="flex items-center gap-3 pt-2">
+                                <button
+                                    onClick={handleSaveFiscal}
+                                    disabled={fiscalSaving || !fiscalData.rfc || !fiscalData.razon_social || !fiscalData.regimen_fiscal || !fiscalData.codigo_postal_fiscal}
+                                    className="px-6 py-2 bg-charcoal-900 text-white rounded-lg hover:bg-charcoal-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {fiscalSaving ? 'Guardando...' : 'Guardar Datos Fiscales'}
+                                </button>
+                                <button
+                                    onClick={() => setShowFiscalForm(false)}
+                                    className="px-4 py-2 border border-charcoal-300 text-charcoal-900 rounded-lg hover:bg-cream-300 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+
+                            {fiscalMessage && (
+                                <p className={`text-sm mt-2 ${fiscalMessage.includes('Error') || fiscalMessage.includes('error') ? 'text-red-600' : 'text-green-600'}`}>
+                                    {fiscalMessage}
+                                </p>
+                            )}
+
+                            <p className="text-xs text-charcoal-400 mt-2">
+                                Estos datos se usan para generar tus facturas. Asegúrate de que coincidan con tu Constancia de Situación Fiscal.
+                            </p>
+                        </div>
+                    )}
                 </section>
 
                 {/* IUREXIA Connect — Solo para PRO/Platinum */}
