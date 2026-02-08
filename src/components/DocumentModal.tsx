@@ -9,8 +9,8 @@ interface DocumentModalProps {
     onClose: () => void;
 }
 
-// Parse jurisprudence metadata from text
-function parseJurisprudenciaMetadata(texto: string): {
+// Parse jurisprudence metadata from text OR document payload
+function parseJurisprudenciaMetadata(texto: string, doc?: DocumentResponse): {
     tipo?: string;
     materia?: string;
     instancia?: string;
@@ -36,11 +36,12 @@ function parseJurisprudenciaMetadata(texto: string): {
     const tesisMatch = texto.match(/\[TESIS:\s*([^\]]+)\]/i);
     const registroMatch = texto.match(/\[REGISTRO:\s*([^\]]+)\]/i);
 
-    if (tipoMatch) result.tipo = tipoMatch[1].trim();
-    if (materiaMatch) result.materia = materiaMatch[1].trim();
-    if (instanciaMatch) result.instancia = instanciaMatch[1].trim();
-    if (tesisMatch) result.tesis = tesisMatch[1].trim();
-    if (registroMatch) result.registro = registroMatch[1].trim();
+    // Prefer text tags if present, otherwise fallback to payload fields (for TCC)
+    result.tipo = tipoMatch ? tipoMatch[1].trim() : doc?.tipo_criterio;
+    result.materia = materiaMatch ? materiaMatch[1].trim() : doc?.materia;
+    result.instancia = instanciaMatch ? instanciaMatch[1].trim() : doc?.instancia;
+    result.tesis = tesisMatch ? tesisMatch[1].trim() : doc?.tesis_num;
+    result.registro = registroMatch ? registroMatch[1].trim() : doc?.registro;
 
     // Remove metadata lines and dashes from content
     let contenido = texto
@@ -136,7 +137,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
     if (!docId) return null;
 
     const isJurisprudencia = document?.silo === 'jurisprudencia_nacional';
-    const jurisprudenciaData = document && isJurisprudencia ? parseJurisprudenciaMetadata(document.texto) : null;
+    const jurisprudenciaData = document && isJurisprudencia ? parseJurisprudenciaMetadata(document.texto, document) : null;
 
     const handleDownloadPDF = () => {
         if (!document) return;

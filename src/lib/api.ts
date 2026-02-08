@@ -153,6 +153,12 @@ export interface DocumentResponse {
     entidad: string | null;
     silo: string;
     found: boolean;
+    // Additional fields for jurisprudencia (esp. TCC)
+    tipo_criterio?: string;
+    materia?: string;
+    instancia?: string;
+    tesis_num?: string;
+    registro?: string;
 }
 
 /**
