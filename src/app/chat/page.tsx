@@ -297,20 +297,9 @@ export default function ChatPage() {
     const selectedEstadoLabel = ESTADOS_MEXICO.find(e => e.value === selectedEstado)?.label || 'Seleccionar jurisdicción';
     const queriesRemaining = isUnlimited ? -1 : Math.max(0, queriesLimit - queriesUsed);
 
-    // Show loading while checking auth
-    if (authLoading) {
-        return (
-            <div className="min-h-screen bg-cream-300 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-charcoal-900 mx-auto mb-4"></div>
-                    <p className="text-charcoal-600">Verificando sesión...</p>
-                </div>
-            </div>
-        );
-    }
-
-    // If not authenticated, useRequireAuth will redirect
-    if (!isAuthenticated) {
+    // While auth loads, render nothing (bg matches body, no flash)
+    // useRequireAuth will redirect if not authenticated
+    if (authLoading || !isAuthenticated) {
         return null;
     }
 

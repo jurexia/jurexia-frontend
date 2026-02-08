@@ -3,41 +3,17 @@
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { MessageSquare, ArrowRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
 
 interface HeroCTAProps {
     className?: string;
 }
 
-// Conditional CTA that shows "Ir al chat" for logged-in users, login prompt for guests
+// Conditional CTA: "Ir al chat" for logged-in users, demo prompt for guests
 export function HeroCTA({ className = '' }: HeroCTAProps) {
     const { isAuthenticated, loading } = useAuth();
-    const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-    // Fallback: if loading takes more than 2s, show unauthenticated state
-    useEffect(() => {
-        if (loading) {
-            const timer = setTimeout(() => setLoadingTimeout(true), 2000);
-            return () => clearTimeout(timer);
-        } else {
-            setLoadingTimeout(false);
-        }
-    }, [loading]);
-
-    // While loading (and not timed out), show a neutral state
-    if (loading && !loadingTimeout) {
-        return (
-            <div className={`chat-input-container p-6 ${className}`}>
-                <div className="animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-            </div>
-        );
-    }
-
-    // Authenticated user: Show "Ir al chat" button
-    if (isAuthenticated) {
+    // Authenticated user: Show "Continuar al chat" button
+    if (!loading && isAuthenticated) {
         return (
             <Link href="/chat" className={className}>
                 <div className="chat-input-container p-6 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.01] group">
@@ -64,7 +40,8 @@ export function HeroCTA({ className = '' }: HeroCTAProps) {
         );
     }
 
-    // Unauthenticated user: Show demo prompt with login link
+    // Default state (loading OR unauthenticated): Show demo prompt with login link
+    // No skeleton/pulse — this is the stable default that everyone sees first
     return (
         <Link href="/login" className={className}>
             <div className="chat-input-container p-6 cursor-pointer hover:shadow-lg transition-shadow">
