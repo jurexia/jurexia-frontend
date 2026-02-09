@@ -533,6 +533,12 @@ export default function ChatPage() {
                             placeholder="Escribe tu siguiente pregunta..."
                             estado={selectedEstado || undefined}
                         />
+                        {/* Responsible Use Disclaimer */}
+                        <div className="max-w-3xl mx-auto mt-3">
+                            <p className="text-xs text-charcoal-400 text-center leading-relaxed">
+                                <strong className="text-charcoal-500">Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un profesional del derecho.
+                            </p>
+                        </div>
                     </div>
                 )}
 
