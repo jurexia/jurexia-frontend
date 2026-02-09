@@ -39,22 +39,143 @@ export default function HomePage() {
 
                     {/* Headline */}
                     <AnimatedSection animation="slide-up" delay={300}>
-                        <p className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-charcoal-900 leading-tight mb-6 px-2">
+                        <p className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-charcoal-900 leading-tight mb-12 px-2">
                             La inteligencia artificial más precisa para el sistema jurídico Mexicano
                         </p>
                     </AnimatedSection>
 
-                    {/* Subheadline */}
-                    <AnimatedSection animation="slide-up" delay={400}>
-                        <p className="text-base sm:text-lg text-charcoal-600 max-w-3xl mx-auto mb-12 leading-relaxed px-2">
-                            Iurexia tiene dos objetivos principales. <strong>Primero:</strong> Apoyar a profesionales del Derecho con investigación, análisis y generación de documentos legales, todo mediante IA que reduce tiempos sin comprometer rigor jurídico. <strong>Segundo:</strong> Orientar a personas sin formación jurídica hacia la claridad y el siguiente paso correcto para resolver su problema legal. En síntesis: Iurexia logra que el conocimiento legal mexicano sea accesible, confiable y utilizable.
+                    {/* Two Main Objectives - Visual Cards */}
+                    <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto px-4">
+                        {/* Objective 1: For Legal Professionals */}
+                        <AnimatedSection animation="slide-up" delay={400}>
+                            <div className="group relative bg-gradient-to-br from-charcoal-900 via-charcoal-800 to-charcoal-900 rounded-2xl p-8 text-white overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+                                {/* Animated gradient overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-accent-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                                {/* Content */}
+                                <div className="relative z-10">
+                                    {/* Icon */}
+                                    <div className="w-14 h-14 rounded-xl bg-accent-gold/20 flex items-center justify-center mb-4 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                        <svg className="w-7 h-7 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+
+                                    {/* Number badge */}
+                                    <div className="absolute -top-2 -right-2 w-12 h-12 rounded-full bg-accent-gold flex items-center justify-center transform group-hover:scale-110 transition-transform duration-500">
+                                        <span className="font-serif text-xl font-bold text-charcoal-900">1</span>
+                                    </div>
+
+                                    {/* Title */}
+                                    <h3 className="font-serif text-2xl font-bold mb-3 group-hover:text-accent-gold transition-colors duration-300">
+                                        Para Profesionales del Derecho
+                                    </h3>
+
+                                    {/* Description */}
+                                    <p className="text-gray-300 leading-relaxed mb-4">
+                                        Apoyar a profesionales con <span className="text-accent-gold font-medium">investigación jurídica</span>, <span className="text-accent-gold font-medium">análisis de documentos</span> y <span className="text-accent-gold font-medium">generación de escritos legales</span>, todo mediante IA que reduce tiempos sin comprometer rigor jurídico.
+                                    </p>
+
+                                    {/* Features list */}
+                                    <ul className="space-y-2">
+                                        <li className="flex items-start gap-2 text-sm text-gray-400">
+                                            <svg className="w-5 h-5 text-accent-gold flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span className="group-hover:text-gray-300 transition-colors">Búsqueda híbrida en legislación verificada</span>
+                                        </li>
+                                        <li className="flex items-start gap-2 text-sm text-gray-400">
+                                            <svg className="w-5 h-5 text-accent-gold flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span className="group-hover:text-gray-300 transition-colors">Análisis de demandas y sentencias</span>
+                                        </li>
+                                        <li className="flex items-start gap-2 text-sm text-gray-400">
+                                            <svg className="w-5 h-5 text-accent-gold flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span className="group-hover:text-gray-300 transition-colors">Generación de argumentos fundamentados</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                {/* Decorative element */}
+                                <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-accent-gold/10 blur-2xl transform group-hover:scale-150 transition-transform duration-700"></div>
+                            </div>
+                        </AnimatedSection>
+
+                        {/* Objective 2: For Citizens */}
+                        <AnimatedSection animation="slide-up" delay={500}>
+                            <div className="group relative bg-gradient-to-br from-cream-200 via-cream-100 to-white rounded-2xl p-8 border border-cream-300 overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+                                {/* Animated gradient overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-accent-brown/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                                {/* Content */}
+                                <div className="relative z-10">
+                                    {/* Icon */}
+                                    <div className="w-14 h-14 rounded-xl bg-accent-brown/10 flex items-center justify-center mb-4 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                        <svg className="w-7 h-7 text-accent-brown" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    </div>
+
+                                    {/* Number badge */}
+                                    <div className="absolute -top-2 -right-2 w-12 h-12 rounded-full bg-accent-brown flex items-center justify-center transform group-hover:scale-110 transition-transform duration-500">
+                                        <span className="font-serif text-xl font-bold text-white">2</span>
+                                    </div>
+
+                                    {/* Title */}
+                                    <h3 className="font-serif text-2xl font-bold mb-3 text-charcoal-900 group-hover:text-accent-brown transition-colors duration-300">
+                                        Para Ciudadanos
+                                    </h3>
+
+                                    {/* Description */}
+                                    <p className="text-charcoal-600 leading-relaxed mb-4">
+                                        Orientar a personas <span className="text-accent-brown font-medium">sin formación jurídica</span> hacia la claridad y el siguiente paso correcto para resolver su problema legal con <span className="text-accent-brown font-medium">información confiable</span> y <span className="text-accent-brown font-medium">conexión con profesionales</span>.
+                                    </p>
+
+                                    {/* Features list */}
+                                    <ul className="space-y-2">
+                                        <li className="flex items-start gap-2 text-sm text-charcoal-500">
+                                            <svg className="w-5 h-5 text-accent-brown flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span className="group-hover:text-charcoal-600 transition-colors">Consultas en lenguaje natural</span>
+                                        </li>
+                                        <li className="flex items-start gap-2 text-sm text-charcoal-500">
+                                            <svg className="w-5 h-5 text-accent-brown flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span className="group-hover:text-charcoal-600 transition-colors">Orientación paso a paso</span>
+                                        </li>
+                                        <li className="flex items-start gap-2 text-sm text-charcoal-500">
+                                            <svg className="w-5 h-5 text-accent-brown flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span className="group-hover:text-charcoal-600 transition-colors">Conexión con abogados verificados</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                {/* Decorative element */}
+                                <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-accent-brown/10 blur-2xl transform group-hover:scale-150 transition-transform duration-700"></div>
+                            </div>
+                        </AnimatedSection>
+                    </div>
+
+                    {/* Tagline */}
+                    <AnimatedSection animation="fade-in" delay={600}>
+                        <p className="text-center text-lg font-medium text-charcoal-700 mt-8 px-4">
+                            Haciendo el conocimiento legal mexicano <span className="text-accent-gold">accesible</span>, <span className="text-accent-gold">confiable</span> y <span className="text-accent-gold">utilizable</span>.
                         </p>
                     </AnimatedSection>
                 </div>
+            </section>
 
-                {/* Chat Input Demo - Harvey Style (Conditional for auth) */}
-                <AnimatedSection animation="fade-in" delay={500}>
-                    <div className="max-w-3xl mx-auto mt-8">
+            {/* Chat Input Demo Section */}
+            <section className="py-8 px-4">
+                <AnimatedSection animation="fade-in" delay={700}>
+                    <div className="max-w-3xl mx-auto">
                         <HeroCTA />
                     </div>
                 </AnimatedSection>
