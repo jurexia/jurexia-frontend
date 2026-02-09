@@ -5,17 +5,21 @@ import { WakeUpProvider } from '@/components/WakeUpProvider'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://iurexia.com'),
-    title: 'Iurexia - IA para el Derecho Mexicano',
-    description: 'Plataforma de inteligencia artificial diseñada para profesionales del derecho en México. Investigación jurídica, análisis de documentos y consultoría legal avanzada.',
-    keywords: ['derecho mexicano', 'inteligencia artificial', 'legal tech', 'jurisprudencia', 'abogados'],
+    title: 'Iurexia - Inteligencia Artificial para el Derecho Mexicano',
+    description: 'La IA jurídica más precisa para México. Investigación legal, análisis de documentos y conexión con abogados verificados. Especializada en legislación mexicana.',
+    keywords: ['iurexia', 'inteligencia artificial derecho mexicano', 'ia juridica mexico', 'asistente legal inteligencia artificial', 'abogado virtual mexico', 'jurisprudencia mexico', 'legal tech mexico', 'analisis documentos legales', 'codigo civil mexico', 'derecho mexicano ia', 'busqueda juridica mexico'],
     authors: [{ name: 'Iurexia' }],
     robots: {
-        index: false,
-        follow: false,
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+        },
     },
     openGraph: {
-        title: 'Iurexia - IA para el Derecho Mexicano',
-        description: 'Avanza tu práctica jurídica con IA especializada en Derecho Mexicano',
+        title: 'Iurexia - IA Jurídica para México',
+        description: 'Investigación legal, análisis de documentos y conexión con abogados verificados. La inteligencia artificial más precisa para el sistema jurídico mexicano.',
         url: 'https://iurexia.com',
         siteName: 'Iurexia',
         locale: 'es_MX',
@@ -31,8 +35,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Iurexia - IA para el Derecho Mexicano',
-        description: 'Avanza tu práctica jurídica con IA especializada en Derecho Mexicano',
+        title: 'Iurexia - IA Jurídica para México',
+        description: 'La inteligencia artificial más precisa para el sistema jurídico mexicano',
         images: ['/og-image.png'],
     },
 }
@@ -50,7 +54,6 @@ export default function RootLayout({
                 <meta name="classification" content="Legal, Education, Business, Professional Services" />
                 <meta name="category" content="LegalTech, Legal Research, Law, Professional Services, Education" />
                 <meta name="rating" content="General" />
-                <meta name="robots" content="noindex, nofollow" />
                 {/* Dublin Core metadata for academic/institutional recognition */}
                 <meta name="DC.type" content="Service" />
                 <meta name="DC.subject" content="Legal Technology, Mexican Law, Legal Research, Artificial Intelligence" />

@@ -1,9 +1,20 @@
-# Iurexia - Bloqueo temporal de indexación
-# Remover este bloqueo cuando estés listo para aparecer en Google
-
+# Permitir todos los crawlers de búsqueda
 User-agent: *
-Disallow: /
+Allow: /
 
-# Nota: Cuando quieras que Google te indexe, cambia a:
-# User-agent: *
-# Allow: /
+# Sitemap
+Sitemap: https://www.iurexia.com/sitemap.xml
+
+# Bloquear rutas privadas y API
+Disallow: /api/
+Disallow: /chat/
+Disallow: /cuenta/
+Disallow: /_next/
+Disallow: /static/
+
+# Permitir páginas públicas importantes
+Allow: /plataforma
+Allow: /precios
+Allow: /connect
+Allow: /registro
+Allow: /login
