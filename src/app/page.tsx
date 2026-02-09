@@ -173,7 +173,7 @@ export default function HomePage() {
             </section>
 
             {/* Chat Input Demo Section */}
-            <section className="py-8 px-4">
+            <section className="py-4 px-4">
                 <AnimatedSection animation="fade-in" delay={700}>
                     <div className="max-w-3xl mx-auto">
                         <HeroCTA />
