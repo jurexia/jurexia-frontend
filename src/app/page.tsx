@@ -36,7 +36,7 @@ export default function HomePage() {
 
                     {/* Subheadline */}
                     <p className="text-lg text-charcoal-600 max-w-3xl mx-auto mb-12 leading-relaxed">
-                        Iurexia tiene dos objetivos principales. <strong>Primero:</strong> Apoyar a profesionales del Derecho con investigación, análisis y generación de documentos legales, todo mediante IA que reduce tiempos sin comprometer rigor jurídico. <strong>Segundo:</strong> Orientar a personas sin formación jurídica hacia la claridad y el siguiente paso correcto. En síntesis: Iurexia logra que el conocimiento legal mexicano sea accesible, confiable y utilizable.
+                        Iurexia tiene dos objetivos principales. <strong>Primero:</strong> Apoyar a profesionales del Derecho con investigación, análisis y generación de documentos legales, todo mediante IA que reduce tiempos sin comprometer rigor jurídico. <strong>Segundo:</strong> Orientar a personas sin formación jurídica hacia la claridad y el siguiente paso correcto para resolver su problema legal. En síntesis: Iurexia logra que el conocimiento legal mexicano sea accesible, confiable y utilizable.
                     </p>
                 </div>
 
@@ -210,9 +210,12 @@ export default function HomePage() {
                                     />
                                 </ul>
 
-                                <Link href="/precios" className="inline-flex items-center gap-2 px-6 py-3 bg-accent-gold text-charcoal-900 font-semibold rounded-full hover:bg-accent-gold/90 transition-all duration-300 hover:shadow-lg hover:shadow-accent-gold/20">
-                                    Registrar mi perfil
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                <Link href="/precios" className="inline-flex flex-col items-center gap-1 px-6 py-3 bg-accent-gold text-charcoal-900 font-semibold rounded-full hover:bg-accent-gold/90 transition-all duration-300 hover:shadow-lg hover:shadow-accent-gold/20">
+                                    <span className="flex items-center gap-2">
+                                        Registrar mi perfil
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                    </span>
+                                    <span className="text-xs font-normal text-charcoal-700">(Disponible para usuarios Pro en adelante)</span>
                                 </Link>
                             </div>
                         </div>
