@@ -492,10 +492,9 @@ export default function HomeDemo() {
                                     </p>
                                 </div>
 
-                                {/* Lawyer Cards Carousel */}
                                 <LawyerCard
-                                    name="Lic. Yair Israel Alcantar"
-                                    cedula="12994266"
+                                    name="Lic. Roberto Alcocer Peniche"
+                                    cedula="8456123"
                                     location="Querétaro, Qro."
                                     specialties={["Amparo", "Fiscal", "Civil"]}
                                     match={98}
@@ -671,8 +670,8 @@ function ActionButton({ icon: Icon, label, active = false }: { icon: any, label:
     return (
         <button
             className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${active
-                    ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
         >
             <Icon className="w-4 h-4" />
@@ -685,8 +684,8 @@ function DropdownItem({ label, active = false }: { label: string, active?: boole
     return (
         <button
             className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${active
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-charcoal-700 hover:bg-gray-50'
+                ? 'bg-blue-50 text-blue-700 font-medium'
+                : 'text-charcoal-700 hover:bg-gray-50'
                 }`}
         >
             {label}
