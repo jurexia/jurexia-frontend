@@ -14,9 +14,21 @@ export default function HomeDemo() {
 
     // Sequence configuration
     useEffect(() => {
-        let timeout: NodeJS.Timeout;
+        let isMounted = true;
+
+        const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+        const typeText = async (fullText: string, setter: (s: string) => void) => {
+            for (let i = 0; i <= fullText.length; i++) {
+                if (!isMounted) return;
+                setter(fullText.slice(0, i));
+                await wait(50 + Math.random() * 30);
+            }
+        };
 
         const runSequence = async () => {
+            if (!isMounted) return;
+
             // --- STEP 1: CHAT ---
             setStep('chat');
             setText('');
@@ -25,19 +37,24 @@ export default function HomeDemo() {
 
             // Type question
             await wait(1000);
+            if (!isMounted) return;
             setIsTyping(true);
             await typeText("Fundamento del despido injustificado", setText);
+            if (!isMounted) return;
             setIsTyping(false);
 
             // Show "Searching"
             await wait(500);
+            if (!isMounted) return;
             setProgress(30);
             await wait(500);
+            if (!isMounted) return;
             setProgress(100);
 
             // Show Result
             setShowResult(true);
             await wait(3500); // Read time
+            if (!isMounted) return;
 
             // --- STEP 2: AUDIT ---
             setStep('audit');
@@ -47,8 +64,10 @@ export default function HomeDemo() {
 
             // Upload simulation
             await wait(1000);
+            if (!isMounted) return;
             setText('Subiendo demanda_laboral.pdf...');
             for (let i = 0; i <= 100; i += 10) {
+                if (!isMounted) return;
                 setProgress(i);
                 await wait(100);
             }
@@ -56,10 +75,12 @@ export default function HomeDemo() {
             // Analyze
             setText('Analizando riesgos procesales...');
             await wait(1500);
+            if (!isMounted) return;
 
             // Show Result
             setShowResult(true);
             await wait(3500);
+            if (!isMounted) return;
 
             // --- STEP 3: CONNECT ---
             setStep('connect');
@@ -69,27 +90,32 @@ export default function HomeDemo() {
 
             // Search simulation
             await wait(1000);
+            if (!isMounted) return;
             setIsTyping(true);
             await typeText("Abogado laboralista en CDMX", setText);
+            if (!isMounted) return;
             setIsTyping(false);
 
             // Searching
             await wait(500);
+            if (!isMounted) return;
             setProgress(50);
             await wait(500);
+            if (!isMounted) return;
             setProgress(100);
 
             // Show Result
             setShowResult(true);
             await wait(3500);
+            if (!isMounted) return;
 
             // Loop
-            runSequence();
+            if (isMounted) runSequence();
         };
 
         runSequence();
 
-        return () => clearTimeout(timeout);
+        return () => { isMounted = false; };
     }, []);
 
     return (
