@@ -40,7 +40,7 @@ export default function PreciosPage() {
                             period="MXN"
                             description="Ideal para probar la plataforma"
                             features={[
-                                "5 consultas/mes",
+                                "3 consultas/mes",
                                 "Búsqueda con IA en legislación mexicana verificada",
                                 "Filtros de jurisdicción",
                                 "Acceso a base documental completa"
@@ -171,7 +171,7 @@ export default function PreciosPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <ComparisonRow feature="Consultas/mes" free="5" pro="170" proAnual="170" platinum="Ilimitadas" />
+                                <ComparisonRow feature="Consultas/mes" free="3" pro="170" proAnual="170" platinum="Ilimitadas" />
                                 <ComparisonRow feature="Búsqueda con IA verificada" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Filtros jurisdiccionales" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Base documental completa" free="✓" pro="✓" proAnual="✓" platinum="✓" />
@@ -234,7 +234,7 @@ export default function PreciosPage() {
                         Comienza gratis hoy
                     </h2>
                     <p className="text-lg text-gray-400 mb-8">
-                        Prueba Iurexia con 5 consultas gratuitas. Sin tarjeta de crédito.
+                        Prueba Iurexia con 3 consultas gratuitas. Sin tarjeta de crédito.
                     </p>
                     <Link
                         href="/chat"

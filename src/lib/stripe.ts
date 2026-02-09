@@ -38,9 +38,9 @@ export const PLANS = {
         price: 0,
         currency: 'MXN',
         interval: null,
-        queryLimit: 5,
+        queryLimit: 3,
         features: [
-            '5 consultas/mes',
+            '3 consultas/mes',
             'Búsqueda jurídica con RAG',
             'Filtros de jurisdicción',
             'Acceso a base documental completa'

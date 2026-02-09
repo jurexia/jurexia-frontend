@@ -81,7 +81,7 @@ export default function RegistroPage() {
                         Crea tu cuenta
                     </h1>
                     <p className="text-charcoal-500 text-center mb-6">
-                        Comienza con 5 consultas gratis
+                        Comienza con 3 consultas gratis
                     </p>
 
                     {/* Benefits */}
@@ -89,7 +89,7 @@ export default function RegistroPage() {
                         <div className="space-y-2">
                             <div className="flex items-center gap-2 text-sm text-green-700">
                                 <Check className="w-4 h-4" />
-                                <span>5 consultas mensuales gratis</span>
+                                <span>3 consultas mensuales gratis</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-green-700">
                                 <Check className="w-4 h-4" />
