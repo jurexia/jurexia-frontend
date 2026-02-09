@@ -30,20 +30,91 @@ export default function HomePage() {
                     </div>
 
                     {/* Headline */}
-                    <p className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-charcoal-900 leading-tight mb-6">
+                    <p className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-charcoal-900 leading-tight mb-6">
                         La inteligencia artificial más precisa para el sistema jurídico Mexicano
                     </p>
 
                     {/* Subheadline */}
-                    <p className="text-lg text-charcoal-600 max-w-3xl mx-auto mb-12">
-                        Poderosa herramienta de investigación jurídica, análisis de documentos y consultoría legal
-                        potenciada por inteligencia artificial especializada para el sistema jurídico mexicano.
+                    <p className="text-lg text-charcoal-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+                        Iurexia tiene dos objetivos principales. <strong>Primero:</strong> Apoyar a profesionales del Derecho con investigación, análisis y generación de documentos legales, todo mediante IA que reduce tiempos sin comprometer rigor jurídico. <strong>Segundo:</strong> Orientar a personas sin formación jurídica hacia la claridad y el siguiente paso correcto. En síntesis: Iurexia logra que el conocimiento legal mexicano sea accesible, confiable y utilizable.
                     </p>
                 </div>
 
                 {/* Chat Input Demo - Harvey Style (Conditional for auth) */}
                 <div className="max-w-3xl mx-auto mt-8">
                     <HeroCTA />
+                </div>
+            </section>
+
+            {/* Connect Section for Lawyers */}
+            <section className="py-16 bg-gradient-to-b from-white to-blue-50">
+                <div className="max-w-4xl mx-auto px-4">
+                    <div className="bg-white border-2 border-blue-200 rounded-2xl p-8 md:p-12 shadow-lg">
+                        {/* Header with Icon */}
+                        <div className="flex items-center justify-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <h2 className="font-serif text-3xl md:text-4xl font-bold text-charcoal-900">
+                                Iurexia <span className="text-blue-600">Connect</span>
+                            </h2>
+                            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
+                                Nuevo
+                            </span>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-lg text-charcoal-700 leading-relaxed text-center mb-8">
+                            ¿Eres abogado? <strong className="text-blue-600">Conecta con clientes reales</strong> que buscan orientación legal en la plataforma. Miles de usuarios utilizan Iurexia gratuitamente para una primera consulta y muchos necesitan representación profesional. <strong>Regístrate, valida tu cédula profesional con la SEP</strong>, y tu perfil quedará disponible para que usuarios te encuentren según tu especialidad y ubicación. Sin comisiones ocultas, sin intermediarios: tú decides cómo gestionar tus casos.
+                        </p>
+
+                        {/* CTA Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link
+                                href="/connect/registro-abogado"
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-xl"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Registrarme como Abogado
+                            </Link>
+                            <Link
+                                href="/connect"
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all"
+                            >
+                                Buscar Abogados
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </Link>
+                        </div>
+
+                        {/* Trust badges */}
+                        <div className="mt-8 pt-6 border-t border-gray-200 flex flex-wrap items-center justify-center gap-6 text-sm text-charcoal-500">
+                            <div className="flex items-center gap-2">
+                                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                <span>Validación SEP automática</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                                    <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+                                </svg>
+                                <span>Expediente IA generado</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <svg className="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                <span>Match inteligente por especialidad</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
