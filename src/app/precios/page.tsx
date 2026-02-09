@@ -175,6 +175,7 @@ export default function PreciosPage() {
                                 <ComparisonRow feature="Búsqueda con IA verificada" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Filtros jurisdiccionales" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Base documental completa" free="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                <ComparisonRow feature="Directorio de abogados (Connect)" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Análisis de documentos" free="—" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Auditoría de demandas" free="—" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Sugerencias con fundamento" free="—" pro="✓" proAnual="✓" platinum="✓" />

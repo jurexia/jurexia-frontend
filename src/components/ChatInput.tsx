@@ -187,7 +187,7 @@ ${draftRequest.descripcion}`;
 
                     {/* Action Buttons Row */}
                     <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                             {/* Subir Documentos para Análisis */}
                             <ActionButton
                                 icon={Paperclip}
@@ -290,15 +290,16 @@ function ActionButton({
     return (
         <button
             onClick={onClick}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium
+            className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-sm font-medium
                   transition-colors duration-200
                   ${active
                     ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
+            title={label}
         >
             <Icon className="w-4 h-4" />
-            <span>{label}</span>
+            <span className="hidden sm:inline">{label}</span>
         </button>
     );
 }
