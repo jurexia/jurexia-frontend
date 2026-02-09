@@ -152,7 +152,7 @@ export default function ChatSidebar({
                                                 {conv.title}
                                             </p>
                                             <p className="text-xs text-charcoal-500 mt-0.5">
-                                                {formatDate(conv.updatedAt)} · {conv.messages.length} mensajes
+                                                {formatDate(conv.updatedAt)} · {conv.messageCount ?? conv.messages.length} mensajes
                                             </p>
                                         </>
                                     )}

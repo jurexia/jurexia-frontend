@@ -11,6 +11,7 @@ export interface Conversation {
     id: string;
     title: string;
     messages: Message[];
+    messageCount?: number;  // For sidebar display without loading all messages
     estado?: string;
     createdAt: string;
     updatedAt: string;
@@ -103,6 +104,7 @@ export async function getConversations(): Promise<Conversation[]> {
                 return {
                     ...dbToConversation(dbConv),
                     messages: [], // Don't load all messages yet, just metadata
+                    messageCount: count || 0,  // Assign count for sidebar display
                 };
             })
         );
