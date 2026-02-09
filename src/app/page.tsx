@@ -2,6 +2,7 @@ import Navbar from '@/components/Navbar';
 import ChatInput from '@/components/ChatInput';
 import Link from 'next/link';
 import { HeroCTA } from '@/components/HeroCTA';
+import HomeDemo from '@/components/HomeDemo';
 
 export default function HomePage() {
     return (
@@ -55,18 +56,7 @@ export default function HomePage() {
                     <p className="text-center text-charcoal-600 mb-8 max-w-2xl mx-auto">
                         Desde la selección de jurisdicción hasta consultar documentos fuente, todo en segundos.
                     </p>
-                    <div className="rounded-2xl overflow-hidden shadow-2xl border border-cream-300">
-                        <video
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-full"
-                        >
-                            <source src="/demo/Iurexia-demo.mp4" type="video/mp4" />
-                            Tu navegador no soporta video.
-                        </video>
-                    </div>
+                    <HomeDemo />
                 </div>
             </section>
 
