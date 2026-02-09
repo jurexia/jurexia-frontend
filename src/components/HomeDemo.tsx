@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, FileText, Shield, ChevronRight, CheckCircle2, Scale, AlertTriangle, FileSearch, MapPin } from 'lucide-react';
+import { Search, FileText, Shield, ChevronRight, CheckCircle2, Scale, AlertTriangle, FileSearch, MapPin, UserCheck } from 'lucide-react';
 
 type Step = 'chat' | 'audit' | 'connect';
 
