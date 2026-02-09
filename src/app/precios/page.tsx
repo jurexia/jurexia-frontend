@@ -306,14 +306,37 @@ function PricingCard({
     const { user } = useAuth();
 
     const handleSubscribe = async () => {
-        if (!priceId) return;
+        if (!priceId) {
+            console.error('❌ No priceId provided');
+            alert('Error de configuración. Por favor contacta a soporte.');
+            return;
+        }
+
+        // Check if user is logged in
+        if (!user?.email) {
+            console.warn('⚠️ User not logged in, redirecting to login');
+            alert('Por favor inicia sesión para suscribirte.');
+            window.location.href = '/login?redirect=/precios';
+            return;
+        }
 
         setLoading(true);
         try {
-            await redirectToCheckout(priceId, user?.email || undefined);
-        } catch (error) {
-            console.error('Checkout error:', error);
-            alert('Error al procesar el pago. Por favor intenta de nuevo.');
+            console.log('🔄 Starting checkout with:', { priceId, email: user.email });
+            await redirectToCheckout(priceId, user.email);
+        } catch (error: any) {
+            console.error('❌ Checkout error:', error);
+
+            // More detailed error message
+            const errorMessage = error?.message || 'Error desconocido';
+            if (errorMessage.includes('Email is required')) {
+                alert('Por favor inicia sesión para continuar.');
+                window.location.href = '/login?redirect=/precios';
+            } else if (errorMessage.includes('Price ID')) {
+                alert('Error de configuración del plan. Por favor contacta a soporte.');
+            } else {
+                alert(`Error al procesar el pago: ${errorMessage}. Por favor intenta de nuevo o contacta a soporte.`);
+            }
         } finally {
             setLoading(false);
         }
