@@ -56,6 +56,14 @@ export async function POST(request: NextRequest) {
         // Determine the base URL for redirects
         const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://iurexia.com';
 
+        // Log checkout session parameters for debugging
+        console.log('📦 Creating Stripe Checkout Session:', {
+            priceId,
+            customerEmail,
+            customerId: customerId || 'new customer',
+            origin
+        });
+
         // Create Stripe Checkout Session
         const checkoutSession = await stripe.checkout.sessions.create({
             mode: 'subscription',
@@ -90,11 +98,27 @@ export async function POST(request: NextRequest) {
             locale: 'es',
         });
 
+        console.log('✅ Checkout Session created successfully:', checkoutSession.id);
         return NextResponse.json({ url: checkoutSession.url });
     } catch (error) {
         console.error('Checkout session error:', error);
+
+        // Extract specific error message for debugging
+        let errorMessage = 'Failed to create checkout session';
+        if (error instanceof Error) {
+            errorMessage = error.message;
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
+        }
+
         return NextResponse.json(
-            { error: 'Failed to create checkout session' },
+            {
+                error: 'Failed to create checkout session',
+                details: errorMessage  // Include specific error for debugging
+            },
             { status: 500 }
         );
     }
