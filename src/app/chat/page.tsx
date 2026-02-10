@@ -8,6 +8,7 @@ import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
 import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
 import PromptGuide from '@/components/PromptGuide';
+import QuickGuide from '@/components/QuickGuide';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
@@ -527,6 +528,10 @@ export default function ChatPage() {
                 {/* Fixed Input at Bottom - Only when there are messages */}
                 {hasMessages && (
                     <div className="fixed bottom-0 left-0 right-0 md:left-72 bg-gradient-to-t from-cream-300 via-cream-300 to-transparent pt-8 pb-6 px-4 transition-all duration-300">
+                        {/* Quick Guide */}
+                        <QuickGuide />
+
+                        {/* Chat Input */}
                         <ChatInput
                             onSubmit={handleSendMessage}
                             isLoading={isLoading}
