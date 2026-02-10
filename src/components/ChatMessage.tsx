@@ -760,10 +760,10 @@ export function TypingIndicator() {
     const [textIndex, setTextIndex] = useState(0);
     const loadingTexts = [
         "Analizando tu consulta...",
-        "Buscando en nuestra base de datos jurídica...",
+        "Construyendo respuesta con datos verificados...",
         "Consultando legislación federal y estatal...",
         "Revisando jurisprudencia relevante...",
-        "Preparando respuesta legal..."
+        "Preparando análisis legal..."
     ];
 
     useEffect(() => {
