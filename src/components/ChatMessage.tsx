@@ -788,7 +788,7 @@ export function TypingIndicator() {
                     {/* Animated Message */}
                     <div className="flex flex-col min-w-[280px]">
                         <span className="text-charcoal-700 font-medium text-sm transition-opacity duration-300">
-                            {loadingTexts[textIndex]}
+                            🧠 {loadingTexts[textIndex]}
                         </span>
                         <span className="text-charcoal-500 text-xs mt-0.5">
                             Esto puede tomar unos segundos
