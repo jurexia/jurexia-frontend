@@ -9,7 +9,8 @@ import {
     Shield,
     FileEdit,
     Gavel,
-    Users
+    Users,
+    Brain
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -19,7 +20,7 @@ import SentenciaModal from './SentenciaModal';
 import { enhanceText } from '@/lib/api';
 
 interface ChatInputProps {
-    onSubmit: (message: string) => void;
+    onSubmit: (message: string, enableReasoning?: boolean) => void;
     isLoading?: boolean;
     placeholder?: string;
     estado?: string;
@@ -38,6 +39,7 @@ export default function ChatInput({
     const [showDraftModal, setShowDraftModal] = useState(false);
     const [showSentenciaModal, setShowSentenciaModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ text: string; fileName: string } | null>(null);
+    const [enableReasoning, setEnableReasoning] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const handleSubmit = () => {
@@ -62,9 +64,10 @@ export default function ChatInput({
                 setAttachedDocument(null); // Clear after sending
             }
 
-            // We pass the full message but the UI should filter out document content
-            onSubmit(finalMessage);
+            // Pass message and reasoning flag to parent
+            onSubmit(finalMessage, enableReasoning);
             setMessage('');
+            setEnableReasoning(false); // Reset after sending
             if (textareaRef.current) {
                 textareaRef.current.style.height = 'auto';
             }
@@ -214,6 +217,22 @@ ${draftRequest.descripcion}`;
                                 onClick={() => handleModeClick('sentencia')}
                             />
                         </div>
+
+                        {/* Reasoning Toggle */}
+                        <button
+                            type="button"
+                            onClick={() => setEnableReasoning(!enableReasoning)}
+                            className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-200 ${enableReasoning
+                                ? 'bg-accent-brown text-white shadow-sm'
+                                : 'bg-cream-300 text-charcoal-600 hover:bg-cream-400'
+                                }`}
+                            title={enableReasoning ? 'Modo razonamiento activado (~10s)' : 'Activar análisis profundo (~10s)'}
+                        >
+                            <Brain className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">
+                                {enableReasoning ? 'Razonamiento' : 'Con razonamiento'}
+                            </span>
+                        </button>
                     </div>
 
                     {/* Connect Badge — Free Plan CTA */}

@@ -239,7 +239,7 @@ export default function ChatPage() {
 
     // Wrapped send function with limit check and increment
     // Optimized: fires sendMessage IMMEDIATELY, persists conversation in background
-    const handleSendMessage = useCallback(async (content: string) => {
+    const handleSendMessage = useCallback(async (content: string, enableReasoning = false) => {
         if (!user) return;
 
         // Check limit from local state (no network call) — skip for unlimited plans
@@ -252,7 +252,7 @@ export default function ChatPage() {
         }
 
         // 1) Fire the AI message IMMEDIATELY — no blocking I/O before this
-        const sendPromise = sendMessage(content);
+        const sendPromise = sendMessage(content, enableReasoning);
 
         // 2) Optimistically increment the local counter
         if (!isUnlimited) {

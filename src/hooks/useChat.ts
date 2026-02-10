@@ -13,7 +13,7 @@ interface UseChatReturn {
     messages: Message[];
     isLoading: boolean;
     error: string | null;
-    sendMessage: (content: string) => Promise<void>;
+    sendMessage: (content: string, enableReasoning?: boolean) => Promise<void>;
     clearMessages: () => void;
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
@@ -24,7 +24,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [error, setError] = useState<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    const sendMessage = useCallback(async (content: string) => {
+    const sendMessage = useCallback(async (content: string, enableReasoning = false) => {
         if (!content.trim() || isLoading) return;
 
         setError(null);
@@ -58,7 +58,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 updatedMessages,
                 options.estado,
                 options.topK,
-                accessToken  // Pass auth token for backend validation
+                accessToken,  // Pass auth token for backend validation
+                enableReasoning  // Pass reasoning flag
             )) {
                 fullResponse += chunk;
 
