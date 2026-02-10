@@ -507,8 +507,8 @@ export default function ChatPage() {
                                 />
                             ))}
 
-                            {/* Typing indicator when loading but no assistant message yet */}
-                            {isLoading && messages[messages.length - 1]?.role === 'user' && (
+                            {/* Typing indicator when loading and assistant message is empty */}
+                            {isLoading && messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content && (
                                 <TypingIndicator />
                             )}
 
