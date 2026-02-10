@@ -779,14 +779,9 @@ export function TypingIndicator() {
                 <Scale className="w-4 h-4 text-white" />
             </div>
             <div className="message-assistant px-4 py-4">
-                <div className="flex items-center gap-3">
-                    {/* Spinner */}
-                    <div className="relative">
-                        <div className="w-5 h-5 border-2 border-accent-brown/20 rounded-full"></div>
-                        <div className="w-5 h-5 border-2 border-accent-brown border-t-transparent rounded-full absolute top-0 left-0 animate-spin"></div>
-                    </div>
+                <div className="flex items-start gap-2">
                     {/* Animated Message */}
-                    <div className="flex flex-col min-w-[280px]">
+                    <div className="flex flex-col">
                         <span className="text-charcoal-700 font-medium text-sm transition-opacity duration-300">
                             🧠 {loadingTexts[textIndex]}
                         </span>
