@@ -94,6 +94,14 @@ export async function POST(request: NextRequest) {
             tax_id_collection: {
                 enabled: true,
             },
+            // CRITICAL FIX: When customer exists, Stripe needs permission to update their name
+            // This is required when tax_id_collection is enabled for existing customers
+            ...(customerId && {
+                customer_update: {
+                    name: 'auto',  // Allow Stripe to update customer name from billing details
+                    address: 'auto', // Also update address for consistency
+                }
+            }),
             // Locale
             locale: 'es',
         });
