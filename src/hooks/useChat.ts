@@ -35,10 +35,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         const updatedMessages = [...messages, userMessage];
         setMessages(updatedMessages);
 
-        // Prepare assistant message placeholder
-        const assistantMessage: Message = { role: 'assistant', content: '' };
-        setMessages([...updatedMessages, assistantMessage]);
-
         try {
             // Get Supabase session for auth token
             const session = await getSession();
@@ -49,6 +45,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             let isReasonerMode = false; // Only true if API sends reasoning markers
             let reasoningCleared = false;
             let modeDetected = false; // Whether we've determined the streaming mode
+            let assistantMessageAdded = false; // Track if we've added the assistant message yet
 
             // Markers that indicate we're in reasoner mode (document analysis)
             const reasoningHeader = '💭 *Proceso de razonamiento:*\n\n> ';
@@ -95,14 +92,21 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     ? (reasoningCleared ? finalContent : fullResponse)
                     : fullResponse;
 
-                setMessages(prev => {
-                    const newMessages = [...prev];
-                    newMessages[newMessages.length - 1] = {
-                        role: 'assistant',
-                        content: displayContent,
-                    };
-                    return newMessages;
-                });
+                // Add assistant message on first chunk
+                if (!assistantMessageAdded) {
+                    setMessages(prev => [...prev, { role: 'assistant', content: displayContent }]);
+                    assistantMessageAdded = true;
+                } else {
+                    // Update existing assistant message
+                    setMessages(prev => {
+                        const newMessages = [...prev];
+                        newMessages[newMessages.length - 1] = {
+                            role: 'assistant',
+                            content: displayContent,
+                        };
+                        return newMessages;
+                    });
+                }
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
