@@ -10,9 +10,11 @@ import {
     ChevronRight,
     MessageCircle,
     Menu,
-    X
+    X,
+    BookOpen
 } from 'lucide-react';
 import { Conversation } from '@/lib/conversations';
+import QuickGuide from '@/components/QuickGuide';
 
 interface ChatSidebarProps {
     conversations: Conversation[];
@@ -178,6 +180,13 @@ export default function ChatSidebar({
                     </div>
                 )}
             </div>
+
+            {/* Quick Guide at Bottom */}
+            {!isCollapsed && (
+                <div className="p-3 border-t border-cream-300 bg-cream-50">
+                    <QuickGuide />
+                </div>
+            )}
         </div>
     );
 

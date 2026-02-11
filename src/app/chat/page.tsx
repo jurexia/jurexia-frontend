@@ -4,11 +4,10 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { Trash2, MapPin, ChevronDown, Check, Scale, Building2, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
-import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
+import ChatMessage from '@/components/ChatMessage';
 import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
 import PromptGuide from '@/components/PromptGuide';
-import QuickGuide from '@/components/QuickGuide';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
@@ -508,11 +507,6 @@ export default function ChatPage() {
                                 />
                             ))}
 
-                            {/* Typing indicator when loading and assistant message is empty */}
-                            {isLoading && messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content && (
-                                <TypingIndicator />
-                            )}
-
                             {/* Error display */}
                             {error && (
                                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -528,9 +522,6 @@ export default function ChatPage() {
                 {/* Fixed Input at Bottom - Only when there are messages */}
                 {hasMessages && (
                     <div className="fixed bottom-0 left-0 right-0 md:left-72 bg-gradient-to-t from-cream-300 via-cream-300 to-transparent pt-8 pb-6 px-4 transition-all duration-300">
-                        {/* Quick Guide */}
-                        <QuickGuide />
-
                         {/* Chat Input */}
                         <ChatInput
                             onSubmit={handleSendMessage}
