@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { Trash2, MapPin, ChevronDown, Check, Scale, Building2, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
-import ChatMessage from '@/components/ChatMessage';
+import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
 import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
 import PromptGuide from '@/components/PromptGuide';
@@ -506,6 +506,11 @@ export default function ChatPage() {
                                     onCitationClick={handleCitationClick}
                                 />
                             ))}
+
+                            {/* Typing indicator when loading and assistant message is empty */}
+                            {isLoading && messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content && (
+                                <TypingIndicator />
+                            )}
 
                             {/* Error display */}
                             {error && (

@@ -663,7 +663,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     <>
                         <div
                             ref={contentRef}
-                            className={`prose-legal text-sm sm:text-base px-4 py-3 ${isStreaming ? 'streaming-cursor' : ''}`}
+                            className="prose-legal text-sm sm:text-base px-4 py-3"
                             dangerouslySetInnerHTML={{ __html: formatMarkdown(processedContent) }}
                             onClick={(e) => {
                                 const target = e.target as HTMLElement;

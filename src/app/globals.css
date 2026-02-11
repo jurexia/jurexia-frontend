@@ -150,25 +150,6 @@ h6 {
   animation-delay: 0.4s;
 }
 
-/* Streaming cursor */
-.streaming-cursor::after {
-  content: '▌';
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-
-  0%,
-  50% {
-    opacity: 1;
-  }
-
-  51%,
-  100% {
-    opacity: 0;
-  }
-}
-
 /* ══════════════════════════════════════════════════════════════════
    MARKDOWN RENDERING
    ══════════════════════════════════════════════════════════════════ */
