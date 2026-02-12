@@ -42,49 +42,46 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             const accessToken = session?.access_token;
 
             let fullResponse = '';
-            let reasoningText = '';
-            let responseText = '';
-            let inResponsePhase = false;
+            let finalContent = '';
+            let isReasonerMode = false;
+            let reasoningCleared = false;
+            let modeDetected = false;
             let assistantMessageAdded = false;
+
+            // Markers for reasoner mode (only active during document analysis)
+            const analysisMarkerRegex = /## ⚖️ (Análisis|Respuesta) Legal/;
 
             for await (const chunk of streamChat(
                 updatedMessages,
                 options.estado,
                 options.topK,
-                accessToken,  // Pass auth token for backend validation
-                enableReasoning  // Pass reasoning flag
+                accessToken,
+                enableReasoning
             )) {
                 fullResponse += chunk;
 
-                // Detect transition from reasoning to response (marked by ---)
-                if (!inResponsePhase) {
-                    const separatorIdx = fullResponse.indexOf('\n\n---\n\n');
-                    if (separatorIdx !== -1) {
-                        // Found separator: everything before is reasoning, after is response
-                        reasoningText = fullResponse.substring(0, separatorIdx);
-                        responseText = fullResponse.substring(separatorIdx + 6); // skip \n\n---\n\n
-                        inResponsePhase = true;
-                    }
-                } else {
-                    // Already in response phase, append chunk directly
-                    responseText += chunk;
+                // Detect mode from first content (reasoner only used for documents)
+                if (!modeDetected && fullResponse.length > 10) {
+                    isReasonerMode = fullResponse.includes('🧠') || fullResponse.includes('💭');
+                    modeDetected = true;
                 }
 
-                // Build display content:
-                // During reasoning phase: show typing indicator
-                // During response phase: show response (+ hidden reasoning for collapsible)
-                let displayContent: string;
-                if (inResponsePhase) {
-                    // Include reasoning as collapsible marker for ChatMessage component
-                    if (reasoningText.trim()) {
-                        displayContent = `<!--reasoning-start-->${reasoningText}<!--reasoning-end-->${responseText}`;
-                    } else {
-                        displayContent = responseText;
+                if (isReasonerMode) {
+                    // ── REASONER MODE (document analysis): Show reasoning then final ──
+                    const markerMatch = fullResponse.match(analysisMarkerRegex);
+                    if (!reasoningCleared && markerMatch) {
+                        const markerIndex = fullResponse.indexOf(markerMatch[0]);
+                        finalContent = fullResponse.substring(markerIndex);
+                        reasoningCleared = true;
+                    } else if (reasoningCleared) {
+                        finalContent += chunk;
                     }
-                } else {
-                    // Still in reasoning phase - show brief indicator
-                    displayContent = '🧠 *Analizando tu consulta con razonamiento profundo...*';
                 }
+                // In CHAT MODE (normal queries), fullResponse is used directly
+
+                const displayContent = isReasonerMode
+                    ? (reasoningCleared ? finalContent : '🧠 *Analizando documento...*')
+                    : fullResponse;
 
                 // Add assistant message on first chunk
                 if (!assistantMessageAdded) {

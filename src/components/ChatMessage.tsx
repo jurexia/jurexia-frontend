@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, ChevronDown } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer } from 'lucide-react';
 import type { Message } from '@/lib/api';
 
 interface ChatMessageProps {
@@ -52,37 +52,6 @@ function filterDocumentContent(content: string): string {
 }
 
 
-
-// Collapsible reasoning section component
-function ReasoningCollapsible({ reasoningHtml }: { reasoningHtml: string }) {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <div className="mx-4 mt-2 mb-1">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-1.5 text-xs text-charcoal-500 hover:text-charcoal-700 transition-colors duration-200 group"
-            >
-                <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}
-                />
-                <span className="font-medium">
-                    {isOpen ? 'Ocultar razonamiento' : 'Ver razonamiento'}
-                </span>
-                <span className="text-charcoal-400 group-hover:text-charcoal-500">🧠</span>
-            </button>
-            <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100 mt-2' : 'max-h-0 opacity-0'
-                    }`}
-            >
-                <div
-                    className="text-xs text-charcoal-500 bg-cream-200/50 rounded-lg p-3 border border-cream-300/50 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: reasoningHtml }}
-                />
-            </div>
-        </div>
-    );
-}
 
 
 export default function ChatMessage({ message, isStreaming = false, onCitationClick }: ChatMessageProps) {
@@ -694,64 +663,18 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     </p>
                 ) : (
                     <>
-                        {(() => {
-                            // Parse reasoning markers from content
-                            const reasoningStartMarker = '<!--reasoning-start-->';
-                            const reasoningEndMarker = '<!--reasoning-end-->';
-                            const hasReasoning = processedContent.includes(reasoningStartMarker);
-
-                            let reasoningHtml = '';
-                            let responseHtml = '';
-
-                            if (hasReasoning) {
-                                const startIdx = processedContent.indexOf(reasoningStartMarker);
-                                const endIdx = processedContent.indexOf(reasoningEndMarker);
-                                if (startIdx !== -1 && endIdx !== -1) {
-                                    const rawReasoning = processedContent.substring(
-                                        startIdx + reasoningStartMarker.length,
-                                        endIdx
-                                    );
-                                    const rawResponse = processedContent.substring(
-                                        endIdx + reasoningEndMarker.length
-                                    );
-                                    // Clean up reasoning: remove leading blockquote markers and headers
-                                    reasoningHtml = formatMarkdown(
-                                        rawReasoning
-                                            .replace(/^ \*Proceso de razonamiento:\*\s*/m, '')
-                                            .replace(/^> /gm, '')
-                                            .replace(/ \*\*Analizando documento\.\.\.\*\*\s*/g, '')
-                                            .trim()
-                                    );
-                                    responseHtml = formatMarkdown(rawResponse.trim());
-                                } else {
-                                    responseHtml = formatMarkdown(processedContent);
+                        <div
+                            ref={contentRef}
+                            className="prose-legal text-sm sm:text-base px-4 py-3"
+                            dangerouslySetInnerHTML={{ __html: formatMarkdown(processedContent) }}
+                            onClick={(e) => {
+                                const target = e.target as HTMLElement;
+                                if (target.classList.contains('citation-badge') && target.dataset.docId) {
+                                    e.preventDefault();
+                                    onCitationClick?.(target.dataset.docId);
                                 }
-                            } else {
-                                responseHtml = formatMarkdown(processedContent);
-                            }
-
-                            return (
-                                <>
-                                    {/* Collapsible Reasoning Section */}
-                                    {hasReasoning && reasoningHtml && (
-                                        <ReasoningCollapsible reasoningHtml={reasoningHtml} />
-                                    )}
-                                    {/* Main Response */}
-                                    <div
-                                        ref={contentRef}
-                                        className="prose-legal text-sm sm:text-base px-4 py-3"
-                                        dangerouslySetInnerHTML={{ __html: responseHtml }}
-                                        onClick={(e) => {
-                                            const target = e.target as HTMLElement;
-                                            if (target.classList.contains('citation-badge') && target.dataset.docId) {
-                                                e.preventDefault();
-                                                onCitationClick?.(target.dataset.docId);
-                                            }
-                                        }}
-                                    />
-                                </>
-                            );
-                        })()}
+                            }}
+                        />
                         {/* Export Buttons - Only show when not streaming and has content */}
                         {!isStreaming && message.content.length > 50 && (
                             <div className="flex items-center gap-2 px-4 py-2 border-t border-cream-300 bg-cream-100/50">
