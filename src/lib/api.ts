@@ -76,7 +76,7 @@ export async function search(
 export async function* streamChat(
     messages: Message[],
     estado?: string,
-    topK: number = 4,  // Reduced to stay within 8k token limit
+    topK: number = 30,  // Match backend default for full silo coverage (30 / 4 silos = ~8 per silo)
     accessToken?: string,  // Optional Supabase access token for auth
     enableReasoning = false  // Whether to enable deep reasoning with Query Expansion
 ): AsyncGenerator<string, void, unknown> {
