@@ -78,7 +78,7 @@ export async function* streamChat(
     estado?: string,
     topK: number = 30,  // Match backend default for full silo coverage (30 / 4 silos = ~8 per silo)
     accessToken?: string,  // Optional Supabase access token for auth
-    enableReasoning = false  // Whether to enable deep reasoning with Query Expansion
+    enableReasoning = true  // Always enable Query Expansion for maximum search quality
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);

@@ -24,7 +24,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [error, setError] = useState<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    const sendMessage = useCallback(async (content: string, enableReasoning = false) => {
+    const sendMessage = useCallback(async (content: string, _enableReasoning = true) => {
+        const enableReasoning = true; // Always use reasoning for maximum quality
         if (!content.trim() || isLoading) return;
 
         setError(null);
