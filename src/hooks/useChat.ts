@@ -18,6 +18,9 @@ interface UseChatReturn {
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
+// Thinking marker used by the backend to separate reasoning from content
+const THINKING_MARKER = '<!--thinking-->';
+
 export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -41,15 +44,9 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             const session = await getSession();
             const accessToken = session?.access_token;
 
-            let fullResponse = '';
-            let finalContent = '';
-            let isReasonerMode = false;
-            let reasoningCleared = false;
-            let modeDetected = false;
+            let thinkingContent = '';
+            let responseContent = '';
             let assistantMessageAdded = false;
-
-            // Markers for reasoner mode (only active during document analysis)
-            const analysisMarkerRegex = /## ⚖️ (Análisis|Respuesta) Legal/;
 
             for await (const chunk of streamChat(
                 updatedMessages,
@@ -58,30 +55,31 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 accessToken,
                 enableReasoning
             )) {
-                fullResponse += chunk;
-
-                // Detect mode from first content (reasoner only used for documents)
-                if (!modeDetected && fullResponse.length > 10) {
-                    isReasonerMode = fullResponse.includes('🧠') || fullResponse.includes('💭');
-                    modeDetected = true;
-                }
-
-                if (isReasonerMode) {
-                    // ── REASONER MODE (document analysis): Show reasoning then final ──
-                    const markerMatch = fullResponse.match(analysisMarkerRegex);
-                    if (!reasoningCleared && markerMatch) {
-                        const markerIndex = fullResponse.indexOf(markerMatch[0]);
-                        finalContent = fullResponse.substring(markerIndex);
-                        reasoningCleared = true;
-                    } else if (reasoningCleared) {
-                        finalContent += chunk;
+                // Parse thinking markers from backend stream
+                if (chunk.includes(THINKING_MARKER)) {
+                    // Split chunk in case it contains mixed content
+                    const parts = chunk.split(THINKING_MARKER);
+                    for (let i = 0; i < parts.length; i++) {
+                        const part = parts[i];
+                        if (!part) continue;
+                        // Parts after the marker are thinking content
+                        // (the marker prefixes thinking text)
+                        if (i > 0 || chunk.startsWith(THINKING_MARKER)) {
+                            thinkingContent += part;
+                        } else {
+                            responseContent += part;
+                        }
                     }
+                } else {
+                    responseContent += chunk;
                 }
-                // In CHAT MODE (normal queries), fullResponse is used directly
 
-                const displayContent = isReasonerMode
-                    ? (reasoningCleared ? finalContent : '🧠 *Analizando documento...*')
-                    : fullResponse;
+                // Build display content: thinking section (collapsible) + response
+                let displayContent = '';
+                if (thinkingContent) {
+                    displayContent += `<!--THINKING_START-->${thinkingContent}<!--THINKING_END-->`;
+                }
+                displayContent += responseContent;
 
                 // Add assistant message on first chunk
                 if (!assistantMessageAdded) {

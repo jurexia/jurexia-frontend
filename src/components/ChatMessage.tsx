@@ -58,11 +58,19 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
-    // Extract unique document IDs and create numbered references
-    const { processedContent, docIdMap } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>() };
+    // Extract unique document IDs, thinking content, and create numbered references
+    const { processedContent, docIdMap, thinkingContent } = useMemo(() => {
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '' };
 
         let content = message.content;
+
+        // Extract thinking content (chain-of-thought from thinking mode)
+        let thinking = '';
+        const thinkingMatch = content.match(/<!--THINKING_START-->(.*?)<!--THINKING_END-->/s);
+        if (thinkingMatch) {
+            thinking = thinkingMatch[1];
+            content = content.replace(/<!--THINKING_START-->.*?<!--THINKING_END-->/s, '').trim();
+        }
 
         // Create map to track citation numbers in order of FIRST APPEARANCE
         const docIdMap = new Map<string, number>();
@@ -137,7 +145,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Clean up leading whitespace/newlines left after removing headers
         content = content.replace(/^\s+/, '').trim();
 
-        return { processedContent: content, docIdMap };
+        return { processedContent: content, docIdMap, thinkingContent: thinking };
     }, [message.content, isUser]);
 
     // Generate document header with logo (text-based for reliable export)
@@ -663,6 +671,20 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     </p>
                 ) : (
                     <>
+                        {/* Thinking/Reasoning section (collapsible) */}
+                        {thinkingContent && (
+                            <details className="mx-4 mt-3 mb-1 rounded-lg border border-amber-200/60 bg-amber-50/30 overflow-hidden">
+                                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-amber-800/70 hover:bg-amber-50/50 transition-colors select-none flex items-center gap-1.5">
+                                    <span>🧠</span>
+                                    <span>Ver razonamiento jurídico</span>
+                                    <span className="text-amber-600/50 ml-auto text-[10px]">{Math.round(thinkingContent.length / 4)} tokens</span>
+                                </summary>
+                                <div
+                                    className="px-3 py-2 text-xs text-charcoal-600 leading-relaxed border-t border-amber-200/40 max-h-64 overflow-y-auto prose-thinking"
+                                    dangerouslySetInnerHTML={{ __html: formatMarkdown(thinkingContent) }}
+                                />
+                            </details>
+                        )}
                         <div
                             ref={contentRef}
                             className="prose-legal text-sm sm:text-base px-4 py-3"
