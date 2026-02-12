@@ -42,15 +42,10 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             const accessToken = session?.access_token;
 
             let fullResponse = '';
-            let finalContent = '';
-            let isReasonerMode = false; // Only true if API sends reasoning markers
-            let reasoningCleared = false;
-            let modeDetected = false; // Whether we've determined the streaming mode
-            let assistantMessageAdded = false; // Track if we've added the assistant message yet
-
-            // Markers that indicate we're in reasoner mode (document analysis)
-            const reasoningHeader = '💭 *Proceso de razonamiento:*\n\n> ';
-            const analysisMarkerRegex = /## ⚖️ (Análisis|Respuesta) Legal/;
+            let reasoningText = '';
+            let responseText = '';
+            let inResponsePhase = false;
+            let assistantMessageAdded = false;
 
             for await (const chunk of streamChat(
                 updatedMessages,
@@ -61,37 +56,35 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             )) {
                 fullResponse += chunk;
 
-                // Detect mode from the first meaningful content
-                if (!modeDetected && fullResponse.length > 10) {
-                    isReasonerMode = fullResponse.includes('🧠') || fullResponse.includes('💭');
-                    modeDetected = true;
-                }
-
-                if (isReasonerMode) {
-                    // ── REASONER MODE: Show reasoning, then clear for final content ──
-                    const markerMatch = fullResponse.match(analysisMarkerRegex);
-                    if (!reasoningCleared && markerMatch) {
-                        const markerIndex = fullResponse.indexOf(markerMatch[0]);
-                        finalContent = fullResponse.substring(markerIndex);
-                        reasoningCleared = true;
-                    } else if (reasoningCleared) {
-                        finalContent += chunk;
-                    } else if (fullResponse.includes('> ')) {
-                        // Still in reasoning phase - show last ~2 paragraphs
-                        const headerEnd = fullResponse.indexOf('> ');
-                        if (headerEnd !== -1) {
-                            const reasoningText = fullResponse.substring(headerEnd);
-                            const paragraphs = reasoningText.split('\n> \n> ');
-                            const lastParagraphs = paragraphs.slice(-2).join('\n> \n> ');
-                            fullResponse = reasoningHeader.slice(0, -2) + lastParagraphs;
-                        }
+                // Detect transition from reasoning to response (marked by ---)
+                if (!inResponsePhase) {
+                    const separatorIdx = fullResponse.indexOf('\n\n---\n\n');
+                    if (separatorIdx !== -1) {
+                        // Found separator: everything before is reasoning, after is response
+                        reasoningText = fullResponse.substring(0, separatorIdx);
+                        responseText = fullResponse.substring(separatorIdx + 6); // skip \n\n---\n\n
+                        inResponsePhase = true;
                     }
+                } else {
+                    // Already in response phase, append chunk directly
+                    responseText += chunk;
                 }
-                // In CHAT MODE (no reasoning), fullResponse is used as-is
 
-                const displayContent = isReasonerMode
-                    ? (reasoningCleared ? finalContent : fullResponse)
-                    : fullResponse;
+                // Build display content:
+                // During reasoning phase: show typing indicator
+                // During response phase: show response (+ hidden reasoning for collapsible)
+                let displayContent: string;
+                if (inResponsePhase) {
+                    // Include reasoning as collapsible marker for ChatMessage component
+                    if (reasoningText.trim()) {
+                        displayContent = `<!--reasoning-start-->${reasoningText}<!--reasoning-end-->${responseText}`;
+                    } else {
+                        displayContent = responseText;
+                    }
+                } else {
+                    // Still in reasoning phase - show brief indicator
+                    displayContent = '🧠 *Analizando tu consulta con razonamiento profundo...*';
+                }
 
                 // Add assistant message on first chunk
                 if (!assistantMessageAdded) {
