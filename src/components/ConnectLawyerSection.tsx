@@ -35,10 +35,14 @@ interface LawyerProfileData {
     specialties: string[];
     bio: string;
     office_address: { estado: string; municipio: string; cp: string };
+    estado: string;
+    municipio: string;
+    cp: string;
     verification_status: string;
     is_pro_active: boolean;
     avatar_url: string | null;
     phone: string | null;
+    phone_visible: boolean;
 }
 
 // Specialties available
@@ -89,6 +93,7 @@ export default function ConnectLawyerSection({
     const [municipio, setMunicipio] = useState('');
     const [colonia, setColonia] = useState('');
     const [phone, setPhone] = useState('');
+    const [phoneVisible, setPhoneVisible] = useState(false);
     const [cpLookedUp, setCpLookedUp] = useState(false);
 
     // Submission
@@ -206,6 +211,7 @@ export default function ConnectLawyerSection({
                     is_pro_active: true,
                     avatar_url: avatarUrl || null,
                     phone: phone || null,
+                    phone_visible: phoneVisible,
                 });
 
             if (dbError) {
@@ -235,10 +241,14 @@ export default function ConnectLawyerSection({
                 specialties: selectedSpecialties,
                 bio: bio.trim(),
                 office_address: { estado, municipio, cp },
+                estado,
+                municipio,
+                cp,
                 verification_status: 'verified',
                 is_pro_active: true,
                 avatar_url: avatarUrl || null,
                 phone: phone || null,
+                phone_visible: phoneVisible,
             });
 
             setStep('registered');
@@ -342,6 +352,7 @@ export default function ConnectLawyerSection({
                                 setCpLookedUp(true);
                             }
                             setPhone(existingProfile.phone || '');
+                            setPhoneVisible(existingProfile.phone_visible || false);
                             setStep('form');
                         }}
                         className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-50 text-blue-700 rounded-xl font-medium hover:bg-blue-100 transition-colors border border-blue-200"
@@ -590,10 +601,10 @@ export default function ConnectLawyerSection({
                         )}
                     </div>
 
-                    {/* Phone (optional) */}
+                    {/* Phone + visibility toggle */}
                     <div>
                         <label className="block text-sm font-medium text-charcoal-700 mb-2">
-                            Teléfono <span className="text-charcoal-400 font-normal">(opcional, solo visible para ti)</span>
+                            Teléfono <span className="text-charcoal-400 font-normal">(opcional)</span>
                         </label>
                         <input
                             type="tel"
@@ -602,6 +613,41 @@ export default function ConnectLawyerSection({
                             placeholder="55 1234 5678"
                             className="w-full px-4 py-2.5 border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-charcoal-900"
                         />
+                        {phone && (
+                            <div className="mt-3 space-y-2">
+                                <p className="text-xs font-medium text-charcoal-600">¿Cómo quieres recibir contacto?</p>
+                                <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all hover:border-blue-300"
+                                    style={{ borderColor: !phoneVisible ? '#3b82f6' : '#e5e7eb', background: !phoneVisible ? '#eff6ff' : 'white' }}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="phone_visibility"
+                                        checked={!phoneVisible}
+                                        onChange={() => setPhoneVisible(false)}
+                                        className="accent-blue-600"
+                                    />
+                                    <div>
+                                        <span className="text-sm font-medium text-charcoal-800">Solo vía iurexia</span>
+                                        <p className="text-xs text-charcoal-500">Los clientes te contactarán a través de nuestra plataforma</p>
+                                    </div>
+                                </label>
+                                <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all hover:border-green-300"
+                                    style={{ borderColor: phoneVisible ? '#22c55e' : '#e5e7eb', background: phoneVisible ? '#f0fdf4' : 'white' }}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="phone_visibility"
+                                        checked={phoneVisible}
+                                        onChange={() => setPhoneVisible(true)}
+                                        className="accent-green-600"
+                                    />
+                                    <div>
+                                        <span className="text-sm font-medium text-charcoal-800">Mostrar mi teléfono públicamente</span>
+                                        <p className="text-xs text-charcoal-500">Tu número será visible en tu tarjeta de abogado</p>
+                                    </div>
+                                </label>
+                            </div>
+                        )}
                     </div>
 
                     {/* Error */}

@@ -300,6 +300,8 @@ export interface LawyerProfile {
     is_pro_active: boolean;
     avatar_url?: string;
     score?: number;
+    phone?: string;
+    phone_visible?: boolean;
 }
 
 export interface LawyerSearchResponse {

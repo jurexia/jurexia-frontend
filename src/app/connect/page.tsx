@@ -79,6 +79,7 @@ export default function ConnectPage() {
     const [isSearching, setIsSearching] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [totalResults, setTotalResults] = useState(0);
+    const [hasSearched, setHasSearched] = useState(false);
 
     // Contact modal state
     const [contactLawyer, setContactLawyer] = useState<LawyerProfile | null>(null);
@@ -112,10 +113,13 @@ export default function ConnectPage() {
                         verification_status: (row.verification_status || '') as string,
                         is_pro_active: row.is_pro_active as boolean,
                         avatar_url: (row.avatar_url || undefined) as string | undefined,
+                        phone: (row.phone || undefined) as string | undefined,
+                        phone_visible: (row.phone_visible || false) as boolean,
                     }));
                     setAllLawyers(mapped);
-                    setLawyers(mapped);
-                    setTotalResults(mapped.length);
+                    // NO mostrar abogados al cargar — solo al buscar
+                    // setLawyers(mapped);
+                    // setTotalResults(mapped.length);
                 }
             } catch (err) {
                 console.error('Error loading lawyers:', err);
@@ -131,6 +135,7 @@ export default function ConnectPage() {
     const handleSearch = async () => {
         const query = searchQuery.trim().toLowerCase();
         const estado = selectedEstado;
+        setHasSearched(true);
 
         // Try semantic search via API first, fallback to local filtering
         if (query.length >= 3) {
@@ -291,7 +296,34 @@ export default function ConnectPage() {
                         </div>
                     )}
 
-                    {!isSearching && !isLoading && lawyers.length === 0 && (
+                    {/* Estado inicial: invitación a buscar */}
+                    {!isSearching && !hasSearched && (
+                        <div className="text-center py-20">
+                            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-50 to-amber-50 rounded-2xl flex items-center justify-center border border-blue-100">
+                                <Search className="w-10 h-10 text-blue-500/70" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-charcoal-900 mb-3">
+                                Describe tu problema legal
+                            </h3>
+                            <p className="text-charcoal-500 max-w-lg mx-auto leading-relaxed">
+                                Nuestra IA analizará tu consulta y te conectará con abogados verificados especializados en tu caso y zona geográfica.
+                            </p>
+                            <div className="flex flex-wrap justify-center gap-3 mt-6">
+                                {['Despido injustificado', 'Divorcio', 'Defensa penal', 'Deuda fiscal'].map((example) => (
+                                    <button
+                                        key={example}
+                                        onClick={() => { setSearchQuery(example); }}
+                                        className="px-4 py-2 text-sm bg-white border border-cream-300 rounded-full text-charcoal-600 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                                    >
+                                        {example}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Sin resultados después de buscar */}
+                    {!isSearching && hasSearched && lawyers.length === 0 && (
                         <div className="text-center py-16">
                             <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
                                 <Users className="w-8 h-8 text-gray-400" />
@@ -329,7 +361,7 @@ export default function ConnectPage() {
                     {isLoading && (
                         <div className="flex flex-col items-center justify-center py-20">
                             <div className="w-12 h-12 border-3 border-charcoal-200 border-t-charcoal-900 rounded-full animate-spin mb-4" />
-                            <p className="text-charcoal-500">Cargando directorio de abogados...</p>
+                            <p className="text-charcoal-500">Preparando buscador...</p>
                         </div>
                     )}
                 </div>
@@ -408,6 +440,16 @@ function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: (
             )}
 
             {/* Bio */}
+            {/* Phone (if visible) */}
+            {lawyer.phone_visible && lawyer.phone && (
+                <div className="flex items-center gap-2 mb-3 text-sm text-charcoal-600">
+                    <Phone className="w-4 h-4 text-green-600" />
+                    <a href={`tel:${lawyer.phone}`} className="hover:text-green-700 transition-colors">
+                        {lawyer.phone}
+                    </a>
+                </div>
+            )}
+
             {lawyer.bio && (
                 <p className="text-sm text-charcoal-600 line-clamp-3 mb-4">
                     {lawyer.bio}
