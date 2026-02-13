@@ -152,12 +152,20 @@ export default function ConnectPage() {
         let score = 0;
         const maxScore = 100;
 
+        // Null-safe field access
+        const lawyerSpecs = (lawyer.specialties || []).map(s => s.toLowerCase());
+        const bioLower = (lawyer.bio || '').toLowerCase();
+        const nameLower = (lawyer.full_name || '').toLowerCase();
+
         // 1. Specialty matching via synonym map (up to 50 points)
-        const lawyerSpecs = lawyer.specialties.map(s => s.toLowerCase());
         let specScore = 0;
 
         for (const [area, keywords] of Object.entries(LEGAL_KEYWORDS)) {
-            const queryMatchesArea = words.some(w => keywords.some(kw => kw.includes(w) || w.includes(kw)));
+            // Check if any query word matches ANY keyword in this legal area
+            const queryMatchesArea = words.some(w =>
+                keywords.some(kw => kw.includes(w) || w.includes(kw))
+            );
+            // Check if this lawyer has this legal area as a specialty
             const lawyerHasArea = lawyerSpecs.some(s => s.includes(area));
 
             if (queryMatchesArea && lawyerHasArea) {
@@ -165,7 +173,7 @@ export default function ConnectPage() {
             }
         }
 
-        // Direct specialty word match
+        // Direct word match against specialty text
         for (const word of words) {
             if (lawyerSpecs.some(s => s.includes(word))) {
                 specScore = Math.max(specScore, 40);
@@ -174,7 +182,6 @@ export default function ConnectPage() {
         score += specScore;
 
         // 2. Bio keyword matching (up to 30 points)
-        const bioLower = lawyer.bio.toLowerCase();
         let bioHits = 0;
         for (const word of words) {
             if (bioLower.includes(word)) bioHits++;
@@ -184,7 +191,6 @@ export default function ConnectPage() {
         }
 
         // 3. Name matching (up to 10 points)
-        const nameLower = lawyer.full_name.toLowerCase();
         for (const word of words) {
             if (nameLower.includes(word)) { score += 10; break; }
         }
@@ -198,10 +204,10 @@ export default function ConnectPage() {
             }
         }
 
-        // 5. Generic "abogado" / "licenciado" — everyone is a lawyer, give base score
-        const genericTerms = ['abogado', 'abogada', 'licenciado', 'licenciada', 'asesoría', 'asesoria', 'legal', 'jurídico', 'juridico', 'consulta'];
+        // 5. Generic terms — everyone is a lawyer, give base score
+        const genericTerms = ['abogado', 'abogada', 'licenciado', 'licenciada', 'asesoría', 'asesoria', 'legal', 'jurídico', 'juridico', 'consulta', 'asesor', 'defensa', 'demanda', 'juicio', 'proceso'];
         if (words.some(w => genericTerms.includes(w))) {
-            score = Math.max(score, 20); // At minimum 20% for generic legal terms
+            score = Math.max(score, 20);
         }
 
         return Math.min(maxScore, score);
