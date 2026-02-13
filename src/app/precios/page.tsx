@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
 import Navbar from '@/components/Navbar';
+import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
 export default function PreciosPage() {
     return (
@@ -15,234 +16,245 @@ export default function PreciosPage() {
             {/* Hero Section */}
             <section className="pt-32 pb-12 px-4">
                 <div className="max-w-5xl mx-auto text-center">
-                    <p className="text-accent-brown font-medium mb-4 tracking-wide">PRECIOS</p>
-                    <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
-                        Inversión transparente,
-                        <br />
-                        <span className="text-charcoal-500">valor comprobado</span>
-                    </h1>
-                    <p className="text-xl text-charcoal-600 max-w-3xl mx-auto">
-                        Elige el plan que se adapte a tu práctica. Comienza gratis y escala cuando lo necesites.
-                    </p>
+                    <AnimateOnScroll delay={0}>
+                        <p className="text-accent-brown font-medium mb-4 tracking-wide">PRECIOS</p>
+                    </AnimateOnScroll>
+                    <AnimateOnScroll delay={0.1}>
+                        <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
+                            Inversión transparente,
+                            <br />
+                            <span className="text-charcoal-500">valor comprobado</span>
+                        </h1>
+                    </AnimateOnScroll>
+                    <AnimateOnScroll delay={0.2}>
+                        <p className="text-xl text-charcoal-600 max-w-3xl mx-auto">
+                            Elige el plan que se adapte a tu práctica. Comienza gratis y escala cuando lo necesites.
+                        </p>
+                    </AnimateOnScroll>
                 </div>
             </section>
 
             {/* Pricing Cards - Row 1: Gratuito, Pro Mensual, Pro Anual */}
-            <section className="py-8 px-4">
+            <section className="py-8 px-4 overflow-hidden">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-3 gap-6 mb-8">
-                        {/* Plan Gratuito */}
-                        <PricingCard
-                            icon={<Zap className="w-6 h-6" />}
-                            name="Plan Gratuito"
-                            price="$0"
-                            originalPrice={null}
-                            period="MXN"
-                            description="Ideal para probar la plataforma"
-                            features={[
-                                "3 consultas/mes",
-                                "Búsqueda con IA en legislación mexicana verificada",
-                                "Filtros de jurisdicción",
-                                "Acceso a base documental completa"
-                            ]}
-                            buttonText="Comenzar Gratis"
-                            buttonHref="/chat"
-                            highlighted={false}
-                        />
+                        <AnimateOnScroll delay={0}>
+                            <PricingCard
+                                icon={<Zap className="w-6 h-6" />}
+                                name="Plan Gratuito"
+                                price="$0"
+                                originalPrice={null}
+                                period="MXN"
+                                description="Ideal para probar la plataforma"
+                                features={[
+                                    "3 consultas/mes",
+                                    "Búsqueda con IA en legislación mexicana verificada",
+                                    "Filtros de jurisdicción",
+                                    "Acceso a base documental completa"
+                                ]}
+                                buttonText="Comenzar Gratis"
+                                buttonHref="/chat"
+                                highlighted={false}
+                            />
+                        </AnimateOnScroll>
 
-                        {/* Plan Pro Mensual */}
-                        <PricingCard
-                            icon={<Crown className="w-6 h-6" />}
-                            name="Plan Pro"
-                            price="$149"
-                            originalPrice="$200"
-                            period="MXN/mes"
-                            description="Para profesionales que necesitan potencia"
-                            features={[
-                                "170 consultas/mes",
-                                "Registra tu cédula para conectar con clientes de tu zona",
-                                "Búsqueda con IA en legislación mexicana verificada y en constante actualización",
-                                "Análisis de documentos (auditoría y mejoras)",
-                                "Filtros por entidad federativa + marco federal",
-                                "Soporte prioritario"
-                            ]}
-                            buttonText="Elegir Plan Pro"
-                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY}
-                            highlighted={true}
-                            badge="MÁS POPULAR"
-                        />
+                        <AnimateOnScroll delay={0.15}>
+                            <PricingCard
+                                icon={<Crown className="w-6 h-6" />}
+                                name="Plan Pro"
+                                price="$149"
+                                originalPrice="$200"
+                                period="MXN/mes"
+                                description="Para profesionales que necesitan potencia"
+                                features={[
+                                    "170 consultas/mes",
+                                    "Registra tu cédula para conectar con clientes de tu zona",
+                                    "Búsqueda con IA en legislación mexicana verificada y en constante actualización",
+                                    "Análisis de documentos (auditoría y mejoras)",
+                                    "Filtros por entidad federativa + marco federal",
+                                    "Soporte prioritario"
+                                ]}
+                                buttonText="Elegir Plan Pro"
+                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY}
+                                highlighted={true}
+                                badge="MÁS POPULAR"
+                            />
+                        </AnimateOnScroll>
 
-                        {/* Plan Pro Anual */}
-                        <PricingCard
-                            icon={<Calendar className="w-6 h-6" />}
-                            name="Plan Pro Anual"
-                            price="$1,490"
-                            originalPrice="$2,400"
-                            period="MXN/año"
-                            description="Máximo ahorro por pago adelantado"
-                            features={[
-                                "170 consultas/mes (2,040/año)",
-                                "Registra tu cédula para conectar con clientes de tu zona",
-                                "Todo lo del Plan Pro incluido",
-                                "Ahorro de $910 MXN al año",
-                                "Precio fijo garantizado",
-                                "Soporte prioritario"
-                            ]}
-                            buttonText="Ahorrar con Plan Anual"
-                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL}
-                            highlighted={false}
-                            badge="MEJOR VALOR"
-                        />
+                        <AnimateOnScroll delay={0.3}>
+                            <PricingCard
+                                icon={<Calendar className="w-6 h-6" />}
+                                name="Plan Pro Anual"
+                                price="$1,490"
+                                originalPrice="$2,400"
+                                period="MXN/año"
+                                description="Máximo ahorro por pago adelantado"
+                                features={[
+                                    "170 consultas/mes (2,040/año)",
+                                    "Registra tu cédula para conectar con clientes de tu zona",
+                                    "Todo lo del Plan Pro incluido",
+                                    "Ahorro de $910 MXN al año",
+                                    "Precio fijo garantizado",
+                                    "Soporte prioritario"
+                                ]}
+                                buttonText="Ahorrar con Plan Anual"
+                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL}
+                                highlighted={false}
+                                badge="MEJOR VALOR"
+                            />
+                        </AnimateOnScroll>
                     </div>
 
                     {/* Row 2: Platinum Plans */}
                     <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                        {/* Plan Platinum Mensual */}
-                        <PricingCard
-                            icon={<Star className="w-6 h-6" />}
-                            name="Plan Platinum"
-                            price="$599"
-                            originalPrice="$900"
-                            period="MXN/mes"
-                            description="Ideal para despachos y corporativos"
-                            features={[
-                                "700 consultas/mes — ideal para despachos y corporativos",
-                                "Registra tu cédula para conectar con clientes de tu zona",
-                                "Todo lo del Plan Pro incluido",
-                                "Consulta personalizada con equipo legal de Iurexia (vía correo)",
-                                "Asesoría legal sobre estrategia (un abogado te contestará a la brevedad)",
-                                "Soporte VIP dedicado"
-                            ]}
-                            buttonText="Elegir Platinum"
-                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_MONTHLY}
-                            highlighted={false}
-                            isPlatinum={true}
-                            badge="PREMIUM"
-                        />
+                        <AnimateOnScroll delay={0.1}>
+                            <PricingCard
+                                icon={<Star className="w-6 h-6" />}
+                                name="Plan Platinum"
+                                price="$599"
+                                originalPrice="$900"
+                                period="MXN/mes"
+                                description="Ideal para despachos y corporativos"
+                                features={[
+                                    "700 consultas/mes — ideal para despachos y corporativos",
+                                    "Registra tu cédula para conectar con clientes de tu zona",
+                                    "Todo lo del Plan Pro incluido",
+                                    "Consulta personalizada con equipo legal de Iurexia (vía correo)",
+                                    "Asesoría legal sobre estrategia (un abogado te contestará a la brevedad)",
+                                    "Soporte VIP dedicado"
+                                ]}
+                                buttonText="Elegir Platinum"
+                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_MONTHLY}
+                                highlighted={false}
+                                isPlatinum={true}
+                                badge="PREMIUM"
+                            />
+                        </AnimateOnScroll>
 
-                        {/* Plan Platinum Anual */}
-                        <PricingCard
-                            icon={<Star className="w-6 h-6" />}
-                            name="Plan Platinum Anual"
-                            price="$5,990"
-                            originalPrice="$10,800"
-                            period="MXN/año"
-                            description="Máximo ahorro para despachos y corporativos"
-                            features={[
-                                "700 consultas/mes (8,400/año)",
-                                "Registra tu cédula para conectar con clientes de tu zona",
-                                "Todo lo del Plan Platinum incluido",
-                                "Asesoría legal personalizada continua (vía correo)",
-                                "Ahorro de $4,810 MXN al año",
-                                "Precio fijo garantizado",
-                                "Soporte VIP dedicado"
-                            ]}
-                            buttonText="Ahorrar con Platinum Anual"
-                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_ANNUAL}
-                            highlighted={false}
-                            isPlatinum={true}
-                            badge="MÁXIMO AHORRO"
-                        />
+                        <AnimateOnScroll delay={0.25}>
+                            <PricingCard
+                                icon={<Star className="w-6 h-6" />}
+                                name="Plan Platinum Anual"
+                                price="$5,990"
+                                originalPrice="$10,800"
+                                period="MXN/año"
+                                description="Máximo ahorro para despachos y corporativos"
+                                features={[
+                                    "700 consultas/mes (8,400/año)",
+                                    "Registra tu cédula para conectar con clientes de tu zona",
+                                    "Todo lo del Plan Platinum incluido",
+                                    "Asesoría legal personalizada continua (vía correo)",
+                                    "Ahorro de $4,810 MXN al año",
+                                    "Precio fijo garantizado",
+                                    "Soporte VIP dedicado"
+                                ]}
+                                buttonText="Ahorrar con Platinum Anual"
+                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_ANNUAL}
+                                highlighted={false}
+                                isPlatinum={true}
+                                badge="MÁXIMO AHORRO"
+                            />
+                        </AnimateOnScroll>
                     </div>
                 </div>
             </section>
 
             {/* Features Comparison */}
-            <section className="py-20 bg-white border-t border-black/5">
+            <section className="py-20 bg-white border-t border-black/5 overflow-hidden">
                 <div className="max-w-6xl mx-auto px-4">
-                    <div className="text-center mb-12">
-                        <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
-                            Comparación de planes
-                        </h2>
-                        <p className="text-charcoal-600">
-                            Todas las funciones incluidas según tu plan
-                        </p>
-                    </div>
+                    <AnimateOnScroll>
+                        <div className="text-center mb-12">
+                            <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
+                                Comparación de planes
+                            </h2>
+                            <p className="text-charcoal-600">
+                                Todas las funciones incluidas según tu plan
+                            </p>
+                        </div>
+                    </AnimateOnScroll>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-gray-200">
-                                    <th className="text-left py-4 px-3 font-medium text-charcoal-900">Característica</th>
-                                    <th className="text-center py-4 px-3 font-medium text-charcoal-900">Gratuito</th>
-                                    <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-accent-brown/5">Pro</th>
-                                    <th className="text-center py-4 px-3 font-medium text-charcoal-900">Pro Anual</th>
-                                    <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-gradient-to-r from-amber-50 to-yellow-50">Platinum</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <ComparisonRow feature="Consultas/mes" free="3" pro="170" proAnual="170" platinum="700" />
-                                <ComparisonRow feature="Búsqueda con IA verificada" free="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                <ComparisonRow feature="Filtros jurisdiccionales" free="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                <ComparisonRow feature="Base documental completa" free="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                <ComparisonRow feature="Directorio de abogados (Connect)" free="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                <ComparisonRow feature="Registro connect para captar clientes" free="—" pro="✓" proAnual="✓" platinum="✓" />
-                                <ComparisonRow feature="Análisis de documentos" free="—" pro="✓" proAnual="✓" platinum="✓" />
-                                <ComparisonRow feature="Auditoría de demandas" free="—" pro="✓" proAnual="✓" platinum="✓" />
-                                <ComparisonRow feature="Sugerencias con fundamento" free="—" pro="✓" proAnual="✓" platinum="✓" />
-                                <ComparisonRow feature="Soporte prioritario" free="—" pro="✓" proAnual="✓" platinum="VIP" />
-                                <ComparisonRow feature="Consulta con equipo legal (vía correo)" free="—" pro="—" proAnual="—" platinum="✓" />
-                                <ComparisonRow feature="Asesoría legal sobre estrategia" free="—" pro="—" proAnual="—" platinum="✓" />
-                            </tbody>
-                        </table>
-                    </div>
+                    <AnimateOnScroll delay={0.2}>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-gray-200">
+                                        <th className="text-left py-4 px-3 font-medium text-charcoal-900">Característica</th>
+                                        <th className="text-center py-4 px-3 font-medium text-charcoal-900">Gratuito</th>
+                                        <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-accent-brown/5">Pro</th>
+                                        <th className="text-center py-4 px-3 font-medium text-charcoal-900">Pro Anual</th>
+                                        <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-gradient-to-r from-amber-50 to-yellow-50">Platinum</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <ComparisonRow feature="Consultas/mes" free="3" pro="170" proAnual="170" platinum="700" />
+                                    <ComparisonRow feature="Búsqueda con IA verificada" free="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Filtros jurisdiccionales" free="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Base documental completa" free="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Directorio de abogados (Connect)" free="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Registro connect para captar clientes" free="—" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Análisis de documentos" free="—" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Auditoría de demandas" free="—" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Sugerencias con fundamento" free="—" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Soporte prioritario" free="—" pro="✓" proAnual="✓" platinum="VIP" />
+                                    <ComparisonRow feature="Consulta con equipo legal (vía correo)" free="—" pro="—" proAnual="—" platinum="✓" />
+                                    <ComparisonRow feature="Asesoría legal sobre estrategia" free="—" pro="—" proAnual="—" platinum="✓" />
+                                </tbody>
+                            </table>
+                        </div>
+                    </AnimateOnScroll>
                 </div>
             </section>
 
             {/* FAQ Section */}
-            <section className="py-20 bg-cream-300">
+            <section className="py-20 bg-cream-300 overflow-hidden">
                 <div className="max-w-4xl mx-auto px-4">
-                    <div className="text-center mb-12">
-                        <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
-                            Preguntas frecuentes
-                        </h2>
-                    </div>
+                    <AnimateOnScroll>
+                        <div className="text-center mb-12">
+                            <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
+                                Preguntas frecuentes
+                            </h2>
+                        </div>
+                    </AnimateOnScroll>
 
                     <div className="space-y-4">
-                        <FAQItem
-                            question="¿Qué incluye una consulta?"
-                            answer="Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo."
-                        />
-                        <FAQItem
-                            question="¿Qué incluye el Plan Platinum?"
-                            answer="El Plan Platinum incluye todo lo del Plan Pro más 700 consultas al mes y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan un volumen alto de consultas. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal."
-                        />
-                        <FAQItem
-                            question="¿Puedo cambiar de plan en cualquier momento?"
-                            answer="Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación."
-                        />
-                        <FAQItem
-                            question="¿Qué métodos de pago aceptan?"
-                            answer="Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo."
-                        />
-                        <FAQItem
-                            question="¿Hay garantía de devolución?"
-                            answer="Ofrecemos 14 días de garantía de devolución en los planes mensuales. Si no estás satisfecho, te devolvemos el 100% de tu pago sin preguntas."
-                        />
-                        <FAQItem
-                            question="¿Qué pasa si se acaban mis consultas?"
-                            answer="Te notificaremos cuando te queden pocas consultas. Puedes esperar al siguiente mes o actualizar a un plan con más consultas en cualquier momento. El Plan Platinum incluye 700 consultas al mes, ideal para despachos y corporativos."
-                        />
+                        {[
+                            { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
+                            { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro más 700 consultas al mes y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan un volumen alto de consultas. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal.' },
+                            { question: '¿Puedo cambiar de plan en cualquier momento?', answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación.' },
+                            { question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo.' },
+                            { question: '¿Hay garantía de devolución?', answer: 'Ofrecemos 14 días de garantía de devolución en los planes mensuales. Si no estás satisfecho, te devolvemos el 100% de tu pago sin preguntas.' },
+                            { question: '¿Qué pasa si se acaban mis consultas?', answer: 'Te notificaremos cuando te queden pocas consultas. Puedes esperar al siguiente mes o actualizar a un plan con más consultas en cualquier momento. El Plan Platinum incluye 700 consultas al mes, ideal para despachos y corporativos.' },
+                        ].map((faq, i) => (
+                            <AnimateOnScroll key={i} delay={i * 0.08}>
+                                <FAQItem question={faq.question} answer={faq.answer} />
+                            </AnimateOnScroll>
+                        ))}
                     </div>
                 </div>
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 bg-charcoal-900 text-white">
+            <section className="py-20 bg-charcoal-900 text-white overflow-hidden">
                 <div className="max-w-4xl mx-auto text-center px-4">
-                    <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                        Comienza gratis hoy
-                    </h2>
-                    <p className="text-lg text-gray-400 mb-8">
-                        Prueba Iurexia con 3 consultas gratuitas. Sin tarjeta de crédito.
-                    </p>
-                    <Link
-                        href="/chat"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                        Probar Gratis
-                        <ArrowRight className="w-5 h-5" />
-                    </Link>
+                    <AnimateOnScroll>
+                        <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
+                            Comienza gratis hoy
+                        </h2>
+                    </AnimateOnScroll>
+                    <AnimateOnScroll delay={0.15}>
+                        <p className="text-lg text-gray-400 mb-8">
+                            Prueba Iurexia con 3 consultas gratuitas. Sin tarjeta de crédito.
+                        </p>
+                    </AnimateOnScroll>
+                    <AnimateOnScroll delay={0.3} direction="scale">
+                        <Link
+                            href="/chat"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-full hover:bg-gray-100 transition-colors"
+                        >
+                            Probar Gratis
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
+                    </AnimateOnScroll>
                 </div>
             </section>
 
@@ -362,7 +374,7 @@ function PricingCard({
             : 'bg-charcoal-900 text-white hover:bg-charcoal-800';
 
     return (
-        <div className={`relative rounded-3xl p-8 transition-all ${cardStyles}`}>
+        <div className={`relative rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 ${cardStyles}`}>
             {badge && (
                 <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide ${badgeStyles}`}>
                     {badge}
@@ -472,15 +484,21 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
                 className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors"
             >
                 <span className="font-medium text-charcoal-900">{question}</span>
-                <span className={`text-2xl text-charcoal-400 transition-transform ${isOpen ? 'rotate-45' : ''}`}>
+                <span className={`text-2xl text-charcoal-400 transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`}>
                     +
                 </span>
             </button>
-            {isOpen && (
+            <div
+                className="overflow-hidden transition-all duration-300 ease-in-out"
+                style={{
+                    maxHeight: isOpen ? '200px' : '0px',
+                    opacity: isOpen ? 1 : 0,
+                }}
+            >
                 <div className="px-6 pb-6">
                     <p className="text-charcoal-600 leading-relaxed">{answer}</p>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
