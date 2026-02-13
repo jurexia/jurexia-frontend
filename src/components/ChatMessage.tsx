@@ -96,6 +96,24 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             }
         );
 
+        // Pattern A2: [, uuid] or [,uuid] - AI sometimes outputs this format (comma before UUID)
+        content = content.replace(
+            /\[\s*,\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\s*\]/gi,
+            (_, uuid) => {
+                const num = getCitationNumber(uuid);
+                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
+            }
+        );
+
+        // Pattern A3: [text, uuid] - AI sometimes outputs [nombre, uuid] format
+        content = content.replace(
+            /\[[^\]]*,\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\s*\]/gi,
+            (_, uuid) => {
+                const num = getCitationNumber(uuid);
+                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
+            }
+        );
+
         // Pattern B: Doc uuid (standalone)
         content = content.replace(
             /(?<![a-f0-9-])Doc\s+([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(?![a-f0-9-])/gi,
@@ -119,6 +137,13 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         );
 
         // STEP 2: Remove ALL malformed/leftover Doc IDs AFTER processing valid ones
+        // Clean up leftover bracket artifacts from citation processing: [, <sup>...</sup>] → <sup>...</sup>
+        content = content.replace(/\[\s*,?\s*(<sup class="citation-badge"[^<]*<\/sup>)\s*\]/g, '$1');
+        // Clean up double-bracketed citations: [<sup>...</sup>] → <sup>...</sup>
+        content = content.replace(/\[(<sup class="citation-badge"[^<]*<\/sup>)\]/g, '$1');
+        // Clean up [, [N]] patterns (nested brackets with numbers)
+        content = content.replace(/\[\s*,?\s*\[(\d+)\]\s*\]/g, '<sup class="citation-badge">[$1]</sup>');
+
         // Remove UUIDs missing first segment like [-53b4-5b76-b7ea-ef9db1b4ead8]
         content = content.replace(/\[-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\]/gi, '');
 
