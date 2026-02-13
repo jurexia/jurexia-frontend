@@ -50,27 +50,27 @@ export default function ChatSidebar({
         <div className="flex flex-col h-full">
             {/* ── Brand Header ── */}
             <div className="p-4" style={{ borderBottom: '1px solid rgba(201, 169, 98, 0.15)' }}>
-                {/* Back to Home */}
+                {/* Brand Name - Centered */}
+                {!isCollapsed && (
+                    <div className="text-center mb-3">
+                        <span className="font-serif text-xl font-semibold text-white">
+                            Iurex<span style={{ color: '#c9a962' }}>ia</span>
+                        </span>
+                    </div>
+                )}
+
+                {/* Back to Home - Icon + Arrow */}
                 <Link
                     href="/"
-                    className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+                    className={`flex items-center gap-2 text-xs font-medium transition-colors ${isCollapsed ? 'justify-center' : ''}`}
                     title="Ir al inicio"
                     style={{ color: 'rgba(255,255,255,0.45)' }}
                     onMouseEnter={e => (e.currentTarget.style.color = '#c9a962')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}
                 >
                     <Home className="w-3.5 h-3.5 flex-shrink-0" />
-                    {!isCollapsed && <span>Inicio</span>}
+                    {!isCollapsed && <ChevronRight className="w-3 h-3" />}
                 </Link>
-
-                {/* Brand Name */}
-                {!isCollapsed && (
-                    <div className="mt-3">
-                        <span className="font-serif text-xl font-semibold text-white">
-                            Iurex<span style={{ color: '#c9a962' }}>ia</span>
-                        </span>
-                    </div>
-                )}
             </div>
 
             {/* ── Historial Header + Collapse ── */}
