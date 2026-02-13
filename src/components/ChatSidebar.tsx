@@ -53,7 +53,7 @@ export default function ChatSidebar({
                 {/* Back to Home */}
                 <Link
                     href="/"
-                    className={`flex items-center gap-2 mb-3 text-xs font-medium uppercase tracking-wider transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+                    className={`flex items-center gap-2 text-xs font-medium uppercase tracking-wider transition-colors ${isCollapsed ? 'justify-center' : ''}`}
                     title="Ir al inicio"
                     style={{ color: 'rgba(255,255,255,0.45)' }}
                     onMouseEnter={e => (e.currentTarget.style.color = '#c9a962')}
@@ -62,6 +62,15 @@ export default function ChatSidebar({
                     <Home className="w-3.5 h-3.5 flex-shrink-0" />
                     {!isCollapsed && <span>Inicio</span>}
                 </Link>
+
+                {/* Brand Name */}
+                {!isCollapsed && (
+                    <div className="mt-3">
+                        <span className="font-serif text-xl font-semibold text-white">
+                            Iurex<span style={{ color: '#c9a962' }}>ia</span>
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* ── Historial Header + Collapse ── */}
