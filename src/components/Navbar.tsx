@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { UserAvatar } from './UserAvatar';
@@ -35,6 +35,15 @@ export default function Navbar() {
                         <NavLink href="/precios">Precios</NavLink>
                         <NavLink href="/seguridad">Seguridad</NavLink>
                     </div>
+
+                    {/* Ir al Chat - always visible */}
+                    <Link
+                        href="/chat"
+                        className="hidden md:flex items-center gap-2 px-4 py-2 bg-charcoal-900 text-white text-sm font-semibold rounded-lg hover:bg-charcoal-800 transition-colors shadow-sm"
+                    >
+                        <MessageSquare className="w-4 h-4" />
+                        Ir al Chat
+                    </Link>
 
                     {/* Desktop CTA / User Menu */}
                     <div className="hidden md:flex items-center gap-4">
@@ -96,6 +105,14 @@ export default function Navbar() {
                             <MobileNavLink href="/seguridad" onClick={() => setIsMenuOpen(false)}>
                                 Seguridad
                             </MobileNavLink>
+                            <Link
+                                href="/chat"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-charcoal-900 text-white text-base font-semibold rounded-lg hover:bg-charcoal-800 transition-colors"
+                            >
+                                <MessageSquare className="w-5 h-5" />
+                                Ir al Chat
+                            </Link>
 
                             <div className="pt-4 border-t border-black/5">
                                 {isLoggedIn ? (

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
     MessageSquarePlus,
     Trash2,
@@ -47,25 +46,14 @@ export default function ChatSidebar({
 
     const SidebarContent = () => (
         <div className="flex flex-col h-full">
-            {/* Home Button with Logo */}
-            <div className="p-4 border-b border-cream-300">
+            {/* Header spacer */}
+            <div className="p-3 border-b border-cream-300">
                 <Link
                     href="/"
-                    className={`flex items-center gap-2 p-2 -m-2 hover:bg-cream-300 rounded-lg transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+                    className={`flex items-center gap-2 p-2 -m-2 hover:bg-cream-300 rounded-lg transition-colors text-sm font-medium text-charcoal-600 ${isCollapsed ? 'justify-center' : ''}`}
                     title="Ir al inicio"
                 >
-                    <Image
-                        src="/logo-iurexia.png"
-                        alt="Iurexia"
-                        width={32}
-                        height={32}
-                        className="flex-shrink-0"
-                    />
-                    {!isCollapsed && (
-                        <span className="font-serif text-lg font-semibold text-charcoal-900">
-                            Iurex<span className="text-accent-gold">ia</span>
-                        </span>
-                    )}
+                    {isCollapsed ? '⌂' : '← Inicio'}
                 </Link>
             </div>
 
