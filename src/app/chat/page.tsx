@@ -308,7 +308,13 @@ export default function ChatPage() {
                 onSelectConversation={handleSelectConversation}
                 onNewConversation={handleNewConversation}
                 onDeleteConversation={handleDeleteConversation}
-                onToggleGuide={() => setShowVisualGuide(true)}
+                onToggleGuide={() => {
+                    // If there's an active conversation with messages, start fresh so guide elements are visible
+                    if (messages.length > 0) {
+                        handleNewConversation();
+                    }
+                    setShowVisualGuide(true);
+                }}
             />
 
             {/* Main Content - offset for fixed sidebar */}
