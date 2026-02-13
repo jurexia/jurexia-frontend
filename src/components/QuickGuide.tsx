@@ -76,22 +76,25 @@ export default function QuickGuide() {
             {/* Toggle Button */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between px-4 py-2.5 bg-cream-200 hover:bg-cream-300 
-                         rounded-lg transition-all duration-200 border border-charcoal-100 group"
+                className="w-full flex items-center justify-between px-4 py-2.5
+                         rounded-lg transition-all duration-200 group"
+                style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(201, 169, 98, 0.15)',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
             >
                 <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-accent-brown" />
-                    <span className="text-sm font-medium text-charcoal-800">
-                        Guía Rápida de Uso
-                    </span>
-                    <span className="text-xs text-charcoal-500 hidden sm:inline">
-                        Aprende cuándo usar cada modo
+                    <BookOpen className="w-4 h-4" style={{ color: '#c9a962' }} />
+                    <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                        Guía Rápida
                     </span>
                 </div>
                 {isExpanded ? (
-                    <X className="w-4 h-4 text-charcoal-600" />
+                    <X className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.4)' }} />
                 ) : (
-                    <ChevronRight className="w-4 h-4 text-charcoal-600 group-hover:translate-x-0.5 transition-transform" />
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: 'rgba(255,255,255,0.4)' }} />
                 )}
             </button>
 
