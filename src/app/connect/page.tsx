@@ -156,17 +156,24 @@ export default function ConnectPage() {
         // Local filtering fallback
         let filtered = [...allLawyers];
         if (query.length >= 2) {
-            filtered = filtered.filter(l =>
-                l.full_name.toLowerCase().includes(query) ||
-                l.bio.toLowerCase().includes(query) ||
-                l.specialties.some(s => s.toLowerCase().includes(query))
-            );
+            // Split query into individual words for flexible matching
+            const words = query.split(/\s+/).filter(w => w.length >= 2);
+            filtered = filtered.filter(l => {
+                const name = l.full_name.toLowerCase();
+                const bio = l.bio.toLowerCase();
+                const specs = l.specialties.map(s => s.toLowerCase()).join(' ');
+                // Match if ANY search word appears in name, bio, or specialties
+                return words.some(word =>
+                    name.includes(word) ||
+                    bio.includes(word) ||
+                    specs.includes(word)
+                );
+            });
         }
         if (estado) {
             filtered = filtered.filter(l => {
-                const lawyerEstado = l.office_address?.estado || '';
-                return lawyerEstado.toUpperCase().replace(/\s+/g, '_') === estado ||
-                    lawyerEstado.toUpperCase() === estado;
+                const lawyerEstado = (l.office_address?.estado || '').toUpperCase().replace(/\s+/g, '_');
+                return lawyerEstado === estado || lawyerEstado.replace(/_/g, '') === estado.replace(/_/g, '');
             });
         }
 
