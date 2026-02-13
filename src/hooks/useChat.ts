@@ -30,21 +30,31 @@ const MARKER_LEN = THINKING_MARKER.length;
  * Buffer-based parser that handles <!--thinking--> markers even when
  * they are split across multiple TCP chunks.
  *
+ * Backend protocol:
+ * - Each reasoning token is sent as: <!--thinking-->TOKEN
+ * - Each content token is sent as: TOKEN (no prefix)
+ * - The transition from reasoning→content happens when tokens stop
+ *   being prefixed with <!--thinking-->
+ *
  * Strategy:
  * - We maintain a `pending` buffer of unprocessed text.
- * - Each incoming chunk is appended to `pending`.
- * - We scan `pending` for complete markers and flush confirmed text.
- * - At the end of each chunk, if the tail of `pending` could be the START
- *   of a marker (e.g. "<!--th"), we hold it until the next chunk.
- * - On stream end, we flush everything remaining.
+ * - We scan for complete markers. Text BEFORE a marker = content,
+ *   text AFTER a marker (until next marker or non-marker text) = thinking.
+ * - When no marker is found and we've been in thinking mode, we check:
+ *   if the text has no marker prefix, it must be content → switch back.
+ * - We hold partial markers at the tail until the next chunk confirms.
  */
 class ThinkingParser {
     thinking = '';
     content = '';
     private pending = '';
-    private inThinkingMode = false;
+    // reasoningPhase tracks whether we're still in the reasoning phase
+    // (markers are still arriving). Once we see content without markers
+    // after having been in reasoning, we switch to content mode permanently.
+    private reasoningPhase = false;
+    private seenAnyMarker = false;
 
-    /** Feed a new chunk from the stream. Call updateUI after. */
+    /** Feed a new chunk from the stream. */
     feed(chunk: string): void {
         this.pending += chunk;
         this.drain(false);
@@ -60,41 +70,95 @@ class ThinkingParser {
             const idx = this.pending.indexOf(THINKING_MARKER);
 
             if (idx !== -1) {
-                // Found a complete marker — flush text before it, then switch mode
+                this.seenAnyMarker = true;
+                // Found a complete marker.
+                // Text BEFORE the marker is CONTENT (not prefixed by thinking)
                 const before = this.pending.slice(0, idx);
                 if (before) {
-                    this.appendText(before);
+                    this.content += before;
                 }
-                // Switch to thinking mode (marker always prefixes thinking text)
-                this.inThinkingMode = true;
+                // After the marker: enter reasoning phase
+                this.reasoningPhase = true;
                 this.pending = this.pending.slice(idx + MARKER_LEN);
-                continue; // keep scanning
+
+                // Now grab the text that follows this marker, up to the next marker.
+                // This text is THINKING content.
+                const nextIdx = this.pending.indexOf(THINKING_MARKER);
+                if (nextIdx !== -1) {
+                    // There's another marker — text before it is thinking
+                    const thinkText = this.pending.slice(0, nextIdx);
+                    if (thinkText) {
+                        this.thinking += thinkText;
+                    }
+                    this.pending = this.pending.slice(nextIdx);
+                    continue; // process next marker
+                }
+
+                // No next marker found. The remaining text COULD be:
+                // a) More thinking text (next marker arrives in future chunk)
+                // b) The start of content (markers have stopped)
+                // c) A partial marker at the tail
+                // We can't know yet, so we hold it in pending.
+                if (!isFinal) {
+                    // Hold everything — can't decide yet
+                    break;
+                } else {
+                    // Stream is done. Everything remaining after the last marker
+                    // is thinking content (since it was preceded by a marker).
+                    if (this.pending) {
+                        this.thinking += this.pending;
+                        this.pending = '';
+                    }
+                    break;
+                }
             }
 
-            // No complete marker found.
+            // No complete marker found in pending.
             if (isFinal) {
-                // Stream is done — flush everything remaining as-is
+                // Stream is done — flush everything.
                 if (this.pending) {
-                    this.appendText(this.pending);
+                    if (this.reasoningPhase) {
+                        // We were in reasoning but stream ended without more markers.
+                        // This remaining text is likely content (the answer).
+                        // But it could also be leftover thinking if model stopped mid-reasoning.
+                        // Since the backend sends content WITHOUT markers, treat as content.
+                        this.content += this.pending;
+                    } else {
+                        this.content += this.pending;
+                    }
                     this.pending = '';
                 }
                 break;
             }
 
             // Check if the END of `pending` could be the beginning of a marker.
-            // e.g. pending ends with "<!--" or "<!--thi" — we must hold it.
             const holdFrom = this.findPartialMarkerTail();
             if (holdFrom < this.pending.length) {
-                // Flush the safe portion, hold the rest
+                // Flush the safe portion
                 const safe = this.pending.slice(0, holdFrom);
                 if (safe) {
-                    this.appendText(safe);
+                    if (this.reasoningPhase && !this.seenAnyMarkerInText(safe)) {
+                        // Text without markers while in reasoning phase = content
+                        this.reasoningPhase = false;
+                        this.content += safe;
+                    } else if (this.reasoningPhase) {
+                        this.thinking += safe;
+                    } else {
+                        this.content += safe;
+                    }
                 }
                 this.pending = this.pending.slice(holdFrom);
             } else {
-                // No partial marker possible — flush all
+                // No partial marker — flush all
                 if (this.pending) {
-                    this.appendText(this.pending);
+                    if (this.reasoningPhase) {
+                        // No marker in this text but we were reasoning.
+                        // This means markers have stopped → transition to content.
+                        this.reasoningPhase = false;
+                        this.content += this.pending;
+                    } else {
+                        this.content += this.pending;
+                    }
                     this.pending = '';
                 }
             }
@@ -102,10 +166,12 @@ class ThinkingParser {
         }
     }
 
+    private seenAnyMarkerInText(text: string): boolean {
+        return text.includes(THINKING_MARKER);
+    }
+
     /** Find the earliest position in pending where a partial marker could start at the tail. */
     private findPartialMarkerTail(): number {
-        // Check if any suffix of `pending` matches a prefix of THINKING_MARKER.
-        // We only need to check the last (MARKER_LEN - 1) characters.
         const searchStart = Math.max(0, this.pending.length - (MARKER_LEN - 1));
         for (let i = searchStart; i < this.pending.length; i++) {
             const tail = this.pending.slice(i);
@@ -113,15 +179,7 @@ class ThinkingParser {
                 return i;
             }
         }
-        return this.pending.length; // no partial match
-    }
-
-    private appendText(text: string): void {
-        if (this.inThinkingMode) {
-            this.thinking += text;
-        } else {
-            this.content += text;
-        }
+        return this.pending.length;
     }
 
     /** Build the display string for the assistant message. */
