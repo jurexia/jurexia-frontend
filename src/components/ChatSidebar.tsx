@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
     MessageSquarePlus,
     Trash2,
@@ -62,23 +61,6 @@ export default function ChatSidebar({
                     <Home className="w-3.5 h-3.5 flex-shrink-0" />
                     {!isCollapsed && <span>Inicio</span>}
                 </Link>
-
-                {/* Iurexia Logo */}
-                <div className={`flex items-center gap-2.5 ${isCollapsed ? 'justify-center' : ''}`}>
-                    <Image
-                        src="/logo-iurexia.png"
-                        alt="Iurexia"
-                        width={36}
-                        height={36}
-                        className="flex-shrink-0"
-                        style={{ filter: 'brightness(1.1)' }}
-                    />
-                    {!isCollapsed && (
-                        <span className="font-serif text-xl font-semibold text-white">
-                            Iurex<span style={{ color: '#c9a962' }}>ia</span>
-                        </span>
-                    )}
-                </div>
             </div>
 
             {/* ── Historial Header + Collapse ── */}
