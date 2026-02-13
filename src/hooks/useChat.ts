@@ -215,6 +215,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             // Get Supabase session for auth token
             const session = await getSession();
             const accessToken = session?.access_token;
+            const userId = session?.user?.id;
 
             const parser = new ThinkingParser();
             let assistantMessageAdded = false;
@@ -224,7 +225,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 options.estado,
                 options.topK,
                 accessToken,
-                enableReasoning
+                enableReasoning,
+                userId,
             )) {
                 // Feed chunk to the buffer-based parser (handles split markers)
                 parser.feed(chunk);

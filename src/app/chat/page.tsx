@@ -11,7 +11,6 @@ import PromptGuide from '@/components/PromptGuide';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
-import { incrementQueryCount } from '@/lib/supabase';
 import {
     Conversation,
     getConversations,
@@ -84,7 +83,7 @@ export default function ChatPage() {
 
     // Query limits state
     const [queriesUsed, setQueriesUsed] = useState<number>(0);
-    const [queriesLimit, setQueriesLimit] = useState<number>(5);
+    const [queriesLimit, setQueriesLimit] = useState<number>(3);
     const [showLimitModal, setShowLimitModal] = useState(false);
     const isUnlimited = profile?.subscription_type === 'platinum_monthly' || profile?.subscription_type === 'platinum_annual';
 
@@ -95,7 +94,7 @@ export default function ChatPage() {
     useEffect(() => {
         if (profile) {
             setQueriesUsed(profile.queries_used || 0);
-            setQueriesLimit(profile.queries_limit || 5);
+            setQueriesLimit(profile.queries_limit || 3);
         }
     }, [profile]);
 
@@ -285,12 +284,7 @@ export default function ChatPage() {
         // 4) Wait for the AI response to finish streaming
         await sendPromise;
 
-        // 5) Increment counter on the server in the background (skip for unlimited)
-        if (!isUnlimited && user) {
-            incrementQueryCount(user.id).catch(err =>
-                console.error('Error incrementing query count:', err)
-            );
-        }
+        // 5) Quota consumption is now handled server-side by the backend's consume_query RPC
     }, [user, isUnlimited, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
 
     const hasMessages = messages.length > 0;

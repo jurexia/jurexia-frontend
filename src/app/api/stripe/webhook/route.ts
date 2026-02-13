@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 import { getStripe, getPlanFromSubscription, PLANS, PlanId } from '@/lib/stripe';
 import {
     updateUserSubscription,
@@ -12,6 +13,18 @@ import {
 // Disable body parsing, we need the raw body for webhook verification
 export const dynamic = 'force-dynamic';
 
+// ─── Supabase Admin (for idempotency table) ──────────────────
+
+function getSupabaseAdmin() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+}
+
+// ─── Helpers ─────────────────────────────────────────────────
+
 // Map Stripe PlanId to Supabase PlanType
 function mapPlanIdToSubscriptionType(planId: PlanId): PlanType {
     const mapping: Record<PlanId, PlanType> = {
@@ -23,6 +36,32 @@ function mapPlanIdToSubscriptionType(planId: PlanId): PlanType {
     };
     return mapping[planId] || 'gratuito';
 }
+
+/**
+ * Check if this event has already been processed (idempotency guard).
+ * Returns true if event was already handled.
+ */
+async function isEventProcessed(eventId: string): Promise<boolean> {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+        .from('stripe_events_processed')
+        .select('event_id')
+        .eq('event_id', eventId)
+        .single();
+    return !!data;
+}
+
+/**
+ * Mark an event as processed.
+ */
+async function markEventProcessed(eventId: string, eventType: string): Promise<void> {
+    const supabase = getSupabaseAdmin();
+    await supabase
+        .from('stripe_events_processed')
+        .insert({ event_id: eventId, event_type: eventType });
+}
+
+// ─── Main Handler ────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
     const body = await request.text();
@@ -54,7 +93,19 @@ export async function POST(request: NextRequest) {
 
     console.log(`📨 Webhook received: ${event.type} (id: ${event.id})`);
 
-    // Handle the event
+    // ── Idempotency Guard ────────────────────────────────────
+    try {
+        const alreadyProcessed = await isEventProcessed(event.id);
+        if (alreadyProcessed) {
+            console.log(`⏭️ Event ${event.id} already processed — skipping`);
+            return NextResponse.json({ received: true, duplicate: true });
+        }
+    } catch (err) {
+        // Don't block on idempotency check failure — log and continue
+        console.error(`⚠️ Idempotency check failed (proceeding anyway):`, err);
+    }
+
+    // ── Handle the event ─────────────────────────────────────
     try {
         switch (event.type) {
             case 'checkout.session.completed': {
@@ -90,6 +141,13 @@ export async function POST(request: NextRequest) {
 
             default:
                 console.log(`Unhandled event type: ${event.type}`);
+        }
+
+        // ── Mark event as processed ──────────────────────────
+        try {
+            await markEventProcessed(event.id, event.type);
+        } catch (err) {
+            console.error(`⚠️ Failed to mark event ${event.id} as processed:`, err);
         }
 
         return NextResponse.json({ received: true });
@@ -176,6 +234,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
         status: subscription.status,
         customerId: subscription.customer,
         priceId: subscription.items.data[0]?.price.id,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
     });
 
     const planId = getPlanFromSubscription(subscription);
@@ -191,6 +250,14 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
         return;
     }
 
+    // Handle cancel_at_period_end — user keeps access until period ends
+    if (subscription.cancel_at_period_end) {
+        const periodEnd = new Date(subscription.current_period_end * 1000);
+        console.log(`⏳ User ${email} scheduled cancellation — access until ${periodEnd.toISOString()}`);
+        // Don't downgrade yet; Stripe will send subscription.deleted when period actually ends
+        return;
+    }
+
     console.log(`📧 User ${email} subscription updated to: ${subscriptionType}, status: ${subscription.status}`);
 
     if (subscription.status === 'active') {
@@ -202,6 +269,10 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
         );
     } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
         await downgradeToFree(email);
+    } else if (subscription.status === 'past_due') {
+        // Payment is past due but subscription hasn't been canceled yet
+        // Keep current plan but log the warning
+        console.warn(`⚠️ Subscription past_due for ${email} — user retains access for now`);
     } else {
         console.log(`ℹ️ Subscription status is "${subscription.status}" — no action taken`);
     }
@@ -242,14 +313,22 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
+    const email = (invoice.customer_email || '').toLowerCase().trim();
+    const attemptCount = invoice.attempt_count ?? 0;
+
     console.log('⚠️ Payment failed:', {
         invoiceId: invoice.id,
-        customerEmail: invoice.customer_email,
-        attemptCount: invoice.attempt_count,
+        customerEmail: email,
+        attemptCount,
     });
 
-    // After multiple failed attempts, Stripe will cancel the subscription
-    // which triggers handleSubscriptionDeleted → downgrade to free
-    // For now we just log the failure
-    console.log(`⚠️ Payment failed for ${invoice.customer_email} (attempt ${invoice.attempt_count})`);
+    if (attemptCount >= 3 && email) {
+        // After 3+ failed attempts, proactively downgrade to prevent continued usage
+        // Stripe will eventually cancel the subscription, but this is a safety net
+        console.warn(`🚨 Payment failed ${attemptCount} times for ${email} — proactive downgrade`);
+        await downgradeToFree(email);
+    } else {
+        // Just log; Stripe's dunning process will handle retries
+        console.log(`⚠️ Payment failed for ${email} (attempt ${attemptCount}) — awaiting retry`);
+    }
 }

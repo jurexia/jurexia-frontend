@@ -26,7 +26,7 @@ function getSupabaseAdmin() {
 
 // Plan configuration mapping
 export const PLAN_CONFIG = {
-    gratuito: { queriesLimit: 5, isUnlimited: false },
+    gratuito: { queriesLimit: 3, isUnlimited: false },
     pro_monthly: { queriesLimit: 170, isUnlimited: false },
     pro_annual: { queriesLimit: 170, isUnlimited: false },
     platinum_monthly: { queriesLimit: -1, isUnlimited: true },
@@ -140,7 +140,7 @@ export async function downgradeToFree(email: string) {
         .from('user_profiles')
         .update({
             subscription_type: 'gratuito',
-            queries_limit: 5,
+            queries_limit: PLAN_CONFIG.gratuito.queriesLimit,
             queries_used: 0,
             stripe_subscription_id: null,
             updated_at: new Date().toISOString(),

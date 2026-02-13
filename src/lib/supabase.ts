@@ -116,10 +116,12 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
 }
 
 export async function incrementQueryCount(userId: string) {
-    const { data, error } = await supabase.rpc('increment_query_count', { p_user_id: userId })
+    // Now uses transactional consume_query RPC (SELECT ... FOR UPDATE)
+    const { data, error } = await supabase.rpc('consume_query', { p_user_id: userId })
 
-    // Fallback if RPC doesn't exist
     if (error) {
+        console.error('Error calling consume_query RPC:', error)
+        // Fallback to direct update if RPC doesn't exist
         const profile = await getUserProfile(userId)
         if (profile) {
             return updateUserProfile(userId, { queries_used: profile.queries_used + 1 })
@@ -129,26 +131,28 @@ export async function incrementQueryCount(userId: string) {
 }
 
 export async function checkCanQuery(userId: string): Promise<{ canQuery: boolean; remaining: number }> {
-    const profile = await getUserProfile(userId)
+    // Use read-only get_quota_status RPC
+    const { data, error } = await supabase.rpc('get_quota_status', { p_user_id: userId })
 
-    if (!profile) {
-        return { canQuery: false, remaining: 0 }
+    if (error || !data) {
+        // Fallback to profile-based check
+        const profile = await getUserProfile(userId)
+        if (!profile || !profile.is_active) {
+            return { canQuery: false, remaining: 0 }
+        }
+        if (profile.subscription_type === 'platinum_monthly' || profile.subscription_type === 'platinum_annual') {
+            return { canQuery: true, remaining: -1 }
+        }
+        const remaining = profile.queries_limit - profile.queries_used
+        return { canQuery: remaining > 0, remaining: Math.max(0, remaining) }
     }
 
-    if (!profile.is_active) {
-        return { canQuery: false, remaining: 0 }
-    }
+    const canQuery = data.can_query ?? false
+    const limit = data.limit ?? 0
+    const used = data.used ?? 0
+    const remaining = limit === -1 ? -1 : Math.max(0, limit - used)
 
-    // Platinum plans have unlimited queries
-    if (profile.subscription_type === 'platinum_monthly' || profile.subscription_type === 'platinum_annual') {
-        return { canQuery: true, remaining: -1 } // -1 = unlimited
-    }
-
-    const remaining = profile.queries_limit - profile.queries_used
-    return {
-        canQuery: remaining > 0,
-        remaining: Math.max(0, remaining)
-    }
+    return { canQuery, remaining }
 }
 
 export async function getSubscriptionInfo(userId: string) {

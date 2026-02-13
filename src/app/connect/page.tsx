@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Search, MapPin, Shield, Star, BadgeCheck, Users, ArrowRight,
     ChevronDown, Check, X, Loader2, Phone, Mail, MessageSquare,
@@ -75,28 +75,99 @@ export default function ConnectPage() {
     const [selectedEstado, setSelectedEstado] = useState('');
     const [showEstadoDropdown, setShowEstadoDropdown] = useState(false);
     const [lawyers, setLawyers] = useState<LawyerProfile[]>([]);
+    const [allLawyers, setAllLawyers] = useState<LawyerProfile[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [hasSearched, setHasSearched] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [totalResults, setTotalResults] = useState(0);
 
     // Contact modal state
     const [contactLawyer, setContactLawyer] = useState<LawyerProfile | null>(null);
 
-    const handleSearch = async () => {
-        if (!searchQuery.trim() || searchQuery.trim().length < 3) return;
+    // Load all verified lawyers from Supabase on mount
+    useEffect(() => {
+        async function loadLawyers() {
+            setIsLoading(true);
+            try {
+                const { createClient } = await import('@supabase/supabase-js');
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                );
 
-        setIsSearching(true);
-        setHasSearched(true);
-        try {
-            const result = await searchLawyers(searchQuery, selectedEstado || undefined, 12);
-            setLawyers(result.lawyers);
-            setTotalResults(result.total);
-        } catch {
-            console.error('Search failed');
-            setLawyers([]);
-        } finally {
-            setIsSearching(false);
+                const { data, error } = await supabase
+                    .from('lawyer_profiles')
+                    .select('*')
+                    .eq('is_pro_active', true)
+                    .order('created_at', { ascending: false });
+
+                if (!error && data) {
+                    // Map Supabase data to LawyerProfile format
+                    const mapped: LawyerProfile[] = data.map((row: Record<string, unknown>) => ({
+                        id: row.id as string,
+                        full_name: row.full_name as string,
+                        cedula_number: (row.cedula_number || '') as string,
+                        specialties: (row.specialties || []) as string[],
+                        bio: (row.bio || '') as string,
+                        office_address: (row.office_address || {}) as { estado?: string; municipio?: string; cp?: string },
+                        verification_status: (row.verification_status || '') as string,
+                        is_pro_active: row.is_pro_active as boolean,
+                        avatar_url: (row.avatar_url || undefined) as string | undefined,
+                    }));
+                    setAllLawyers(mapped);
+                    setLawyers(mapped);
+                    setTotalResults(mapped.length);
+                }
+            } catch (err) {
+                console.error('Error loading lawyers:', err);
+            } finally {
+                setIsLoading(false);
+            }
         }
+
+        loadLawyers();
+    }, []);
+
+    // Filter lawyers locally when search query or estado changes
+    const handleSearch = async () => {
+        const query = searchQuery.trim().toLowerCase();
+        const estado = selectedEstado;
+
+        // Try semantic search via API first, fallback to local filtering
+        if (query.length >= 3) {
+            setIsSearching(true);
+            try {
+                const result = await searchLawyers(query, estado || undefined, 12);
+                if (result.lawyers.length > 0) {
+                    setLawyers(result.lawyers);
+                    setTotalResults(result.total);
+                    setIsSearching(false);
+                    return;
+                }
+            } catch {
+                // API search failed — use local filtering
+            }
+        }
+
+        // Local filtering fallback
+        let filtered = [...allLawyers];
+        if (query.length >= 2) {
+            filtered = filtered.filter(l =>
+                l.full_name.toLowerCase().includes(query) ||
+                l.bio.toLowerCase().includes(query) ||
+                l.specialties.some(s => s.toLowerCase().includes(query))
+            );
+        }
+        if (estado) {
+            filtered = filtered.filter(l => {
+                const lawyerEstado = l.office_address?.estado || '';
+                return lawyerEstado.toUpperCase().replace(/\s+/g, '_') === estado ||
+                    lawyerEstado.toUpperCase() === estado;
+            });
+        }
+
+        setLawyers(filtered);
+        setTotalResults(filtered.length);
+        setIsSearching(false);
     };
 
     return (
@@ -220,7 +291,7 @@ export default function ConnectPage() {
                         </div>
                     )}
 
-                    {!isSearching && hasSearched && lawyers.length === 0 && (
+                    {!isSearching && !isLoading && lawyers.length === 0 && (
                         <div className="text-center py-16">
                             <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
                                 <Users className="w-8 h-8 text-gray-400" />
@@ -254,26 +325,11 @@ export default function ConnectPage() {
                         </>
                     )}
 
-                    {/* Empty state - no search yet */}
-                    {!hasSearched && !isSearching && (
-                        <div className="text-center py-12">
-                            <div className="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <FeatureCard
-                                    icon={<Search className="w-6 h-6 text-blue-600" />}
-                                    title="Búsqueda Inteligente"
-                                    description="Describe tu problema y la IA encuentra al especialista ideal"
-                                />
-                                <FeatureCard
-                                    icon={<BadgeCheck className="w-6 h-6 text-green-600" />}
-                                    title="Cédulas Verificadas"
-                                    description="Todos los abogados pasan validación de cédula profesional SEP"
-                                />
-                                <FeatureCard
-                                    icon={<Shield className="w-6 h-6 text-purple-600" />}
-                                    title="Chat Seguro"
-                                    description="Comunicación blindada con protección de datos de contacto"
-                                />
-                            </div>
+                    {/* Loading state */}
+                    {isLoading && (
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <div className="w-12 h-12 border-3 border-charcoal-200 border-t-charcoal-900 rounded-full animate-spin mb-4" />
+                            <p className="text-charcoal-500">Cargando directorio de abogados...</p>
                         </div>
                     )}
                 </div>
