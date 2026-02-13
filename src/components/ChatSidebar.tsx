@@ -50,26 +50,19 @@ export default function ChatSidebar({
         <div className="flex flex-col h-full">
             {/* ── Brand Header ── */}
             <div className="p-4" style={{ borderBottom: '1px solid rgba(201, 169, 98, 0.15)' }}>
-                {/* Brand Name - Centered */}
-                {!isCollapsed && (
-                    <div className="text-center mb-3">
-                        <span className="font-serif text-xl font-semibold text-white">
-                            Iurex<span style={{ color: '#c9a962' }}>ia</span>
-                        </span>
-                    </div>
-                )}
-
-                {/* Back to Home - Icon + Arrow */}
+                {/* Brand Name - Links to Home */}
                 <Link
                     href="/"
-                    className={`flex items-center gap-2 text-xs font-medium transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+                    className={`block transition-colors ${isCollapsed ? 'text-center' : 'text-center'}`}
                     title="Ir al inicio"
-                    style={{ color: 'rgba(255,255,255,0.45)' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#c9a962')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}
                 >
-                    <Home className="w-3.5 h-3.5 flex-shrink-0" />
-                    {!isCollapsed && <ChevronRight className="w-3 h-3" />}
+                    {!isCollapsed ? (
+                        <span className="font-serif text-xl font-semibold text-white hover:opacity-80 transition-opacity">
+                            Iurex<span style={{ color: '#c9a962' }}>ia</span>
+                        </span>
+                    ) : (
+                        <Home className="w-4 h-4 mx-auto" style={{ color: 'rgba(255,255,255,0.45)' }} />
+                    )}
                 </Link>
             </div>
 
