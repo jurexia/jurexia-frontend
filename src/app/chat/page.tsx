@@ -7,6 +7,7 @@ import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
 import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
+import VisualGuideOverlay from '@/components/VisualGuideOverlay';
 import PromptGuide from '@/components/PromptGuide';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -67,6 +68,7 @@ export default function ChatPage() {
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showEstadoSelector, setShowEstadoSelector] = useState(false);
     const [showPromptGuide, setShowPromptGuide] = useState(false);
+    const [showVisualGuide, setShowVisualGuide] = useState(false);
 
     // Conversation history state
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -306,6 +308,7 @@ export default function ChatPage() {
                 onSelectConversation={handleSelectConversation}
                 onNewConversation={handleNewConversation}
                 onDeleteConversation={handleDeleteConversation}
+                onToggleGuide={() => setShowVisualGuide(true)}
             />
 
             {/* Main Content - offset for fixed sidebar */}
@@ -424,6 +427,7 @@ export default function ChatPage() {
                                     )}
                                     <button
                                         onClick={() => setShowEstadoSelector(!showEstadoSelector)}
+                                        data-guide="jurisdiction"
                                         className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${selectedEstado
                                             ? 'bg-accent-brown text-white'
                                             : 'bg-cream-300 text-charcoal-700 hover:bg-cream-400 border border-cream-400'
@@ -547,6 +551,12 @@ export default function ChatPage() {
                 <PromptGuide
                     isOpen={showPromptGuide}
                     onClose={() => setShowPromptGuide(false)}
+                />
+
+                {/* Visual Guide Overlay */}
+                <VisualGuideOverlay
+                    isOpen={showVisualGuide}
+                    onClose={() => setShowVisualGuide(false)}
                 />
             </div>
 

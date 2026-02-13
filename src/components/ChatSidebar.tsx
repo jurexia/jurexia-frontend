@@ -14,7 +14,6 @@ import {
     BookOpen
 } from 'lucide-react';
 import { Conversation } from '@/lib/conversations';
-import QuickGuide from '@/components/QuickGuide';
 
 interface ChatSidebarProps {
     conversations: Conversation[];
@@ -22,6 +21,7 @@ interface ChatSidebarProps {
     onSelectConversation: (id: string) => void;
     onNewConversation: () => void;
     onDeleteConversation: (id: string) => void;
+    onToggleGuide?: () => void;
 }
 
 export default function ChatSidebar({
@@ -29,7 +29,8 @@ export default function ChatSidebar({
     activeConversationId,
     onSelectConversation,
     onNewConversation,
-    onDeleteConversation
+    onDeleteConversation,
+    onToggleGuide
 }: ChatSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -227,7 +228,28 @@ export default function ChatSidebar({
                         background: 'rgba(0,0,0,0.15)',
                     }}
                 >
-                    <QuickGuide />
+                    <button
+                        onClick={() => {
+                            onToggleGuide?.();
+                            setIsMobileOpen(false);
+                        }}
+                        className="w-full flex items-center justify-between px-4 py-2.5
+                                 rounded-lg transition-all duration-200 group"
+                        style={{
+                            background: 'rgba(255,255,255,0.06)',
+                            border: '1px solid rgba(201, 169, 98, 0.15)',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                    >
+                        <div className="flex items-center gap-2">
+                            <BookOpen className="w-4 h-4" style={{ color: '#c9a962' }} />
+                            <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                                Guía Rápida
+                            </span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: 'rgba(255,255,255,0.4)' }} />
+                    </button>
                 </div>
             )}
         </div>

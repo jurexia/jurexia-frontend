@@ -196,24 +196,28 @@ ${draftRequest.descripcion}`;
                                 label="Subir documento"
                                 active={activeMode === 'files'}
                                 onClick={() => handleModeClick('files')}
+                                guideId="upload"
                             />
                             <ActionButton
                                 icon={Search}
                                 label="Buscar"
                                 active={activeMode === 'search'}
                                 onClick={() => handleModeClick('search')}
+                                guideId="search"
                             />
                             <ActionButton
                                 icon={FileEdit}
                                 label="Redactar"
                                 active={activeMode === 'draft'}
                                 onClick={() => handleModeClick('draft')}
+                                guideId="draft"
                             />
                             <ActionButton
                                 icon={Gavel}
                                 label="Revisar Sentencia"
                                 active={activeMode === 'sentencia'}
                                 onClick={() => handleModeClick('sentencia')}
+                                guideId="sentencia"
                             />
                         </div>
 
@@ -223,6 +227,7 @@ ${draftRequest.descripcion}`;
                     <div className="mt-3 pt-3 border-t border-gray-50">
                         <a
                             href="/connect"
+                            data-guide="lawyer"
                             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 hover:border-blue-200 transition-all group"
                         >
                             <Users className="w-4 h-4 text-blue-500" />
@@ -283,16 +288,19 @@ function ActionButton({
     icon: Icon,
     label,
     active = false,
-    onClick
+    onClick,
+    guideId
 }: {
     icon: React.ElementType;
     label: string;
     active?: boolean;
     onClick?: () => void;
+    guideId?: string;
 }) {
     return (
         <button
             onClick={onClick}
+            data-guide={guideId}
             className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-sm font-medium
                   transition-colors duration-200
                   ${active
