@@ -98,7 +98,7 @@ export default function VisualGuideOverlay({ isOpen, onClose }: VisualGuideOverl
         const padding = 16;
         const tooltipWidth = 320;
         const tooltipHeight = 140;
-        const arrowGap = 20;
+        const arrowGap = 32;
         let top = 0;
         let left = 0;
         let arrowFrom = { x: 0, y: 0 };
