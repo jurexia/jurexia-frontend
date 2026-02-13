@@ -82,9 +82,9 @@ export const PLANS = {
         price: 599,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: -1, // Unlimited
+        queryLimit: 700,
         features: [
-            'Consultas ilimitadas',
+            '700 consultas/mes — ideal para despachos',
             'Todo lo del Plan Pro incluido',
             'Consulta con equipo legal',
             'Contrato de servicios profesionales',
@@ -97,9 +97,9 @@ export const PLANS = {
         price: 5990,
         currency: 'MXN',
         interval: 'year' as const,
-        queryLimit: -1, // Unlimited
+        queryLimit: 700,
         features: [
-            'Consultas ilimitadas todo el año',
+            '700 consultas/mes (8,400/año)',
             'Todo lo del Plan Platinum incluido',
             'Ahorro de $4,810 MXN al año',
             'Precio fijo garantizado',

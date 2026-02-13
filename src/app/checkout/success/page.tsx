@@ -78,7 +78,7 @@ function CheckoutSuccessContent() {
                 <ul className="space-y-3">
                     <li className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-charcoal-700">Realizar consultas ilimitadas o hasta 170/mes</span>
+                        <span className="text-charcoal-700">Realizar hasta 170 o 700 consultas/mes según tu plan</span>
                     </li>
                     <li className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />

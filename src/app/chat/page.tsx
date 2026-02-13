@@ -87,7 +87,6 @@ export default function ChatPage() {
     const [queriesUsed, setQueriesUsed] = useState<number>(0);
     const [queriesLimit, setQueriesLimit] = useState<number>(3);
     const [showLimitModal, setShowLimitModal] = useState(false);
-    const isUnlimited = profile?.subscription_type === 'platinum_monthly' || profile?.subscription_type === 'platinum_annual';
 
     // Track if we should scroll - only scroll for new messages, not conversation switches
     const prevMessagesLengthRef = useRef(messages.length);
@@ -243,22 +242,18 @@ export default function ChatPage() {
     const handleSendMessage = useCallback(async (content: string, enableReasoning = false) => {
         if (!user) return;
 
-        // Check limit from local state (no network call) — skip for unlimited plans
-        if (!isUnlimited) {
-            const remaining = queriesLimit - queriesUsed;
-            if (remaining <= 0) {
-                setShowLimitModal(true);
-                return;
-            }
+        // Check limit from local state (no network call)
+        const remaining = queriesLimit - queriesUsed;
+        if (remaining <= 0) {
+            setShowLimitModal(true);
+            return;
         }
 
         // 1) Fire the AI message IMMEDIATELY — no blocking I/O before this
         const sendPromise = sendMessage(content, enableReasoning);
 
         // 2) Optimistically increment the local counter
-        if (!isUnlimited) {
-            setQueriesUsed(prev => prev + 1);
-        }
+        setQueriesUsed(prev => prev + 1);
 
         // 3) Persist conversation data in the background (non-blocking)
         (async () => {
@@ -287,11 +282,11 @@ export default function ChatPage() {
         await sendPromise;
 
         // 5) Quota consumption is now handled server-side by the backend's consume_query RPC
-    }, [user, isUnlimited, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
+    }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
 
     const hasMessages = messages.length > 0;
     const selectedEstadoLabel = ESTADOS_MEXICO.find(e => e.value === selectedEstado)?.label || 'Seleccionar jurisdicción';
-    const queriesRemaining = isUnlimited ? -1 : Math.max(0, queriesLimit - queriesUsed);
+    const queriesRemaining = Math.max(0, queriesLimit - queriesUsed);
 
     // While auth loads, render nothing (bg matches body, no flash)
     // useRequireAuth will redirect if not authenticated
@@ -337,13 +332,9 @@ export default function ChatPage() {
                             {/* Query Counter */}
                             <div className="flex items-center gap-1 px-2 py-1 bg-cream-100 rounded-lg text-xs font-medium">
                                 <span className="text-charcoal-600">Consultas:</span>
-                                {isUnlimited ? (
-                                    <span className="text-accent-brown" title="Ilimitado">∞</span>
-                                ) : (
-                                    <span className={queriesRemaining <= 1 ? 'text-red-600' : 'text-accent-brown'}>
-                                        {queriesRemaining}/{queriesLimit}
-                                    </span>
-                                )}
+                                <span className={queriesRemaining <= 1 ? 'text-red-600' : 'text-accent-brown'}>
+                                    {queriesRemaining}/{queriesLimit}
+                                </span>
                             </div>
                             <UserAvatar />
                         </div>

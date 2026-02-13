@@ -29,8 +29,8 @@ export const PLAN_CONFIG = {
     gratuito: { queriesLimit: 3, isUnlimited: false },
     pro_monthly: { queriesLimit: 170, isUnlimited: false },
     pro_annual: { queriesLimit: 170, isUnlimited: false },
-    platinum_monthly: { queriesLimit: -1, isUnlimited: true },
-    platinum_annual: { queriesLimit: -1, isUnlimited: true },
+    platinum_monthly: { queriesLimit: 700, isUnlimited: false },
+    platinum_annual: { queriesLimit: 700, isUnlimited: false },
 } as const;
 
 export type PlanType = keyof typeof PLAN_CONFIG;

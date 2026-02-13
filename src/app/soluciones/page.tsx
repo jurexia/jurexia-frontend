@@ -257,8 +257,8 @@ export default function SolucionesPage() {
                                             <p className="text-xs text-charcoal-500">Soporte dedicado</p>
                                         </div>
                                         <div className="p-4 bg-gray-50 rounded-xl">
-                                            <p className="text-2xl font-bold text-charcoal-900">∞</p>
-                                            <p className="text-xs text-charcoal-500">Consultas ilimitadas</p>
+                                            <p className="text-2xl font-bold text-charcoal-900">700</p>
+                                            <p className="text-xs text-charcoal-500">Consultas/mes</p>
                                         </div>
                                     </div>
                                 </div>

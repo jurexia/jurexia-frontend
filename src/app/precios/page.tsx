@@ -104,9 +104,9 @@ export default function PreciosPage() {
                             price="$599"
                             originalPrice="$900"
                             period="MXN/mes"
-                            description="Asesoría personalizada con equipo legal"
+                            description="Ideal para despachos y corporativos"
                             features={[
-                                "Consultas ilimitadas",
+                                "700 consultas/mes — ideal para despachos y corporativos",
                                 "Registra tu cédula para conectar con clientes de tu zona",
                                 "Todo lo del Plan Pro incluido",
                                 "Consulta personalizada con equipo legal de Iurexia (vía correo)",
@@ -127,9 +127,9 @@ export default function PreciosPage() {
                             price="$5,990"
                             originalPrice="$10,800"
                             period="MXN/año"
-                            description="Máximo ahorro + asesoría premium"
+                            description="Máximo ahorro para despachos y corporativos"
                             features={[
-                                "Consultas ilimitadas todo el año",
+                                "700 consultas/mes (8,400/año)",
                                 "Registra tu cédula para conectar con clientes de tu zona",
                                 "Todo lo del Plan Platinum incluido",
                                 "Asesoría legal personalizada continua (vía correo)",
@@ -171,7 +171,7 @@ export default function PreciosPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <ComparisonRow feature="Consultas/mes" free="3" pro="170" proAnual="170" platinum="Ilimitadas" />
+                                <ComparisonRow feature="Consultas/mes" free="3" pro="170" proAnual="170" platinum="700" />
                                 <ComparisonRow feature="Búsqueda con IA verificada" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Filtros jurisdiccionales" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                 <ComparisonRow feature="Base documental completa" free="✓" pro="✓" proAnual="✓" platinum="✓" />
@@ -205,7 +205,7 @@ export default function PreciosPage() {
                         />
                         <FAQItem
                             question="¿Qué incluye el Plan Platinum?"
-                            answer="El Plan Platinum incluye todo lo del Plan Pro más consultas ilimitadas y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal."
+                            answer="El Plan Platinum incluye todo lo del Plan Pro más 700 consultas al mes y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan un volumen alto de consultas. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal."
                         />
                         <FAQItem
                             question="¿Puedo cambiar de plan en cualquier momento?"
@@ -221,7 +221,7 @@ export default function PreciosPage() {
                         />
                         <FAQItem
                             question="¿Qué pasa si se acaban mis consultas?"
-                            answer="Te notificaremos cuando te queden pocas consultas. Puedes esperar al siguiente mes o actualizar a un plan con más consultas en cualquier momento. En el Plan Platinum las consultas son ilimitadas."
+                            answer="Te notificaremos cuando te queden pocas consultas. Puedes esperar al siguiente mes o actualizar a un plan con más consultas en cualquier momento. El Plan Platinum incluye 700 consultas al mes, ideal para despachos y corporativos."
                         />
                     </div>
                 </div>

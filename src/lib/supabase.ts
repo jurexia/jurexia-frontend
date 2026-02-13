@@ -140,9 +140,6 @@ export async function checkCanQuery(userId: string): Promise<{ canQuery: boolean
         if (!profile || !profile.is_active) {
             return { canQuery: false, remaining: 0 }
         }
-        if (profile.subscription_type === 'platinum_monthly' || profile.subscription_type === 'platinum_annual') {
-            return { canQuery: true, remaining: -1 }
-        }
         const remaining = profile.queries_limit - profile.queries_used
         return { canQuery: remaining > 0, remaining: Math.max(0, remaining) }
     }
@@ -164,14 +161,14 @@ export async function getSubscriptionInfo(userId: string) {
         type: profile.subscription_type,
         queriesUsed: profile.queries_used,
         queriesLimit: profile.queries_limit,
-        isUnlimited: profile.subscription_type === 'platinum_monthly' || profile.subscription_type === 'platinum_annual',
+        isUnlimited: false,
         isActive: profile.is_active,
         startDate: profile.subscription_start,
         endDate: profile.subscription_end
     }
 }
 
-// Helper to check if a plan type is unlimited
+// Helper to check if a plan type is unlimited (no plans are unlimited now)
 export function isUnlimitedPlan(subscriptionType: string): boolean {
-    return subscriptionType === 'platinum_monthly' || subscriptionType === 'platinum_annual';
+    return false;
 }
