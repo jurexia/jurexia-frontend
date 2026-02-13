@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
-import { searchLawyers, LawyerProfile, sendConnectRequest } from '@/lib/api';
+import { LawyerProfile, sendConnectRequest } from '@/lib/api';
 import Navbar from '@/components/Navbar';
 
 // Mexican states for filter
@@ -131,54 +131,116 @@ export default function ConnectPage() {
         loadLawyers();
     }, []);
 
-    // Filter lawyers locally when search query or estado changes
-    const handleSearch = async () => {
-        const query = searchQuery.trim().toLowerCase();
-        const estado = selectedEstado;
-        setHasSearched(true);
+    // ── Legal problem → specialty mapping for intelligent matching ──
+    const LEGAL_KEYWORDS: Record<string, string[]> = {
+        'penal': ['penal', 'criminal', 'delito', 'homicidio', 'robo', 'fraude', 'violencia', 'abuso', 'extorsión', 'extorsion', 'secuestro', 'narcotráfico', 'narcotrafico', 'preso', 'cárcel', 'carcel', 'denuncia', 'ministerio público', 'ministerio publico', 'víctima', 'victima', 'agresión', 'agresion'],
+        'civil': ['civil', 'contrato', 'propiedad', 'arrendamiento', 'renta', 'inmueble', 'compraventa', 'daños', 'danos', 'perjuicios', 'responsabilidad', 'obligaciones', 'prescripción', 'prescripcion', 'usucapión', 'usucapion', 'servidumbre', 'hipoteca', 'fianza', 'nulidad'],
+        'familiar': ['familiar', 'familia', 'divorcio', 'custodia', 'pensión alimenticia', 'pension alimenticia', 'alimentos', 'matrimonio', 'patria potestad', 'adopción', 'adopcion', 'violencia familiar', 'guarda', 'convivencia', 'separación', 'separacion', 'hijos', 'esposo', 'esposa', 'pareja'],
+        'laboral': ['laboral', 'trabajo', 'trabajador', 'despido', 'despidieron', 'liquidación', 'liquidacion', 'indemnización', 'indemnizacion', 'salario', 'sueldo', 'patrón', 'patron', 'empresa', 'sindicato', 'huelga', 'acoso laboral', 'aguinaldo', 'vacaciones', 'imss', 'seguro social', 'junta de conciliación', 'reinstalación', 'reinstalacion', 'injustificado', 'injustificadamente'],
+        'mercantil': ['mercantil', 'comercial', 'sociedad', 'empresa', 'quiebra', 'concurso', 'pagaré', 'pagare', 'cheque', 'letra de cambio', 'título de crédito', 'titulo de credito', 'marca', 'patente', 'franquicia'],
+        'amparo': ['amparo', 'constitucional', 'derechos humanos', 'garantías', 'garantias', 'suspensión', 'suspension', 'acto de autoridad', 'inconstitucional'],
+        'fiscal': ['fiscal', 'impuesto', 'impuestos', 'sat', 'tributario', 'iva', 'isr', 'factura', 'contribución', 'contribucion', 'auditoría', 'auditoria', 'hacienda', 'crédito fiscal', 'credito fiscal', 'devolución', 'devolucion'],
+        'administrativo': ['administrativo', 'gobierno', 'permiso', 'licencia', 'concesión', 'concesion', 'licitación', 'licitacion', 'expropiación', 'expropiacion', 'sanción', 'sancion', 'multa', 'trámite', 'tramite'],
+    };
 
-        // Try semantic search via API first, fallback to local filtering
-        if (query.length >= 3) {
-            setIsSearching(true);
-            try {
-                const result = await searchLawyers(query, estado || undefined, 12);
-                if (result.lawyers.length > 0) {
-                    setLawyers(result.lawyers);
-                    setTotalResults(result.total);
-                    setIsSearching(false);
-                    return;
-                }
-            } catch {
-                // API search failed — use local filtering
+    // Score a lawyer against a search query (0 to 100)
+    const scoreLawyer = (lawyer: LawyerProfile, queryText: string, estado: string): number => {
+        const queryLower = queryText.toLowerCase();
+        const words = queryLower.split(/\s+/).filter(w => w.length >= 2);
+        if (words.length === 0 && !estado) return 0;
+
+        let score = 0;
+        const maxScore = 100;
+
+        // 1. Specialty matching via synonym map (up to 50 points)
+        const lawyerSpecs = lawyer.specialties.map(s => s.toLowerCase());
+        let specScore = 0;
+
+        for (const [area, keywords] of Object.entries(LEGAL_KEYWORDS)) {
+            const queryMatchesArea = words.some(w => keywords.some(kw => kw.includes(w) || w.includes(kw)));
+            const lawyerHasArea = lawyerSpecs.some(s => s.includes(area));
+
+            if (queryMatchesArea && lawyerHasArea) {
+                specScore = Math.max(specScore, 50);
             }
         }
 
-        // Local filtering fallback
-        let filtered = [...allLawyers];
-        if (query.length >= 2) {
-            // Split query into individual words for flexible matching
-            const words = query.split(/\s+/).filter(w => w.length >= 2);
-            filtered = filtered.filter(l => {
-                const name = l.full_name.toLowerCase();
-                const bio = l.bio.toLowerCase();
-                const specs = l.specialties.map(s => s.toLowerCase()).join(' ');
-                // Match if ANY search word appears in name, bio, or specialties
-                return words.some(word =>
-                    name.includes(word) ||
-                    bio.includes(word) ||
-                    specs.includes(word)
-                );
-            });
+        // Direct specialty word match
+        for (const word of words) {
+            if (lawyerSpecs.some(s => s.includes(word))) {
+                specScore = Math.max(specScore, 40);
+            }
         }
-        if (estado) {
-            filtered = filtered.filter(l => {
-                const lawyerEstado = (l.office_address?.estado || '').toUpperCase().replace(/\s+/g, '_');
-                return lawyerEstado === estado || lawyerEstado.replace(/_/g, '') === estado.replace(/_/g, '');
-            });
+        score += specScore;
+
+        // 2. Bio keyword matching (up to 30 points)
+        const bioLower = lawyer.bio.toLowerCase();
+        let bioHits = 0;
+        for (const word of words) {
+            if (bioLower.includes(word)) bioHits++;
+        }
+        if (words.length > 0) {
+            score += Math.min(30, Math.round((bioHits / words.length) * 30));
         }
 
-        setLawyers(filtered);
-        setTotalResults(filtered.length);
+        // 3. Name matching (up to 10 points)
+        const nameLower = lawyer.full_name.toLowerCase();
+        for (const word of words) {
+            if (nameLower.includes(word)) { score += 10; break; }
+        }
+
+        // 4. Estado match bonus (10 points)
+        if (estado) {
+            const lawyerEstado = (lawyer.office_address?.estado || '').toUpperCase().replace(/\s+/g, '_');
+            const normalizedEstado = estado.replace(/_/g, '');
+            if (lawyerEstado === estado || lawyerEstado.replace(/_/g, '') === normalizedEstado) {
+                score += 10;
+            }
+        }
+
+        // 5. Generic "abogado" / "licenciado" — everyone is a lawyer, give base score
+        const genericTerms = ['abogado', 'abogada', 'licenciado', 'licenciada', 'asesoría', 'asesoria', 'legal', 'jurídico', 'juridico', 'consulta'];
+        if (words.some(w => genericTerms.includes(w))) {
+            score = Math.max(score, 20); // At minimum 20% for generic legal terms
+        }
+
+        return Math.min(maxScore, score);
+    };
+
+    // Filter lawyers locally with scoring
+    const handleSearch = async () => {
+        const query = searchQuery.trim();
+        const estado = selectedEstado;
+        setHasSearched(true);
+        setIsSearching(true);
+
+        // Score all lawyers
+        const scored = allLawyers.map(lawyer => ({
+            lawyer,
+            score: scoreLawyer(lawyer, query, estado),
+        }));
+
+        // Filter by estado if selected (mandatory filter, not just a bonus)
+        let results = estado
+            ? scored.filter(s => {
+                const lawyerEstado = (s.lawyer.office_address?.estado || '').toUpperCase().replace(/\s+/g, '_');
+                return lawyerEstado === estado || lawyerEstado.replace(/_/g, '') === estado.replace(/_/g, '');
+            })
+            : scored;
+
+        // If there's a text query, filter to score > 0 and sort by score desc
+        if (query.length >= 2) {
+            results = results.filter(s => s.score > 0).sort((a, b) => b.score - a.score);
+        }
+
+        // If only estado selected (no text), show all from that estado
+        const finalLawyers = results.map(s => ({
+            ...s.lawyer,
+            score: s.score,
+        }));
+
+        setLawyers(finalLawyers);
+        setTotalResults(finalLawyers.length);
         setIsSearching(false);
     };
 
@@ -394,12 +456,24 @@ export default function ConnectPage() {
 function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: () => void }) {
     const estado = lawyer.office_address?.estado || '';
     const municipio = lawyer.office_address?.municipio || '';
-    const location = [municipio, ESTADOS.find(e => e.value === estado)?.label].filter(Boolean).join(', ');
+    const estadoNormalized = estado.toUpperCase().replace(/\s+/g, '_');
+    const estadoLabel = ESTADOS.find(e => e.value === estadoNormalized || e.value === estado)?.label || estado;
+    const location = [municipio, estadoLabel].filter(Boolean).join(', ');
     const isVerified = lawyer.verification_status === 'verified';
+    const matchScore = lawyer.score || 0;
     const initials = lawyer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
     return (
-        <div className="bg-white rounded-2xl border border-black/5 p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300 group">
+        <div className="bg-white rounded-2xl border border-black/5 p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300 group relative">
+            {/* Match Score Badge */}
+            {matchScore > 0 && (
+                <div className={`absolute top-4 right-4 px-2.5 py-1 rounded-full text-xs font-bold ${matchScore >= 50 ? 'bg-green-100 text-green-700' :
+                    matchScore >= 30 ? 'bg-amber-100 text-amber-700' :
+                        'bg-gray-100 text-gray-600'
+                    }`}>
+                    {matchScore}% match
+                </div>
+            )}
             {/* Header */}
             <div className="flex items-start gap-4 mb-4">
                 {/* Avatar */}
