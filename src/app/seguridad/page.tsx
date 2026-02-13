@@ -3,8 +3,71 @@
 import Link from 'next/link';
 import { Scale, ArrowRight, Shield, Lock, Eye, CreditCard, Server, FileCheck, CheckCircle, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
+/* ───────── Scroll Animation Hook ───────── */
+function useScrollAnimation(threshold = 0.15) {
+    const ref = useRef<HTMLDivElement>(null);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.unobserve(el);
+                }
+            },
+            { threshold }
+        );
+
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [threshold]);
+
+    return { ref, isVisible };
+}
+
+/* ───────── Animated Wrapper ───────── */
+function AnimateOnScroll({
+    children,
+    delay = 0,
+    direction = 'up',
+    className = '',
+}: {
+    children: React.ReactNode;
+    delay?: number;
+    direction?: 'up' | 'left' | 'right' | 'scale';
+    className?: string;
+}) {
+    const { ref, isVisible } = useScrollAnimation(0.1);
+
+    const transforms: Record<string, string> = {
+        up: 'translateY(40px)',
+        left: 'translateX(-40px)',
+        right: 'translateX(40px)',
+        scale: 'scale(0.95)',
+    };
+
+    return (
+        <div
+            ref={ref}
+            className={className}
+            style={{
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible ? 'none' : transforms[direction],
+                transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+            }}
+        >
+            {children}
+        </div>
+    );
+}
+
+/* ───────── Page ───────── */
 export default function SeguridadPage() {
     return (
         <main className="min-h-screen bg-cream-300">
@@ -13,171 +76,159 @@ export default function SeguridadPage() {
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-4">
                 <div className="max-w-5xl mx-auto text-center">
-                    <p className="text-accent-brown font-medium mb-4 tracking-wide">SEGURIDAD</p>
-                    <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
-                        Protección de
-                        <br />
-                        <span className="text-charcoal-500">nivel empresarial</span>
-                    </h1>
-                    <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
-                        Tu información legal es confidencial. Iurexia está diseñada con los más altos estándares de seguridad para proteger tus consultas, documentos y transacciones.
-                    </p>
+                    <AnimateOnScroll delay={0}>
+                        <p className="text-accent-brown font-medium mb-4 tracking-wide">SEGURIDAD</p>
+                    </AnimateOnScroll>
+                    <AnimateOnScroll delay={0.1}>
+                        <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
+                            Protección de
+                            <br />
+                            <span className="text-charcoal-500">nivel empresarial</span>
+                        </h1>
+                    </AnimateOnScroll>
+                    <AnimateOnScroll delay={0.2}>
+                        <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
+                            Tu información legal es confidencial. Iurexia está diseñada con los más altos estándares de seguridad para proteger tus consultas, documentos y transacciones.
+                        </p>
+                    </AnimateOnScroll>
                 </div>
             </section>
 
             {/* Security Badges */}
-            <section className="py-8 bg-charcoal-900">
+            <section className="py-8 bg-charcoal-900 overflow-hidden">
                 <div className="max-w-5xl mx-auto px-4">
                     <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-                        <SecurityBadge label="Cifrado TLS 256-bit" />
-                        <SecurityBadge label="Datos en México" />
-                        <SecurityBadge label="Pagos seguros con Stripe" />
-                        <SecurityBadge label="Sin entrenamiento en tus datos" />
+                        {['Cifrado TLS 256-bit', 'Datos en México', 'Pagos seguros con Stripe', 'Sin entrenamiento en tus datos'].map((label, i) => (
+                            <AnimateOnScroll key={label} delay={i * 0.1} direction="scale">
+                                <SecurityBadge label={label} />
+                            </AnimateOnScroll>
+                        ))}
                     </div>
                 </div>
             </section>
 
             {/* Core Principles */}
-            <section className="py-24 bg-white">
+            <section className="py-24 bg-white overflow-hidden">
                 <div className="max-w-6xl mx-auto px-4">
-                    <div className="text-center mb-16">
-                        <p className="text-accent-brown font-medium mb-4 tracking-wide">PRINCIPIOS FUNDAMENTALES</p>
-                        <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
-                            La seguridad es nuestra prioridad
-                        </h2>
-                        <p className="text-xl text-charcoal-600 max-w-2xl mx-auto">
-                            Hemos construido Iurexia desde cero con la protección de tu información como pilar central.
-                        </p>
-                    </div>
+                    <AnimateOnScroll>
+                        <div className="text-center mb-16">
+                            <p className="text-accent-brown font-medium mb-4 tracking-wide">PRINCIPIOS FUNDAMENTALES</p>
+                            <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
+                                La seguridad es nuestra prioridad
+                            </h2>
+                            <p className="text-xl text-charcoal-600 max-w-2xl mx-auto">
+                                Hemos construido Iurexia desde cero con la protección de tu información como pilar central.
+                            </p>
+                        </div>
+                    </AnimateOnScroll>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <SecurityCard
-                            icon={<Lock className="w-8 h-8" />}
-                            title="Confidencialidad Total"
-                            description="Tus consultas y documentos son completamente privados. Nadie en Iurexia puede ver el contenido de tus búsquedas ni los archivos que subes."
-                        />
-                        <SecurityCard
-                            icon={<Eye className="w-8 h-8" />}
-                            title="Sin Entrenamiento en tus Datos"
-                            description="Iurexia garantiza contractualmente que tus datos jamás se utilizan para entrenar modelos de IA. Tu información permanece exclusivamente tuya."
-                        />
-                        <SecurityCard
-                            icon={<Server className="w-8 h-8" />}
-                            title="Infraestructura Segura"
-                            description="Utilizamos servidores con certificación de seguridad empresarial. Todos los datos se cifran en tránsito y en reposo con protocolos de nivel bancario."
-                        />
-                        <SecurityCard
-                            icon={<CreditCard className="w-8 h-8" />}
-                            title="Pagos Protegidos"
-                            description="Los pagos se procesan a través de Stripe, líder mundial en seguridad de pagos. Nunca almacenamos datos de tarjetas en nuestros servidores."
-                        />
-                        <SecurityCard
-                            icon={<FileCheck className="w-8 h-8" />}
-                            title="Control de tus Datos"
-                            description="Tú decides qué información compartes. Puedes eliminar tu historial, documentos y cuenta en cualquier momento, sin restricciones."
-                        />
-                        <SecurityCard
-                            icon={<Shield className="w-8 h-8" />}
-                            title="Acceso Controlado"
-                            description="Implementamos controles de acceso estrictos. Solo tú puedes ver tu información, con autenticación segura y sesiones protegidas."
-                        />
+                        {[
+                            { icon: <Lock className="w-8 h-8" />, title: 'Confidencialidad Total', description: 'Tus consultas y documentos son completamente privados. Nadie en Iurexia puede ver el contenido de tus búsquedas ni los archivos que subes.' },
+                            { icon: <Eye className="w-8 h-8" />, title: 'Sin Entrenamiento en tus Datos', description: 'Iurexia garantiza contractualmente que tus datos jamás se utilizan para entrenar modelos de IA. Tu información permanece exclusivamente tuya.' },
+                            { icon: <Server className="w-8 h-8" />, title: 'Infraestructura Segura', description: 'Utilizamos servidores con certificación de seguridad empresarial. Todos los datos se cifran en tránsito y en reposo con protocolos de nivel bancario.' },
+                            { icon: <CreditCard className="w-8 h-8" />, title: 'Pagos Protegidos', description: 'Los pagos se procesan a través de Stripe, líder mundial en seguridad de pagos. Nunca almacenamos datos de tarjetas en nuestros servidores.' },
+                            { icon: <FileCheck className="w-8 h-8" />, title: 'Control de tus Datos', description: 'Tú decides qué información compartes. Puedes eliminar tu historial, documentos y cuenta en cualquier momento, sin restricciones.' },
+                            { icon: <Shield className="w-8 h-8" />, title: 'Acceso Controlado', description: 'Implementamos controles de acceso estrictos. Solo tú puedes ver tu información, con autenticación segura y sesiones protegidas.' },
+                        ].map((card, i) => (
+                            <AnimateOnScroll key={card.title} delay={i * 0.1}>
+                                <SecurityCard {...card} />
+                            </AnimateOnScroll>
+                        ))}
                     </div>
                 </div>
             </section>
 
             {/* Data Flow Section */}
-            <section className="py-24 bg-cream-300">
+            <section className="py-24 bg-cream-300 overflow-hidden">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="grid md:grid-cols-2 gap-16 items-center">
-                        <div>
-                            <p className="text-accent-brown font-medium mb-4 tracking-wide">FLUJO DE DATOS</p>
-                            <h3 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-6">
-                                ¿Qué sucede con tu información?
-                            </h3>
-                            <p className="text-charcoal-600 leading-relaxed mb-8">
-                                Cuando realizas una consulta en Iurexia, tu pregunta se procesa de forma segura para buscar en nuestra base de datos jurídica verificada. Los resultados se generan sin almacenar el contenido de tu consulta a largo plazo.
-                            </p>
-                            <ul className="space-y-4">
-                                <li className="flex items-start gap-3">
-                                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-charcoal-700">Consultas cifradas de extremo a extremo</span>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-charcoal-700">Documentos subidos protegidos con cifrado AES-256</span>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-charcoal-700">Sin venta ni compartición de datos con terceros</span>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                                    <span className="text-charcoal-700">Cumplimiento con normativa mexicana de protección de datos</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div className="bg-white rounded-3xl p-8 shadow-lg">
-                            <DataFlowVisual />
-                        </div>
+                        <AnimateOnScroll direction="left">
+                            <div>
+                                <p className="text-accent-brown font-medium mb-4 tracking-wide">FLUJO DE DATOS</p>
+                                <h3 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-6">
+                                    ¿Qué sucede con tu información?
+                                </h3>
+                                <p className="text-charcoal-600 leading-relaxed mb-8">
+                                    Cuando realizas una consulta en Iurexia, tu pregunta se procesa de forma segura para buscar en nuestra base de datos jurídica verificada. Los resultados se generan sin almacenar el contenido de tu consulta a largo plazo.
+                                </p>
+                                <ul className="space-y-4">
+                                    {[
+                                        'Consultas cifradas de extremo a extremo',
+                                        'Documentos subidos protegidos con cifrado AES-256',
+                                        'Sin venta ni compartición de datos con terceros',
+                                        'Cumplimiento con normativa mexicana de protección de datos',
+                                    ].map((item, i) => (
+                                        <AnimateOnScroll key={i} delay={0.3 + i * 0.1}>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                                <span className="text-charcoal-700">{item}</span>
+                                            </li>
+                                        </AnimateOnScroll>
+                                    ))}
+                                </ul>
+                            </div>
+                        </AnimateOnScroll>
+                        <AnimateOnScroll direction="right" delay={0.2}>
+                            <div className="bg-white rounded-3xl p-8 shadow-lg">
+                                <DataFlowVisual />
+                            </div>
+                        </AnimateOnScroll>
                     </div>
                 </div>
             </section>
 
             {/* FAQ Section */}
-            <section className="py-24 bg-white">
+            <section className="py-24 bg-white overflow-hidden">
                 <div className="max-w-4xl mx-auto px-4">
-                    <div className="text-center mb-16">
-                        <p className="text-accent-brown font-medium mb-4 tracking-wide">PREGUNTAS FRECUENTES</p>
-                        <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900">
-                            Seguridad en detalle
-                        </h2>
-                    </div>
+                    <AnimateOnScroll>
+                        <div className="text-center mb-16">
+                            <p className="text-accent-brown font-medium mb-4 tracking-wide">PREGUNTAS FRECUENTES</p>
+                            <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900">
+                                Seguridad en detalle
+                            </h2>
+                        </div>
+                    </AnimateOnScroll>
 
                     <div className="space-y-4">
-                        <FAQItem
-                            question="¿Iurexia puede ver mis consultas y documentos?"
-                            answer="No. Tu información está cifrada y es completamente privada. El equipo de Iurexia no tiene acceso al contenido de tus consultas ni a los documentos que subes. Solo tú puedes ver tu información."
-                        />
-                        <FAQItem
-                            question="¿Mis datos se usan para entrenar modelos de IA?"
-                            answer="Jamás. Iurexia garantiza contractualmente que tus consultas, respuestas y documentos no se utilizan para entrenar ningún modelo de inteligencia artificial. Tu información permanece exclusivamente tuya."
-                        />
-                        <FAQItem
-                            question="¿Dónde se almacenan mis datos?"
-                            answer="Iurexia utiliza infraestructura de servidores seguros con centros de datos que cumplen con estándares internacionales de seguridad. Todos los datos se cifran tanto en tránsito como en reposo."
-                        />
-                        <FAQItem
-                            question="¿Cómo se protegen mis pagos?"
-                            answer="Los pagos se procesan a través de Stripe, la plataforma de pagos más segura del mundo, utilizada por empresas como Amazon, Google y Shopify. Nunca almacenamos información de tarjetas en nuestros servidores."
-                        />
-                        <FAQItem
-                            question="¿Puedo eliminar toda mi información?"
-                            answer="Sí. Tienes control total sobre tus datos. Puedes eliminar tu historial de consultas, documentos subidos, y tu cuenta completa en cualquier momento desde la configuración de tu perfil."
-                        />
-                        <FAQItem
-                            question="¿Iurexia comparte datos con terceros?"
-                            answer="No vendemos ni compartimos tu información personal o profesional con terceros. Los únicos datos que se procesan externamente son los pagos (a través de Stripe) con los más altos estándares de seguridad."
-                        />
+                        {[
+                            { question: '¿Iurexia puede ver mis consultas y documentos?', answer: 'No. Tu información está cifrada y es completamente privada. El equipo de Iurexia no tiene acceso al contenido de tus consultas ni a los documentos que subes. Solo tú puedes ver tu información.' },
+                            { question: '¿Mis datos se usan para entrenar modelos de IA?', answer: 'Jamás. Iurexia garantiza contractualmente que tus consultas, respuestas y documentos no se utilizan para entrenar ningún modelo de inteligencia artificial. Tu información permanece exclusivamente tuya.' },
+                            { question: '¿Dónde se almacenan mis datos?', answer: 'Iurexia utiliza infraestructura de servidores seguros con centros de datos que cumplen con estándares internacionales de seguridad. Todos los datos se cifran tanto en tránsito como en reposo.' },
+                            { question: '¿Cómo se protegen mis pagos?', answer: 'Los pagos se procesan a través de Stripe, la plataforma de pagos más segura del mundo, utilizada por empresas como Amazon, Google y Shopify. Nunca almacenamos información de tarjetas en nuestros servidores.' },
+                            { question: '¿Puedo eliminar toda mi información?', answer: 'Sí. Tienes control total sobre tus datos. Puedes eliminar tu historial de consultas, documentos subidos, y tu cuenta completa en cualquier momento desde la configuración de tu perfil.' },
+                            { question: '¿Iurexia comparte datos con terceros?', answer: 'No vendemos ni compartimos tu información personal o profesional con terceros. Los únicos datos que se procesan externamente son los pagos (a través de Stripe) con los más altos estándares de seguridad.' },
+                        ].map((faq, i) => (
+                            <AnimateOnScroll key={i} delay={i * 0.08}>
+                                <FAQItem question={faq.question} answer={faq.answer} />
+                            </AnimateOnScroll>
+                        ))}
                     </div>
                 </div>
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 bg-charcoal-900 text-white">
+            <section className="py-20 bg-charcoal-900 text-white overflow-hidden">
                 <div className="max-w-4xl mx-auto text-center px-4">
-                    <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                        Tu información está segura con Iurexia
-                    </h2>
-                    <p className="text-lg text-gray-400 mb-8">
-                        Comienza a trabajar con la tranquilidad de saber que tu información está protegida.
-                    </p>
-                    <Link
-                        href="/chat"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-full hover:bg-gray-100 transition-colors"
-                    >
-                        Comenzar ahora
-                        <ArrowRight className="w-5 h-5" />
-                    </Link>
+                    <AnimateOnScroll>
+                        <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
+                            Tu información está segura con Iurexia
+                        </h2>
+                    </AnimateOnScroll>
+                    <AnimateOnScroll delay={0.15}>
+                        <p className="text-lg text-gray-400 mb-8">
+                            Comienza a trabajar con la tranquilidad de saber que tu información está protegida.
+                        </p>
+                    </AnimateOnScroll>
+                    <AnimateOnScroll delay={0.3} direction="scale">
+                        <Link
+                            href="/chat"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-full hover:bg-gray-100 transition-colors"
+                        >
+                            Comenzar ahora
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
+                    </AnimateOnScroll>
                 </div>
             </section>
 
@@ -208,6 +259,8 @@ export default function SeguridadPage() {
     );
 }
 
+/* ───────── Subcomponents ───────── */
+
 function SecurityBadge({ label }: { label: string }) {
     return (
         <div className="flex items-center gap-2 text-white">
@@ -219,7 +272,7 @@ function SecurityBadge({ label }: { label: string }) {
 
 function SecurityCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
     return (
-        <div className="p-8 rounded-2xl bg-cream-300 hover:shadow-lg transition-shadow">
+        <div className="p-8 rounded-2xl bg-cream-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
             <div className="text-accent-brown mb-4">{icon}</div>
             <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">{title}</h3>
             <p className="text-charcoal-600 leading-relaxed">{description}</p>
@@ -278,13 +331,19 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
                 className="w-full flex items-center justify-between p-6 text-left bg-white hover:bg-gray-50 transition-colors"
             >
                 <span className="font-medium text-charcoal-900">{question}</span>
-                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
-            {isOpen && (
+            <div
+                className="overflow-hidden transition-all duration-300 ease-in-out"
+                style={{
+                    maxHeight: isOpen ? '200px' : '0px',
+                    opacity: isOpen ? 1 : 0,
+                }}
+            >
                 <div className="px-6 pb-6 bg-white">
                     <p className="text-charcoal-600 leading-relaxed">{answer}</p>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
