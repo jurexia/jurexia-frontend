@@ -427,7 +427,7 @@ export default function ChatPage() {
                                         data-guide="jurisdiction"
                                         className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${selectedEstado
                                             ? 'bg-accent-brown text-white'
-                                            : 'bg-cream-300 text-charcoal-700 hover:bg-cream-400 border border-cream-400'
+                                            : 'bg-cream-300 text-charcoal-700 hover:bg-cream-400 jurisdiction-pulse'
                                             }`}
                                     >
                                         <MapPin className="w-4 h-4" />

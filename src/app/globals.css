@@ -518,3 +518,32 @@ h6 {
 .delay-800 {
   animation-delay: 0.8s;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   JURISDICTION BUTTON - Pulse Attention
+   ══════════════════════════════════════════════════════════════════ */
+
+@keyframes pulseRedGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 4px rgba(220, 38, 38, 0.15), 0 0 0 0 rgba(220, 38, 38, 0);
+    border-color: rgba(220, 38, 38, 0.25);
+  }
+
+  50% {
+    box-shadow: 0 0 8px rgba(220, 38, 38, 0.25), 0 0 0 6px rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.4);
+  }
+}
+
+.jurisdiction-pulse {
+  animation: pulseRedGlow 2.5s ease-in-out infinite;
+  border: 1.5px solid rgba(220, 38, 38, 0.25);
+}
+
+.jurisdiction-pulse:hover {
+  animation: none;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.4);
+}
