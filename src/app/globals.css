@@ -223,6 +223,63 @@ h6 {
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   MARKDOWN TABLES (Sentencia Analysis)
+   ══════════════════════════════════════════════════════════════════ */
+
+.table-wrapper {
+  overflow-x: auto;
+  margin: 16px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.md-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.md-table thead {
+  background: var(--charcoal, #1a1a1a);
+  color: white;
+}
+
+.md-table thead th {
+  padding: 10px 14px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.md-table tbody tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  transition: background 0.15s ease;
+}
+
+.md-table tbody tr:nth-child(even) {
+  background: rgba(245, 244, 240, 0.5);
+}
+
+.md-table tbody tr:hover {
+  background: rgba(201, 169, 98, 0.08);
+}
+
+.md-table tbody td {
+  padding: 10px 14px;
+  vertical-align: top;
+  color: var(--charcoal, #1a1a1a);
+}
+
+.md-table tbody td:first-child {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════
    JUREXIA ANALYSIS HEADER
    ══════════════════════════════════════════════════════════════════ */
 
@@ -289,6 +346,7 @@ h6 {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -305,6 +363,7 @@ h6 {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -321,6 +380,7 @@ h6 {
     opacity: 0;
     transform: translateX(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -337,6 +397,7 @@ h6 {
     opacity: 0;
     transform: translateX(30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -353,6 +414,7 @@ h6 {
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);

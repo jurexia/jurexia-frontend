@@ -776,6 +776,75 @@ function formatMarkdown(text: string): string {
         ''
     );
 
+    // STEP 1: Parse markdown tables BEFORE other transforms
+    // Split into lines and detect table blocks
+    const lines = processed.split('\n');
+    const outputLines: string[] = [];
+    let i = 0;
+
+    while (i < lines.length) {
+        const line = lines[i].trim();
+
+        // Detect start of a markdown table (line with pipes)
+        if (line.startsWith('|') && line.endsWith('|') && line.includes('|')) {
+            // Collect all table lines
+            const tableLines: string[] = [];
+
+            while (i < lines.length) {
+                const tl = lines[i].trim();
+                if (tl.startsWith('|') && tl.includes('|')) {
+                    tableLines.push(tl);
+                    i++;
+                } else {
+                    break;
+                }
+            }
+
+            // Parse the table if we have at least header + separator + 1 row
+            if (tableLines.length >= 2) {
+                const parseCells = (row: string) =>
+                    row.split('|').slice(1, -1).map(c => c.trim());
+
+                const headerCells = parseCells(tableLines[0]);
+
+                // Check if line 2 is a separator (---) 
+                const isSeparator = /^[\s|:-]+$/.test(tableLines[1]);
+                const dataStart = isSeparator ? 2 : 1;
+
+                let tableHtml = '<div class="table-wrapper"><table class="md-table">';
+
+                // Header
+                tableHtml += '<thead><tr>';
+                headerCells.forEach(cell => {
+                    tableHtml += `<th>${cell}</th>`;
+                });
+                tableHtml += '</tr></thead>';
+
+                // Body rows
+                tableHtml += '<tbody>';
+                for (let r = dataStart; r < tableLines.length; r++) {
+                    const cells = parseCells(tableLines[r]);
+                    tableHtml += '<tr>';
+                    cells.forEach(cell => {
+                        tableHtml += `<td>${cell}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                }
+                tableHtml += '</tbody></table></div>';
+
+                outputLines.push(tableHtml);
+            } else {
+                // Not enough lines for a table, push as-is
+                tableLines.forEach(l => outputLines.push(l));
+            }
+        } else {
+            outputLines.push(lines[i]);
+            i++;
+        }
+    }
+
+    processed = outputLines.join('\n');
+
     return processed
         // Skip headers that contain "Iurexia" or already processed branded headers
         // Headers - but skip lines that already have HTML or branded headers
