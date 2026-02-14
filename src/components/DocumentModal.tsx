@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Download, FileText, MapPin, Scale, Loader2, Gavel, BookOpen } from 'lucide-react';
+import { X, Download, FileText, MapPin, Scale, Loader2, Gavel, BookOpen, ExternalLink } from 'lucide-react';
 import { getDocument, DocumentResponse } from '@/lib/api';
 
 interface DocumentModalProps {
@@ -195,7 +195,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                         ${jurisprudenciaData.materia ? `<p><strong>⚖️ Materia:</strong> ${jurisprudenciaData.materia}</p>` : ''}
                         ${jurisprudenciaData.instancia ? `<p><strong>🏛️ Instancia:</strong> ${jurisprudenciaData.instancia}</p>` : ''}
                         ${jurisprudenciaData.tesis ? `<p><strong>📑 Tesis:</strong> ${jurisprudenciaData.tesis}</p>` : ''}
-                        ${jurisprudenciaData.registro ? `<p><strong>🔢 Registro:</strong> ${jurisprudenciaData.registro}</p>` : ''}
+                        ${jurisprudenciaData.registro ? `<p><strong>🔢 Registro:</strong> <a href="https://sjf2.scjn.gob.mx/detalle/tesis/${jurisprudenciaData.registro}" target="_blank" rel="noopener" style="color: #B8860B; text-decoration: underline;">${jurisprudenciaData.registro} ↗ Verificar en SCJN</a></p>` : ''}
                     </div>
                 </div>
             `;
@@ -418,9 +418,17 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                                     {jurisprudenciaData.registro && (
                                         <div className="flex items-center gap-2 col-span-2">
                                             <span className="font-medium">Registro:</span>
-                                            <span className="px-2 py-0.5 bg-accent-brown/20 text-accent-brown text-xs rounded font-mono">
+                                            <a
+                                                href={`https://sjf2.scjn.gob.mx/detalle/tesis/${jurisprudenciaData.registro}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-accent-brown/20 text-accent-brown text-xs rounded font-mono hover:bg-accent-brown/30 transition-colors cursor-pointer"
+                                                title="Verificar en el Semanario Judicial de la Federación"
+                                            >
                                                 {jurisprudenciaData.registro}
-                                            </span>
+                                                <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                            <span className="text-[10px] text-charcoal-500 italic">Verificar en SCJN</span>
                                         </div>
                                     )}
                                 </div>
