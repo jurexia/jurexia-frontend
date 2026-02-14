@@ -60,7 +60,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Extract unique document IDs, thinking content, and create numbered references
     const { processedContent, docIdMap, thinkingContent, citationMeta } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string }> } | null };
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string }> } | null };
 
         let content = message.content;
 
@@ -171,7 +171,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         content = content.replace(/^\s+/, '').trim();
 
         // Parse and strip <!-- CITATION_META:{...} --> from content
-        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string }> } | null = null;
+        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string }> } | null = null;
         const metaMatch = content.match(/<!-- CITATION_META:(\{.*?\}) -->/);
         if (metaMatch) {
             try {
@@ -735,46 +735,66 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                         {/* Citation Legend — maps [N] → source UUID */}
                         {!isStreaming && docIdMap.size > 0 && (
                             <div className="mx-4 mb-2 mt-1 rounded-lg border border-cream-300 bg-cream-50/80 overflow-hidden">
-                                <details>
-                                    <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-charcoal-600 hover:bg-cream-100 transition-colors select-none flex items-center gap-1.5">
-                                        <span>📋</span>
-                                        <span>Índice de fuentes citadas ({docIdMap.size})</span>
-                                        {citationMeta && citationMeta.invalid > 0 && (
-                                            <span className="ml-auto text-[10px] text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
-                                                ⚠ {citationMeta.invalid} sin verificar
-                                            </span>
-                                        )}
-                                    </summary>
-                                    <div className="px-3 py-2 border-t border-cream-200 space-y-1">
-                                        {Array.from(docIdMap.entries()).map(([uuid, num]) => {
-                                            const isInvalid = citationMeta?.invalid_ids?.includes(uuid);
-                                            return (
-                                                <div
-                                                    key={uuid}
-                                                    className={`flex items-center gap-2 text-xs py-1 px-2 rounded cursor-pointer hover:bg-cream-200 transition-colors ${isInvalid ? 'opacity-60' : ''
-                                                        }`}
-                                                    onClick={() => onCitationClick?.(uuid)}
+                                <div className="px-3 py-2 text-xs font-medium text-charcoal-600 flex items-center gap-1.5 border-b border-cream-200">
+                                    <span>⚖️</span>
+                                    <span>Fundamento Legal ({docIdMap.size} fuentes)</span>
+                                    {citationMeta && citationMeta.invalid > 0 && (
+                                        <span className="ml-auto text-[10px] text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+                                            ⚠ {citationMeta.invalid} sin verificar
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="divide-y divide-cream-200">
+                                    {Array.from(docIdMap.entries()).map(([uuid, num]) => {
+                                        const isInvalid = citationMeta?.invalid_ids?.includes(uuid);
+                                        const source = citationMeta?.sources?.[uuid];
+                                        const hasTexto = source?.texto && source.texto.length > 0;
+                                        return (
+                                            <details key={uuid} className="group">
+                                                <summary
+                                                    className={`flex items-center gap-2 text-xs py-2 px-3 cursor-pointer hover:bg-cream-100 transition-colors select-none ${isInvalid ? 'opacity-60' : ''}`}
                                                 >
                                                     <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-charcoal-700 text-white text-[10px] font-bold flex-shrink-0">
                                                         {num}
                                                     </span>
-                                                    <span className="text-charcoal-600 truncate text-[11px]">
-                                                        {citationMeta?.sources?.[uuid]
-                                                            ? `${citationMeta.sources[uuid].origen}${citationMeta.sources[uuid].ref ? ` — ${citationMeta.sources[uuid].ref}` : ''}`
+                                                    <span className="text-charcoal-700 font-medium text-[11px] flex-1 min-w-0">
+                                                        {source
+                                                            ? `${source.origen}${source.ref ? ` — ${source.ref}` : ''}`
                                                             : `${uuid.slice(0, 8)}...${uuid.slice(-4)}`
                                                         }
                                                     </span>
                                                     {isInvalid && (
-                                                        <span className="text-amber-500 text-[10px]" title="UUID no encontrado en el contexto recuperado">
-                                                            ⚠ no verificada
+                                                        <span className="text-amber-500 text-[10px] flex-shrink-0" title="UUID no encontrado en el contexto recuperado">
+                                                            ⚠
                                                         </span>
                                                     )}
-                                                    <span className="ml-auto text-charcoal-400 text-[10px]">Ver fuente →</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </details>
+                                                    {hasTexto && (
+                                                        <span className="text-charcoal-400 text-[10px] flex-shrink-0 group-open:hidden">
+                                                            Ver texto ▸
+                                                        </span>
+                                                    )}
+                                                    {hasTexto && (
+                                                        <span className="text-charcoal-400 text-[10px] flex-shrink-0 hidden group-open:inline">
+                                                            ▾ Cerrar
+                                                        </span>
+                                                    )}
+                                                </summary>
+                                                {hasTexto && (
+                                                    <div className="px-3 pb-3 pt-1">
+                                                        <div className="bg-white rounded-md border border-cream-200 p-3 max-h-48 overflow-y-auto">
+                                                            <p className="text-[11px] leading-relaxed text-charcoal-600 whitespace-pre-wrap font-serif">
+                                                                &ldquo;{source!.texto}&rdquo;
+                                                            </p>
+                                                            <p className="text-[10px] text-charcoal-400 mt-2 text-right italic">
+                                                                — {source!.origen}{source!.ref ? `, ${source!.ref}` : ''}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </details>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         )}
                         {/* Export Buttons - Only show when not streaming and has content */}
