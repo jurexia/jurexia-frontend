@@ -110,6 +110,47 @@ function formatThesisContent(contenido: string): React.ReactNode {
     });
 }
 
+// ── Humanize Origen: Converts raw filename-style origen to display names ─────
+// Fallback for any cases the backend doesn't handle
+const CODE_NAMES: Record<string, string> = {
+    'CC': 'Código Civil', 'CP': 'Código Penal',
+    'CPC': 'Código de Procedimientos Civiles', 'CPP': 'Código de Procedimientos Penales',
+    'CNPP': 'Código Nacional de Procedimientos Penales',
+    'CT': 'Código de Trabajo', 'CF': 'Código Fiscal',
+    'CM': 'Código de Comercio', 'CA': 'Código Administrativo',
+    'LF': 'Ley de la Familia', 'LP': 'Ley de Profesiones',
+    'LA': 'Ley de Amparo', 'LFT': 'Ley Federal del Trabajo',
+};
+const STATE_DISPLAY: Record<string, string> = {
+    'AGS': 'Aguascalientes', 'BC': 'Baja California', 'BCS': 'Baja California Sur',
+    'CAMP': 'Campeche', 'CHIA': 'Chiapas', 'CHIH': 'Chihuahua',
+    'CDMX': 'Ciudad de México', 'COAH': 'Coahuila', 'COL': 'Colima',
+    'DGO': 'Durango', 'GTO': 'Guanajuato', 'GRO': 'Guerrero',
+    'HGO': 'Hidalgo', 'JAL': 'Jalisco', 'MEX': 'Estado de México',
+    'MICH': 'Michoacán', 'MOR': 'Morelos', 'NAY': 'Nayarit',
+    'NL': 'Nuevo León', 'OAX': 'Oaxaca', 'PUE': 'Puebla',
+    'QRO': 'Querétaro', 'QROO': 'Quintana Roo', 'SLP': 'San Luis Potosí',
+    'SIN': 'Sinaloa', 'SON': 'Sonora', 'TAB': 'Tabasco',
+    'TAMPS': 'Tamaulipas', 'TLAX': 'Tlaxcala', 'VER': 'Veracruz',
+    'YUC': 'Yucatán', 'ZAC': 'Zacatecas',
+};
+
+function humanizeOrigen(origen: string | null | undefined): string {
+    if (!origen) return '';
+    let clean = origen.replace(/\.(txt|json)$/i, '').trim();
+    // If already human-readable (has spaces, no JSON_ prefix), return as-is
+    if (clean.includes(' ') && !clean.startsWith('JSON_')) return clean;
+    // Try JSON_{STATE}_{CODE}_{STATE} pattern
+    const m = clean.match(/^JSON_([A-Z]+)_([A-Z]+)_([A-Z]+)$/i);
+    if (m) {
+        const code = CODE_NAMES[m[2].toUpperCase()] || m[2];
+        const state = STATE_DISPLAY[m[1].toUpperCase()] || m[1];
+        return `${code} del Estado de ${state}`;
+    }
+    // Fallback: strip JSON_, replace underscores, title-case
+    return clean.replace(/^JSON_/i, '').replace(/_/g, ' ');
+}
+
 export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
     const [document, setDocument] = useState<DocumentResponse | null>(null);
     const [loading, setLoading] = useState(false);
@@ -166,7 +207,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
             metadataHTML = `
                 <div class="metadata">
                     <div class="metadata-grid">
-                        ${document.origen ? `<p><strong>📄 Origen:</strong> ${document.origen}</p>` : ''}
+                        ${document.origen ? `<p><strong>📄 Ley:</strong> ${humanizeOrigen(document.origen)}</p>` : ''}
                         ${document.jurisdiccion ? `<p><strong>⚖️ Jurisdicción:</strong> ${document.jurisdiccion}</p>` : ''}
                         ${document.entidad && document.entidad !== 'NA' ? `<p><strong>📍 Entidad:</strong> ${document.entidad}</p>` : ''}
                         <p><strong>📁 Categoría:</strong> ${document.silo.replace(/_/g, ' ').replace(/^./, s => s.toUpperCase())}</p>
@@ -390,7 +431,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                                         <div className="flex items-center gap-2 col-span-2">
                                             <Scale className="w-4 h-4 text-accent-brown" />
                                             <span className="font-medium">Ley:</span>
-                                            <span className="text-charcoal-700">{document.origen.replace(/\.txt$/i, '')}</span>
+                                            <span className="text-charcoal-700">{humanizeOrigen(document.origen)}</span>
                                         </div>
                                     )}
                                     {document.entidad && document.entidad !== 'NA' && (
