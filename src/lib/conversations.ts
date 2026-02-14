@@ -109,7 +109,8 @@ export async function getConversations(): Promise<Conversation[]> {
             })
         );
 
-        return conversations;
+        // Filter out empty conversations (0 messages) to keep sidebar clean
+        return conversations.filter(c => (c.messageCount ?? 0) > 0);
     } catch (error) {
         console.error('Error in getConversations:', error);
         return [];

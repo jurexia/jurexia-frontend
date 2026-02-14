@@ -19,7 +19,6 @@ import {
     deleteConversation,
     createConversation,
     addMessageToConversation,
-    getActiveConversationId,
     setActiveConversationId,
     generateTitle
 } from '@/lib/conversations';
@@ -99,7 +98,7 @@ export default function ChatPage() {
         }
     }, [profile]);
 
-    // Load conversations on mount
+    // Load conversations on mount — always start with a fresh blank chat
     useEffect(() => {
         if (authLoading || !isAuthenticated) return; // Don't load until auth is ready
 
@@ -108,18 +107,7 @@ export default function ChatPage() {
             try {
                 const loadedConversations = await getConversations();
                 setConversations(loadedConversations);
-
-                const activeId = getActiveConversationId();
-                if (activeId) {
-                    const activeConv = await getConversation(activeId);
-                    if (activeConv) {
-                        setActiveConvId(activeId);
-                        setMessages(activeConv.messages);
-                        if (activeConv.estado) {
-                            setSelectedEstado(activeConv.estado);
-                        }
-                    }
-                }
+                // Don't restore any previous conversation — start fresh
             } catch (err) {
                 console.error('Error loading conversations:', err);
             } finally {
@@ -208,29 +196,19 @@ export default function ChatPage() {
         }
     }, [setMessages]);
 
-    // Handle delete conversation
+    // Handle delete conversation — always go to blank state after
     const handleDeleteConversation = useCallback(async (id: string) => {
         await deleteConversation(id);
         const remaining = await getConversations();
         setConversations(remaining);
 
         if (id === activeConversationId) {
-            if (remaining.length > 0) {
-                // Don't scroll when switching after delete - just load the conversation quietly
-                const conv = await getConversation(remaining[0].id);
-                if (conv) {
-                    setMessages(conv.messages);
-                    setActiveConvId(remaining[0].id);
-                    if (conv.estado) {
-                        setSelectedEstado(conv.estado);
-                    }
-                }
-            } else {
-                setActiveConvId(null);
-                clearMessages();
-            }
+            // Go to blank chat state
+            setActiveConvId(null);
+            setActiveConversationId(null);
+            clearMessages();
         }
-    }, [activeConversationId, clearMessages, setMessages]);
+    }, [activeConversationId, clearMessages]);
 
     // Handle citation click
     const handleCitationClick = useCallback((docId: string) => {
@@ -320,11 +298,15 @@ export default function ChatPage() {
 
                         <div className="flex items-center gap-2">
 
-                            {hasMessages && (
+                            {hasMessages && activeConversationId && (
                                 <button
-                                    onClick={clearMessages}
+                                    onClick={async () => {
+                                        if (activeConversationId) {
+                                            await handleDeleteConversation(activeConversationId);
+                                        }
+                                    }}
                                     className="p-2 hover:bg-black/5 rounded-lg transition-colors text-charcoal-600 hover:text-red-600"
-                                    title="Limpiar conversación"
+                                    title="Eliminar conversación"
                                 >
                                     <Trash2 className="w-5 h-5" />
                                 </button>
