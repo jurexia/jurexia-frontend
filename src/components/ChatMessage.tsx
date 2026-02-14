@@ -777,19 +777,33 @@ function formatMarkdown(text: string): string {
     );
 
     // STEP 1: Parse markdown tables BEFORE other transforms
-    // Split into lines and detect table blocks
+    // Handles BOTH standard pipe tables (|) AND Unicode box-drawing tables (┌─┬─┐ │ ├ └)
     const lines = processed.split('\n');
     const outputLines: string[] = [];
     let i = 0;
 
+    // Helper: detect if a line is part of a Unicode box-drawing table
+    const isUnicodeTableLine = (line: string) =>
+        /[┌┐└┘├┤┬┴┼─│║═╔╗╚╝╠╣╦╩╬]/.test(line);
+
+    // Helper: detect if line is a box-drawing border (no data)
+    const isUnicodeBorder = (line: string) =>
+        /^[\s┌┐└┘├┤┬┴┼─═╔╗╚╝╠╣╦╩╬]+$/.test(line.trim());
+
+    // Helper: extract cells from a Unicode table row (│ cell │ cell │)
+    const parseUnicodeCells = (row: string): string[] => {
+        // Split by │ or ║ and filter empty border pieces
+        return row.split(/[│║]/)
+            .map(c => c.trim())
+            .filter(c => c.length > 0 && !/^[\s─═┌┐└┘├┤┬┴┼╔╗╚╝╠╣╦╩╬]+$/.test(c));
+    };
+
     while (i < lines.length) {
         const line = lines[i].trim();
 
-        // Detect start of a markdown table (line with pipes)
-        if (line.startsWith('|') && line.endsWith('|') && line.includes('|')) {
-            // Collect all table lines
+        // === CASE A: Standard Markdown pipe table ===
+        if (line.startsWith('|') && line.endsWith('|') && line.split('|').length >= 3) {
             const tableLines: string[] = [];
-
             while (i < lines.length) {
                 const tl = lines[i].trim();
                 if (tl.startsWith('|') && tl.includes('|')) {
@@ -800,43 +814,73 @@ function formatMarkdown(text: string): string {
                 }
             }
 
-            // Parse the table if we have at least header + separator + 1 row
             if (tableLines.length >= 2) {
                 const parseCells = (row: string) =>
                     row.split('|').slice(1, -1).map(c => c.trim());
 
                 const headerCells = parseCells(tableLines[0]);
-
-                // Check if line 2 is a separator (---) 
                 const isSeparator = /^[\s|:-]+$/.test(tableLines[1]);
                 const dataStart = isSeparator ? 2 : 1;
 
                 let tableHtml = '<div class="table-wrapper"><table class="md-table">';
-
-                // Header
                 tableHtml += '<thead><tr>';
-                headerCells.forEach(cell => {
-                    tableHtml += `<th>${cell}</th>`;
-                });
-                tableHtml += '</tr></thead>';
-
-                // Body rows
-                tableHtml += '<tbody>';
+                headerCells.forEach(cell => { tableHtml += `<th>${cell}</th>`; });
+                tableHtml += '</tr></thead><tbody>';
                 for (let r = dataStart; r < tableLines.length; r++) {
                     const cells = parseCells(tableLines[r]);
                     tableHtml += '<tr>';
-                    cells.forEach(cell => {
-                        tableHtml += `<td>${cell}</td>`;
-                    });
+                    cells.forEach(cell => { tableHtml += `<td>${cell}</td>`; });
                     tableHtml += '</tr>';
                 }
                 tableHtml += '</tbody></table></div>';
-
                 outputLines.push(tableHtml);
             } else {
-                // Not enough lines for a table, push as-is
                 tableLines.forEach(l => outputLines.push(l));
             }
+
+            // === CASE B: Unicode box-drawing table ===
+        } else if (isUnicodeTableLine(line) && (line.includes('│') || line.includes('┌') || line.includes('╔'))) {
+            const tableLines: string[] = [];
+            while (i < lines.length) {
+                const tl = lines[i].trim();
+                if (isUnicodeTableLine(tl) || tl === '') {
+                    if (tl === '' && tableLines.length > 0) {
+                        // Empty line might end the table
+                        break;
+                    }
+                    tableLines.push(tl);
+                    i++;
+                } else {
+                    break;
+                }
+            }
+
+            // Filter: separate data rows from border rows
+            const dataRows = tableLines.filter(l => !isUnicodeBorder(l) && l.includes('│'));
+
+            if (dataRows.length >= 2) {
+                let tableHtml = '<div class="table-wrapper"><table class="md-table">';
+
+                // First data row = header
+                const headerCells = parseUnicodeCells(dataRows[0]);
+                tableHtml += '<thead><tr>';
+                headerCells.forEach(cell => { tableHtml += `<th>${cell}</th>`; });
+                tableHtml += '</tr></thead><tbody>';
+
+                // Rest = data
+                for (let r = 1; r < dataRows.length; r++) {
+                    const cells = parseUnicodeCells(dataRows[r]);
+                    tableHtml += '<tr>';
+                    cells.forEach(cell => { tableHtml += `<td>${cell}</td>`; });
+                    tableHtml += '</tr>';
+                }
+                tableHtml += '</tbody></table></div>';
+                outputLines.push(tableHtml);
+            } else {
+                // Not enough data rows, push original lines
+                tableLines.forEach(l => outputLines.push(l));
+            }
+
         } else {
             outputLines.push(lines[i]);
             i++;
