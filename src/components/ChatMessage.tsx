@@ -889,6 +889,34 @@ function formatMarkdown(text: string): string {
 
     processed = outputLines.join('\n');
 
+    // STEP 2: Clean up raw UUIDs and Doc ID references
+    // Remove [Doc ID: uuid] patterns - they're for internal linking, not display
+    processed = processed.replace(/\[Doc\s*ID:\s*[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\]/gi, '');
+    // Remove bare UUIDs that aren't inside HTML attributes
+    processed = processed.replace(/(?<!")([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?!")/gi, '');
+    // Clean up leftover Doc ID labels without UUIDs
+    processed = processed.replace(/\[Doc\s*ID:\s*\]/gi, '');
+    // Clean up parentheses or brackets that now only contain whitespace
+    processed = processed.replace(/\(\s*\)/g, '');
+    processed = processed.replace(/\[\s*\]/g, '');
+
+    // STEP 3: Convert separator lines (═══, ─────) to styled HRs
+    processed = processed.replace(/^[═]{5,}.*$/gm, '<hr class="section-divider" />');
+    processed = processed.replace(/^[─]{5,}.*$/gm, '<hr class="section-divider-light" />');
+
+    // STEP 4: Convert Roman numeral section headers to styled headings
+    // Matches: I. TITLE, II. TITLE, III. TITLE, IV. TITLE, V. TITLE, VI. TITLE, VII. TITLE, VIII. TITLE, IX. TITLE, X. TITLE
+    processed = processed.replace(
+        /^((?:[IVX]{1,5}))\.\s+(.+)$/gm,
+        '<div class="sentencia-section-header"><span class="section-numeral">$1.</span> <span class="section-title">$2</span></div>'
+    );
+
+    // STEP 5: Style "Fuentes citadas" or "FUENTES" headers
+    processed = processed.replace(
+        /^##\s*(Fuentes\s+citadas|FUENTES\s+CITADAS|Referencias)$/gim,
+        '<div class="fuentes-header"><span>📚</span> <span>$1</span></div>'
+    );
+
     return processed
         // Skip headers that contain "Iurexia" or already processed branded headers
         // Headers - but skip lines that already have HTML or branded headers
@@ -908,7 +936,7 @@ function formatMarkdown(text: string): string {
         .replace(/^> (.*$)/gm, '<blockquote class="pl-4 border-l-4 border-accent-brown italic text-charcoal-700 my-1">$1</blockquote>')
         // Unordered lists
         .replace(/^- (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-        .replace(/(<li.*<\/li>\n?)+/g, '<ul class="my-3">$&</ul>')
+        .replace(/((<li.*<\/li>\n?)+)/g, '<ul class="my-3">$1</ul>')
         // Ordered lists
         .replace(/^\d+\. (.*$)/gm, '<li class="ml-4 list-decimal">$1</li>')
         // Line breaks
