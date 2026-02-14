@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, FileEdit, Scale, Gavel, Users, Briefcase, Home, ShoppingCart, FileText, MessageSquare, Shield, Globe, Sparkles, AlertTriangle, Mail, Building, UserCheck } from 'lucide-react';
+import { X, FileEdit, Scale, Gavel, Users, Briefcase, Home, ShoppingCart, FileText, Shield, Mail, Building, UserCheck, Scroll, Landmark, BookOpen, AlertTriangle, ArrowUpDown, RotateCcw, HelpCircle, Eye, Wheat } from 'lucide-react';
 
 interface DraftModalProps {
     isOpen: boolean;
@@ -11,7 +11,7 @@ interface DraftModalProps {
 }
 
 export interface DraftRequest {
-    tipo: 'contrato' | 'demanda' | 'argumentacion' | 'peticion_oficio';
+    tipo: 'contrato' | 'demanda' | 'amparo' | 'impugnacion' | 'peticion_oficio';
     subtipo: string;
     estado: string;
     descripcion: string;
@@ -21,7 +21,6 @@ const DOCUMENT_TYPES = {
     contrato: {
         icon: FileEdit,
         label: 'Contrato',
-        color: 'blue',
         subtipos: [
             { value: 'arrendamiento', label: 'Arrendamiento', icon: Home },
             { value: 'compraventa', label: 'Compraventa', icon: ShoppingCart },
@@ -33,31 +32,36 @@ const DOCUMENT_TYPES = {
     demanda: {
         icon: Scale,
         label: 'Demanda',
-        color: 'amber',
         subtipos: [
             { value: 'civil', label: 'Civil', icon: Scale },
             { value: 'familiar', label: 'Familiar', icon: Users },
             { value: 'laboral', label: 'Laboral', icon: Briefcase },
-            { value: 'amparo', label: 'Demanda de Amparo', icon: Gavel },
-            { value: 'mercantil', label: 'Mercantil', icon: ShoppingCart },
+            { value: 'mercantil', label: 'Oral Mercantil', icon: ShoppingCart },
+            { value: 'agrario', label: 'Agrario', icon: Wheat },
         ]
     },
-    argumentacion: {
-        icon: MessageSquare,
-        label: 'Argumentación Jurídica',
-        color: 'purple',
+    amparo: {
+        icon: Shield,
+        label: 'Amparo',
         subtipos: [
-            { value: 'ilegalidad', label: 'Ilegalidad de acto', icon: AlertTriangle },
-            { value: 'inconstitucionalidad', label: 'Inconstitucionalidad', icon: Shield },
-            { value: 'inconvencionalidad', label: 'Inconvencionalidad', icon: Globe },
-            { value: 'fortalecer_posicion', label: 'Fortalecer posición', icon: Sparkles },
-            { value: 'agravio', label: 'Construir agravio', icon: Gavel },
+            { value: 'amparo_indirecto', label: 'Amparo Indirecto', icon: Shield },
+            { value: 'amparo_directo', label: 'Amparo Directo', icon: Landmark },
+        ]
+    },
+    impugnacion: {
+        icon: Gavel,
+        label: 'Impugnación',
+        subtipos: [
+            { value: 'apelacion', label: 'Recurso de Apelación', icon: ArrowUpDown },
+            { value: 'revocacion', label: 'Recurso de Revocación', icon: RotateCcw },
+            { value: 'queja', label: 'Recurso de Queja', icon: HelpCircle },
+            { value: 'revision', label: 'Recurso de Revisión', icon: Eye },
+            { value: 'agravio', label: 'Concepto de Violación / Agravio', icon: AlertTriangle },
         ]
     },
     peticion_oficio: {
         icon: Mail,
         label: 'Petición u Oficio',
-        color: 'green',
         subtipos: [
             { value: 'peticion_ciudadana', label: 'Petición de ciudadano', icon: UserCheck },
             { value: 'oficio_autoridad', label: 'Oficio entre autoridades', icon: Building },
@@ -67,7 +71,7 @@ const DOCUMENT_TYPES = {
 };
 
 export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL' }: DraftModalProps) {
-    const [selectedType, setSelectedType] = useState<'contrato' | 'demanda' | 'argumentacion' | 'peticion_oficio' | null>(null);
+    const [selectedType, setSelectedType] = useState<'contrato' | 'demanda' | 'amparo' | 'impugnacion' | 'peticion_oficio' | null>(null);
     const [selectedSubtipo, setSelectedSubtipo] = useState<string>('');
     const [descripcion, setDescripcion] = useState('');
     const [selectedEstado, setSelectedEstado] = useState(estado);
@@ -101,39 +105,39 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
     const currentTypeConfig = selectedType ? DOCUMENT_TYPES[selectedType] : null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-cream-100 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-charcoal-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-charcoal-700/50">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-cream-300 bg-cream-50">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-charcoal-700/50 bg-gradient-to-r from-charcoal-900 to-charcoal-800">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-accent-brown/10 flex items-center justify-center">
-                            <FileEdit className="w-5 h-5 text-accent-brown" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-gold/20 to-accent-brown/20 flex items-center justify-center border border-accent-gold/30">
+                            <FileEdit className="w-5 h-5 text-accent-gold" />
                         </div>
                         <div>
-                            <h2 className="font-serif text-xl font-semibold text-charcoal-900">
+                            <h2 className="font-serif text-xl font-semibold text-cream-100">
                                 Redactar Documento Legal
                             </h2>
-                            <p className="text-sm text-charcoal-500">
+                            <p className="text-sm text-charcoal-400">
                                 Genera documentos legales completos con fundamento
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={handleClose}
-                        className="p-2 text-charcoal-600 hover:text-charcoal-900 hover:bg-cream-200 rounded-lg transition-colors"
+                        className="p-2 text-charcoal-400 hover:text-cream-100 hover:bg-charcoal-700 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-charcoal-900">
                     {/* Step 1: Document Type */}
                     <div>
-                        <label className="block text-sm font-medium text-charcoal-700 mb-3">
+                        <label className="block text-sm font-medium text-accent-gold/80 mb-3 tracking-wide uppercase">
                             1. Tipo de documento
                         </label>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                             {(Object.keys(DOCUMENT_TYPES) as Array<keyof typeof DOCUMENT_TYPES>).map((type) => {
                                 const config = DOCUMENT_TYPES[type];
                                 const Icon = config.icon;
@@ -146,14 +150,14 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                             setSelectedType(type);
                                             setSelectedSubtipo('');
                                         }}
-                                        className={`p-4 rounded-lg border-2 transition-all text-center
+                                        className={`p-3 rounded-xl border transition-all text-center group
                                             ${isSelected
-                                                ? 'border-accent-brown bg-accent-brown/10 text-accent-brown'
-                                                : 'border-cream-300 hover:border-charcoal-400 text-charcoal-600 hover:text-charcoal-900'
+                                                ? 'border-accent-gold bg-gradient-to-br from-accent-gold/15 to-accent-brown/10 text-accent-gold shadow-lg shadow-accent-gold/10'
+                                                : 'border-charcoal-700 hover:border-charcoal-500 text-charcoal-400 hover:text-cream-200 bg-charcoal-800/50 hover:bg-charcoal-800'
                                             }`}
                                     >
-                                        <Icon className="w-8 h-8 mx-auto mb-2" />
-                                        <span className="font-medium">{config.label}</span>
+                                        <Icon className={`w-7 h-7 mx-auto mb-1.5 transition-transform group-hover:scale-110 ${isSelected ? 'text-accent-gold' : ''}`} />
+                                        <span className="font-medium text-xs">{config.label}</span>
                                     </button>
                                 );
                             })}
@@ -163,7 +167,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                     {/* Step 2: Subtype */}
                     {selectedType && currentTypeConfig && (
                         <div className="animate-fadeIn">
-                            <label className="block text-sm font-medium text-charcoal-700 mb-3">
+                            <label className="block text-sm font-medium text-accent-gold/80 mb-3 tracking-wide uppercase">
                                 2. Subtipo de {currentTypeConfig.label.toLowerCase()}
                             </label>
                             <div className="grid grid-cols-2 gap-2">
@@ -175,13 +179,13 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                         <button
                                             key={subtipo.value}
                                             onClick={() => setSelectedSubtipo(subtipo.value)}
-                                            className={`p-3 rounded-lg border transition-all text-left flex items-center gap-3
+                                            className={`p-3 rounded-xl border transition-all text-left flex items-center gap-3 group
                                                 ${isSelected
-                                                    ? 'border-accent-brown bg-accent-brown/10 text-accent-brown'
-                                                    : 'border-cream-300 hover:border-charcoal-400 text-charcoal-600 hover:text-charcoal-900'
+                                                    ? 'border-accent-gold bg-gradient-to-r from-accent-gold/15 to-accent-brown/10 text-accent-gold'
+                                                    : 'border-charcoal-700 hover:border-charcoal-500 text-charcoal-400 hover:text-cream-200 bg-charcoal-800/50 hover:bg-charcoal-800'
                                                 }`}
                                         >
-                                            <Icon className="w-5 h-5 flex-shrink-0" />
+                                            <Icon className={`w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 ${isSelected ? 'text-accent-gold' : ''}`} />
                                             <span className="font-medium text-sm">{subtipo.label}</span>
                                         </button>
                                     );
@@ -193,13 +197,13 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                     {/* Step 3: Jurisdicción */}
                     {selectedSubtipo && (
                         <div className="animate-fadeIn">
-                            <label className="block text-sm font-medium text-charcoal-700 mb-3">
+                            <label className="block text-sm font-medium text-accent-gold/80 mb-3 tracking-wide uppercase">
                                 3. Jurisdicción
                             </label>
                             <select
                                 value={selectedEstado}
                                 onChange={(e) => setSelectedEstado(e.target.value)}
-                                className="w-full p-3 border border-cream-300 rounded-lg bg-white text-charcoal-900 focus:ring-2 focus:ring-accent-brown focus:border-accent-brown"
+                                className="w-full p-3 border border-charcoal-700 rounded-xl bg-charcoal-800 text-cream-100 focus:ring-2 focus:ring-accent-gold/50 focus:border-accent-gold transition-colors"
                                 size={1}
                             >
                                 <option value="FEDERAL">Federal (Aplica en todo México)</option>
@@ -242,7 +246,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                     {/* Step 4: Descripción del caso */}
                     {selectedSubtipo && (
                         <div className="animate-fadeIn">
-                            <label className="block text-sm font-medium text-charcoal-700 mb-3">
+                            <label className="block text-sm font-medium text-accent-gold/80 mb-3 tracking-wide uppercase">
                                 4. Describe el caso o proporciona los datos
                             </label>
                             <textarea
@@ -250,7 +254,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                 onChange={(e) => setDescripcion(e.target.value)}
                                 placeholder={getPlaceholder(selectedType, selectedSubtipo)}
                                 rows={6}
-                                className="w-full p-4 border border-cream-300 rounded-lg bg-white text-charcoal-900 placeholder:text-charcoal-400 focus:ring-2 focus:ring-accent-brown focus:border-accent-brown resize-none"
+                                className="w-full p-4 border border-charcoal-700 rounded-xl bg-charcoal-800 text-cream-100 placeholder:text-charcoal-500 focus:ring-2 focus:ring-accent-gold/50 focus:border-accent-gold resize-none transition-colors"
                             />
                             <p className="text-xs text-charcoal-500 mt-2">
                                 💡 Entre más detalles proporciones, mejor será el documento generado.
@@ -260,17 +264,17 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-cream-300 bg-cream-50 flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-charcoal-700/50 bg-charcoal-800/80 flex items-center justify-between">
                     <button
                         onClick={handleClose}
-                        className="px-4 py-2 text-charcoal-600 hover:text-charcoal-900 font-medium transition-colors"
+                        className="px-4 py-2 text-charcoal-400 hover:text-cream-100 font-medium transition-colors rounded-lg hover:bg-charcoal-700"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={!selectedType || !selectedSubtipo || !descripcion.trim()}
-                        className="px-6 py-2.5 bg-accent-brown text-white font-medium rounded-lg hover:bg-accent-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-6 py-2.5 bg-gradient-to-r from-charcoal-700 to-charcoal-800 text-accent-gold font-medium rounded-xl border border-accent-gold/30 hover:border-accent-gold hover:from-accent-gold/20 hover:to-accent-brown/20 hover:shadow-lg hover:shadow-accent-gold/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-accent-gold/30 disabled:hover:shadow-none flex items-center gap-2"
                     >
                         <FileEdit className="w-4 h-4" />
                         Generar Documento
@@ -292,17 +296,21 @@ function getPlaceholder(tipo: string | null, subtipo: string): string {
         },
         demanda: {
             civil: 'Ejemplo: Demanda civil por incumplimiento de contrato. Actor: Juan Pérez demanda a María García por falta de pago de renta acumulada de $24,000 correspondiente a 3 meses.',
-            familiar: 'Ejemplo: Demanda de divorcio incausado. Actor: María García solicita disolución del vínculo matrimonial con Juan Pérez. Bienes a liquidar, hijos menores, pensión alimenticia.',
+            familiar: 'Ejemplo: Demanda de divorcio incausado. Actor: María García solicita disolución del vínculo matrimonial. Bienes a liquidar, hijos menores, pensión alimenticia.',
             laboral: 'Ejemplo: Demanda por despido injustificado. Actor: trabajador con 5 años de antigüedad, salario diario de $500. Fecha de despido: 15 de enero 2024.',
-            amparo: 'Describe el acto reclamado (qué acto de autoridad te afecta), la autoridad responsable, los derechos fundamentales violados y por qué debe concederse el amparo. El sistema determinará si es amparo directo o indirecto según el tipo de acto.',
-            mercantil: 'Ejemplo: Demanda ejecutiva mercantil por pagaré vencido. Monto: $150,000 más intereses moratorios.',
+            mercantil: 'Ejemplo: Demanda ejecutiva mercantil por pagaré vencido. Monto: $150,000 más intereses moratorios. O juicio oral mercantil por incumplimiento contractual.',
+            agrario: 'Ejemplo: Demanda agraria ante Tribunal Unitario Agrario. Describe el ejido, parcela, conflicto de tierras o derechos agrarios en disputa.',
         },
-        argumentacion: {
-            ilegalidad: 'Describe el acto, resolución o situación que consideras ILEGAL. Explica qué norma crees que viola y cuál es el contexto. Ej: "La autoridad fiscal me embargó sin notificación previa, ¿por qué es ilegal?"',
-            inconstitucionalidad: 'Describe el artículo, ley o acto que consideras INCONSTITUCIONAL. Explica qué derecho fundamental crees vulnerado. Ej: "El artículo X de la ley Y viola el derecho de audiencia porque..."',
-            inconvencionalidad: 'Describe el acto o norma que viola TRATADOS INTERNACIONALES (CADH, PIDCP, etc). Ej: "La detención prolongada sin control judicial viola el artículo 7.5 de la CADH porque..."',
-            fortalecer_posicion: 'Describe tu posición jurídica y qué quieres demostrar o defender. Ej: "Soy arrendador y el inquilino no paga desde hace 6 meses, quiero argumentar que procede el desahucio inmediato"',
-            agravio: 'Describe la resolución impugnada y por qué te causa perjuicio. Ej: "El juez desechó mi demanda por falta de legitimación, pero sí tengo interés jurídico porque..."',
+        amparo: {
+            amparo_indirecto: 'Describe el acto reclamado (ley, reglamento, acto de autoridad administrativa, auto judicial), la autoridad responsable, y los derechos fundamentales violados. Ejemplo: Amparo contra orden de clausura de negocio sin audiencia previa.',
+            amparo_directo: 'Describe la sentencia definitiva o laudo que impugnas, el tribunal que la dictó, y los conceptos de violación (errores de fondo y/o procedimiento). Ejemplo: Amparo directo contra sentencia de segunda instancia que confirmó condena en juicio civil.',
+        },
+        impugnacion: {
+            apelacion: 'Describe la resolución apelada (sentencia definitiva o interlocutoria), el juzgado que la dictó, y los agravios que te causa. Ejemplo: Apelación contra sentencia que desestimó la demanda por falta de pruebas.',
+            revocacion: 'Describe el auto o decreto que impugnas y por qué debe revocarse. Ejemplo: Impugnar auto que negó admisión de prueba pericial.',
+            queja: 'Describe el acto procesal contra el que se queja (exceso o defecto en ejecución, denegación de apelación). Ejemplo: Queja contra juez que no admitió recurso de apelación.',
+            revision: 'Describe la resolución de amparo que se revisa y los agravios. Ejemplo: Revisión contra sentencia de Juzgado de Distrito que negó el amparo.',
+            agravio: 'Describe la resolución impugnada y construye el agravio: qué se resolvió, qué norma se viola, cómo se viola, y qué perjuicio causa.',
         },
         peticion_oficio: {
             peticion_ciudadana: 'Describe qué solicitas a la autoridad, con qué fundamento y qué resultado esperas. Ej: "Solicito al IMSS copia certificada de mi expediente clínico con fundamento en la Ley de Transparencia"',
