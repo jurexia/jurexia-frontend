@@ -770,42 +770,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
  * Simple markdown to HTML converter for legal responses
  */
 function formatMarkdown(text: string): string {
-    // STEP 0: Transform [SCJN_BUSCAR: ...] markers into elegant search cards
+    // STEP 0: Strip any [SCJN_BUSCAR: ...] markers (feature removed)
     let processed = text.replace(
-        /\[SCJN_BUSCAR:\s*([^|\]]+?)(?:\s*\|\s*([^\]]*))?\]/g,
-        (_, searchTerm: string, filters: string | undefined) => {
-            const term = searchTerm.trim();
-            const isRegistro = /^\d{5,}$/.test(term);
-            const scjnUrl = isRegistro
-                ? `https://sjf2.scjn.gob.mx/detalle/tesis/${term}`
-                : `https://sjf2.scjn.gob.mx/busqueda-principal-tesis`;
-
-            // Parse filters into readable tags
-            const filterTags = filters
-                ? filters.split('|').map(f => f.trim()).filter(Boolean).map(f =>
-                    `<span style="display:inline-block;background:#f5f0e8;color:#6b5a3e;padding:2px 8px;border-radius:12px;font-size:11px;margin:2px;">${f}</span>`
-                ).join('')
-                : '';
-
-            return `<div style="margin:16px 0;border:1px solid #d4c5a9;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#faf8f4,#f5f0e8);">
-                <div style="padding:16px 20px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                        <span style="font-size:18px;">&#9878;</span>
-                        <span style="font-weight:600;color:#1a1a1a;font-size:14px;">Buscar en el Semanario Judicial de la Federaci\u00f3n</span>
-                    </div>
-                    <div style="background:white;border:1px solid #e8e0d0;border-radius:8px;padding:10px 14px;margin-bottom:10px;">
-                        <span style="font-size:11px;color:#8b7355;text-transform:uppercase;letter-spacing:0.5px;">T\u00e9rmino sugerido</span>
-                        <div style="font-weight:500;color:#2d2418;font-size:15px;margin-top:2px;">${term}</div>
-                    </div>
-                    ${filterTags ? `<div style="margin-bottom:12px;">${filterTags}</div>` : ''}
-                    <a href="${scjnUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;background:#1a3a5c;color:white;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none;transition:background 0.2s;" onmouseover="this.style.background='#264d73'" onmouseout="this.style.background='#1a3a5c'">
-                        <span style="font-size:14px;">&#128269;</span>
-                        ${isRegistro ? 'Ver tesis en SCJN' : 'Buscar en SCJN'}
-                        <span style="font-size:12px;">&#x2197;</span>
-                    </a>
-                </div>
-            </div>`;
-        }
+        /\[SCJN_BUSCAR:\s*[^\]]*\]/g,
+        ''
     );
 
     return processed
