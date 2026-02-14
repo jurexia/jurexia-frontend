@@ -59,8 +59,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Extract unique document IDs, thinking content, and create numbered references
-    const { processedContent, docIdMap, thinkingContent } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '' };
+    const { processedContent, docIdMap, thinkingContent, citationMeta } = useMemo(() => {
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[] } | null };
 
         let content = message.content;
 
@@ -170,7 +170,17 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Clean up leading whitespace/newlines left after removing headers
         content = content.replace(/^\s+/, '').trim();
 
-        return { processedContent: content, docIdMap, thinkingContent: thinking };
+        // Parse and strip <!-- CITATION_META:{...} --> from content
+        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[] } | null = null;
+        const metaMatch = content.match(/<!-- CITATION_META:(\{.*?\}) -->/);
+        if (metaMatch) {
+            try {
+                citationMeta = JSON.parse(metaMatch[1]);
+            } catch { /* ignore parse errors */ }
+            content = content.replace(/\n*<!-- CITATION_META:\{.*?\} -->/g, '').trim();
+        }
+
+        return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta };
     }, [message.content, isUser]);
 
     // Generate document header with logo (text-based for reliable export)
@@ -722,6 +732,48 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 }
                             }}
                         />
+                        {/* Citation Legend — maps [N] → source UUID */}
+                        {!isStreaming && docIdMap.size > 0 && (
+                            <div className="mx-4 mb-2 mt-1 rounded-lg border border-cream-300 bg-cream-50/80 overflow-hidden">
+                                <details>
+                                    <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-charcoal-600 hover:bg-cream-100 transition-colors select-none flex items-center gap-1.5">
+                                        <span>📋</span>
+                                        <span>Índice de fuentes citadas ({docIdMap.size})</span>
+                                        {citationMeta && citationMeta.invalid > 0 && (
+                                            <span className="ml-auto text-[10px] text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+                                                ⚠ {citationMeta.invalid} sin verificar
+                                            </span>
+                                        )}
+                                    </summary>
+                                    <div className="px-3 py-2 border-t border-cream-200 space-y-1">
+                                        {Array.from(docIdMap.entries()).map(([uuid, num]) => {
+                                            const isInvalid = citationMeta?.invalid_ids?.includes(uuid);
+                                            return (
+                                                <div
+                                                    key={uuid}
+                                                    className={`flex items-center gap-2 text-xs py-1 px-2 rounded cursor-pointer hover:bg-cream-200 transition-colors ${isInvalid ? 'opacity-60' : ''
+                                                        }`}
+                                                    onClick={() => onCitationClick?.(uuid)}
+                                                >
+                                                    <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-charcoal-700 text-white text-[10px] font-bold flex-shrink-0">
+                                                        {num}
+                                                    </span>
+                                                    <span className="text-charcoal-500 font-mono truncate">
+                                                        {uuid.slice(0, 8)}...{uuid.slice(-4)}
+                                                    </span>
+                                                    {isInvalid && (
+                                                        <span className="text-amber-500 text-[10px]" title="UUID no encontrado en el contexto recuperado">
+                                                            ⚠ no verificada
+                                                        </span>
+                                                    )}
+                                                    <span className="ml-auto text-charcoal-400 text-[10px]">Ver fuente →</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </details>
+                            </div>
+                        )}
                         {/* Export Buttons - Only show when not streaming and has content */}
                         {!isStreaming && message.content.length > 50 && (
                             <div className="flex items-center gap-2 px-4 py-2 border-t border-cream-300 bg-cream-100/50">
