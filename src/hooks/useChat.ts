@@ -200,7 +200,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const sendMessage = useCallback(async (content: string, _enableReasoning = true) => {
-        const enableReasoning = true; // Always use reasoning for maximum quality
+        const enableReasoning = false; // Disabled: Query Expansion was diluting BM25 precision
         if (!content.trim() || isLoading) return;
 
         setError(null);
