@@ -252,6 +252,10 @@ export default function ChatSidebar({
                         </div>
                         <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: 'rgba(255,255,255,0.4)' }} />
                     </button>
+                    {/* Responsible Use Disclaimer */}
+                    <p className="text-[10px] leading-relaxed mt-2 px-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.45)' }} className="font-medium">Nota:</span> Iurexia orienta y fortalece el análisis legal; no sustituye la asesoría profesional.
+                    </p>
                 </div>
             )}
         </div>
