@@ -956,6 +956,123 @@ function formatMarkdown(text: string): string {
                 tableLines.forEach(l => outputLines.push(l));
             }
 
+            // === CASE C: Orgchart block (:::orgchart ... :::) ===
+        } else if (line === ':::orgchart') {
+            const blockLines: string[] = [];
+            i++; // skip opening :::orgchart
+            while (i < lines.length) {
+                const bl = lines[i].trim();
+                if (bl === ':::') { i++; break; }
+                blockLines.push(bl);
+                i++;
+            }
+
+            // Parse orgchart
+            let titulo = '';
+            const edges: { parent: string; children: string[] }[] = [];
+            const allNodes = new Set<string>();
+            const childNodes = new Set<string>();
+
+            for (const bl of blockLines) {
+                if (bl.toLowerCase().startsWith('titulo:')) {
+                    titulo = bl.substring(bl.indexOf(':') + 1).trim();
+                } else if (bl.includes('->')) {
+                    const [parentPart, childrenPart] = bl.split('->').map(s => s.trim());
+                    const parent = parentPart.replace(/^\[|\]$/g, '').trim();
+                    const children = childrenPart.split(',').map(c => c.trim().replace(/^\[|\]$/g, '').trim()).filter(c => c);
+                    if (parent && children.length > 0) {
+                        edges.push({ parent, children });
+                        allNodes.add(parent);
+                        children.forEach(c => { allNodes.add(c); childNodes.add(c); });
+                    }
+                }
+            }
+
+            // Build tree HTML
+            let html = `<div class="iurexia-orgchart">`;
+            if (titulo) html += `<div class="orgchart-title">${titulo}</div>`;
+            html += `<div class="orgchart-tree">`;
+
+            // Find roots (nodes that are never children)
+            const roots = Array.from(allNodes).filter(n => !childNodes.has(n));
+            if (roots.length === 0 && allNodes.size > 0) roots.push(Array.from(allNodes)[0]);
+
+            // Recursive HTML builder
+            const buildNodeHtml = (nodeName: string, isRoot: boolean): string => {
+                const edge = edges.find(e => e.parent === nodeName);
+                let nodeHtml = `<div class="orgchart-node-group">`;
+                nodeHtml += `<div class="orgchart-node${isRoot ? ' root-node' : ''}">${nodeName}</div>`;
+                if (edge && edge.children.length > 0) {
+                    nodeHtml += `<div class="orgchart-connector"></div>`;
+                    nodeHtml += `<div class="orgchart-level">`;
+                    edge.children.forEach(child => {
+                        nodeHtml += `<div class="orgchart-node-group">`;
+                        nodeHtml += `<div class="orgchart-vline"></div>`;
+                        nodeHtml += buildNodeHtml(child, false);
+                        nodeHtml += `</div>`;
+                    });
+                    nodeHtml += `</div>`;
+                }
+                nodeHtml += `</div>`;
+                return nodeHtml;
+            };
+
+            roots.forEach(root => { html += buildNodeHtml(root, true); });
+            html += `</div></div>`;
+            outputLines.push(html);
+
+            // === CASE D: Processflow block (:::processflow ... :::) ===
+        } else if (line === ':::processflow') {
+            const blockLines: string[] = [];
+            i++; // skip opening :::processflow
+            while (i < lines.length) {
+                const bl = lines[i].trim();
+                if (bl === ':::') { i++; break; }
+                blockLines.push(bl);
+                i++;
+            }
+
+            // Parse process flow
+            let titulo = '';
+            const steps: { num: string; title: string; desc: string; timing: string }[] = [];
+
+            for (const bl of blockLines) {
+                if (bl.toLowerCase().startsWith('titulo:')) {
+                    titulo = bl.substring(bl.indexOf(':') + 1).trim();
+                } else {
+                    // Parse: "1. Title | Description | Timing"
+                    const stepMatch = bl.match(/^(\d+)\.\s*(.+)/);
+                    if (stepMatch) {
+                        const num = stepMatch[1];
+                        const parts = stepMatch[2].split('|').map(p => p.trim());
+                        steps.push({
+                            num,
+                            title: parts[0] || '',
+                            desc: parts[1] || '',
+                            timing: parts[2] || ''
+                        });
+                    }
+                }
+            }
+
+            // Build timeline HTML
+            let html = `<div class="iurexia-processflow">`;
+            if (titulo) html += `<div class="processflow-title">${titulo}</div>`;
+            html += `<div class="processflow-timeline">`;
+
+            steps.forEach(step => {
+                html += `<div class="processflow-step">`;
+                html += `<div class="processflow-circle">${step.num}</div>`;
+                html += `<div class="processflow-card">`;
+                html += `<div class="processflow-step-title">${step.title}</div>`;
+                if (step.desc) html += `<div class="processflow-step-desc">${step.desc}</div>`;
+                if (step.timing) html += `<div class="processflow-step-timing">${step.timing}</div>`;
+                html += `</div></div>`;
+            });
+
+            html += `</div></div>`;
+            outputLines.push(html);
+
         } else {
             outputLines.push(lines[i]);
             i++;
