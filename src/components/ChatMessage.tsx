@@ -60,7 +60,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Extract unique document IDs, thinking content, and create numbered references
     const { processedContent, docIdMap, thinkingContent, citationMeta } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[] } | null };
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string }> } | null };
 
         let content = message.content;
 
@@ -171,7 +171,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         content = content.replace(/^\s+/, '').trim();
 
         // Parse and strip <!-- CITATION_META:{...} --> from content
-        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[] } | null = null;
+        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string }> } | null = null;
         const metaMatch = content.match(/<!-- CITATION_META:(\{.*?\}) -->/);
         if (metaMatch) {
             try {
@@ -758,8 +758,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                                     <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-charcoal-700 text-white text-[10px] font-bold flex-shrink-0">
                                                         {num}
                                                     </span>
-                                                    <span className="text-charcoal-500 font-mono truncate">
-                                                        {uuid.slice(0, 8)}...{uuid.slice(-4)}
+                                                    <span className="text-charcoal-600 truncate text-[11px]">
+                                                        {citationMeta?.sources?.[uuid]
+                                                            ? `${citationMeta.sources[uuid].origen}${citationMeta.sources[uuid].ref ? ` — ${citationMeta.sources[uuid].ref}` : ''}`
+                                                            : `${uuid.slice(0, 8)}...${uuid.slice(-4)}`
+                                                        }
                                                     </span>
                                                     {isInvalid && (
                                                         <span className="text-amber-500 text-[10px]" title="UUID no encontrado en el contexto recuperado">
