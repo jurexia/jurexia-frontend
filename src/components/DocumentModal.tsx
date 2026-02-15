@@ -160,8 +160,10 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
     const [showPdfViewer, setShowPdfViewer] = useState(false);
 
     // Resolve PDF URL for "Ver ley completa" button
+    // Priority: 1) url_pdf from Qdrant payload, 2) lawPdfLookup (estadosData)
     const pdfUrl = useMemo(() => {
         if (!document || document.silo !== 'leyes_estatales') return null;
+        if (document.url_pdf) return document.url_pdf;
         return findLawPdfUrl(document.origen, document.entidad);
     }, [document]);
 

@@ -17,6 +17,7 @@ const ENTIDAD_TO_SLUG: Record<string, string> = {
     'CHIAPAS': 'chiapas',
     'CHIHUAHUA': 'chihuahua',
     'CIUDAD DE MEXICO': 'cdmx',
+    'CIUDAD_DE_MEXICO': 'cdmx',
     'CDMX': 'cdmx',
     'COAHUILA': 'coahuila',
     'COAHUILA DE ZARAGOZA': 'coahuila',

@@ -162,6 +162,7 @@ export interface DocumentResponse {
     instancia?: string;
     tesis_num?: string;
     registro?: string;
+    url_pdf?: string;
 }
 
 /**
