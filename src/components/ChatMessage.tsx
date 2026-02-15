@@ -158,6 +158,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         // Remove multi-Doc ID brackets like [Doc ID: uuid; Doc ID: uuid]
         content = content.replace(/\[Doc ID:[^\]]*;[^\]]*\]/gi, '');
+        // Remove plural "Doc IDs" patterns like [Doc IDs: ; ] or [Doc IDs: xxx; yyy]
+        content = content.replace(/\[Doc IDs?:[^\]]*\]/gi, '');
 
         // Remove any remaining raw "Doc ID:" text that wasn't properly formatted
         content = content.replace(/Doc ID:\s*[a-f0-9-]+/gi, '');
