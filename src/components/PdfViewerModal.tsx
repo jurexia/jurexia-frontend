@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { X, ExternalLink, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, ExternalLink, FileText, Loader2 } from 'lucide-react';
 
 interface PdfViewerModalProps {
     pdfUrl: string;
@@ -11,6 +11,11 @@ interface PdfViewerModalProps {
 }
 
 export default function PdfViewerModal({ pdfUrl, lawName, estadoName, onClose }: PdfViewerModalProps) {
+    const [loading, setLoading] = useState(true);
+
+    // Use Google Docs Viewer to proxy HTTP PDFs (avoids mixed content blocking)
+    const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm">
             <div className="bg-cream-100 rounded-xl shadow-2xl w-full max-w-7xl h-[95vh] flex flex-col">
@@ -47,11 +52,18 @@ export default function PdfViewerModal({ pdfUrl, lawName, estadoName, onClose }:
                 </div>
 
                 {/* PDF Viewer */}
-                <div className="flex-1 overflow-hidden bg-gray-200 rounded-b-xl">
+                <div className="flex-1 overflow-hidden bg-gray-200 rounded-b-xl relative">
+                    {loading && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-cream-100 z-10">
+                            <Loader2 className="w-10 h-10 animate-spin text-accent-brown mb-3" />
+                            <p className="text-charcoal-600 text-sm">Cargando documento...</p>
+                        </div>
+                    )}
                     <iframe
-                        src={pdfUrl}
+                        src={viewerUrl}
                         className="w-full h-full border-0"
                         title={`PDF: ${lawName}`}
+                        onLoad={() => setLoading(false)}
                     />
                 </div>
             </div>
