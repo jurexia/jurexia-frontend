@@ -2,13 +2,35 @@
 
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { getEstadoBySlug, CategoriaLeyes, CATEGORIA_META, Ley, getTotalLeyes } from '../estadosData';
 import { ChevronDown, ChevronRight, ArrowLeft, BookOpen, FileText, ExternalLink, Scale, Search } from 'lucide-react';
+import { useAuth } from '@/lib/useAuth';
+import { isAdmin } from '../adminGuard';
 
 export default function EstadoPage() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading && !isAdmin(user?.email)) {
+            router.push('/');
+        }
+    }, [loading, user, router]);
+
+    // Show nothing while loading or redirecting
+    if (loading || !isAdmin(user?.email)) {
+        return (
+            <main className="min-h-screen bg-cream-300">
+                <Navbar />
+                <div className="pt-32 flex justify-center">
+                    <div className="w-8 h-8 border-2 border-accent-gold border-t-transparent rounded-full animate-spin" />
+                </div>
+            </main>
+        );
+    }
     const params = useParams();
     const slug = params.estado as string;
     const estado = getEstadoBySlug(slug);

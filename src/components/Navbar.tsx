@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Menu, X, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
+import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from './UserAvatar';
 
 export default function Navbar() {
@@ -11,6 +12,7 @@ export default function Navbar() {
     const { user, loading } = useAuth();
     const isLoggedIn = !!user;
     const isLoading = loading;
+    const userIsAdmin = isAdmin(user?.email);
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
@@ -32,12 +34,14 @@ export default function Navbar() {
                         >
                             Connect
                         </Link>
-                        <Link
-                            href="/leyesestatales"
-                            className="text-sm font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-1.5 hover:bg-accent-gold/10 hover:border-accent-gold transition-all duration-200"
-                        >
-                            Leyes Estatales
-                        </Link>
+                        {userIsAdmin && (
+                            <Link
+                                href="/leyesestatales"
+                                className="text-sm font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-1.5 hover:bg-accent-gold/10 hover:border-accent-gold transition-all duration-200"
+                            >
+                                Leyes Estatales
+                            </Link>
+                        )}
                         <NavLink href="/precios">Precios</NavLink>
                         <NavLink href="/seguridad">Seguridad</NavLink>
                     </div>
@@ -105,13 +109,15 @@ export default function Navbar() {
                             >
                                 Connect
                             </Link>
-                            <Link
-                                href="/leyesestatales"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="text-base font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-2 text-center hover:bg-accent-gold/10 transition-colors"
-                            >
-                                Leyes Estatales
-                            </Link>
+                            {userIsAdmin && (
+                                <Link
+                                    href="/leyesestatales"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="text-base font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-2 text-center hover:bg-accent-gold/10 transition-colors"
+                                >
+                                    Leyes Estatales
+                                </Link>
+                            )}
                             <MobileNavLink href="/precios" onClick={() => setIsMenuOpen(false)}>
                                 Precios
                             </MobileNavLink>

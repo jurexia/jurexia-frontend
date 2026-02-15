@@ -2,12 +2,35 @@
 
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { ESTADOS, REGION_COLORS, getTotalLeyes } from './estadosData';
 import { Search, BookOpen, MapPin, ArrowRight, Scale } from 'lucide-react';
+import { useAuth } from '@/lib/useAuth';
+import { isAdmin } from './adminGuard';
 
 export default function LeyesEstatalesPage() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading && !isAdmin(user?.email)) {
+            router.push('/');
+        }
+    }, [loading, user, router]);
+
+    // Show nothing while loading or redirecting
+    if (loading || !isAdmin(user?.email)) {
+        return (
+            <main className="min-h-screen bg-cream-300">
+                <Navbar />
+                <div className="pt-32 flex justify-center">
+                    <div className="w-8 h-8 border-2 border-accent-gold border-t-transparent rounded-full animate-spin" />
+                </div>
+            </main>
+        );
+    }
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
@@ -108,8 +131,8 @@ export default function LeyesEstatalesPage() {
                             <button
                                 onClick={() => setSelectedRegion(null)}
                                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${!selectedRegion
-                                        ? 'bg-charcoal-900 text-white shadow-md'
-                                        : 'bg-white text-charcoal-700 border border-cream-400 hover:border-charcoal-900/20 hover:bg-cream-200'
+                                    ? 'bg-charcoal-900 text-white shadow-md'
+                                    : 'bg-white text-charcoal-700 border border-cream-400 hover:border-charcoal-900/20 hover:bg-cream-200'
                                     }`}
                             >
                                 🇲🇽 Todos
@@ -119,8 +142,8 @@ export default function LeyesEstatalesPage() {
                                     key={region.key}
                                     onClick={() => setSelectedRegion(selectedRegion === region.key ? null : region.key)}
                                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${selectedRegion === region.key
-                                            ? 'bg-charcoal-900 text-white shadow-md'
-                                            : 'bg-white text-charcoal-700 border border-cream-400 hover:border-charcoal-900/20 hover:bg-cream-200'
+                                        ? 'bg-charcoal-900 text-white shadow-md'
+                                        : 'bg-white text-charcoal-700 border border-cream-400 hover:border-charcoal-900/20 hover:bg-cream-200'
                                         }`}
                                 >
                                     {region.icon} {region.label}
@@ -150,14 +173,14 @@ export default function LeyesEstatalesPage() {
                                         <Link
                                             href={`/leyesestatales/${estado.slug}`}
                                             className={`group relative block rounded-2xl border transition-all duration-300 overflow-hidden ${hasContent
-                                                    ? 'bg-white border-cream-400 hover:border-accent-gold/40 hover:shadow-xl hover:-translate-y-1'
-                                                    : 'bg-cream-200/50 border-cream-400/60 hover:bg-white hover:border-cream-400 hover:shadow-md'
+                                                ? 'bg-white border-cream-400 hover:border-accent-gold/40 hover:shadow-xl hover:-translate-y-1'
+                                                : 'bg-cream-200/50 border-cream-400/60 hover:bg-white hover:border-cream-400 hover:shadow-md'
                                                 }`}
                                         >
                                             {/* Top accent bar */}
                                             <div className={`h-1 w-full transition-all duration-300 ${hasContent
-                                                    ? 'bg-gradient-to-r from-accent-gold to-accent-brown'
-                                                    : 'bg-cream-400 group-hover:bg-gradient-to-r group-hover:from-cream-500 group-hover:to-cream-400'
+                                                ? 'bg-gradient-to-r from-accent-gold to-accent-brown'
+                                                : 'bg-cream-400 group-hover:bg-gradient-to-r group-hover:from-cream-500 group-hover:to-cream-400'
                                                 }`} />
 
                                             <div className="p-5">
@@ -186,8 +209,8 @@ export default function LeyesEstatalesPage() {
                                                         </span>
                                                     </div>
                                                     <ArrowRight className={`w-4 h-4 transition-all duration-300 ${hasContent
-                                                            ? 'text-accent-gold group-hover:translate-x-1'
-                                                            : 'text-charcoal-700/20 group-hover:text-charcoal-700/40'
+                                                        ? 'text-accent-gold group-hover:translate-x-1'
+                                                        : 'text-charcoal-700/20 group-hover:text-charcoal-700/40'
                                                         }`} />
                                                 </div>
 
