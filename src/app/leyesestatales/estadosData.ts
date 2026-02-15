@@ -344,7 +344,7 @@ export const ESTADOS: Estado[] = [
     { slug: 'campeche', nombre: 'Campeche', nombreCorto: 'Campeche', abreviatura: 'CAMP', region: 'sur', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'chiapas', nombre: 'Chiapas', nombreCorto: 'Chiapas', abreviatura: 'CHIS', region: 'sur', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'chihuahua', nombre: 'Chihuahua', nombreCorto: 'Chihuahua', abreviatura: 'CHIH', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
-    { slug: 'cdmx', nombre: 'Ciudad de México', nombreCorto: 'CDMX', abreviatura: 'CDMX', region: 'centro', leyesCount: 120, ultimaActualizacion: '2026-02-15', leyes: CDMX_LEYES },
+    { slug: 'cdmx', nombre: 'Ciudad de México', nombreCorto: 'CDMX', abreviatura: 'CDMX', region: 'centro', leyesCount: 139, ultimaActualizacion: '2026-02-15', leyes: CDMX_LEYES },
     { slug: 'coahuila', nombre: 'Coahuila', nombreCorto: 'Coahuila', abreviatura: 'COAH', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'colima', nombre: 'Colima', nombreCorto: 'Colima', abreviatura: 'COL', region: 'occidente', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'durango', nombre: 'Durango', nombreCorto: 'Durango', abreviatura: 'DGO', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
