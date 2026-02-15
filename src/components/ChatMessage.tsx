@@ -732,70 +732,51 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 }
                             }}
                         />
-                        {/* Citation Legend — maps [N] → source UUID */}
+                        {/* Citation Legend — collapsible source list */}
                         {!isStreaming && docIdMap.size > 0 && (
-                            <div className="mx-4 mb-2 mt-1 rounded-lg border border-cream-300 bg-cream-50/80 overflow-hidden">
-                                <div className="px-3 py-2 text-xs font-medium text-charcoal-600 flex items-center gap-1.5 border-b border-cream-200">
-                                    <span>⚖️</span>
-                                    <span>Fundamento Legal ({docIdMap.size} fuentes)</span>
+                            <details className="mx-4 mb-2 mt-1 rounded-lg border border-cream-300 bg-cream-50/80 overflow-hidden group/sources">
+                                <summary className="px-3 py-2.5 text-xs font-medium text-charcoal-600 flex items-center gap-2 cursor-pointer hover:bg-cream-100 transition-colors select-none">
+                                    <span>📚</span>
+                                    <span className="text-blue-600 font-semibold">{docIdMap.size} fuentes</span>
                                     {citationMeta && citationMeta.invalid > 0 && (
-                                        <span className="ml-auto text-[10px] text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+                                        <span className="text-[10px] text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
                                             ⚠ {citationMeta.invalid} sin verificar
                                         </span>
                                     )}
-                                </div>
-                                <div className="divide-y divide-cream-200">
+                                    <span className="ml-auto text-charcoal-400 text-[10px] group-open/sources:rotate-90 transition-transform duration-200">▶</span>
+                                </summary>
+                                <div className="divide-y divide-cream-200 border-t border-cream-200">
                                     {Array.from(docIdMap.entries()).map(([uuid, num]) => {
                                         const isInvalid = citationMeta?.invalid_ids?.includes(uuid);
                                         const source = citationMeta?.sources?.[uuid];
-                                        const hasTexto = source?.texto && source.texto.length > 0;
                                         return (
-                                            <details key={uuid} className="group">
-                                                <summary
-                                                    className={`flex items-center gap-2 text-xs py-2 px-3 cursor-pointer hover:bg-cream-100 transition-colors select-none ${isInvalid ? 'opacity-60' : ''}`}
+                                            <div
+                                                key={uuid}
+                                                className={`flex items-center gap-2.5 text-xs py-2 px-3 hover:bg-cream-100 transition-colors ${isInvalid ? 'opacity-60' : ''}`}
+                                            >
+                                                <button
+                                                    onClick={() => onCitationClick?.(uuid)}
+                                                    className="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-600 text-white text-[10px] font-bold flex-shrink-0 hover:bg-blue-700 transition-colors cursor-pointer"
+                                                    title="Ver documento completo"
                                                 >
-                                                    <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-charcoal-700 text-white text-[10px] font-bold flex-shrink-0">
-                                                        {num}
+                                                    {num}
+                                                </button>
+                                                <span className="text-charcoal-700 text-[11px] flex-1 min-w-0 truncate">
+                                                    {source
+                                                        ? `${source.origen}${source.ref ? ` — ${source.ref}` : ''}`
+                                                        : `${uuid.slice(0, 8)}...${uuid.slice(-4)}`
+                                                    }
+                                                </span>
+                                                {isInvalid && (
+                                                    <span className="text-amber-500 text-[10px] flex-shrink-0" title="UUID no encontrado en el contexto recuperado">
+                                                        ⚠
                                                     </span>
-                                                    <span className="text-charcoal-700 font-medium text-[11px] flex-1 min-w-0">
-                                                        {source
-                                                            ? `${source.origen}${source.ref ? ` — ${source.ref}` : ''}`
-                                                            : `${uuid.slice(0, 8)}...${uuid.slice(-4)}`
-                                                        }
-                                                    </span>
-                                                    {isInvalid && (
-                                                        <span className="text-amber-500 text-[10px] flex-shrink-0" title="UUID no encontrado en el contexto recuperado">
-                                                            ⚠
-                                                        </span>
-                                                    )}
-                                                    {hasTexto && (
-                                                        <span className="text-charcoal-400 text-[10px] flex-shrink-0 group-open:hidden">
-                                                            Ver texto ▸
-                                                        </span>
-                                                    )}
-                                                    {hasTexto && (
-                                                        <span className="text-charcoal-400 text-[10px] flex-shrink-0 hidden group-open:inline">
-                                                            ▾ Cerrar
-                                                        </span>
-                                                    )}
-                                                </summary>
-                                                {hasTexto && (
-                                                    <div className="px-3 pb-3 pt-1">
-                                                        <div className="bg-white rounded-md border border-cream-200 p-3 max-h-48 overflow-y-auto">
-                                                            <p className="text-[11px] leading-relaxed text-charcoal-600 whitespace-pre-wrap font-serif">
-                                                                &ldquo;{source!.texto}&rdquo;
-                                                            </p>
-                                                            <p className="text-[10px] text-charcoal-400 mt-2 text-right italic">
-                                                                — {source!.origen}{source!.ref ? `, ${source!.ref}` : ''}
-                                                            </p>
-                                                        </div>
-                                                    </div>
                                                 )}
-                                            </details>
+                                            </div>
                                         );
                                     })}
                                 </div>
-                            </div>
+                            </details>
                         )}
                         {/* Export Buttons - Only show when not streaming and has content */}
                         {!isStreaming && message.content.length > 50 && (
@@ -1112,7 +1093,7 @@ function formatMarkdown(text: string): string {
     return processed
         // Skip headers that contain "Iurexia" or already processed branded headers
         // Headers - but skip lines that already have HTML or branded headers
-        .replace(/^### (.*$)/gm, '<h3 class="text-lg font-serif font-medium mt-4 mb-2">$1</h3>')
+        .replace(/^### (.*$)/gm, '<h3 class="text-lg font-serif font-medium mt-3 mb-1">$1</h3>')
         // Skip "Respuesta Legal" or "Análisis Legal" H2s since they're already branded
         .replace(/^## (?!.*(Respuesta|Análisis) Legal)(.*$)/gm, '<h2 class="text-xl font-serif font-medium mt-5 mb-3">$2</h2>')
         .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-serif font-medium mt-6 mb-4">$1</h1>')
@@ -1132,12 +1113,12 @@ function formatMarkdown(text: string): string {
         // Ordered lists
         .replace(/^\d+\. (.*$)/gm, '<li class="ml-4 list-decimal">$1</li>')
         // Line breaks
-        .replace(/\n\n/g, '</p><p class="mb-3">')
+        .replace(/\n\n/g, '</p><p class="mb-2">')
         .replace(/\n/g, '<br/>')
         // Wrap in paragraph (but not elements that start with HTML tags)
         .replace(/^(.+)$/gm, (match) => {
             if (match.startsWith('<')) return match;
-            return `<p class="mb-3">${match}</p>`;
+            return `<p class="mb-2">${match}</p>`;
         });
 }
 

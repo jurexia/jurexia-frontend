@@ -162,11 +162,26 @@ h6 {
 .prose-legal h1,
 .prose-legal h2,
 .prose-legal h3 {
-  @apply font-serif font-medium mt-6 mb-3;
+  @apply font-serif font-medium mt-5 mb-2;
+}
+
+/* Elegant fading black divider under h2 section headings */
+.prose-legal h2::after {
+  content: '';
+  display: block;
+  height: 2px;
+  margin-top: 6px;
+  background: linear-gradient(to right, #1a1a1a, #1a1a1a 25%, transparent 85%);
+  border-radius: 1px;
+  opacity: 0.7;
+}
+
+.prose-legal h3 {
+  @apply mt-3 mb-1;
 }
 
 .prose-legal p {
-  @apply mb-2;
+  @apply mb-1.5;
 }
 
 .prose-legal ul,
