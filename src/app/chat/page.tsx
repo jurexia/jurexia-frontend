@@ -41,7 +41,7 @@ export default function ChatPage() {
     const [activeConversationId, setActiveConvId] = useState<string | null>(null);
     const [conversationsLoading, setConversationsLoading] = useState(true);
 
-    const { messages, isLoading, error, sendMessage, clearMessages, setMessages } = useChat({
+    const { messages, isLoading, error, sendMessage, clearMessages, setMessages, retryMessage } = useChat({
         estado: selectedEstado || undefined,
         topK: 30  // Maximum allowed by API
     });
@@ -127,6 +127,7 @@ export default function ChatPage() {
     const wasLoadingRef = useRef(false);
 
     // Save messages to database when assistant finishes responding
+    // IMPORTANT: Save both user message and assistant response as atomic pair
     useEffect(() => {
         const saveMessagesAfterResponse = async () => {
             // Detect transition from loading=true to loading=false
@@ -136,8 +137,11 @@ export default function ChatPage() {
                 const userMsg = lastMessages.find(m => m.role === 'user');
                 const assistantMsg = lastMessages.find(m => m.role === 'assistant');
 
-                // Save assistant response if we have one
-                if (assistantMsg && assistantMsg.content.trim().length > 0) {
+                // Save BOTH messages as atomic pair if we have both
+                if (userMsg && assistantMsg && assistantMsg.content.trim().length > 0) {
+                    // Save user message first
+                    await addMessageToConversation(activeConversationId, userMsg);
+                    // Then save assistant response
                     await addMessageToConversation(activeConversationId, assistantMsg);
                     // Refresh conversations to update title/timestamp
                     const updatedConvs = await getConversations();
@@ -194,7 +198,7 @@ export default function ChatPage() {
     }, []);
 
     // Wrapped send function with limit check and increment
-    // Optimized: fires sendMessage IMMEDIATELY, persists conversation in background
+    // Optimized: fires sendMessage IMMEDIATELY, creates conversation in background
     const handleSendMessage = useCallback(async (content: string, enableReasoning = false) => {
         if (!user) return;
 
@@ -211,7 +215,8 @@ export default function ChatPage() {
         // 2) Optimistically increment the local counter
         setQueriesUsed(prev => prev + 1);
 
-        // 3) Persist conversation data in the background (non-blocking)
+        // 3) Ensure conversation exists in the background (non-blocking)
+        // DO NOT save user message here - it will be saved atomically with response in useEffect
         (async () => {
             try {
                 let convId = activeConversationId;
@@ -223,14 +228,8 @@ export default function ChatPage() {
                         setActiveConversationId(convId);
                     }
                 }
-
-                if (convId) {
-                    await addMessageToConversation(convId, { role: 'user', content });
-                    const updatedConvs = await getConversations();
-                    setConversations(updatedConvs);
-                }
             } catch (err) {
-                console.error('Error persisting conversation:', err);
+                console.error('Error creating conversation:', err);
             }
         })();
 
@@ -401,7 +400,7 @@ export default function ChatPage() {
 
                             {/* Typing indicator when loading and waiting for assistant response */}
                             {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                                <TypingIndicator />
+                                <TypingIndicator retryMessage={retryMessage || undefined} />
                             )}
 
                             {/* Error display */}

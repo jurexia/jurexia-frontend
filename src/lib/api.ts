@@ -71,15 +71,22 @@ export async function search(
 }
 
 /**
- * Stream chat response
+ * Sleep helper for retry delays
  */
-export async function* streamChat(
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Stream chat response with internal implementation (no retry logic)
+ */
+async function* streamChatInternal(
     messages: Message[],
     estado?: string,
-    topK: number = 30,  // Match backend default for full silo coverage (30 / 4 silos = ~8 per silo)
-    accessToken?: string,  // Optional Supabase access token for auth
-    enableReasoning = false,  // Disabled: Query Expansion was diluting BM25 precision
-    userId?: string,  // Supabase user ID for server-side quota enforcement
+    topK: number = 30,
+    accessToken?: string,
+    enableReasoning = false,
+    userId?: string,
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);
@@ -94,36 +101,74 @@ export async function* streamChat(
         headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
-    try {
-        const response = await fetch(`${API_URL}/chat`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ messages, estado, top_k: topK, enable_reasoning: enableReasoning, user_id: userId }),
-        });
+    const response = await fetch(`${API_URL}/chat`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ messages, estado, top_k: topK, enable_reasoning: enableReasoning, user_id: userId }),
+    });
 
-        console.log('[API] Response status:', response.status);
+    console.log('[API] Response status:', response.status);
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('[API] Error response:', errorText);
-            throw new Error(`Chat request failed: ${response.status} - ${errorText}`);
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[API] Error response:', errorText);
+        throw new Error(`Chat request failed: ${response.status} - ${errorText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('No response body');
+
+    const decoder = new TextDecoder();
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        yield chunk;
+    }
+}
+
+/**
+ * Stream chat response with automatic retry on cold start
+ * Implements exponential backoff: 2s, 4s, 8s
+ */
+export async function* streamChat(
+    messages: Message[],
+    estado?: string,
+    topK: number = 30,  // Match backend default for full silo coverage (30 / 4 silos = ~8 per silo)
+    accessToken?: string,  // Optional Supabase access token for auth
+    enableReasoning = false,  // Disabled: Query Expansion was diluting BM25 precision
+    userId?: string,  // Supabase user ID for server-side quota enforcement
+): AsyncGenerator<string, void, unknown> {
+    const maxRetries = 3;
+    let attempt = 0;
+
+    while (attempt < maxRetries) {
+        try {
+            // Attempt to stream chat
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId);
+            return; // Success - exit
+        } catch (err) {
+            attempt++;
+            console.error(`[API] Attempt ${attempt}/${maxRetries} failed:`, err);
+
+            // If we've exhausted retries, throw the error
+            if (attempt >= maxRetries) {
+                console.error('[API] All retry attempts exhausted');
+                throw err;
+            }
+
+            // Exponential backoff: 2s, 4s, 8s
+            const delay = Math.pow(2, attempt) * 1000;
+            console.log(`[API] Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`);
+
+            // Yield a special marker for UI to show retry status
+            yield `<!--RETRY:${attempt}:${delay}-->`;
+
+            // Wait before retrying
+            await sleep(delay);
         }
-
-        const reader = response.body?.getReader();
-        if (!reader) throw new Error('No response body');
-
-        const decoder = new TextDecoder();
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            yield chunk;
-        }
-    } catch (err) {
-        console.error('[API] Fetch error:', err);
-        throw err;
     }
 }
 

@@ -16,6 +16,7 @@ interface UseChatReturn {
     sendMessage: (content: string, enableReasoning?: boolean) => Promise<void>;
     clearMessages: () => void;
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+    retryMessage: string | null;  // New field for retry status
 }
 
 // Thinking marker used by the backend to separate reasoning from content.
@@ -197,6 +198,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [retryMessage, setRetryMessage] = useState<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const sendMessage = useCallback(async (content: string, _enableReasoning = true) => {
@@ -205,6 +207,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
         setError(null);
         setIsLoading(true);
+        setRetryMessage(null);  // Reset retry message
 
         // Add user message
         const userMessage: Message = { role: 'user', content };
@@ -228,6 +231,15 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 enableReasoning,
                 userId,
             )) {
+                // Check if this is a retry marker: <!--RETRY:1:2000-->
+                const retryMatch = chunk.match(/<!--RETRY:(\d+):(\d+)-->/);
+                if (retryMatch) {
+                    const attempt = parseInt(retryMatch[1]);
+                    const delay = parseInt(retryMatch[2]);
+                    setRetryMessage(`Intento ${attempt + 1}/3 — esperando ${delay / 1000} segundos...`);
+                    continue;  // Don't feed retry markers to the parser
+                }
+
                 // Feed chunk to the buffer-based parser (handles split markers)
                 parser.feed(chunk);
 
@@ -277,10 +289,14 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     return newMessages;
                 });
             }
+
+            // Clear retry message after successful response
+            setRetryMessage(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
             // Remove the empty assistant message on error
             setMessages(updatedMessages);
+            setRetryMessage(null);
         } finally {
             setIsLoading(false);
         }
@@ -289,6 +305,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const clearMessages = useCallback(() => {
         setMessages([]);
         setError(null);
+        setRetryMessage(null);
     }, []);
 
     return {
@@ -298,5 +315,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         sendMessage,
         clearMessages,
         setMessages,
+        retryMessage,
     };
 }

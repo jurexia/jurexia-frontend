@@ -1124,7 +1124,7 @@ function formatMarkdown(text: string): string {
 
 // Typing indicator component with informative message
 // Typing indicator component with animated progressive text
-export function TypingIndicator() {
+export function TypingIndicator({ retryMessage }: { retryMessage?: string } = {}) {
     const [textIndex, setTextIndex] = useState(0);
     const loadingTexts = [
         "Analizando tu consulta...",
@@ -1140,6 +1140,30 @@ export function TypingIndicator() {
         }, 2500);
         return () => clearInterval(interval);
     }, []);
+
+    // If retry message is provided, show cold start indicator
+    if (retryMessage) {
+        return (
+            <div className="flex gap-4 justify-start animate-slide-up">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center">
+                    <Scale className="w-4 h-4 text-white animate-pulse" />
+                </div>
+                <div className="message-assistant px-4 py-4 border-l-4 border-amber-500">
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-amber-900 font-semibold text-sm">
+                            ⏳ Despertando el servidor...
+                        </span>
+                        <span className="text-amber-700 text-xs">
+                            {retryMessage}
+                        </span>
+                        <span className="text-amber-600 text-xs mt-0.5 italic">
+                            Esto sucede cuando el servidor ha estado inactivo. Solo llevará unos segundos.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex gap-4 justify-start animate-slide-up">
