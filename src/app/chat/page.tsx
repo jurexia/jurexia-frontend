@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, ChevronDown, Check, Scale, Building2, HelpCircle } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
@@ -9,9 +9,11 @@ import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
 import VisualGuideOverlay from '@/components/VisualGuideOverlay';
 import PromptGuide from '@/components/PromptGuide';
+import StateSelectorModal from '@/components/StateSelectorModal';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
+import { getEstadoLabel } from '@/lib/estados';
 import {
     Conversation,
     getConversations,
@@ -23,49 +25,14 @@ import {
     generateTitle
 } from '@/lib/conversations';
 
-// Mexican states for jurisdiction selector
-const ESTADOS_MEXICO = [
-    { value: '', label: 'Todos los estados', icon: '🇲🇽' },
-    { value: 'AGUASCALIENTES', label: 'Aguascalientes', icon: '🏛️' },
-    { value: 'BAJA_CALIFORNIA', label: 'Baja California', icon: '🏛️' },
-    { value: 'BAJA_CALIFORNIA_SUR', label: 'Baja California Sur', icon: '🏛️' },
-    { value: 'CAMPECHE', label: 'Campeche', icon: '🏛️' },
-    { value: 'CHIAPAS', label: 'Chiapas', icon: '🏛️' },
-    { value: 'CHIHUAHUA', label: 'Chihuahua', icon: '🏛️' },
-    { value: 'CIUDAD_DE_MEXICO', label: 'Ciudad de México', icon: '🏛️' },
-    { value: 'COAHUILA', label: 'Coahuila', icon: '🏛️' },
-    { value: 'COLIMA', label: 'Colima', icon: '🏛️' },
-    { value: 'DURANGO', label: 'Durango', icon: '🏛️' },
-    { value: 'GUANAJUATO', label: 'Guanajuato', icon: '🏛️' },
-    { value: 'GUERRERO', label: 'Guerrero', icon: '🏛️' },
-    { value: 'HIDALGO', label: 'Hidalgo', icon: '🏛️' },
-    { value: 'JALISCO', label: 'Jalisco', icon: '🏛️' },
-    { value: 'MEXICO', label: 'Estado de México', icon: '🏛️' },
-    { value: 'MICHOACAN', label: 'Michoacán', icon: '🏛️' },
-    { value: 'MORELOS', label: 'Morelos', icon: '🏛️' },
-    { value: 'NAYARIT', label: 'Nayarit', icon: '🏛️' },
-    { value: 'NUEVO_LEON', label: 'Nuevo León', icon: '🏛️' },
-    { value: 'OAXACA', label: 'Oaxaca', icon: '🏛️' },
-    { value: 'PUEBLA', label: 'Puebla', icon: '🏛️' },
-    { value: 'QUERETARO', label: 'Querétaro', icon: '🏛️' },
-    { value: 'QUINTANA_ROO', label: 'Quintana Roo', icon: '🏛️' },
-    { value: 'SAN_LUIS_POTOSI', label: 'San Luis Potosí', icon: '🏛️' },
-    { value: 'SINALOA', label: 'Sinaloa', icon: '🏛️' },
-    { value: 'SONORA', label: 'Sonora', icon: '🏛️' },
-    { value: 'TABASCO', label: 'Tabasco', icon: '🏛️' },
-    { value: 'TAMAULIPAS', label: 'Tamaulipas', icon: '🏛️' },
-    { value: 'TLAXCALA', label: 'Tlaxcala', icon: '🏛️' },
-    { value: 'VERACRUZ', label: 'Veracruz', icon: '🏛️' },
-    { value: 'YUCATAN', label: 'Yucatán', icon: '🏛️' },
-    { value: 'ZACATECAS', label: 'Zacatecas', icon: '🏛️' },
-];
-
 export default function ChatPage() {
     // Auth protection - redirects to login if not authenticated
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
 
     const [selectedEstado, setSelectedEstado] = useState<string>('');
-    const [showEstadoSelector, setShowEstadoSelector] = useState(false);
+    const [showStateModal, setShowStateModal] = useState(false);
+    const [showConfigModal, setShowConfigModal] = useState(false);
+    const estadoInitializedRef = useRef(false);
     const [showPromptGuide, setShowPromptGuide] = useState(false);
     const [showVisualGuide, setShowVisualGuide] = useState(false);
 
@@ -90,11 +57,22 @@ export default function ChatPage() {
     // Track if we should scroll - only scroll for new messages, not conversation switches
     const prevMessagesLengthRef = useRef(messages.length);
 
-    // Sync query counts from profile
+    // Sync query counts and estado from profile
     useEffect(() => {
         if (profile) {
             setQueriesUsed(profile.queries_used || 0);
             setQueriesLimit(profile.queries_limit || 3);
+
+            // Initialize selectedEstado from profile (only once)
+            if (!estadoInitializedRef.current) {
+                estadoInitializedRef.current = true;
+                if (profile.estado) {
+                    setSelectedEstado(profile.estado);
+                } else {
+                    // No estado in profile → show selector modal
+                    setShowStateModal(true);
+                }
+            }
         }
     }, [profile]);
 
@@ -263,7 +241,7 @@ export default function ChatPage() {
     }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
 
     const hasMessages = messages.length > 0;
-    const selectedEstadoLabel = ESTADOS_MEXICO.find(e => e.value === selectedEstado)?.label || 'Seleccionar jurisdicción';
+    const selectedEstadoLabel = getEstadoLabel(selectedEstado);
     const queriesRemaining = Math.max(0, queriesLimit - queriesUsed);
 
     // While auth loads, render nothing (bg matches body, no flash)
@@ -324,60 +302,7 @@ export default function ChatPage() {
 
                 </header>
 
-                {/* Jurisdiction Dropdown - Overlay */}
-                {showEstadoSelector && (
-                    <>
-                        {/* Backdrop to close */}
-                        <div
-                            className="fixed inset-0 z-50 bg-black/20"
-                            onClick={() => setShowEstadoSelector(false)}
-                        />
-                        {/* Dropdown Panel */}
-                        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl mx-4 bg-cream-100 border border-cream-400 rounded-xl shadow-2xl max-h-[70vh] overflow-y-auto">
-                            <div className="p-4">
-                                <div className="mb-4">
-                                    <p className="text-xs text-charcoal-500 uppercase tracking-wide font-medium mb-2">
-                                        Selecciona una jurisdicción
-                                    </p>
-                                    <div className="flex flex-wrap gap-2 text-xs">
-                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                                            <Building2 className="w-3 h-3" /> Leyes Federales ✓
-                                        </span>
-                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
-                                            <Scale className="w-3 h-3" /> Jurisprudencia ✓
-                                        </span>
-                                        {selectedEstado && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-accent-brown/20 text-accent-brown rounded-full">
-                                                <MapPin className="w-3 h-3" /> Leyes de {selectedEstadoLabel} ✓
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                                    {ESTADOS_MEXICO.map((estado) => (
-                                        <button
-                                            key={estado.value}
-                                            onClick={() => {
-                                                setSelectedEstado(estado.value);
-                                                setShowEstadoSelector(false);
-                                            }}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-all ${selectedEstado === estado.value
-                                                ? 'bg-accent-brown text-white'
-                                                : 'bg-cream-200 hover:bg-cream-300 text-charcoal-700'
-                                                }`}
-                                        >
-                                            <span>{estado.icon}</span>
-                                            <span className="truncate">{estado.label}</span>
-                                            {selectedEstado === estado.value && (
-                                                <Check className="w-4 h-4 ml-auto flex-shrink-0" />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                )}
+
 
                 {/* Main Content Area - Scrollable */}
                 <main className="flex-1 pt-14 overflow-y-auto">
@@ -397,43 +322,33 @@ export default function ChatPage() {
                                     Consulta leyes, analiza documentos o busca jurisprudencia en la normativa mexicana.
                                 </p>
 
-                                {/* Jurisdiction Selector */}
-                                <div className="mb-4">
-                                    {!selectedEstado && (
-                                        <p className="text-xs text-accent-brown mb-2">
-                                            💡 Selecciona un estado para resultados más precisos
+                                {/* Locked Jurisdiction Badge */}
+                                <div className="mb-6" data-guide="jurisdiction">
+                                    <div className="mb-6 p-3 bg-cream-200 rounded-xl inline-block">
+                                        <p className="text-xs text-charcoal-600 mb-1.5">
+                                            <strong>Buscando en:</strong>
                                         </p>
-                                    )}
-                                    <button
-                                        onClick={() => setShowEstadoSelector(!showEstadoSelector)}
-                                        data-guide="jurisdiction"
-                                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${selectedEstado
-                                            ? 'bg-accent-brown text-white'
-                                            : 'bg-cream-300 text-charcoal-700 hover:bg-cream-400 jurisdiction-pulse'
-                                            }`}
-                                    >
-                                        <MapPin className="w-4 h-4" />
-                                        <span>{selectedEstado ? selectedEstadoLabel : 'Seleccionar Jurisdicción'}</span>
-                                        <ChevronDown className={`w-4 h-4 transition-transform ${showEstadoSelector ? 'rotate-180' : ''}`} />
-                                    </button>
-                                </div>
-
-                                {/* Jurisdiction Info */}
-                                <div className="mb-6 p-3 bg-cream-200 rounded-xl inline-block">
-                                    <p className="text-xs text-charcoal-600 mb-1.5">
-                                        <strong>Buscando en:</strong>
-                                    </p>
-                                    <div className="flex flex-wrap justify-center gap-1.5 text-xs">
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
-                                            <Building2 className="w-3 h-3" /> Leyes Federales
-                                        </span>
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">
-                                            <Scale className="w-3 h-3" /> Jurisprudencia
-                                        </span>
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent-brown/20 text-accent-brown rounded-full">
-                                            <MapPin className="w-3 h-3" /> {selectedEstado ? selectedEstadoLabel : 'Todas las entidades'}
-                                        </span>
+                                        <div className="flex flex-wrap justify-center gap-1.5 text-xs">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                                                <Building2 className="w-3 h-3" /> Leyes Federales
+                                            </span>
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">
+                                                <Scale className="w-3 h-3" /> Jurisprudencia
+                                            </span>
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent-brown/20 text-accent-brown rounded-full">
+                                                <MapPin className="w-3 h-3" /> {selectedEstado ? selectedEstadoLabel : 'Todas las entidades'}
+                                            </span>
+                                        </div>
                                     </div>
+                                    {selectedEstado && (
+                                        <button
+                                            onClick={() => setShowConfigModal(true)}
+                                            className="flex items-center gap-1 mx-auto mt-1 text-xs text-charcoal-400 hover:text-accent-brown transition-colors"
+                                        >
+                                            <Settings className="w-3 h-3" />
+                                            <span>Cambiar estado en Configuración</span>
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* Inline Chat Input */}
@@ -532,6 +447,31 @@ export default function ChatPage() {
                     onClose={() => setShowVisualGuide(false)}
                 />
             </div>
+
+            {/* State Selector Modal — shown when profile.estado is null (first login) */}
+            {showStateModal && user && (
+                <StateSelectorModal
+                    userId={user.id}
+                    onSelectEstado={(estado) => {
+                        setSelectedEstado(estado);
+                        setShowStateModal(false);
+                    }}
+                />
+            )}
+
+            {/* Config Modal — change default state */}
+            {showConfigModal && user && (
+                <StateSelectorModal
+                    userId={user.id}
+                    isConfig={true}
+                    currentEstado={selectedEstado}
+                    onClose={() => setShowConfigModal(false)}
+                    onSelectEstado={(estado) => {
+                        setSelectedEstado(estado);
+                        setShowConfigModal(false);
+                    }}
+                />
+            )}
 
             {/* Limit Reached Modal */}
             {showLimitModal && (

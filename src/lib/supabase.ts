@@ -76,6 +76,7 @@ export interface UserProfile {
     id: string;
     email: string;
     full_name: string | null;
+    estado: string | null;
     subscription_type: 'gratuito' | 'pro_monthly' | 'pro_annual' | 'platinum_monthly' | 'platinum_annual';
     queries_used: number;
     queries_limit: number;
@@ -112,6 +113,21 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
         .single()
 
     if (error) throw error
+    return data
+}
+
+export async function updateUserEstado(userId: string, estado: string): Promise<UserProfile | null> {
+    const { data, error } = await supabase
+        .from('user_profiles')
+        .update({ estado })
+        .eq('id', userId)
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Error updating estado:', error)
+        throw error
+    }
     return data
 }
 
