@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Download, FileText, MapPin, Scale, Loader2, Gavel, BookOpen, ExternalLink } from 'lucide-react';
 import { getDocument, DocumentResponse } from '@/lib/api';
+import { findLawPdfUrl, getEstadoDisplayName } from '@/lib/lawPdfLookup';
+import PdfViewerModal from '@/components/PdfViewerModal';
 
 interface DocumentModalProps {
     docId: string | null;
@@ -155,6 +157,17 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
     const [document, setDocument] = useState<DocumentResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showPdfViewer, setShowPdfViewer] = useState(false);
+
+    // Resolve PDF URL for "Ver ley completa" button
+    const pdfUrl = useMemo(() => {
+        if (!document || document.silo !== 'leyes_estatales') return null;
+        return findLawPdfUrl(document.origen, document.entidad);
+    }, [document]);
+
+    const estadoDisplayName = useMemo(() => {
+        return document?.entidad ? getEstadoDisplayName(document.entidad) : null;
+    }, [document?.entidad]);
 
     useEffect(() => {
         if (!docId) return;
@@ -350,6 +363,15 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
+                        {pdfUrl && (
+                            <button
+                                onClick={() => setShowPdfViewer(true)}
+                                className="flex items-center gap-2 px-3 py-2 text-sm bg-charcoal-800 text-white rounded-lg hover:bg-charcoal-700 transition-colors"
+                            >
+                                <FileText className="w-4 h-4" />
+                                Ver ley completa
+                            </button>
+                        )}
                         <button
                             onClick={handleDownloadPDF}
                             disabled={!document}
@@ -497,6 +519,16 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                     ID: {docId}
                 </div>
             </div>
+
+            {/* PDF Viewer Modal */}
+            {showPdfViewer && pdfUrl && document && (
+                <PdfViewerModal
+                    pdfUrl={pdfUrl}
+                    lawName={humanizeOrigen(document.origen)}
+                    estadoName={estadoDisplayName}
+                    onClose={() => setShowPdfViewer(false)}
+                />
+            )}
         </div>
     );
 }
