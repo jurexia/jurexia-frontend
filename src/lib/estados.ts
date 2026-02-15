@@ -15,7 +15,7 @@ export const ESTADOS_MEXICO: EstadoOption[] = [
     { value: 'CAMPECHE', label: 'Campeche', icon: '🏛️' },
     { value: 'CHIAPAS', label: 'Chiapas', icon: '🏛️' },
     { value: 'CHIHUAHUA', label: 'Chihuahua', icon: '🏛️' },
-    { value: 'CDMX', label: 'Ciudad de México', icon: '🏛️' },
+    { value: 'CIUDAD_DE_MEXICO', label: 'Ciudad de México', icon: '🏛️' },
     { value: 'COAHUILA', label: 'Coahuila', icon: '🏛️' },
     { value: 'COLIMA', label: 'Colima', icon: '🏛️' },
     { value: 'DURANGO', label: 'Durango', icon: '🏛️' },
