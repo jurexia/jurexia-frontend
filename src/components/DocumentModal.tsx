@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Download, FileText, MapPin, Scale, Loader2, Gavel, BookOpen, ExternalLink } from 'lucide-react';
+import { X, Download, FileText, MapPin, Scale, Loader2, Gavel, BookOpen, ExternalLink, ChevronRight, AlertCircle } from 'lucide-react';
 import { getDocument, DocumentResponse } from '@/lib/api';
 import { findLawPdfUrl, getEstadoDisplayName } from '@/lib/lawPdfLookup';
 import PdfViewerModal from '@/components/PdfViewerModal';
@@ -162,10 +162,24 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
     // Resolve PDF URL for "Ver ley completa" button
     // Priority: 1) url_pdf from Qdrant payload, 2) lawPdfLookup (estadosData)
     const pdfUrl = useMemo(() => {
-        if (!document || document.silo !== 'leyes_estatales') return null;
+        if (!document || !document.silo?.startsWith('leyes_')) return null;
         if (document.url_pdf) return document.url_pdf;
         return findLawPdfUrl(document.origen, document.entidad);
     }, [document]);
+
+    // Build link to iurexia.com/leyesestatales for the document's state
+    const leyesEstatalesUrl = useMemo(() => {
+        if (!document?.entidad) return null;
+        const slug = getEstadoDisplayName(document.entidad);
+        if (!slug) return null;
+        // Convert display name to URL slug
+        const urlSlug = slug.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, '-');
+        return `/leyesestatales/${urlSlug}`;
+    }, [document?.entidad]);
+
+    const isChunkContinuation = (document?.chunk_index ?? 0) > 0;
 
     const estadoDisplayName = useMemo(() => {
         return document?.entidad ? getEstadoDisplayName(document.entidad) : null;
@@ -457,20 +471,44 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                                     )}
                                 </div>
                             ) : (
-                                <div className="bg-cream-200 rounded-lg p-4 mb-6 grid grid-cols-2 gap-3 text-sm">
-                                    {/* For state laws, show Ley name (origen) as primary */}
-                                    {document.origen && (
-                                        <div className="flex items-center gap-2 col-span-2">
-                                            <Scale className="w-4 h-4 text-accent-brown" />
-                                            <span className="font-medium">Ley:</span>
-                                            <span className="text-charcoal-700">{humanizeOrigen(document.origen)}</span>
+                                <div className="bg-cream-200 rounded-lg p-4 mb-6 space-y-3 text-sm">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {/* For state laws, show Ley name (origen) as primary */}
+                                        {document.origen && (
+                                            <div className="flex items-center gap-2 col-span-2">
+                                                <Scale className="w-4 h-4 text-accent-brown" />
+                                                <span className="font-medium">Ley:</span>
+                                                <span className="text-charcoal-700">{humanizeOrigen(document.origen)}</span>
+                                            </div>
+                                        )}
+                                        {document.entidad && document.entidad !== 'NA' && (
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-4 h-4 text-accent-brown" />
+                                                <span className="font-medium">Entidad:</span>
+                                                <span className="text-charcoal-700">{estadoDisplayName ?? document.entidad}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Hierarchy breadcrumb */}
+                                    {document.jerarquia_txt && (
+                                        <div className="flex items-center gap-1.5 text-xs text-charcoal-500 pt-1 border-t border-cream-300">
+                                            <ChevronRight className="w-3 h-3" />
+                                            <span>{document.jerarquia_txt}</span>
                                         </div>
                                     )}
-                                    {document.entidad && document.entidad !== 'NA' && (
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-accent-brown" />
-                                            <span className="font-medium">Entidad:</span>
-                                            <span className="text-charcoal-700">{document.entidad}</span>
+                                    {/* Link to Leyes Estatales page */}
+                                    {leyesEstatalesUrl && (
+                                        <div className="pt-1 border-t border-cream-300">
+                                            <a
+                                                href={leyesEstatalesUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1.5 text-xs text-accent-brown hover:text-accent-gold transition-colors"
+                                            >
+                                                <BookOpen className="w-3 h-3" />
+                                                Ver todas las leyes de {estadoDisplayName ?? document.entidad}
+                                                <ExternalLink className="w-3 h-3" />
+                                            </a>
                                         </div>
                                     )}
                                 </div>
@@ -489,27 +527,49 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="prose-legal text-charcoal-800 leading-relaxed whitespace-pre-wrap">
-                                    {document.texto
-                                        // Remove law name prefix like [Ley de Hacienda del Estado de Querétaro]
-                                        .replace(/^\[[^\]]+\]\s*/gm, '')
-                                        .replace(/^#{1,4}\s*/gm, '')  // Remove markdown headers
-                                        .split(/\n/)
-                                        .map((line, i) => {
-                                            // Bold article references
-                                            const articleMatch = line.match(/^(Art[ií]culo\s+\d+[\w.-]*)/i);
-                                            if (articleMatch) {
-                                                return (
-                                                    <span key={i}>
-                                                        <strong className="text-charcoal-900">{articleMatch[1]}</strong>
-                                                        {line.slice(articleMatch[1].length)}
-                                                        {'\n'}
-                                                    </span>
-                                                );
-                                            }
-                                            return line + '\n';
-                                        })
-                                    }
+                                <div className="prose-legal text-charcoal-800 leading-relaxed">
+                                    {/* Continuation indicator for multi-chunk articles */}
+                                    {isChunkContinuation && (
+                                        <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+                                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                            <span>Este fragmento es una continuación del artículo. El texto puede iniciar a mitad de una fracción.</span>
+                                        </div>
+                                    )}
+                                    <div className="whitespace-pre-wrap">
+                                        {document.texto
+                                            // Remove law name prefix like [Ley de Hacienda del Estado de Querétaro]
+                                            .replace(/^\[[^\]]+\]\s*/gm, '')
+                                            .replace(/^#{1,4}\s*/gm, '')  // Remove markdown headers
+                                            .split(/\n/)
+                                            .map((line, i) => {
+                                                const trimmed = line.trim();
+                                                // Bold article references
+                                                const articleMatch = trimmed.match(/^(Art[ií]culo\s+\d+[\w.-]*)/i);
+                                                if (articleMatch) {
+                                                    return (
+                                                        <span key={i}>
+                                                            <strong className="text-charcoal-900 text-base">{articleMatch[1]}</strong>
+                                                            {trimmed.slice(articleMatch[1].length)}
+                                                            {'\n'}
+                                                        </span>
+                                                    );
+                                                }
+                                                // Bold Roman numeral fractions (I., II., III., IV., V., etc.)
+                                                const romanMatch = trimmed.match(/^([IVXLCDM]+\.)\s/);
+                                                if (romanMatch) {
+                                                    return (
+                                                        <span key={i}>
+                                                            {'\n'}
+                                                            <strong className="text-charcoal-900">{romanMatch[1]}</strong>
+                                                            {' '}{trimmed.slice(romanMatch[0].length)}
+                                                            {'\n'}
+                                                        </span>
+                                                    );
+                                                }
+                                                return line + '\n';
+                                            })
+                                        }
+                                    </div>
                                 </div>
                             )}
                         </>

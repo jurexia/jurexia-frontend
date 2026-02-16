@@ -208,6 +208,8 @@ export interface DocumentResponse {
     tesis_num?: string;
     registro?: string;
     url_pdf?: string;
+    chunk_index?: number;      // 0 = article start, >0 = continuation
+    jerarquia_txt?: string;    // e.g. "Título Quinto > Capítulo II"
 }
 
 /**
