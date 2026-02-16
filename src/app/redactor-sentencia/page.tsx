@@ -340,34 +340,34 @@ export default function RedactorSentenciaPage() {
         <div className="min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
             {/* ═══ Scrolling IUREXIA Watermark Background ═══ */}
             <div className="fixed inset-0 pointer-events-none select-none z-0 overflow-hidden" aria-hidden="true">
-                {/* Row 1 — Large, drift right, slow */}
-                <div className="absolute top-[2%] whitespace-nowrap" style={{ animation: 'scrollRight 90s linear infinite', willChange: 'transform' }}>
-                    <span className="inline-block text-[26vw] font-serif font-bold tracking-[0.15em] text-white/[0.018] -rotate-2">
-                        IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;
+                {/* Row 1 — 8vw text, top-[4%], drift right */}
+                <div className="absolute top-[4%] whitespace-nowrap" style={{ animation: 'scrollRight 80s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[8vw] font-serif font-semibold tracking-[0.18em] text-white/[0.02]">
+                        IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;
                     </span>
                 </div>
-                {/* Row 2 — Medium, drift left, medium */}
-                <div className="absolute top-[22%] whitespace-nowrap" style={{ animation: 'scrollLeft 70s linear infinite', willChange: 'transform' }}>
-                    <span className="inline-block text-[14vw] font-serif font-bold tracking-[0.2em] text-white/[0.015] rotate-1">
-                        IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                {/* Row 2 — 14vw text, top-[18%], drift left */}
+                <div className="absolute top-[18%] whitespace-nowrap" style={{ animation: 'scrollLeft 65s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[14vw] font-serif font-semibold tracking-[0.15em] text-white/[0.015]">
+                        IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;
                     </span>
                 </div>
-                {/* Row 3 — Largest, drift right, very slow */}
-                <div className="absolute top-[40%] whitespace-nowrap" style={{ animation: 'scrollRight 80s linear infinite', willChange: 'transform' }}>
-                    <span className="inline-block text-[22vw] font-serif font-bold tracking-[0.12em] text-white/[0.012] -rotate-1">
-                        IUREX<span className="text-[#c9a962]/[0.018]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.018]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.018]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.018]">IA</span>&nbsp;&nbsp;&nbsp;
+                {/* Row 3 — 20vw text, top-[38%], drift right */}
+                <div className="absolute top-[38%] whitespace-nowrap" style={{ animation: 'scrollRight 90s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[20vw] font-serif font-semibold tracking-[0.12em] text-white/[0.012]">
+                        IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;
                     </span>
                 </div>
-                {/* Row 4 — Small, drift left, fast */}
-                <div className="absolute top-[62%] whitespace-nowrap" style={{ animation: 'scrollLeft 55s linear infinite', willChange: 'transform' }}>
-                    <span className="inline-block text-[12vw] font-serif font-bold tracking-[0.25em] text-white/[0.02] rotate-2">
-                        IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {/* Row 4 — 11vw text, top-[64%], drift left */}
+                <div className="absolute top-[64%] whitespace-nowrap" style={{ animation: 'scrollLeft 55s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[11vw] font-serif font-semibold tracking-[0.2em] text-white/[0.018]">
+                        IUREX<span className="text-[#c9a962]/[0.03]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.03]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.03]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.03]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.03]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;
                     </span>
                 </div>
-                {/* Row 5 — Medium-large, drift right, medium-slow */}
-                <div className="absolute top-[82%] whitespace-nowrap" style={{ animation: 'scrollRight 65s linear infinite', willChange: 'transform' }}>
-                    <span className="inline-block text-[18vw] font-serif font-bold tracking-[0.18em] text-white/[0.016] -rotate-1">
-                        IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;
+                {/* Row 5 — 7vw text, top-[82%], drift right */}
+                <div className="absolute top-[82%] whitespace-nowrap" style={{ animation: 'scrollRight 70s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[7vw] font-serif font-semibold tracking-[0.22em] text-white/[0.022]">
+                        IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.035]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;
                     </span>
                 </div>
             </div>
