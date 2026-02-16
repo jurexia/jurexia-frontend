@@ -163,7 +163,15 @@ const QUERETARO_LEYES: CategoriaLeyes = {
         { nombre: 'Código Urbano del Estado de Querétaro', url: `${QRO_BASE}/Codigos/COD-ID-06.pdf` },
         { nombre: 'Código Penal para el Estado de Querétaro', url: `${QRO_BASE}/Codigos/COD-ID-07.pdf` },
     ],
-    reglamentos: [],
+    reglamentos: [
+        // Reglamentos Municipales del Municipio de Querétaro
+        { nombre: 'Código de Conducta de los Servidores Públicos Municipales de Querétaro 2021', url: '' },
+        { nombre: 'Código Municipal de Querétaro', url: '' },
+        { nombre: 'Lineamientos en Materia de Obra Pública del Municipio de Querétaro', url: '' },
+        { nombre: 'Protocolo para la Implementación de los Puntos de Control de Alcoholimetría para el Municipio de Querétaro', url: '' },
+        { nombre: 'Reglamento para la Movilidad y el Tránsito del Municipio de Querétaro', url: '' },
+        { nombre: 'Reglamento de Justicia Cívica del Municipio de Querétaro (Marzo 2025)', url: '' },
+    ],
     otros: [
         // Leyes Orgánicas
         { nombre: 'Ley Orgánica de la Agencia de Energía del Estado de Querétaro', url: `${QRO_BASE}/Ley-Org/ORG-ID-01.pdf` },
@@ -359,7 +367,7 @@ export const ESTADOS: Estado[] = [
     { slug: 'nuevo-leon', nombre: 'Nuevo León', nombreCorto: 'Nuevo León', abreviatura: 'NL', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'oaxaca', nombre: 'Oaxaca', nombreCorto: 'Oaxaca', abreviatura: 'OAX', region: 'sur', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'puebla', nombre: 'Puebla', nombreCorto: 'Puebla', abreviatura: 'PUE', region: 'centro', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
-    { slug: 'queretaro', nombre: 'Querétaro', nombreCorto: 'Querétaro', abreviatura: 'QRO', region: 'centro', leyesCount: 132, ultimaActualizacion: '2026-02-14', leyes: QUERETARO_LEYES },
+    { slug: 'queretaro', nombre: 'Querétaro', nombreCorto: 'Querétaro', abreviatura: 'QRO', region: 'centro', leyesCount: 138, ultimaActualizacion: '2026-02-14', leyes: QUERETARO_LEYES },
     { slug: 'quintana-roo', nombre: 'Quintana Roo', nombreCorto: 'Quintana Roo', abreviatura: 'QROO', region: 'sur', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'san-luis-potosi', nombre: 'San Luis Potosí', nombreCorto: 'San Luis Potosí', abreviatura: 'SLP', region: 'centro', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'sinaloa', nombre: 'Sinaloa', nombreCorto: 'Sinaloa', abreviatura: 'SIN', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
