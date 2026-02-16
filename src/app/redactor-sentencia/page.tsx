@@ -99,10 +99,10 @@ function DocumentDropZone({
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 ${dragActive
-                    ? 'border-amber-500/60 bg-amber-500/5'
-                    : file
-                        ? 'border-emerald-500/30 bg-emerald-500/5'
-                        : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
+                ? 'border-amber-500/60 bg-amber-500/5'
+                : file
+                    ? 'border-emerald-500/30 bg-emerald-500/5'
+                    : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
                 }`}
         >
             {file ? (
@@ -179,6 +179,14 @@ export default function RedactorSentenciaPage() {
     const [progressStep, setProgressStep] = useState(0);
     const [tokensInfo, setTokensInfo] = useState<{ input: number; output: number } | null>(null);
     const [copied, setCopied] = useState(false);
+    const [exportLoading, setExportLoading] = useState(false);
+
+    // ── DOCX Metadata ─────────────────────────────────────────────────────
+    const [metaExpediente, setMetaExpediente] = useState('');
+    const [metaMateria, setMetaMateria] = useState('CIVIL');
+    const [metaQuejoso, setMetaQuejoso] = useState('');
+    const [metaMagistrado, setMetaMagistrado] = useState('');
+    const [metaSecretario, setMetaSecretario] = useState('');
 
     const allFilesUploaded = files.every((f) => f !== null);
 
@@ -250,8 +258,48 @@ export default function RedactorSentenciaPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // ── Download as TXT ───────────────────────────────────────────────────
-    const handleDownload = () => {
+    // ── Download as DOCX (official TCC format with seals) ─────────────────
+    const handleDownloadDocx = async () => {
+        if (!result || exportLoading) return;
+        setExportLoading(true);
+        try {
+            const res = await fetch(`${API_URL}/export-sentencia-docx`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sentencia_text: result,
+                    tipo: selectedTipo?.id || 'amparo_directo',
+                    numero_expediente: metaExpediente,
+                    materia: metaMateria,
+                    quejoso: metaQuejoso,
+                    magistrado: metaMagistrado,
+                    secretario: metaSecretario,
+                    user_email: user?.email || '',
+                }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({ detail: 'Error al exportar' }));
+                throw new Error(err.detail || 'Error al exportar DOCX');
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const disposition = res.headers.get('Content-Disposition');
+            const filename = disposition?.match(/filename="(.+)"/)?.[1]
+                || `Sentencia_${selectedTipo?.id || 'TCC'}_${metaExpediente || 'borrador'}.docx`;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err: any) {
+            alert(err.message || 'Error al descargar DOCX');
+        } finally {
+            setExportLoading(false);
+        }
+    };
+
+    // ── Download as TXT (fallback) ────────────────────────────────────────
+    const handleDownloadTxt = () => {
         const blob = new Blob([result], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -434,8 +482,8 @@ export default function RedactorSentenciaPage() {
                             onClick={handleGenerate}
                             disabled={!allFilesUploaded}
                             className={`w-full py-4 rounded-2xl text-base font-medium transition-all duration-300 ${allFilesUploaded
-                                    ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-black hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-500/20'
-                                    : 'bg-white/5 text-white/20 cursor-not-allowed'
+                                ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-black hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-500/20'
+                                : 'bg-white/5 text-white/20 cursor-not-allowed'
                                 }`}
                         >
                             <span className="flex items-center justify-center gap-2">
@@ -477,10 +525,10 @@ export default function RedactorSentenciaPage() {
                                 <div
                                     key={i}
                                     className={`flex items-center gap-3 transition-all duration-500 ${i < progressStep
+                                        ? 'opacity-100'
+                                        : i === progressStep
                                             ? 'opacity-100'
-                                            : i === progressStep
-                                                ? 'opacity-100'
-                                                : 'opacity-20'
+                                            : 'opacity-20'
                                         }`}
                                 >
                                     {i < progressStep ? (
@@ -536,11 +584,11 @@ export default function RedactorSentenciaPage() {
                                     )}
                                 </button>
                                 <button
-                                    onClick={handleDownload}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-sm text-amber-400 hover:text-amber-300 transition-all"
+                                    onClick={handleDownloadTxt}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm text-white/40 hover:text-white/60 transition-all"
                                 >
-                                    <Download className="w-4 h-4" />
-                                    Descargar
+                                    <Download className="w-3.5 h-3.5" />
+                                    TXT
                                 </button>
                             </div>
                         </div>
@@ -556,6 +604,101 @@ export default function RedactorSentenciaPage() {
                                     {result.length.toLocaleString()} caracteres • Revisa y ajusta antes de presentar
                                 </p>
                             </div>
+                        </div>
+
+                        {/* ── DOCX Export Panel ── */}
+                        <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent p-6 mb-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                                    <FileText className="w-5 h-5 text-amber-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-white/90">Exportar con Formato Oficial TCC</h3>
+                                    <p className="text-xs text-white/40">DOCX con sellos, membrete y formato del tribunal</p>
+                                </div>
+                            </div>
+
+                            {/* Metadata grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+                                <div>
+                                    <label className="block text-xs text-white/40 mb-1">Nº Expediente</label>
+                                    <input
+                                        type="text"
+                                        value={metaExpediente}
+                                        onChange={e => setMetaExpediente(e.target.value)}
+                                        placeholder="365/2024"
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-amber-500/40 transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-white/40 mb-1">Materia</label>
+                                    <select
+                                        value={metaMateria}
+                                        onChange={e => setMetaMateria(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:outline-none focus:border-amber-500/40 transition-colors"
+                                    >
+                                        <option value="CIVIL">Civil</option>
+                                        <option value="PENAL">Penal</option>
+                                        <option value="ADMINISTRATIVA">Administrativa</option>
+                                        <option value="LABORAL">Laboral</option>
+                                        <option value="FISCAL">Fiscal</option>
+                                        <option value="MERCANTIL">Mercantil</option>
+                                        <option value="FAMILIAR">Familiar</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-white/40 mb-1">Quejoso(a)</label>
+                                    <input
+                                        type="text"
+                                        value={metaQuejoso}
+                                        onChange={e => setMetaQuejoso(e.target.value)}
+                                        placeholder="Nombre del quejoso"
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-amber-500/40 transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-white/40 mb-1">Magistrado Ponente</label>
+                                    <input
+                                        type="text"
+                                        value={metaMagistrado}
+                                        onChange={e => setMetaMagistrado(e.target.value)}
+                                        placeholder="Nombre del magistrado"
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-amber-500/40 transition-colors"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs text-white/40 mb-1">Secretario</label>
+                                    <input
+                                        type="text"
+                                        value={metaSecretario}
+                                        onChange={e => setMetaSecretario(e.target.value)}
+                                        placeholder="Nombre del secretario"
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-amber-500/40 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* DOCX Download button */}
+                            <button
+                                onClick={handleDownloadDocx}
+                                disabled={exportLoading}
+                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${exportLoading
+                                        ? 'bg-amber-500/10 text-amber-400/50 cursor-wait'
+                                        : 'bg-gradient-to-r from-amber-600 to-amber-500 text-black hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-500/20'
+                                    }`}
+                            >
+                                {exportLoading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Generando DOCX...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Download className="w-4 h-4" />
+                                        Descargar DOCX con Formato Oficial
+                                    </>
+                                )}
+                            </button>
                         </div>
 
                         {/* Sentencia content */}
