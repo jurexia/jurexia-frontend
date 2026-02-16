@@ -188,6 +188,10 @@ export default function RedactorSentenciaPage() {
     const [metaMagistrado, setMetaMagistrado] = useState('');
     const [metaSecretario, setMetaSecretario] = useState('');
 
+    // ── Secretary Instructions ───────────────────────────────────────────────
+    const [instrucciones, setInstrucciones] = useState('');
+    const [ragCount, setRagCount] = useState(0);
+
     const allFilesUploaded = files.every((f) => f !== null);
 
     // ── Select Type ───────────────────────────────────────────────────────
@@ -222,6 +226,7 @@ export default function RedactorSentenciaPage() {
             const formData = new FormData();
             formData.append('tipo', selectedTipo.id);
             formData.append('user_email', user.email);
+            formData.append('instrucciones', instrucciones);
             formData.append('doc1', files[0]!);
             formData.append('doc2', files[1]!);
             formData.append('doc3', files[2]!);
@@ -242,6 +247,9 @@ export default function RedactorSentenciaPage() {
             setResult(data.sentencia_text);
             if (data.tokens_input && data.tokens_output) {
                 setTokensInfo({ input: data.tokens_input, output: data.tokens_output });
+            }
+            if (data.rag_results_count) {
+                setRagCount(data.rag_results_count);
             }
             setPhase('result');
         } catch (err: any) {
@@ -469,6 +477,41 @@ export default function RedactorSentenciaPage() {
                             ))}
                         </div>
 
+                        {/* ── Secretary Instructions Textarea ── */}
+                        <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-transparent p-6 mb-8">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                                    <FileText className="w-5 h-5 text-violet-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-white/90">Instrucciones para el Proyecto</h3>
+                                    <p className="text-xs text-white/40">Indique el sentido del fallo y cómo calificar los conceptos/agravios</p>
+                                </div>
+                            </div>
+                            <textarea
+                                value={instrucciones}
+                                onChange={e => setInstrucciones(e.target.value)}
+                                rows={6}
+                                placeholder={selectedTipo?.id === 'amparo_directo'
+                                    ? 'Ej: Negar el amparo. El primer concepto de violación es infundado porque el tribunal responsable sí valoró correctamente las pruebas. El segundo concepto es inoperante porque pretende una nueva valoración probatoria que no corresponde al juicio de amparo directo. No procede suplencia de la queja por ser materia civil.'
+                                    : selectedTipo?.id === 'amparo_revision'
+                                        ? 'Ej: Confirmar la sentencia recurrida. Los agravios son infundados porque el juez de distrito aplicó correctamente los criterios de la Suprema Corte respecto a la suspensión del acto reclamado. El primer agravio es inoperante por novedoso.'
+                                        : selectedTipo?.id === 'revision_fiscal'
+                                            ? 'Ej: Confirmar la sentencia del TFJA. La revisión fiscal es infundada. Los agravios no logran desvirtuar la valoración realizada por la Sala del Tribunal Fiscal respecto a la caducidad de las facultades de comprobación.'
+                                            : 'Ej: Declarar fundada la queja. El juez de distrito excedió sus atribuciones al negar la suspensión del acto reclamado sin fundamentar adecuadamente los requisitos del artículo 128 de la Ley de Amparo.'
+                                }
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-violet-500/40 transition-colors resize-none leading-relaxed"
+                            />
+                            <div className="flex items-start gap-2 mt-3 px-1">
+                                <AlertTriangle className="w-3.5 h-3.5 text-violet-400/60 mt-0.5 flex-shrink-0" />
+                                <p className="text-[11px] text-white/30 leading-relaxed">
+                                    <span className="text-violet-400/60 font-medium">No es necesario citar todas las leyes.</span>{' '}
+                                    El sistema consultará automáticamente la base de datos de jurisprudencia,
+                                    legislación y constitución para fundamentar el proyecto según sus instrucciones.
+                                </p>
+                            </div>
+                        </div>
+
                         {/* Error */}
                         {error && (
                             <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
@@ -601,7 +644,9 @@ export default function RedactorSentenciaPage() {
                                     Proyecto de Sentencia generado — {selectedTipo?.label}
                                 </p>
                                 <p className="text-xs text-white/30 mt-0.5">
-                                    {result.length.toLocaleString()} caracteres • Revisa y ajusta antes de presentar
+                                    {result.length.toLocaleString()} caracteres
+                                    {ragCount > 0 && <> • {ragCount} fuentes RAG</>}
+                                    {' '}• Revisa y ajusta antes de presentar
                                 </p>
                             </div>
                         </div>
@@ -683,8 +728,8 @@ export default function RedactorSentenciaPage() {
                                 onClick={handleDownloadDocx}
                                 disabled={exportLoading}
                                 className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${exportLoading
-                                        ? 'bg-amber-500/10 text-amber-400/50 cursor-wait'
-                                        : 'bg-gradient-to-r from-amber-600 to-amber-500 text-black hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-500/20'
+                                    ? 'bg-amber-500/10 text-amber-400/50 cursor-wait'
+                                    : 'bg-gradient-to-r from-amber-600 to-amber-500 text-black hover:from-amber-500 hover:to-amber-400 shadow-lg shadow-amber-500/20'
                                     }`}
                             >
                                 {exportLoading ? (
