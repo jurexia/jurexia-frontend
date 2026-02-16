@@ -338,18 +338,47 @@ export default function RedactorSentenciaPage() {
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
-            {/* ═══ Giant IUREXIA Watermark Background ═══ */}
-            <div className="fixed inset-0 pointer-events-none select-none z-0 overflow-hidden">
-                <span className="absolute -left-20 top-[10%] text-[20vw] font-serif font-bold text-white/[0.015] tracking-[0.2em] -rotate-12 whitespace-nowrap" style={{ animation: 'watermarkPulse 8s ease-in-out infinite' }}>IUREXIA</span>
-                <span className="absolute -right-10 top-[35%] text-[18vw] font-serif font-bold text-white/[0.02] tracking-[0.15em] rotate-6 whitespace-nowrap" style={{ animation: 'watermarkPulse 8s ease-in-out 2s infinite' }}>IUREXIA</span>
-                <span className="absolute -left-32 top-[60%] text-[24vw] font-serif font-bold text-white/[0.012] tracking-[0.25em] -rotate-6 whitespace-nowrap" style={{ animation: 'watermarkPulse 8s ease-in-out 4s infinite' }}>IUREXIA</span>
-                <span className="absolute -right-20 top-[85%] text-[16vw] font-serif font-bold text-white/[0.018] tracking-[0.2em] rotate-3 whitespace-nowrap" style={{ animation: 'watermarkPulse 8s ease-in-out 6s infinite' }}>IUREXIA</span>
-                <span className="absolute left-[15%] -top-[5%] text-[22vw] font-serif font-bold text-[#c9a962]/[0.008] tracking-[0.3em] rotate-12 whitespace-nowrap" style={{ animation: 'watermarkPulse 10s ease-in-out 1s infinite' }}>IUREXIA</span>
+            {/* ═══ Scrolling IUREXIA Watermark Background ═══ */}
+            <div className="fixed inset-0 pointer-events-none select-none z-0 overflow-hidden" aria-hidden="true">
+                {/* Row 1 — Large, drift right, slow */}
+                <div className="absolute top-[2%] whitespace-nowrap" style={{ animation: 'scrollRight 90s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[26vw] font-serif font-bold tracking-[0.15em] text-white/[0.018] -rotate-2">
+                        IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.025]">IA</span>&nbsp;&nbsp;&nbsp;
+                    </span>
+                </div>
+                {/* Row 2 — Medium, drift left, medium */}
+                <div className="absolute top-[22%] whitespace-nowrap" style={{ animation: 'scrollLeft 70s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[14vw] font-serif font-bold tracking-[0.2em] text-white/[0.015] rotate-1">
+                        IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.02]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                    </span>
+                </div>
+                {/* Row 3 — Largest, drift right, very slow */}
+                <div className="absolute top-[40%] whitespace-nowrap" style={{ animation: 'scrollRight 80s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[22vw] font-serif font-bold tracking-[0.12em] text-white/[0.012] -rotate-1">
+                        IUREX<span className="text-[#c9a962]/[0.018]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.018]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.018]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.018]">IA</span>&nbsp;&nbsp;&nbsp;
+                    </span>
+                </div>
+                {/* Row 4 — Small, drift left, fast */}
+                <div className="absolute top-[62%] whitespace-nowrap" style={{ animation: 'scrollLeft 55s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[12vw] font-serif font-bold tracking-[0.25em] text-white/[0.02] rotate-2">
+                        IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.028]">IA</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    </span>
+                </div>
+                {/* Row 5 — Medium-large, drift right, medium-slow */}
+                <div className="absolute top-[82%] whitespace-nowrap" style={{ animation: 'scrollRight 65s linear infinite', willChange: 'transform' }}>
+                    <span className="inline-block text-[18vw] font-serif font-bold tracking-[0.18em] text-white/[0.016] -rotate-1">
+                        IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;IUREX<span className="text-[#c9a962]/[0.022]">IA</span>&nbsp;&nbsp;&nbsp;
+                    </span>
+                </div>
             </div>
             <style jsx>{`
-                @keyframes watermarkPulse {
-                    0%, 100% { opacity: 0.3; }
-                    50% { opacity: 1; }
+                @keyframes scrollRight {
+                    0% { transform: translateX(-50%); }
+                    100% { transform: translateX(0%); }
+                }
+                @keyframes scrollLeft {
+                    0% { transform: translateX(0%); }
+                    100% { transform: translateX(-50%); }
                 }
             `}</style>
             {/* ═══ Top Bar ═══ */}
