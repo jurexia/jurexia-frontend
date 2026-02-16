@@ -1079,13 +1079,6 @@ function formatMarkdown(text: string): string {
     processed = processed.replace(/^[═]{5,}.*$/gm, '<hr class="section-divider" />');
     processed = processed.replace(/^[─]{5,}.*$/gm, '<hr class="section-divider-light" />');
 
-    // STEP 4: Convert Roman numeral section headers to styled headings
-    // Matches: I. TITLE, II. TITLE, III. TITLE, IV. TITLE, V. TITLE, VI. TITLE, VII. TITLE, VIII. TITLE, IX. TITLE, X. TITLE
-    processed = processed.replace(
-        /^((?:[IVX]{1,5}))\.\s+(.+)$/gm,
-        '<div class="sentencia-section-header"><span class="section-numeral">$1.</span> <span class="section-title">$2</span></div>'
-    );
-
     // STEP 5: Style "Fuentes citadas" or "FUENTES" headers
     processed = processed.replace(
         /^##\s*(Fuentes\s+citadas|FUENTES\s+CITADAS|Referencias)$/gim,

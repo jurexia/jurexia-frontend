@@ -294,38 +294,6 @@ h6 {
   white-space: nowrap;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   SENTENCIA SECTION HEADERS (I. RESUMEN EJECUTIVO, etc.)
-   ══════════════════════════════════════════════════════════════════ */
-
-.sentencia-section-header {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  padding: 14px 20px;
-  margin: 28px 0 14px 0;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2a2118 60%, #1a1a1a 100%);
-  border-left: 4px solid var(--accent-gold, #c9a962);
-  border-radius: 0 8px 8px 0;
-  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.sentencia-section-header .section-numeral {
-  font-weight: 700;
-  font-size: 1.15rem;
-  color: var(--accent-gold, #c9a962);
-  min-width: fit-content;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.sentencia-section-header .section-title {
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: #ffffff;
-  letter-spacing: 0.01em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
 
 /* Section dividers */
 .section-divider {
