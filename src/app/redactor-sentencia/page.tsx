@@ -99,28 +99,28 @@ function DocumentDropZone({
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 ${dragActive
-                ? 'border-[#c9a962]/60 bg-[#c9a962]/5'
+                ? 'border-[#c9a962]/60 bg-[#c9a962]/10'
                 : file
-                    ? 'border-[#8b7355]/40 bg-[#8b7355]/5'
-                    : 'border-gray-300 bg-white hover:border-[#c9a962]/40 hover:bg-[#c9a962]/[0.03]'
+                    ? 'border-[#8b7355]/40 bg-white/[0.04]'
+                    : 'border-white/10 bg-white/[0.02] hover:border-[#c9a962]/30 hover:bg-white/[0.04]'
                 }`}
         >
             {file ? (
                 <div className="flex items-center gap-4 p-5">
-                    <div className="w-12 h-12 rounded-xl bg-[#8b7355]/10 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-[#8b7355]/15 flex items-center justify-center flex-shrink-0">
                         <FileText className="w-6 h-6 text-[#8b7355]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#1a1a1a] truncate">{file.name}</p>
-                        <p className="text-xs text-[#404040]/60 mt-0.5">
+                        <p className="text-sm font-medium text-white/90 truncate">{file.name}</p>
+                        <p className="text-xs text-white/30 mt-0.5">
                             {(file.size / (1024 * 1024)).toFixed(1)} MB • PDF
                         </p>
                     </div>
                     <button
                         onClick={onRemove}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                     >
-                        <X className="w-4 h-4 text-[#404040]/50" />
+                        <X className="w-4 h-4 text-white/30" />
                     </button>
                 </div>
             ) : (
@@ -129,10 +129,10 @@ function DocumentDropZone({
                         <Upload className="w-5 h-5 text-[#c9a962]" />
                     </div>
                     <div className="text-center">
-                        <p className="text-sm text-[#404040] mb-0.5">
+                        <p className="text-sm text-white/50 mb-0.5">
                             <span className="text-[#c9a962] font-medium">Doc {index + 1}</span> — {label}
                         </p>
-                        <p className="text-xs text-[#404040]/50">Arrastra o selecciona PDF (máx 50MB)</p>
+                        <p className="text-xs text-white/25">Arrastra o selecciona PDF (máx 50MB)</p>
                     </div>
                     <input
                         type="file"
@@ -330,30 +330,44 @@ export default function RedactorSentenciaPage() {
     // ── Auth Loading ──────────────────────────────────────────────────────
     if (authLoading) {
         return (
-            <div className="min-h-screen bg-[#f5f4f0] flex items-center justify-center">
+            <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c9a962]"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#f5f4f0] text-[#1a1a1a]">
+        <div className="min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
+            {/* ═══ Giant IUREXIA Watermark Background ═══ */}
+            <div className="fixed inset-0 pointer-events-none select-none z-0 overflow-hidden">
+                <span className="absolute -left-20 top-[10%] text-[20vw] font-serif font-bold text-white/[0.015] tracking-[0.2em] -rotate-12 whitespace-nowrap" style={{ animation: 'watermarkPulse 8s ease-in-out infinite' }}>IUREXIA</span>
+                <span className="absolute -right-10 top-[35%] text-[18vw] font-serif font-bold text-white/[0.02] tracking-[0.15em] rotate-6 whitespace-nowrap" style={{ animation: 'watermarkPulse 8s ease-in-out 2s infinite' }}>IUREXIA</span>
+                <span className="absolute -left-32 top-[60%] text-[24vw] font-serif font-bold text-white/[0.012] tracking-[0.25em] -rotate-6 whitespace-nowrap" style={{ animation: 'watermarkPulse 8s ease-in-out 4s infinite' }}>IUREXIA</span>
+                <span className="absolute -right-20 top-[85%] text-[16vw] font-serif font-bold text-white/[0.018] tracking-[0.2em] rotate-3 whitespace-nowrap" style={{ animation: 'watermarkPulse 8s ease-in-out 6s infinite' }}>IUREXIA</span>
+                <span className="absolute left-[15%] -top-[5%] text-[22vw] font-serif font-bold text-[#c9a962]/[0.008] tracking-[0.3em] rotate-12 whitespace-nowrap" style={{ animation: 'watermarkPulse 10s ease-in-out 1s infinite' }}>IUREXIA</span>
+            </div>
+            <style jsx>{`
+                @keyframes watermarkPulse {
+                    0%, 100% { opacity: 0.3; }
+                    50% { opacity: 1; }
+                }
+            `}</style>
             {/* ═══ Top Bar ═══ */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200/80">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/[0.06]">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
                     <div className="flex items-center gap-3">
                         <Link href="/chat" className="flex items-center gap-2 group">
-                            <span className="font-serif text-xl font-semibold text-[#1a1a1a]">
+                            <span className="font-serif text-xl font-semibold text-white">
                                 Iurex<span className="text-[#c9a962]">ia</span>
                             </span>
                         </Link>
-                        <div className="h-5 w-px bg-gray-300" />
-                        <span className="text-xs text-[#8b7355] tracking-wider uppercase font-medium">
+                        <div className="h-5 w-px bg-white/10" />
+                        <span className="text-xs text-[#c9a962]/70 tracking-wider uppercase font-medium">
                             Redactor de Sentencias
                         </span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <Link href="/chat" className="text-sm text-[#404040]/60 hover:text-[#1a1a1a] transition-colors">
+                        <Link href="/chat" className="text-sm text-white/40 hover:text-white/70 transition-colors">
                             ← Chat
                         </Link>
                         <UserAvatar />
@@ -362,7 +376,7 @@ export default function RedactorSentenciaPage() {
             </div>
 
             {/* ═══ Main Content ═══ */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 pb-16">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 pb-16 relative z-10">
 
                 {/* ═══════════════════════════════════════════════════════════ */}
                 {/* PHASE 1: SELECT TYPE                                       */}
@@ -375,10 +389,10 @@ export default function RedactorSentenciaPage() {
                                 <Gavel className="w-4 h-4" />
                                 Tribunal Colegiado de Circuito
                             </div>
-                            <h1 className="font-serif text-4xl md:text-5xl font-semibold text-[#1a1a1a] mb-4">
+                            <h1 className="font-serif text-4xl md:text-5xl font-semibold text-white mb-4">
                                 Redactor de Sentencias
                             </h1>
-                            <p className="text-[#404040]/70 text-lg max-w-2xl mx-auto leading-relaxed">
+                            <p className="text-white/40 text-lg max-w-2xl mx-auto leading-relaxed">
                                 Genera proyectos de sentencia completos con la potencia de Gemini 2.5 Pro.
                                 Sube los expedientes y la IA construirá el proyecto desde cero.
                             </p>
@@ -390,17 +404,17 @@ export default function RedactorSentenciaPage() {
                                 <button
                                     key={tipo.id}
                                     onClick={() => handleSelectTipo(tipo)}
-                                    className={`group relative rounded-2xl border border-gray-200 bg-white p-6 text-left transition-all duration-300 hover:border-[#c9a962]/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#c9a962]/5`}
+                                    className={`group relative rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 text-left transition-all duration-300 hover:border-[#c9a962]/30 hover:bg-white/[0.06] hover:scale-[1.02] hover:shadow-xl hover:shadow-[#c9a962]/5`}
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="w-12 h-12 rounded-xl bg-[#c9a962]/10 flex items-center justify-center text-[#c9a962] group-hover:scale-110 transition-transform">
                                             {tipo.icon}
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className="font-serif text-lg font-medium text-[#1a1a1a] mb-1">
+                                            <h3 className="font-serif text-lg font-medium text-white/90 mb-1">
                                                 {tipo.label}
                                             </h3>
-                                            <p className="text-sm text-[#404040]/60 leading-relaxed">
+                                            <p className="text-sm text-white/40 leading-relaxed">
                                                 {tipo.description}
                                             </p>
                                         </div>
@@ -410,7 +424,7 @@ export default function RedactorSentenciaPage() {
                                         {tipo.docs.map((doc, i) => (
                                             <span
                                                 key={i}
-                                                className="text-[10px] px-2 py-1 rounded-lg bg-[#f5f4f0] text-[#8b7355] truncate border border-gray-200/50"
+                                                className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.04] text-[#c9a962]/70 truncate border border-white/[0.06]"
                                             >
                                                 {doc}
                                             </span>
@@ -421,7 +435,7 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         {/* Admin note */}
-                        <p className="text-center text-xs text-[#8b7355]/60 mt-8">
+                        <p className="text-center text-xs text-white/20 mt-8">
                             Función exclusiva para administradores • Powered by Gemini 2.5 Pro
                         </p>
                     </div>
@@ -435,7 +449,7 @@ export default function RedactorSentenciaPage() {
                         {/* Back button */}
                         <button
                             onClick={handleReset}
-                            className="flex items-center gap-2 text-sm text-[#404040]/60 hover:text-[#1a1a1a] transition-colors mb-8"
+                            className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-8"
                         >
                             <ArrowLeft className="w-4 h-4" /> Cambiar tipo
                         </button>
@@ -446,10 +460,10 @@ export default function RedactorSentenciaPage() {
                                 {selectedTipo.icon}
                             </div>
                             <div>
-                                <h2 className="font-serif text-2xl font-medium text-[#1a1a1a]">
+                                <h2 className="font-serif text-2xl font-medium text-white">
                                     {selectedTipo.label}
                                 </h2>
-                                <p className="text-sm text-[#404040]/60 mt-0.5">
+                                <p className="text-sm text-white/40 mt-0.5">
                                     Adjunta los 3 documentos del expediente
                                 </p>
                             </div>
@@ -478,14 +492,14 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         {/* ── Secretary Instructions Textarea ── */}
-                        <div className="rounded-2xl border border-[#c9a962]/20 bg-white p-6 mb-8 shadow-sm">
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-8">
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
                                     <FileText className="w-5 h-5 text-[#c9a962]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-[#1a1a1a]">Instrucciones para el Proyecto</h3>
-                                    <p className="text-xs text-[#404040]/60">Indique el sentido del fallo y cómo calificar los conceptos/agravios</p>
+                                    <h3 className="text-sm font-medium text-white/90">Instrucciones para el Proyecto</h3>
+                                    <p className="text-xs text-white/40">Indique el sentido del fallo y cómo calificar los conceptos/agravios</p>
                                 </div>
                             </div>
                             <textarea
@@ -500,11 +514,11 @@ export default function RedactorSentenciaPage() {
                                             ? 'Ej: Confirmar la sentencia del TFJA. La revisión fiscal es infundada. Los agravios no logran desvirtuar la valoración realizada por la Sala del Tribunal Fiscal respecto a la caducidad de las facultades de comprobación.'
                                             : 'Ej: Declarar fundada la queja. El juez de distrito excedió sus atribuciones al negar la suspensión del acto reclamado sin fundamentar adecuadamente los requisitos del artículo 128 de la Ley de Amparo.'
                                 }
-                                className="w-full bg-[#f5f4f0] border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#1a1a1a] placeholder:text-[#404040]/30 focus:outline-none focus:border-[#c9a962]/60 focus:ring-1 focus:ring-[#c9a962]/20 transition-colors resize-none leading-relaxed"
+                                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 focus:ring-1 focus:ring-[#c9a962]/10 transition-colors resize-none leading-relaxed"
                             />
                             <div className="flex items-start gap-2 mt-3 px-1">
                                 <AlertTriangle className="w-3.5 h-3.5 text-[#c9a962]/70 mt-0.5 flex-shrink-0" />
-                                <p className="text-[11px] text-[#404040]/50 leading-relaxed">
+                                <p className="text-[11px] text-white/30 leading-relaxed">
                                     <span className="text-[#c9a962] font-medium">No es necesario citar todas las leyes.</span>{' '}
                                     El sistema consultará automáticamente la base de datos de jurisprudencia,
                                     legislación y constitución para fundamentar el proyecto según sus instrucciones.
@@ -514,9 +528,9 @@ export default function RedactorSentenciaPage() {
 
                         {/* Error */}
                         {error && (
-                            <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
-                                <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-red-700">{error}</p>
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
+                                <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-red-300">{error}</p>
                             </div>
                         )}
 
@@ -525,8 +539,8 @@ export default function RedactorSentenciaPage() {
                             onClick={handleGenerate}
                             disabled={!allFilesUploaded}
                             className={`w-full py-4 rounded-full text-base font-medium transition-all duration-300 ${allFilesUploaded
-                                ? 'bg-[#1a1a1a] text-white hover:bg-[#404040] shadow-lg shadow-black/10'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                ? 'bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20'
+                                : 'bg-white/[0.04] text-white/20 cursor-not-allowed border border-white/[0.06]'
                                 }`}
                         >
                             <span className="flex items-center justify-center gap-2">
@@ -535,7 +549,7 @@ export default function RedactorSentenciaPage() {
                             </span>
                         </button>
 
-                        <p className="text-center text-xs text-[#8b7355]/60 mt-4">
+                        <p className="text-center text-xs text-white/20 mt-4">
                             El proceso puede tomar entre 1 y 3 minutos dependiendo de la extensión de los documentos
                         </p>
                     </div>
@@ -555,10 +569,10 @@ export default function RedactorSentenciaPage() {
                             </div>
                         </div>
 
-                        <h2 className="font-serif text-2xl font-medium text-[#1a1a1a] mb-2">
+                        <h2 className="font-serif text-2xl font-medium text-white mb-2">
                             Redactando proyecto de sentencia...
                         </h2>
-                        <p className="text-sm text-[#404040]/60 mb-10">
+                        <p className="text-sm text-white/40 mb-10">
                             Gemini 2.5 Pro está analizando los documentos
                         </p>
 
@@ -579,9 +593,9 @@ export default function RedactorSentenciaPage() {
                                     ) : i === progressStep ? (
                                         <Loader2 className="w-5 h-5 text-[#c9a962] animate-spin flex-shrink-0" />
                                     ) : (
-                                        <div className="w-5 h-5 rounded-full border border-gray-300 flex-shrink-0" />
+                                        <div className="w-5 h-5 rounded-full border border-white/10 flex-shrink-0" />
                                     )}
-                                    <span className={`text-sm ${i <= progressStep ? 'text-[#1a1a1a]' : 'text-[#404040]/40'
+                                    <span className={`text-sm ${i <= progressStep ? 'text-white/70' : 'text-white/25'
                                         }`}>
                                         {step.emoji} {step.label}
                                     </span>
@@ -600,23 +614,23 @@ export default function RedactorSentenciaPage() {
                         <div className="flex items-center justify-between mb-6">
                             <button
                                 onClick={handleReset}
-                                className="flex items-center gap-2 text-sm text-[#404040]/60 hover:text-[#1a1a1a] transition-colors"
+                                className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors"
                             >
                                 <ArrowLeft className="w-4 h-4" /> Nueva redacción
                             </button>
                             <div className="flex items-center gap-3">
                                 {tokensInfo && (
-                                    <span className="text-xs text-[#8b7355]/60">
+                                    <span className="text-xs text-white/20">
                                         {tokensInfo.input.toLocaleString()} → {tokensInfo.output.toLocaleString()} tokens
                                     </span>
                                 )}
                                 <button
                                     onClick={handleCopy}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 hover:border-[#c9a962]/40 text-sm text-[#404040] hover:text-[#1a1a1a] transition-all"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/10 hover:border-[#c9a962]/30 text-sm text-white/60 hover:text-white/90 transition-all"
                                 >
                                     {copied ? (
                                         <>
-                                            <CheckCircle className="w-4 h-4 text-[#8b7355]" />
+                                            <CheckCircle className="w-4 h-4 text-[#c9a962]" />
                                             Copiado
                                         </>
                                     ) : (
@@ -628,7 +642,7 @@ export default function RedactorSentenciaPage() {
                                 </button>
                                 <button
                                     onClick={handleDownloadTxt}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-gray-200 hover:border-gray-300 text-sm text-[#404040]/60 hover:text-[#404040] transition-all"
+                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.05] border border-white/10 hover:border-white/20 text-sm text-white/40 hover:text-white/60 transition-all"
                                 >
                                     <Download className="w-3.5 h-3.5" />
                                     TXT
@@ -637,13 +651,13 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         {/* Success badge */}
-                        <div className="flex items-center gap-3 px-5 py-3 rounded-xl border border-[#8b7355]/20 bg-[#8b7355]/5 mb-6">
-                            <CheckCircle className="w-5 h-5 text-[#8b7355]" />
+                        <div className="flex items-center gap-3 px-5 py-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 mb-6">
+                            <CheckCircle className="w-5 h-5 text-emerald-400" />
                             <div>
-                                <p className="text-sm font-medium text-[#8b7355]">
+                                <p className="text-sm font-medium text-emerald-300">
                                     Proyecto de Sentencia generado — {selectedTipo?.label}
                                 </p>
-                                <p className="text-xs text-[#404040]/50 mt-0.5">
+                                <p className="text-xs text-white/30 mt-0.5">
                                     {result.length.toLocaleString()} caracteres
                                     {ragCount > 0 && <> • {ragCount} fuentes RAG</>}
                                     {' '}• Revisa y ajusta antes de presentar
@@ -652,35 +666,35 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         {/* ── DOCX Export Panel ── */}
-                        <div className="rounded-2xl border border-[#c9a962]/20 bg-white p-6 mb-6 shadow-sm">
+                        <div className="rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#c9a962]/5 to-transparent p-6 mb-6">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
                                     <FileText className="w-5 h-5 text-[#c9a962]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-[#1a1a1a]">Exportar con Formato Oficial TCC</h3>
-                                    <p className="text-xs text-[#404040]/60">DOCX con sellos, membrete y formato del tribunal</p>
+                                    <h3 className="text-sm font-medium text-white/90">Exportar con Formato Oficial TCC</h3>
+                                    <p className="text-xs text-white/40">DOCX con sellos, membrete y formato del tribunal</p>
                                 </div>
                             </div>
 
                             {/* Metadata grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
                                 <div>
-                                    <label className="block text-xs text-[#8b7355] mb-1">Nº Expediente</label>
+                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Nº Expediente</label>
                                     <input
                                         type="text"
                                         value={metaExpediente}
                                         onChange={e => setMetaExpediente(e.target.value)}
                                         placeholder="365/2024"
-                                        className="w-full bg-[#f5f4f0] border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#1a1a1a] placeholder:text-[#404040]/30 focus:outline-none focus:border-[#c9a962]/50 transition-colors"
+                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-white/40 mb-1">Materia</label>
+                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Materia</label>
                                     <select
                                         value={metaMateria}
                                         onChange={e => setMetaMateria(e.target.value)}
-                                        className="w-full bg-[#f5f4f0] border border-gray-200 rounded-lg px-3 py-2 text-sm text-[#1a1a1a] focus:outline-none focus:border-[#c9a962]/50 transition-colors"
+                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
                                     >
                                         <option value="CIVIL">Civil</option>
                                         <option value="PENAL">Penal</option>
@@ -692,33 +706,33 @@ export default function RedactorSentenciaPage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-white/40 mb-1">Quejoso(a)</label>
+                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Quejoso(a)</label>
                                     <input
                                         type="text"
                                         value={metaQuejoso}
                                         onChange={e => setMetaQuejoso(e.target.value)}
                                         placeholder="Nombre del quejoso"
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-amber-500/40 transition-colors"
+                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-white/40 mb-1">Magistrado Ponente</label>
+                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Magistrado Ponente</label>
                                     <input
                                         type="text"
                                         value={metaMagistrado}
                                         onChange={e => setMetaMagistrado(e.target.value)}
                                         placeholder="Nombre del magistrado"
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-amber-500/40 transition-colors"
+                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
                                     />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-xs text-white/40 mb-1">Secretario</label>
+                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Secretario</label>
                                     <input
                                         type="text"
                                         value={metaSecretario}
                                         onChange={e => setMetaSecretario(e.target.value)}
                                         placeholder="Nombre del secretario"
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-amber-500/40 transition-colors"
+                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
                                     />
                                 </div>
                             </div>
@@ -727,9 +741,9 @@ export default function RedactorSentenciaPage() {
                             <button
                                 onClick={handleDownloadDocx}
                                 disabled={exportLoading}
-                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-full text-sm font-medium transition-all duration-300 ${exportLoading
+                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${exportLoading
                                     ? 'bg-[#c9a962]/10 text-[#c9a962]/50 cursor-wait'
-                                    : 'bg-[#1a1a1a] text-white hover:bg-[#404040] shadow-lg shadow-black/10'
+                                    : 'bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20'
                                     }`}
                             >
                                 {exportLoading ? (
@@ -747,13 +761,13 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         {/* Sentencia content */}
-                        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-                            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                                <span className="text-sm font-medium text-[#8b7355]">Proyecto de Sentencia</span>
-                                <span className="text-xs text-[#404040]/40 font-mono">{selectedTipo?.id}</span>
+                        <div className="rounded-2xl border border-white/[0.06] bg-[#111111] overflow-hidden">
+                            <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                                <span className="text-sm font-medium text-[#c9a962]/70">Proyecto de Sentencia</span>
+                                <span className="text-xs text-white/20 font-mono">{selectedTipo?.id}</span>
                             </div>
                             <div className="px-6 py-6 max-h-[70vh] overflow-y-auto">
-                                <pre className="whitespace-pre-wrap text-sm text-[#1a1a1a]/80 leading-relaxed font-serif">
+                                <pre className="whitespace-pre-wrap text-sm text-white/80 leading-relaxed font-serif">
                                     {result}
                                 </pre>
                             </div>
