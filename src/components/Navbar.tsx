@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, MessageSquare } from 'lucide-react';
+import { Menu, X, MessageSquare, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
@@ -35,12 +35,33 @@ export default function Navbar() {
                             Connect
                         </Link>
                         {userIsAdmin && (
-                            <Link
-                                href="/leyesestatales"
-                                className="text-sm font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-1.5 hover:bg-accent-gold/10 hover:border-accent-gold transition-all duration-200"
-                            >
-                                Leyes Estatales
-                            </Link>
+                            <>
+                                <Link
+                                    href="/leyesestatales"
+                                    className="text-sm font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-1.5 hover:bg-accent-gold/10 hover:border-accent-gold transition-all duration-200"
+                                >
+                                    Leyes Estatales
+                                </Link>
+                                <Link
+                                    href="/redactor-sentencia"
+                                    className="text-sm font-semibold rounded-full px-4 py-1.5 transition-all duration-200 flex items-center gap-1.5"
+                                    style={{
+                                        color: '#a78bfa',
+                                        border: '1px solid rgba(167, 139, 250, 0.4)',
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.backgroundColor = 'rgba(167, 139, 250, 0.1)';
+                                        e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.7)';
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                        e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.4)';
+                                    }}
+                                >
+                                    <FileText className="w-3.5 h-3.5" />
+                                    Redactor TCC
+                                </Link>
+                            </>
                         )}
                         <NavLink href="/precios">Precios</NavLink>
                         <NavLink href="/seguridad">Seguridad</NavLink>
@@ -110,13 +131,27 @@ export default function Navbar() {
                                 Connect
                             </Link>
                             {userIsAdmin && (
-                                <Link
-                                    href="/leyesestatales"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="text-base font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-2 text-center hover:bg-accent-gold/10 transition-colors"
-                                >
-                                    Leyes Estatales
-                                </Link>
+                                <>
+                                    <Link
+                                        href="/leyesestatales"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="text-base font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-2 text-center hover:bg-accent-gold/10 transition-colors"
+                                    >
+                                        Leyes Estatales
+                                    </Link>
+                                    <Link
+                                        href="/redactor-sentencia"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="flex items-center justify-center gap-2 text-base font-semibold rounded-full px-4 py-2 text-center transition-colors"
+                                        style={{
+                                            color: '#a78bfa',
+                                            border: '1px solid rgba(167, 139, 250, 0.4)',
+                                        }}
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        Redactor TCC
+                                    </Link>
+                                </>
                             )}
                             <MobileNavLink href="/precios" onClick={() => setIsMenuOpen(false)}>
                                 Precios
