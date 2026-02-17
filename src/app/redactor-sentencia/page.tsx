@@ -155,12 +155,12 @@ function DocumentDropZone({
 
 const PROGRESS_STEPS = [
     { label: 'Extrayendo datos estructurados de los PDFs...', emoji: '🔬' },
-    { label: 'Buscando jurisprudencia y legislación (RAG)...', emoji: '🔍' },
-    { label: 'Redactando RESULTANDOS...', emoji: '📜' },
-    { label: 'Redactando CONSIDERANDOS (competencia, legitimación, procedencia)...', emoji: '⚖️' },
-    { label: 'Redactando ESTUDIO DE FONDO (análisis de cada agravio)...', emoji: '✍️' },
-    { label: 'Ensamblando y puliendo la sentencia final...', emoji: '✨' },
-    { label: 'Verificando consistencia y numeración...', emoji: '✅' },
+    { label: 'RAG multi-silo por agravio (jurisprudencia + legislación + constitución)...', emoji: '🔍' },
+    { label: 'Gemini redacta análisis profundo de cada agravio...', emoji: '✍️' },
+    { label: 'RAG de enriquecimiento (buscando citas adicionales)...', emoji: '📚' },
+    { label: 'Gemini enriquece las citas verificadas...', emoji: '✨' },
+    { label: 'Redactando efectos de la sentencia y puntos resolutivos...', emoji: '⚖️' },
+    { label: 'Verificando coherencia del estudio de fondo...', emoji: '✅' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -922,7 +922,7 @@ export default function RedactorSentenciaPage() {
                             <span className="flex items-center justify-center gap-2">
                                 <Sparkles className="w-5 h-5" />
                                 {allCalificadas
-                                    ? `Generar Sentencia (${calificaciones.filter(c => c.calificacion === 'fundado').length} fundados, ${calificaciones.filter(c => c.calificacion !== 'fundado').length} infundados/inoperantes)`
+                                    ? `Generar Estudio de Fondo (${calificaciones.filter(c => c.calificacion === 'fundado').length} fundados, ${calificaciones.filter(c => c.calificacion !== 'fundado').length} infundados/inoperantes)`
                                     : `Califique todos los agravios (${calificaciones.filter(c => c.calificacion !== 'sin_calificar').length}/${calificaciones.length})`
                                 }
                             </span>
@@ -949,10 +949,10 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         <h2 className="font-serif text-2xl font-medium text-white mb-2">
-                            Redactando proyecto de sentencia (multi-pass)...
+                            Redactando Estudio de Fondo profundo...
                         </h2>
                         <p className="text-sm text-white/40 mb-10">
-                            5 fases de generación con Gemini 2.5 Pro — Tiempo estimado: 3-8 minutos
+                            Pipeline enfocado con RAG intensivo por agravio — Tiempo estimado: 5-15 minutos
                         </p>
 
                         {/* Progress Steps */}
@@ -1034,7 +1034,7 @@ export default function RedactorSentenciaPage() {
                             <CheckCircle className="w-5 h-5 text-emerald-400" />
                             <div>
                                 <p className="text-sm font-medium text-emerald-300">
-                                    Proyecto de Sentencia generado — {selectedTipo?.label}
+                                    Estudio de Fondo generado — {selectedTipo?.label}
                                 </p>
                                 <p className="text-xs text-white/30 mt-0.5">
                                     {result.length.toLocaleString()} caracteres
