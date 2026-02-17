@@ -184,9 +184,8 @@ export default function RedactorSentenciaPage() {
     // ── DOCX Metadata ─────────────────────────────────────────────────────
     const [metaExpediente, setMetaExpediente] = useState('');
     const [metaMateria, setMetaMateria] = useState('CIVIL');
-    const [metaQuejoso, setMetaQuejoso] = useState('');
-    const [metaMagistrado, setMetaMagistrado] = useState('');
-    const [metaSecretario, setMetaSecretario] = useState('');
+    const [metaQuejoso, setMetaQuejoso] = useState(''); // kept for analysis display, not exported
+    // Note: metaMagistrado and metaSecretario removed — not needed for estudio de fondo
 
     // ── Secretary Instructions ───────────────────────────────────────────────
     const [instrucciones, setInstrucciones] = useState('');
@@ -398,9 +397,7 @@ export default function RedactorSentenciaPage() {
                     tipo: selectedTipo?.id || 'amparo_directo',
                     numero_expediente: metaExpediente,
                     materia: metaMateria,
-                    quejoso: metaQuejoso,
-                    magistrado: metaMagistrado,
-                    secretario: metaSecretario,
+                    // Note: quejoso, magistrado, secretario removed for estudio de fondo
                     user_email: user?.email || '',
                 }),
             });
@@ -1051,8 +1048,8 @@ export default function RedactorSentenciaPage() {
                                     <FileText className="w-5 h-5 text-[#c9a962]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-white/90">Exportar con Formato Oficial TCC</h3>
-                                    <p className="text-xs text-white/40">DOCX con sellos, membrete y formato del tribunal</p>
+                                    <h3 className="text-sm font-medium text-white/90">Exportar Estudio de Fondo</h3>
+                                    <p className="text-xs text-white/40">DOCX con formato del tribunal</p>
                                 </div>
                             </div>
 
@@ -1083,36 +1080,6 @@ export default function RedactorSentenciaPage() {
                                         <option value="MERCANTIL">Mercantil</option>
                                         <option value="FAMILIAR">Familiar</option>
                                     </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Quejoso(a)</label>
-                                    <input
-                                        type="text"
-                                        value={metaQuejoso}
-                                        onChange={e => setMetaQuejoso(e.target.value)}
-                                        placeholder="Nombre del quejoso"
-                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Magistrado Ponente</label>
-                                    <input
-                                        type="text"
-                                        value={metaMagistrado}
-                                        onChange={e => setMetaMagistrado(e.target.value)}
-                                        placeholder="Nombre del magistrado"
-                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
-                                    />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Secretario</label>
-                                    <input
-                                        type="text"
-                                        value={metaSecretario}
-                                        onChange={e => setMetaSecretario(e.target.value)}
-                                        placeholder="Nombre del secretario"
-                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
-                                    />
                                 </div>
                             </div>
 
