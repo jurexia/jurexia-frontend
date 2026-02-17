@@ -20,7 +20,7 @@ interface TipoConfig {
     shortLabel: string;
     description: string;
     icon: React.ReactNode;
-    docs: [string, string, string]; // Labels for the 3 required documents
+    docs: [string, string]; // Labels for the 3 required documents
     color: string; // accent color class
 }
 
@@ -31,7 +31,7 @@ const TIPOS: TipoConfig[] = [
         shortLabel: 'Directo',
         description: 'Contra sentencias definitivas o laudos de tribunales ordinarios',
         icon: <Gavel className="w-6 h-6" />,
-        docs: ['Demanda de Amparo', 'Acto Reclamado', 'Auto de Trámite'],
+        docs: ['Demanda de Amparo', 'Acto Reclamado'],
         color: 'from-[#c9a962]/10 to-[#8b7355]/5',
     },
     {
@@ -40,7 +40,7 @@ const TIPOS: TipoConfig[] = [
         shortLabel: 'Revisión',
         description: 'Recurso contra sentencias de Juzgado de Distrito en amparo indirecto',
         icon: <Scale className="w-6 h-6" />,
-        docs: ['Recurso de Revisión', 'Sentencia Recurrida', 'Auto de Trámite'],
+        docs: ['Recurso de Revisión', 'Sentencia Recurrida'],
         color: 'from-[#c9a962]/10 to-[#8b7355]/5',
     },
     {
@@ -49,7 +49,7 @@ const TIPOS: TipoConfig[] = [
         shortLabel: 'R. Fiscal',
         description: 'Recurso contra sentencias del TFJA en materia fiscal/administrativa',
         icon: <Shield className="w-6 h-6" />,
-        docs: ['Recurso de Revisión Fiscal', 'Sentencia Recurrida', 'Auto de Trámite'],
+        docs: ['Recurso de Revisión Fiscal', 'Sentencia Recurrida'],
         color: 'from-[#c9a962]/10 to-[#8b7355]/5',
     },
     {
@@ -58,7 +58,7 @@ const TIPOS: TipoConfig[] = [
         shortLabel: 'Queja',
         description: 'Recurso contra autos o resoluciones que no admiten apelación',
         icon: <AlertTriangle className="w-6 h-6" />,
-        docs: ['Recurso de Queja', 'Determinación Recurrida', 'Admisión del Recurso'],
+        docs: ['Recurso de Queja', 'Determinación Recurrida'],
         color: 'from-[#c9a962]/10 to-[#8b7355]/5',
     },
 ];
@@ -173,7 +173,7 @@ export default function RedactorSentenciaPage() {
     // State Machine: 'select' → 'upload' → 'analyzing' → 'calificacion' → 'generating' → 'result'
     const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'calificacion' | 'generating' | 'result'>('select');
     const [selectedTipo, setSelectedTipo] = useState<TipoConfig | null>(null);
-    const [files, setFiles] = useState<(File | null)[]>([null, null, null]);
+    const [files, setFiles] = useState<(File | null)[]>([null, null]);
     const [result, setResult] = useState('');
     const [error, setError] = useState('');
     const [progressStep, setProgressStep] = useState(0);
@@ -238,7 +238,7 @@ export default function RedactorSentenciaPage() {
     // ── Select Type ───────────────────────────────────────────────────────
     const handleSelectTipo = (tipo: TipoConfig) => {
         setSelectedTipo(tipo);
-        setFiles([null, null, null]);
+        setFiles([null, null]);
         setError('');
         setResult('');
         setPhase('upload');
@@ -257,7 +257,6 @@ export default function RedactorSentenciaPage() {
             formData.append('user_email', user.email);
             formData.append('doc1', files[0]!);
             formData.append('doc2', files[1]!);
-            formData.append('doc3', files[2]!);
 
             const response = await fetch(`${API_URL}/analyze-expediente`, {
                 method: 'POST',
@@ -320,7 +319,6 @@ export default function RedactorSentenciaPage() {
             formData.append('instrucciones', instrucciones);
             formData.append('doc1', files[0]!);
             formData.append('doc2', files[1]!);
-            formData.append('doc3', files[2]!);
 
             // Send calificaciones JSON if we have them from Phase 0.5
             if (calificaciones.length > 0) {
@@ -442,7 +440,7 @@ export default function RedactorSentenciaPage() {
     const handleReset = () => {
         setPhase('select');
         setSelectedTipo(null);
-        setFiles([null, null, null]);
+        setFiles([null, null]);
         setResult('');
         setError('');
         setTokensInfo(null);
@@ -614,7 +612,7 @@ export default function RedactorSentenciaPage() {
                                     {selectedTipo.label}
                                 </h2>
                                 <p className="text-sm text-white/40 mt-0.5">
-                                    Adjunta los 3 documentos del expediente
+                                    Adjunta los 2 documentos del expediente
                                 </p>
                             </div>
                         </div>
