@@ -120,13 +120,13 @@ export default function SecretariosPage() {
                                     {/* Outer glow ring */}
                                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#c9a962]/20 to-transparent animate-pulse" style={{ animationDuration: '3s' }} />
                                     {/* Inner circle with logo */}
-                                    <div className="relative w-64 h-64 rounded-full bg-gradient-to-br from-[#111827] to-[#1a1a2e] border border-[#c9a962]/30 flex items-center justify-center shadow-2xl shadow-[#c9a962]/10">
+                                    <div className="relative w-64 h-64 rounded-full bg-gradient-to-br from-[#1a1a6b] to-[#111840] border border-[#c9a962]/30 flex items-center justify-center shadow-2xl shadow-[#c9a962]/10 overflow-hidden">
                                         <Image
-                                            src="/logo-iurexia.png"
-                                            alt="Iurexia"
-                                            width={180}
-                                            height={60}
-                                            className="filter brightness-110"
+                                            src="/pjf-escudo.png"
+                                            alt="Poder Judicial de la Federación"
+                                            width={220}
+                                            height={220}
+                                            className="rounded-full object-cover"
                                         />
                                     </div>
                                     {/* Floating badges */}
