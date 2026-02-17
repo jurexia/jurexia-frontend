@@ -159,6 +159,26 @@ export default function PreciosPage() {
                 </div>
             </section>
 
+            {/* Secretarios PJF CTA */}
+            <section className="py-6 px-4">
+                <div className="max-w-4xl mx-auto">
+                    <AnimateOnScroll delay={0.1}>
+                        <Link
+                            href="/secretarios"
+                            className="group block text-center py-6 px-8 rounded-2xl bg-charcoal-900 hover:bg-charcoal-800 transition-all duration-300 border border-accent-gold/20 hover:border-accent-gold/40 hover:shadow-lg hover:shadow-accent-gold/5"
+                        >
+                            <p className="text-white font-serif text-lg md:text-xl">
+                                ¿Eres Secretario del <span className="text-accent-gold font-medium">Poder Judicial de la Federación</span>?
+                            </p>
+                            <p className="text-gray-400 text-sm mt-1 flex items-center justify-center gap-2">
+                                Descubre los servicios especiales diseñados para ti
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-accent-gold" />
+                            </p>
+                        </Link>
+                    </AnimateOnScroll>
+                </div>
+            </section>
+
             {/* Features Comparison */}
             <section className="py-20 bg-white border-t border-black/5 overflow-hidden">
                 <div className="max-w-6xl mx-auto px-4">
