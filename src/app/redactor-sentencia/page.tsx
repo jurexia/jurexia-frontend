@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Upload, FileText, Gavel, Scale, Shield, AlertTriangle, Loader2, Copy, Download, ArrowLeft, CheckCircle, X } from 'lucide-react';
+import { Upload, FileText, Gavel, Scale, Shield, AlertTriangle, Loader2, Copy, Download, ArrowLeft, CheckCircle, X, Search, ChevronDown, ChevronUp, Edit3, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRequireAuth } from '@/lib/useAuth';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -154,13 +154,13 @@ function DocumentDropZone({
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const PROGRESS_STEPS = [
-    { label: 'Leyendo documentos del expediente...', emoji: '📄' },
-    { label: 'Analizando conceptos de violación...', emoji: '🔍' },
-    { label: 'Investigando jurisprudencia aplicable...', emoji: '⚖️' },
-    { label: 'Construyendo estructura de la sentencia...', emoji: '🏛️' },
-    { label: 'Redactando considerandos...', emoji: '✍️' },
-    { label: 'Verificando fundamentación legal...', emoji: '📋' },
-    { label: 'Finalizando proyecto de sentencia...', emoji: '✅' },
+    { label: 'Extrayendo datos estructurados de los PDFs...', emoji: '🔬' },
+    { label: 'Buscando jurisprudencia y legislación (RAG)...', emoji: '🔍' },
+    { label: 'Redactando RESULTANDOS...', emoji: '📜' },
+    { label: 'Redactando CONSIDERANDOS (competencia, legitimación, procedencia)...', emoji: '⚖️' },
+    { label: 'Redactando ESTUDIO DE FONDO (análisis de cada agravio)...', emoji: '✍️' },
+    { label: 'Ensamblando y puliendo la sentencia final...', emoji: '✨' },
+    { label: 'Verificando consistencia y numeración...', emoji: '✅' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -170,8 +170,8 @@ const PROGRESS_STEPS = [
 export default function RedactorSentenciaPage() {
     const { user, loading: authLoading } = useRequireAuth();
 
-    // State Machine: 'select' → 'upload' → 'generating' → 'result'
-    const [phase, setPhase] = useState<'select' | 'upload' | 'generating' | 'result'>('select');
+    // State Machine: 'select' → 'upload' → 'analyzing' → 'calificacion' → 'generating' → 'result'
+    const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'calificacion' | 'generating' | 'result'>('select');
     const [selectedTipo, setSelectedTipo] = useState<TipoConfig | null>(null);
     const [files, setFiles] = useState<(File | null)[]>([null, null, null]);
     const [result, setResult] = useState('');
@@ -191,6 +191,47 @@ export default function RedactorSentenciaPage() {
     // ── Secretary Instructions ───────────────────────────────────────────────
     const [instrucciones, setInstrucciones] = useState('');
     const [ragCount, setRagCount] = useState(0);
+    const [generationInfo, setGenerationInfo] = useState<{
+        phasesCompleted: number;
+        totalChars: number;
+        generationTime: number;
+    } | null>(null);
+
+    // ── Phase 0.5: Analysis & Calificación ─────────────────────────────────
+    interface AgravioData {
+        numero: number;
+        titulo: string;
+        resumen: string;
+        texto_integro: string;
+        articulos_mencionados: string[];
+        derechos_invocados: string[];
+    }
+    interface AnalysisData {
+        resumen_caso: string;
+        resumen_acto_reclamado: string;
+        datos_expediente: {
+            numero: string;
+            tipo_asunto: string;
+            quejoso_recurrente: string;
+            autoridades_responsables: string[];
+            materia: string;
+            tribunal: string;
+        };
+        agravios: AgravioData[];
+        observaciones_preliminares: string;
+        analysis_time_seconds: number;
+    }
+    interface CalificacionEntry {
+        numero: number;
+        titulo: string;
+        resumen: string;
+        calificacion: 'fundado' | 'infundado' | 'inoperante' | 'sin_calificar';
+        notas: string;
+        expanded: boolean;
+    }
+    const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+    const [calificaciones, setCalificaciones] = useState<CalificacionEntry[]>([]);
+    const [expandedAgravio, setExpandedAgravio] = useState<number | null>(null);
 
     const allFilesUploaded = files.every((f) => f !== null);
 
@@ -203,7 +244,57 @@ export default function RedactorSentenciaPage() {
         setPhase('upload');
     };
 
-    // ── Generate ──────────────────────────────────────────────────────────
+    // ── Analyze (Phase 0.5) ─────────────────────────────────────────────
+    const handleAnalyze = async () => {
+        if (!selectedTipo || !allFilesUploaded || !user?.email) return;
+
+        setPhase('analyzing');
+        setError('');
+
+        try {
+            const formData = new FormData();
+            formData.append('tipo', selectedTipo.id);
+            formData.append('user_email', user.email);
+            formData.append('doc1', files[0]!);
+            formData.append('doc2', files[1]!);
+            formData.append('doc3', files[2]!);
+
+            const response = await fetch(`${API_URL}/analyze-expediente`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }));
+                throw new Error(errorData.detail || `Error ${response.status}`);
+            }
+
+            const data: AnalysisData = await response.json();
+            setAnalysisData(data);
+
+            // Auto-fill metadata from analysis
+            if (data.datos_expediente.numero) setMetaExpediente(data.datos_expediente.numero);
+            if (data.datos_expediente.materia) setMetaMateria(data.datos_expediente.materia.toUpperCase());
+            if (data.datos_expediente.quejoso_recurrente) setMetaQuejoso(data.datos_expediente.quejoso_recurrente);
+
+            // Build calificaciones from agravios
+            const califs: CalificacionEntry[] = data.agravios.map(a => ({
+                numero: a.numero,
+                titulo: a.titulo,
+                resumen: a.resumen,
+                calificacion: 'sin_calificar' as const,
+                notas: '',
+                expanded: false,
+            }));
+            setCalificaciones(califs);
+            setPhase('calificacion');
+        } catch (err: any) {
+            setError(err.message || 'Error al analizar el expediente');
+            setPhase('upload');
+        }
+    };
+
+    // ── Generate (with calificaciones) ────────────────────────────────────
     const handleGenerate = async () => {
         if (!selectedTipo || !allFilesUploaded || !user?.email) return;
 
@@ -220,7 +311,7 @@ export default function RedactorSentenciaPage() {
                 }
                 return prev + 1;
             });
-        }, 8000); // ~8s per step for a ~60s total generation time
+        }, 40000);
 
         try {
             const formData = new FormData();
@@ -230,6 +321,18 @@ export default function RedactorSentenciaPage() {
             formData.append('doc1', files[0]!);
             formData.append('doc2', files[1]!);
             formData.append('doc3', files[2]!);
+
+            // Send calificaciones JSON if we have them from Phase 0.5
+            if (calificaciones.length > 0) {
+                const califJson = calificaciones.map(c => ({
+                    numero: c.numero,
+                    titulo: c.titulo,
+                    resumen: c.resumen,
+                    calificacion: c.calificacion,
+                    notas: c.notas,
+                }));
+                formData.append('calificaciones', JSON.stringify(califJson));
+            }
 
             const response = await fetch(`${API_URL}/draft-sentencia`, {
                 method: 'POST',
@@ -251,13 +354,31 @@ export default function RedactorSentenciaPage() {
             if (data.rag_results_count) {
                 setRagCount(data.rag_results_count);
             }
+            if (data.phases_completed) {
+                setGenerationInfo({
+                    phasesCompleted: data.phases_completed,
+                    totalChars: data.total_chars || data.sentencia_text.length,
+                    generationTime: data.generation_time_seconds || 0,
+                });
+            }
             setPhase('result');
         } catch (err: any) {
             clearInterval(interval);
             setError(err.message || 'Error al generar la sentencia');
-            setPhase('upload');
+            setPhase('calificacion');
         }
     };
+
+    // ── Update calificacion for a single agravio ────────────────────────
+    const updateCalificacion = (index: number, field: keyof CalificacionEntry, value: any) => {
+        setCalificaciones(prev => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], [field]: value };
+            return updated;
+        });
+    };
+
+    const allCalificadas = calificaciones.length > 0 && calificaciones.every(c => c.calificacion !== 'sin_calificar');
 
     // ── Copy to Clipboard ─────────────────────────────────────────────────
     const handleCopy = async () => {
@@ -520,39 +641,265 @@ export default function RedactorSentenciaPage() {
                             ))}
                         </div>
 
-                        {/* ── Secretary Instructions Textarea ── */}
+                        {/* Error */}
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
+                                <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-red-300">{error}</p>
+                            </div>
+                        )}
+
+                        {/* Analyze Expediente Button */}
+                        <button
+                            onClick={handleAnalyze}
+                            disabled={!allFilesUploaded}
+                            className={`w-full py-4 rounded-full text-base font-medium transition-all duration-300 ${allFilesUploaded
+                                ? 'bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20'
+                                : 'bg-white/[0.04] text-white/20 cursor-not-allowed border border-white/[0.06]'
+                                }`}
+                        >
+                            <span className="flex items-center justify-center gap-2">
+                                <Search className="w-5 h-5" />
+                                Analizar Expediente
+                            </span>
+                        </button>
+
+                        <p className="text-center text-xs text-white/20 mt-4">
+                            El análisis identifica automáticamente los agravios para que usted los califique antes de generar
+                        </p>
+                    </div>
+                )}
+
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* PHASE 2.5: ANALYZING                                        */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {phase === 'analyzing' && (
+                    <div className="max-w-2xl mx-auto text-center py-16">
+                        <div className="relative w-24 h-24 mx-auto mb-8">
+                            <div className="absolute inset-0 rounded-full bg-[#c9a962]/10 animate-ping" />
+                            <div className="absolute inset-2 rounded-full bg-[#c9a962]/5 animate-pulse" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <Search className="w-10 h-10 text-[#c9a962] animate-pulse" />
+                            </div>
+                        </div>
+                        <h2 className="font-serif text-2xl font-medium text-white mb-2">
+                            Analizando expediente...
+                        </h2>
+                        <p className="text-sm text-white/40 mb-4">
+                            Gemini 2.5 Pro está leyendo los 3 documentos e identificando agravios
+                        </p>
+                        <div className="space-y-2 text-left max-w-sm mx-auto">
+                            <div className="flex items-center gap-3 opacity-100">
+                                <Loader2 className="w-5 h-5 text-[#c9a962] animate-spin flex-shrink-0" />
+                                <span className="text-sm text-white/70">🔬 Extrayendo datos estructurados...</span>
+                            </div>
+                            <div className="flex items-center gap-3 opacity-40">
+                                <div className="w-5 h-5 rounded-full border border-white/10 flex-shrink-0" />
+                                <span className="text-sm text-white/25">📋 Identificando agravios individuales...</span>
+                            </div>
+                            <div className="flex items-center gap-3 opacity-40">
+                                <div className="w-5 h-5 rounded-full border border-white/10 flex-shrink-0" />
+                                <span className="text-sm text-white/25">⚖️ Generando resumen del caso...</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* PHASE 2.75: CALIFICACIÓN                                     */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {phase === 'calificacion' && analysisData && (
+                    <div className="max-w-4xl mx-auto">
+                        <button
+                            onClick={() => setPhase('upload')}
+                            className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-6"
+                        >
+                            <ArrowLeft className="w-4 h-4" /> Volver a documentos
+                        </button>
+
+                        {/* Case Summary Card */}
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
+                                    <Scale className="w-5 h-5 text-[#c9a962]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-medium text-white/90">Resumen del Análisis</h3>
+                                    <p className="text-xs text-white/40">
+                                        Analizado en {analysisData.analysis_time_seconds}s • {analysisData.agravios.length} agravios identificados
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Expediente Data */}
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="bg-white/[0.03] rounded-lg p-3">
+                                    <p className="text-[10px] text-white/30 uppercase tracking-wider">Expediente</p>
+                                    <p className="text-sm text-white/80 mt-1">{analysisData.datos_expediente.numero || 'No identificado'}</p>
+                                </div>
+                                <div className="bg-white/[0.03] rounded-lg p-3">
+                                    <p className="text-[10px] text-white/30 uppercase tracking-wider">Quejoso/Recurrente</p>
+                                    <p className="text-sm text-white/80 mt-1">{analysisData.datos_expediente.quejoso_recurrente || 'No identificado'}</p>
+                                </div>
+                                <div className="bg-white/[0.03] rounded-lg p-3">
+                                    <p className="text-[10px] text-white/30 uppercase tracking-wider">Materia</p>
+                                    <p className="text-sm text-white/80 mt-1">{analysisData.datos_expediente.materia || 'No identificada'}</p>
+                                </div>
+                                <div className="bg-white/[0.03] rounded-lg p-3">
+                                    <p className="text-[10px] text-white/30 uppercase tracking-wider">Tribunal</p>
+                                    <p className="text-sm text-white/80 mt-1">{analysisData.datos_expediente.tribunal || 'No identificado'}</p>
+                                </div>
+                            </div>
+
+                            {/* Case Summary Text */}
+                            <div className="bg-white/[0.02] rounded-lg p-4 border border-white/[0.04]">
+                                <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Resumen del Caso</p>
+                                <p className="text-sm text-white/60 leading-relaxed">{analysisData.resumen_caso}</p>
+                            </div>
+
+                            {analysisData.resumen_acto_reclamado && (
+                                <div className="bg-white/[0.02] rounded-lg p-4 border border-white/[0.04] mt-3">
+                                    <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Acto Reclamado</p>
+                                    <p className="text-sm text-white/60 leading-relaxed">{analysisData.resumen_acto_reclamado}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Section Title */}
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
+                                <Edit3 className="w-5 h-5 text-[#c9a962]" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-medium text-white/90">Califique cada Agravio</h3>
+                                <p className="text-xs text-white/40">
+                                    El sistema redactará el estudio de fondo según su calificación
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Agravio Cards */}
+                        <div className="space-y-4 mb-8">
+                            {calificaciones.map((calif, i) => (
+                                <div
+                                    key={calif.numero}
+                                    className={`rounded-2xl border transition-all duration-300 ${calif.calificacion === 'fundado'
+                                        ? 'border-green-500/30 bg-green-500/[0.04]'
+                                        : calif.calificacion === 'infundado'
+                                            ? 'border-red-500/30 bg-red-500/[0.04]'
+                                            : calif.calificacion === 'inoperante'
+                                                ? 'border-amber-500/30 bg-amber-500/[0.04]'
+                                                : 'border-white/[0.06] bg-white/[0.03]'
+                                        }`}
+                                >
+                                    {/* Card Header */}
+                                    <div className="p-5">
+                                        <div className="flex items-start justify-between gap-4 mb-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#c9a962]/10 text-[#c9a962] font-medium">
+                                                        Agravio {calif.numero}
+                                                    </span>
+                                                    {calif.calificacion !== 'sin_calificar' && (
+                                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${calif.calificacion === 'fundado'
+                                                            ? 'bg-green-500/15 text-green-400'
+                                                            : calif.calificacion === 'infundado'
+                                                                ? 'bg-red-500/15 text-red-400'
+                                                                : 'bg-amber-500/15 text-amber-400'
+                                                            }`}>
+                                                            {calif.calificacion.toUpperCase()}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <h4 className="text-sm font-medium text-white/90">{calif.titulo}</h4>
+                                                <p className="text-xs text-white/40 mt-1">{calif.resumen}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => setExpandedAgravio(
+                                                    expandedAgravio === calif.numero ? null : calif.numero
+                                                )}
+                                                className="p-2 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
+                                            >
+                                                {expandedAgravio === calif.numero
+                                                    ? <ChevronUp className="w-4 h-4 text-white/40" />
+                                                    : <ChevronDown className="w-4 h-4 text-white/40" />
+                                                }
+                                            </button>
+                                        </div>
+
+                                        {/* Expandable Full Text */}
+                                        {expandedAgravio === calif.numero && (
+                                            <div className="bg-white/[0.03] rounded-xl p-4 mb-4 border border-white/[0.04]">
+                                                <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Texto Íntegro del Agravio</p>
+                                                <p className="text-xs text-white/50 leading-relaxed whitespace-pre-wrap">
+                                                    {analysisData.agravios.find(a => a.numero === calif.numero)?.texto_integro || 'No disponible'}
+                                                </p>
+                                                {(analysisData.agravios.find(a => a.numero === calif.numero)?.articulos_mencionados?.length ?? 0) > 0 && (
+                                                    <div className="mt-3 pt-3 border-t border-white/[0.04]">
+                                                        <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Artículos Mencionados</p>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {analysisData.agravios.find(a => a.numero === calif.numero)?.articulos_mencionados.map((art, j) => (
+                                                                <span key={j} className="text-[10px] px-2 py-0.5 rounded-md bg-[#c9a962]/10 text-[#c9a962]/70">
+                                                                    {art}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Calificación Radio Buttons */}
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            {(['fundado', 'infundado', 'inoperante'] as const).map(opt => (
+                                                <button
+                                                    key={opt}
+                                                    onClick={() => updateCalificacion(i, 'calificacion', opt)}
+                                                    className={`px-4 py-2 rounded-xl text-xs font-medium transition-all duration-200 ${calif.calificacion === opt
+                                                        ? opt === 'fundado'
+                                                            ? 'bg-green-500/20 text-green-400 border border-green-500/40 shadow-sm shadow-green-500/10'
+                                                            : opt === 'infundado'
+                                                                ? 'bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm shadow-red-500/10'
+                                                                : 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm shadow-amber-500/10'
+                                                        : 'bg-white/[0.04] text-white/40 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white/60'
+                                                        }`}
+                                                >
+                                                    {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Notes Textarea */}
+                                        <textarea
+                                            value={calif.notas}
+                                            onChange={(e) => updateCalificacion(i, 'notas', e.target.value)}
+                                            rows={2}
+                                            placeholder="Notas opcionales para guiar la redacción de este agravio..."
+                                            className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2 text-xs text-white/70 placeholder:text-white/15 focus:outline-none focus:border-[#c9a962]/30 transition-colors resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Secretary Instructions (optional) */}
                         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-8">
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
                                     <FileText className="w-5 h-5 text-[#c9a962]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-white/90">Instrucciones para el Proyecto</h3>
-                                    <p className="text-xs text-white/40">Indique el sentido del fallo y cómo calificar los conceptos/agravios</p>
+                                    <h3 className="text-sm font-medium text-white/90">Instrucciones Adicionales</h3>
+                                    <p className="text-xs text-white/40">Opcional — indicaciones generales para toda la sentencia</p>
                                 </div>
                             </div>
                             <textarea
                                 value={instrucciones}
                                 onChange={e => setInstrucciones(e.target.value)}
-                                rows={6}
-                                placeholder={selectedTipo?.id === 'amparo_directo'
-                                    ? 'Ej: Negar el amparo. El primer concepto de violación es infundado porque el tribunal responsable sí valoró correctamente las pruebas. El segundo concepto es inoperante porque pretende una nueva valoración probatoria que no corresponde al juicio de amparo directo. No procede suplencia de la queja por ser materia civil.'
-                                    : selectedTipo?.id === 'amparo_revision'
-                                        ? 'Ej: Confirmar la sentencia recurrida. Los agravios son infundados porque el juez de distrito aplicó correctamente los criterios de la Suprema Corte respecto a la suspensión del acto reclamado. El primer agravio es inoperante por novedoso.'
-                                        : selectedTipo?.id === 'revision_fiscal'
-                                            ? 'Ej: Confirmar la sentencia del TFJA. La revisión fiscal es infundada. Los agravios no logran desvirtuar la valoración realizada por la Sala del Tribunal Fiscal respecto a la caducidad de las facultades de comprobación.'
-                                            : 'Ej: Declarar fundada la queja. El juez de distrito excedió sus atribuciones al negar la suspensión del acto reclamado sin fundamentar adecuadamente los requisitos del artículo 128 de la Ley de Amparo.'
-                                }
-                                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 focus:ring-1 focus:ring-[#c9a962]/10 transition-colors resize-none leading-relaxed"
+                                rows={3}
+                                placeholder="Ej: Aplicar suplencia de la queja por materia laboral. Citar la tesis 2024/XII del Pleno..."
+                                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 focus:ring-1 focus:ring-[#c9a962]/10 transition-colors resize-none"
                             />
-                            <div className="flex items-start gap-2 mt-3 px-1">
-                                <AlertTriangle className="w-3.5 h-3.5 text-[#c9a962]/70 mt-0.5 flex-shrink-0" />
-                                <p className="text-[11px] text-white/30 leading-relaxed">
-                                    <span className="text-[#c9a962] font-medium">No es necesario citar todas las leyes.</span>{' '}
-                                    El sistema consultará automáticamente la base de datos de jurisprudencia,
-                                    legislación y constitución para fundamentar el proyecto según sus instrucciones.
-                                </p>
-                            </div>
                         </div>
 
                         {/* Error */}
@@ -566,20 +913,23 @@ export default function RedactorSentenciaPage() {
                         {/* Generate Button */}
                         <button
                             onClick={handleGenerate}
-                            disabled={!allFilesUploaded}
-                            className={`w-full py-4 rounded-full text-base font-medium transition-all duration-300 ${allFilesUploaded
+                            disabled={!allCalificadas}
+                            className={`w-full py-4 rounded-full text-base font-medium transition-all duration-300 ${allCalificadas
                                 ? 'bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20'
                                 : 'bg-white/[0.04] text-white/20 cursor-not-allowed border border-white/[0.06]'
                                 }`}
                         >
                             <span className="flex items-center justify-center gap-2">
-                                <Gavel className="w-5 h-5" />
-                                Generar Proyecto de Sentencia
+                                <Sparkles className="w-5 h-5" />
+                                {allCalificadas
+                                    ? `Generar Sentencia (${calificaciones.filter(c => c.calificacion === 'fundado').length} fundados, ${calificaciones.filter(c => c.calificacion !== 'fundado').length} infundados/inoperantes)`
+                                    : `Califique todos los agravios (${calificaciones.filter(c => c.calificacion !== 'sin_calificar').length}/${calificaciones.length})`
+                                }
                             </span>
                         </button>
 
                         <p className="text-center text-xs text-white/20 mt-4">
-                            El proceso puede tomar entre 1 y 3 minutos dependiendo de la extensión de los documentos
+                            La generación creará un estudio de fondo individualizado para cada agravio
                         </p>
                     </div>
                 )}
@@ -599,10 +949,10 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         <h2 className="font-serif text-2xl font-medium text-white mb-2">
-                            Redactando proyecto de sentencia...
+                            Redactando proyecto de sentencia (multi-pass)...
                         </h2>
                         <p className="text-sm text-white/40 mb-10">
-                            Gemini 2.5 Pro está analizando los documentos
+                            5 fases de generación con Gemini 2.5 Pro — Tiempo estimado: 3-8 minutos
                         </p>
 
                         {/* Progress Steps */}
@@ -688,6 +1038,8 @@ export default function RedactorSentenciaPage() {
                                 </p>
                                 <p className="text-xs text-white/30 mt-0.5">
                                     {result.length.toLocaleString()} caracteres
+                                    {generationInfo && <> • {generationInfo.phasesCompleted} fases completadas</>}
+                                    {generationInfo && generationInfo.generationTime > 0 && <> • {Math.round(generationInfo.generationTime)}s</>}
                                     {ragCount > 0 && <> • {ragCount} fuentes RAG</>}
                                     {' '}• Revisa y ajusta antes de presentar
                                 </p>
