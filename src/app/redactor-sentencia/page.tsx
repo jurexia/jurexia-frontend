@@ -191,7 +191,11 @@ export default function RedactorSentenciaPage() {
 
     // State Machine: 'select' → 'upload' → 'analyzing' → 'estrategia' → 'calificacion' → 'generating' → 'result'
     const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'estrategia' | 'calificacion' | 'generating' | 'result'>('select');
-    const [jurisdiction, setJurisdiction] = useState<'tcc' | 'juzgado' | null>(null);
+
+    // New Navigation State
+    const [viewState, setViewState] = useState<'tools' | 'jurisdiction' | 'tipos'>('tools');
+    const [jurisdiction, setJurisdiction] = useState<'tcc' | 'juzgado' | null>(null); // Keep for data context if needed
+
     const [showJuzgadoAlert, setShowJuzgadoAlert] = useState(false);
     const [selectedTipo, setSelectedTipo] = useState<TipoConfig | null>(null);
     const [files, setFiles] = useState<(File | null)[]>([null, null]);
@@ -535,6 +539,8 @@ export default function RedactorSentenciaPage() {
     // ── Reset ─────────────────────────────────────────────────────────────
     const handleReset = () => {
         setPhase('select');
+        setViewState('tools');
+        setJurisdiction(null);
         // If we are in 'upload' or later, we go back to 'select' (which now means TCC tool selector if jurisdiction is set)
         // If we want to fully reset to jurisdiction selector, we should do:
         // setJurisdiction(null); 
@@ -600,29 +606,115 @@ export default function RedactorSentenciaPage() {
                         {/* ═══════════════════════════════════════════════════════ */}
                         {/* STEP 1: JURISDICTION SELECTION                          */}
                         {/* ═══════════════════════════════════════════════════════ */}
-                        {!jurisdiction && (
+                        {/* ═══════════════════════════════════════════════════════ */}
+                        {/* VIEW 1: TOOL SELECTION                                  */}
+                        {/* ═══════════════════════════════════════════════════════ */}
+                        {viewState === 'tools' && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {/* Header */}
                                 <div className="text-center mb-12">
-                                    <div className="inline-flex items-center gap-2 bg-[#c9a962]/10 text-[#c9a962] px-4 py-1.5 rounded-full text-sm font-medium mb-5 border border-[#c9a962]/20">
-                                        <Scale className="w-4 h-4" />
-                                        Selecciona la Instancia
-                                    </div>
                                     <h1 className="font-serif text-4xl md:text-5xl font-semibold text-white mb-4">
                                         Redactor de Sentencias
                                     </h1>
                                     <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-                                        Selecciona la instancia judicial para acceder a las herramientas especializadas.
+                                        Selecciona la herramienta que mejor se adapte a tu flujo de trabajo.
                                     </p>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Card 1: Tribunal Colegiado */}
+                                    {/* Card 1: Estudio de Fondo (Goes to Jurisdiction) */}
                                     <button
-                                        onClick={() => setJurisdiction('tcc')}
+                                        onClick={() => setViewState('jurisdiction')}
                                         className="group relative rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#111827] to-[#0d1424] p-8 text-left transition-all duration-500 hover:border-[#c9a962]/50 hover:shadow-2xl hover:shadow-[#c9a962]/10 hover:scale-[1.02] overflow-hidden"
                                     >
                                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#c9a962]/10 to-transparent rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
+                                        <div className="relative z-10">
+                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#c9a962]/20">
+                                                <FileText className="w-7 h-7 text-[#0a0e1a]" />
+                                            </div>
+                                            <h3 className="font-serif text-xl font-semibold text-white mb-2">
+                                                Redactar Estudio de Fondo
+                                            </h3>
+                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                                                Genera un proyecto de sentencia completo desde cero.
+                                                Sube los expedientes y la IA construirá el estudio de fondo.
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
+                                                    Multi-fase
+                                                </span>
+                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
+                                                    RAG integrado
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+
+                                    {/* Card 2: Chat (Direct Link) */}
+                                    <Link
+                                        href="/redactor-sentencia/chat"
+                                        className="group relative rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#111827] to-[#0d1424] p-8 text-left transition-all duration-500 hover:border-[#c9a962]/50 hover:shadow-2xl hover:shadow-[#c9a962]/10 hover:scale-[1.02] overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#c9a962]/10 to-transparent rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
+                                        <div className="relative z-10">
+                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#c9a962]/20">
+                                                <Sparkles className="w-7 h-7 text-[#0a0e1a]" />
+                                            </div>
+                                            <h3 className="font-serif text-xl font-semibold text-white mb-2">
+                                                Chat de Asistencia
+                                            </h3>
+                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                                                Modifica, ajusta o continúa sentencias en diálogo abierto.
+                                                Sube un borrador o pega tu texto.
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
+                                                    Chat en tiempo real
+                                                </span>
+                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
+                                                    PDF/DOCX
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ═══════════════════════════════════════════════════════ */}
+                        {/* STEP 2: TOOL SELECTION (TCC ONLY)                       */}
+                        {/* ═══════════════════════════════════════════════════════ */}
+                        {/* ═══════════════════════════════════════════════════════ */}
+                        {/* VIEW 2: JURISDICTION SELECTION                          */}
+                        {/* ═══════════════════════════════════════════════════════ */}
+                        {viewState === 'jurisdiction' && (
+                            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                                <button
+                                    onClick={() => setViewState('tools')}
+                                    className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-8"
+                                >
+                                    <ArrowLeft className="w-4 h-4" /> Volver a selección de herramienta
+                                </button>
+
+                                <div className="text-center mb-12">
+                                    <div className="inline-flex items-center gap-2 bg-[#c9a962]/10 text-[#c9a962] px-4 py-1.5 rounded-full text-sm font-medium mb-5 border border-[#c9a962]/20">
+                                        <Scale className="w-4 h-4" />
+                                        Redactar Estudio de Fondo
+                                    </div>
+                                    <h1 className="font-serif text-4xl md:text-5xl font-semibold text-white mb-4">
+                                        Selecciona la Instancia
+                                    </h1>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Card 1: TCC (Goes to Tipos) */}
+                                    <button
+                                        onClick={() => {
+                                            setJurisdiction('tcc');
+                                            setViewState('tipos');
+                                        }}
+                                        className="group relative rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#111827] to-[#0d1424] p-8 text-left transition-all duration-500 hover:border-[#c9a962]/50 hover:shadow-2xl hover:shadow-[#c9a962]/10 hover:scale-[1.02] overflow-hidden"
+                                    >
                                         <div className="relative z-10">
                                             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#c9a962]/20">
                                                 <Gavel className="w-7 h-7 text-[#0a0e1a]" />
@@ -633,13 +725,10 @@ export default function RedactorSentenciaPage() {
                                             <p className="text-sm text-gray-400 leading-relaxed mb-4">
                                                 Sentencias de Amparo Directo, en Revisión, Queja y Revisión Fiscal.
                                             </p>
-                                            <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                Disponible
-                                            </span>
                                         </div>
                                     </button>
 
-                                    {/* Card 2: Juzgado de Distrito */}
+                                    {/* Card 2: Juzgado (Alert) */}
                                     <button
                                         onClick={() => setShowJuzgadoAlert(true)}
                                         className="group relative rounded-2xl border border-white/[0.08] bg-[#111827]/50 p-8 text-left transition-all duration-300 hover:bg-[#111827] hover:border-white/[0.15]"
@@ -664,150 +753,60 @@ export default function RedactorSentenciaPage() {
                         )}
 
                         {/* ═══════════════════════════════════════════════════════ */}
-                        {/* STEP 2: TOOL SELECTION (TCC ONLY)                       */}
+                        {/* VIEW 3: TIPO SELECTION (TCC)                            */}
                         {/* ═══════════════════════════════════════════════════════ */}
-                        {jurisdiction === 'tcc' && (
+                        {viewState === 'tipos' && (
                             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                                 <button
-                                    onClick={() => setJurisdiction(null)}
+                                    onClick={() => setViewState('jurisdiction')}
                                     className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-8"
                                 >
                                     <ArrowLeft className="w-4 h-4" /> Volver a selección de instancia
                                 </button>
 
-                                {/* Header TCC */}
                                 <div className="text-center mb-12">
                                     <div className="inline-flex items-center gap-2 bg-[#c9a962]/10 text-[#c9a962] px-4 py-1.5 rounded-full text-sm font-medium mb-5 border border-[#c9a962]/20">
                                         <Gavel className="w-4 h-4" />
                                         Tribunal Colegiado de Circuito
                                     </div>
                                     <h1 className="font-serif text-4xl md:text-5xl font-semibold text-white mb-4">
-                                        Herramientas de Redacción
+                                        Tipo de Sentencia
                                     </h1>
-                                    <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-                                        Selecciona la herramienta que mejor se adapte a tu flujo de trabajo.
-                                    </p>
                                 </div>
 
-                                {/* Tool Selector: 2 main entry points */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-                                    {/* Card 1: Estudio de Fondo Completo */}
-                                    <button
-                                        onClick={() => {
-                                            const tipoSection = document.getElementById('tipo-selector');
-                                            tipoSection?.scrollIntoView({ behavior: 'smooth' });
-                                        }}
-                                        className="group relative rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#111827] to-[#0d1424] p-8 text-left transition-all duration-500 hover:border-[#c9a962]/50 hover:shadow-2xl hover:shadow-[#c9a962]/10 hover:scale-[1.02] overflow-hidden"
-                                    >
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#c9a962]/10 to-transparent rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
-                                        <div className="relative z-10">
-                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#c9a962]/20">
-                                                <FileText className="w-7 h-7 text-[#0a0e1a]" />
-                                            </div>
-                                            <h3 className="font-serif text-xl font-semibold text-white mb-2">
-                                                Redactar Estudio de Fondo
-                                            </h3>
-                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
-                                                Genera un proyecto de sentencia completo desde cero.
-                                                Sube los expedientes y la IA construirá el estudio de fondo
-                                                con análisis de cada agravio.
-                                            </p>
-                                            <div className="flex flex-wrap gap-2">
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    Multi-fase
-                                                </span>
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    RAG integrado
-                                                </span>
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    PDF → DOCX
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    {/* Card 2: Chat de Asistencia en Redacción */}
-                                    <Link
-                                        href="/redactor-sentencia/chat"
-                                        className="group relative rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#111827] to-[#0d1424] p-8 text-left transition-all duration-500 hover:border-[#c9a962]/50 hover:shadow-2xl hover:shadow-[#c9a962]/10 hover:scale-[1.02] overflow-hidden"
-                                    >
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#c9a962]/10 to-transparent rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
-                                        <div className="relative z-10">
-                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#c9a962]/20">
-                                                <Sparkles className="w-7 h-7 text-[#0a0e1a]" />
-                                            </div>
-                                            <h3 className="font-serif text-xl font-semibold text-white mb-2">
-                                                Chat de Asistencia en Redacción
-                                            </h3>
-                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
-                                                Modifica, ajusta, mejora o continúa la redacción de sentencias
-                                                en diálogo abierto. Sube un borrador o pega tu texto para que la
-                                                IA lo trabaje.
-                                            </p>
-                                            <div className="flex flex-wrap gap-2">
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    Chat en tiempo real
-                                                </span>
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    Subir DOCX/PDF
-                                                </span>
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    RAG opcional
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                </div>
-
-                                {/* Tipo Selector (select sentence type for full draft) */}
-                                <div id="tipo-selector">
-                                    <div className="text-center mb-6">
-                                        <h2 className="font-serif text-2xl font-medium text-white/80 mb-2">
-                                            Selecciona el tipo de sentencia
-                                        </h2>
-                                        <p className="text-sm text-gray-500">
-                                            Para generar un estudio de fondo completo
-                                        </p>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {TIPOS.map((tipo) => (
-                                            <button
-                                                key={tipo.id}
-                                                onClick={() => handleSelectTipo(tipo)}
-                                                className={`group relative rounded-2xl border border-white/[0.08] bg-[#111827]/80 backdrop-blur-sm p-6 text-left transition-all duration-300 hover:border-[#c9a962]/40 hover:bg-[#111827] hover:scale-[1.02] hover:shadow-xl hover:shadow-[#c9a962]/10`}
-                                            >
-                                                <div className="flex items-start gap-4">
-                                                    <div className="w-12 h-12 rounded-xl bg-[#c9a962]/10 flex items-center justify-center text-[#c9a962] group-hover:scale-110 transition-transform">
-                                                        {tipo.icon}
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <h3 className="font-serif text-lg font-medium text-white/90 mb-1">
-                                                            {tipo.label}
-                                                        </h3>
-                                                        <p className="text-sm text-gray-400 leading-relaxed">
-                                                            {tipo.description}
-                                                        </p>
-                                                    </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {TIPOS.map((tipo) => (
+                                        <button
+                                            key={tipo.id}
+                                            onClick={() => handleSelectTipo(tipo)}
+                                            className={`group relative rounded-2xl border border-white/[0.08] bg-[#111827]/80 backdrop-blur-sm p-6 text-left transition-all duration-300 hover:border-[#c9a962]/40 hover:bg-[#111827] hover:scale-[1.02] hover:shadow-xl hover:shadow-[#c9a962]/10`}
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-[#c9a962]/10 flex items-center justify-center text-[#c9a962] group-hover:scale-110 transition-transform">
+                                                    {tipo.icon}
                                                 </div>
-                                                <div className="flex gap-2 mt-4 pl-16">
-                                                    {tipo.docs.map((doc, i) => (
-                                                        <span
-                                                            key={i}
-                                                            className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.04] text-[#c9a962]/70 truncate border border-white/[0.06]"
-                                                        >
-                                                            {doc}
-                                                        </span>
-                                                    ))}
+                                                <div className="flex-1">
+                                                    <h3 className="font-serif text-lg font-medium text-white/90 mb-1">
+                                                        {tipo.label}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-400 leading-relaxed">
+                                                        {tipo.description}
+                                                    </p>
                                                 </div>
-                                            </button>
-                                        ))}
-                                    </div>
+                                            </div>
+                                            <div className="flex gap-2 mt-4 pl-16">
+                                                {tipo.docs.map((doc, i) => (
+                                                    <span
+                                                        key={i}
+                                                        className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.04] text-[#c9a962]/70 truncate border border-white/[0.06]"
+                                                    >
+                                                        {doc}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </button>
+                                    ))}
                                 </div>
-
-                                <p className="text-center text-xs text-gray-500 mt-8">
-                                    Función exclusiva para administradores • Powered by Gemini 2.5 Pro
-                                </p>
                             </div>
                         )}
 
