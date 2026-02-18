@@ -199,6 +199,7 @@ export default function RedactorSentenciaPage() {
     const [tokensInfo, setTokensInfo] = useState<{ input: number; output: number } | null>(null);
     const [copied, setCopied] = useState(false);
     const [exportLoading, setExportLoading] = useState(false);
+    const [adelantoFile, setAdelantoFile] = useState<File | null>(null);
 
     // ── DOCX Metadata ─────────────────────────────────────────────────────
     const [metaExpediente, setMetaExpediente] = useState('');
@@ -445,7 +446,43 @@ export default function RedactorSentenciaPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // ── Download as DOCX (official TCC format with seals) ─────────────────
+    // ── Merge adelanto DOCX with estudio de fondo ─────────────────────────
+    const handleMergeDownload = async () => {
+        if (!result || !adelantoFile || exportLoading) return;
+        setExportLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('adelanto_file', adelantoFile);
+            formData.append('estudio_text', result);
+            formData.append('tipo', selectedTipo?.id || 'amparo_directo');
+            formData.append('user_email', user?.email || '');
+
+            const res = await fetch(`${API_URL}/merge-sentencia-docx`, {
+                method: 'POST',
+                body: formData,
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({ detail: 'Error al combinar documentos' }));
+                throw new Error(err.detail || 'Error al combinar DOCX');
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const disposition = res.headers.get('Content-Disposition');
+            const filename = disposition?.match(/filename="(.+)"/)?.[1]
+                || `Sentencia_Combinada_${metaExpediente || 'borrador'}.docx`;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err: any) {
+            alert(err.message || 'Error al combinar documentos');
+        } finally {
+            setExportLoading(false);
+        }
+    };
+
+    // ── Download as DOCX (official TCC format — fallback) ─────────────────
     const handleDownloadDocx = async () => {
         if (!result || exportLoading) return;
         setExportLoading(true);
@@ -458,7 +495,6 @@ export default function RedactorSentenciaPage() {
                     tipo: selectedTipo?.id || 'amparo_directo',
                     numero_expediente: metaExpediente,
                     materia: metaMateria,
-                    // Note: quejoso, magistrado, secretario removed for estudio de fondo
                     user_email: user?.email || '',
                 }),
             });
@@ -1330,70 +1366,135 @@ export default function RedactorSentenciaPage() {
                             </div>
                         </div>
 
-                        {/* ── DOCX Export Panel ── */}
+                        {/* ── Merge with Adelanto Panel (Primary Export) ── */}
                         <div className="rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#c9a962]/5 to-transparent p-6 mb-6">
-                            <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center gap-3 mb-2">
                                 <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
                                     <FileText className="w-5 h-5 text-[#c9a962]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-medium text-white/90">Exportar Estudio de Fondo</h3>
-                                    <p className="text-xs text-white/40">DOCX con formato del tribunal</p>
+                                    <h3 className="text-sm font-medium text-white/90">Exportar Sentencia Completa</h3>
+                                    <p className="text-xs text-white/40">Combine su adelanto con el estudio de fondo</p>
                                 </div>
                             </div>
+                            <p className="text-xs text-white/30 mb-4 ml-[52px]">
+                                Suba su formato de consideraciones previas (DOCX) y el sistema insertará automáticamente el estudio de fondo en el punto correcto del documento.
+                            </p>
 
-                            {/* Metadata grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
-                                <div>
-                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Nº Expediente</label>
+                            {/* Upload zone */}
+                            {!adelantoFile ? (
+                                <label className="group flex flex-col items-center justify-center gap-3 py-8 px-4 rounded-xl border-2 border-dashed border-white/10 hover:border-[#c9a962]/30 bg-white/[0.02] hover:bg-[#c9a962]/[0.03] transition-all cursor-pointer mb-4">
+                                    <Upload className="w-8 h-8 text-white/20 group-hover:text-[#c9a962]/60 transition-colors" />
+                                    <div className="text-center">
+                                        <span className="text-sm text-white/50 group-hover:text-white/70 transition-colors">Arrastre o seleccione su adelanto</span>
+                                        <p className="text-[10px] text-white/20 mt-1">Formato .docx — Consideraciones previas al estudio de fondo</p>
+                                    </div>
                                     <input
-                                        type="text"
-                                        value={metaExpediente}
-                                        onChange={e => setMetaExpediente(e.target.value)}
-                                        placeholder="365/2024"
-                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
+                                        type="file"
+                                        accept=".docx"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const f = e.target.files?.[0];
+                                            if (f) setAdelantoFile(f);
+                                        }}
                                     />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-[#c9a962]/70 mb-1">Materia</label>
-                                    <select
-                                        value={metaMateria}
-                                        onChange={e => setMetaMateria(e.target.value)}
-                                        className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
+                                </label>
+                            ) : (
+                                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 mb-4">
+                                    <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-white/80 truncate">{adelantoFile.name}</p>
+                                        <p className="text-[10px] text-white/30">{(adelantoFile.size / 1024).toFixed(0)} KB</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setAdelantoFile(null)}
+                                        className="p-1 rounded-lg hover:bg-white/10 text-white/30 hover:text-white/60 transition-colors"
                                     >
-                                        <option value="CIVIL">Civil</option>
-                                        <option value="PENAL">Penal</option>
-                                        <option value="ADMINISTRATIVA">Administrativa</option>
-                                        <option value="LABORAL">Laboral</option>
-                                        <option value="FISCAL">Fiscal</option>
-                                        <option value="MERCANTIL">Mercantil</option>
-                                        <option value="FAMILIAR">Familiar</option>
-                                    </select>
+                                        <X className="w-4 h-4" />
+                                    </button>
                                 </div>
-                            </div>
+                            )}
 
-                            {/* DOCX Download button */}
+                            {/* Merge Download button */}
                             <button
-                                onClick={handleDownloadDocx}
-                                disabled={exportLoading}
-                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${exportLoading
-                                    ? 'bg-[#c9a962]/10 text-[#c9a962]/50 cursor-wait'
+                                onClick={handleMergeDownload}
+                                disabled={!adelantoFile || exportLoading}
+                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${!adelantoFile || exportLoading
+                                    ? 'bg-white/[0.04] text-white/20 cursor-not-allowed border border-white/[0.06]'
                                     : 'bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20'
                                     }`}
                             >
                                 {exportLoading ? (
                                     <>
                                         <Loader2 className="w-4 h-4 animate-spin" />
-                                        Generando DOCX...
+                                        Combinando documentos...
                                     </>
                                 ) : (
                                     <>
                                         <Download className="w-4 h-4" />
-                                        Descargar DOCX con Formato Oficial
+                                        {adelantoFile ? 'Descargar Sentencia Combinada' : 'Suba su adelanto para combinar'}
                                     </>
                                 )}
                             </button>
                         </div>
+
+                        {/* ── Fallback: Formato Oficial (secondary) ── */}
+                        <details className="group rounded-2xl border border-white/[0.06] bg-white/[0.02] mb-6">
+                            <summary className="flex items-center gap-3 px-5 py-3 cursor-pointer text-white/40 hover:text-white/60 transition-colors">
+                                <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
+                                <span className="text-xs">O exportar solo el estudio de fondo con formato genérico</span>
+                            </summary>
+                            <div className="px-5 pb-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                                    <div>
+                                        <label className="block text-xs text-white/30 mb-1">Nº Expediente</label>
+                                        <input
+                                            type="text"
+                                            value={metaExpediente}
+                                            onChange={e => setMetaExpediente(e.target.value)}
+                                            placeholder="365/2024"
+                                            className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-white/30 mb-1">Materia</label>
+                                        <select
+                                            value={metaMateria}
+                                            onChange={e => setMetaMateria(e.target.value)}
+                                            className="w-full bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:outline-none focus:border-[#c9a962]/40 transition-colors"
+                                        >
+                                            <option value="CIVIL">Civil</option>
+                                            <option value="PENAL">Penal</option>
+                                            <option value="ADMINISTRATIVA">Administrativa</option>
+                                            <option value="LABORAL">Laboral</option>
+                                            <option value="FISCAL">Fiscal</option>
+                                            <option value="MERCANTIL">Mercantil</option>
+                                            <option value="FAMILIAR">Familiar</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleDownloadDocx}
+                                    disabled={exportLoading}
+                                    className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-medium transition-all duration-300 ${exportLoading
+                                        ? 'bg-white/[0.04] text-white/20 cursor-wait'
+                                        : 'bg-white/[0.06] text-white/50 hover:text-white/80 hover:bg-white/[0.08] border border-white/[0.06]'
+                                        }`}
+                                >
+                                    {exportLoading ? (
+                                        <>
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            Generando DOCX...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="w-3.5 h-3.5" />
+                                            Descargar Estudio de Fondo (Formato Genérico)
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </details>
 
                         {/* Sentencia content */}
                         <div className="rounded-2xl border border-white/[0.06] bg-[#111111] overflow-hidden">
