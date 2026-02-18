@@ -62,14 +62,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const { processedContent, docIdMap, thinkingContent, citationMeta } = useMemo(() => {
         if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string }> } | null };
 
-        let content = message.content;
+        let content = message.content || '';
 
         // Extract thinking content (chain-of-thought from thinking mode)
         let thinking = '';
-        const thinkingMatch = content.match(/<!--THINKING_START-->(.*?)<!--THINKING_END-->/s);
+        const thinkingMatch = content.match(/<!--THINKING_START-->([\s\S]*?)<!--THINKING_END-->/);
         if (thinkingMatch) {
             thinking = thinkingMatch[1];
-            content = content.replace(/<!--THINKING_START-->.*?<!--THINKING_END-->/s, '').trim();
+            content = content.replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/, '').trim();
         }
 
         // Create map to track citation numbers in order of FIRST APPEARANCE

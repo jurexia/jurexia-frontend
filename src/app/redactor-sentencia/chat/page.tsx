@@ -300,8 +300,8 @@ export default function ChatSentenciaPage() {
                         <button
                             onClick={toggleRag}
                             className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${useRag
-                                    ? 'bg-[#c9a962]/20 text-[#c9a962] border border-[#c9a962]/30'
-                                    : 'bg-red-500/15 text-red-400 border border-red-500/30'
+                                ? 'bg-[#c9a962]/20 text-[#c9a962] border border-[#c9a962]/30'
+                                : 'bg-red-500/15 text-red-400 border border-red-500/30'
                                 }`}
                             title={useRag ? 'Base de datos verificada activa' : 'Sin base de datos — riesgo de alucinaciones'}
                         >
@@ -377,26 +377,24 @@ export default function ChatSentenciaPage() {
             )}
 
             {/* ── Main Content ───────────────────────────────────────────────── */}
-            <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+            <main className="flex-1 flex flex-col max-w-3xl mx-auto w-full relative">
                 {/* Empty state — Welcome */}
                 {!hasMessages && (
-                    <div className="flex-1 flex items-center justify-center p-6">
-                        <div className="text-center max-w-lg">
+                    <div className="flex-1 flex items-center justify-center p-6 pb-32">
+                        <div className="text-center w-full max-w-2xl mx-auto">
                             {/* Animated icon */}
-                            <div className="relative mx-auto w-20 h-20 mb-6">
-                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#c9a962]/20 to-[#8b7355]/10 animate-pulse" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <Sparkles className="w-10 h-10 text-[#c9a962]" />
+                            <div className="relative mx-auto w-16 h-16 mb-8 group">
+                                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#c9a962]/30 to-[#8b7355]/20 blur-xl group-hover:blur-2xl transition-all duration-700" />
+                                <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-[#c9a962]/10 to-[#8b7355]/5 border border-[#c9a962]/20 flex items-center justify-center backdrop-blur-sm">
+                                    <Sparkles className="w-8 h-8 text-[#c9a962]" />
                                 </div>
                             </div>
 
-                            <h2 className="text-2xl font-bold text-white mb-2">
-                                Chat de Asistencia en Redacción
+                            <h2 className="text-3xl font-medium text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-3 tracking-tight">
+                                ¿En qué puedo ayudarte hoy?
                             </h2>
-                            <p className="text-white/50 text-sm mb-8 leading-relaxed">
-                                Modifica, ajusta, mejora o continúa la redacción de sentencias
-                                con Gemini 2.5 Pro. Pega tu texto, arrastra un archivo o describe
-                                el caso para comenzar.
+                            <p className="text-white/40 text-base mb-12 max-w-lg mx-auto font-light">
+                                Asistente jurídico especializado en redacción de sentencias.
                             </p>
 
                             {/* Quick action suggestions */}
@@ -404,44 +402,44 @@ export default function ChatSentenciaPage() {
                                 {[
                                     {
                                         title: 'Continuar redacción',
-                                        desc: 'Pega tu texto y pide que continúe donde quedó',
+                                        desc: 'Retomar escritura',
                                         icon: '✍️',
                                     },
                                     {
                                         title: 'Cambiar sentido',
-                                        desc: 'Modifica un agravio de fundado a infundado',
+                                        desc: 'Fundado ↔ Infundado',
                                         icon: '🔄',
                                     },
                                     {
-                                        title: 'Ampliar fundamentación',
-                                        desc: 'Enriquece con jurisprudencia y legislación',
-                                        icon: '📚',
+                                        title: 'Buscar jurisprudencia',
+                                        desc: 'Tesis y precedentes',
+                                        icon: '⚖️',
                                     },
                                     {
-                                        title: 'Subir documento',
-                                        desc: 'Arrastra un DOCX/PDF como contexto',
-                                        icon: '📎',
+                                        title: 'Analizar documento',
+                                        desc: 'Subir PDF/DOCX',
+                                        icon: '📄',
                                     },
                                 ].map((item) => (
                                     <button
                                         key={item.title}
                                         onClick={() => {
-                                            setInputValue(item.title === 'Subir documento' ? '' : `${item.title}: `);
-                                            if (item.title === 'Subir documento') {
+                                            setInputValue(item.title === 'Analizar documento' ? '' : `${item.title}: `);
+                                            if (item.title === 'Analizar documento') {
                                                 fileInputRef.current?.click();
                                             } else {
                                                 textareaRef.current?.focus();
                                             }
                                         }}
-                                        className="p-4 rounded-xl border border-[#c9a962]/15 bg-[#c9a962]/5 hover:bg-[#c9a962]/10 hover:border-[#c9a962]/30 transition-all group text-left"
+                                        className="p-4 rounded-2xl bg-[#1a1f2e]/50 border border-white/5 hover:border-[#c9a962]/30 hover:bg-[#1a1f2e] transition-all duration-300 group"
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-xl">{item.icon}</span>
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-xl group-hover:scale-110 transition-transform duration-300">{item.icon}</span>
                                             <div>
-                                                <p className="text-sm font-medium text-[#c9a962] group-hover:text-[#d4b46a] transition-colors">
+                                                <p className="text-sm font-medium text-white/80 group-hover:text-[#c9a962] transition-colors">
                                                     {item.title}
                                                 </p>
-                                                <p className="text-xs text-white/40 mt-0.5">{item.desc}</p>
+                                                <p className="text-xs text-white/30 group-hover:text-white/50">{item.desc}</p>
                                             </div>
                                         </div>
                                     </button>
@@ -453,7 +451,7 @@ export default function ChatSentenciaPage() {
 
                 {/* Messages area */}
                 {hasMessages && (
-                    <div className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
+                    <div className="flex-1 overflow-y-auto px-4 py-8 space-y-6 scroll-smooth">
                         {messages.map((msg, idx) => (
                             <ChatMessage
                                 key={idx}
@@ -462,113 +460,135 @@ export default function ChatSentenciaPage() {
                             />
                         ))}
                         {isLoading && messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content && (
-                            <div className="flex items-center gap-3 py-4 px-4">
-                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center">
-                                    <Gavel className="w-4 h-4 text-[#0a0e1a]" />
+                            <div className="flex items-start gap-4 px-4 animate-pulse">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center shrink-0 shadow-lg shadow-[#c9a962]/10">
+                                    <Sparkles className="w-4 h-4 text-[#0a0e1a]" />
                                 </div>
-                                <div className="flex items-center gap-2 text-white/50 text-sm">
-                                    <Loader2 className="w-4 h-4 animate-spin text-[#c9a962]" />
-                                    <span>Redactando con Gemini 2.5 Pro...</span>
+                                <div className="space-y-2 pt-1.5">
+                                    <div className="h-4 w-32 bg-white/10 rounded overflow-hidden">
+                                        <div className="h-full bg-gradient-to-r from-transparent via-white/10 to-transparent w-full animate-shimmer" />
+                                    </div>
                                 </div>
                             </div>
                         )}
-                        <div ref={messagesEndRef} />
+                        <div ref={messagesEndRef} className="h-4" />
                     </div>
                 )}
 
                 {/* ── Error bar ──────────────────────────────────────────────── */}
                 {error && (
-                    <div className="mx-4 mb-2 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-center gap-2">
+                    <div className="mx-6 mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-center gap-3 backdrop-blur-md">
                         <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                         <span>{error}</span>
-                        <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-300">
+                        <button onClick={() => setError(null)} className="ml-auto p-1 hover:bg-red-500/10 rounded-full transition-colors">
                             <X className="w-4 h-4" />
                         </button>
                     </div>
                 )}
 
-                {/* ── Input area ─────────────────────────────────────────────── */}
-                <div className="sticky bottom-0 p-4 bg-gradient-to-t from-[#0a0e1a] via-[#0a0e1a] to-transparent pt-8">
-                    {/* Attached file indicator */}
-                    {attachedFile && (
-                        <div className="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#c9a962]/10 border border-[#c9a962]/20">
-                            <FileText className="w-4 h-4 text-[#c9a962]" />
-                            <span className="text-xs text-[#c9a962] truncate flex-1">{attachedFile.name}</span>
-                            <span className="text-[10px] text-white/30">
-                                {(attachedText?.length || 0).toLocaleString()} chars
-                            </span>
-                            <button
-                                onClick={removeAttachment}
-                                className="p-0.5 rounded hover:bg-white/10 text-white/40 hover:text-white/70"
-                            >
-                                <X className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
-                    )}
+                {/* ── Floating Input Area ────────────────────────────────────── */}
+                <div className="sticky bottom-0 px-4 pb-6 pt-10 bg-gradient-to-t from-[#0a0e1a] via-[#0a0e1a]/95 to-transparent z-10">
+                    <div className="relative max-w-3xl mx-auto">
+                        {/* Attached file indicator */}
+                        {(attachedFile || extractingFile) && (
+                            <div className="absolute -top-12 left-0 right-0 flex justify-center">
+                                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[#1a1f2e] border border-[#c9a962]/20 shadow-lg shadow-black/20 backdrop-blur-md">
+                                    {extractingFile ? (
+                                        <>
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#c9a962]" />
+                                            <span className="text-xs text-[#c9a962]">Procesando documento...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileText className="w-3.5 h-3.5 text-[#c9a962]" />
+                                            <span className="text-xs text-white/90 font-medium max-w-[200px] truncate">{attachedFile?.name}</span>
+                                            <button
+                                                onClick={removeAttachment}
+                                                className="ml-1 p-0.5 rounded-full hover:bg-white/10 text-white/40 hover:text-white/80 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
-                    {/* Extracting file indicator */}
-                    {extractingFile && (
-                        <div className="mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#c9a962]/10 border border-[#c9a962]/20">
-                            <Loader2 className="w-4 h-4 animate-spin text-[#c9a962]" />
-                            <span className="text-xs text-[#c9a962]">Extrayendo texto del archivo...</span>
-                        </div>
-                    )}
-
-                    <div className="relative bg-[#111827] border border-[#c9a962]/20 rounded-2xl shadow-lg shadow-black/30 focus-within:border-[#c9a962]/50 transition-colors">
-                        <textarea
-                            ref={textareaRef}
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onInput={handleTextareaInput}
-                            onKeyDown={handleKeyDown}
-                            placeholder="Pega tu texto de sentencia, describe el caso o da instrucciones..."
-                            rows={1}
-                            className="w-full bg-transparent text-white/90 placeholder-white/30 px-4 py-3 pr-24 resize-none outline-none text-sm leading-relaxed"
-                            style={{ maxHeight: '200px' }}
-                            disabled={isLoading}
-                        />
-                        <div className="absolute right-2 bottom-2 flex items-center gap-1">
-                            {/* File upload button */}
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept=".pdf,.docx"
-                                onChange={handleFileSelect}
-                                className="hidden"
+                        <div className={`
+                            relative bg-[#1a1f2e] border transition-all duration-300 rounded-[24px] shadow-2xl overflow-hidden
+                            ${isLoading ? 'border-[#c9a962]/10 opacity-80' : 'border-[#c9a962]/20 hover:border-[#c9a962]/40 focus-within:border-[#c9a962]/60 focus-within:ring-1 focus-within:ring-[#c9a962]/30'}
+                        `}>
+                            <textarea
+                                ref={textareaRef}
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onInput={handleTextareaInput}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Escribe tu instrucción o describe el documento..."
+                                rows={1}
+                                className="w-full bg-transparent text-white/90 placeholder-white/30 px-6 py-4 pr-32 resize-none outline-none text-[15px] leading-relaxed max-h-[200px] scrollbar-thin scrollbar-thumb-white/10"
+                                disabled={isLoading}
+                                autoFocus
                             />
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={isLoading || extractingFile}
-                                className="p-2 rounded-lg text-white/40 hover:text-[#c9a962] hover:bg-[#c9a962]/10 transition-colors disabled:opacity-30"
-                                title="Adjuntar PDF o DOCX"
-                            >
-                                <Paperclip className="w-4 h-4" />
-                            </button>
-                            {/* Send button */}
-                            <button
-                                onClick={sendMessage}
-                                disabled={!inputValue.trim() || isLoading}
-                                className="p-2 rounded-lg bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0e1a] hover:from-[#d4b46a] hover:to-[#9e8562] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            >
-                                {isLoading ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                    <Send className="w-4 h-4" />
-                                )}
-                            </button>
+
+                            <div className="absolute right-2 bottom-2.5 flex items-center gap-1.5">
+                                {/* File upload button */}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".pdf,.docx"
+                                    onChange={handleFileSelect}
+                                    className="hidden"
+                                />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isLoading || extractingFile}
+                                    className="p-2.5 rounded-xl text-white/40 hover:text-[#c9a962] hover:bg-[#c9a962]/10 transition-colors disabled:opacity-30 tooltip-trigger"
+                                    title="Adjuntar documento"
+                                >
+                                    <Paperclip className="w-5 h-5" />
+                                </button>
+
+                                {/* Send button */}
+                                <button
+                                    onClick={sendMessage}
+                                    disabled={!inputValue.trim() || isLoading}
+                                    className={`
+                                        p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center
+                                        ${inputValue.trim() && !isLoading
+                                            ? 'bg-[#c9a962] text-[#0a0e1a] hover:bg-[#d4b46a] shadow-[0_0_15px_rgba(201,169,98,0.3)] hover:shadow-[0_0_20px_rgba(201,169,98,0.5)] transform hover:scale-105'
+                                            : 'bg-white/5 text-white/20 cursor-not-allowed'}
+                                    `}
+                                >
+                                    {isLoading ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <Send className="w-5 h-5" />
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Footer hint */}
+                        <div className="flex justify-center items-center mt-3 gap-2 opacity-0 hover:opacity-100 transition-opacity duration-500">
+                            <p className="text-[10px] text-white/20 select-none">
+                                Gemini 2.5 Pro · {useRag ? 'Verificado' : 'Sin verificar'}
+                            </p>
                         </div>
                     </div>
-
-                    {/* Footer hint */}
-                    <p className="text-center text-[10px] text-white/20 mt-2">
-                        {useRag ? (
-                            <>Motor: Gemini 2.5 Pro · Base de datos verificada activa · Ctrl+Enter para nueva línea</>
-                        ) : (
-                            <>Motor: Gemini 2.5 Pro · ⚠️ Sin base de datos — posibles alucinaciones · Ctrl+Enter para nueva línea</>
-                        )}
-                    </p>
                 </div>
             </main>
         </div>
     );
 }
+
+// Add strict style for scrollbar hiding if needed
+const css = `
+  .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+  }
+  .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+  }
+`;
