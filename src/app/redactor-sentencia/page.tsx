@@ -555,7 +555,7 @@ export default function RedactorSentenciaPage() {
             {/* ═══ Top Bar ═══ */}
             <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0f1a]/90 backdrop-blur-xl border-b border-white/[0.08]">
                 {/* Diagonal gold grid accent */}
-                <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(45deg, #c9a962 1px, transparent 1px), linear-gradient(-45deg, #c9a962 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+                <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(45deg, #c9a962 1px, transparent 1px), linear-gradient(-45deg, #c9a962 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
                     <div className="flex items-center gap-3">
                         <Link href="/chat" className="flex items-center gap-2 group">
