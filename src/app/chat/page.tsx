@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
@@ -35,6 +35,20 @@ export default function ChatPage() {
     const estadoInitializedRef = useRef(false);
     const [showPromptGuide, setShowPromptGuide] = useState(false);
     const [showVisualGuide, setShowVisualGuide] = useState(false);
+    const [selectedMateria, setSelectedMateria] = useState<string>('');  // '' = Auto
+
+    const MATERIAS = [
+        { key: '', label: 'Auto', icon: '✨' },
+        { key: 'PENAL', label: 'Penal', icon: '⚖️' },
+        { key: 'CIVIL', label: 'Civil', icon: '📜' },
+        { key: 'FAMILIAR', label: 'Familiar', icon: '👨‍👩‍👧' },
+        { key: 'LABORAL', label: 'Laboral', icon: '🏢' },
+        { key: 'MERCANTIL', label: 'Mercantil', icon: '💼' },
+        { key: 'ADMINISTRATIVO', label: 'Administrativo', icon: '🏛️' },
+        { key: 'FISCAL', label: 'Fiscal', icon: '💰' },
+        { key: 'AGRARIO', label: 'Agrario', icon: '🌾' },
+        { key: 'CONSTITUCIONAL', label: 'Constitucional', icon: '📕' },
+    ];
 
     // Conversation history state
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -43,7 +57,8 @@ export default function ChatPage() {
 
     const { messages, isLoading, error, sendMessage, clearMessages, setMessages, retryMessage } = useChat({
         estado: selectedEstado || undefined,
-        topK: 30  // Maximum allowed by API
+        topK: 30,  // Maximum allowed by API
+        materia: selectedMateria || undefined,
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -350,6 +365,31 @@ export default function ChatPage() {
                                     )}
                                 </div>
 
+                                {/* Materia Selector Chips */}
+                                <div className="mb-6" data-guide="materia">
+                                    <p className="text-xs text-charcoal-500 mb-2 font-medium">Filtrar por materia:</p>
+                                    <div className="flex flex-wrap justify-center gap-1.5">
+                                        {MATERIAS.map((m) => (
+                                            <button
+                                                key={m.key}
+                                                onClick={() => setSelectedMateria(m.key)}
+                                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${selectedMateria === m.key
+                                                        ? 'bg-accent-brown text-white shadow-sm scale-105'
+                                                        : 'bg-cream-100 text-charcoal-600 hover:bg-cream-200 hover:text-charcoal-800'
+                                                    }`}
+                                            >
+                                                <span>{m.icon}</span>
+                                                <span>{m.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {selectedMateria && (
+                                        <p className="text-xs text-accent-brown mt-1.5">
+                                            Filtrando resultados por: <strong>{selectedMateria}</strong>
+                                        </p>
+                                    )}
+                                </div>
+
                                 {/* Inline Chat Input */}
                                 <div className="mb-4">
                                     <ChatInput
@@ -386,6 +426,12 @@ export default function ChatPage() {
                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-cream-200 rounded-full text-xs text-charcoal-600">
                                     <MapPin className="w-3 h-3" />
                                     <span>Buscando en: {selectedEstado ? selectedEstadoLabel : 'Todas las entidades'} + Federal + Jurisprudencia</span>
+                                    {selectedMateria && (
+                                        <span className="inline-flex items-center gap-1 ml-1 px-2 py-0.5 bg-accent-brown/20 text-accent-brown rounded-full font-medium">
+                                            <Sparkles className="w-3 h-3" />
+                                            {selectedMateria}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 

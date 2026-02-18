@@ -7,6 +7,7 @@ import { getSession } from '@/lib/supabase';
 interface UseChatOptions {
     estado?: string;
     topK?: number;  // Default: 20 for better document retrieval
+    materia?: string;  // Materia-Aware: forced materia filter (PENAL, CIVIL, etc.)
 }
 
 interface UseChatReturn {
@@ -230,6 +231,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 accessToken,
                 enableReasoning,
                 userId,
+                options.materia,
             )) {
                 // Check if this is a retry marker: <!--RETRY:1:2000-->
                 const retryMatch = chunk.match(/<!--RETRY:(\d+):(\d+)-->/);
@@ -300,7 +302,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [messages, isLoading, options.estado, options.topK]);
+    }, [messages, isLoading, options.estado, options.topK, options.materia]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

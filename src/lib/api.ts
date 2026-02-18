@@ -87,6 +87,7 @@ async function* streamChatInternal(
     accessToken?: string,
     enableReasoning = false,
     userId?: string,
+    materia?: string,
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);
@@ -104,7 +105,7 @@ async function* streamChatInternal(
     const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ messages, estado, top_k: topK, enable_reasoning: enableReasoning, user_id: userId }),
+        body: JSON.stringify({ messages, estado, top_k: topK, enable_reasoning: enableReasoning, user_id: userId, ...(materia ? { materia } : {}) }),
     });
 
     console.log('[API] Response status:', response.status);
@@ -140,6 +141,7 @@ export async function* streamChat(
     accessToken?: string,  // Optional Supabase access token for auth
     enableReasoning = false,  // Disabled: Query Expansion was diluting BM25 precision
     userId?: string,  // Supabase user ID for server-side quota enforcement
+    materia?: string,  // Materia-Aware: forced materia filter (PENAL, CIVIL, etc.)
 ): AsyncGenerator<string, void, unknown> {
     const maxRetries = 3;
     let attempt = 0;
@@ -147,7 +149,7 @@ export async function* streamChat(
     while (attempt < maxRetries) {
         try {
             // Attempt to stream chat
-            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId);
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, materia);
             return; // Success - exit
         } catch (err) {
             attempt++;
