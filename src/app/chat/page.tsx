@@ -370,10 +370,11 @@ export default function ChatPage() {
                                     {selectedEstado && (
                                         <button
                                             onClick={() => setShowConfigModal(true)}
-                                            className="flex items-center gap-1 mx-auto mt-1 text-xs text-charcoal-400 hover:text-accent-brown transition-colors"
+                                            className="flex items-center gap-1.5 mx-auto mt-2 px-4 py-1.5 rounded-full text-xs font-medium text-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                                            style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}
                                         >
                                             <Settings className="w-3 h-3" />
-                                            <span>Cambiar estado en Configuración</span>
+                                            <span>Cambiar jurisdicción</span>
                                         </button>
                                     )}
                                 </div>
@@ -399,8 +400,8 @@ export default function ChatPage() {
                                                             setShowMateriaDropdown(false);
                                                         }}
                                                         className={`w-full text-left px-4 py-2 text-sm transition-colors duration-100 ${selectedMateria === m.key
-                                                                ? 'text-accent-gold bg-white/10 font-medium'
-                                                                : 'text-white/80 hover:text-white hover:bg-white/5'
+                                                            ? 'text-accent-gold bg-white/10 font-medium'
+                                                            : 'text-white/80 hover:text-white hover:bg-white/5'
                                                             }`}
                                                     >
                                                         {m.label}
