@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, Sparkles } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
@@ -36,19 +36,32 @@ export default function ChatPage() {
     const [showPromptGuide, setShowPromptGuide] = useState(false);
     const [showVisualGuide, setShowVisualGuide] = useState(false);
     const [selectedMateria, setSelectedMateria] = useState<string>('');  // '' = Auto
+    const [showMateriaDropdown, setShowMateriaDropdown] = useState(false);
+    const materiaDropdownRef = useRef<HTMLDivElement>(null);
 
     const MATERIAS = [
-        { key: '', label: 'Auto', icon: '✨' },
-        { key: 'PENAL', label: 'Penal', icon: '⚖️' },
-        { key: 'CIVIL', label: 'Civil', icon: '📜' },
-        { key: 'FAMILIAR', label: 'Familiar', icon: '👨‍👩‍👧' },
-        { key: 'LABORAL', label: 'Laboral', icon: '🏢' },
-        { key: 'MERCANTIL', label: 'Mercantil', icon: '💼' },
-        { key: 'ADMINISTRATIVO', label: 'Administrativo', icon: '🏛️' },
-        { key: 'FISCAL', label: 'Fiscal', icon: '💰' },
-        { key: 'AGRARIO', label: 'Agrario', icon: '🌾' },
-        { key: 'CONSTITUCIONAL', label: 'Constitucional', icon: '📕' },
+        { key: '', label: 'Automático' },
+        { key: 'PENAL', label: 'Penal' },
+        { key: 'CIVIL', label: 'Civil' },
+        { key: 'FAMILIAR', label: 'Familiar' },
+        { key: 'LABORAL', label: 'Laboral' },
+        { key: 'MERCANTIL', label: 'Mercantil' },
+        { key: 'ADMINISTRATIVO', label: 'Administrativo' },
+        { key: 'FISCAL', label: 'Fiscal' },
+        { key: 'AGRARIO', label: 'Agrario' },
+        { key: 'CONSTITUCIONAL', label: 'Constitucional' },
     ];
+
+    // Close materia dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (materiaDropdownRef.current && !materiaDropdownRef.current.contains(event.target as Node)) {
+                setShowMateriaDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Conversation history state
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -365,29 +378,37 @@ export default function ChatPage() {
                                     )}
                                 </div>
 
-                                {/* Materia Selector Chips */}
-                                <div className="mb-6" data-guide="materia">
-                                    <p className="text-xs text-charcoal-500 mb-2 font-medium">Filtrar por materia:</p>
-                                    <div className="flex flex-wrap justify-center gap-1.5">
-                                        {MATERIAS.map((m) => (
-                                            <button
-                                                key={m.key}
-                                                onClick={() => setSelectedMateria(m.key)}
-                                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 ${selectedMateria === m.key
-                                                        ? 'bg-accent-brown text-white shadow-sm scale-105'
-                                                        : 'bg-cream-100 text-charcoal-600 hover:bg-cream-200 hover:text-charcoal-800'
-                                                    }`}
-                                            >
-                                                <span>{m.icon}</span>
-                                                <span>{m.label}</span>
-                                            </button>
-                                        ))}
+                                {/* Materia Selector — Elegant Dropdown */}
+                                <div className="mb-6 flex justify-center" ref={materiaDropdownRef}>
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setShowMateriaDropdown(!showMateriaDropdown)}
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-charcoal-800 hover:bg-charcoal-900 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200 hover:shadow-md"
+                                        >
+                                            <span className="text-white/60 text-xs">Materia:</span>
+                                            <span>{selectedMateria ? MATERIAS.find(m => m.key === selectedMateria)?.label : 'Automático'}</span>
+                                            <ChevronDown className={`w-4 h-4 text-white/50 transition-transform duration-200 ${showMateriaDropdown ? 'rotate-180' : ''}`} />
+                                        </button>
+                                        {showMateriaDropdown && (
+                                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-charcoal-800 rounded-xl shadow-xl border border-white/10 py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                {MATERIAS.map((m) => (
+                                                    <button
+                                                        key={m.key}
+                                                        onClick={() => {
+                                                            setSelectedMateria(m.key);
+                                                            setShowMateriaDropdown(false);
+                                                        }}
+                                                        className={`w-full text-left px-4 py-2 text-sm transition-colors duration-100 ${selectedMateria === m.key
+                                                                ? 'text-accent-gold bg-white/10 font-medium'
+                                                                : 'text-white/80 hover:text-white hover:bg-white/5'
+                                                            }`}
+                                                    >
+                                                        {m.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                    {selectedMateria && (
-                                        <p className="text-xs text-accent-brown mt-1.5">
-                                            Filtrando resultados por: <strong>{selectedMateria}</strong>
-                                        </p>
-                                    )}
                                 </div>
 
                                 {/* Inline Chat Input */}
@@ -427,9 +448,8 @@ export default function ChatPage() {
                                     <MapPin className="w-3 h-3" />
                                     <span>Buscando en: {selectedEstado ? selectedEstadoLabel : 'Todas las entidades'} + Federal + Jurisprudencia</span>
                                     {selectedMateria && (
-                                        <span className="inline-flex items-center gap-1 ml-1 px-2 py-0.5 bg-accent-brown/20 text-accent-brown rounded-full font-medium">
-                                            <Sparkles className="w-3 h-3" />
-                                            {selectedMateria}
+                                        <span className="ml-1 px-2 py-0.5 bg-charcoal-800 text-white rounded-full text-xs font-medium">
+                                            {MATERIAS.find(m => m.key === selectedMateria)?.label}
                                         </span>
                                     )}
                                 </div>
