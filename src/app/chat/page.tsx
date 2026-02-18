@@ -349,49 +349,30 @@ export default function ChatPage() {
                                     Consulta leyes, analiza documentos o busca jurisprudencia en la normativa mexicana.
                                 </p>
 
-                                {/* Locked Jurisdiction Badge */}
-                                <div className="mb-6" data-guide="jurisdiction">
-                                    <div className="mb-6 p-3 bg-cream-200 rounded-xl inline-block">
-                                        <p className="text-xs text-charcoal-600 mb-1.5">
-                                            <strong>Buscando en:</strong>
-                                        </p>
-                                        <div className="flex flex-wrap justify-center gap-1.5 text-xs">
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
-                                                <Building2 className="w-3 h-3" /> Leyes Federales
-                                            </span>
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">
-                                                <Scale className="w-3 h-3" /> Jurisprudencia
-                                            </span>
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent-brown/20 text-accent-brown rounded-full">
-                                                <MapPin className="w-3 h-3" /> {selectedEstado ? selectedEstadoLabel : 'Todas las entidades'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {selectedEstado && (
-                                        <button
-                                            onClick={() => setShowConfigModal(true)}
-                                            className="flex items-center gap-1.5 mx-auto mt-2 px-4 py-1.5 rounded-full text-xs font-medium text-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                                            style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}
-                                        >
-                                            <Settings className="w-3 h-3" />
-                                            <span>Cambiar jurisdicción</span>
-                                        </button>
-                                    )}
-                                </div>
+                                {/* Jurisdiction + Materia Controls — Side by side */}
+                                <div className="mb-6 flex justify-center gap-3" data-guide="jurisdiction" ref={materiaDropdownRef}>
+                                    {/* Cambiar jurisdicción */}
+                                    <button
+                                        onClick={() => setShowConfigModal(true)}
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium text-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                                        style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}
+                                    >
+                                        <Settings className="w-3.5 h-3.5" />
+                                        <span>{selectedEstado ? selectedEstadoLabel : 'Jurisdicción'}</span>
+                                    </button>
 
-                                {/* Materia Selector — Elegant Dropdown */}
-                                <div className="mb-6 flex justify-center" ref={materiaDropdownRef}>
+                                    {/* Materia Selector */}
                                     <div className="relative">
                                         <button
                                             onClick={() => setShowMateriaDropdown(!showMateriaDropdown)}
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-charcoal-800 hover:bg-charcoal-900 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200 hover:shadow-md"
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-charcoal-800 hover:bg-charcoal-900 text-white text-xs font-medium rounded-xl shadow-sm transition-all duration-200 hover:shadow-md hover:scale-105"
                                         >
-                                            <span className="text-white/60 text-xs">Materia:</span>
+                                            <span className="text-white/60">Materia:</span>
                                             <span>{selectedMateria ? MATERIAS.find(m => m.key === selectedMateria)?.label : 'Automático'}</span>
-                                            <ChevronDown className={`w-4 h-4 text-white/50 transition-transform duration-200 ${showMateriaDropdown ? 'rotate-180' : ''}`} />
+                                            <ChevronDown className={`w-3.5 h-3.5 text-white/50 transition-transform duration-200 ${showMateriaDropdown ? 'rotate-180' : ''}`} />
                                         </button>
                                         {showMateriaDropdown && (
-                                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-charcoal-800 rounded-xl shadow-xl border border-white/10 py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-charcoal-800 rounded-xl shadow-xl border border-white/10 py-1 z-50">
                                                 {MATERIAS.map((m) => (
                                                     <button
                                                         key={m.key}
@@ -400,8 +381,8 @@ export default function ChatPage() {
                                                             setShowMateriaDropdown(false);
                                                         }}
                                                         className={`w-full text-left px-4 py-2 text-sm transition-colors duration-100 ${selectedMateria === m.key
-                                                            ? 'text-accent-gold bg-white/10 font-medium'
-                                                            : 'text-white/80 hover:text-white hover:bg-white/5'
+                                                                ? 'text-accent-gold bg-white/10 font-medium'
+                                                                : 'text-white/80 hover:text-white hover:bg-white/5'
                                                             }`}
                                                     >
                                                         {m.label}
@@ -443,18 +424,7 @@ export default function ChatPage() {
                     ) : (
                         // Messages Container
                         <div className="max-w-3xl mx-auto px-4 py-6 pb-64 space-y-4">
-                            {/* Active jurisdiction indicator */}
-                            <div className="flex justify-center">
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-cream-200 rounded-full text-xs text-charcoal-600">
-                                    <MapPin className="w-3 h-3" />
-                                    <span>Buscando en: {selectedEstado ? selectedEstadoLabel : 'Todas las entidades'} + Federal + Jurisprudencia</span>
-                                    {selectedMateria && (
-                                        <span className="ml-1 px-2 py-0.5 bg-charcoal-800 text-white rounded-full text-xs font-medium">
-                                            {MATERIAS.find(m => m.key === selectedMateria)?.label}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+
 
                             {messages.map((message, index) => (
                                 <ChatMessage
