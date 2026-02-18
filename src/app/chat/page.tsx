@@ -303,6 +303,16 @@ export default function ChatPage() {
 
                         <div className="flex items-center gap-2">
 
+                            {/* Jurisdicción button — always visible in header */}
+                            <button
+                                onClick={() => setShowConfigModal(true)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                                style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}
+                            >
+                                <span className="text-white/70">Jurisdicción:</span>
+                                <span>{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
+                            </button>
+
                             {hasMessages && activeConversationId && (
                                 <button
                                     onClick={async () => {
@@ -349,27 +359,16 @@ export default function ChatPage() {
                                     Consulta leyes, analiza documentos o busca jurisprudencia en la normativa mexicana.
                                 </p>
 
-                                {/* Jurisdiction + Materia Controls — Side by side */}
-                                <div className="mb-6 flex justify-center gap-3" data-guide="jurisdiction" ref={materiaDropdownRef}>
-                                    {/* Cambiar jurisdicción */}
-                                    <button
-                                        onClick={() => setShowConfigModal(true)}
-                                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium text-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                                        style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}
-                                    >
-                                        <Settings className="w-3.5 h-3.5" />
-                                        <span>{selectedEstado ? selectedEstadoLabel : 'Jurisdicción'}</span>
-                                    </button>
-
-                                    {/* Materia Selector */}
+                                {/* Materia Selector — Centered */}
+                                <div className="mb-6 flex justify-center" data-guide="jurisdiction" ref={materiaDropdownRef}>
                                     <div className="relative">
                                         <button
                                             onClick={() => setShowMateriaDropdown(!showMateriaDropdown)}
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-charcoal-800 hover:bg-charcoal-900 text-white text-xs font-medium rounded-xl shadow-sm transition-all duration-200 hover:shadow-md hover:scale-105"
+                                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-charcoal-800 hover:bg-charcoal-900 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200 hover:shadow-md hover:scale-105"
                                         >
-                                            <span className="text-white/60">Materia:</span>
+                                            <span className="text-white/60 text-xs">Materia:</span>
                                             <span>{selectedMateria ? MATERIAS.find(m => m.key === selectedMateria)?.label : 'Automático'}</span>
-                                            <ChevronDown className={`w-3.5 h-3.5 text-white/50 transition-transform duration-200 ${showMateriaDropdown ? 'rotate-180' : ''}`} />
+                                            <ChevronDown className={`w-4 h-4 text-white/50 transition-transform duration-200 ${showMateriaDropdown ? 'rotate-180' : ''}`} />
                                         </button>
                                         {showMateriaDropdown && (
                                             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-charcoal-800 rounded-xl shadow-xl border border-white/10 py-1 z-50">
