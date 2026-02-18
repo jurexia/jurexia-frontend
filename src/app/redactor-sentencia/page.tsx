@@ -550,7 +550,7 @@ export default function RedactorSentenciaPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
+        <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
             {/* ═══ Scrolling IUREXIA Watermark Background ═══ */}
             <div className="fixed inset-0 pointer-events-none select-none z-0 overflow-hidden" aria-hidden="true">
                 {/* Row 1 — 8vw text, top-[4%], drift right */}
@@ -595,7 +595,9 @@ export default function RedactorSentenciaPage() {
                 }
             `}</style>
             {/* ═══ Top Bar ═══ */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-xl border-b border-white/[0.06]">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0f1a]/90 backdrop-blur-xl border-b border-white/[0.08]">
+                {/* Diagonal gold grid accent */}
+                <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(45deg, #c9a962 1px, transparent 1px), linear-gradient(-45deg, #c9a962 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
                     <div className="flex items-center gap-3">
                         <Link href="/chat" className="flex items-center gap-2 group">
@@ -634,7 +636,7 @@ export default function RedactorSentenciaPage() {
                             <h1 className="font-serif text-4xl md:text-5xl font-semibold text-white mb-4">
                                 Redactor de Sentencias
                             </h1>
-                            <p className="text-white/40 text-lg max-w-2xl mx-auto leading-relaxed">
+                            <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
                                 Genera proyectos de sentencia completos con la potencia de Gemini 2.5 Pro.
                                 Sube los expedientes y la IA construirá el proyecto desde cero.
                             </p>
@@ -646,7 +648,7 @@ export default function RedactorSentenciaPage() {
                                 <button
                                     key={tipo.id}
                                     onClick={() => handleSelectTipo(tipo)}
-                                    className={`group relative rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 text-left transition-all duration-300 hover:border-[#c9a962]/30 hover:bg-white/[0.06] hover:scale-[1.02] hover:shadow-xl hover:shadow-[#c9a962]/5`}
+                                    className={`group relative rounded-2xl border border-white/[0.08] bg-[#111827]/80 backdrop-blur-sm p-6 text-left transition-all duration-300 hover:border-[#c9a962]/40 hover:bg-[#111827] hover:scale-[1.02] hover:shadow-xl hover:shadow-[#c9a962]/10`}
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="w-12 h-12 rounded-xl bg-[#c9a962]/10 flex items-center justify-center text-[#c9a962] group-hover:scale-110 transition-transform">
@@ -656,7 +658,7 @@ export default function RedactorSentenciaPage() {
                                             <h3 className="font-serif text-lg font-medium text-white/90 mb-1">
                                                 {tipo.label}
                                             </h3>
-                                            <p className="text-sm text-white/40 leading-relaxed">
+                                            <p className="text-sm text-gray-400 leading-relaxed">
                                                 {tipo.description}
                                             </p>
                                         </div>
@@ -677,7 +679,7 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         {/* Admin note */}
-                        <p className="text-center text-xs text-white/20 mt-8">
+                        <p className="text-center text-xs text-gray-500 mt-8">
                             Función exclusiva para administradores • Powered by Gemini 2.5 Pro
                         </p>
                     </div>
@@ -705,7 +707,7 @@ export default function RedactorSentenciaPage() {
                                 <h2 className="font-serif text-2xl font-medium text-white">
                                     {selectedTipo.label}
                                 </h2>
-                                <p className="text-sm text-white/40 mt-0.5">
+                                <p className="text-sm text-gray-400 mt-0.5">
                                     Adjunta los 2 documentos del expediente
                                 </p>
                             </div>
@@ -745,9 +747,9 @@ export default function RedactorSentenciaPage() {
                         <button
                             onClick={handleAnalyze}
                             disabled={!allFilesUploaded}
-                            className={`w-full py-4 rounded-full text-base font-medium transition-all duration-300 ${allFilesUploaded
-                                ? 'bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20'
-                                : 'bg-white/[0.04] text-white/20 cursor-not-allowed border border-white/[0.06]'
+                            className={`w-full py-4 rounded-full text-base font-bold transition-all duration-300 ${allFilesUploaded
+                                ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0a0f1a] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
+                                : 'bg-white/[0.04] text-white/20 cursor-not-allowed border border-white/[0.08]'
                                 }`}
                         >
                             <span className="flex items-center justify-center gap-2">
@@ -756,7 +758,7 @@ export default function RedactorSentenciaPage() {
                             </span>
                         </button>
 
-                        <p className="text-center text-xs text-white/20 mt-4">
+                        <p className="text-center text-xs text-gray-500 mt-4">
                             El análisis identifica automáticamente los {term.pluralLower} para que usted los califique antes de generar
                         </p>
                     </div>
@@ -777,7 +779,7 @@ export default function RedactorSentenciaPage() {
                         <h2 className="font-serif text-2xl font-medium text-white mb-2">
                             Analizando expediente...
                         </h2>
-                        <p className="text-sm text-white/40 mb-4">
+                        <p className="text-sm text-gray-400 mb-4">
                             Gemini 2.5 Pro está leyendo los 3 documentos e identificando agravios
                         </p>
                         <div className="space-y-2 text-left max-w-sm mx-auto">
@@ -804,13 +806,13 @@ export default function RedactorSentenciaPage() {
                     <div className="max-w-4xl mx-auto">
                         <button
                             onClick={() => setPhase('upload')}
-                            className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-6"
+                            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white/70 transition-colors mb-6"
                         >
                             <ArrowLeft className="w-4 h-4" /> Volver
                         </button>
 
                         {/* Analysis Summary (compact) */}
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                        <div className="rounded-2xl border border-white/[0.08] bg-[#111827]/60 backdrop-blur-sm p-6 mb-6">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
@@ -818,7 +820,7 @@ export default function RedactorSentenciaPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-base font-medium text-white/90">Resumen del Análisis</h3>
-                                        <p className="text-xs text-white/40">
+                                        <p className="text-xs text-gray-400">
                                             Analizado en {analysisData.analysis_time_seconds}s • {analysisData.agravios.length} {term.pluralLower} identificados
                                         </p>
                                     </div>
@@ -828,14 +830,14 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         {/* Sentido Propuesto */}
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                        <div className="rounded-2xl border border-white/[0.08] bg-[#111827]/60 backdrop-blur-sm p-6 mb-6">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
                                     <Gavel className="w-5 h-5 text-[#c9a962]" />
                                 </div>
                                 <div>
                                     <h3 className="text-base font-medium text-white/90">Sentido del Proyecto</h3>
-                                    <p className="text-xs text-white/40">¿Cuál es la línea que desea para este proyecto de sentencia?</p>
+                                    <p className="text-xs text-gray-400">¿Cuál es la línea que desea para este proyecto de sentencia?</p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 gap-3">
@@ -849,7 +851,7 @@ export default function RedactorSentenciaPage() {
                                         onClick={() => setSentido(sentido === opt.value ? null : opt.value)}
                                         className={`p-4 rounded-xl border text-left transition-all duration-200 ${sentido === opt.value
                                             ? 'border-[#c9a962]/50 bg-[#c9a962]/10 shadow-sm shadow-[#c9a962]/10'
-                                            : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.05]'
+                                            : 'border-white/[0.08] bg-[#111827]/40 hover:border-white/[0.15] hover:bg-[#111827]/70'
                                             }`}
                                     >
                                         <span className="text-lg mb-1 block">{opt.icon}</span>
@@ -871,7 +873,7 @@ export default function RedactorSentenciaPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-base font-medium text-white/90">{term.singular} Dispositivo</h3>
-                                        <p className="text-xs text-white/40">
+                                        <p className="text-xs text-gray-400">
                                             ¿Hay un {term.singularLower} que por sí solo resuelve el caso al mayor beneficio?
                                         </p>
                                     </div>
@@ -889,7 +891,7 @@ export default function RedactorSentenciaPage() {
                                                 ? 'border-green-500/40 bg-green-500/10'
                                                 : dispositivoIndex !== null
                                                     ? 'border-white/[0.04] bg-white/[0.01] opacity-50'
-                                                    : 'border-white/[0.06] bg-white/[0.02] hover:border-green-500/20 hover:bg-green-500/[0.03]'
+                                                    : 'border-white/[0.08] bg-[#111827]/40 hover:border-green-500/20 hover:bg-green-500/[0.03]'
                                                 }`}
                                         >
                                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${dispositivoIndex === c.numero
@@ -897,7 +899,7 @@ export default function RedactorSentenciaPage() {
                                                 : 'border-white/20'
                                                 }`}>
                                                 {dispositivoIndex === c.numero && (
-                                                    <CheckCircle className="w-3 h-3 text-[#0a0a0a]" />
+                                                    <CheckCircle className="w-3 h-3 text-[#0a0f1a]" />
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -922,14 +924,14 @@ export default function RedactorSentenciaPage() {
 
                         {/* Thematic Groups Preview */}
                         {gruposTematicos.length > 0 && sentido !== 'conceder' && (
-                            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                            <div className="rounded-2xl border border-white/[0.08] bg-[#111827]/60 backdrop-blur-sm p-6 mb-6">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
                                         <FileText className="w-5 h-5 text-[#c9a962]" />
                                     </div>
                                     <div>
                                         <h3 className="text-base font-medium text-white/90">Agrupación Temática</h3>
-                                        <p className="text-xs text-white/40">{gruposTematicos.length} grupos identificados — se abordarán en conjunto</p>
+                                        <p className="text-xs text-gray-400">{gruposTematicos.length} grupos identificados — se abordarán en conjunto</p>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -949,14 +951,14 @@ export default function RedactorSentenciaPage() {
                         )}
 
                         {/* Instructions */}
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                        <div className="rounded-2xl border border-white/[0.08] bg-[#111827]/60 backdrop-blur-sm p-6 mb-6">
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
                                     <Edit3 className="w-5 h-5 text-[#c9a962]" />
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-medium text-white/90">Instrucciones para la Redacción</h3>
-                                    <p className="text-xs text-white/40">Opcional — dictele la línea al sistema</p>
+                                    <p className="text-xs text-gray-400">Opcional — dictele la línea al sistema</p>
                                 </div>
                             </div>
                             <textarea
@@ -991,7 +993,7 @@ export default function RedactorSentenciaPage() {
                             ) : (
                                 <button
                                     onClick={handleContinueToCalificacion}
-                                    className="flex-1 py-4 rounded-full text-base font-medium transition-all duration-300 bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20"
+                                    className="flex-1 py-4 rounded-full text-base font-bold transition-all duration-300 bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0a0f1a] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30"
                                 >
                                     <span className="flex items-center justify-center gap-2">
                                         <Edit3 className="w-5 h-5" />
@@ -1001,7 +1003,7 @@ export default function RedactorSentenciaPage() {
                             )}
                         </div>
 
-                        <p className="text-center text-xs text-white/20 mt-4">
+                        <p className="text-center text-xs text-gray-500 mt-4">
                             {dispositivoIndex !== null
                                 ? 'Se generará solo el estudio del agravio dispositivo — los demás se omitirán'
                                 : `Podrá calificar cada ${term.singularLower} individualmente antes de generar`
@@ -1017,20 +1019,20 @@ export default function RedactorSentenciaPage() {
                     <div className="max-w-4xl mx-auto">
                         <button
                             onClick={() => setPhase('estrategia')}
-                            className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-6"
+                            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white/70 transition-colors mb-6"
                         >
                             <ArrowLeft className="w-4 h-4" /> Volver a Estrategia
                         </button>
 
                         {/* Case Summary Card */}
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                        <div className="rounded-2xl border border-white/[0.08] bg-[#111827]/60 backdrop-blur-sm p-6 mb-6">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
                                     <Scale className="w-5 h-5 text-[#c9a962]" />
                                 </div>
                                 <div>
                                     <h3 className="text-base font-medium text-white/90">Resumen del Análisis</h3>
-                                    <p className="text-xs text-white/40">
+                                    <p className="text-xs text-gray-400">
                                         Analizado en {analysisData.analysis_time_seconds}s • {analysisData.agravios.length} {term.pluralLower} identificados
                                     </p>
                                 </div>
@@ -1038,19 +1040,19 @@ export default function RedactorSentenciaPage() {
 
                             {/* Expediente Data */}
                             <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-white/[0.03] rounded-lg p-3">
+                                <div className="bg-[#111827]/40 rounded-lg p-3">
                                     <p className="text-[10px] text-white/30 uppercase tracking-wider">Expediente</p>
                                     <p className="text-sm text-white/80 mt-1">{analysisData.datos_expediente.numero || 'No identificado'}</p>
                                 </div>
-                                <div className="bg-white/[0.03] rounded-lg p-3">
+                                <div className="bg-[#111827]/40 rounded-lg p-3">
                                     <p className="text-[10px] text-white/30 uppercase tracking-wider">Quejoso/Recurrente</p>
                                     <p className="text-sm text-white/80 mt-1">{analysisData.datos_expediente.quejoso_recurrente || 'No identificado'}</p>
                                 </div>
-                                <div className="bg-white/[0.03] rounded-lg p-3">
+                                <div className="bg-[#111827]/40 rounded-lg p-3">
                                     <p className="text-[10px] text-white/30 uppercase tracking-wider">Materia</p>
                                     <p className="text-sm text-white/80 mt-1">{analysisData.datos_expediente.materia || 'No identificada'}</p>
                                 </div>
-                                <div className="bg-white/[0.03] rounded-lg p-3">
+                                <div className="bg-[#111827]/40 rounded-lg p-3">
                                     <p className="text-[10px] text-white/30 uppercase tracking-wider">Tribunal</p>
                                     <p className="text-sm text-white/80 mt-1">{analysisData.datos_expediente.tribunal || 'No identificado'}</p>
                                 </div>
@@ -1077,7 +1079,7 @@ export default function RedactorSentenciaPage() {
                             </div>
                             <div>
                                 <h3 className="text-base font-medium text-white/90">Califique cada {term.singular}</h3>
-                                <p className="text-xs text-white/40">
+                                <p className="text-xs text-gray-400">
                                     El sistema redactará el estudio de fondo según su calificación
                                 </p>
                             </div>
@@ -1094,7 +1096,7 @@ export default function RedactorSentenciaPage() {
                                             ? 'border-red-500/30 bg-red-500/[0.04]'
                                             : calif.calificacion === 'inoperante'
                                                 ? 'border-amber-500/30 bg-amber-500/[0.04]'
-                                                : 'border-white/[0.06] bg-white/[0.03]'
+                                                : 'border-white/[0.08] bg-[#111827]/50'
                                         }`}
                                 >
                                     {/* Card Header */}
@@ -1117,7 +1119,7 @@ export default function RedactorSentenciaPage() {
                                                     )}
                                                 </div>
                                                 <h4 className="text-sm font-medium text-white/90">{calif.titulo}</h4>
-                                                <p className="text-xs text-white/40 mt-1">{calif.resumen}</p>
+                                                <p className="text-xs text-gray-400 mt-1">{calif.resumen}</p>
                                             </div>
                                             <button
                                                 onClick={() => setExpandedAgravio(
@@ -1171,7 +1173,7 @@ export default function RedactorSentenciaPage() {
                                                             : opt === 'infundado'
                                                                 ? 'bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm shadow-red-500/10'
                                                                 : 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm shadow-amber-500/10'
-                                                        : 'bg-white/[0.04] text-white/40 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white/60'
+                                                        : 'bg-[#111827]/40 text-gray-400 border border-white/[0.08] hover:bg-[#111827]/70 hover:text-white/60'
                                                         }`}
                                                 >
                                                     {opt.charAt(0).toUpperCase() + opt.slice(1)}
@@ -1234,9 +1236,9 @@ export default function RedactorSentenciaPage() {
                         <button
                             onClick={handleGenerate}
                             disabled={!allCalificadas}
-                            className={`w-full py-4 rounded-full text-base font-medium transition-all duration-300 ${allCalificadas
-                                ? 'bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20'
-                                : 'bg-white/[0.04] text-white/20 cursor-not-allowed border border-white/[0.06]'
+                            className={`w-full py-4 rounded-full text-base font-bold transition-all duration-300 ${allCalificadas
+                                ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0a0f1a] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
+                                : 'bg-white/[0.04] text-gray-600 cursor-not-allowed border border-white/[0.08]'
                                 }`}
                         >
                             <span className="flex items-center justify-center gap-2">
@@ -1248,7 +1250,7 @@ export default function RedactorSentenciaPage() {
                             </span>
                         </button>
 
-                        <p className="text-center text-xs text-white/20 mt-4">
+                        <p className="text-center text-xs text-gray-500 mt-4">
                             La generación creará un estudio de fondo individualizado para cada {term.singularLower}
                         </p>
                     </div>
@@ -1271,7 +1273,7 @@ export default function RedactorSentenciaPage() {
                         <h2 className="font-serif text-2xl font-medium text-white mb-2">
                             Redactando Estudio de Fondo profundo...
                         </h2>
-                        <p className="text-sm text-white/40 mb-10">
+                        <p className="text-sm text-gray-400 mb-10">
                             Pipeline enfocado con RAG intensivo por agravio — Tiempo estimado: 5-15 minutos
                         </p>
 
@@ -1313,19 +1315,19 @@ export default function RedactorSentenciaPage() {
                         <div className="flex items-center justify-between mb-6">
                             <button
                                 onClick={handleReset}
-                                className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors"
+                                className="flex items-center gap-2 text-sm text-gray-400 hover:text-white/70 transition-colors"
                             >
                                 <ArrowLeft className="w-4 h-4" /> Nueva redacción
                             </button>
                             <div className="flex items-center gap-3">
                                 {tokensInfo && (
-                                    <span className="text-xs text-white/20">
+                                    <span className="text-xs text-gray-500">
                                         {tokensInfo.input.toLocaleString()} → {tokensInfo.output.toLocaleString()} tokens
                                     </span>
                                 )}
                                 <button
                                     onClick={handleCopy}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/10 hover:border-[#c9a962]/30 text-sm text-white/60 hover:text-white/90 transition-all"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#111827]/60 border border-white/10 hover:border-[#c9a962]/40 text-sm text-gray-300 hover:text-white transition-all"
                                 >
                                     {copied ? (
                                         <>
@@ -1341,7 +1343,7 @@ export default function RedactorSentenciaPage() {
                                 </button>
                                 <button
                                     onClick={handleDownloadTxt}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.05] border border-white/10 hover:border-white/20 text-sm text-white/40 hover:text-white/60 transition-all"
+                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-[#111827]/60 border border-white/10 hover:border-white/20 text-sm text-gray-400 hover:text-gray-200 transition-all"
                                 >
                                     <Download className="w-3.5 h-3.5" />
                                     TXT
@@ -1374,7 +1376,7 @@ export default function RedactorSentenciaPage() {
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-medium text-white/90">Exportar Sentencia Completa</h3>
-                                    <p className="text-xs text-white/40">Combine su adelanto con el estudio de fondo</p>
+                                    <p className="text-xs text-gray-400">Combine su adelanto con el estudio de fondo</p>
                                 </div>
                             </div>
                             <p className="text-xs text-white/30 mb-4 ml-[52px]">
@@ -1419,9 +1421,9 @@ export default function RedactorSentenciaPage() {
                             <button
                                 onClick={handleMergeDownload}
                                 disabled={!adelantoFile || exportLoading}
-                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${!adelantoFile || exportLoading
-                                    ? 'bg-white/[0.04] text-white/20 cursor-not-allowed border border-white/[0.06]'
-                                    : 'bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20'
+                                className={`w-full flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition-all duration-300 ${!adelantoFile || exportLoading
+                                    ? 'bg-white/[0.04] text-gray-600 cursor-not-allowed border border-white/[0.08]'
+                                    : 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0a0f1a] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
                                     }`}
                             >
                                 {exportLoading ? (
@@ -1439,8 +1441,8 @@ export default function RedactorSentenciaPage() {
                         </div>
 
                         {/* ── Fallback: Formato Oficial (secondary) ── */}
-                        <details className="group rounded-2xl border border-white/[0.06] bg-white/[0.02] mb-6">
-                            <summary className="flex items-center gap-3 px-5 py-3 cursor-pointer text-white/40 hover:text-white/60 transition-colors">
+                        <details className="group rounded-2xl border border-white/[0.08] bg-[#111827]/30 mb-6">
+                            <summary className="flex items-center gap-3 px-5 py-3 cursor-pointer text-gray-400 hover:text-gray-200 transition-colors">
                                 <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
                                 <span className="text-xs">O exportar solo el estudio de fondo con formato genérico</span>
                             </summary>
@@ -1478,7 +1480,7 @@ export default function RedactorSentenciaPage() {
                                     disabled={exportLoading}
                                     className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-medium transition-all duration-300 ${exportLoading
                                         ? 'bg-white/[0.04] text-white/20 cursor-wait'
-                                        : 'bg-white/[0.06] text-white/50 hover:text-white/80 hover:bg-white/[0.08] border border-white/[0.06]'
+                                        : 'bg-[#111827]/60 text-gray-400 hover:text-white hover:bg-[#111827] border border-white/[0.08]'
                                         }`}
                                 >
                                     {exportLoading ? (
@@ -1497,10 +1499,10 @@ export default function RedactorSentenciaPage() {
                         </details>
 
                         {/* Sentencia content */}
-                        <div className="rounded-2xl border border-white/[0.06] bg-[#111111] overflow-hidden">
-                            <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                        <div className="rounded-2xl border border-white/[0.08] bg-[#0d1525] overflow-hidden">
+                            <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
                                 <span className="text-sm font-medium text-[#c9a962]/70">Proyecto de Sentencia</span>
-                                <span className="text-xs text-white/20 font-mono">{selectedTipo?.id}</span>
+                                <span className="text-xs text-gray-500 font-mono">{selectedTipo?.id}</span>
                             </div>
                             <div className="px-6 py-6 max-h-[70vh] overflow-y-auto">
                                 <pre className="whitespace-pre-wrap text-sm text-white/80 leading-relaxed font-serif">
