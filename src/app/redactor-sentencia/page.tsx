@@ -64,6 +64,25 @@ const TIPOS: TipoConfig[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Dynamic Terminology based on tipo
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function getTerminology(tipoId?: TipoSentencia) {
+    if (tipoId === 'amparo_directo') {
+        return { singular: 'Concepto de Violación', plural: 'Conceptos de Violación', singularLower: 'concepto de violación', pluralLower: 'conceptos de violación' };
+    }
+    return { singular: 'Agravio', plural: 'Agravios', singularLower: 'agravio', pluralLower: 'agravios' };
+}
+
+interface GrupoTematico {
+    tema: string;
+    agravios_nums: number[];
+    descripcion: string;
+}
+
+type SentidoPropuesto = 'conceder' | 'negar' | 'sobreseer' | null;
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Sub-components
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -170,8 +189,8 @@ const PROGRESS_STEPS = [
 export default function RedactorSentenciaPage() {
     const { user, loading: authLoading } = useRequireAuth();
 
-    // State Machine: 'select' → 'upload' → 'analyzing' → 'calificacion' → 'generating' → 'result'
-    const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'calificacion' | 'generating' | 'result'>('select');
+    // State Machine: 'select' → 'upload' → 'analyzing' → 'estrategia' → 'calificacion' → 'generating' → 'result'
+    const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'estrategia' | 'calificacion' | 'generating' | 'result'>('select');
     const [selectedTipo, setSelectedTipo] = useState<TipoConfig | null>(null);
     const [files, setFiles] = useState<(File | null)[]>([null, null]);
     const [result, setResult] = useState('');
@@ -187,14 +206,20 @@ export default function RedactorSentenciaPage() {
     const [metaQuejoso, setMetaQuejoso] = useState(''); // kept for analysis display, not exported
     // Note: metaMagistrado and metaSecretario removed — not needed for estudio de fondo
 
-    // ── Secretary Instructions ───────────────────────────────────────────────
+    // ── Secretary Instructions & Strategy ──────────────────────────────────
     const [instrucciones, setInstrucciones] = useState('');
+    const [sentido, setSentido] = useState<SentidoPropuesto>(null);
+    const [dispositivoIndex, setDispositivoIndex] = useState<number | null>(null);
+    const [gruposTematicos, setGruposTematicos] = useState<GrupoTematico[]>([]);
     const [ragCount, setRagCount] = useState(0);
     const [generationInfo, setGenerationInfo] = useState<{
         phasesCompleted: number;
         totalChars: number;
         generationTime: number;
     } | null>(null);
+
+    // Dynamic terminology
+    const term = getTerminology(selectedTipo?.id);
 
     // ── Phase 0.5: Analysis & Calificación ─────────────────────────────────
     interface AgravioData {
@@ -217,6 +242,7 @@ export default function RedactorSentenciaPage() {
             tribunal: string;
         };
         agravios: AgravioData[];
+        grupos_tematicos?: GrupoTematico[];
         observaciones_preliminares: string;
         analysis_time_seconds: number;
     }
@@ -224,7 +250,7 @@ export default function RedactorSentenciaPage() {
         numero: number;
         titulo: string;
         resumen: string;
-        calificacion: 'fundado' | 'infundado' | 'inoperante' | 'sin_calificar';
+        calificacion: 'fundado' | 'infundado' | 'inoperante' | 'innecesario' | 'sin_calificar';
         notas: string;
         expanded: boolean;
         dispositivo: boolean;
@@ -287,7 +313,14 @@ export default function RedactorSentenciaPage() {
                 dispositivo: false,
             }));
             setCalificaciones(califs);
-            setPhase('calificacion');
+
+            // Store thematic groups from analysis
+            if (data.grupos_tematicos && data.grupos_tematicos.length > 0) {
+                setGruposTematicos(data.grupos_tematicos);
+            }
+
+            // Go to strategy phase first
+            setPhase('estrategia');
         } catch (err: any) {
             setError(err.message || 'Error al analizar el expediente');
             setPhase('upload');
@@ -379,6 +412,31 @@ export default function RedactorSentenciaPage() {
     };
 
     const allCalificadas = calificaciones.length > 0 && calificaciones.every(c => c.calificacion !== 'sin_calificar');
+
+    // ── Apply dispositivo auto-calificación ──────────────────────────────
+    const applyDispositivo = (agravioNum: number) => {
+        setDispositivoIndex(agravioNum);
+        setCalificaciones(prev => prev.map(c => {
+            if (c.numero === agravioNum) {
+                return { ...c, calificacion: 'fundado', dispositivo: true };
+            }
+            return { ...c, calificacion: 'innecesario', dispositivo: false };
+        }));
+    };
+
+    const clearDispositivo = () => {
+        setDispositivoIndex(null);
+        setCalificaciones(prev => prev.map(c => ({
+            ...c,
+            calificacion: 'sin_calificar',
+            dispositivo: false,
+        })));
+    };
+
+    // ── Proceed from Strategy to Calificacion ────────────────────────────
+    const handleContinueToCalificacion = () => {
+        setPhase('calificacion');
+    };
 
     // ── Copy to Clipboard ─────────────────────────────────────────────────
     const handleCopy = async () => {
@@ -663,7 +721,7 @@ export default function RedactorSentenciaPage() {
                         </button>
 
                         <p className="text-center text-xs text-white/20 mt-4">
-                            El análisis identifica automáticamente los agravios para que usted los califique antes de generar
+                            El análisis identifica automáticamente los {term.pluralLower} para que usted los califique antes de generar
                         </p>
                     </div>
                 )}
@@ -693,7 +751,7 @@ export default function RedactorSentenciaPage() {
                             </div>
                             <div className="flex items-center gap-3 opacity-40">
                                 <div className="w-5 h-5 rounded-full border border-white/10 flex-shrink-0" />
-                                <span className="text-sm text-white/25">📋 Identificando agravios individuales...</span>
+                                <span className="text-sm text-white/25">📋 Identificando {term.pluralLower} individuales...</span>
                             </div>
                             <div className="flex items-center gap-3 opacity-40">
                                 <div className="w-5 h-5 rounded-full border border-white/10 flex-shrink-0" />
@@ -704,15 +762,228 @@ export default function RedactorSentenciaPage() {
                 )}
 
                 {/* ═══════════════════════════════════════════════════════════ */}
-                {/* PHASE 2.75: CALIFICACIÓN                                     */}
+                {/* PHASE 2.6: ESTRATEGIA DEL PROYECTO                          */}
                 {/* ═══════════════════════════════════════════════════════════ */}
-                {phase === 'calificacion' && analysisData && (
+                {phase === 'estrategia' && analysisData && (
                     <div className="max-w-4xl mx-auto">
                         <button
                             onClick={() => setPhase('upload')}
                             className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-6"
                         >
-                            <ArrowLeft className="w-4 h-4" /> Volver a documentos
+                            <ArrowLeft className="w-4 h-4" /> Volver
+                        </button>
+
+                        {/* Analysis Summary (compact) */}
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
+                                        <Search className="w-5 h-5 text-[#c9a962]" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-medium text-white/90">Resumen del Análisis</h3>
+                                        <p className="text-xs text-white/40">
+                                            Analizado en {analysisData.analysis_time_seconds}s • {analysisData.agravios.length} {term.pluralLower} identificados
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-sm text-white/60 leading-relaxed">{analysisData.resumen_caso}</p>
+                        </div>
+
+                        {/* Sentido Propuesto */}
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
+                                    <Gavel className="w-5 h-5 text-[#c9a962]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-medium text-white/90">Sentido del Proyecto</h3>
+                                    <p className="text-xs text-white/40">¿Cuál es la línea que desea para este proyecto de sentencia?</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                {([
+                                    { value: 'conceder' as SentidoPropuesto, label: 'Conceder amparo', icon: '✅', desc: 'El amparo es procedente y fundado' },
+                                    { value: 'negar' as SentidoPropuesto, label: 'Negar amparo', icon: '❌', desc: 'Los agravios son infundados/inoperantes' },
+                                    { value: 'sobreseer' as SentidoPropuesto, label: 'Sobreseer', icon: '⚠️', desc: 'Existe causa de improcedencia' },
+                                ]).map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        onClick={() => setSentido(sentido === opt.value ? null : opt.value)}
+                                        className={`p-4 rounded-xl border text-left transition-all duration-200 ${sentido === opt.value
+                                            ? 'border-[#c9a962]/50 bg-[#c9a962]/10 shadow-sm shadow-[#c9a962]/10'
+                                            : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] hover:bg-white/[0.05]'
+                                            }`}
+                                    >
+                                        <span className="text-lg mb-1 block">{opt.icon}</span>
+                                        <span className={`text-sm font-medium block mb-1 ${sentido === opt.value ? 'text-[#c9a962]' : 'text-white/80'}`}>
+                                            {opt.label}
+                                        </span>
+                                        <span className="text-[10px] text-white/30">{opt.desc}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Dispositivo Selector — only when Conceder */}
+                        {sentido === 'conceder' && (
+                            <div className="rounded-2xl border border-green-500/20 bg-green-500/[0.03] backdrop-blur-sm p-6 mb-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                                        <Sparkles className="w-5 h-5 text-green-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-medium text-white/90">{term.singular} Dispositivo</h3>
+                                        <p className="text-xs text-white/40">
+                                            ¿Hay un {term.singularLower} que por sí solo resuelve el caso al mayor beneficio?
+                                        </p>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-green-400/60 mb-4 flex items-center gap-2">
+                                    <span className="text-base">💡</span>
+                                    Si selecciona un {term.singularLower} como dispositivo, los demás se omitirán con un párrafo formulaico — ahorrando ~60% en tiempo y costo.
+                                </p>
+                                <div className="space-y-2">
+                                    {calificaciones.map(c => (
+                                        <button
+                                            key={c.numero}
+                                            onClick={() => dispositivoIndex === c.numero ? clearDispositivo() : applyDispositivo(c.numero)}
+                                            className={`w-full text-left p-3 rounded-xl border transition-all duration-200 flex items-center gap-3 ${dispositivoIndex === c.numero
+                                                ? 'border-green-500/40 bg-green-500/10'
+                                                : dispositivoIndex !== null
+                                                    ? 'border-white/[0.04] bg-white/[0.01] opacity-50'
+                                                    : 'border-white/[0.06] bg-white/[0.02] hover:border-green-500/20 hover:bg-green-500/[0.03]'
+                                                }`}
+                                        >
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${dispositivoIndex === c.numero
+                                                ? 'border-green-400 bg-green-400'
+                                                : 'border-white/20'
+                                                }`}>
+                                                {dispositivoIndex === c.numero && (
+                                                    <CheckCircle className="w-3 h-3 text-[#0a0a0a]" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-xs text-[#c9a962]/70 font-medium">{term.singular} {c.numero}</span>
+                                                <p className="text-sm text-white/80 font-medium truncate">{c.titulo}</p>
+                                            </div>
+                                            {dispositivoIndex === c.numero && (
+                                                <span className="text-[10px] px-2 py-1 rounded-full bg-green-500/20 text-green-400 font-medium flex-shrink-0">DISPOSITIVO</span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                                {dispositivoIndex !== null && (
+                                    <div className="mt-4 p-3 rounded-xl bg-green-500/[0.06] border border-green-500/[0.12]">
+                                        <p className="text-xs text-green-400/80">
+                                            ✅ Solo se redactará el estudio de fondo del {term.singularLower} {dispositivoIndex}. Los demás {calificaciones.length - 1} {term.pluralLower} se declararán innecesarios de estudio.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Thematic Groups Preview */}
+                        {gruposTematicos.length > 0 && sentido !== 'conceder' && (
+                            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
+                                        <FileText className="w-5 h-5 text-[#c9a962]" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-medium text-white/90">Agrupación Temática</h3>
+                                        <p className="text-xs text-white/40">{gruposTematicos.length} grupos identificados — se abordarán en conjunto</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    {gruposTematicos.map((g, gi) => {
+                                        const colors = ['border-l-blue-500/40', 'border-l-purple-500/40', 'border-l-emerald-500/40', 'border-l-amber-500/40', 'border-l-pink-500/40'];
+                                        return (
+                                            <div key={gi} className={`pl-4 py-2 border-l-2 ${colors[gi % colors.length]} bg-white/[0.02] rounded-r-lg`}>
+                                                <p className="text-sm text-white/80 font-medium">{g.tema}</p>
+                                                <p className="text-[10px] text-white/30">
+                                                    {term.plural}: {g.agravios_nums.join(', ')} {g.descripcion ? `— ${g.descripcion}` : ''}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Instructions */}
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-6">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
+                                    <Edit3 className="w-5 h-5 text-[#c9a962]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-white/90">Instrucciones para la Redacción</h3>
+                                    <p className="text-xs text-white/40">Opcional — dictele la línea al sistema</p>
+                                </div>
+                            </div>
+                            <textarea
+                                value={instrucciones}
+                                onChange={e => setInstrucciones(e.target.value)}
+                                rows={3}
+                                placeholder="Ej: Aplicar suplencia de la queja por materia laboral. El agravio 2 es fundado por violación al debido proceso..."
+                                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 focus:ring-1 focus:ring-[#c9a962]/10 transition-colors resize-none"
+                            />
+                        </div>
+
+                        {/* Error */}
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
+                                <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-red-300">{error}</p>
+                            </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                            {dispositivoIndex !== null ? (
+                                <button
+                                    onClick={handleGenerate}
+                                    className="flex-1 py-4 rounded-full text-base font-medium transition-all duration-300 bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500 shadow-lg shadow-green-500/20"
+                                >
+                                    <span className="flex items-center justify-center gap-2">
+                                        <Sparkles className="w-5 h-5" />
+                                        Generar con {term.singular} Dispositivo (solo {term.singularLower} {dispositivoIndex})
+                                    </span>
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleContinueToCalificacion}
+                                    className="flex-1 py-4 rounded-full text-base font-medium transition-all duration-300 bg-gradient-to-r from-[#c9a962] to-[#8b7355] text-[#0a0a0a] hover:from-[#d4b56d] hover:to-[#9a8260] shadow-lg shadow-[#c9a962]/20"
+                                >
+                                    <span className="flex items-center justify-center gap-2">
+                                        <Edit3 className="w-5 h-5" />
+                                        Continuar a Calificación Individual
+                                    </span>
+                                </button>
+                            )}
+                        </div>
+
+                        <p className="text-center text-xs text-white/20 mt-4">
+                            {dispositivoIndex !== null
+                                ? 'Se generará solo el estudio del agravio dispositivo — los demás se omitirán'
+                                : `Podrá calificar cada ${term.singularLower} individualmente antes de generar`
+                            }
+                        </p>
+                    </div>
+                )}
+
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* PHASE 2.75: CALIFICACIÓN                                     */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {phase === 'calificacion' && analysisData && (
+                    <div className="max-w-4xl mx-auto">
+                        <button
+                            onClick={() => setPhase('estrategia')}
+                            className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-6"
+                        >
+                            <ArrowLeft className="w-4 h-4" /> Volver a Estrategia
                         </button>
 
                         {/* Case Summary Card */}
@@ -724,7 +995,7 @@ export default function RedactorSentenciaPage() {
                                 <div>
                                     <h3 className="text-base font-medium text-white/90">Resumen del Análisis</h3>
                                     <p className="text-xs text-white/40">
-                                        Analizado en {analysisData.analysis_time_seconds}s • {analysisData.agravios.length} agravios identificados
+                                        Analizado en {analysisData.analysis_time_seconds}s • {analysisData.agravios.length} {term.pluralLower} identificados
                                     </p>
                                 </div>
                             </div>
@@ -769,7 +1040,7 @@ export default function RedactorSentenciaPage() {
                                 <Edit3 className="w-5 h-5 text-[#c9a962]" />
                             </div>
                             <div>
-                                <h3 className="text-base font-medium text-white/90">Califique cada Agravio</h3>
+                                <h3 className="text-base font-medium text-white/90">Califique cada {term.singular}</h3>
                                 <p className="text-xs text-white/40">
                                     El sistema redactará el estudio de fondo según su calificación
                                 </p>
@@ -796,7 +1067,7 @@ export default function RedactorSentenciaPage() {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="text-xs px-2 py-0.5 rounded-full bg-[#c9a962]/10 text-[#c9a962] font-medium">
-                                                        Agravio {calif.numero}
+                                                        {term.singular} {calif.numero}
                                                     </span>
                                                     {calif.calificacion !== 'sin_calificar' && (
                                                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${calif.calificacion === 'fundado'
@@ -828,7 +1099,7 @@ export default function RedactorSentenciaPage() {
                                         {/* Expandable Full Text */}
                                         {expandedAgravio === calif.numero && (
                                             <div className="bg-white/[0.03] rounded-xl p-4 mb-4 border border-white/[0.04]">
-                                                <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Texto Íntegro del Agravio</p>
+                                                <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Texto Íntegro del {term.singular}</p>
                                                 <p className="text-xs text-white/50 leading-relaxed whitespace-pre-wrap">
                                                     {analysisData.agravios.find(a => a.numero === calif.numero)?.texto_integro || 'No disponible'}
                                                 </p>
@@ -878,17 +1149,17 @@ export default function RedactorSentenciaPage() {
                                                 <div
                                                     onClick={() => updateCalificacion(i, 'dispositivo', !calif.dispositivo)}
                                                     className={`relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${calif.dispositivo
-                                                            ? 'bg-green-500/60'
-                                                            : 'bg-white/10'
+                                                        ? 'bg-green-500/60'
+                                                        : 'bg-white/10'
                                                         }`}
                                                 >
                                                     <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${calif.dispositivo ? 'translate-x-[18px]' : 'translate-x-0.5'
                                                         }`} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <span className="text-xs font-medium text-green-400/90">Agravio dispositivo</span>
+                                                    <span className="text-xs font-medium text-green-400/90">{term.singular} dispositivo</span>
                                                     <p className="text-[10px] text-white/30 mt-0.5 leading-tight">
-                                                        Si es fundado, resuelve el caso — los demás agravios se omiten
+                                                        Si es fundado, resuelve el caso — los demás {term.pluralLower} se omiten
                                                     </p>
                                                 </div>
                                             </label>
@@ -899,7 +1170,7 @@ export default function RedactorSentenciaPage() {
                                             value={calif.notas}
                                             onChange={(e) => updateCalificacion(i, 'notas', e.target.value)}
                                             rows={2}
-                                            placeholder="Notas opcionales para guiar la redacción de este agravio..."
+                                            placeholder={`Notas opcionales para guiar la redacción de este ${term.singularLower}...`}
                                             className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2 text-xs text-white/70 placeholder:text-white/15 focus:outline-none focus:border-[#c9a962]/30 transition-colors resize-none"
                                         />
                                     </div>
@@ -907,25 +1178,13 @@ export default function RedactorSentenciaPage() {
                             ))}
                         </div>
 
-                        {/* Secretary Instructions (optional) */}
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 mb-8">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
-                                    <FileText className="w-5 h-5 text-[#c9a962]" />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-medium text-white/90">Instrucciones Adicionales</h3>
-                                    <p className="text-xs text-white/40">Opcional — indicaciones generales para toda la sentencia</p>
-                                </div>
+                        {/* Instructions already captured in Strategy phase -- show summary if any */}
+                        {instrucciones && (
+                            <div className="rounded-2xl border border-[#c9a962]/15 bg-[#c9a962]/[0.03] backdrop-blur-sm p-4 mb-8">
+                                <p className="text-[10px] text-[#c9a962]/50 uppercase tracking-wider mb-1">Instrucciones del Proyecto</p>
+                                <p className="text-xs text-white/50">{instrucciones}</p>
                             </div>
-                            <textarea
-                                value={instrucciones}
-                                onChange={e => setInstrucciones(e.target.value)}
-                                rows={3}
-                                placeholder="Ej: Aplicar suplencia de la queja por materia laboral. Citar la tesis 2024/XII del Pleno..."
-                                className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 focus:ring-1 focus:ring-[#c9a962]/10 transition-colors resize-none"
-                            />
-                        </div>
+                        )}
 
                         {/* Error */}
                         {error && (
@@ -947,14 +1206,14 @@ export default function RedactorSentenciaPage() {
                             <span className="flex items-center justify-center gap-2">
                                 <Sparkles className="w-5 h-5" />
                                 {allCalificadas
-                                    ? `Generar Estudio de Fondo (${calificaciones.filter(c => c.calificacion === 'fundado').length} fundados, ${calificaciones.filter(c => c.calificacion !== 'fundado').length} infundados/inoperantes)`
-                                    : `Califique todos los agravios (${calificaciones.filter(c => c.calificacion !== 'sin_calificar').length}/${calificaciones.length})`
+                                    ? `Generar Estudio de Fondo (${calificaciones.filter(c => c.calificacion === 'fundado').length} fundados, ${calificaciones.filter(c => c.calificacion !== 'fundado' && c.calificacion !== 'sin_calificar').length} infundados/inoperantes)`
+                                    : `Califique todos los ${term.pluralLower} (${calificaciones.filter(c => c.calificacion !== 'sin_calificar').length}/${calificaciones.length})`
                                 }
                             </span>
                         </button>
 
                         <p className="text-center text-xs text-white/20 mt-4">
-                            La generación creará un estudio de fondo individualizado para cada agravio
+                            La generación creará un estudio de fondo individualizado para cada {term.singularLower}
                         </p>
                     </div>
                 )}
