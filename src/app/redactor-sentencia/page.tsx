@@ -227,6 +227,7 @@ export default function RedactorSentenciaPage() {
         calificacion: 'fundado' | 'infundado' | 'inoperante' | 'sin_calificar';
         notas: string;
         expanded: boolean;
+        dispositivo: boolean;
     }
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
     const [calificaciones, setCalificaciones] = useState<CalificacionEntry[]>([]);
@@ -283,6 +284,7 @@ export default function RedactorSentenciaPage() {
                 calificacion: 'sin_calificar' as const,
                 notas: '',
                 expanded: false,
+                dispositivo: false,
             }));
             setCalificaciones(califs);
             setPhase('calificacion');
@@ -327,6 +329,7 @@ export default function RedactorSentenciaPage() {
                     resumen: c.resumen,
                     calificacion: c.calificacion,
                     notas: c.notas,
+                    dispositivo: c.dispositivo,
                 }));
                 formData.append('calificaciones', JSON.stringify(califJson));
             }
@@ -849,7 +852,12 @@ export default function RedactorSentenciaPage() {
                                             {(['fundado', 'infundado', 'inoperante'] as const).map(opt => (
                                                 <button
                                                     key={opt}
-                                                    onClick={() => updateCalificacion(i, 'calificacion', opt)}
+                                                    onClick={() => {
+                                                        updateCalificacion(i, 'calificacion', opt);
+                                                        if (opt !== 'fundado') {
+                                                            updateCalificacion(i, 'dispositivo', false);
+                                                        }
+                                                    }}
                                                     className={`px-4 py-2 rounded-xl text-xs font-medium transition-all duration-200 ${calif.calificacion === opt
                                                         ? opt === 'fundado'
                                                             ? 'bg-green-500/20 text-green-400 border border-green-500/40 shadow-sm shadow-green-500/10'
@@ -863,6 +871,28 @@ export default function RedactorSentenciaPage() {
                                                 </button>
                                             ))}
                                         </div>
+
+                                        {/* Dispositivo Toggle — only when fundado */}
+                                        {calif.calificacion === 'fundado' && (
+                                            <label className="flex items-center gap-3 mb-3 px-3 py-2.5 rounded-xl bg-green-500/[0.06] border border-green-500/[0.12] cursor-pointer transition-all duration-200 hover:bg-green-500/[0.10]">
+                                                <div
+                                                    onClick={() => updateCalificacion(i, 'dispositivo', !calif.dispositivo)}
+                                                    className={`relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0 ${calif.dispositivo
+                                                            ? 'bg-green-500/60'
+                                                            : 'bg-white/10'
+                                                        }`}
+                                                >
+                                                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${calif.dispositivo ? 'translate-x-[18px]' : 'translate-x-0.5'
+                                                        }`} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <span className="text-xs font-medium text-green-400/90">Agravio dispositivo</span>
+                                                    <p className="text-[10px] text-white/30 mt-0.5 leading-tight">
+                                                        Si es fundado, resuelve el caso — los demás agravios se omiten
+                                                    </p>
+                                                </div>
+                                            </label>
+                                        )}
 
                                         {/* Notes Textarea */}
                                         <textarea
