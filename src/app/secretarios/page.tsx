@@ -18,7 +18,7 @@ export default function SecretariosPage() {
     const { user } = useAuth();
 
     const handleSubscribe = async () => {
-        const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_SECRETARIOS;
+        const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ULTRA_SECRETARIOS;
         if (!priceId) {
             alert('El plan estará disponible próximamente. Contáctanos para más información.');
             return;
