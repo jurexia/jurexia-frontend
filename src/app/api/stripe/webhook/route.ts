@@ -213,6 +213,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             pro_annual: PLANS.pro_annual.priceId,
             platinum_monthly: PLANS.platinum_monthly.priceId,
             platinum_annual: PLANS.platinum_annual.priceId,
+            ultra_secretarios: PLANS.ultra_secretarios.priceId,
         });
         // Don't return — still try to update with whatever we have, but the warning is logged
     }
