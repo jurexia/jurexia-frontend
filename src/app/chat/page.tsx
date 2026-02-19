@@ -13,6 +13,7 @@ import StateSelectorModal from '@/components/StateSelectorModal';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
+import { useRouter } from 'next/navigation';
 import { getEstadoLabel } from '@/lib/estados';
 import {
     Conversation,
@@ -28,6 +29,14 @@ import {
 export default function ChatPage() {
     // Auth protection - redirects to login if not authenticated
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
+    const router = useRouter();
+
+    // Redirect ultra_secretarios users to Redactor de Sentencias
+    useEffect(() => {
+        if (!authLoading && profile?.subscription_type === 'ultra_secretarios') {
+            router.replace('/redactor-sentencia/chat');
+        }
+    }, [authLoading, profile, router]);
 
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showStateModal, setShowStateModal] = useState(false);
@@ -380,8 +389,8 @@ export default function ChatPage() {
                                                             setShowMateriaDropdown(false);
                                                         }}
                                                         className={`w-full text-left px-4 py-2 text-sm transition-colors duration-100 ${selectedMateria === m.key
-                                                                ? 'text-accent-gold bg-white/10 font-medium'
-                                                                : 'text-white/80 hover:text-white hover:bg-white/5'
+                                                            ? 'text-accent-gold bg-white/10 font-medium'
+                                                            : 'text-white/80 hover:text-white hover:bg-white/5'
                                                             }`}
                                                     >
                                                         {m.label}
