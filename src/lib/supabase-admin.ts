@@ -26,11 +26,12 @@ function getSupabaseAdmin() {
 
 // Plan configuration mapping
 export const PLAN_CONFIG = {
-    gratuito: { queriesLimit: 3, isUnlimited: false },
-    pro_monthly: { queriesLimit: 170, isUnlimited: false },
-    pro_annual: { queriesLimit: 170, isUnlimited: false },
-    platinum_monthly: { queriesLimit: 700, isUnlimited: false },
-    platinum_annual: { queriesLimit: 700, isUnlimited: false },
+    gratuito: { queriesLimit: 3, draftsLimit: 0, isUnlimited: false },
+    pro_monthly: { queriesLimit: 170, draftsLimit: 0, isUnlimited: false },
+    pro_annual: { queriesLimit: 170, draftsLimit: 0, isUnlimited: false },
+    platinum_monthly: { queriesLimit: 700, draftsLimit: 0, isUnlimited: false },
+    platinum_annual: { queriesLimit: 700, draftsLimit: 0, isUnlimited: false },
+    ultra_secretarios: { queriesLimit: 50, draftsLimit: 20, isUnlimited: false },
 } as const;
 
 export type PlanType = keyof typeof PLAN_CONFIG;
@@ -60,6 +61,8 @@ export async function updateUserSubscription(
         subscription_type: subscriptionType,
         queries_limit: config.queriesLimit,
         queries_used: 0,
+        drafts_limit: config.draftsLimit,
+        drafts_used: 0,
         stripe_customer_id: stripeCustomerId || undefined,
         stripe_subscription_id: stripeSubscriptionId || undefined,
         is_active: true,
@@ -142,6 +145,8 @@ export async function downgradeToFree(email: string) {
             subscription_type: 'gratuito',
             queries_limit: PLAN_CONFIG.gratuito.queriesLimit,
             queries_used: 0,
+            drafts_limit: 0,
+            drafts_used: 0,
             stripe_subscription_id: null,
             updated_at: new Date().toISOString(),
         } as Record<string, unknown>)
@@ -170,6 +175,7 @@ export async function resetUserQueries(email: string) {
         .from('user_profiles')
         .update({
             queries_used: 0,
+            drafts_used: 0,
             updated_at: new Date().toISOString(),
         } as Record<string, unknown>)
         .eq('email', normalizedEmail)

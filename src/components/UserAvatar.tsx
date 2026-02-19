@@ -13,6 +13,7 @@ const planColors: Record<string, { bg: string; text: string; label: string }> = 
     pro_annual: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Pro Anual' },
     platinum_monthly: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum' },
     platinum_annual: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum Anual' },
+    ultra_secretarios: { bg: 'bg-gradient-to-r from-purple-100 to-indigo-100', text: 'text-purple-700', label: 'Ultra' },
 };
 
 export function UserAvatar() {

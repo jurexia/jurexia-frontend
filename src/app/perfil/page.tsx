@@ -14,6 +14,7 @@ const planColors: Record<string, { bg: string; text: string; label: string }> = 
     pro_annual: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Pro Anual' },
     platinum_monthly: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum Mensual' },
     platinum_annual: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum Anual' },
+    ultra_secretarios: { bg: 'bg-gradient-to-r from-purple-100 to-indigo-100', text: 'text-purple-700', label: 'Ultra Secretarios' },
 };
 
 const REGIMENES_FISCALES = [
@@ -423,6 +424,29 @@ export default function PerfilPage() {
                                 </>
                             )}
                         </div>
+
+                        {/* Uso de redacciones (solo Ultra) */}
+                        {profile.subscription_type === 'ultra_secretarios' && profile.drafts_limit > 0 && (
+                            <div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-sm font-medium text-charcoal-700">
+                                        Redacciones de sentencia este mes
+                                    </span>
+                                    <span className="text-sm text-charcoal-600">
+                                        {profile.drafts_used}/{profile.drafts_limit}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-cream-300 rounded-full h-3 overflow-hidden">
+                                    <div
+                                        className="bg-purple-500 h-3 rounded-full transition-all duration-300"
+                                        style={{ width: `${Math.min((profile.drafts_used / profile.drafts_limit) * 100, 100)}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-charcoal-500 mt-1">
+                                    {((profile.drafts_used / profile.drafts_limit) * 100).toFixed(0)}% utilizado
+                                </p>
+                            </div>
+                        )}
 
                         {/* Detalles de suscripción */}
                         {profile.stripe_subscription_id && (

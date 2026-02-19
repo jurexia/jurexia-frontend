@@ -105,6 +105,22 @@ export const PLANS = {
             'Precio fijo garantizado',
             'Soporte VIP dedicado'
         ]
+    },
+    ultra_secretarios: {
+        name: 'Plan Ultra Secretarios',
+        get priceId() { return getPriceId('STRIPE_PRICE_ULTRA_SECRETARIOS'); },
+        price: 999,
+        currency: 'MXN',
+        interval: 'month' as const,
+        queryLimit: 50,
+        draftLimit: 20,
+        features: [
+            '50 consultas/mes al Redactor Chat',
+            '20 redacciones de sentencia/mes',
+            'Acceso exclusivo al Redactor de Sentencias TCC',
+            'Sin acceso al chat general de Iurexia',
+            'Soporte dedicado'
+        ]
     }
 };
 

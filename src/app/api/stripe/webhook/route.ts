@@ -33,6 +33,7 @@ function mapPlanIdToSubscriptionType(planId: PlanId): PlanType {
         pro_annual: 'pro_annual',
         platinum_monthly: 'platinum_monthly',
         platinum_annual: 'platinum_annual',
+        ultra_secretarios: 'ultra_secretarios',
     };
     return mapping[planId] || 'gratuito';
 }
@@ -304,10 +305,10 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         billingReason: invoice.billing_reason,
     });
 
-    // Reset monthly query count on successful renewal payment
+    // Reset monthly query + draft count on successful renewal payment
     const email = (invoice.customer_email || '').toLowerCase().trim();
     if (email && invoice.billing_reason === 'subscription_cycle') {
-        console.log(`📧 Resetting query count for ${email} (subscription renewal)`);
+        console.log(`📧 Resetting query + draft count for ${email} (subscription renewal)`);
         await resetUserQueries(email);
     }
 }

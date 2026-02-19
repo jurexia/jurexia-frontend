@@ -77,9 +77,11 @@ export interface UserProfile {
     email: string;
     full_name: string | null;
     estado: string | null;
-    subscription_type: 'gratuito' | 'pro_monthly' | 'pro_annual' | 'platinum_monthly' | 'platinum_annual';
+    subscription_type: 'gratuito' | 'pro_monthly' | 'pro_annual' | 'platinum_monthly' | 'platinum_annual' | 'ultra_secretarios';
     queries_used: number;
     queries_limit: number;
+    drafts_used: number;
+    drafts_limit: number;
     subscription_start: string;
     subscription_end: string | null;
     stripe_customer_id: string | null;
@@ -187,4 +189,39 @@ export async function getSubscriptionInfo(userId: string) {
 // Helper to check if a plan type is unlimited (no plans are unlimited now)
 export function isUnlimitedPlan(subscriptionType: string): boolean {
     return false;
+}
+
+// Helper to check if a plan is the Ultra Secretarios plan
+export function isUltraPlan(subscriptionType: string): boolean {
+    return subscriptionType === 'ultra_secretarios';
+}
+
+// Draft management for Ultra Secretarios
+export async function incrementDraftCount(userId: string) {
+    const { data, error } = await supabase.rpc('consume_draft', { p_user_id: userId })
+
+    if (error) {
+        console.error('Error calling consume_draft RPC:', error)
+        // Fallback to direct update
+        const profile = await getUserProfile(userId)
+        if (profile) {
+            return updateUserProfile(userId, { drafts_used: profile.drafts_used + 1 })
+        }
+    }
+    return data
+}
+
+export async function checkCanDraft(userId: string): Promise<{ canDraft: boolean; remaining: number }> {
+    const profile = await getUserProfile(userId)
+    if (!profile || !profile.is_active) {
+        return { canDraft: false, remaining: 0 }
+    }
+
+    if (profile.drafts_limit <= 0) {
+        // No draft limit (non-ultra plans don't have draft access by default)
+        return { canDraft: false, remaining: 0 }
+    }
+
+    const remaining = profile.drafts_limit - profile.drafts_used
+    return { canDraft: remaining > 0, remaining: Math.max(0, remaining) }
 }
