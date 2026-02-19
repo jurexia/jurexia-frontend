@@ -737,11 +737,9 @@ export default function ChatSentenciaPage() {
                         docId={selectedDocId}
                         onClose={handleCloseModal}
                     />
-            </div>
-                )}
-        </main>
-            </div > {/* End Main Content Wrapper */ }
-        </div >
+                </main>
+            </div> {/* End Main Content Wrapper */}
+        </div>
     );
 }
 
