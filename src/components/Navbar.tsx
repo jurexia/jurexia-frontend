@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, MessageSquare, FileText } from 'lucide-react';
+import { Menu, X, MessageSquare, FileText, HeartPulse } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
@@ -34,6 +34,13 @@ export default function Navbar() {
                             className="text-sm font-semibold text-blue-600 border border-blue-400 rounded-full px-4 py-1.5 hover:bg-blue-50 hover:border-blue-500 transition-all duration-200"
                         >
                             Connect
+                        </Link>
+                        <Link
+                            href="/salvame"
+                            className="text-sm font-semibold text-red-600 border border-red-400 rounded-full px-4 py-1.5 hover:bg-red-50 hover:border-red-500 transition-all duration-200 flex items-center gap-1.5"
+                        >
+                            <HeartPulse className="w-3.5 h-3.5" />
+                            SALVAME
                         </Link>
                         {userIsAdmin && (
                             <Link
@@ -130,6 +137,14 @@ export default function Navbar() {
                                 className="text-base font-semibold text-blue-600 border border-blue-400 rounded-full px-4 py-2 text-center hover:bg-blue-50 transition-colors"
                             >
                                 Connect
+                            </Link>
+                            <Link
+                                href="/salvame"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center justify-center gap-2 text-base font-semibold text-red-600 border border-red-400 rounded-full px-4 py-2 text-center hover:bg-red-50 transition-colors"
+                            >
+                                <HeartPulse className="w-4 h-4" />
+                                SALVAME
                             </Link>
                             {userIsAdmin && (
                                 <Link
