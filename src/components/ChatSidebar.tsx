@@ -37,8 +37,9 @@ export default function ChatSidebar({
 }: ChatSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const userIsAdmin = isAdmin(user?.email);
+    const canAccessRedactor = userIsAdmin || profile?.subscription_type === 'ultra_secretarios';
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -226,8 +227,8 @@ export default function ChatSidebar({
                 )}
             </div>
 
-            {/* ── Admin: Redactor TCC ── */}
-            {userIsAdmin && !isCollapsed && (
+            {/* ── Redactor TCC (Admin + Ultra Secretarios) ── */}
+            {canAccessRedactor && !isCollapsed && (
                 <div className="px-3 pb-2">
                     <Link
                         href="/redactor-sentencia"

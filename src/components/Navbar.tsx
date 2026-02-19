@@ -9,10 +9,11 @@ import { UserAvatar } from './UserAvatar';
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const { user, loading } = useAuth();
+    const { user, profile, loading } = useAuth();
     const isLoggedIn = !!user;
     const isLoading = loading;
     const userIsAdmin = isAdmin(user?.email);
+    const canAccessRedactor = userIsAdmin || profile?.subscription_type === 'ultra_secretarios';
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
@@ -35,33 +36,33 @@ export default function Navbar() {
                             Connect
                         </Link>
                         {userIsAdmin && (
-                            <>
-                                <Link
-                                    href="/leyesestatales"
-                                    className="text-sm font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-1.5 hover:bg-accent-gold/10 hover:border-accent-gold transition-all duration-200"
-                                >
-                                    Leyes Estatales
-                                </Link>
-                                <Link
-                                    href="/redactor-sentencia"
-                                    className="text-sm font-semibold rounded-full px-4 py-1.5 transition-all duration-200 flex items-center gap-1.5"
-                                    style={{
-                                        color: '#a78bfa',
-                                        border: '1px solid rgba(167, 139, 250, 0.4)',
-                                    }}
-                                    onMouseEnter={e => {
-                                        e.currentTarget.style.backgroundColor = 'rgba(167, 139, 250, 0.1)';
-                                        e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.7)';
-                                    }}
-                                    onMouseLeave={e => {
-                                        e.currentTarget.style.backgroundColor = 'transparent';
-                                        e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.4)';
-                                    }}
-                                >
-                                    <FileText className="w-3.5 h-3.5" />
-                                    Redactor TCC
-                                </Link>
-                            </>
+                            <Link
+                                href="/leyesestatales"
+                                className="text-sm font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-1.5 hover:bg-accent-gold/10 hover:border-accent-gold transition-all duration-200"
+                            >
+                                Leyes Estatales
+                            </Link>
+                        )}
+                        {canAccessRedactor && (
+                            <Link
+                                href="/redactor-sentencia"
+                                className="text-sm font-semibold rounded-full px-4 py-1.5 transition-all duration-200 flex items-center gap-1.5"
+                                style={{
+                                    color: '#a78bfa',
+                                    border: '1px solid rgba(167, 139, 250, 0.4)',
+                                }}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.backgroundColor = 'rgba(167, 139, 250, 0.1)';
+                                    e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.7)';
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.4)';
+                                }}
+                            >
+                                <FileText className="w-3.5 h-3.5" />
+                                Redactor TCC
+                            </Link>
                         )}
                         <NavLink href="/precios">Precios</NavLink>
                         <NavLink href="/seguridad">Seguridad</NavLink>
@@ -131,27 +132,27 @@ export default function Navbar() {
                                 Connect
                             </Link>
                             {userIsAdmin && (
-                                <>
-                                    <Link
-                                        href="/leyesestatales"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="text-base font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-2 text-center hover:bg-accent-gold/10 transition-colors"
-                                    >
-                                        Leyes Estatales
-                                    </Link>
-                                    <Link
-                                        href="/redactor-sentencia"
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className="flex items-center justify-center gap-2 text-base font-semibold rounded-full px-4 py-2 text-center transition-colors"
-                                        style={{
-                                            color: '#a78bfa',
-                                            border: '1px solid rgba(167, 139, 250, 0.4)',
-                                        }}
-                                    >
-                                        <FileText className="w-4 h-4" />
-                                        Redactor TCC
-                                    </Link>
-                                </>
+                                <Link
+                                    href="/leyesestatales"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="text-base font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-2 text-center hover:bg-accent-gold/10 transition-colors"
+                                >
+                                    Leyes Estatales
+                                </Link>
+                            )}
+                            {canAccessRedactor && (
+                                <Link
+                                    href="/redactor-sentencia"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center justify-center gap-2 text-base font-semibold rounded-full px-4 py-2 text-center transition-colors"
+                                    style={{
+                                        color: '#a78bfa',
+                                        border: '1px solid rgba(167, 139, 250, 0.4)',
+                                    }}
+                                >
+                                    <FileText className="w-4 h-4" />
+                                    Redactor TCC
+                                </Link>
                             )}
                             <MobileNavLink href="/precios" onClick={() => setIsMenuOpen(false)}>
                                 Precios

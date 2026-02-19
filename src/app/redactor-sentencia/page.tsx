@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Upload, FileText, Gavel, Scale, Shield, AlertTriangle, Loader2, Copy, Download, ArrowLeft, CheckCircle, X, Search, ChevronDown, ChevronUp, Edit3, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useRequireAuth } from '@/lib/useAuth';
+import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from '@/components/UserAvatar';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://Iurexia-api.onrender.com';
@@ -187,7 +189,11 @@ const PROGRESS_STEPS = [
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default function RedactorSentenciaPage() {
-    const { user, loading: authLoading } = useRequireAuth();
+    const { user, profile, loading: authLoading, isAuthenticated } = useRequireAuth();
+    const router = useRouter();
+
+    // Access gate: only admin or ultra_secretarios
+    const canAccess = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
 
     // State Machine: 'select' → 'upload' → 'analyzing' → 'estrategia' → 'calificacion' → 'generating' → 'result'
     const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'estrategia' | 'calificacion' | 'generating' | 'result'>('select');
@@ -267,6 +273,29 @@ export default function RedactorSentenciaPage() {
     const [expandedAgravio, setExpandedAgravio] = useState<number | null>(null);
 
     const allFilesUploaded = files.every((f) => f !== null);
+
+    // ── Access Gate (redirect unauthorized, after all hooks) ──────────────
+    useEffect(() => {
+        if (!authLoading && isAuthenticated && profile && !canAccess) {
+            router.replace('/secretarios');
+        }
+    }, [authLoading, isAuthenticated, profile, canAccess, router]);
+
+    if (authLoading || (isAuthenticated && !profile)) {
+        return (
+            <div className="min-h-screen bg-cream-300 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-charcoal-900"></div>
+            </div>
+        );
+    }
+
+    if (!canAccess) {
+        return (
+            <div className="min-h-screen bg-cream-300 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-charcoal-900"></div>
+            </div>
+        );
+    }
 
     // ── Select Type ───────────────────────────────────────────────────────
     const handleSelectTipo = (tipo: TipoConfig) => {

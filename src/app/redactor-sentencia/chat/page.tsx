@@ -18,9 +18,11 @@ import {
     Check,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import ChatMessage from '@/components/ChatMessage';
 import DocumentModal from '@/components/DocumentModal';
 import { useRequireAuth } from '@/lib/useAuth';
+import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from '@/components/UserAvatar';
 import type { Message } from '@/lib/api';
 import ChatSidebar from '@/components/ChatSidebar';
@@ -84,6 +86,17 @@ async function extractDocxText(file: File): Promise<string> {
 
 export default function ChatSentenciaPage() {
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
+    const router = useRouter();
+
+    // Access gate: only admin or ultra_secretarios can use this page
+    const canAccess = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
+
+    useEffect(() => {
+        // Wait until profile is loaded before checking access
+        if (!authLoading && isAuthenticated && profile && !canAccess) {
+            router.replace('/secretarios');
+        }
+    }, [authLoading, isAuthenticated, profile, canAccess, router]);
 
     // Chat state
     const [messages, setMessages] = useState<Message[]>([]);
@@ -119,6 +132,24 @@ export default function ChatSentenciaPage() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    // ── Access Gate (after all hooks) ─────────────────────────────────────
+    if (authLoading || (isAuthenticated && !profile)) {
+        return (
+            <div className="min-h-screen bg-cream-300 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-charcoal-900"></div>
+            </div>
+        );
+    }
+
+    if (!canAccess) {
+        return (
+            <div className="min-h-screen bg-cream-300 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-charcoal-900"></div>
+            </div>
+        );
+    }
+
 
     // ── Conversations Logic ───────────────────────────────────────────────
 
