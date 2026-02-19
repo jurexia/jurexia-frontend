@@ -19,9 +19,20 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import ChatMessage from '@/components/ChatMessage';
+import DocumentModal from '@/components/DocumentModal';
 import { useRequireAuth } from '@/lib/useAuth';
 import { UserAvatar } from '@/components/UserAvatar';
 import type { Message } from '@/lib/api';
+import ChatSidebar from '@/components/ChatSidebar';
+import {
+    Conversation,
+    getConversations,
+    getConversation,
+    deleteConversation,
+    createConversation,
+    addMessageToConversation,
+    setActiveConversationId
+} from '@/lib/conversations';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://Iurexia-api.onrender.com';
 
@@ -76,6 +87,13 @@ export default function ChatSentenciaPage() {
 
     // Chat state
     const [messages, setMessages] = useState<Message[]>([]);
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [activeConversationId, setActiveConvId] = useState<string | null>(null);
+    const [conversationsLoading, setConversationsLoading] = useState(true);
+
+    // Track previous loading state for detecting when response completes
+    const wasLoadingRef = useRef(false);
+
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -83,6 +101,9 @@ export default function ChatSentenciaPage() {
     // Feature toggles
     const [useRag, setUseRag] = useState(true);
     const [showRagWarning, setShowRagWarning] = useState(false);
+
+    // Document Modal State
+    const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
 
     // File attachment
     const [attachedFile, setAttachedFile] = useState<File | null>(null);
@@ -98,6 +119,90 @@ export default function ChatSentenciaPage() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    // ── Conversations Logic ───────────────────────────────────────────────
+
+    // Load conversations on mount
+    useEffect(() => {
+        if (authLoading || !isAuthenticated) return;
+
+        const loadConversations = async () => {
+            setConversationsLoading(true);
+            try {
+                const loadedConversations = await getConversations();
+                setConversations(loadedConversations);
+            } catch (err) {
+                console.error('Error loading conversations:', err);
+            } finally {
+                setConversationsLoading(false);
+            }
+        };
+
+        loadConversations();
+    }, [authLoading, isAuthenticated]);
+
+    // Save messages to database when assistant finishes responding
+    useEffect(() => {
+        const saveMessagesAfterResponse = async () => {
+            // Detect transition from loading=true to loading=false
+            if (wasLoadingRef.current && !isLoading && activeConversationId && messages.length >= 2) {
+                // Get the last two messages (user + assistant)
+                const lastMessages = messages.slice(-2);
+                const userMsg = lastMessages.find(m => m.role === 'user');
+                const assistantMsg = lastMessages.find(m => m.role === 'assistant');
+
+                if (userMsg && assistantMsg && assistantMsg.content.trim().length > 0) {
+                    // Save user message
+                    await addMessageToConversation(activeConversationId, userMsg);
+                    // Save assistant message
+                    await addMessageToConversation(activeConversationId, assistantMsg);
+                    // Refresh conversations to update title/timestamp
+                    const updatedConvs = await getConversations();
+                    setConversations(updatedConvs);
+                }
+            }
+            wasLoadingRef.current = isLoading;
+        };
+
+        saveMessagesAfterResponse();
+    }, [isLoading, activeConversationId, messages]);
+
+    // Handle new conversation
+    const handleNewConversation = useCallback(async () => {
+        // Optimistic UI update
+        setActiveConvId(null);
+        setActiveConversationId(null);
+        setMessages([]);
+        setAttachedFile(null);
+        setAttachedText(null);
+
+        // Ensure backend creates one if needed later, but for now just clear state
+        const updatedConvs = await getConversations();
+        setConversations(updatedConvs);
+    }, []);
+
+    // Handle select conversation
+    const handleSelectConversation = useCallback(async (id: string) => {
+        const conv = await getConversation(id);
+        if (conv) {
+            setActiveConvId(id);
+            setActiveConversationId(id);
+            setMessages(conv.messages);
+            setAttachedFile(null); // Clear attachments when switching
+            setAttachedText(null);
+        }
+    }, []);
+
+    // Handle delete conversation
+    const handleDeleteConversation = useCallback(async (id: string) => {
+        await deleteConversation(id);
+        const remaining = await getConversations();
+        setConversations(remaining);
+
+        if (id === activeConversationId) {
+            handleNewConversation();
+        }
+    }, [activeConversationId, handleNewConversation]);
 
     // ── File Handling ────────────────────────────────────────────────────────
     const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,6 +251,15 @@ export default function ChatSentenciaPage() {
         setShowRagWarning(false);
     }, []);
 
+    // ── Document Modal Handlers ─────────────────────────────────────────────
+    const handleCitationClick = useCallback((docId: string) => {
+        setSelectedDocId(docId);
+    }, []);
+
+    const handleCloseModal = useCallback(() => {
+        setSelectedDocId(null);
+    }, []);
+
     // ── Send Message ────────────────────────────────────────────────────────
     const sendMessage = useCallback(async () => {
         const content = inputValue.trim();
@@ -154,10 +268,29 @@ export default function ChatSentenciaPage() {
         // Add user message
         const userMsg: Message = { role: 'user', content };
         const addAssistantMsg: Message = { role: 'assistant', content: '' };
-        setMessages(prev => [...prev, userMsg, addAssistantMsg]);
+        const currentMessages = [...messages, userMsg, addAssistantMsg];
+        setMessages(currentMessages);
         setInputValue('');
         setIsLoading(true);
         setError(null);
+
+        // Ensure we have an active conversation ID before sending
+        let currentConvId = activeConversationId;
+        if (!currentConvId) {
+            try {
+                const newConv = await createConversation();
+                if (newConv) {
+                    currentConvId = newConv.id;
+                    setActiveConvId(newConv.id);
+                    setActiveConversationId(newConv.id);
+                    // Refresh sidebar
+                    const updatedConvs = await getConversations();
+                    setConversations(updatedConvs);
+                }
+            } catch (err) {
+                console.error('Error creating conversation:', err);
+            }
+        }
 
         // Reset textarea height
         if (textareaRef.current) {
@@ -250,10 +383,8 @@ export default function ChatSentenciaPage() {
 
     // Clear chat
     const clearChat = useCallback(() => {
-        setMessages([]);
-        setError(null);
-        removeAttachment();
-    }, [removeAttachment]);
+        handleNewConversation();
+    }, [handleNewConversation]);
 
     // ── Loading state ───────────────────────────────────────────────────────
     if (authLoading) {
@@ -374,222 +505,243 @@ export default function ChatSentenciaPage() {
     // RENDER MAIN
     // ═══════════════════════════════════════════════════════════════════════════
     return (
-        <div className="min-h-screen bg-[#0a0e1a] flex flex-col font-sans">
-            {/* ── Header ─────────────────────────────────────────────────────── */}
-            <header className="sticky top-0 z-50 border-b border-[#c9a962]/10 bg-[#0a0e1a]/80 backdrop-blur-xl supports-[backdrop-filter]:bg-[#0a0e1a]/60">
-                <div className="max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between">
-                    {/* Left: Back + Title */}
-                    <div className="flex items-center gap-4">
-                        <Link
-                            href="/redactor-sentencia"
-                            className="p-2 rounded-full hover:bg-white/5 transition-colors text-white/60 hover:text-white"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </Link>
+        <div className="min-h-screen bg-[#0a0e1a] flex font-sans">
+            {/* Sidebar */}
+            <ChatSidebar
+                conversations={conversations}
+                activeConversationId={activeConversationId}
+                onSelectConversation={handleSelectConversation}
+                onNewConversation={handleNewConversation}
+                onDeleteConversation={handleDeleteConversation}
+            />
+
+            {/* Main Content Wrapper */}
+            <div className="flex-1 flex flex-col min-w-0 md:ml-72 transition-all duration-300">
+                {/* ── Header ─────────────────────────────────────────────────────── */}
+                <header className="sticky top-0 z-50 border-b border-[#c9a962]/10 bg-[#0a0e1a]/80 backdrop-blur-xl supports-[backdrop-filter]:bg-[#0a0e1a]/60">
+                    <div className="max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between">
+                        {/* Left: Back + Title */}
+                        <div className="flex items-center gap-4">
+                            <Link
+                                href="/redactor-sentencia"
+                                className="p-2 rounded-full hover:bg-white/5 transition-colors text-white/60 hover:text-white"
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                            </Link>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-lg font-medium text-white tracking-tight">Chat de Redacción</h1>
+                                <span className="px-2 py-0.5 rounded-full bg-[#c9a962]/10 text-[#c9a962] text-[10px] font-medium border border-[#c9a962]/20">
+                                    Gemini 2.5
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Center: RAG toggle */}
+                        <div className="hidden md:flex items-center gap-2">
+                            <button
+                                onClick={toggleRag}
+                                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${useRag
+                                    ? 'bg-[#c9a962]/10 text-[#c9a962] border border-[#c9a962]/20 hover:bg-[#c9a962]/20'
+                                    : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'
+                                    }`}
+                                title={useRag ? 'Base de datos verificada activa' : 'Sin base de datos — riesgo de alucinaciones'}
+                            >
+                                {useRag ? (
+                                    <DatabaseZap className="w-3.5 h-3.5" />
+                                ) : (
+                                    <AlertTriangle className="w-3.5 h-3.5" />
+                                )}
+                                {useRag ? 'BD Verificada' : 'Sin BD'}
+                            </button>
+                        </div>
+
+                        {/* Right: Clear + Avatar */}
                         <div className="flex items-center gap-3">
-                            <h1 className="text-lg font-medium text-white tracking-tight">Chat de Redacción</h1>
-                            <span className="px-2 py-0.5 rounded-full bg-[#c9a962]/10 text-[#c9a962] text-[10px] font-medium border border-[#c9a962]/20">
-                                Gemini 2.5
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Center: RAG toggle */}
-                    <div className="hidden md:flex items-center gap-2">
-                        <button
-                            onClick={toggleRag}
-                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${useRag
-                                ? 'bg-[#c9a962]/10 text-[#c9a962] border border-[#c9a962]/20 hover:bg-[#c9a962]/20'
-                                : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20'
-                                }`}
-                            title={useRag ? 'Base de datos verificada activa' : 'Sin base de datos — riesgo de alucinaciones'}
-                        >
-                            {useRag ? (
-                                <DatabaseZap className="w-3.5 h-3.5" />
-                            ) : (
-                                <AlertTriangle className="w-3.5 h-3.5" />
+                            {hasMessages && (
+                                <button
+                                    onClick={clearChat}
+                                    className="p-2 rounded-full hover:bg-white/5 transition-colors text-white/40 hover:text-white"
+                                    title="Limpiar chat"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             )}
-                            {useRag ? 'BD Verificada' : 'Sin BD'}
-                        </button>
-                    </div>
-
-                    {/* Right: Clear + Avatar */}
-                    <div className="flex items-center gap-3">
-                        {hasMessages && (
-                            <button
-                                onClick={clearChat}
-                                className="p-2 rounded-full hover:bg-white/5 transition-colors text-white/40 hover:text-white"
-                                title="Limpiar chat"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        )}
-                        <UserAvatar />
-                    </div>
-                </div>
-            </header>
-
-            {/* ── RAG Warning Modal (Same as before) ─────────────────────────── */}
-            {showRagWarning && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-[#111827] border border-red-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                                <AlertTriangle className="w-5 h-5 text-red-400" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-white">Desactivar Base de Datos</h3>
-                        </div>
-                        <p className="text-sm text-white/70 mb-4 leading-relaxed">
-                            Al desactivar la base de datos verificada, las respuestas se basarán únicamente en el
-                            conocimiento del modelo de IA. Esto puede resultar en:
-                        </p>
-                        <ul className="text-sm text-red-300/80 space-y-2 mb-6 pl-4">
-                            <li className="flex items-start gap-2">
-                                <span className="text-red-400 mt-0.5">•</span>
-                                <span>Alucinaciones en citas de tesis y jurisprudencia</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-red-400 mt-0.5">•</span>
-                                <span>Registros digitales inventados</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-red-400 mt-0.5">•</span>
-                                <span>Artículos citados con contenido impreciso</span>
-                            </li>
-                        </ul>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowRagWarning(false)}
-                                className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 text-sm font-medium transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={confirmRagOff}
-                                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm font-medium border border-red-500/30 transition-colors"
-                            >
-                                Desactivar
-                            </button>
+                            <UserAvatar />
                         </div>
                     </div>
-                </div>
-            )}
+                </header>
 
-            {/* ── Main Content ───────────────────────────────────────────────── */}
-            <main className="flex-1 flex flex-col relative overflow-hidden">
-
-                {/* 1. WELCOME VIEW (Empty State) */}
-                {!hasMessages && (
-                    <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <div className="w-full max-w-3xl flex flex-col gap-10">
-
-                            {/* Greeting */}
-                            <div className="text-left md:pl-2">
-                                <h2 className="text-4xl md:text-5xl font-medium text-transparent bg-clip-text bg-gradient-to-br from-[#c9a962] via-white to-white/60 tracking-tight mb-3">
-                                    Hola{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}.
-                                </h2>
-                                <p className="text-2xl md:text-3xl text-white/40 font-light">
-                                    ¿En qué puedo ayudarte hoy?
-                                </p>
+                {/* ── RAG Warning Modal (Same as before) ─────────────────────────── */}
+                {showRagWarning && (
+                    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+                        <div className="bg-[#111827] border border-red-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                                    <AlertTriangle className="w-5 h-5 text-red-400" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-white">Desactivar Base de Datos</h3>
                             </div>
-
-                            {/* Centered Input */}
-                            <div className="w-full">
-                                {renderInputArea(true)}
+                            <p className="text-sm text-white/70 mb-4 leading-relaxed">
+                                Al desactivar la base de datos verificada, las respuestas se basarán únicamente en el
+                                conocimiento del modelo de IA. Esto puede resultar en:
+                            </p>
+                            <ul className="text-sm text-red-300/80 space-y-2 mb-6 pl-4">
+                                <li className="flex items-start gap-2">
+                                    <span className="text-red-400 mt-0.5">•</span>
+                                    <span>Alucinaciones en citas de tesis y jurisprudencia</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-red-400 mt-0.5">•</span>
+                                    <span>Registros digitales inventados</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-red-400 mt-0.5">•</span>
+                                    <span>Artículos citados con contenido impreciso</span>
+                                </li>
+                            </ul>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowRagWarning(false)}
+                                    className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 text-sm font-medium transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={confirmRagOff}
+                                    className="flex-1 px-4 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm font-medium border border-red-500/30 transition-colors"
+                                >
+                                    Desactivar
+                                </button>
                             </div>
-
-                            {/* Suggestion Chips (Below Input) */}
-                            <div className="flex flex-wrap gap-3 mt-2">
-                                {[
-                                    { icon: '✍️', label: 'Continuar redacción', desc: 'Retomar escritura' },
-                                    { icon: '🔄', label: 'Cambiar sentido', desc: 'Fundado ↔ Infundado' },
-                                    { icon: '⚖️', label: 'Buscar jurisprudencia', desc: 'Tesis y precedentes' },
-                                    { icon: '📄', label: 'Analizar documento', desc: 'Subir PDF/DOCX' },
-                                ].map((item) => (
-                                    <button
-                                        key={item.label}
-                                        onClick={() => {
-                                            if (item.label === 'Analizar documento') {
-                                                fileInputRef.current?.click();
-                                            } else {
-                                                setInputValue(`${item.label}: `);
-                                                textareaRef.current?.focus();
-                                            }
-                                        }}
-                                        className="group flex flex-col items-start p-4 rounded-2xl bg-[#1a1f2e] border border-white/5 hover:border-[#c9a962]/30 hover:bg-[#1f2636] transition-all duration-300 min-w-[200px]"
-                                    >
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <span className="text-lg group-hover:scale-110 transition-transform">{item.icon}</span>
-                                            <span className="text-sm font-medium text-white/80 group-hover:text-[#c9a962] transition-colors">
-                                                {item.label}
-                                            </span>
-                                        </div>
-                                        {item.desc && (
-                                            <span className="text-xs text-white/40 ml-[36px]">
-                                                {item.desc}
-                                            </span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-
                         </div>
                     </div>
                 )}
 
-                {/* 2. CHAT VIEW (Active State) */}
-                {hasMessages && (
-                    <div className="flex-1 flex flex-col h-full">
-                        {/* Messages List - Scrollable */}
-                        <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
-                            <div className="max-w-3xl mx-auto space-y-8">
-                                {messages.map((msg, idx) => (
-                                    <ChatMessage
-                                        key={idx}
-                                        message={msg}
-                                        isStreaming={isLoading && idx === messages.length - 1 && msg.role === 'assistant'}
-                                    />
-                                ))}
-                                {isLoading && messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content && (
-                                    <div className="flex items-start gap-4 px-4 animate-pulse">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center shrink-0 shadow-lg shadow-[#c9a962]/10">
-                                            <Sparkles className="w-4 h-4 text-[#0a0e1a]" />
-                                        </div>
-                                        <div className="space-y-2 pt-1.5">
-                                            <div className="h-4 w-32 bg-white/10 rounded overflow-hidden">
-                                                <div className="h-full bg-gradient-to-r from-transparent via-white/10 to-transparent w-full animate-shimmer" />
+                {/* ── Main Content ───────────────────────────────────────────────── */}
+                <main className="flex-1 flex flex-col relative overflow-hidden">
+
+                    {/* 1. WELCOME VIEW (Empty State) */}
+                    {!hasMessages && (
+                        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div className="w-full max-w-3xl flex flex-col gap-10">
+
+                                {/* Greeting */}
+                                <div className="text-left md:pl-2">
+                                    <h2 className="text-4xl md:text-5xl font-medium text-transparent bg-clip-text bg-gradient-to-br from-[#c9a962] via-white to-white/60 tracking-tight mb-3">
+                                        Hola{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}.
+                                    </h2>
+                                    <p className="text-2xl md:text-3xl text-white/40 font-light">
+                                        ¿En qué puedo ayudarte hoy?
+                                    </p>
+                                </div>
+
+                                {/* Centered Input */}
+                                <div className="w-full">
+                                    {renderInputArea(true)}
+                                </div>
+
+                                {/* Suggestion Chips (Below Input) */}
+                                <div className="flex flex-wrap gap-3 mt-2">
+                                    {[
+                                        { icon: '✍️', label: 'Continuar redacción', desc: 'Retomar escritura' },
+                                        { icon: '🔄', label: 'Cambiar sentido', desc: 'Fundado ↔ Infundado' },
+                                        { icon: '⚖️', label: 'Buscar jurisprudencia', desc: 'Tesis y precedentes' },
+                                        { icon: '📄', label: 'Analizar documento', desc: 'Subir PDF/DOCX' },
+                                    ].map((item) => (
+                                        <button
+                                            key={item.label}
+                                            onClick={() => {
+                                                if (item.label === 'Analizar documento') {
+                                                    fileInputRef.current?.click();
+                                                } else {
+                                                    setInputValue(`${item.label}: `);
+                                                    textareaRef.current?.focus();
+                                                }
+                                            }}
+                                            className="group flex flex-col items-start p-4 rounded-2xl bg-[#1a1f2e] border border-white/5 hover:border-[#c9a962]/30 hover:bg-[#1f2636] transition-all duration-300 min-w-[200px]"
+                                        >
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <span className="text-lg group-hover:scale-110 transition-transform">{item.icon}</span>
+                                                <span className="text-sm font-medium text-white/80 group-hover:text-[#c9a962] transition-colors">
+                                                    {item.label}
+                                                </span>
+                                            </div>
+                                            {item.desc && (
+                                                <span className="text-xs text-white/40 ml-[36px]">
+                                                    {item.desc}
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 2. CHAT VIEW (Active State) */}
+                    {hasMessages && (
+                        <div className="flex-1 flex flex-col h-full">
+                            {/* Messages List - Scrollable */}
+                            <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
+                                <div className="max-w-3xl mx-auto space-y-8">
+                                    {messages.map((msg, idx) => (
+                                        <ChatMessage
+                                            key={idx}
+                                            message={msg}
+                                            isStreaming={isLoading && idx === messages.length - 1 && msg.role === 'assistant'}
+                                            onCitationClick={handleCitationClick}
+                                        />
+                                    ))}
+                                    {isLoading && messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content && (
+                                        <div className="flex items-start gap-4 px-4 animate-pulse">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center shrink-0 shadow-lg shadow-[#c9a962]/10">
+                                                <Sparkles className="w-4 h-4 text-[#0a0e1a]" />
+                                            </div>
+                                            <div className="space-y-2 pt-1.5">
+                                                <div className="h-4 w-32 bg-white/10 rounded overflow-hidden">
+                                                    <div className="h-full bg-gradient-to-r from-transparent via-white/10 to-transparent w-full animate-shimmer" />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
-                                <div ref={messagesEndRef} className="h-4" />
-                            </div>
-                        </div>
-
-                        {/* Error Bar */}
-                        {error && (
-                            <div className="max-w-3xl mx-auto w-full px-4 mb-2">
-                                <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-center gap-3 backdrop-blur-md">
-                                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                                    <span>{error}</span>
-                                    <button onClick={() => setError(null)} className="ml-auto p-1 hover:bg-red-500/10 rounded-full transition-colors">
-                                        <X className="w-4 h-4" />
-                                    </button>
+                                    )}
+                                    <div ref={messagesEndRef} className="h-4" />
                                 </div>
                             </div>
-                        )}
 
-                        {/* Sticky Bottom Input */}
-                        <div className="px-4 pb-6 pt-4 bg-gradient-to-t from-[#0a0e1a] via-[#0a0e1a] to-transparent z-10">
-                            {renderInputArea(false)}
-                            <p className="text-center text-[10px] text-white/20 mt-3">
-                                Gemini 2.5 Pro · Iurexia Legal AI · {useRag ? 'Base de datos verificada' : 'Modo creativo'}
-                            </p>
+                            {/* Error Bar */}
+                            {error && (
+                                <div className="max-w-3xl mx-auto w-full px-4 mb-2">
+                                    <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-center gap-3 backdrop-blur-md">
+                                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                                        <span>{error}</span>
+                                        <button onClick={() => setError(null)} className="ml-auto p-1 hover:bg-red-500/10 rounded-full transition-colors">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Sticky Bottom Input */}
+                            <div className="px-4 pb-6 pt-4 bg-gradient-to-t from-[#0a0e1a] via-[#0a0e1a] to-transparent z-10">
+                                {renderInputArea(false)}
+                                <p className="text-center text-[10px] text-white/20 mt-3">
+                                    Gemini 2.5 Pro · Iurexia Legal AI · {useRag ? 'Base de datos verificada' : 'Modo creativo'}
+                                </p>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* ── Document Modal ─────────────────────────────────────────────── */}
+                    <DocumentModal
+                        docId={selectedDocId}
+                        onClose={handleCloseModal}
+                    />
+            </div>
                 )}
-            </main>
-        </div>
+        </main>
+            </div > {/* End Main Content Wrapper */ }
+        </div >
     );
 }
 
