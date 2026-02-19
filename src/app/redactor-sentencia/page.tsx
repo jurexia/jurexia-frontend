@@ -412,6 +412,8 @@ export default function RedactorSentenciaPage() {
             formData.append('tipo', selectedTipo.id);
             formData.append('user_email', user.email);
             formData.append('instrucciones', instrucciones);
+            formData.append('sentido', sentido || '');
+            formData.append('auto_mode', autoMode ? 'true' : 'false');
             formData.append('doc1', files[0]!);
             formData.append('doc2', files[1]!);
 
@@ -1203,8 +1205,8 @@ export default function RedactorSentenciaPage() {
                                             ? groupCalif[0].calificacion : null;
                                         return (
                                             <div key={gi} className={`border-l-2 ${colors[gi % colors.length]} rounded-r-xl overflow-hidden transition-all duration-300 ${currentCalif === 'fundado' ? 'bg-green-500/[0.04]' :
-                                                    currentCalif === 'infundado' ? 'bg-red-500/[0.04]' :
-                                                        currentCalif === 'inoperante' ? 'bg-amber-500/[0.04]' : 'bg-white/[0.02]'
+                                                currentCalif === 'infundado' ? 'bg-red-500/[0.04]' :
+                                                    currentCalif === 'inoperante' ? 'bg-amber-500/[0.04]' : 'bg-white/[0.02]'
                                                 }`}>
                                                 {/* Group header */}
                                                 <div className="px-4 py-3">
@@ -1260,8 +1262,8 @@ export default function RedactorSentenciaPage() {
                                                                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#c9a962]/10 text-[#c9a962] font-medium">{term.singular} {num}</span>
                                                                         {calif && calif.calificacion !== 'sin_calificar' && (
                                                                             <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${calif.calificacion === 'fundado' ? 'bg-green-500/15 text-green-400' :
-                                                                                    calif.calificacion === 'infundado' ? 'bg-red-500/15 text-red-400' :
-                                                                                        'bg-amber-500/15 text-amber-400'
+                                                                                calif.calificacion === 'infundado' ? 'bg-red-500/15 text-red-400' :
+                                                                                    'bg-amber-500/15 text-amber-400'
                                                                                 }`}>{calif.calificacion.toUpperCase()}</span>
                                                                         )}
                                                                     </div>
@@ -1313,8 +1315,8 @@ export default function RedactorSentenciaPage() {
                                         if (!autoMode) setInstrucciones('');
                                     }}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs transition-all duration-200 border ${autoMode
-                                            ? 'bg-[#c9a962]/10 border-[#c9a962]/30 text-[#c9a962]'
-                                            : 'bg-white/[0.03] border-white/[0.06] text-gray-400 hover:text-white/60 hover:border-white/[0.12]'
+                                        ? 'bg-[#c9a962]/10 border-[#c9a962]/30 text-[#c9a962]'
+                                        : 'bg-white/[0.03] border-white/[0.06] text-gray-400 hover:text-white/60 hover:border-white/[0.12]'
                                         }`}
                                 >
                                     <Sparkles className="w-3.5 h-3.5" />
