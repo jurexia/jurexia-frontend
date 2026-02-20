@@ -221,7 +221,7 @@ export default function SalvamePage() {
     const [copied, setCopied] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const [showInstructions, setShowInstructions] = useState(false);
-    const [juzgadoInfo, setJuzgadoInfo] = useState<{ denominacion: string; direccion: string; telefono?: string } | null>(null);
+    const [juzgadoInfo, setJuzgadoInfo] = useState<{ denominacion_turno: string; direccion_oficialia: string; telefono?: string; nota?: string } | null>(null);
     const resultRef = useRef<HTMLDivElement>(null);
 
     // ─── Loader rotation ──────────────────────────────────────────
@@ -381,11 +381,16 @@ export default function SalvamePage() {
 
             // Fetch juzgado info for the hospital's state
             try {
-                const jRes = await fetch(`${API_URL}/juzgados-distrito?estado=${encodeURIComponent(form.hospital_estado)}&materia=Administrativa&limit=1`);
+                const jRes = await fetch(`${API_URL}/juzgados-distrito?estado=${encodeURIComponent(form.hospital_estado)}`);
                 if (jRes.ok) {
                     const jData = await jRes.json();
-                    if (jData.juzgados?.length > 0) {
-                        setJuzgadoInfo(jData.juzgados[0]);
+                    if (jData.denominacion_turno) {
+                        setJuzgadoInfo({
+                            denominacion_turno: jData.denominacion_turno,
+                            direccion_oficialia: jData.direccion_oficialia,
+                            telefono: jData.telefono,
+                            nota: jData.nota,
+                        });
                     }
                 }
             } catch { /* silently fail — juzgado info is optional */ }
@@ -1046,7 +1051,7 @@ export default function SalvamePage() {
                                     ¿A qué instalaciones dirigirte? (La jerarquía de juzgados)
                                 </h4>
 
-                                {/* ── Juzgado Info Card (from DB) ──────────────── */}
+                                {/* ── Oficialía de Partes Info Card (from DB) ───────── */}
                                 {juzgadoInfo && (
                                     <div style={{
                                         padding: '20px', borderRadius: 14, marginBottom: 18, marginLeft: 36,
@@ -1055,14 +1060,14 @@ export default function SalvamePage() {
                                         boxShadow: '0 2px 12px rgba(220,38,38,0.08)',
                                     }}>
                                         <p style={{ margin: '0 0 4px', fontSize: 11, color: '#f87171', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                            🏛️ Juzgado competente en {form.hospital_estado}
+                                            🏛️ Oficialía de Partes Común — {form.hospital_estado}
                                         </p>
                                         <p style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: '#f5f5f5', lineHeight: 1.4 }}>
-                                            {juzgadoInfo.denominacion}
+                                            {juzgadoInfo.denominacion_turno}
                                         </p>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                             <p style={{ margin: 0, fontSize: 13, color: '#ccc', lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                                                <span style={{ flexShrink: 0 }}>📍</span> {juzgadoInfo.direccion}
+                                                <span style={{ flexShrink: 0 }}>📍</span> {juzgadoInfo.direccion_oficialia}
                                             </p>
                                             {juzgadoInfo.telefono && (
                                                 <p style={{ margin: 0, fontSize: 13, color: '#ccc', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1070,7 +1075,10 @@ export default function SalvamePage() {
                                                 </p>
                                             )}
                                         </div>
-                                        <p style={{ margin: '12px 0 0', fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                                        <p style={{ margin: '10px 0 0', fontSize: 12, color: '#4ade80', fontWeight: 600 }}>
+                                            ⏰ Funciona las 24 horas, los 365 días del año
+                                        </p>
+                                        <p style={{ margin: '8px 0 0', fontSize: 11, color: '#666', fontStyle: 'italic' }}>
                                             Fuente: Directorio del Consejo de la Judicatura Federal (CJF)
                                         </p>
                                     </div>
