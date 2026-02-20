@@ -213,7 +213,8 @@ export default function SalvamePage() {
     // ─── Form State ─────────────────────────────────────────────
     const [step, setStep] = useState(0);
     const [form, setForm] = useState<FormData>(INITIAL_FORM);
-    const [phase, setPhase] = useState<'form' | 'generating' | 'result'>('form');
+    const [phase, setPhase] = useState<'intro' | 'form' | 'generating' | 'result'>('intro');
+    const [termsAccepted, setTermsAccepted] = useState(false);
     const [generatedText, setGeneratedText] = useState('');
     const [error, setError] = useState('');
     const [loaderIdx, setLoaderIdx] = useState(0);
@@ -411,6 +412,142 @@ export default function SalvamePage() {
                     <span style={{ fontSize: 11, color: '#555', padding: '4px 10px', border: '1px solid #2a2a2a', borderRadius: 6 }}>Módulo Gratuito</span>
                 </div>
             </header>
+
+            {/* ─── INTRO / TERMS SCREEN ─────────────────────────────── */}
+            {phase === 'intro' && (
+                <section style={{
+                    padding: '48px 24px 60px', textAlign: 'center', position: 'relative', overflow: 'hidden',
+                    animation: 'fadeIn 0.6s ease-out',
+                }}>
+                    {/* Background heart watermark */}
+                    <div style={{ position: 'absolute', top: 20, right: '10%', opacity: 0.04, pointerEvents: 'none' }}>
+                        <HeartPulse size={280} color="#dc2626" />
+                    </div>
+
+                    <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                            <MedicalCross size={32} color="#dc2626" />
+                            <h1 style={{ fontSize: 36, fontWeight: 800, color: '#f5f5f5', margin: 0, letterSpacing: '-0.02em' }}>
+                                SALVAME
+                            </h1>
+                        </div>
+                        <h2 style={{ fontSize: 20, fontWeight: 400, color: '#a3a3a3', margin: '8px 0 28px', lineHeight: 1.5 }}>
+                            Amparo de emergencia por salud
+                        </h2>
+
+                        {/* ECG line */}
+                        <div style={{ margin: '0 auto 32px', maxWidth: 500 }}>
+                            <EcgLine />
+                        </div>
+
+                        {/* ─── Explanation Card ─────────────────────────── */}
+                        <div style={{
+                            textAlign: 'left', background: '#151515', borderRadius: 16, border: '1px solid #222',
+                            padding: '28px 24px', marginBottom: 20,
+                        }}>
+                            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#f5f5f5', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <ShieldCheck size={20} />
+                                ¿Qué es esta herramienta?
+                            </h3>
+                            <p style={{ fontSize: 15, color: '#bbb', lineHeight: 1.7, margin: '0 0 16px' }}>
+                                <strong style={{ color: '#e5e5e5' }}>SALVAME</strong> es una herramienta gratuita creada para
+                                ayudar a todas las personas que enfrentan una emergencia de salud y necesitan
+                                exigir atención médica de manera legal e inmediata.
+                            </p>
+
+                            <h4 style={{ fontSize: 15, fontWeight: 600, color: '#e5e5e5', margin: '0 0 8px' }}>¿Qué es un Amparo?</h4>
+                            <p style={{ fontSize: 14, color: '#aaa', lineHeight: 1.7, margin: '0 0 16px' }}>
+                                El <strong style={{ color: '#ccc' }}>Juicio de Amparo</strong> es un derecho constitucional
+                                que permite a cualquier persona solicitar a un juez federal que ordene a una autoridad
+                                (como un hospital público) que proteja sus derechos fundamentales — en este caso,
+                                el <strong style={{ color: '#ccc' }}>derecho a la salud y a la vida</strong>.
+                                No necesitas ser abogado para presentarlo.
+                            </p>
+
+                            <h4 style={{ fontSize: 15, fontWeight: 600, color: '#e5e5e5', margin: '0 0 8px' }}>¿Cómo funciona?</h4>
+                            <p style={{ fontSize: 14, color: '#aaa', lineHeight: 1.7, margin: '0 0 16px' }}>
+                                Completas un formulario breve con tus datos, los datos del paciente y la situación.
+                                La inteligencia artificial genera automáticamente la demanda de amparo lista para
+                                imprimir, firmar y presentar ante un Juzgado de Distrito. También recibirás
+                                instrucciones paso a paso de cómo y dónde presentarla según tu ubicación.
+                            </p>
+                        </div>
+
+                        {/* ─── Urgent Warning ─────────────────────────── */}
+                        <div style={{
+                            textAlign: 'left', padding: '18px 20px', borderRadius: 14,
+                            background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)',
+                            marginBottom: 20,
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                <AlertTriangleIcon size={22} />
+                                <div>
+                                    <p style={{ fontSize: 14, fontWeight: 600, color: '#f87171', margin: '0 0 6px' }}>
+                                        Uso exclusivo para emergencias reales
+                                    </p>
+                                    <p style={{ fontSize: 13, color: '#999', margin: 0, lineHeight: 1.6 }}>
+                                        Esta herramienta está diseñada <strong style={{ color: '#ccc' }}>estrictamente
+                                            para casos de urgencia</strong> en los que se te esté negando atención médica,
+                                        cirugía, medicamentos vitales o cualquier servicio esencial de salud.
+                                        Su uso genera un documento legal real que será presentado ante un juez.
+                                        Por favor, utilízala con responsabilidad.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ─── Life danger note ───────────────────────── */}
+                        <div style={{
+                            textAlign: 'left', padding: '14px 20px', borderRadius: 12,
+                            background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.15)',
+                            marginBottom: 28,
+                        }}>
+                            <p style={{ fontSize: 13, color: '#999', margin: 0, lineHeight: 1.6 }}>
+                                <strong style={{ color: '#fbbf24' }}>Si hay peligro inmediato de vida</strong>, acude
+                                primero a urgencias y solicita atención inmediata. Este módulo complementa esa
+                                acción ayudándote a documentar y exigir legalmente la atención que necesitas.
+                            </p>
+                        </div>
+
+                        {/* ─── Terms Checkbox ─────────────────────────── */}
+                        <label style={{
+                            display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer',
+                            padding: '16px 18px', borderRadius: 12,
+                            background: termsAccepted ? 'rgba(220,38,38,0.06)' : '#1a1a1a',
+                            border: `1px solid ${termsAccepted ? 'rgba(220,38,38,0.3)' : '#2a2a2a'}`,
+                            transition: 'all 0.2s', textAlign: 'left',
+                        }}>
+                            <input
+                                type="checkbox"
+                                checked={termsAccepted}
+                                onChange={e => setTermsAccepted(e.target.checked)}
+                                style={{ marginTop: 3, accentColor: '#dc2626', width: 18, height: 18, flexShrink: 0 }}
+                            />
+                            <span style={{ fontSize: 14, color: '#ccc', lineHeight: 1.6 }}>
+                                Declaro que necesito esta herramienta por una <strong style={{ color: '#e5e5e5' }}>situación
+                                    de emergencia de salud real</strong> y me comprometo a usarla de manera responsable.
+                                <span style={{ color: '#888' }}> Acepto los términos y condiciones de uso.</span>
+                            </span>
+                        </label>
+
+                        {/* ─── Continue Button ────────────────────────── */}
+                        <div style={{ textAlign: 'center', marginTop: 28 }}>
+                            <button
+                                className="btn-primary"
+                                disabled={!termsAccepted}
+                                onClick={() => setPhase('form')}
+                                style={{ padding: '16px 40px', fontSize: 17 }}
+                            >
+                                <MedicalCross size={20} color="white" />
+                                Comenzar
+                            </button>
+                            <p style={{ fontSize: 12, color: '#555', marginTop: 12 }}>
+                                Herramienta 100% gratuita — Iurexia Legal AI
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* ─── HERO ───────────────────────────────────────────────── */}
             {phase === 'form' && step === 0 && (
