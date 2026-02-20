@@ -130,8 +130,8 @@ const EcgLine = () => (
     </svg>
 );
 
-const ShieldCheck = ({ size = 18 }: { size?: number }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const ShieldCheck = ({ size = 18, color = "currentColor" }: { size?: number; color?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         <path d="M9 12l2 2 4-4" />
     </svg>
@@ -156,8 +156,8 @@ const DownloadIcon = ({ size = 18 }: { size?: number }) => (
     </svg>
 );
 
-const CheckCircle = ({ size = 18 }: { size?: number }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const CheckCircle = ({ size = 18, color = "currentColor" }: { size?: number; color?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
     </svg>
 );
@@ -514,143 +514,171 @@ export default function SalvamePage() {
                 </div>
             </header>
 
-            {/* ─── INTRO / TERMS SCREEN ─────────────────────────────── */}
+            {/* ─── INTRO / TERMS SCREEN (NEW PUBLI DESIGN) ──────────────── */}
             {phase === 'intro' && (
-                <section style={{
-                    padding: '48px 24px 60px', textAlign: 'center', position: 'relative', overflow: 'hidden',
-                    animation: 'fadeIn 0.6s ease-out',
-                }}>
-                    {/* Background heart watermark */}
-                    <div style={{ position: 'absolute', top: 20, right: '10%', opacity: 0.04, pointerEvents: 'none' }}>
-                        <HeartPulse size={280} color="#dc2626" />
-                    </div>
+                <div style={{ animation: 'fadeIn 0.8s ease-out' }}>
 
-                    <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                            <MedicalCross size={32} color="#dc2626" />
-                            <h1 style={{ fontSize: 36, fontWeight: 800, color: '#f5f5f5', margin: 0, letterSpacing: '-0.02em' }}>
-                                SALVAME
-                            </h1>
+                    {/* Hero Section */}
+                    <section style={{
+                        minHeight: '80vh',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        padding: '80px 5% 60px',
+                        position: 'relative'
+                    }}>
+                        {/* Background heart watermark */}
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0.03, pointerEvents: 'none' }}>
+                            <HeartPulse size={400} color="#dc2626" />
                         </div>
-                        <h2 style={{ fontSize: 20, fontWeight: 400, color: '#a3a3a3', margin: '8px 0 28px', lineHeight: 1.5 }}>
-                            Amparo de emergencia por salud
-                        </h2>
 
-
-                        {/* ─── What is this tool? ──────────────────────── */}
-                        <div style={{ textAlign: 'left', marginBottom: 40 }}>
-                            <h3 style={{
-                                fontSize: 24, fontWeight: 300, color: '#e5e5e5', margin: '0 0 16px',
-                                fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: '-0.01em',
-                            }}>
-                                ¿Qué es esta herramienta?
-                            </h3>
-                            <p style={{ fontSize: 17, color: '#999', lineHeight: 1.8, margin: 0 }}>
-                                <strong style={{ color: '#d4d4d4' }}>SALVAME</strong> es una herramienta gratuita
-                                diseñada para ayudar a todas las personas que enfrentan una emergencia de salud
-                                y necesitan exigir atención médica de manera legal e inmediata.
+                        <div style={{ position: 'relative', zIndex: 1, maxWidth: 800 }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+                                <MedicalCross size={48} color="#dc2626" />
+                                <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #fff 0%, #a3a3a3 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                                    SALVAME
+                                </h1>
+                            </div>
+                            <h2 style={{ fontSize: '1.5rem', color: '#a3a3a3', fontWeight: 400, marginBottom: 32, lineHeight: 1.5 }}>
+                                Amparo de emergencia por salud
+                            </h2>
+                            <p style={{ fontSize: '1.125rem', color: '#999', maxWidth: 600, margin: '0 auto 48px', lineHeight: 1.6 }}>
+                                Si te niegan atención hospitalaria, una cirugía urgente o medicamento vital, el tiempo es crucial. Genera tu demanda de amparo federal en minutos usando Inteligencia Artificial.
                             </p>
-                        </div>
 
-                        {/* ─── Thin separator ─────────────────────────── */}
-                        <div style={{ width: 60, height: 1, background: 'rgba(220,38,38,0.3)', margin: '0 0 40px' }} />
-
-                        {/* ─── What is Amparo for? ────────────────────── */}
-                        <div style={{ textAlign: 'left', marginBottom: 40 }}>
-                            <h3 style={{
-                                fontSize: 24, fontWeight: 300, color: '#e5e5e5', margin: '0 0 16px',
-                                fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: '-0.01em',
-                            }}>
-                                ¿Para qué sirve el Juicio de Amparo en este caso?
-                            </h3>
-                            <p style={{ fontSize: 17, color: '#999', lineHeight: 1.8, margin: 0 }}>
-                                En casos como estos, el <strong style={{ color: '#d4d4d4' }}>Juicio de Amparo</strong> funciona
-                                como un derecho constitucional que permite a cualquier persona solicitar a un juez
-                                federal que ordene a la autoridad responsable — como un hospital público — que
-                                proteja tu <strong style={{ color: '#d4d4d4' }}>derecho a la salud y a la vida</strong>.
-                                No necesitas ser abogado para presentarlo.
-                            </p>
-                        </div>
-
-                        {/* ─── Thin separator ─────────────────────────── */}
-                        <div style={{ width: 60, height: 1, background: 'rgba(220,38,38,0.3)', margin: '0 0 40px' }} />
-
-                        {/* ─── How it works ───────────────────────────── */}
-                        <div style={{ textAlign: 'left', marginBottom: 44 }}>
-                            <h3 style={{
-                                fontSize: 24, fontWeight: 300, color: '#e5e5e5', margin: '0 0 16px',
-                                fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: '-0.01em',
-                            }}>
-                                ¿Cómo funciona?
-                            </h3>
-                            <p style={{ fontSize: 17, color: '#999', lineHeight: 1.8, margin: 0 }}>
-                                Completas un formulario breve con tus datos, los del paciente y la situación.
-                                La inteligencia artificial genera automáticamente la demanda de amparo lista para
-                                imprimir, firmar y presentar ante un Juzgado de Distrito. También recibirás
-                                instrucciones paso a paso de cómo y dónde presentarla según tu ubicación.
-                            </p>
-                        </div>
-
-                        {/* ─── ECG separator ──────────────────────────── */}
-                        <div style={{ maxWidth: 400, margin: '0 auto 36px' }}>
-                            <EcgLine />
-                        </div>
-
-                        {/* ─── Urgent use warning ─────────────────────── */}
-                        <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                            <p style={{ fontSize: 15, color: '#f87171', fontWeight: 600, margin: '0 0 8px', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                                <AlertTriangleIcon size={18} />
-                                Uso exclusivo para emergencias reales
-                            </p>
-                            <p style={{ fontSize: 14, color: '#777', lineHeight: 1.7, margin: 0, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
-                                Esta herramienta genera un <strong style={{ color: '#aaa' }}>documento legal real</strong> que
-                                será presentado ante un juez. Está diseñada estrictamente para casos de urgencia
-                                en los que se te esté negando atención médica. Por favor, utilízala con responsabilidad.
-                            </p>
-                        </div>
-                        <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6, textAlign: 'center', margin: '0 0 32px' }}>
-                            <strong style={{ color: '#fbbf24' }}>Si hay peligro inmediato de vida</strong>, acude
-                            primero a urgencias. Este módulo complementa esa acción.
-                        </p>
-
-                        {/* ─── Terms Checkbox ─────────────────────────── */}
-                        <label style={{
-                            display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer',
-                            padding: '16px 18px', borderRadius: 12,
-                            background: termsAccepted ? 'rgba(220,38,38,0.06)' : '#1a1a1a',
-                            border: `1px solid ${termsAccepted ? 'rgba(220,38,38,0.3)' : '#2a2a2a'} `,
-                            transition: 'all 0.2s', textAlign: 'left',
-                        }}>
-                            <input
-                                type="checkbox"
-                                checked={termsAccepted}
-                                onChange={e => setTermsAccepted(e.target.checked)}
-                                style={{ marginTop: 3, accentColor: '#dc2626', width: 18, height: 18, flexShrink: 0 }}
-                            />
-                            <span style={{ fontSize: 14, color: '#ccc', lineHeight: 1.6 }}>
-                                Declaro que necesito esta herramienta por una <strong style={{ color: '#e5e5e5' }}>situación
-                                    de emergencia de salud real</strong> y me comprometo a usarla de manera responsable.
-                                <span style={{ color: '#888' }}> Acepto los términos y condiciones de uso.</span>
-                            </span>
-                        </label>
-
-                        {/* ─── Continue Button ────────────────────────── */}
-                        <div style={{ textAlign: 'center', marginTop: 28 }}>
                             <button
                                 className="btn-primary"
-                                disabled={!termsAccepted}
                                 onClick={() => setPhase('form')}
-                                style={{ padding: '16px 40px', fontSize: 17 }}
+                                style={{ padding: '18px 40px', fontSize: '1.125rem', boxShadow: '0 0 15px rgba(220,38,38,0.3)', animation: 'pulseGlow 3s infinite' }}
                             >
-                                <MedicalCross size={20} color="white" />
-                                Comenzar
+                                <CheckCircle size={20} color="white" />
+                                Generar Amparo Ahora Gratis
                             </button>
-                            <p style={{ fontSize: 12, color: '#555', marginTop: 12 }}>
-                                Herramienta 100% gratuita — Iurexia Legal AI
+
+                            <div style={{ width: '100%', maxWidth: 600, margin: '40px auto 0', opacity: 0.3 }}>
+                                <EcgLine />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Stats Section */}
+                    <section style={{ padding: '80px 5%', background: '#151515', borderTop: '1px solid #262626', borderBottom: '1px solid #262626' }}>
+                        <div style={{ textAlign: 'center', maxWidth: 700, margin: '0 auto 60px' }}>
+                            <h2 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: '2.5rem', fontWeight: 300, color: '#f5f5f5', marginBottom: 24 }}>
+                                Por qué creamos SALVAME
+                            </h2>
+                            <p style={{ color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.6 }}>
+                                Conocemos la dura realidad en México. La burocracia no debe estar por encima de la vida. Esta herramienta nace de la sensibilidad y el deber moral del equipo de Iurexia.
                             </p>
                         </div>
-                    </div>
-                </section>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 30, maxWidth: 1200, margin: '0 auto' }}>
+                            {/* Stat 1: CONEVAL */}
+                            <div style={{ background: '#0f0f0f', border: '1px solid #262626', borderRadius: 16, padding: '40px 30px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ fontSize: '3rem', fontWeight: 800, color: '#dc2626', marginBottom: 16 }}>50.4M</div>
+                                <div style={{ fontSize: '1.125rem', color: '#f5f5f5', fontWeight: 600, marginBottom: 12 }}>Mexicanos sin acceso a la salud</div>
+                                <div style={{ color: '#666', fontSize: '0.95rem', lineHeight: 1.6 }}>Más de 50.4 millones de personas experimentaron carencia por acceso a los servicios de salud (39.1% de la población).</div>
+                                <span style={{ display: 'block', marginTop: 16, fontSize: '0.8rem', color: '#444', fontStyle: 'italic' }}>Fuente: CONEVAL (2022)</span>
+                            </div>
+
+                            {/* Stat 2: Colectivo Cero Desabasto */}
+                            <div style={{ background: '#0f0f0f', border: '1px solid #262626', borderRadius: 16, padding: '40px 30px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ fontSize: '3rem', fontWeight: 800, color: '#dc2626', marginBottom: 16 }}>15M+</div>
+                                <div style={{ fontSize: '1.125rem', color: '#f5f5f5', fontWeight: 600, marginBottom: 12 }}>Recetas no surtidas</div>
+                                <div style={{ color: '#666', fontSize: '0.95rem', lineHeight: 1.6 }}>Más de 15 millones de recetas médicas no fueron surtidas efectivamente en instituciones de salud pública en un nivel reciente.</div>
+                                <span style={{ display: 'block', marginTop: 16, fontSize: '0.8rem', color: '#444', fontStyle: 'italic' }}>Fuente: Colectivo Cero Desabasto</span>
+                            </div>
+
+                            {/* Stat 3: Amparo 24h */}
+                            <div style={{ background: '#0f0f0f', border: '1px solid #262626', borderRadius: 16, padding: '40px 30px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ fontSize: '3rem', fontWeight: 800, color: '#dc2626', marginBottom: 16 }}>24h</div>
+                                <div style={{ fontSize: '1.125rem', color: '#f5f5f5', fontWeight: 600, marginBottom: 12 }}>Derecho a la suspensión</div>
+                                <div style={{ color: '#666', fontSize: '0.95rem', lineHeight: 1.6 }}>Los jueces federales otorgan suspensiones de plano en menos de 24 horas cuando hay peligro inminente de pérdida de la vida.</div>
+                                <span style={{ display: 'block', marginTop: 16, fontSize: '0.8rem', color: '#444', fontStyle: 'italic' }}>Fuente: Ley de Amparo, Arts. 15, 126</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Features Sections */}
+                    <section style={{ padding: '80px 5%', maxWidth: 1200, margin: '0 auto' }}>
+                        {/* Feature 1 */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 60, marginBottom: 80 }}>
+                            <div style={{ flex: '1 1 400px' }}>
+                                <h3 style={{ fontSize: '2rem', marginBottom: 20, color: '#f5f5f5' }}>El Juicio de Amparo Salva Vidas</h3>
+                                <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
+                                    El Juicio de Amparo no es solo para grandes corporativos, es un derecho diseñado para <span style={{ color: '#dc2626', fontWeight: 600 }}>proteger al ciudadano común</span> contra omisiones de la autoridad.
+                                </p>
+                                <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
+                                    Al presentar este documento, un Juez de Distrito de la Federación obliga legalmente al hospital o institución de salud (IMSS, ISSSTE, local) a brindarte la atención médica o el medicamento que te niegan.
+                                </p>
+                            </div>
+                            <div style={{ flex: '1 1 400px', background: 'linear-gradient(145deg, #1a1a1a, #111)', border: '1px solid #262626', borderRadius: 20, padding: 40, position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                                <ShieldCheck size={160} color="#dc2626" />
+                            </div>
+                        </div>
+
+                        {/* Feature 2 */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 60, marginBottom: 40, flexDirection: 'row-reverse' }}>
+                            <div style={{ flex: '1 1 400px' }}>
+                                <h3 style={{ fontSize: '2rem', marginBottom: 20, color: '#f5f5f5' }}>Respaldo y Tecnología Legal</h3>
+                                <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
+                                    SALVAME utiliza el motor de inteligencia artificial jurídica más avanzado de México (<span style={{ color: '#c9a962' }}>Iurexia Legal AI</span>). La demanda que generas cuenta con los más altos estándares técnicos.
+                                </p>
+                                <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
+                                    El sistema fundamenta automáticamente tu demanda con los <span style={{ color: '#dc2626', fontWeight: 600 }}>artículos 1 y 4 de la Constitución</span>, y busca jurisprudencia en tiempo real para hacer valer tu derecho a la salud.
+                                </p>
+                            </div>
+                            <div style={{ flex: '1 1 400px', background: 'linear-gradient(145deg, #1a1a1a, #111)', border: '1px solid #262626', borderRadius: 20, padding: 40, display: 'flex', flexDirection: 'column', gap: 15 }}>
+                                <div style={{ background: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 8, borderLeft: '3px solid #c9a962' }}>
+                                    <div style={{ fontSize: 12, color: '#666', marginBottom: 5 }}>Buscando jurisprudencia...</div>
+                                    <div style={{ width: '80%', height: 8, background: '#333', borderRadius: 4 }}></div>
+                                </div>
+                                <div style={{ background: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 8, borderLeft: '3px solid #dc2626' }}>
+                                    <div style={{ fontSize: 12, color: '#666', marginBottom: 5 }}>Redactando suspensión de plano...</div>
+                                    <div style={{ width: '60%', height: 8, background: '#333', borderRadius: 4 }}></div>
+                                </div>
+                                <div style={{ background: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 8, borderLeft: '3px solid #a3a3a3' }}>
+                                    <div style={{ fontSize: 12, color: '#666', marginBottom: 5 }}>Fundamentando agravios...</div>
+                                    <div style={{ width: '90%', height: 8, background: '#333', borderRadius: 4 }}></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Action CTA Section */}
+                    <section style={{ padding: '80px 5%', textAlign: 'center', background: 'linear-gradient(to bottom, #0f0f0f, #1a0505)', borderTop: '1px solid rgba(220,38,38,0.15)' }}>
+                        <div style={{ maxWidth: 800, margin: '0 auto', background: 'rgba(20,20,20,0.6)', backdropFilter: 'blur(10px)', border: '1px solid #262626', padding: '60px 40px', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: '#f87171', background: 'rgba(220,38,38,0.1)', padding: '10px 20px', borderRadius: 30, fontSize: '0.95rem', fontWeight: 600, marginBottom: 30 }}>
+                                <AlertTriangleIcon size={20} />
+                                Uso exclusivo para emergencias reales
+                            </div>
+
+                            <h2 style={{ fontSize: '2.5rem', marginBottom: 20, fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>
+                                Protege la vida de tus seres queridos hoy.
+                            </h2>
+                            <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 40, maxWidth: 600, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+                                No necesitas cuenta premium ni conocimientos legales. Completa un breve formulario y obtén tu demanda lista para imprimir y presentar en el juzgado.
+                            </p>
+
+                            <button
+                                className="btn-primary"
+                                onClick={() => setPhase('form')}
+                                style={{ padding: '20px 50px', fontSize: '1.25rem' }}
+                            >
+                                <MedicalCross size={20} color="white" />
+                                Comenzar proceso gratuito
+                            </button>
+
+                            <p style={{ marginTop: 24, color: '#666', fontSize: '0.9rem' }}>
+                                Responsabilidad social de <strong style={{ color: '#e5e5e5' }}>Iurexia Technologies</strong>
+                            </p>
+                        </div>
+                    </section>
+
+                </div>
             )}
 
             {/* ─── HERO ───────────────────────────────────────────────── */}
