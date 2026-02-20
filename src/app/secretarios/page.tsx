@@ -471,8 +471,9 @@ export default function SecretariosPage() {
             <section className="py-24 px-4 bg-gradient-to-t from-[#0a0f1a] to-[#111827]">
                 <div className="max-w-4xl mx-auto text-center">
                     <AnimateOnScroll>
-                        <div className="flex justify-center mb-8">
-                            <Image src="/logo-iurexia.png" alt="Iurexia" width={160} height={50} />
+                        <div className="flex justify-center items-center gap-3 mb-8">
+                            <Scale className="w-8 h-8 text-[#c9a962]" />
+                            <span className="font-serif text-4xl font-semibold tracking-tight">Iurex<span className="text-[#c9a962]">ia</span></span>
                         </div>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.1}>
