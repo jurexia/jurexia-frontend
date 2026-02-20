@@ -44,7 +44,7 @@ export default function Navbar() {
                         <NavLink href="/soluciones">Soluciones</NavLink>
                         <Link
                             href="/connect"
-                            className="text-sm font-semibold text-blue-600 border border-blue-400 rounded-full px-4 py-1.5 hover:bg-blue-50 hover:border-blue-500 transition-all duration-200"
+                            className="text-sm font-semibold text-white bg-blue-600 rounded-full px-5 py-1.5 hover:bg-blue-700 transition-all duration-200 shadow-sm"
                         >
                             Connect
                         </Link>
@@ -141,7 +141,7 @@ export default function Navbar() {
                             <Link
                                 href="/connect"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="text-base font-semibold text-blue-600 border border-blue-400 rounded-full px-4 py-2 text-center hover:bg-blue-50 transition-colors"
+                                className="text-base font-semibold text-white bg-blue-600 rounded-full px-4 py-2 text-center hover:bg-blue-700 transition-colors shadow-sm"
                             >
                                 Connect
                             </Link>

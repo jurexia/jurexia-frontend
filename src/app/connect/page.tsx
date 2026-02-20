@@ -301,45 +301,11 @@ export default function ConnectPage() {
                                 />
                             </div>
 
-                            {/* Estado Filter */}
-                            <div className="relative md:w-64">
-                                <button
-                                    onClick={() => setShowEstadoDropdown(!showEstadoDropdown)}
-                                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#0F0F0F', border: '1px solid #333', borderRadius: '16px', color: '#E5E5E5', cursor: 'pointer' }}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 text-gray-400" />
-                                        <span>{ESTADOS.find(e => e.value === selectedEstado)?.label || 'México'}</span>
-                                    </div>
-                                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                                </button>
-
-                                {showEstadoDropdown && (
-                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#1A1A1A', border: '1px solid #333', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', maxHeight: '250px', overflowY: 'auto', zIndex: 50 }}>
-                                        {ESTADOS.map(estado => (
-                                            <button
-                                                key={estado.value}
-                                                onClick={() => {
-                                                    setSelectedEstado(estado.value);
-                                                    setShowEstadoDropdown(false);
-                                                }}
-                                                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', color: '#ccc', borderBottom: '1px solid #222', cursor: 'pointer', textAlign: 'left' }}
-                                                onMouseOver={(e) => e.currentTarget.style.background = '#2A2A2A'}
-                                                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                                            >
-                                                <span>{estado.label}</span>
-                                                {selectedEstado === estado.value && <Check className="w-4 h-4 text-blue-500" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
                             {/* Search Button */}
                             <button
                                 onClick={handleSearch}
                                 disabled={isSearching || (!user && searchQuery.trim().length === 0)}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 32px', background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', color: '#fff', borderRadius: '16px', fontWeight: 600, cursor: (isSearching || (!user && searchQuery.trim().length === 0)) ? 'not-allowed' : 'pointer', opacity: (isSearching || (!user && searchQuery.trim().length === 0)) ? 0.6 : 1, transition: 'transform 0.2s', minHeight: '56px' }}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 32px', background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', color: '#fff', borderRadius: '16px', fontWeight: 600, cursor: (isSearching || (!user && searchQuery.trim().length === 0)) ? 'not-allowed' : 'pointer', opacity: (isSearching || (!user && searchQuery.trim().length === 0)) ? 0.6 : 1, transition: 'transform 0.2s', minHeight: '56px', border: 'none' }}
                                 onMouseOver={(e) => !isSearching && (e.currentTarget.style.transform = 'scale(1.02)')}
                                 onMouseOut={(e) => !isSearching && (e.currentTarget.style.transform = 'scale(1)')}
                             >
@@ -354,8 +320,55 @@ export default function ConnectPage() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Estado Selector — horizontal scrollable pills */}
+                    <div style={{ maxWidth: '800px', margin: '16px auto 0', position: 'relative' }}>
+                        <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', msOverflowStyle: 'none' }} className="hide-scrollbar">
+                                {ESTADOS.map(estado => (
+                                    <button
+                                        key={estado.value}
+                                        onClick={() => setSelectedEstado(estado.value)}
+                                        style={{
+                                            whiteSpace: 'nowrap',
+                                            padding: '6px 14px',
+                                            borderRadius: '9999px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: selectedEstado === estado.value ? 600 : 400,
+                                            background: selectedEstado === estado.value ? '#2563EB' : 'transparent',
+                                            color: selectedEstado === estado.value ? '#fff' : '#999',
+                                            border: selectedEstado === estado.value ? '1px solid #2563EB' : '1px solid #333',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            flexShrink: 0,
+                                        }}
+                                        onMouseOver={(e) => {
+                                            if (selectedEstado !== estado.value) {
+                                                e.currentTarget.style.borderColor = '#555';
+                                                e.currentTarget.style.color = '#ddd';
+                                            }
+                                        }}
+                                        onMouseOut={(e) => {
+                                            if (selectedEstado !== estado.value) {
+                                                e.currentTarget.style.borderColor = '#333';
+                                                e.currentTarget.style.color = '#999';
+                                            }
+                                        }}
+                                    >
+                                        {estado.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
+
+            {/* Hide scrollbar CSS */}
+            <style jsx>{`
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+            `}</style>
 
             {/* Value Proposition Section */}
             <section style={{ padding: '40px 24px', background: '#111111', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
