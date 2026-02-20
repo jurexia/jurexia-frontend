@@ -220,6 +220,7 @@ export default function SalvamePage() {
     const [loaderIdx, setLoaderIdx] = useState(0);
     const [copied, setCopied] = useState(false);
     const [downloading, setDownloading] = useState(false);
+    const [showInstructions, setShowInstructions] = useState(false);
     const resultRef = useRef<HTMLDivElement>(null);
 
     // ─── Loader rotation ──────────────────────────────────────────
@@ -451,26 +452,26 @@ export default function SalvamePage() {
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes pulseGlow { 0 %, 100 % { box- shadow: 0 0 8px rgba(220, 38, 38, 0.3); } 50 % { box- shadow: 0 0 24px rgba(220, 38, 38, 0.6);
+    @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 8px rgba(220, 38, 38, 0.3); } 50% { box-shadow: 0 0 24px rgba(220, 38, 38, 0.6);
 } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes ecgPulse { 0 % { stroke- dashoffset: 600; } 100 % { stroke- dashoffset: 0; } }
-        .salvame - input { width: 100 %; padding: 12px 16px; border - radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font - size: 15px; font - family: inherit; transition: border - color 0.2s, box - shadow 0.2s; outline: none; box - sizing: border - box; }
-        .salvame - input:focus { border - color: #dc2626; box - shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
-        .salvame - input::placeholder { color: #666; }
-        .salvame - select { appearance: none; width: 100 %; padding: 12px 16px; border - radius: 10px; border: 1px solid #333; background: #1a1a1a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no - repeat right 14px center; color: #e5e5e5; font - size: 15px; font - family: inherit; cursor: pointer; outline: none; transition: border - color 0.2s; }
-        .salvame - select:focus { border - color: #dc2626; }
-        .salvame - textarea { width: 100 %; padding: 12px 16px; border - radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font - size: 15px; font - family: inherit; resize: vertical; min - height: 120px; outline: none; transition: border - color 0.2s; box - sizing: border - box; }
-        .salvame - textarea:focus { border - color: #dc2626; box - shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
-        .chip { display: inline - flex; align - items: center; gap: 6px; padding: 8px 16px; border - radius: 20px; border: 1px solid #333; background: #1a1a1a; color: #aaa; font - size: 14px; cursor: pointer; transition: all 0.2s; user - select: none; }
-        .chip:hover { border - color: #dc2626; color: #e5e5e5; }
-        .chip.active { background: rgba(220, 38, 38, 0.15); border - color: #dc2626; color: #f87171; }
-        .btn - primary { display: inline - flex; align - items: center; gap: 8px; padding: 14px 32px; border - radius: 12px; border: none; background: linear - gradient(135deg, #dc2626 0 %, #b91c1c 100 %); color: white; font - size: 16px; font - weight: 600; cursor: pointer; transition: all 0.3s; font - family: inherit; }
-        .btn - primary: hover: not(: disabled) { transform: translateY(-2px); box - shadow: 0 8px 24px rgba(220, 38, 38, 0.4); }
-        .btn - primary:disabled { opacity: 0.4; cursor: not - allowed; transform: none; }
-        .btn - secondary { display: inline - flex; align - items: center; gap: 8px; padding: 10px 20px; border - radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font - size: 14px; cursor: pointer; transition: all 0.2s; font - family: inherit; }
-        .btn - secondary:hover { border - color: #555; background: #222; }
-        .result - text { white - space: pre - wrap; line - height: 1.8; font - size: 15px; color: #d4d4d4; padding: 24px; background: #141414; border - radius: 12px; border: 1px solid #262626; max - height: 600px; overflow - y: auto; }
+@keyframes ecgPulse { 0% { stroke-dashoffset: 600; } 100% { stroke-dashoffset: 0; } }
+        .salvame-input { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font-size: 15px; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s; outline: none; box-sizing: border-box; }
+        .salvame-input:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
+        .salvame-input::placeholder { color: #666; }
+        .salvame-select { appearance: none; width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 14px center; color: #e5e5e5; font-size: 15px; font-family: inherit; cursor: pointer; outline: none; transition: border-color 0.2s; }
+        .salvame-select:focus { border-color: #dc2626; }
+        .salvame-textarea { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font-size: 15px; font-family: inherit; resize: vertical; min-height: 120px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+        .salvame-textarea:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
+        .chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; border: 1px solid #333; background: #1a1a1a; color: #aaa; font-size: 14px; cursor: pointer; transition: all 0.2s; user-select: none; }
+        .chip:hover { border-color: #dc2626; color: #e5e5e5; }
+        .chip.active { background: rgba(220, 38, 38, 0.15); border-color: #dc2626; color: #f87171; }
+        .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 12px; border: none; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: inherit; }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font-size: 14px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .btn-secondary:hover { border-color: #555; background: #222; }
+        .result-text { white-space: pre-wrap; line-height: 1.8; font-size: 15px; color: #d4d4d4; padding: 24px; background: #141414; border-radius: 12px; border: 1px solid #262626; max-height: 600px; overflow-y: auto; }
 `}</style>
 
             {/* ─── HEADER BAR ─────────────────────────────────────────── */}
@@ -600,7 +601,7 @@ export default function SalvamePage() {
                             display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer',
                             padding: '16px 18px', borderRadius: 12,
                             background: termsAccepted ? 'rgba(220,38,38,0.06)' : '#1a1a1a',
-                            border: `1px solid ${ termsAccepted ? 'rgba(220,38,38,0.3)' : '#2a2a2a' } `,
+                            border: `1px solid ${termsAccepted ? 'rgba(220,38,38,0.3)' : '#2a2a2a'} `,
                             transition: 'all 0.2s', textAlign: 'left',
                         }}>
                             <input
@@ -744,7 +745,7 @@ export default function SalvamePage() {
                                         onChange={e => updateField('promovente_domicilio', e.target.value)} />
                                     <p style={{ fontSize: 11, color: '#555', marginTop: 4 }}>Dirección donde podrás recibir documentos del juzgado.</p>
                                 </div>
-                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.promueve_por_paciente ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${ form.promueve_por_paciente ? 'rgba(220,38,38,0.3)' : '#2a2a2a' } `, transition: 'all 0.2s' }}>
+                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.promueve_por_paciente ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${form.promueve_por_paciente ? 'rgba(220,38,38,0.3)' : '#2a2a2a'} `, transition: 'all 0.2s' }}>
                                     <input type="checkbox" checked={form.promueve_por_paciente}
                                         onChange={e => updateField('promueve_por_paciente', e.target.checked)}
                                         style={{ marginTop: 2, accentColor: '#dc2626' }} />
@@ -783,7 +784,7 @@ export default function SalvamePage() {
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                                         {RIESGO_OPTIONS.map(opt => (
                                             <button key={opt.value}
-                                                className={`chip ${ form.paciente_riesgo === opt.value ? 'active' : '' } `}
+                                                className={`chip ${form.paciente_riesgo === opt.value ? 'active' : ''} `}
                                                 onClick={() => updateField('paciente_riesgo', opt.value)}
                                             >
                                                 {opt.label}
@@ -845,7 +846,7 @@ export default function SalvamePage() {
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                                         {SITUACION_CHIPS.map(s => (
                                             <button key={s}
-                                                className={`chip ${ form.situaciones.includes(s) ? 'active' : '' } `}
+                                                className={`chip ${form.situaciones.includes(s) ? 'active' : ''} `}
                                                 onClick={() => toggleSituacion(s)}
                                             >
                                                 {s}
@@ -864,7 +865,7 @@ export default function SalvamePage() {
                                     />
                                     <p style={{ fontSize: 11, color: '#555', textAlign: 'right', marginTop: 4 }}>{form.descripcion_libre.length}/1200</p>
                                 </div>
-                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.confirma_veracidad ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${ form.confirma_veracidad ? 'rgba(220,38,38,0.3)' : '#2a2a2a' } `, transition: 'all 0.2s' }}>
+                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.confirma_veracidad ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${form.confirma_veracidad ? 'rgba(220,38,38,0.3)' : '#2a2a2a'} `, transition: 'all 0.2s' }}>
                                     <input type="checkbox" checked={form.confirma_veracidad}
                                         onChange={e => updateField('confirma_veracidad', e.target.checked)}
                                         style={{ marginTop: 2, accentColor: '#dc2626' }} />
@@ -992,6 +993,135 @@ export default function SalvamePage() {
                             ))}
                         </div>
                     </div>
+
+                    {/* ─── ¿QUÉ SIGUE? BUTTON + INSTRUCTIONS ──────────── */}
+                    <div style={{ textAlign: 'center', marginTop: 28 }}>
+                        <button
+                            onClick={() => setShowInstructions(!showInstructions)}
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 10,
+                                padding: '16px 36px', borderRadius: 14, border: 'none',
+                                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                                color: 'white', fontSize: 16, fontWeight: 700,
+                                cursor: 'pointer', transition: 'all 0.3s', fontFamily: 'inherit',
+                                boxShadow: '0 4px 20px rgba(220,38,38,0.3)',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(220,38,38,0.5)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(220,38,38,0.3)'; }}
+                        >
+                            ✅ Ya tengo la demanda generada y revisada, ¿qué sigue?
+                            <span style={{ transition: 'transform 0.3s', transform: showInstructions ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: 14 }}>▼</span>
+                        </button>
+                    </div>
+
+                    {showInstructions && (
+                        <div style={{
+                            marginTop: 24, padding: '28px', borderRadius: 16,
+                            background: '#151515', border: '1px solid rgba(220,38,38,0.2)',
+                            animation: 'fadeIn 0.4s ease-out',
+                        }}>
+                            <h3 style={{ fontSize: 20, fontWeight: 700, color: '#f87171', margin: '0 0 24px', textAlign: 'center' }}>
+                                📋 Instrucciones para presentar tu Amparo
+                            </h3>
+
+                            {/* SECTION 1: ¿A qué instalaciones dirigirte? */}
+                            <div style={{ marginBottom: 28 }}>
+                                <h4 style={{ fontSize: 16, fontWeight: 700, color: '#e5e5e5', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{
+                                        width: 28, height: 28, borderRadius: '50%', background: 'rgba(220,38,38,0.15)', color: '#f87171',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0,
+                                    }}>1</span>
+                                    ¿A qué instalaciones dirigirte? (La jerarquía de juzgados)
+                                </h4>
+                                <p style={{ fontSize: 14, color: '#ccc', lineHeight: 1.7, margin: '0 0 14px', paddingLeft: 36 }}>
+                                    Idealmente, debes acudir a las instalaciones del <strong style={{ color: '#f5f5f5' }}>Poder Judicial de la Federación</strong> para presentarla ante un <strong style={{ color: '#f5f5f5' }}>Juez de Distrito</strong>. Sin embargo, la ley prevé qué hacer si no hay uno cerca:
+                                </p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 36 }}>
+                                    {[
+                                        'Si en el lugar donde te encuentras no reside un juez de distrito, debes entregar la demanda al juez de primera instancia (un juez local o estatal) dentro de cuya jurisdicción radique la autoridad del hospital que niega la atención. Este juez está obligado a recibirla y acordar de plano la suspensión.',
+                                        'Si tampoco hay un juez de primera instancia en el lugar, o si la autoridad no puede ser habida, puedes presentar la demanda ante cualquiera de los órganos judiciales que ejerzan jurisdicción en ese mismo lugar.',
+                                        'En su defecto, puedes acudir ante el órgano jurisdiccional más próximo.',
+                                    ].map((text, idx) => (
+                                        <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                            <span style={{
+                                                width: 22, height: 22, borderRadius: '50%', background: '#1e1e1e', border: '1px solid #333', color: '#888',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0, marginTop: 2,
+                                            }}>{idx + 1}</span>
+                                            <p style={{ margin: 0, fontSize: 13, color: '#aaa', lineHeight: 1.6 }}>{text}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Divider */}
+                            <hr style={{ border: 'none', borderTop: '1px solid #262626', margin: '0 0 28px' }} />
+
+                            {/* SECTION 2: Lo que hará el Juez */}
+                            <div style={{ marginBottom: 28 }}>
+                                <h4 style={{ fontSize: 16, fontWeight: 700, color: '#e5e5e5', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{
+                                        width: 28, height: 28, borderRadius: '50%', background: 'rgba(220,38,38,0.15)', color: '#f87171',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0,
+                                    }}>2</span>
+                                    Lo que hará el Juez (La Suspensión Inmediata)
+                                </h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 36 }}>
+                                    <p style={{ margin: 0, fontSize: 14, color: '#ccc', lineHeight: 1.7 }}>
+                                        Dado que es un caso de urgencia (artículos 15 y 20 de la Ley de Amparo), el juez debe proveer o dar respuesta <strong style={{ color: '#4ade80' }}>de inmediato</strong>.
+                                    </p>
+                                    {[
+                                        'El juez decretará la suspensión de los actos reclamados y dictará las medidas necesarias.',
+                                        'Esta suspensión se concederá de oficio y de plano (de forma automática y directa).',
+                                        'El juez comunicará esta suspensión sin demora a la autoridad responsable (el hospital) por cualquier medio que permita lograr su inmediato cumplimiento para que atiendan al paciente.',
+                                    ].map((text, idx) => (
+                                        <div key={idx} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                            <span style={{ color: '#4ade80', fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>
+                                            <p style={{ margin: 0, fontSize: 13, color: '#aaa', lineHeight: 1.6 }}>{text}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Divider */}
+                            <hr style={{ border: 'none', borderTop: '1px solid #262626', margin: '0 0 28px' }} />
+
+                            {/* SECTION 3: La Ratificación */}
+                            <div>
+                                <h4 style={{ fontSize: 16, fontWeight: 700, color: '#e5e5e5', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{
+                                        width: 28, height: 28, borderRadius: '50%', background: 'rgba(220,38,38,0.15)', color: '#f87171',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0,
+                                    }}>3</span>
+                                    El seguimiento obligatorio: La Ratificación
+                                </h4>
+                                <div style={{ paddingLeft: 36 }}>
+                                    <div style={{
+                                        padding: '16px 18px', borderRadius: 12, background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.15)', marginBottom: 14,
+                                    }}>
+                                        <p style={{ margin: 0, fontSize: 13, color: '#fbbf24', lineHeight: 1.6, fontWeight: 500 }}>
+                                            ⚠️ Este paso no siempre ocurrirá (dada la naturaleza del acto reclamado); sin embargo, dependerá del criterio del juez y no debes olvidarlo una vez que pase la urgencia médica.
+                                        </p>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        <p style={{ margin: 0, fontSize: 14, color: '#ccc', lineHeight: 1.7 }}>
+                                            El Juez podría ordenar al actuario, si es que es posible, que <strong style={{ color: '#f5f5f5' }}>el paciente ratifique (confirme)</strong> la demanda de amparo que tú presentaste por él.
+                                        </p>
+                                        <p style={{ margin: 0, fontSize: 14, color: '#ccc', lineHeight: 1.7 }}>
+                                            Si el paciente, por sí mismo o por medio de su representante, <strong style={{ color: '#f87171' }}>no ratifica la demanda, esta se tendrá por no presentada</strong> y quedarán sin efecto. Es importante que, si está en condiciones, la persona hospitalizada tenga conocimiento de que se presentó una demanda de amparo a su nombre para que la ratifique en caso de que así sea requerido.
+                                        </p>
+                                        <div style={{
+                                            padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)',
+                                        }}>
+                                            <p style={{ margin: 0, fontSize: 13, color: '#4ade80', lineHeight: 1.6 }}>
+                                                💚 Si la persona no está en posibilidades por sus condiciones de salud, no te preocupes — no será necesaria esa ratificación inmediata.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                 </main>
             )}
 
