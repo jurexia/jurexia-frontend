@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, MessageSquare, FileText } from 'lucide-react';
+import { Menu, X, MessageSquare, FileText, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from './UserAvatar';
+
+const ADMIN_EMAIL = 'administracion@iurexia.com';
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,13 +16,15 @@ export default function Navbar() {
     const isLoading = loading;
     const userIsAdmin = isAdmin(user?.email);
     const canAccessRedactor = userIsAdmin || profile?.subscription_type === 'ultra_secretarios';
+    const isAdminEmail = user?.email === ADMIN_EMAIL;
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 <div className="flex items-center justify-between h-16">
-                    {/* Logo + SALVAME */}
-                    <div className="flex items-center gap-3">
+
+                    {/* ── Left: Logo + SALVAME ── */}
+                    <div className="flex items-center gap-3 shrink-0">
                         <Link href="/" className="flex items-center gap-2 group">
                             <span className="font-serif text-2xl font-semibold text-charcoal-900">
                                 Iurex<span className="text-accent-gold">ia</span>
@@ -29,7 +33,7 @@ export default function Navbar() {
                         <span className="hidden sm:block w-px h-6 bg-charcoal-300/50" />
                         <Link
                             href="/salvame"
-                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-charcoal-900 rounded-full hover:bg-charcoal-800 transition-all duration-200 group/salvame shadow-sm"
+                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-charcoal-900 rounded-full hover:bg-charcoal-800 transition-all duration-200 shadow-sm"
                         >
                             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
                                 <rect x="9" y="2" width="6" height="20" rx="1" fill="#dc2626" />
@@ -39,185 +43,207 @@ export default function Navbar() {
                         </Link>
                     </div>
 
-                    <div className="hidden md:flex items-center gap-8">
+                    {/* ── Center: Navigation links ── */}
+                    <div className="hidden lg:flex items-center gap-1">
                         <NavLink href="/plataforma">Plataforma</NavLink>
                         <NavLink href="/soluciones">Soluciones</NavLink>
                         <Link
                             href="/connect"
-                            className="text-sm font-semibold text-white bg-blue-600 rounded-full px-5 py-1.5 hover:bg-blue-700 transition-all duration-200 shadow-sm"
+                            className="text-sm font-semibold text-white bg-blue-600 rounded-full px-4 py-1.5 hover:bg-blue-700 transition-all duration-200 shadow-sm mx-1"
                         >
                             Connect
                         </Link>
-
                         {userIsAdmin && (
-                            <Link
-                                href="/leyesestatales"
-                                className="text-sm font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-1.5 hover:bg-accent-gold/10 hover:border-accent-gold transition-all duration-200"
-                            >
-                                Leyes Estatales
-                            </Link>
+                            <NavLink href="/leyesestatales">
+                                <span className="text-accent-gold">Leyes Estatales</span>
+                            </NavLink>
                         )}
                         {canAccessRedactor && (
                             <Link
                                 href="/redactor-sentencia"
-                                className="text-sm font-semibold rounded-full px-4 py-1.5 transition-all duration-200 flex items-center gap-1.5"
-                                style={{
-                                    color: '#a78bfa',
-                                    border: '1px solid rgba(167, 139, 250, 0.4)',
-                                }}
-                                onMouseEnter={e => {
-                                    e.currentTarget.style.backgroundColor = 'rgba(167, 139, 250, 0.1)';
-                                    e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.7)';
-                                }}
-                                onMouseLeave={e => {
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                    e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.4)';
-                                }}
+                                className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors hover:bg-black/5"
+                                style={{ color: '#7c3aed' }}
                             >
                                 <FileText className="w-3.5 h-3.5" />
-                                Redactor TCC
+                                Redactor
                             </Link>
                         )}
                         <NavLink href="/precios">Precios</NavLink>
                         <NavLink href="/seguridad">Seguridad</NavLink>
+                        {isAdminEmail && (
+                            <Link
+                                href="/admin"
+                                className="flex items-center gap-1 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-red-50"
+                                style={{ color: '#dc2626' }}
+                            >
+                                <Shield className="w-3.5 h-3.5" />
+                                Admin
+                            </Link>
+                        )}
                     </div>
 
-                    {/* Ir al Chat - always visible */}
-                    <Link
-                        href="/chat"
-                        className="hidden md:flex items-center gap-2 px-4 py-2 bg-charcoal-900 text-white text-sm font-semibold rounded-lg hover:bg-charcoal-800 transition-colors shadow-sm"
-                    >
-                        <MessageSquare className="w-4 h-4" />
-                        Ir al Chat
-                    </Link>
-
-                    {/* Desktop CTA / User Menu */}
-                    <div className="hidden md:flex items-center gap-4">
+                    {/* ── Right: Chat + User ── */}
+                    <div className="hidden lg:flex items-center gap-3 shrink-0">
+                        <Link
+                            href="/chat"
+                            className="flex items-center gap-2 px-4 py-2 bg-charcoal-900 text-white text-sm font-semibold rounded-lg hover:bg-charcoal-800 transition-colors shadow-sm"
+                        >
+                            <MessageSquare className="w-4 h-4" />
+                            Ir al Chat
+                        </Link>
                         {isLoading ? (
-                            <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+                            <div className="w-9 h-9 rounded-full bg-gray-200 animate-pulse" />
                         ) : isLoggedIn ? (
                             <UserAvatar />
                         ) : (
-                            <>
+                            <div className="flex items-center gap-2">
                                 <Link
                                     href="/login"
-                                    className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900 transition-colors"
+                                    className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900 transition-colors px-2"
                                 >
-                                    Iniciar Sesión
+                                    Acceder
                                 </Link>
                                 <Link
                                     href="/registro"
-                                    className="btn-primary text-sm py-2 px-5"
+                                    className="btn-primary text-sm py-1.5 px-4"
                                 >
                                     Probar Gratis
                                 </Link>
-                            </>
+                            </div>
                         )}
                     </div>
 
-                    {/* Mobile menu button */}
-                    <button
-                        className="md:hidden p-2"
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    >
-                        {isMenuOpen ? (
-                            <X className="w-6 h-6" />
-                        ) : (
-                            <Menu className="w-6 h-6" />
-                        )}
-                    </button>
+                    {/* ── Mobile: hamburger ── */}
+                    <div className="flex items-center gap-2 lg:hidden">
+                        {isLoggedIn && <UserAvatar />}
+                        <button
+                            className="p-2 rounded-lg hover:bg-black/5 transition-colors"
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        >
+                            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </button>
+                    </div>
                 </div>
 
-                {/* Mobile Navigation */}
+                {/* ═══ Mobile Navigation ═══ */}
                 {isMenuOpen && (
-                    <div className="md:hidden py-4 border-t border-black/5">
-                        <div className="flex flex-col gap-4">
+                    <div className="lg:hidden py-4 border-t border-black/5">
+                        <div className="flex flex-col gap-1">
+
+                            {/* Text links */}
                             <MobileNavLink href="/plataforma" onClick={() => setIsMenuOpen(false)}>
                                 Plataforma
                             </MobileNavLink>
                             <MobileNavLink href="/soluciones" onClick={() => setIsMenuOpen(false)}>
                                 Soluciones
                             </MobileNavLink>
-                            <Link
-                                href="/connect"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="text-base font-semibold text-white bg-blue-600 rounded-full px-4 py-2 text-center hover:bg-blue-700 transition-colors shadow-sm"
-                            >
-                                Connect
-                            </Link>
-                            <Link
-                                href="/salvame"
-                                onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-charcoal-900 text-white text-base font-bold rounded-full hover:bg-charcoal-800 transition-colors"
-                            >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-                                    <rect x="9" y="2" width="6" height="20" rx="1" fill="#dc2626" />
-                                    <rect x="2" y="9" width="20" height="6" rx="1" fill="#dc2626" />
-                                </svg>
-                                SALVAME
-                            </Link>
-                            {userIsAdmin && (
-                                <Link
-                                    href="/leyesestatales"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="text-base font-semibold text-accent-gold border border-accent-gold/40 rounded-full px-4 py-2 text-center hover:bg-accent-gold/10 transition-colors"
-                                >
-                                    Leyes Estatales
-                                </Link>
-                            )}
-                            {canAccessRedactor && (
-                                <Link
-                                    href="/redactor-sentencia"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex items-center justify-center gap-2 text-base font-semibold rounded-full px-4 py-2 text-center transition-colors"
-                                    style={{
-                                        color: '#a78bfa',
-                                        border: '1px solid rgba(167, 139, 250, 0.4)',
-                                    }}
-                                >
-                                    <FileText className="w-4 h-4" />
-                                    Redactor TCC
-                                </Link>
-                            )}
                             <MobileNavLink href="/precios" onClick={() => setIsMenuOpen(false)}>
                                 Precios
                             </MobileNavLink>
                             <MobileNavLink href="/seguridad" onClick={() => setIsMenuOpen(false)}>
                                 Seguridad
                             </MobileNavLink>
+
+                            {/* Divider */}
+                            <div className="h-px bg-black/5 my-2" />
+
+                            {/* Action buttons — compact grid */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <Link
+                                    href="/connect"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="text-sm font-semibold text-white bg-blue-600 rounded-lg px-3 py-2.5 text-center hover:bg-blue-700 transition-colors shadow-sm"
+                                >
+                                    Connect
+                                </Link>
+                                <Link
+                                    href="/salvame"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-charcoal-900 text-white text-sm font-bold rounded-lg hover:bg-charcoal-800 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                                        <rect x="9" y="2" width="6" height="20" rx="1" fill="#dc2626" />
+                                        <rect x="2" y="9" width="20" height="6" rx="1" fill="#dc2626" />
+                                    </svg>
+                                    SALVAME
+                                </Link>
+                            </div>
+
+                            {/* Conditional admin links */}
+                            {(userIsAdmin || canAccessRedactor || isAdminEmail) && (
+                                <>
+                                    <div className="h-px bg-black/5 my-2" />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {userIsAdmin && (
+                                            <Link
+                                                href="/leyesestatales"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className="text-sm font-semibold text-accent-gold border border-accent-gold/30 rounded-lg px-3 py-2.5 text-center hover:bg-accent-gold/5 transition-colors"
+                                            >
+                                                Leyes Estatales
+                                            </Link>
+                                        )}
+                                        {canAccessRedactor && (
+                                            <Link
+                                                href="/redactor-sentencia"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className="flex items-center justify-center gap-1.5 text-sm font-semibold rounded-lg px-3 py-2.5 transition-colors border"
+                                                style={{ color: '#7c3aed', borderColor: 'rgba(124, 58, 237, 0.3)' }}
+                                            >
+                                                <FileText className="w-3.5 h-3.5" />
+                                                Redactor
+                                            </Link>
+                                        )}
+                                        {isAdminEmail && (
+                                            <Link
+                                                href="/admin"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className="flex items-center justify-center gap-1.5 text-sm font-semibold rounded-lg px-3 py-2.5 transition-colors border col-span-2"
+                                                style={{ color: '#dc2626', borderColor: 'rgba(220, 38, 38, 0.3)', background: 'rgba(220, 38, 38, 0.04)' }}
+                                            >
+                                                <Shield className="w-3.5 h-3.5" />
+                                                Administrador
+                                            </Link>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Divider */}
+                            <div className="h-px bg-black/5 my-2" />
+
+                            {/* Chat CTA */}
                             <Link
                                 href="/chat"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-charcoal-900 text-white text-base font-semibold rounded-lg hover:bg-charcoal-800 transition-colors"
+                                className="flex items-center justify-center gap-2 px-4 py-3 bg-charcoal-900 text-white text-base font-semibold rounded-lg hover:bg-charcoal-800 transition-colors"
                             >
                                 <MessageSquare className="w-5 h-5" />
                                 Ir al Chat
                             </Link>
 
-                            <div className="pt-4 border-t border-black/5">
-                                {isLoggedIn ? (
-                                    <div className="flex items-center gap-3">
-                                        <UserAvatar />
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
+                            {/* Login/Register (only if not logged in) */}
+                            {!isLoggedIn && !isLoading && (
+                                <>
+                                    <div className="h-px bg-black/5 my-2" />
+                                    <div className="grid grid-cols-2 gap-2">
                                         <Link
                                             href="/login"
-                                            className="block text-center py-2 text-charcoal-700 font-medium"
                                             onClick={() => setIsMenuOpen(false)}
+                                            className="text-sm font-medium text-charcoal-700 text-center py-2.5 rounded-lg border border-black/10 hover:bg-black/5 transition-colors"
                                         >
                                             Iniciar Sesión
                                         </Link>
                                         <Link
                                             href="/registro"
-                                            className="btn-primary w-full text-center text-sm"
+                                            className="btn-primary text-sm text-center py-2.5"
                                             onClick={() => setIsMenuOpen(false)}
                                         >
                                             Probar Gratis
                                         </Link>
                                     </div>
-                                )}
-                            </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
@@ -230,10 +256,9 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
     return (
         <Link
             href={href}
-            className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900 transition-colors relative group"
+            className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900 transition-colors px-3 py-1.5 rounded-lg hover:bg-black/5"
         >
             {children}
-            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-charcoal-900 group-hover:w-full transition-all duration-300" />
         </Link>
     );
 }
@@ -251,7 +276,7 @@ function MobileNavLink({
         <Link
             href={href}
             onClick={onClick}
-            className="text-base font-medium text-charcoal-700 hover:text-charcoal-900 transition-colors py-2"
+            className="text-base font-medium text-charcoal-700 hover:text-charcoal-900 hover:bg-black/5 transition-colors py-2.5 px-3 rounded-lg"
         >
             {children}
         </Link>
