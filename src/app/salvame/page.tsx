@@ -435,79 +435,82 @@ export default function SalvamePage() {
                             Amparo de emergencia por salud
                         </h2>
 
-                        {/* ECG line */}
-                        <div style={{ margin: '0 auto 32px', maxWidth: 500 }}>
-                            <EcgLine />
-                        </div>
 
-                        {/* ─── Explanation Card ─────────────────────────── */}
-                        <div style={{
-                            textAlign: 'left', background: '#151515', borderRadius: 16, border: '1px solid #222',
-                            padding: '28px 24px', marginBottom: 20,
-                        }}>
-                            <h3 style={{ fontSize: 17, fontWeight: 700, color: '#f5f5f5', margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <ShieldCheck size={20} />
+                        {/* ─── What is this tool? ──────────────────────── */}
+                        <div style={{ textAlign: 'left', marginBottom: 40 }}>
+                            <h3 style={{
+                                fontSize: 24, fontWeight: 300, color: '#e5e5e5', margin: '0 0 16px',
+                                fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: '-0.01em',
+                            }}>
                                 ¿Qué es esta herramienta?
                             </h3>
-                            <p style={{ fontSize: 15, color: '#bbb', lineHeight: 1.7, margin: '0 0 16px' }}>
-                                <strong style={{ color: '#e5e5e5' }}>SALVAME</strong> es una herramienta gratuita creada para
-                                ayudar a todas las personas que enfrentan una emergencia de salud y necesitan
-                                exigir atención médica de manera legal e inmediata.
+                            <p style={{ fontSize: 17, color: '#999', lineHeight: 1.8, margin: 0 }}>
+                                <strong style={{ color: '#d4d4d4' }}>SALVAME</strong> es una herramienta gratuita
+                                diseñada para ayudar a todas las personas que enfrentan una emergencia de salud
+                                y necesitan exigir atención médica de manera legal e inmediata.
                             </p>
+                        </div>
 
-                            <h4 style={{ fontSize: 15, fontWeight: 600, color: '#e5e5e5', margin: '0 0 8px' }}>¿Qué es un Amparo?</h4>
-                            <p style={{ fontSize: 14, color: '#aaa', lineHeight: 1.7, margin: '0 0 16px' }}>
-                                El <strong style={{ color: '#ccc' }}>Juicio de Amparo</strong> es un derecho constitucional
-                                que permite a cualquier persona solicitar a un juez federal que ordene a una autoridad
-                                (como un hospital público) que proteja sus derechos fundamentales — en este caso,
-                                el <strong style={{ color: '#ccc' }}>derecho a la salud y a la vida</strong>.
+                        {/* ─── Thin separator ─────────────────────────── */}
+                        <div style={{ width: 60, height: 1, background: 'rgba(220,38,38,0.3)', margin: '0 0 40px' }} />
+
+                        {/* ─── What is Amparo for? ────────────────────── */}
+                        <div style={{ textAlign: 'left', marginBottom: 40 }}>
+                            <h3 style={{
+                                fontSize: 24, fontWeight: 300, color: '#e5e5e5', margin: '0 0 16px',
+                                fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: '-0.01em',
+                            }}>
+                                ¿Para qué sirve el Juicio de Amparo en este caso?
+                            </h3>
+                            <p style={{ fontSize: 17, color: '#999', lineHeight: 1.8, margin: 0 }}>
+                                En casos como estos, el <strong style={{ color: '#d4d4d4' }}>Juicio de Amparo</strong> funciona
+                                como un derecho constitucional que permite a cualquier persona solicitar a un juez
+                                federal que ordene a la autoridad responsable — como un hospital público — que
+                                proteja tu <strong style={{ color: '#d4d4d4' }}>derecho a la salud y a la vida</strong>.
                                 No necesitas ser abogado para presentarlo.
                             </p>
+                        </div>
 
-                            <h4 style={{ fontSize: 15, fontWeight: 600, color: '#e5e5e5', margin: '0 0 8px' }}>¿Cómo funciona?</h4>
-                            <p style={{ fontSize: 14, color: '#aaa', lineHeight: 1.7, margin: '0 0 16px' }}>
-                                Completas un formulario breve con tus datos, los datos del paciente y la situación.
+                        {/* ─── Thin separator ─────────────────────────── */}
+                        <div style={{ width: 60, height: 1, background: 'rgba(220,38,38,0.3)', margin: '0 0 40px' }} />
+
+                        {/* ─── How it works ───────────────────────────── */}
+                        <div style={{ textAlign: 'left', marginBottom: 44 }}>
+                            <h3 style={{
+                                fontSize: 24, fontWeight: 300, color: '#e5e5e5', margin: '0 0 16px',
+                                fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: '-0.01em',
+                            }}>
+                                ¿Cómo funciona?
+                            </h3>
+                            <p style={{ fontSize: 17, color: '#999', lineHeight: 1.8, margin: 0 }}>
+                                Completas un formulario breve con tus datos, los del paciente y la situación.
                                 La inteligencia artificial genera automáticamente la demanda de amparo lista para
                                 imprimir, firmar y presentar ante un Juzgado de Distrito. También recibirás
                                 instrucciones paso a paso de cómo y dónde presentarla según tu ubicación.
                             </p>
                         </div>
 
-                        {/* ─── Urgent Warning ─────────────────────────── */}
-                        <div style={{
-                            textAlign: 'left', padding: '18px 20px', borderRadius: 14,
-                            background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)',
-                            marginBottom: 20,
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                                <AlertTriangleIcon size={22} />
-                                <div>
-                                    <p style={{ fontSize: 14, fontWeight: 600, color: '#f87171', margin: '0 0 6px' }}>
-                                        Uso exclusivo para emergencias reales
-                                    </p>
-                                    <p style={{ fontSize: 13, color: '#999', margin: 0, lineHeight: 1.6 }}>
-                                        Esta herramienta está diseñada <strong style={{ color: '#ccc' }}>estrictamente
-                                            para casos de urgencia</strong> en los que se te esté negando atención médica,
-                                        cirugía, medicamentos vitales o cualquier servicio esencial de salud.
-                                        Su uso genera un documento legal real que será presentado ante un juez.
-                                        Por favor, utilízala con responsabilidad.
-                                    </p>
-                                </div>
-                            </div>
+                        {/* ─── ECG separator ──────────────────────────── */}
+                        <div style={{ maxWidth: 400, margin: '0 auto 36px' }}>
+                            <EcgLine />
                         </div>
 
-                        {/* ─── Life danger note ───────────────────────── */}
-                        <div style={{
-                            textAlign: 'left', padding: '14px 20px', borderRadius: 12,
-                            background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.15)',
-                            marginBottom: 28,
-                        }}>
-                            <p style={{ fontSize: 13, color: '#999', margin: 0, lineHeight: 1.6 }}>
-                                <strong style={{ color: '#fbbf24' }}>Si hay peligro inmediato de vida</strong>, acude
-                                primero a urgencias y solicita atención inmediata. Este módulo complementa esa
-                                acción ayudándote a documentar y exigir legalmente la atención que necesitas.
+                        {/* ─── Urgent use warning ─────────────────────── */}
+                        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                            <p style={{ fontSize: 15, color: '#f87171', fontWeight: 600, margin: '0 0 8px', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                                <AlertTriangleIcon size={18} />
+                                Uso exclusivo para emergencias reales
+                            </p>
+                            <p style={{ fontSize: 14, color: '#777', lineHeight: 1.7, margin: 0, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
+                                Esta herramienta genera un <strong style={{ color: '#aaa' }}>documento legal real</strong> que
+                                será presentado ante un juez. Está diseñada estrictamente para casos de urgencia
+                                en los que se te esté negando atención médica. Por favor, utilízala con responsabilidad.
                             </p>
                         </div>
+                        <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6, textAlign: 'center', margin: '0 0 32px' }}>
+                            <strong style={{ color: '#fbbf24' }}>Si hay peligro inmediato de vida</strong>, acude
+                            primero a urgencias. Este módulo complementa esa acción.
+                        </p>
 
                         {/* ─── Terms Checkbox ─────────────────────────── */}
                         <label style={{
