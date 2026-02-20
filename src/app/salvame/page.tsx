@@ -221,6 +221,7 @@ export default function SalvamePage() {
     const [copied, setCopied] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const [showInstructions, setShowInstructions] = useState(false);
+    const [juzgadoInfo, setJuzgadoInfo] = useState<{ denominacion: string; direccion: string; telefono?: string } | null>(null);
     const resultRef = useRef<HTMLDivElement>(null);
 
     // ─── Loader rotation ──────────────────────────────────────────
@@ -377,6 +378,17 @@ export default function SalvamePage() {
 
             setPhase('result');
             setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
+
+            // Fetch juzgado info for the hospital's state
+            try {
+                const jRes = await fetch(`${API_URL}/juzgados-distrito?estado=${encodeURIComponent(form.hospital_estado)}&materia=Administrativa&limit=1`);
+                if (jRes.ok) {
+                    const jData = await jRes.json();
+                    if (jData.juzgados?.length > 0) {
+                        setJuzgadoInfo(jData.juzgados[0]);
+                    }
+                }
+            } catch { /* silently fail — juzgado info is optional */ }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Error al generar el amparo');
             setPhase('form');
@@ -1033,6 +1045,37 @@ export default function SalvamePage() {
                                     }}>1</span>
                                     ¿A qué instalaciones dirigirte? (La jerarquía de juzgados)
                                 </h4>
+
+                                {/* ── Juzgado Info Card (from DB) ──────────────── */}
+                                {juzgadoInfo && (
+                                    <div style={{
+                                        padding: '20px', borderRadius: 14, marginBottom: 18, marginLeft: 36,
+                                        background: 'linear-gradient(135deg, rgba(220,38,38,0.06) 0%, rgba(220,38,38,0.02) 100%)',
+                                        border: '1px solid rgba(220,38,38,0.2)',
+                                        boxShadow: '0 2px 12px rgba(220,38,38,0.08)',
+                                    }}>
+                                        <p style={{ margin: '0 0 4px', fontSize: 11, color: '#f87171', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                            🏛️ Juzgado competente en {form.hospital_estado}
+                                        </p>
+                                        <p style={{ margin: '0 0 10px', fontSize: 15, fontWeight: 700, color: '#f5f5f5', lineHeight: 1.4 }}>
+                                            {juzgadoInfo.denominacion}
+                                        </p>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                            <p style={{ margin: 0, fontSize: 13, color: '#ccc', lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                                                <span style={{ flexShrink: 0 }}>📍</span> {juzgadoInfo.direccion}
+                                            </p>
+                                            {juzgadoInfo.telefono && (
+                                                <p style={{ margin: 0, fontSize: 13, color: '#ccc', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    <span style={{ flexShrink: 0 }}>📞</span> {juzgadoInfo.telefono}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <p style={{ margin: '12px 0 0', fontSize: 11, color: '#666', fontStyle: 'italic' }}>
+                                            Fuente: Directorio del Consejo de la Judicatura Federal (CJF)
+                                        </p>
+                                    </div>
+                                )}
+
                                 <p style={{ fontSize: 14, color: '#ccc', lineHeight: 1.7, margin: '0 0 14px', paddingLeft: 36 }}>
                                     Idealmente, debes acudir a las instalaciones del <strong style={{ color: '#f5f5f5' }}>Poder Judicial de la Federación</strong> para presentarla ante un <strong style={{ color: '#f5f5f5' }}>Juez de Distrito</strong>. Sin embargo, la ley prevé qué hacer si no hay uno cerca:
                                 </p>
