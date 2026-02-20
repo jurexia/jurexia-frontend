@@ -91,6 +91,16 @@ export default function SecretariosPage() {
                                         <ChevronDown className="w-4 h-4" />
                                     </a>
                                 </div>
+                                <a
+                                    href="mailto:soporte@iurexia.com?subject=Solicitud%20de%20prueba%20—%20Plan%20Secretario%20PJF&body=Hola%2C%20me%20gustaría%20solicitar%20una%20prueba%20de%20la%20función%20Redactor%20de%20Sentencias.%0A%0AMi%20correo%20de%20registro%20en%20Iurexia%20es%3A%20"
+                                    className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-[#c9a962] transition-colors mt-2 group"
+                                >
+                                    <Sparkles className="w-3.5 h-3.5 text-[#c9a962]/60 group-hover:text-[#c9a962] transition-colors" />
+                                    ¿Quieres una prueba antes de suscribirte?{' '}
+                                    <span className="text-[#c9a962] underline underline-offset-2 decoration-[#c9a962]/40 group-hover:decoration-[#c9a962]">
+                                        Solicítala aquí
+                                    </span>
+                                </a>
                             </AnimateOnScroll>
 
                             <AnimateOnScroll delay={0.4}>
