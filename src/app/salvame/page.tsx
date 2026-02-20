@@ -245,6 +245,88 @@ export default function SalvamePage() {
         }));
     };
 
+    // ─── Render formatted text (parse markdown-like output) ────
+    const renderFormattedText = (text: string) => {
+        if (!text) return null;
+        const lines = text.split('\n');
+        return lines.map((line, i) => {
+            const trimmed = line.trim();
+
+            // Empty line → spacer
+            if (!trimmed) return <div key={i} style={{ height: 12 }} />;
+
+            // Horizontal rule
+            if (/^-{3,}$/.test(trimmed)) return <hr key={i} style={{ border: 'none', borderTop: '1px solid #333', margin: '16px 0' }} />;
+
+            // ## Heading
+            if (trimmed.startsWith('## ')) {
+                const headingText = trimmed.replace(/^#+\s*/, '');
+                return <h3 key={i} style={{ fontSize: 16, fontWeight: 700, color: '#e5e5e5', margin: '20px 0 8px', textTransform: 'uppercase' }}>{headingText}</h3>;
+            }
+            if (trimmed.startsWith('# ')) {
+                const headingText = trimmed.replace(/^#+\s*/, '');
+                return <h2 key={i} style={{ fontSize: 18, fontWeight: 700, color: '#e5e5e5', margin: '24px 0 8px', textAlign: 'center' }}>{headingText}</h2>;
+            }
+
+            // Bullet line
+            const isBullet = /^[-•]\s+/.test(trimmed);
+            const bulletText = isBullet ? trimmed.replace(/^[-•]\s+/, '') : trimmed;
+
+            // Parse inline **bold** markers
+            const parseInlineBold = (str: string) => {
+                const parts = str.split(/(\*\*.*?\*\*)/g);
+                return parts.map((part, j) => {
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                        return <strong key={j} style={{ fontWeight: 700, color: '#e5e5e5' }}>{part.slice(2, -2)}</strong>;
+                    }
+                    return <span key={j}>{part}</span>;
+                });
+            };
+
+            // Check if the whole line is ALL-CAPS header style
+            const isAllCaps = trimmed === trimmed.toUpperCase() && trimmed.length < 120 && /[A-ZÁÉÍÓÚÑÜ]/.test(trimmed);
+
+            if (isBullet) {
+                return (
+                    <div key={i} style={{ display: 'flex', gap: 8, paddingLeft: 16, marginBottom: 4 }}>
+                        <span style={{ color: '#666', flexShrink: 0 }}>•</span>
+                        <span>{parseInlineBold(bulletText)}</span>
+                    </div>
+                );
+            }
+
+            return (
+                <p key={i} style={{
+                    margin: '4px 0',
+                    fontWeight: isAllCaps ? 700 : 400,
+                    textAlign: isAllCaps && trimmed.length < 60 ? 'center' : 'justify',
+                    ...(isAllCaps && { color: '#e5e5e5' }),
+                }}>
+                    {parseInlineBold(bulletText)}
+                </p>
+            );
+        });
+    };
+
+    // ─── Convert markdown to HTML string (for print) ──────────
+    const markdownToHtml = (text: string): string => {
+        return text
+            .split('\n')
+            .map(line => {
+                const t = line.trim();
+                if (!t) return '<br/>';
+                if (/^-{3,}$/.test(t)) return '<hr/>';
+                if (t.startsWith('## ')) return `<h3 style="text-align:center;font-size:14pt;">${t.replace(/^#+\s*/, '')}</h3>`;
+                if (t.startsWith('# ')) return `<h2 style="text-align:center;font-size:16pt;">${t.replace(/^#+\s*/, '')}</h2>`;
+                // Inline bold
+                const parsed = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                // Bullet
+                if (/^[-•]\s+/.test(t)) return `<p style="padding-left:2em;">• ${parsed.replace(/^[-•]\s+/, '')}</p>`;
+                return `<p>${parsed}</p>`;
+            })
+            .join('\n');
+    };
+
     const canProceed = (): boolean => {
         switch (step) {
             case 0: return !!(form.promovente_nombre.trim() && form.promovente_domicilio.trim());
@@ -341,8 +423,8 @@ export default function SalvamePage() {
         if (!w) return;
         w.document.write(`
       <html><head><title>Amparo de Salud</title>
-      <style>body{font-family:Arial,sans-serif;font-size:14pt;margin:2.5cm;line-height:1.8;text-align:justify;}h2,h3{text-align:center;}</style>
-      </head><body>${generatedText.replace(/\n/g, '<br/>')}</body></html>
+      <style>body{font-family:Arial,sans-serif;font-size:14pt;margin:2.5cm;line-height:1.8;text-align:justify;}h2,h3{text-align:center;}p{margin:4px 0;}</style>
+      </head><body>${markdownToHtml(generatedText)}</body></html>
     `);
         w.document.close();
         w.print();
@@ -353,7 +435,7 @@ export default function SalvamePage() {
         return (
             <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f' }}>
                 <div style={{ width: 40, height: 40, border: '3px solid rgba(220,38,38,0.3)', borderTopColor: '#dc2626', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } } `}</style>
             </div>
         );
     }
@@ -366,29 +448,30 @@ export default function SalvamePage() {
 
             {/* ─── GLOBAL STYLES ──────────────────────────────────────── */}
             <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 8px rgba(220,38,38,0.3); } 50% { box-shadow: 0 0 24px rgba(220,38,38,0.6); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes ecgPulse { 0% { stroke-dashoffset: 600; } 100% { stroke-dashoffset: 0; } }
-        .salvame-input { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font-size: 15px; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s; outline: none; box-sizing: border-box; }
-        .salvame-input:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.15); }
-        .salvame-input::placeholder { color: #666; }
-        .salvame-select { appearance: none; width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 14px center; color: #e5e5e5; font-size: 15px; font-family: inherit; cursor: pointer; outline: none; transition: border-color 0.2s; }
-        .salvame-select:focus { border-color: #dc2626; }
-        .salvame-textarea { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font-size: 15px; font-family: inherit; resize: vertical; min-height: 120px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
-        .salvame-textarea:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.15); }
-        .chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; border: 1px solid #333; background: #1a1a1a; color: #aaa; font-size: 14px; cursor: pointer; transition: all 0.2s; user-select: none; }
-        .chip:hover { border-color: #dc2626; color: #e5e5e5; }
-        .chip.active { background: rgba(220,38,38,0.15); border-color: #dc2626; color: #f87171; }
-        .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 12px; border: none; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: inherit; }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(220,38,38,0.4); }
-        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-        .btn-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font-size: 14px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-        .btn-secondary:hover { border-color: #555; background: #222; }
-        .result-text { white-space: pre-wrap; line-height: 1.8; font-size: 15px; color: #d4d4d4; padding: 24px; background: #141414; border-radius: 12px; border: 1px solid #262626; max-height: 600px; overflow-y: auto; }
-      `}</style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulseGlow { 0 %, 100 % { box- shadow: 0 0 8px rgba(220, 38, 38, 0.3); } 50 % { box- shadow: 0 0 24px rgba(220, 38, 38, 0.6);
+} }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ecgPulse { 0 % { stroke- dashoffset: 600; } 100 % { stroke- dashoffset: 0; } }
+        .salvame - input { width: 100 %; padding: 12px 16px; border - radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font - size: 15px; font - family: inherit; transition: border - color 0.2s, box - shadow 0.2s; outline: none; box - sizing: border - box; }
+        .salvame - input:focus { border - color: #dc2626; box - shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
+        .salvame - input::placeholder { color: #666; }
+        .salvame - select { appearance: none; width: 100 %; padding: 12px 16px; border - radius: 10px; border: 1px solid #333; background: #1a1a1a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no - repeat right 14px center; color: #e5e5e5; font - size: 15px; font - family: inherit; cursor: pointer; outline: none; transition: border - color 0.2s; }
+        .salvame - select:focus { border - color: #dc2626; }
+        .salvame - textarea { width: 100 %; padding: 12px 16px; border - radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font - size: 15px; font - family: inherit; resize: vertical; min - height: 120px; outline: none; transition: border - color 0.2s; box - sizing: border - box; }
+        .salvame - textarea:focus { border - color: #dc2626; box - shadow: 0 0 0 3px rgba(220, 38, 38, 0.15); }
+        .chip { display: inline - flex; align - items: center; gap: 6px; padding: 8px 16px; border - radius: 20px; border: 1px solid #333; background: #1a1a1a; color: #aaa; font - size: 14px; cursor: pointer; transition: all 0.2s; user - select: none; }
+        .chip:hover { border - color: #dc2626; color: #e5e5e5; }
+        .chip.active { background: rgba(220, 38, 38, 0.15); border - color: #dc2626; color: #f87171; }
+        .btn - primary { display: inline - flex; align - items: center; gap: 8px; padding: 14px 32px; border - radius: 12px; border: none; background: linear - gradient(135deg, #dc2626 0 %, #b91c1c 100 %); color: white; font - size: 16px; font - weight: 600; cursor: pointer; transition: all 0.3s; font - family: inherit; }
+        .btn - primary: hover: not(: disabled) { transform: translateY(-2px); box - shadow: 0 8px 24px rgba(220, 38, 38, 0.4); }
+        .btn - primary:disabled { opacity: 0.4; cursor: not - allowed; transform: none; }
+        .btn - secondary { display: inline - flex; align - items: center; gap: 8px; padding: 10px 20px; border - radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #e5e5e5; font - size: 14px; cursor: pointer; transition: all 0.2s; font - family: inherit; }
+        .btn - secondary:hover { border - color: #555; background: #222; }
+        .result - text { white - space: pre - wrap; line - height: 1.8; font - size: 15px; color: #d4d4d4; padding: 24px; background: #141414; border - radius: 12px; border: 1px solid #262626; max - height: 600px; overflow - y: auto; }
+`}</style>
 
             {/* ─── HEADER BAR ─────────────────────────────────────────── */}
             <header style={{
@@ -517,7 +600,7 @@ export default function SalvamePage() {
                             display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer',
                             padding: '16px 18px', borderRadius: 12,
                             background: termsAccepted ? 'rgba(220,38,38,0.06)' : '#1a1a1a',
-                            border: `1px solid ${termsAccepted ? 'rgba(220,38,38,0.3)' : '#2a2a2a'}`,
+                            border: `1px solid ${ termsAccepted ? 'rgba(220,38,38,0.3)' : '#2a2a2a' } `,
                             transition: 'all 0.2s', textAlign: 'left',
                         }}>
                             <input
@@ -661,7 +744,7 @@ export default function SalvamePage() {
                                         onChange={e => updateField('promovente_domicilio', e.target.value)} />
                                     <p style={{ fontSize: 11, color: '#555', marginTop: 4 }}>Dirección donde podrás recibir documentos del juzgado.</p>
                                 </div>
-                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.promueve_por_paciente ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${form.promueve_por_paciente ? 'rgba(220,38,38,0.3)' : '#2a2a2a'}`, transition: 'all 0.2s' }}>
+                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.promueve_por_paciente ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${ form.promueve_por_paciente ? 'rgba(220,38,38,0.3)' : '#2a2a2a' } `, transition: 'all 0.2s' }}>
                                     <input type="checkbox" checked={form.promueve_por_paciente}
                                         onChange={e => updateField('promueve_por_paciente', e.target.checked)}
                                         style={{ marginTop: 2, accentColor: '#dc2626' }} />
@@ -700,7 +783,7 @@ export default function SalvamePage() {
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                                         {RIESGO_OPTIONS.map(opt => (
                                             <button key={opt.value}
-                                                className={`chip ${form.paciente_riesgo === opt.value ? 'active' : ''}`}
+                                                className={`chip ${ form.paciente_riesgo === opt.value ? 'active' : '' } `}
                                                 onClick={() => updateField('paciente_riesgo', opt.value)}
                                             >
                                                 {opt.label}
@@ -762,7 +845,7 @@ export default function SalvamePage() {
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                                         {SITUACION_CHIPS.map(s => (
                                             <button key={s}
-                                                className={`chip ${form.situaciones.includes(s) ? 'active' : ''}`}
+                                                className={`chip ${ form.situaciones.includes(s) ? 'active' : '' } `}
                                                 onClick={() => toggleSituacion(s)}
                                             >
                                                 {s}
@@ -781,7 +864,7 @@ export default function SalvamePage() {
                                     />
                                     <p style={{ fontSize: 11, color: '#555', textAlign: 'right', marginTop: 4 }}>{form.descripcion_libre.length}/1200</p>
                                 </div>
-                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.confirma_veracidad ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${form.confirma_veracidad ? 'rgba(220,38,38,0.3)' : '#2a2a2a'}`, transition: 'all 0.2s' }}>
+                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.confirma_veracidad ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${ form.confirma_veracidad ? 'rgba(220,38,38,0.3)' : '#2a2a2a' } `, transition: 'all 0.2s' }}>
                                     <input type="checkbox" checked={form.confirma_veracidad}
                                         onChange={e => updateField('confirma_veracidad', e.target.checked)}
                                         style={{ marginTop: 2, accentColor: '#dc2626' }} />
@@ -838,7 +921,7 @@ export default function SalvamePage() {
                     {generatedText && (
                         <div style={{ textAlign: 'left', maxHeight: 300, overflow: 'hidden', position: 'relative' }}>
                             <div className="result-text" style={{ fontSize: 13, opacity: 0.6 }}>
-                                {generatedText}
+                                {renderFormattedText(generatedText)}
                             </div>
                             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(transparent, #0f0f0f)' }} />
                         </div>
@@ -878,7 +961,7 @@ export default function SalvamePage() {
                     </div>
 
                     {/* Generated text */}
-                    <div className="result-text">{generatedText}</div>
+                    <div className="result-text">{renderFormattedText(generatedText)}</div>
 
                     {/* ECG separator */}
                     <div style={{ margin: '32px 0 24px' }}><EcgLine /></div>
