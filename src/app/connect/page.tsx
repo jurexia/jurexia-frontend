@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-    Search, MapPin, Shield, Star, MessageSquare
+    Search, MapPin, Shield, Star, MessageSquare, ChevronDown, Check
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -51,6 +51,8 @@ export default function ConnectPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedEstado, setSelectedEstado] = useState('');
+    const [showEstados, setShowEstados] = useState(false);
+    const selectedEstadoLabel = ESTADOS.find(e => e.value === selectedEstado)?.label || 'Todos los estados';
 
     const handleSearch = () => {
         if (!user) {
@@ -115,56 +117,55 @@ export default function ConnectPage() {
                         </div>
                     </div>
 
-                    {/* Estado Selector — horizontal scrollable pills */}
-                    <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
-                        <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    gap: '8px',
-                                    overflowX: 'auto',
-                                    paddingBottom: '8px',
-                                    paddingTop: '4px',
-                                    WebkitOverflowScrolling: 'touch',
-                                }}
-                                className="hide-scrollbar"
-                            >
+                    {/* Estado Selector — toggle button + grid panel */}
+                    <div style={{ maxWidth: '800px', margin: '16px auto 0', position: 'relative' }}>
+                        <button
+                            onClick={() => setShowEstados(!showEstados)}
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                padding: '10px 20px', borderRadius: '12px',
+                                background: selectedEstado ? '#1e3a5f' : '#181818',
+                                border: selectedEstado ? '1px solid #2563EB' : '1px solid #333',
+                                color: selectedEstado ? '#93c5fd' : '#aaa',
+                                cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500,
+                                transition: 'all 0.2s',
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.color = '#ddd'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.borderColor = selectedEstado ? '#2563EB' : '#333'; e.currentTarget.style.color = selectedEstado ? '#93c5fd' : '#aaa'; }}
+                        >
+                            <MapPin className="w-4 h-4" />
+                            <span>{selectedEstadoLabel}</span>
+                            <ChevronDown className="w-4 h-4" style={{ transform: showEstados ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+                        </button>
+
+                        {showEstados && (
+                            <div style={{
+                                marginTop: '12px', padding: '16px', background: '#111',
+                                border: '1px solid #333', borderRadius: '16px',
+                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '6px',
+                            }}>
                                 {ESTADOS.map(estado => (
                                     <button
                                         key={estado.value}
-                                        onClick={() => setSelectedEstado(estado.value)}
+                                        onClick={() => { setSelectedEstado(estado.value); setShowEstados(false); }}
                                         style={{
-                                            whiteSpace: 'nowrap',
-                                            padding: '6px 14px',
-                                            borderRadius: '9999px',
-                                            fontSize: '0.8rem',
-                                            fontWeight: selectedEstado === estado.value ? 600 : 400,
-                                            background: selectedEstado === estado.value ? '#2563EB' : 'transparent',
-                                            color: selectedEstado === estado.value ? '#fff' : '#999',
-                                            border: selectedEstado === estado.value ? '1px solid #2563EB' : '1px solid #333',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                            flexShrink: 0,
+                                            display: 'flex', alignItems: 'center', gap: '8px',
+                                            padding: '8px 12px', borderRadius: '10px',
+                                            fontSize: '0.8rem', fontWeight: selectedEstado === estado.value ? 600 : 400,
+                                            background: selectedEstado === estado.value ? 'rgba(37, 99, 235, 0.15)' : 'transparent',
+                                            color: selectedEstado === estado.value ? '#60A5FA' : '#bbb',
+                                            border: 'none', cursor: 'pointer', textAlign: 'left',
+                                            transition: 'all 0.15s',
                                         }}
-                                        onMouseOver={(e) => {
-                                            if (selectedEstado !== estado.value) {
-                                                e.currentTarget.style.borderColor = '#555';
-                                                e.currentTarget.style.color = '#ddd';
-                                            }
-                                        }}
-                                        onMouseOut={(e) => {
-                                            if (selectedEstado !== estado.value) {
-                                                e.currentTarget.style.borderColor = '#333';
-                                                e.currentTarget.style.color = '#999';
-                                            }
-                                        }}
+                                        onMouseOver={(e) => { if (selectedEstado !== estado.value) e.currentTarget.style.background = '#1a1a1a'; }}
+                                        onMouseOut={(e) => { if (selectedEstado !== estado.value) e.currentTarget.style.background = 'transparent'; }}
                                     >
-                                        {estado.label}
+                                        {selectedEstado === estado.value && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                                        <span>{estado.label}</span>
                                     </button>
                                 ))}
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Quick examples */}
@@ -184,11 +185,6 @@ export default function ConnectPage() {
                 </div>
             </section>
 
-            {/* Hide scrollbar CSS */}
-            <style jsx>{`
-                .hide-scrollbar::-webkit-scrollbar { display: none; }
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            `}</style>
 
             {/* Value Proposition Section */}
             <section style={{ padding: '40px 24px', background: '#111111', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
