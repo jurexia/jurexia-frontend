@@ -96,13 +96,13 @@ export default function SecretariosPage() {
                             <AnimateOnScroll delay={0.4}>
                                 <div className="flex items-center gap-6 mt-8 pt-8 border-t border-white/10">
                                     <div className="text-center">
-                                        <div className="text-2xl font-bold text-[#c9a962]">30</div>
+                                        <div className="text-2xl font-bold text-[#c9a962]">20</div>
                                         <div className="text-xs text-gray-500">sentencias/mes</div>
                                     </div>
                                     <div className="w-px h-10 bg-white/10" />
                                     <div className="text-center">
-                                        <div className="text-2xl font-bold text-[#c9a962]">IA</div>
-                                        <div className="text-xs text-gray-500">fundada en ley</div>
+                                        <div className="text-2xl font-bold text-[#c9a962]">50</div>
+                                        <div className="text-xs text-gray-500">consultas/mes</div>
                                     </div>
                                     <div className="w-px h-10 bg-white/10" />
                                     <div className="text-center">
@@ -396,7 +396,7 @@ export default function SecretariosPage() {
                                     <div>
                                         <ul className="space-y-4">
                                             {[
-                                                'Hasta 30 proyectos de sentencia por mes',
+                                                'Hasta 20 proyectos de sentencia por mes',
                                                 'Estudio de fondo fundado y motivado con normativa real',
                                                 'Jurisprudencia de SCJN inyectada automáticamente',
                                                 'Descarga en formato DOCX editable',
@@ -404,7 +404,7 @@ export default function SecretariosPage() {
                                                 'Juzgados de Distrito (próximamente)',
                                                 'Instrucciones personalizadas del Secretario',
                                                 'Base de datos en constante crecimiento',
-                                                '170 consultas de IA legal general incluidas',
+                                                '50 consultas de IA legal general incluidas',
                                                 'Soporte prioritario por correo',
                                             ].map((feature, i) => (
                                                 <li key={i} className="flex items-start gap-3">
@@ -451,8 +451,8 @@ export default function SecretariosPage() {
                                 a: 'Absolutamente. Los archivos que subes son procesados temporalmente con encriptación de grado militar y eliminados automáticamente. Nunca almacenamos tus expedientes ni los usamos para entrenar modelos de IA. Tu información está protegida.'
                             },
                             {
-                                q: '¿Qué pasa si no uso las 30 sentencias del mes?',
-                                a: 'Las sentencias no utilizadas no se acumulan al siguiente mes. Sin embargo, el plan incluye también 170 consultas de IA legal general que puedes usar para investigación jurídica, análisis de documentos y más.'
+                                q: '¿Qué pasa si no uso las 20 sentencias del mes?',
+                                a: 'Las sentencias no utilizadas no se acumulan al siguiente mes. Sin embargo, el plan incluye también 50 consultas de IA legal general que puedes usar para investigación jurídica, análisis de documentos y más.'
                             },
                             {
                                 q: '¿Puedo cancelar en cualquier momento?',
