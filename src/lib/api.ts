@@ -88,10 +88,11 @@ async function* streamChatInternal(
     enableReasoning = false,
     userId?: string,
     materia?: string,
+    fuero?: string,
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);
-    console.log('[API] Reasoning enabled:', enableReasoning);
+    console.log('[API] Fuero:', fuero);
 
     // Build headers with optional auth
     const headers: Record<string, string> = {
@@ -105,7 +106,7 @@ async function* streamChatInternal(
     const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ messages, estado, top_k: topK, enable_reasoning: enableReasoning, user_id: userId, ...(materia ? { materia } : {}) }),
+        body: JSON.stringify({ messages, estado, top_k: topK, enable_reasoning: enableReasoning, user_id: userId, ...(materia ? { materia } : {}), ...(fuero ? { fuero } : {}) }),
     });
 
     console.log('[API] Response status:', response.status);
@@ -137,11 +138,12 @@ async function* streamChatInternal(
 export async function* streamChat(
     messages: Message[],
     estado?: string,
-    topK: number = 30,  // Match backend default for full silo coverage (30 / 4 silos = ~8 per silo)
-    accessToken?: string,  // Optional Supabase access token for auth
-    enableReasoning = false,  // Disabled: Query Expansion was diluting BM25 precision
-    userId?: string,  // Supabase user ID for server-side quota enforcement
-    materia?: string,  // Materia-Aware: forced materia filter (PENAL, CIVIL, etc.)
+    topK: number = 30,
+    accessToken?: string,
+    enableReasoning = false,
+    userId?: string,
+    materia?: string,
+    fuero?: string,
 ): AsyncGenerator<string, void, unknown> {
     const maxRetries = 3;
     let attempt = 0;
@@ -149,7 +151,7 @@ export async function* streamChat(
     while (attempt < maxRetries) {
         try {
             // Attempt to stream chat
-            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, materia);
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, materia, fuero);
             return; // Success - exit
         } catch (err) {
             attempt++;

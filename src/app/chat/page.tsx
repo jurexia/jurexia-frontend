@@ -47,6 +47,7 @@ export default function ChatPage() {
     const [selectedMateria, setSelectedMateria] = useState<string>('');  // '' = Auto
     const [showMateriaDropdown, setShowMateriaDropdown] = useState(false);
     const materiaDropdownRef = useRef<HTMLDivElement>(null);
+    const [selectedFuero, setSelectedFuero] = useState<string>('');  // '' = Todos
 
     const MATERIAS = [
         { key: '', label: 'Automático' },
@@ -59,6 +60,13 @@ export default function ChatPage() {
         { key: 'FISCAL', label: 'Fiscal' },
         { key: 'AGRARIO', label: 'Agrario' },
         { key: 'CONSTITUCIONAL', label: 'Constitucional' },
+    ];
+
+    const FUEROS = [
+        { key: '', label: 'Todos' },
+        { key: 'constitucional', label: 'Constitucional' },
+        { key: 'federal', label: 'Federal' },
+        { key: 'estatal', label: 'Estatal' },
     ];
 
     // Close materia dropdown when clicking outside
@@ -79,8 +87,9 @@ export default function ChatPage() {
 
     const { messages, isLoading, error, sendMessage, clearMessages, setMessages, retryMessage } = useChat({
         estado: selectedEstado || undefined,
-        topK: 30,  // Maximum allowed by API
+        topK: 30,
         materia: selectedMateria || undefined,
+        fuero: selectedFuero || undefined,
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -322,6 +331,19 @@ export default function ChatPage() {
                                 <span>{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
                             </button>
 
+                            {/* Fuero badge in header when active */}
+                            {selectedFuero && (
+                                <button
+                                    onClick={() => setSelectedFuero('')}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-accent-brown/10 text-accent-brown border border-accent-brown/20 hover:bg-accent-brown/20 transition-all duration-200"
+                                    title="Click para quitar filtro"
+                                >
+                                    <Scale className="w-3 h-3" />
+                                    {FUEROS.find(f => f.key === selectedFuero)?.label}
+                                    <span className="text-accent-brown/50 ml-0.5">×</span>
+                                </button>
+                            )}
+
                             {hasMessages && activeConversationId && (
                                 <button
                                     onClick={async () => {
@@ -398,6 +420,24 @@ export default function ChatPage() {
                                                 ))}
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+
+                                {/* Fuero Selector — Pill Buttons */}
+                                <div className="mb-6 flex justify-center">
+                                    <div className="inline-flex items-center gap-1 p-1 bg-charcoal-800/50 rounded-xl">
+                                        {FUEROS.map((f) => (
+                                            <button
+                                                key={f.key}
+                                                onClick={() => setSelectedFuero(f.key)}
+                                                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${selectedFuero === f.key
+                                                        ? 'bg-accent-brown text-white shadow-sm'
+                                                        : 'text-charcoal-500 hover:text-charcoal-800 hover:bg-charcoal-100'
+                                                    }`}
+                                            >
+                                                {f.label}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
