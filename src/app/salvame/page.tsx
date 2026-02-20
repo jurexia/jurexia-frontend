@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useRequireAuth } from '@/lib/useAuth';
+import { useAuth } from '@/lib/useAuth';
 
 // ═══════════════════════════════════════════════════════════════════
 // Types
@@ -207,7 +207,7 @@ const STEP_LABELS = [
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════
 export default function SalvamePage() {
-    const { loading: authLoading, isAuthenticated, user } = useRequireAuth();
+    const { loading: authLoading, isAuthenticated, user } = useAuth();
     const router = useRouter();
 
     // ─── Form State ─────────────────────────────────────────────
@@ -550,7 +550,13 @@ export default function SalvamePage() {
 
                             <button
                                 className="btn-primary"
-                                onClick={() => setPhase('form')}
+                                onClick={() => {
+                                    if (isAuthenticated) {
+                                        setPhase('form');
+                                    } else {
+                                        router.push('/login?redirect=/salvame');
+                                    }
+                                }}
                                 style={{ padding: '18px 40px', fontSize: '1.125rem', boxShadow: '0 0 15px rgba(220,38,38,0.3)', animation: 'pulseGlow 3s infinite' }}
                             >
                                 <CheckCircle size={20} color="white" />
