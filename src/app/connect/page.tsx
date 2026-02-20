@@ -68,7 +68,7 @@ export default function ConnectPage() {
             <Navbar />
 
             {/* ── Hero Section ── */}
-            <section style={{ position: 'relative', overflow: 'hidden', paddingTop: '140px', paddingBottom: '60px', textAlign: 'center', background: 'linear-gradient(180deg, #0A0A0A 0%, #0d1117 50%, #0A0A0A 100%)' }}>
+            <section style={{ position: 'relative', paddingTop: '140px', paddingBottom: '60px', textAlign: 'center', background: 'linear-gradient(180deg, #0A0A0A 0%, #0d1117 50%, #0A0A0A 100%)' }}>
                 {/* Blue glow */}
                 <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', width: '600px', height: '400px', background: 'radial-gradient(ellipse, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
