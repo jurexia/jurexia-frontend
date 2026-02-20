@@ -14,6 +14,7 @@ interface FormData {
     promovente_correo: string;
     promovente_domicilio: string;
     promueve_por_paciente: boolean;
+    parentesco: string;
     // Step 2 — Paciente
     paciente_nombre: string;
     paciente_edad: string;
@@ -24,10 +25,12 @@ interface FormData {
     hospital_nombre: string;
     hospital_ciudad: string;
     hospital_estado: string;
+    hospital_direccion: string;
     director_nombre: string;
     // Step 4 — Situación
     situaciones: string[];
     descripcion_libre: string;
+    detalles_medicos_adicionales: string;
     confirma_veracidad: boolean;
 }
 
@@ -37,6 +40,7 @@ const INITIAL_FORM: FormData = {
     promovente_correo: '',
     promovente_domicilio: '',
     promueve_por_paciente: false,
+    parentesco: '',
     paciente_nombre: '',
     paciente_edad: '',
     paciente_diagnostico: '',
@@ -45,9 +49,11 @@ const INITIAL_FORM: FormData = {
     hospital_nombre: '',
     hospital_ciudad: '',
     hospital_estado: '',
+    hospital_direccion: '',
     director_nombre: '',
     situaciones: [],
     descripcion_libre: '',
+    detalles_medicos_adicionales: '',
     confirma_veracidad: false,
 };
 
@@ -804,6 +810,23 @@ export default function SalvamePage() {
                                         Promuevo por el paciente por imposibilidad de hacerlo personalmente <span style={{ color: '#888' }}>(art. 15 Ley de Amparo)</span>
                                     </span>
                                 </label>
+                                {form.promueve_por_paciente && (
+                                    <div>
+                                        <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Parentesco con el paciente *</label>
+                                        <select className="salvame-select" value={form.parentesco} onChange={e => updateField('parentesco', e.target.value)}>
+                                            <option value="">Selecciona parentesco</option>
+                                            <option value="padre/madre">Padre / Madre</option>
+                                            <option value="hijo/a">Hijo / Hija</option>
+                                            <option value="cónyuge">Cónyuge</option>
+                                            <option value="concubino/a">Concubino / Concubina</option>
+                                            <option value="hermano/a">Hermano / Hermana</option>
+                                            <option value="familiar">Otro familiar</option>
+                                            <option value="amigo/conocido">Amigo / Conocido</option>
+                                            <option value="otro">Otro</option>
+                                        </select>
+                                        <p style={{ fontSize: 11, color: '#555', marginTop: 4 }}>El art. 15 de la Ley de Amparo permite a cualquier persona promover en caso de imposibilidad del afectado.</p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -879,6 +902,12 @@ export default function SalvamePage() {
                                     </div>
                                 </div>
                                 <div>
+                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Dirección del hospital o clínica</label>
+                                    <input className="salvame-input" placeholder="Calle, número, colonia, C.P." value={form.hospital_direccion}
+                                        onChange={e => updateField('hospital_direccion', e.target.value)} />
+                                    <p style={{ fontSize: 11, color: '#555', marginTop: 4 }}>Indispensable para señalar la competencia territorial y la autoridad responsable.</p>
+                                </div>
+                                <div>
                                     <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>Director / Médico responsable (opcional)</label>
                                     <input className="salvame-input" placeholder="Si lo conoces, anota su nombre" value={form.director_nombre}
                                         onChange={e => updateField('director_nombre', e.target.value)} />
@@ -915,6 +944,18 @@ export default function SalvamePage() {
                                         onChange={e => updateField('descripcion_libre', e.target.value)}
                                     />
                                     <p style={{ fontSize: 11, color: '#555', textAlign: 'right', marginTop: 4 }}>{form.descripcion_libre.length}/1200</p>
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: 13, color: '#888', marginBottom: 6, display: 'block' }}>
+                                        Detalles adicionales <span style={{ color: '#555' }}>(nombres de médicos que niegan atención, circunstancias relevantes)</span>
+                                    </label>
+                                    <textarea className="salvame-textarea" maxLength={800}
+                                        placeholder="Ej: El Dr. Pérez Gómez del turno vespertino nos dijo que no había camas. La enfermera de recepción se negó a registrar al paciente..."
+                                        value={form.detalles_medicos_adicionales}
+                                        onChange={e => updateField('detalles_medicos_adicionales', e.target.value)}
+                                        style={{ minHeight: 80 }}
+                                    />
+                                    <p style={{ fontSize: 11, color: '#555', textAlign: 'right', marginTop: 4 }}>{form.detalles_medicos_adicionales.length}/800</p>
                                 </div>
                                 <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '12px 14px', borderRadius: 10, background: form.confirma_veracidad ? 'rgba(220,38,38,0.06)' : '#1a1a1a', border: `1px solid ${form.confirma_veracidad ? 'rgba(220,38,38,0.3)' : '#2a2a2a'} `, transition: 'all 0.2s' }}>
                                     <input type="checkbox" checked={form.confirma_veracidad}
