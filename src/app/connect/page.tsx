@@ -7,6 +7,7 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
 import { LawyerProfile, sendConnectRequest } from '@/lib/api';
 import Navbar from '@/components/Navbar';
@@ -71,6 +72,7 @@ function getSpecialtyColor(specialty: string): string {
 
 export default function ConnectPage() {
     const { user } = useAuth();
+    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedEstado, setSelectedEstado] = useState('');
     const [showEstadoDropdown, setShowEstadoDropdown] = useState(false);
@@ -215,6 +217,12 @@ export default function ConnectPage() {
 
     // Filter lawyers locally with scoring
     const handleSearch = async () => {
+        // Validación de autenticación antes de buscar
+        if (!user) {
+            router.push('/login?redirect=/connect');
+            return;
+        }
+
         const query = searchQuery.trim();
         const estado = selectedEstado;
         setHasSearched(true);
@@ -251,113 +259,138 @@ export default function ConnectPage() {
     };
 
     return (
-        <div className="min-h-screen bg-cream-300">
+        <div style={{ backgroundColor: '#0A0A0A', minHeight: '100vh', color: '#f5f5f5', paddingBottom: '80px', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
             <Navbar />
 
-            {/* Hero Section */}
-            <section className="pt-28 pb-16 px-4">
-                <div className="max-w-4xl mx-auto text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-sm font-medium mb-6">
-                        <Users className="w-4 h-4" />
-                        <span>Marketplace Legal Inteligente</span>
+            {/* Hero Section Majestic */}
+            <section style={{ paddingTop: '160px', paddingBottom: '80px', paddingLeft: '24px', paddingRight: '24px', position: 'relative', overflow: 'hidden' }}>
+                {/* Background glow effects */}
+                <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: '800px', height: '600px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(15, 15, 15, 0) 70%)', zIndex: 0, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', top: '20%', right: '-10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, rgba(15, 15, 15, 0) 70%)', zIndex: 0, pointerEvents: 'none' }} />
+
+                <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 10 }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '9999px', border: '1px solid rgba(59, 130, 246, 0.3)', background: 'rgba(59, 130, 246, 0.1)', color: '#60A5FA', fontSize: '0.875rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '32px' }}>
+                        <Shield className="w-4 h-4" />
+                        <span>Directorio Legítimo y Protegido</span>
                     </div>
 
-                    <h1 className="font-serif text-4xl md:text-5xl font-bold text-charcoal-900 mb-4 leading-tight">
-                        Encuentra al abogado ideal
-                        <br />
-                        <span className="text-accent-gold">con IA de precisión</span>
+                    <h1 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: '3.5rem', fontWeight: 300, color: '#FFFFFF', marginBottom: '24px', lineHeight: 1.1 }}>
+                        La justicia exige seriedad.<br />
+                        <span style={{ color: '#3b82f6', fontWeight: 600 }}>Encuentra representación real.</span>
                     </h1>
 
-                    <p className="text-lg text-charcoal-600 max-w-2xl mx-auto mb-10">
-                        Describe tu problema legal y nuestra IA conectará con abogados verificados
-                        especializados en tu caso y zona geográfica.
+                    <p style={{ fontSize: '1.25rem', color: '#A3A3A3', maxWidth: '700px', margin: '0 auto 48px', lineHeight: 1.6 }}>
+                        La libertad, la salud y el patrimonio no son un juego. Nuestra IA te conecta <strong>gratuitamente</strong> con abogados cuyas cédulas han sido rigurosamente verificadas.
                     </p>
 
-                    {/* Search Bar */}
-                    <div className="max-w-3xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-lg border border-black/5 p-3">
-                            <div className="flex flex-col md:flex-row gap-3">
-                                {/* Problem Input */}
-                                <div className="flex-1 relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                        placeholder="Ej: Me despidieron injustificadamente..."
-                                        className="w-full pl-12 pr-4 py-3.5 bg-gray-50 rounded-xl text-charcoal-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
-                                    />
-                                </div>
-
-                                {/* Estado Filter */}
-                                <div className="relative md:w-56">
-                                    <button
-                                        onClick={() => setShowEstadoDropdown(!showEstadoDropdown)}
-                                        className="w-full flex items-center justify-between px-4 py-3.5 bg-gray-50 rounded-xl text-sm text-charcoal-700 hover:bg-gray-100 transition-colors"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-gray-400" />
-                                            <span>{ESTADOS.find(e => e.value === selectedEstado)?.label || 'Todos los estados'}</span>
-                                        </div>
-                                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                                    </button>
-
-                                    {showEstadoDropdown && (
-                                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-black/5 max-h-64 overflow-y-auto z-50">
-                                            {ESTADOS.map(estado => (
-                                                <button
-                                                    key={estado.value}
-                                                    onClick={() => {
-                                                        setSelectedEstado(estado.value);
-                                                        setShowEstadoDropdown(false);
-                                                    }}
-                                                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-charcoal-700 hover:bg-gray-50 transition-colors"
-                                                >
-                                                    <span>{estado.label}</span>
-                                                    {selectedEstado === estado.value && <Check className="w-4 h-4 text-blue-600" />}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Search Button */}
-                                <button
-                                    onClick={handleSearch}
-                                    disabled={isSearching || searchQuery.trim().length < 3}
-                                    className="flex items-center justify-center gap-2 px-6 py-3.5 bg-charcoal-900 text-white rounded-xl font-medium hover:bg-charcoal-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isSearching ? (
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : (
-                                        <>
-                                            <Search className="w-4 h-4" />
-                                            <span className="hidden md:inline">Buscar</span>
-                                        </>
-                                    )}
-                                </button>
+                    {/* Search Bar Box */}
+                    <div style={{ maxWidth: '800px', margin: '0 auto', background: 'rgba(20, 20, 20, 0.8)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+                        <div className="flex flex-col md:flex-row gap-3">
+                            {/* Problem Input */}
+                            <div className="flex-1 relative">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                    placeholder="Ej: Necesito revisar un contrato de renta..."
+                                    style={{ width: '100%', paddingLeft: '48px', paddingRight: '16px', paddingTop: '16px', paddingBottom: '16px', background: '#0F0F0F', border: '1px solid #333', borderRadius: '16px', color: '#fff', outline: 'none', transition: 'border-color 0.2s' }}
+                                    onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                                    onBlur={(e) => e.target.style.borderColor = '#333'}
+                                />
                             </div>
+
+                            {/* Estado Filter */}
+                            <div className="relative md:w-64">
+                                <button
+                                    onClick={() => setShowEstadoDropdown(!showEstadoDropdown)}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#0F0F0F', border: '1px solid #333', borderRadius: '16px', color: '#E5E5E5', cursor: 'pointer' }}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-gray-400" />
+                                        <span>{ESTADOS.find(e => e.value === selectedEstado)?.label || 'México'}</span>
+                                    </div>
+                                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                                </button>
+
+                                {showEstadoDropdown && (
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#1A1A1A', border: '1px solid #333', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', maxHeight: '250px', overflowY: 'auto', zIndex: 50 }}>
+                                        {ESTADOS.map(estado => (
+                                            <button
+                                                key={estado.value}
+                                                onClick={() => {
+                                                    setSelectedEstado(estado.value);
+                                                    setShowEstadoDropdown(false);
+                                                }}
+                                                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', color: '#ccc', borderBottom: '1px solid #222', cursor: 'pointer', textAlign: 'left' }}
+                                                onMouseOver={(e) => e.currentTarget.style.background = '#2A2A2A'}
+                                                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                            >
+                                                <span>{estado.label}</span>
+                                                {selectedEstado === estado.value && <Check className="w-4 h-4 text-blue-500" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Search Button */}
+                            <button
+                                onClick={handleSearch}
+                                disabled={isSearching || (!user && searchQuery.trim().length === 0)}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 32px', background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', color: '#fff', borderRadius: '16px', fontWeight: 600, cursor: (isSearching || (!user && searchQuery.trim().length === 0)) ? 'not-allowed' : 'pointer', opacity: (isSearching || (!user && searchQuery.trim().length === 0)) ? 0.6 : 1, transition: 'transform 0.2s', minHeight: '56px' }}
+                                onMouseOver={(e) => !isSearching && (e.currentTarget.style.transform = 'scale(1.02)')}
+                                onMouseOut={(e) => !isSearching && (e.currentTarget.style.transform = 'scale(1)')}
+                            >
+                                {isSearching ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <Search className="w-4 h-4" />
+                                        <span>Buscar Abogado</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Trust Badges */}
-            <section className="pb-8 px-4">
-                <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-6 text-sm text-charcoal-500">
-                    <div className="flex items-center gap-2">
-                        <BadgeCheck className="w-5 h-5 text-green-600" />
-                        <span>Cédulas verificadas</span>
+            {/* Value Proposition Section */}
+            <section style={{ padding: '40px 24px', background: '#111111', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
+                <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                        <div style={{ background: 'rgba(220, 38, 38, 0.1)', padding: '12px', borderRadius: '12px', color: '#EF4444' }}>
+                            <Shield className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFF', marginBottom: '8px' }}>Cero Engaños</h3>
+                            <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: 1.5 }}>La representación legal no se simula. Protegemos a los usuarios listando únicamente abogados que han demostrado documentalmente su cédula y trayectoria.</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Shield className="w-5 h-5 text-blue-600" />
-                        <span>Chat blindado</span>
+
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                        <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '12px', color: '#3B82F6' }}>
+                            <Star className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFF', marginBottom: '8px' }}>Matching de Especialidad</h3>
+                            <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: 1.5 }}>Nuestra IA lee tu caso y no busca palabras clave al azar. Encuentra al abogado que por su bio y perfil estadístico tiene la experiencia que requieres.</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Star className="w-5 h-5 text-amber-500" />
-                        <span>Matching semántico IA</span>
+
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                        <div style={{ background: 'rgba(212, 175, 55, 0.1)', padding: '12px', borderRadius: '12px', color: '#D4AF37' }}>
+                            <MessageSquare className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#FFF', marginBottom: '8px' }}>Calificación Directa</h3>
+                            <p style={{ color: '#888', fontSize: '0.95rem', lineHeight: 1.5 }}>El sistema se alimenta de reseñas reales. Podrás calificar la honestidad, primer acercamiento y el costo ofrecido por el abogado.</p>
+                        </div>
                     </div>
+
                 </div>
             </section>
 
@@ -373,22 +406,24 @@ export default function ConnectPage() {
 
                     {/* Estado inicial: invitación a buscar */}
                     {!isSearching && !hasSearched && (
-                        <div className="text-center py-20">
-                            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-50 to-amber-50 rounded-2xl flex items-center justify-center border border-blue-100">
-                                <Search className="w-10 h-10 text-blue-500/70" />
+                        <div style={{ textAlign: 'center', padding: '80px 0' }}>
+                            <div style={{ width: '80px', height: '80px', margin: '0 auto 24px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, rgba(15, 15, 15, 0) 100%)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                                <Search className="w-10 h-10 text-blue-500" />
                             </div>
-                            <h3 className="text-xl font-semibold text-charcoal-900 mb-3">
-                                Describe tu problema legal
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#FFFFFF', marginBottom: '12px' }}>
+                                Explícanos tu situación
                             </h3>
-                            <p className="text-charcoal-500 max-w-lg mx-auto leading-relaxed">
-                                Nuestra IA analizará tu consulta y te conectará con abogados verificados especializados en tu caso y zona geográfica.
+                            <p style={{ color: '#888', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
+                                No uses palabras legales complejas si no las conoces. Escribe como si le platicaras a un amigo y nosotros encontraremos la especialidad correcta.
                             </p>
-                            <div className="flex flex-wrap justify-center gap-3 mt-6">
-                                {['Despido injustificado', 'Divorcio', 'Defensa penal', 'Deuda fiscal'].map((example) => (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px', marginTop: '24px' }}>
+                                {['Despido sin finiquito', 'Convenio de divorcio', 'Robaron mi negocio', 'Problemas con el SAT'].map((example) => (
                                     <button
                                         key={example}
                                         onClick={() => { setSearchQuery(example); }}
-                                        className="px-4 py-2 text-sm bg-white border border-cream-300 rounded-full text-charcoal-600 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                                        style={{ padding: '8px 16px', fontSize: '0.875rem', background: '#111', border: '1px solid #333', borderRadius: '9999px', color: '#ccc', transition: 'all 0.2s', cursor: 'pointer' }}
+                                        onMouseOver={(e) => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.color = '#fff'; }}
+                                        onMouseOut={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#ccc'; }}
                                     >
                                         {example}
                                     </button>
@@ -399,24 +434,24 @@ export default function ConnectPage() {
 
                     {/* Sin resultados después de buscar */}
                     {!isSearching && hasSearched && lawyers.length === 0 && (
-                        <div className="text-center py-16">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
-                                <Users className="w-8 h-8 text-gray-400" />
+                        <div style={{ textAlign: 'center', padding: '64px 0', background: '#111', borderRadius: '24px', border: '1px solid #222' }}>
+                            <div style={{ width: '64px', height: '64px', margin: '0 auto 16px', background: '#222', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Users className="w-8 h-8 text-gray-500" />
                             </div>
-                            <h3 className="text-lg font-semibold text-charcoal-900 mb-2">
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#f5f5f5', marginBottom: '8px' }}>
                                 Sin resultados
                             </h3>
-                            <p className="text-charcoal-500 max-w-md mx-auto">
-                                No encontramos abogados para tu búsqueda. El directorio se está construyendo — pronto habrá más profesionales.
+                            <p style={{ color: '#888', maxWidth: '400px', margin: '0 auto' }}>
+                                No encontramos abogados exactos para tu búsqueda. El directorio Premium se está construyendo — pronto habrá más profesionales en esta región.
                             </p>
                         </div>
                     )}
 
                     {!isSearching && lawyers.length > 0 && (
                         <>
-                            <div className="flex items-center justify-between mb-6">
-                                <p className="text-sm text-charcoal-500">
-                                    {totalResults} abogado{totalResults !== 1 ? 's' : ''} encontrado{totalResults !== 1 ? 's' : ''}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                <p style={{ fontSize: '0.875rem', color: '#888' }}>
+                                    {totalResults} abogado{totalResults !== 1 ? 's' : ''} verificado{totalResults !== 1 ? 's' : ''} recomendado{totalResults !== 1 ? 's' : ''}
                                 </p>
                             </div>
 
@@ -434,9 +469,9 @@ export default function ConnectPage() {
 
                     {/* Loading state */}
                     {isLoading && (
-                        <div className="flex flex-col items-center justify-center py-20">
-                            <div className="w-12 h-12 border-3 border-charcoal-200 border-t-charcoal-900 rounded-full animate-spin mb-4" />
-                            <p className="text-charcoal-500">Preparando buscador...</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+                            <div style={{ width: '48px', height: '48px', border: '3px solid rgba(59,130,246,0.2)', borderTopColor: '#3b82f6', borderRadius: '50%', marginBottom: '16px' }} className="animate-spin" />
+                            <p style={{ color: '#888' }}>Conectando con la base de datos de profesionales...</p>
                         </div>
                     )}
                 </div>
@@ -470,36 +505,33 @@ function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: (
     const initials = lawyer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
     return (
-        <div className="bg-white rounded-2xl border border-black/5 p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-300 group relative">
+        <div style={{ background: '#111', borderRadius: '24px', border: '1px solid #222', padding: '24px', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Match Score Badge */}
             {matchScore > 0 && (
-                <div className={`absolute top-4 right-4 px-2.5 py-1 rounded-full text-xs font-bold ${matchScore >= 50 ? 'bg-green-100 text-green-700' :
-                    matchScore >= 30 ? 'bg-amber-100 text-amber-700' :
-                        'bg-gray-100 text-gray-600'
-                    }`}>
+                <div style={{ position: 'absolute', top: '16px', right: '16px', padding: '4px 10px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 'bold', background: matchScore >= 50 ? 'rgba(34, 197, 94, 0.1)' : matchScore >= 30 ? 'rgba(217, 119, 6, 0.1)' : 'rgba(255, 255, 255, 0.05)', color: matchScore >= 50 ? '#4ade80' : matchScore >= 30 ? '#fbbf24' : '#a3a3a3', border: '1px solid', borderColor: matchScore >= 50 ? 'rgba(34, 197, 94, 0.2)' : matchScore >= 30 ? 'rgba(217, 119, 6, 0.2)' : 'rgba(255, 255, 255, 0.1)' }}>
                     {matchScore}% match
                 </div>
             )}
             {/* Header */}
-            <div className="flex items-start gap-4 mb-4">
+            <div className="flex items-start gap-4 mb-4" style={{ paddingRight: matchScore > 0 ? '70px' : '0' }}>
                 {/* Avatar */}
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-charcoal-700 to-charcoal-900 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #222 0%, #111 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '1.125rem', flexShrink: 0, border: '1px solid #333' }}>
                     {initials}
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-charcoal-900 truncate">
+                        <h3 style={{ fontWeight: 600, color: '#f5f5f5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {lawyer.full_name}
                         </h3>
                         {isVerified && (
-                            <span title="Cédula verificada"><BadgeCheck className="w-5 h-5 text-green-600 flex-shrink-0" /></span>
+                            <span title="Cédula verificada"><BadgeCheck className="w-5 h-5 text-green-500 flex-shrink-0" /></span>
                         )}
                     </div>
-                    <p className="text-xs text-charcoal-500 mt-0.5">
+                    <p style={{ fontSize: '0.75rem', color: '#a3a3a3', marginTop: '2px' }}>
                         Cédula: {lawyer.cedula_number}
                     </p>
                     {location && (
-                        <div className="flex items-center gap-1 text-xs text-charcoal-400 mt-1">
+                        <div className="flex items-center gap-1 mt-1" style={{ fontSize: '0.75rem', color: '#666' }}>
                             <MapPin className="w-3 h-3" />
                             <span>{location}</span>
                         </div>
@@ -513,13 +545,13 @@ function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: (
                     {lawyer.specialties.slice(0, 4).map((spec, i) => (
                         <span
                             key={i}
-                            className={`text-xs font-medium px-2.5 py-1 rounded-lg border ${getSpecialtyColor(spec)}`}
+                            style={{ fontSize: '0.75rem', fontWeight: 500, padding: '4px 10px', borderRadius: '8px', background: '#1A1A1A', color: '#ccc', border: '1px solid #333' }}
                         >
                             {spec}
                         </span>
                     ))}
                     {lawyer.specialties.length > 4 && (
-                        <span className="text-xs text-charcoal-400 px-2 py-1">
+                        <span style={{ fontSize: '0.75rem', color: '#888', padding: '4px 8px' }}>
                             +{lawyer.specialties.length - 4} más
                         </span>
                     )}
@@ -529,43 +561,46 @@ function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: (
             {/* Bio */}
             {/* Phone (if visible) */}
             {lawyer.phone_visible && lawyer.phone && (
-                <div className="flex items-center gap-2 mb-3 text-sm text-charcoal-600">
-                    <Phone className="w-4 h-4 text-green-600" />
-                    <a href={`tel:${lawyer.phone}`} className="hover:text-green-700 transition-colors">
+                <div className="flex items-center gap-2 mb-3" style={{ fontSize: '0.875rem', color: '#a3a3a3' }}>
+                    <Phone className="w-4 h-4 text-green-500" />
+                    <a href={`tel:${lawyer.phone}`} style={{ textDecoration: 'none', color: '#a3a3a3' }} onMouseOver={(e) => e.currentTarget.style.color = '#fff'} onMouseOut={(e) => e.currentTarget.style.color = '#a3a3a3'}>
                         {lawyer.phone}
                     </a>
                 </div>
             )}
 
             {lawyer.bio && (
-                <p className="text-sm text-charcoal-600 line-clamp-3 mb-4">
+                <p style={{ fontSize: '0.875rem', color: '#888', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: '16px', flexGrow: 1 }}>
                     {lawyer.bio}
                 </p>
             )}
 
-            {/* Match Score */}
-            {lawyer.score !== undefined && (
-                <div className="flex items-center gap-2 mb-4">
-                    <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
-                            style={{ width: `${Math.round(lawyer.score * 100)}%` }}
-                        />
+            <div style={{ marginTop: 'auto' }}>
+                {/* Match Score Bar */}
+                {lawyer.score !== undefined && (
+                    <div className="flex items-center gap-2 mb-4">
+                        <div style={{ flex: 1, height: '6px', background: '#222', borderRadius: '9999px', overflow: 'hidden' }}>
+                            <div
+                                style={{ height: '100%', background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)', borderRadius: '9999px', width: `${Math.round(lawyer.score * 100)}%` }}
+                            />
+                        </div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#666' }}>
+                            {Math.round(lawyer.score * 100)}% match
+                        </span>
                     </div>
-                    <span className="text-xs font-medium text-charcoal-500">
-                        {Math.round(lawyer.score * 100)}% match
-                    </span>
-                </div>
-            )}
+                )}
 
-            {/* CTA */}
-            <button
-                onClick={onContact}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-charcoal-900 text-white rounded-xl text-sm font-medium hover:bg-charcoal-800 transition-colors group-hover:bg-blue-600 group-hover:shadow-md"
-            >
-                <span>Contactar</span>
-                <ArrowRight className="w-4 h-4" />
-            </button>
+                {/* CTA */}
+                <button
+                    onClick={onContact}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', background: '#222', color: '#fff', borderRadius: '12px', fontSize: '0.875rem', fontWeight: 500, border: '1px solid #333', cursor: 'pointer', transition: 'all 0.2s' }}
+                    onMouseOver={(e) => { e.currentTarget.style.background = '#3b82f6'; e.currentTarget.style.borderColor = '#3b82f6'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.background = '#222'; e.currentTarget.style.borderColor = '#333'; }}
+                >
+                    <span>Contactar</span>
+                    <ArrowRight className="w-4 h-4" />
+                </button>
+            </div>
         </div>
     );
 }
@@ -641,31 +676,35 @@ function ContactModal({
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div style={{ position: 'relative', background: '#0f0f0f', border: '1px solid #333', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)', width: '100%', maxWidth: '512px', maxHeight: '90vh', overflowY: 'auto' }}>
                 {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-1 text-charcoal-400 hover:text-charcoal-700 transition-colors z-10"
+                    style={{ position: 'absolute', top: '16px', right: '16px', padding: '4px', color: '#888', background: 'transparent', border: 'none', cursor: 'pointer', zIndex: 10 }}
+                    onMouseOver={(e) => e.currentTarget.style.color = '#fff'}
+                    onMouseOut={(e) => e.currentTarget.style.color = '#888'}
                 >
                     <X className="w-5 h-5" />
                 </button>
 
                 {/* Success State */}
                 {sent ? (
-                    <div className="p-8 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-green-50 rounded-2xl flex items-center justify-center">
-                            <CheckCircle2 className="w-8 h-8 text-green-600" />
+                    <div style={{ padding: '32px', textAlign: 'center' }}>
+                        <div style={{ width: '64px', height: '64px', margin: '0 auto 16px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <CheckCircle2 className="w-8 h-8 text-green-500" />
                         </div>
-                        <h3 className="text-xl font-semibold text-charcoal-900 mb-2">
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#fff', marginBottom: '8px' }}>
                             ¡Solicitud enviada!
                         </h3>
-                        <p className="text-charcoal-500 mb-6">
+                        <p style={{ color: '#888', marginBottom: '24px' }}>
                             Tu solicitud fue enviada a <strong>{lawyer.full_name}</strong>.
                             El abogado recibirá una notificación y podrá contactarte directamente.
                         </p>
                         <button
                             onClick={onClose}
-                            className="px-6 py-2.5 bg-charcoal-900 text-white rounded-xl text-sm font-medium hover:bg-charcoal-800 transition-colors"
+                            style={{ padding: '10px 24px', background: '#333', color: '#fff', borderRadius: '12px', fontWeight: 500, border: 'none', cursor: 'pointer' }}
+                            onMouseOver={(e) => e.currentTarget.style.background = '#444'}
+                            onMouseOut={(e) => e.currentTarget.style.background = '#333'}
                         >
                             Cerrar
                         </button>
@@ -673,16 +712,16 @@ function ContactModal({
                 ) : (
                     <>
                         {/* Header */}
-                        <div className="p-6 pb-4 border-b border-gray-100">
+                        <div style={{ padding: '24px', paddingBottom: '16px', borderBottom: '1px solid #222' }}>
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-charcoal-700 to-charcoal-900 flex items-center justify-center text-white font-bold">
+                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #1A1A1A 0%, #000000 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>
                                     {initials}
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-charcoal-900">
+                                    <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#fff' }}>
                                         Contactar a {lawyer.full_name}
                                     </h2>
-                                    <p className="text-xs text-charcoal-500">
+                                    <p style={{ fontSize: '0.75rem', color: '#888' }}>
                                         {lawyer.specialties.slice(0, 3).join(' · ')}
                                     </p>
                                 </div>
@@ -690,89 +729,50 @@ function ContactModal({
                         </div>
 
                         {/* Form */}
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                        <form onSubmit={handleSubmit} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {/* Name */}
                             <div>
-                                <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
-                                    Nombre completo *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    placeholder="Tu nombre completo"
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-charcoal-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 transition-all"
-                                    required
-                                />
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#ccc', marginBottom: '6px' }}>Nombre completo *</label>
+                                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Tu nombre completo" style={{ width: '100%', padding: '12px 16px', background: '#111', border: '1px solid #333', borderRadius: '12px', color: '#fff', outline: 'none' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#333'} required />
                             </div>
 
                             {/* Email + Phone row */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
-                                        <Mail className="w-3.5 h-3.5 inline mr-1 opacity-50" />
-                                        Email *
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={e => setEmail(e.target.value)}
-                                        placeholder="correo@ejemplo.com"
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-charcoal-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 transition-all"
-                                        required
-                                    />
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#ccc', marginBottom: '6px' }}><Mail className="w-3.5 h-3.5 inline mr-1 opacity-50" /> Email *</label>
+                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" style={{ width: '100%', padding: '12px 16px', background: '#111', border: '1px solid #333', borderRadius: '12px', color: '#fff', outline: 'none' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#333'} required />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
-                                        <Phone className="w-3.5 h-3.5 inline mr-1 opacity-50" />
-                                        Teléfono *
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={phone}
-                                        onChange={e => setPhone(e.target.value)}
-                                        placeholder="55 1234 5678"
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-charcoal-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 transition-all"
-                                        required
-                                    />
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#ccc', marginBottom: '6px' }}><Phone className="w-3.5 h-3.5 inline mr-1 opacity-50" /> Teléfono *</label>
+                                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="55 1234 5678" style={{ width: '100%', padding: '12px 16px', background: '#111', border: '1px solid #333', borderRadius: '12px', color: '#fff', outline: 'none' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#333'} required />
                                 </div>
                             </div>
 
                             {/* Message */}
                             <div>
-                                <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
-                                    <MessageSquare className="w-3.5 h-3.5 inline mr-1 opacity-50" />
-                                    Describe tu caso *
-                                </label>
-                                <textarea
-                                    value={message}
-                                    onChange={e => setMessage(e.target.value)}
-                                    placeholder="Describe brevemente tu situación legal para que el abogado pueda evaluar tu caso..."
-                                    rows={4}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-charcoal-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 transition-all resize-none"
-                                    required
-                                />
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#ccc', marginBottom: '6px' }}><MessageSquare className="w-3.5 h-3.5 inline mr-1 opacity-50" /> Describe tu caso *</label>
+                                <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Describe brevemente tu situación legal para que el abogado pueda evaluar tu caso..." rows={4} style={{ width: '100%', padding: '12px 16px', background: '#111', border: '1px solid #333', borderRadius: '12px', color: '#fff', outline: 'none', resize: 'none' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#333'} required />
                             </div>
 
                             {/* Error */}
                             {error && (
-                                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl border border-red-100">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                                     <X className="w-4 h-4 flex-shrink-0" />
                                     <span>{error}</span>
                                 </div>
                             )}
 
                             {/* Privacy note */}
-                            <p className="text-xs text-charcoal-400">
+                            <p style={{ fontSize: '0.75rem', color: '#666' }}>
                                 Tu información será compartida únicamente con el abogado seleccionado.
-                                Al enviar, aceptas nuestros <Link href="/terminos" className="underline hover:text-charcoal-600">Términos</Link> y <Link href="/privacidad" className="underline hover:text-charcoal-600">Política de Privacidad</Link>.
+                                Al enviar, aceptas nuestros <Link href="/terminos" className="underline hover:text-gray-400">Términos</Link> y <Link href="/privacidad" className="underline hover:text-gray-400">Política de Privacidad</Link>.
                             </p>
 
                             {/* Submit */}
                             <button
                                 type="submit"
                                 disabled={sending}
-                                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: '#3b82f6', color: '#fff', borderRadius: '12px', fontWeight: 500, cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.7 : 1, marginTop: '8px' }}
                             >
                                 {sending ? (
                                     <>
