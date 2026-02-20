@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, MessageSquare, FileText, HeartPulse } from 'lucide-react';
+import { Menu, X, MessageSquare, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
@@ -19,12 +19,25 @@ export default function Navbar() {
         <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
                 <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                            Iurex<span className="text-accent-gold">ia</span>
-                        </span>
-                    </Link>
+                    {/* Logo + SALVAME */}
+                    <div className="flex items-center gap-3">
+                        <Link href="/" className="flex items-center gap-2 group">
+                            <span className="font-serif text-2xl font-semibold text-charcoal-900">
+                                Iurex<span className="text-accent-gold">ia</span>
+                            </span>
+                        </Link>
+                        <span className="hidden sm:block w-px h-6 bg-charcoal-300/50" />
+                        <Link
+                            href="/salvame"
+                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-charcoal-900 rounded-full hover:bg-charcoal-800 transition-all duration-200 group/salvame shadow-sm"
+                        >
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                                <rect x="9" y="2" width="6" height="20" rx="1" fill="#dc2626" />
+                                <rect x="2" y="9" width="20" height="6" rx="1" fill="#dc2626" />
+                            </svg>
+                            <span className="text-xs font-bold text-white tracking-wide">SALVAME</span>
+                        </Link>
+                    </div>
 
                     <div className="hidden md:flex items-center gap-8">
                         <NavLink href="/plataforma">Plataforma</NavLink>
@@ -35,13 +48,7 @@ export default function Navbar() {
                         >
                             Connect
                         </Link>
-                        <Link
-                            href="/salvame"
-                            className="text-sm font-semibold text-red-600 border border-red-400 rounded-full px-4 py-1.5 hover:bg-red-50 hover:border-red-500 transition-all duration-200 flex items-center gap-1.5"
-                        >
-                            <HeartPulse className="w-3.5 h-3.5" />
-                            SALVAME
-                        </Link>
+
                         {userIsAdmin && (
                             <Link
                                 href="/leyesestatales"
@@ -141,9 +148,12 @@ export default function Navbar() {
                             <Link
                                 href="/salvame"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center justify-center gap-2 text-base font-semibold text-red-600 border border-red-400 rounded-full px-4 py-2 text-center hover:bg-red-50 transition-colors"
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-charcoal-900 text-white text-base font-bold rounded-full hover:bg-charcoal-800 transition-colors"
                             >
-                                <HeartPulse className="w-4 h-4" />
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                    <rect x="9" y="2" width="6" height="20" rx="1" fill="#dc2626" />
+                                    <rect x="2" y="9" width="20" height="6" rx="1" fill="#dc2626" />
+                                </svg>
                                 SALVAME
                             </Link>
                             {userIsAdmin && (
