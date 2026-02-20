@@ -6,6 +6,7 @@ import type { User, Session } from '@supabase/supabase-js';
 
 export interface AuthContextType {
     user: User | null;
+    session: Session | null;
     profile: UserProfile | null;
     loading: boolean;
     isAuthenticated: boolean;
@@ -13,6 +14,7 @@ export interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType>({
     user: null,
+    session: null,
     profile: null,
     loading: true,
     isAuthenticated: false,
@@ -21,6 +23,7 @@ export const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [authState, setAuthState] = useState<AuthContextType>({
         user: null,
+        session: null,
         profile: null,
         loading: true,
         isAuthenticated: false,
@@ -56,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Set authenticated immediately (profile loads in background)
                     setAuthState({
                         user: session.user,
+                        session: session,
                         profile: null,
                         loading: false,
                         isAuthenticated: true,
@@ -65,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 } else {
                     setAuthState({
                         user: null,
+                        session: null,
                         profile: null,
                         loading: false,
                         isAuthenticated: false,
@@ -75,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (isMounted) {
                     setAuthState({
                         user: null,
+                        session: null,
                         profile: null,
                         loading: false,
                         isAuthenticated: false,
@@ -93,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (event === 'SIGNED_OUT') {
                     setAuthState({
                         user: null,
+                        session: null,
                         profile: null,
                         loading: false,
                         isAuthenticated: false,
@@ -103,6 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (session?.user) {
                     setAuthState(prev => ({
                         user: session.user,
+                        session: session,
                         profile: prev.profile, // Keep existing profile until refreshed
                         loading: false,
                         isAuthenticated: true,
@@ -113,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Don't clear state on TOKEN_REFRESHED without session
                     setAuthState({
                         user: null,
+                        session: null,
                         profile: null,
                         loading: false,
                         isAuthenticated: false,
