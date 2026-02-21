@@ -154,6 +154,28 @@ function humanizeOrigen(origen: string | null | undefined): string {
     return clean.replace(/^JSON_/i, '').replace(/_/g, ' ');
 }
 
+/**
+ * Extracts the law name from texto when origen is null.
+ * Federal law chunks embed: "[Ley GENERAL DE TITULOS Y OPERACIONES DE CREDITO | TITULO I...]"
+ * Returns a title-cased name like "Ley General de Títulos y Operaciones de Crédito"
+ */
+function extractLeyFromTexto(texto: string | null | undefined): string | null {
+    if (!texto) return null;
+    // Pattern: text starts with [Ley ... | rest] or [NOMBRE DE LEY | rest]
+    const bracket = texto.match(/^\[([^\]|]+)/);
+    if (!bracket) return null;
+    const raw = bracket[1].trim();
+    // Only use it if it looks like a law name (contains "Ley", "Código", "Reglamento", etc.)
+    if (!/\b(Ley|Código|Reglamento|Decreto|Estatuto|Ley Federal|Ley General|Constitución)\b/i.test(raw)) return null;
+    // Title-case the result: lowercase everything then capitalize each major word
+    return raw.replace(/\b(\w)/g, (_, c) => c.toUpperCase())
+        .replace(/\bDe\b/g, 'de').replace(/\bDel\b/g, 'del')
+        .replace(/\bY\b/g, 'y').replace(/\bO\b/g, 'o')
+        .replace(/\bLa\b/g, 'la').replace(/\bEl\b/g, 'el')
+        .replace(/\bPara\b/g, 'para').replace(/\bEn\b/g, 'en')
+        .replace(/^\w/, c => c.toUpperCase()); // Always capitalize first letter
+}
+
 export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
     const [document, setDocument] = useState<DocumentResponse | null>(null);
     const [loading, setLoading] = useState(false);
@@ -484,20 +506,21 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                             ) : (
                                 <div className="bg-cream-200 rounded-lg p-4 mb-6 space-y-3 text-sm">
                                     <div className="grid grid-cols-2 gap-3">
-                                        {/* Fuente: ley name or fallback to 'Legislación Federal' */}
-                                        {document.origen ? (
-                                            <div className="flex items-center gap-2 col-span-2">
-                                                <Scale className="w-4 h-4 text-accent-brown" />
-                                                <span className="font-medium">Fuente:</span>
-                                                <span className="text-charcoal-700">{humanizeOrigen(document.origen)}</span>
-                                            </div>
-                                        ) : document.entidad === 'FEDERAL' ? (
-                                            <div className="flex items-center gap-2 col-span-2">
-                                                <Scale className="w-4 h-4 text-accent-brown" />
-                                                <span className="font-medium">Fuente:</span>
-                                                <span className="text-charcoal-700">Legislación Federal</span>
-                                            </div>
-                                        ) : null}
+                                        {/* Fuente — prioridad: origen > extraído del texto > genérico */}
+                                        {(() => {
+                                            const fuenteLabel = document.origen
+                                                ? humanizeOrigen(document.origen)
+                                                : extractLeyFromTexto(document.texto)
+                                                ?? (document.entidad === 'FEDERAL' ? 'Legislaci\u00f3n Federal' : null);
+                                            if (!fuenteLabel) return null;
+                                            return (
+                                                <div className="flex items-start gap-2 col-span-2">
+                                                    <Scale className="w-4 h-4 text-accent-brown mt-0.5 flex-shrink-0" />
+                                                    <span className="font-medium">Fuente:</span>
+                                                    <span className="text-charcoal-700">{fuenteLabel}</span>
+                                                </div>
+                                            );
+                                        })()}
                                         {/* Show state only for state-level laws (not FEDERAL) */}
                                         {document.entidad && document.entidad !== 'NA' && document.entidad !== 'FEDERAL' && (
                                             <div className="flex items-center gap-2">
