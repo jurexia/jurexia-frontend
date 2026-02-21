@@ -1085,6 +1085,12 @@ function formatMarkdown(text: string): string {
         '<div class="fuentes-header"><span>📚</span> <span>$1</span></div>'
     );
 
+    // STEP 6: Style Iurexia main section headers
+    processed = processed.replace(
+        /^(?:##|###)\s*(RESPUESTA DIRECTA|MARCO CONSTITUCIONAL.*?|LEGISLACIÓN FEDERAL.*?|JURISPRUDENCIA Y TESIS.*?|LEGISLACIÓN ESTATAL.*?|ANÁLISIS INTEGRADO.*?|CONCLUSIÓN)$/gim,
+        '<div class="iurexia-section-header"><span>$1</span></div>'
+    );
+
     return processed
         // Skip headers that contain "Iurexia" or already processed branded headers
         // Headers - but skip lines that already have HTML or branded headers
