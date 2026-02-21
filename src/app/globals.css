@@ -336,10 +336,17 @@ h6 {
   font-weight: 600;
   font-size: 1rem;
   letter-spacing: 0.1em;
-  color: var(--charcoal, #1a1a1a);
 }
 
-.iurexia-section-header span {
+/* Primary part of title — charcoal (like "Iurex" in the logo) */
+.iurexia-section-header .section-primary {
+  color: var(--charcoal, #1a1a1a);
+  text-transform: uppercase;
+}
+
+/* Secondary part of title (after " Y ") — gold (like "ia" in the logo) */
+.iurexia-section-header .section-secondary {
+  color: var(--accent-gold, #c9a962);
   text-transform: uppercase;
 }
 

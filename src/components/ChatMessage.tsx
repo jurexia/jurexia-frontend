@@ -1085,15 +1085,25 @@ function formatMarkdown(text: string): string {
         '<div class="fuentes-header"><span>📚</span> <span>$1</span></div>'
     );
 
-    // STEP 6: Style Iurexia main section headers
+    // STEP 6: Style Iurexia main section headers — two-tone color split at " Y "
     processed = processed.replace(
-        /^(?:##|###)\s*(RESPUESTA DIRECTA|MARCO CONSTITUCIONAL.*?|LEGISLACIÓN FEDERAL.*?|JURISPRUDENCIA Y TESIS.*?|LEGISLACIÓN ESTATAL.*?|ANÁLISIS INTEGRADO.*?|CONCLUSIÓN)$/gim,
-        '<div class="iurexia-section-header"><span>$1</span></div>'
+        /^(?:##|###)\s*(RESPUESTA DIRECTA|MARCO CONSTITUCIONAL.*?|LEGISLACI\u00d3N FEDERAL.*?|JURISPRUDENCIA Y TESIS.*?|LEGISLACI\u00d3N ESTATAL.*?|AN\u00c1LISIS INTEGRADO.*?|CONCLUSI\u00d3N)$/gim,
+        (_, title: string) => {
+            const yIdx = title.indexOf(' Y ');
+            if (yIdx !== -1) {
+                const primary = title.slice(0, yIdx);
+                const secondary = title.slice(yIdx); // includes ' Y ...'
+                return `<div class="iurexia-section-header"><span class="section-primary">${primary}</span><span class="section-secondary">${secondary}</span></div>`;
+            }
+            return `<div class="iurexia-section-header"><span class="section-primary">${title}</span></div>`;
+        }
     );
 
     return processed
         // Skip headers that contain "Iurexia" or already processed branded headers
-        // Headers - but skip lines that already have HTML or branded headers
+        // H4 headers (#### text) → bold text paragraph
+        .replace(/^#### (.*$)/gm, '<p class="mb-2"><strong class="font-semibold">$1</strong></p>')
+        // H3, H2, H1 headers
         .replace(/^### (.*$)/gm, '<h3 class="text-lg font-serif font-medium mt-3 mb-1">$1</h3>')
         // Skip "Respuesta Legal" or "Análisis Legal" H2s since they're already branded
         .replace(/^## (?!.*(Respuesta|Análisis) Legal)(.*$)/gm, '<h2 class="text-xl font-serif font-medium mt-5 mb-3">$2</h2>')
