@@ -488,14 +488,15 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                                         {document.origen && (
                                             <div className="flex items-center gap-2 col-span-2">
                                                 <Scale className="w-4 h-4 text-accent-brown" />
-                                                <span className="font-medium">Ley:</span>
+                                                <span className="font-medium">Fuente:</span>
                                                 <span className="text-charcoal-700">{humanizeOrigen(document.origen)}</span>
                                             </div>
                                         )}
-                                        {document.entidad && document.entidad !== 'NA' && (
+                                        {/* Show state only for state-level laws (not FEDERAL) */}
+                                        {document.entidad && document.entidad !== 'NA' && document.entidad !== 'FEDERAL' && (
                                             <div className="flex items-center gap-2">
                                                 <MapPin className="w-4 h-4 text-accent-brown" />
-                                                <span className="font-medium">Entidad:</span>
+                                                <span className="font-medium">Estado:</span>
                                                 <span className="text-charcoal-700">{estadoDisplayName ?? document.entidad}</span>
                                             </div>
                                         )}
