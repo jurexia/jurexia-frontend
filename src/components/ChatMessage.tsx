@@ -1087,7 +1087,7 @@ function formatMarkdown(text: string): string {
 
     // STEP 6: Style Iurexia main section headers — two-tone color split at " Y "
     processed = processed.replace(
-        /^(?:##|###)\s*(RESPUESTA DIRECTA|MARCO CONSTITUCIONAL.*?|LEGISLACI\u00d3N FEDERAL.*?|JURISPRUDENCIA Y TESIS.*?|LEGISLACI\u00d3N ESTATAL.*?|AN\u00c1LISIS INTEGRADO.*?|CONCLUSI\u00d3N)$/gim,
+        /^(?:##|###)\s*(RESPUESTA DIRECTA|MARCO CONSTITUCIONAL.*?|FUNDAMENTO LEGAL.*?|LEGISLACI\u00d3N FEDERAL.*?|JURISPRUDENCIA Y TESIS.*?|JURISPRUDENCIA.*?|LEGISLACI\u00d3N ESTATAL.*?|AN\u00c1LISIS INTEGRADO.*?|CONCLUSI\u00d3N.*?|FUERO APLICABLE.*?)$/gim,
         (_, title: string) => {
             const yIdx = title.indexOf(' Y ');
             if (yIdx !== -1) {

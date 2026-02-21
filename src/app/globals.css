@@ -327,24 +327,48 @@ h6 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Jurexia Section Headers — Solo tipografía elegante */
+/* ── Iurexia Section Headers — Tipografía dos tonos (negro + dorado) ──────── */
+/* Inspirado en el logo: "Iurex" negro + "ia" dorado                           */
 .iurexia-section-header {
-  margin: 28px 0 10px 0;
-  padding: 0 0 8px 0;
-  border-bottom: 1.5px solid var(--accent-gold, #c9a962);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 26px 0 12px 0;
+  padding: 0;
   font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
   font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: 0.1em;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  line-height: 1;
 }
 
-/* Primary part of title — charcoal (like "Iurex" in the logo) */
+/* Barra dorada izquierda — acento de identidad Iurexia */
+.iurexia-section-header::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 1.2em;
+  background: var(--accent-gold, #c9a962);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Línea sutíl que conecta el header con el contenido */
+.iurexia-section-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(201, 169, 98, 0.35), transparent);
+  margin-left: 10px;
+}
+
+/* Palabra principal — negro profundo (como "Iurex" en el logo) */
 .iurexia-section-header .section-primary {
   color: var(--charcoal, #1a1a1a);
   text-transform: uppercase;
 }
 
-/* Secondary part of title (after " Y ") — gold (like "ia" in the logo) */
+/* Palabra secundaria (después de " Y ") — dorado (como "ia" en el logo) */
 .iurexia-section-header .section-secondary {
   color: var(--accent-gold, #c9a962);
   text-transform: uppercase;
