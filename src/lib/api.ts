@@ -250,9 +250,9 @@ export async function getFullDocument(
     origen: string,
     highlightChunkId?: string
 ): Promise<FullDocumentResponse> {
-    const encoded = encodeURIComponent(origen);
-    const params = highlightChunkId ? `?highlight_chunk_id=${highlightChunkId}` : '';
-    const response = await fetch(`${API_URL}/document-full/${encoded}${params}`, {
+    const params = new URLSearchParams({ origen });
+    if (highlightChunkId) params.set('highlight_chunk_id', highlightChunkId);
+    const response = await fetch(`${API_URL}/document-full?${params.toString()}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
     });
