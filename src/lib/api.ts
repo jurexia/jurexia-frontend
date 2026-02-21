@@ -229,6 +229,38 @@ export async function getDocument(docId: string): Promise<DocumentResponse> {
 }
 
 /**
+ * Full document response (reconstructed from chunks)
+ */
+export interface FullDocumentResponse {
+    origen: string;
+    titulo: string;
+    tipo: string | null;
+    texto_completo: string;
+    total_chunks: number;
+    highlight_chunk_index: number | null;
+    source_doc_url: string | null;
+    external_url: string | null;
+    metadata: Record<string, string>;
+}
+
+/**
+ * Get full document reconstructed from all chunks with the same origen
+ */
+export async function getFullDocument(
+    origen: string,
+    highlightChunkId?: string
+): Promise<FullDocumentResponse> {
+    const encoded = encodeURIComponent(origen);
+    const params = highlightChunkId ? `?highlight_chunk_id=${highlightChunkId}` : '';
+    const response = await fetch(`${API_URL}/document-full/${encoded}${params}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) throw new Error(`Full document not found: ${origen}`);
+    return response.json();
+}
+
+/**
  * Enhance response interface
  */
 export interface EnhanceResponse {

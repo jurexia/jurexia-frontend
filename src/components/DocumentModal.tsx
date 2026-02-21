@@ -5,6 +5,7 @@ import { X, Download, FileText, MapPin, Scale, Loader2, Gavel, BookOpen, Externa
 import { getDocument, DocumentResponse } from '@/lib/api';
 import { findLawPdfUrl, getEstadoDisplayName } from '@/lib/lawPdfLookup';
 import PdfViewerModal from '@/components/PdfViewerModal';
+import TextViewerModal from '@/components/TextViewerModal';
 
 interface DocumentModalProps {
     docId: string | null;
@@ -158,6 +159,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showPdfViewer, setShowPdfViewer] = useState(false);
+    const [showTextViewer, setShowTextViewer] = useState(false);
 
     // Resolve PDF URL for "Ver ley completa" button
     // Priority: 1) url_pdf from Qdrant payload, 2) lawPdfLookup (estadosData)
@@ -388,6 +390,15 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                                 Ver ley completa
                             </button>
                         )}
+                        {document?.silo === 'bloque_constitucional' && document.origen && (
+                            <button
+                                onClick={() => setShowTextViewer(true)}
+                                className="flex items-center gap-2 px-3 py-2 text-sm bg-charcoal-800 text-white rounded-lg hover:bg-charcoal-700 transition-colors"
+                            >
+                                <BookOpen className="w-4 h-4" />
+                                Ver documento completo
+                            </button>
+                        )}
                         <button
                             onClick={handleDownloadPDF}
                             disabled={!document}
@@ -589,6 +600,15 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                     lawName={humanizeOrigen(document.origen)}
                     estadoName={estadoDisplayName}
                     onClose={() => setShowPdfViewer(false)}
+                />
+            )}
+
+            {/* Text Viewer Modal (Bloque Constitucional) */}
+            {showTextViewer && document?.origen && (
+                <TextViewerModal
+                    origen={document.origen}
+                    highlightChunkId={docId || undefined}
+                    onClose={() => setShowTextViewer(false)}
                 />
             )}
         </div>
