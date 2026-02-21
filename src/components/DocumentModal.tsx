@@ -238,9 +238,9 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
             metadataHTML = `
                 <div class="metadata">
                     <div class="metadata-grid">
-                        ${document.origen ? `<p><strong>📄 Ley:</strong> ${humanizeOrigen(document.origen)}</p>` : ''}
+                        ${document.origen ? `<p><strong>📄 Fuente:</strong> ${humanizeOrigen(document.origen)}</p>` : (document.entidad === 'FEDERAL' ? `<p><strong>📄 Fuente:</strong> Legislación Federal</p>` : '')}
                         ${document.jurisdiccion ? `<p><strong>⚖️ Jurisdicción:</strong> ${document.jurisdiccion}</p>` : ''}
-                        ${document.entidad && document.entidad !== 'NA' ? `<p><strong>📍 Entidad:</strong> ${document.entidad}</p>` : ''}
+                        ${document.entidad && document.entidad !== 'NA' && document.entidad !== 'FEDERAL' ? `<p><strong>📍 Estado:</strong> ${document.entidad}</p>` : ''}
                         <p><strong>📁 Categoría:</strong> ${document.silo.replace(/_/g, ' ').replace(/^./, s => s.toUpperCase())}</p>
                     </div>
                 </div>
@@ -484,14 +484,20 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
                             ) : (
                                 <div className="bg-cream-200 rounded-lg p-4 mb-6 space-y-3 text-sm">
                                     <div className="grid grid-cols-2 gap-3">
-                                        {/* For state laws, show Ley name (origen) as primary */}
-                                        {document.origen && (
+                                        {/* Fuente: ley name or fallback to 'Legislación Federal' */}
+                                        {document.origen ? (
                                             <div className="flex items-center gap-2 col-span-2">
                                                 <Scale className="w-4 h-4 text-accent-brown" />
                                                 <span className="font-medium">Fuente:</span>
                                                 <span className="text-charcoal-700">{humanizeOrigen(document.origen)}</span>
                                             </div>
-                                        )}
+                                        ) : document.entidad === 'FEDERAL' ? (
+                                            <div className="flex items-center gap-2 col-span-2">
+                                                <Scale className="w-4 h-4 text-accent-brown" />
+                                                <span className="font-medium">Fuente:</span>
+                                                <span className="text-charcoal-700">Legislación Federal</span>
+                                            </div>
+                                        ) : null}
                                         {/* Show state only for state-level laws (not FEDERAL) */}
                                         {document.entidad && document.entidad !== 'NA' && document.entidad !== 'FEDERAL' && (
                                             <div className="flex items-center gap-2">
