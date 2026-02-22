@@ -53,19 +53,6 @@ export default function Navbar() {
                         >
                             Connect
                         </Link>
-                        <NavLink href="/normativa">
-                            <span className="text-accent-gold">Normativa</span>
-                        </NavLink>
-                        {canAccessRedactor && (
-                            <Link
-                                href="/redactor-sentencia"
-                                className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors hover:bg-black/5"
-                                style={{ color: '#7c3aed' }}
-                            >
-                                <FileText className="w-3.5 h-3.5" />
-                                Redactor
-                            </Link>
-                        )}
                         <NavLink href="/precios">Precios</NavLink>
                         <NavLink href="/seguridad">Seguridad</NavLink>
                         {isAdminEmail && (
