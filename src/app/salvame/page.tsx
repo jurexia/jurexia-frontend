@@ -512,7 +512,7 @@ export default function SalvamePage() {
                         <ArrowLeft size={20} />
                     </button>
                     <MedicalCross size={24} color="#dc2626" />
-                    <span style={{ fontSize: 18, fontWeight: 700, color: '#e5e5e5', letterSpacing: '0.05em' }}>SALVAME</span>
+                    <span style={{ fontSize: 18, fontWeight: 700, color: '#e5e5e5', letterSpacing: '0.05em' }}>SÁLVAME</span>
                     <span style={{ fontSize: 12, color: '#555', marginLeft: 4 }}>Iurexia Legal AI</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -544,7 +544,7 @@ export default function SalvamePage() {
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
                                 <MedicalCross size={48} color="#dc2626" />
                                 <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 800, margin: 0, letterSpacing: '-0.03em', background: 'linear-gradient(135deg, #fff 0%, #a3a3a3 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                    SALVAME
+                                    SÁLVAME
                                 </h1>
                             </div>
                             <h2 style={{ fontSize: '1.5rem', color: '#a3a3a3', fontWeight: 400, marginBottom: 32, lineHeight: 1.5 }}>
@@ -579,10 +579,16 @@ export default function SalvamePage() {
                     <section style={{ padding: '80px 5%', background: '#151515', borderTop: '1px solid #262626', borderBottom: '1px solid #262626' }}>
                         <div style={{ textAlign: 'center', maxWidth: 700, margin: '0 auto 60px' }}>
                             <h2 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: '2.5rem', fontWeight: 300, color: '#f5f5f5', marginBottom: 24 }}>
-                                Por qué creamos SALVAME
+                                Por qué creamos SÁLVAME
                             </h2>
-                            <p style={{ color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.6 }}>
-                                Conocemos la dura realidad en México. La burocracia no debe estar por encima de la vida. Esta herramienta nace de la sensibilidad y el deber moral del equipo de Iurexia.
+                            <p style={{ color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.7, marginBottom: 20 }}>
+                                Creamos Iurexia con la mente, pero programamos SÁLVAME con el corazón. Conocemos la desesperación de las salas de espera y la profunda indignidad de tener que suplicar por atención médica. Sabemos que, cuando la vida pende de un hilo, el sentimiento de impotencia es devastador.
+                            </p>
+                            <p style={{ color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.7, marginBottom: 20 }}>
+                                Esta herramienta es nuestra respuesta a la soledad institucional que enfrentamos millones de mexicanos. No importa quién seas, cuánto tengas o dónde te encuentres: ante el dolor, la urgencia y el silencio por parte del personal de salud, Iurexia te toma de la mano. Te entregamos una poderosa herramienta para hacer efectivo tu derecho humano a la salud.
+                            </p>
+                            <p style={{ color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.7 }}>
+                                Pusimos la tecnología más avanzada del mundo al servicio de lo más importante que existe: la salud de ti, de tus seres queridos, o de cualquier persona en grave riesgo ante la indiferencia y desatención de un hospital.
                             </p>
                         </div>
 
@@ -636,7 +642,7 @@ export default function SalvamePage() {
                             <div style={{ flex: '1 1 400px' }}>
                                 <h3 style={{ fontSize: '2rem', marginBottom: 20, color: '#f5f5f5' }}>Respaldo y Tecnología Legal</h3>
                                 <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
-                                    SALVAME utiliza el motor de inteligencia artificial jurídica más avanzado de México (<span style={{ color: '#c9a962' }}>Iurexia Legal AI</span>). La demanda que generas cuenta con los más altos estándares técnicos.
+                                    SÁLVAME utiliza el motor de inteligencia artificial jurídica más avanzado de México (<span style={{ color: '#c9a962' }}>Iurexia Legal AI</span>). La demanda que generas cuenta con los más altos estándares técnicos.
                                 </p>
                                 <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: 24, lineHeight: 1.6 }}>
                                     El sistema fundamenta automáticamente tu demanda con los <span style={{ color: '#dc2626', fontWeight: 600 }}>artículos 1 y 4 de la Constitución</span>, y busca jurisprudencia en tiempo real para hacer valer tu derecho a la salud.
@@ -708,7 +714,7 @@ export default function SalvamePage() {
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                             <MedicalCross size={32} color="#dc2626" />
                             <h1 style={{ fontSize: 36, fontWeight: 800, color: '#f5f5f5', margin: 0, letterSpacing: '-0.02em' }}>
-                                SALVAME
+                                SÁLVAME
                             </h1>
                         </div>
                         <h2 style={{ fontSize: 20, fontWeight: 400, color: '#a3a3a3', margin: '8px 0 24px', lineHeight: 1.5 }}>
@@ -1322,7 +1328,7 @@ export default function SalvamePage() {
             {/* ─── FOOTER ─────────────────────────────────────────────── */}
             <footer style={{ padding: '16px 24px', borderTop: '1px solid #1a1a1a', textAlign: 'center' }}>
                 <p style={{ margin: 0, fontSize: 11, color: '#444' }}>
-                    Iurexia Legal AI · SALVAME · Este módulo no constituye asesoría legal personalizada.
+                    Iurexia Legal AI · SÁLVAME · Este módulo no constituye asesoría legal personalizada.
                 </p>
             </footer>
         </div>
