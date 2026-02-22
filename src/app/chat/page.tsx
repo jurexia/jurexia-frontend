@@ -324,13 +324,14 @@ export default function ChatPage() {
                 <header className="fixed top-0 left-0 right-0 md:left-72 z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 transition-all duration-300">
                     <div className="max-w-4xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-end gap-1 sm:gap-2">
 
-                        {/* Normativa Nacional link button */}
+                        {/* Normativa Nacional link button — desktop: text, mobile: icon only */}
                         <Link
                             href="/normativa"
-                            className="p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0 hover:bg-black/5 text-charcoal-600 hover:text-accent-gold"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-charcoal-900 text-white text-xs font-semibold hover:bg-charcoal-800 transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
                             title="Repositorio de Normativa Nacional"
                         >
-                            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Normativa</span>
                         </Link>
 
                         {/* Jurisdicción button — mobile: compact (icon+state only), desktop: full label */}
