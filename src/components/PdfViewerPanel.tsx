@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { X, ExternalLink, FileText, BookOpen, ChevronRight, Hand } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { X, ExternalLink, FileText, BookOpen, ChevronRight } from 'lucide-react';
 
 interface PdfSource {
     origen: string;
@@ -24,20 +24,11 @@ interface PdfViewerPanelProps {
  */
 export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber }: PdfViewerPanelProps) {
     const panelRef = useRef<HTMLDivElement>(null);
-    const scrollBodyRef = useRef<HTMLDivElement>(null);
-    const [iframeActive, setIframeActive] = useState(false);
-
-    // Deactivate iframe when user scrolls the panel body (mobile)
-    const handleScroll = useCallback(() => {
-        if (iframeActive) setIframeActive(false);
-    }, [iframeActive]);
 
     // Lock body scroll when panel is open on mobile
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
-            // Reset iframe active state when panel opens
-            setIframeActive(false);
         }
         return () => {
             document.body.style.overflow = '';
@@ -122,14 +113,12 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
 
                 {/* Scrollable body — touch fixes for mobile */}
                 <div
-                    ref={scrollBodyRef}
                     className="flex-1 overflow-y-auto"
                     style={{
                         WebkitOverflowScrolling: 'touch',
                         overscrollBehavior: 'contain',
                         touchAction: 'pan-y',
                     }}
-                    onScroll={handleScroll}
                 >
                     {/* Article text section */}
                     <div className="p-5">
@@ -195,38 +184,30 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                     </div>
                                 </div>
 
-                                {/* Embedded PDF iframe with mobile touch overlay */}
-                                <div className="relative rounded-xl overflow-hidden border border-cream-400 bg-cream-200" style={{ height: '480px' }}>
+                                {/* ── Mobile: CTA button (iframes don't work on mobile) ── */}
+                                <div className="md:hidden">
+                                    <a
+                                        href={source.pdf_url!}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-3 w-full py-4 px-5 rounded-xl bg-gradient-to-r from-accent-gold to-accent-brown text-charcoal-900 font-semibold text-sm shadow-lg active:scale-[0.98] transition-transform"
+                                    >
+                                        <ExternalLink className="w-5 h-5" />
+                                        Abrir PDF completo
+                                    </a>
+                                    <p className="mt-2 text-[10px] text-charcoal-500 text-center">
+                                        Se abrirá en el visor PDF de tu dispositivo
+                                    </p>
+                                </div>
+
+                                {/* ── Desktop: embedded iframe ── */}
+                                <div className="hidden md:block rounded-xl overflow-hidden border border-cream-400 bg-cream-200" style={{ height: '480px' }}>
                                     <iframe
                                         src={`${source.pdf_url}#toolbar=1&navpanes=0&scrollbar=1`}
                                         className="w-full h-full"
                                         title={`PDF: ${leyLabel}`}
                                         loading="lazy"
-                                        style={{
-                                            pointerEvents: iframeActive ? 'auto' : 'none',
-                                        }}
                                     />
-                                    {/* Touch overlay: prevents iframe from stealing scroll on mobile */}
-                                    {!iframeActive && (
-                                        <button
-                                            onClick={() => setIframeActive(true)}
-                                            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/5 active:bg-black/10 transition-colors cursor-pointer md:hidden"
-                                            aria-label="Toca para interactuar con el PDF"
-                                        >
-                                            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-charcoal-900/80 text-white text-xs font-medium backdrop-blur-sm shadow-lg">
-                                                <Hand className="w-3.5 h-3.5" />
-                                                Toca para explorar el PDF
-                                            </div>
-                                        </button>
-                                    )}
-                                    {iframeActive && (
-                                        <button
-                                            onClick={() => setIframeActive(false)}
-                                            className="absolute top-2 right-2 z-10 px-3 py-1.5 rounded-full bg-charcoal-900/80 text-white text-[10px] font-medium backdrop-blur-sm shadow-lg md:hidden hover:bg-charcoal-900 transition-colors"
-                                        >
-                                            ✕ Cerrar PDF
-                                        </button>
-                                    )}
                                 </div>
 
                                 <p className="mt-2 text-[10px] text-charcoal-500 text-center">
