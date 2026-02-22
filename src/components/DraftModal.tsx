@@ -153,10 +153,10 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                         className={`p-3 rounded-xl border transition-all text-center group
                                             ${isSelected
                                                 ? 'border-accent-gold bg-gradient-to-br from-accent-gold/15 to-accent-brown/10 text-accent-gold shadow-lg shadow-accent-gold/10'
-                                                : 'border-charcoal-700 hover:border-charcoal-500 text-charcoal-400 hover:text-cream-200 bg-charcoal-800/50 hover:bg-charcoal-800'
+                                                : 'border-charcoal-600 hover:border-accent-gold/50 text-cream-300 hover:text-cream-100 bg-charcoal-700/60 hover:bg-charcoal-700'
                                             }`}
                                     >
-                                        <Icon className={`w-7 h-7 mx-auto mb-1.5 transition-transform group-hover:scale-110 ${isSelected ? 'text-accent-gold' : ''}`} />
+                                        <Icon className={`w-7 h-7 mx-auto mb-1.5 transition-transform group-hover:scale-110 ${isSelected ? 'text-accent-gold' : 'text-cream-200'}`} />
                                         <span className="font-medium text-xs">{config.label}</span>
                                     </button>
                                 );
@@ -182,10 +182,10 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                             className={`p-3 rounded-xl border transition-all text-left flex items-center gap-3 group
                                                 ${isSelected
                                                     ? 'border-accent-gold bg-gradient-to-r from-accent-gold/15 to-accent-brown/10 text-accent-gold'
-                                                    : 'border-charcoal-700 hover:border-charcoal-500 text-charcoal-400 hover:text-cream-200 bg-charcoal-800/50 hover:bg-charcoal-800'
+                                                    : 'border-charcoal-600 hover:border-accent-gold/50 text-cream-300 hover:text-cream-100 bg-charcoal-700/60 hover:bg-charcoal-700'
                                                 }`}
                                         >
-                                            <Icon className={`w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 ${isSelected ? 'text-accent-gold' : ''}`} />
+                                            <Icon className={`w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 ${isSelected ? 'text-accent-gold' : 'text-cream-200'}`} />
                                             <span className="font-medium text-sm">{subtipo.label}</span>
                                         </button>
                                     );
