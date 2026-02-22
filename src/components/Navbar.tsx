@@ -53,11 +53,9 @@ export default function Navbar() {
                         >
                             Connect
                         </Link>
-                        {userIsAdmin && (
-                            <NavLink href="/leyesestatales">
-                                <span className="text-accent-gold">Leyes Estatales</span>
-                            </NavLink>
-                        )}
+                        <NavLink href="/normativa">
+                            <span className="text-accent-gold">Normativa</span>
+                        </NavLink>
                         {canAccessRedactor && (
                             <Link
                                 href="/redactor-sentencia"

@@ -49,14 +49,10 @@ export default function ChatPage() {
     const [showMateriaDropdown, setShowMateriaDropdown] = useState(false);
     const materiaDropdownRef = useRef<HTMLDivElement>(null);
     const [selectedFuero, setSelectedFuero] = useState<string>('');  // '' = Todos
-    const [showCPEUMViewer, setShowCPEUMViewer] = useState(false);
     const [activePdfSource, setActivePdfSource] = useState<{
         docId: string; origen: string; ref: string; texto: string;
         pdf_url?: string | null; silo?: string;
     } | null>(null);
-
-    // Keep legacy CPEUM URL constants for the header button
-    const CPEUM_VIEWER_URL = 'https://docs.google.com/viewer?url=https%3A%2F%2Fwww.diputados.gob.mx%2FLeyesBiblio%2Fpdf%2FCPEUM.pdf&embedded=true';
 
     const MATERIAS = [
         { key: '', label: 'Automático' },
@@ -328,17 +324,14 @@ export default function ChatPage() {
                 <header className="fixed top-0 left-0 right-0 md:left-72 z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 transition-all duration-300">
                     <div className="max-w-4xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-end gap-1 sm:gap-2">
 
-                        {/* CPEUM viewer toggle button */}
-                        <button
-                            onClick={() => setShowCPEUMViewer(v => !v)}
-                            className={`p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0 ${showCPEUMViewer
-                                ? 'bg-red-600 text-white shadow-md'
-                                : 'hover:bg-black/5 text-charcoal-600 hover:text-red-600'
-                                }`}
-                            title="Ver Constitución Política de los Estados Unidos Mexicanos"
+                        {/* Normativa Nacional link button */}
+                        <Link
+                            href="/normativa"
+                            className="p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0 hover:bg-black/5 text-charcoal-600 hover:text-accent-gold"
+                            title="Repositorio de Normativa Nacional"
                         >
                             <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </button>
+                        </Link>
 
                         {/* Jurisdicción button — mobile: compact (icon+state only), desktop: full label */}
                         <button
@@ -613,19 +606,6 @@ export default function ChatPage() {
                     </div>
                 </div>
             )}
-
-            {/* ══ CPEUM PDF Viewer (header button) ══ */}
-            <PdfViewerPanel
-                isOpen={showCPEUMViewer}
-                onClose={() => setShowCPEUMViewer(false)}
-                source={{
-                    origen: 'Constitución Política de los Estados Unidos Mexicanos',
-                    ref: 'CPEUM — Texto vigente 2024',
-                    texto: 'Accede al texto completo de la Constitución Política de los Estados Unidos Mexicanos en el visor integrado.',
-                    pdf_url: 'https://storage.googleapis.com/iurexia-leyes/constitucion/CPEUM-2024.pdf',
-                    silo: 'bloque_constitucional',
-                }}
-            />
 
             {/* ══ Citation Source Viewer (from CITATION_META click) ══ */}
             <PdfViewerPanel
