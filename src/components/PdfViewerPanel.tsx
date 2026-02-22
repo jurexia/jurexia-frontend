@@ -130,8 +130,13 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
     // Parse tesis metadata if applicable
     const tesisMeta = useMemo(() => {
         if (!source) return null;
-        const isTesisSilo = source.silo === 'jurisprudencia' || source.silo === 'tesis_aisladas';
-        if (!isTesisSilo) return null;
+        // Match actual backend silo values + fallback text detection
+        const isTesisSilo = source.silo === 'jurisprudencia_nacional'
+            || source.silo === 'jurisprudencia'
+            || source.silo === 'tesis_aisladas'
+            || source.silo === 'jurisprudencia_tcc';
+        const looksLikeTesis = (source.texto || '').includes('[TIPO:') || (source.texto || '').includes('[REGISTRO:');
+        if (!isTesisSilo && !looksLikeTesis) return null;
         return parseTesisTexto(source.texto || '');
     }, [source]);
 
@@ -234,8 +239,8 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                             <div className="flex flex-wrap gap-2 mb-4">
                                 {tesisMeta.tipo && (
                                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${tesisMeta.tipo === 'JURISPRUDENCIA'
-                                            ? 'bg-accent-gold/15 text-accent-gold border border-accent-gold/30'
-                                            : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                        ? 'bg-accent-gold/15 text-accent-gold border border-accent-gold/30'
+                                        : 'bg-blue-50 text-blue-700 border border-blue-200'
                                         }`}>
                                         <Gavel className="w-3 h-3" />
                                         {tesisMeta.tipo}
