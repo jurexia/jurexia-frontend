@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown, BookOpen, X, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
@@ -48,6 +48,11 @@ export default function ChatPage() {
     const [showMateriaDropdown, setShowMateriaDropdown] = useState(false);
     const materiaDropdownRef = useRef<HTMLDivElement>(null);
     const [selectedFuero, setSelectedFuero] = useState<string>('');  // '' = Todos
+    const [showCPEUMViewer, setShowCPEUMViewer] = useState(false);
+
+    // CPEUM PDF URL — Google Docs viewer for reliable iframe embedding
+    const CPEUM_VIEWER_URL = 'https://docs.google.com/viewer?url=https%3A%2F%2Fwww.diputados.gob.mx%2FLeyesBiblio%2Fpdf%2FCPEUM.pdf&embedded=true';
+    const CPEUM_DIRECT_URL = 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf';
 
     const MATERIAS = [
         { key: '', label: 'Automático' },
@@ -319,6 +324,18 @@ export default function ChatPage() {
                 <header className="fixed top-0 left-0 right-0 md:left-72 z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 transition-all duration-300">
                     <div className="max-w-4xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-end gap-1 sm:gap-2">
 
+                        {/* CPEUM viewer toggle button */}
+                        <button
+                            onClick={() => setShowCPEUMViewer(v => !v)}
+                            className={`p-1.5 sm:p-2 rounded-lg transition-all duration-200 flex-shrink-0 ${showCPEUMViewer
+                                    ? 'bg-red-600 text-white shadow-md'
+                                    : 'hover:bg-black/5 text-charcoal-600 hover:text-red-600'
+                                }`}
+                            title="Ver Constitución Política de los Estados Unidos Mexicanos"
+                        >
+                            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+
                         {/* Jurisdicción button — mobile: compact (icon+state only), desktop: full label */}
                         <button
                             onClick={() => setShowConfigModal(true)}
@@ -588,6 +605,77 @@ export default function ChatPage() {
                                     Ver planes
                                 </Link>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ══ CPEUM PDF Slide-Over Viewer ══ */}
+            {showCPEUMViewer && (
+                <div className="fixed inset-0 z-40 flex justify-end pointer-events-none">
+                    {/* Backdrop — click to close */}
+                    <div
+                        className="absolute inset-0 bg-black/20 pointer-events-auto"
+                        onClick={() => setShowCPEUMViewer(false)}
+                    />
+
+                    {/* Panel */}
+                    <div className="relative w-full max-w-2xl h-full bg-white shadow-2xl border-l border-cream-300 flex flex-col pointer-events-auto animate-in slide-in-from-right duration-300">
+
+                        {/* Panel header */}
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-cream-300 bg-cream-100 flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                                <BookOpen className="w-5 h-5 text-red-600" />
+                                <div>
+                                    <h2 className="font-serif text-sm font-semibold text-charcoal-900">
+                                        Constitución Política de los Estados Unidos Mexicanos
+                                    </h2>
+                                    <p className="text-xs text-charcoal-500">Texto vigente — Cámara de Diputados</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <a
+                                    href={CPEUM_DIRECT_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 px-2 py-1 text-xs text-charcoal-600 hover:text-charcoal-900 hover:bg-cream-200 rounded-lg transition-colors"
+                                    title="Abrir en nueva pestaña"
+                                >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Abrir PDF</span>
+                                </a>
+                                <button
+                                    onClick={() => setShowCPEUMViewer(false)}
+                                    className="p-1.5 hover:bg-cream-300 rounded-lg transition-colors text-charcoal-600"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* PDF iframe */}
+                        <div className="flex-1 overflow-hidden">
+                            <iframe
+                                src={CPEUM_VIEWER_URL}
+                                className="w-full h-full border-0"
+                                title="Constitución Política de los Estados Unidos Mexicanos"
+                                loading="lazy"
+                            />
+                        </div>
+
+                        {/* Footer fallback */}
+                        <div className="px-4 py-2 bg-cream-50 border-t border-cream-200 flex-shrink-0">
+                            <p className="text-xs text-charcoal-400 text-center">
+                                Si el visor no carga,{' '}
+                                <a
+                                    href={CPEUM_DIRECT_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-red-600 hover:underline"
+                                >
+                                    descarga el PDF directamente
+                                </a>
+                            </p>
                         </div>
                     </div>
                 </div>
