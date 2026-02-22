@@ -317,53 +317,55 @@ export default function ChatPage() {
             <div className="flex flex-col h-screen md:ml-72">
                 {/* Header - Minimal, only shows counter and user */}
                 <header className="fixed top-0 left-0 right-0 md:left-72 z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 transition-all duration-300">
-                    <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-end">
+                    <div className="max-w-4xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-end gap-1 sm:gap-2">
 
-                        <div className="flex items-center gap-2">
+                        {/* Jurisdicción button — mobile: compact (icon+state only), desktop: full label */}
+                        <button
+                            onClick={() => setShowConfigModal(true)}
+                            className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium text-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 max-w-[120px] sm:max-w-none"
+                            style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}
+                            title={`Jurisdicción: ${selectedEstado ? selectedEstadoLabel : 'Todas'}`}
+                        >
+                            {/* Hide "Jurisdicción:" label on mobile */}
+                            <span className="hidden sm:inline text-white/70">Jurisdicción:</span>
+                            <span className="truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
+                        </button>
 
-                            {/* Jurisdicción button — always visible in header */}
+                        {/* Fuero badge — mobile: icon only, desktop: icon + text */}
+                        {selectedFuero && (
                             <button
-                                onClick={() => setShowConfigModal(true)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                                style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}
+                                onClick={() => setSelectedFuero('')}
+                                className="inline-flex items-center gap-1 px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-lg text-xs font-medium bg-accent-brown/10 text-accent-brown border border-accent-brown/20 hover:bg-accent-brown/20 transition-all duration-200"
+                                title="Click para quitar filtro de fuero"
                             >
-                                <span className="text-white/70">Jurisdicción:</span>
-                                <span>{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
+                                <Scale className="w-3 h-3 flex-shrink-0" />
+                                <span className="hidden sm:inline">{FUEROS.find(f => f.key === selectedFuero)?.label}</span>
+                                <span className="text-accent-brown/50">×</span>
                             </button>
+                        )}
 
-                            {/* Fuero badge in header when active */}
-                            {selectedFuero && (
-                                <button
-                                    onClick={() => setSelectedFuero('')}
-                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-accent-brown/10 text-accent-brown border border-accent-brown/20 hover:bg-accent-brown/20 transition-all duration-200"
-                                    title="Click para quitar filtro"
-                                >
-                                    <Scale className="w-3 h-3" />
-                                    {FUEROS.find(f => f.key === selectedFuero)?.label}
-                                    <span className="text-accent-brown/50 ml-0.5">×</span>
-                                </button>
-                            )}
+                        {hasMessages && activeConversationId && (
+                            <button
+                                onClick={async () => {
+                                    if (activeConversationId) {
+                                        await handleDeleteConversation(activeConversationId);
+                                    }
+                                }}
+                                className="p-1.5 sm:p-2 hover:bg-black/5 rounded-lg transition-colors text-charcoal-600 hover:text-red-600 flex-shrink-0"
+                                title="Eliminar conversación"
+                            >
+                                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
+                        )}
 
-                            {hasMessages && activeConversationId && (
-                                <button
-                                    onClick={async () => {
-                                        if (activeConversationId) {
-                                            await handleDeleteConversation(activeConversationId);
-                                        }
-                                    }}
-                                    className="p-2 hover:bg-black/5 rounded-lg transition-colors text-charcoal-600 hover:text-red-600"
-                                    title="Eliminar conversación"
-                                >
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
-                            )}
-                            {/* Query Counter */}
-                            <div className="flex items-center gap-1 px-2 py-1 bg-cream-100 rounded-lg text-xs font-medium">
-                                <span className="text-charcoal-600">Consultas:</span>
-                                <span className={queriesRemaining <= 1 ? 'text-red-600' : 'text-accent-brown'}>
-                                    {queriesRemaining}/{queriesLimit}
-                                </span>
-                            </div>
+                        {/* Query Counter — mobile: numbers only, desktop: label + numbers */}
+                        <div className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1 bg-cream-100 rounded-lg text-xs font-medium flex-shrink-0">
+                            <span className="hidden sm:inline text-charcoal-600">Consultas:</span>
+                            <span className={queriesRemaining <= 1 ? 'text-red-600' : 'text-accent-brown'}>
+                                {queriesRemaining}/{queriesLimit}
+                            </span>
+                        </div>
+                        <div className="flex-shrink-0">
                             <UserAvatar />
                         </div>
                     </div>
@@ -373,7 +375,7 @@ export default function ChatPage() {
 
 
                 {/* Main Content Area - Scrollable */}
-                <main className="flex-1 pt-14 overflow-y-auto">
+                <main className="flex-1 pt-12 sm:pt-14 overflow-y-auto">
                     {!hasMessages ? (
                         // Empty State - Welcome Screen
                         <div className="h-full flex flex-col items-center justify-center px-4 -mt-8">
@@ -431,8 +433,8 @@ export default function ChatPage() {
                                                 key={f.key}
                                                 onClick={() => setSelectedFuero(f.key)}
                                                 className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${selectedFuero === f.key
-                                                        ? 'bg-accent-brown text-white shadow-sm'
-                                                        : 'text-charcoal-500 hover:text-charcoal-800 hover:bg-charcoal-100'
+                                                    ? 'bg-accent-brown text-white shadow-sm'
+                                                    : 'text-charcoal-500 hover:text-charcoal-800 hover:bg-charcoal-100'
                                                     }`}
                                             >
                                                 {f.label}
