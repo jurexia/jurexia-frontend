@@ -107,7 +107,7 @@ const LOADER_MESSAGES = [
     'Finalizando puntos petitorios...',
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api-634779006258.us-central1.run.app';
 
 // ═══════════════════════════════════════════════════════════════════
 // SVG Inline Icons
