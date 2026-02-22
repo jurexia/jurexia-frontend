@@ -7,7 +7,7 @@ import type { Message } from '@/lib/api';
 interface ChatMessageProps {
     message: Message;
     isStreaming?: boolean;
-    onCitationClick?: (docId: string) => void;
+    onCitationClick?: (source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string }) => void;
 }
 
 // UUID regex for document IDs
@@ -173,7 +173,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         content = content.replace(/^\s+/, '').trim();
 
         // Parse and strip <!-- CITATION_META:{...} --> from content
-        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string }> } | null = null;
+        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string }> } | null = null;
         const metaMatch = content.match(/<!-- CITATION_META:(\{.*?\}) -->/);
         if (metaMatch) {
             try {
@@ -730,7 +730,16 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 const target = e.target as HTMLElement;
                                 if (target.classList.contains('citation-badge') && target.dataset.docId) {
                                     e.preventDefault();
-                                    onCitationClick?.(target.dataset.docId);
+                                    const docId = target.dataset.docId;
+                                    const src = citationMeta?.sources?.[docId];
+                                    onCitationClick?.({
+                                        docId,
+                                        origen: src?.origen || 'Fuente legal',
+                                        ref: src?.ref || '',
+                                        texto: src?.texto || '',
+                                        pdf_url: src?.pdf_url,
+                                        silo: src?.silo,
+                                    });
                                 }
                             }}
                         />
@@ -757,9 +766,19 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                                 className={`flex items-center gap-2.5 text-xs py-2 px-3 hover:bg-cream-100 transition-colors ${isInvalid ? 'opacity-60' : ''}`}
                                             >
                                                 <button
-                                                    onClick={() => onCitationClick?.(uuid)}
+                                                    onClick={() => {
+                                                        const src = citationMeta?.sources?.[uuid];
+                                                        onCitationClick?.({
+                                                            docId: uuid,
+                                                            origen: src?.origen || 'Fuente legal',
+                                                            ref: src?.ref || '',
+                                                            texto: src?.texto || '',
+                                                            pdf_url: src?.pdf_url,
+                                                            silo: src?.silo,
+                                                        });
+                                                    }}
                                                     className="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-600 text-white text-[10px] font-bold flex-shrink-0 hover:bg-blue-700 transition-colors cursor-pointer"
-                                                    title="Ver documento completo"
+                                                    title="Ver documento y PDF completo"
                                                 >
                                                     {num}
                                                 </button>
