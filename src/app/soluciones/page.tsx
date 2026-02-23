@@ -20,7 +20,7 @@ export default function SolucionesPage() {
                         <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
                             Del rezago a la
                             <br />
-                            <span className="text-charcoal-500">estrategia legal</span>
+                            <span className="text-accent-gold">estrategia legal</span>
                         </h1>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
@@ -56,7 +56,7 @@ export default function SolucionesPage() {
                         <div className="text-center mb-16">
                             <p className="text-accent-brown font-medium mb-4 tracking-wide">APLICACIONES</p>
                             <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
-                                Cómo usan Iurexia los profesionales
+                                Cómo usan Iurexia <span className="text-accent-gold">los profesionales</span>
                             </h2>
                             <p className="text-xl text-charcoal-600 max-w-2xl mx-auto">
                                 Desde investigación hasta análisis de demandas, Iurexia potencia cada etapa del trabajo legal.
@@ -88,7 +88,7 @@ export default function SolucionesPage() {
                         <div className="text-center mb-16">
                             <p className="text-accent-brown font-medium mb-4 tracking-wide">PLATAFORMA</p>
                             <h2 className="font-serif text-4xl md:text-5xl font-medium mb-6">
-                                Herramientas diseñadas para el éxito
+                                Herramientas diseñadas <span className="text-accent-gold">para el éxito</span>
                             </h2>
                             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
                                 Cada funcionalidad de Iurexia está construida específicamente para el sistema jurídico mexicano.
@@ -116,7 +116,7 @@ export default function SolucionesPage() {
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
                             <h3 className="font-serif text-2xl md:text-3xl font-medium text-charcoal-900 mb-4">
-                                Seguridad de nivel empresarial
+                                Seguridad de <span className="text-accent-gold">nivel empresarial</span>
                             </h3>
                             <p className="text-charcoal-600 max-w-2xl mx-auto">
                                 Iurexia cumple con los estándares más altos de seguridad y privacidad para proteger tu información.
@@ -254,7 +254,7 @@ export default function SolucionesPage() {
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <AnimateOnScroll>
                         <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-6">
-                            Transforma tu práctica legal con IA
+                            Transforma tu práctica legal <span className="text-accent-gold">con IA</span>
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.15}>
