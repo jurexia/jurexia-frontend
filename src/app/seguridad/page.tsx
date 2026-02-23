@@ -22,7 +22,7 @@ export default function SeguridadPage() {
                         <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
                             Protección de
                             <br />
-                            <span className="text-charcoal-500">nivel empresarial</span>
+                            <span className="text-accent-gold">nivel empresarial</span>
                         </h1>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
@@ -53,7 +53,7 @@ export default function SeguridadPage() {
                         <div className="text-center mb-16">
                             <p className="text-accent-brown font-medium mb-4 tracking-wide">PRINCIPIOS FUNDAMENTALES</p>
                             <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
-                                La seguridad es nuestra prioridad
+                                La seguridad es <span className="text-accent-gold">nuestra prioridad</span>
                             </h2>
                             <p className="text-xl text-charcoal-600 max-w-2xl mx-auto">
                                 Hemos construido Iurexia desde cero con la protección de tu información como pilar central.
@@ -86,7 +86,7 @@ export default function SeguridadPage() {
                             <div>
                                 <p className="text-accent-brown font-medium mb-4 tracking-wide">FLUJO DE DATOS</p>
                                 <h3 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-6">
-                                    ¿Qué sucede con tu información?
+                                    ¿Qué sucede con <span className="text-accent-gold">tu información?</span>
                                 </h3>
                                 <p className="text-charcoal-600 leading-relaxed mb-8">
                                     Cuando realizas una consulta en Iurexia, tu pregunta se procesa de forma segura para buscar en nuestra base de datos jurídica verificada. Los resultados se generan sin almacenar el contenido de tu consulta a largo plazo.
@@ -124,7 +124,7 @@ export default function SeguridadPage() {
                         <div className="text-center mb-16">
                             <p className="text-accent-brown font-medium mb-4 tracking-wide">PREGUNTAS FRECUENTES</p>
                             <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900">
-                                Seguridad en detalle
+                                Seguridad <span className="text-accent-gold">en detalle</span>
                             </h2>
                         </div>
                     </AnimateOnScroll>
@@ -151,7 +151,7 @@ export default function SeguridadPage() {
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <AnimateOnScroll>
                         <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                            Tu información está segura con Iurexia
+                            Tu información está segura <span className="text-accent-gold">con Iurexia</span>
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.15}>

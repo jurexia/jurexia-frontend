@@ -23,7 +23,7 @@ export default function PreciosPage() {
                         <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
                             Inversión transparente,
                             <br />
-                            <span className="text-charcoal-500">valor comprobado</span>
+                            <span className="text-accent-gold">valor comprobado</span>
                         </h1>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
@@ -185,7 +185,7 @@ export default function PreciosPage() {
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
                             <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
-                                Comparación de planes
+                                Comparación <span className="text-accent-gold">de planes</span>
                             </h2>
                             <p className="text-charcoal-600">
                                 Todas las funciones incluidas según tu plan
@@ -231,7 +231,7 @@ export default function PreciosPage() {
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
                             <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
-                                Preguntas frecuentes
+                                Preguntas <span className="text-accent-gold">frecuentes</span>
                             </h2>
                         </div>
                     </AnimateOnScroll>
@@ -258,7 +258,7 @@ export default function PreciosPage() {
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <AnimateOnScroll>
                         <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                            Comienza gratis hoy
+                            Comienza gratis <span className="text-accent-gold">hoy</span>
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.15}>
