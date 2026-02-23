@@ -15,9 +15,9 @@ export default function PlataformaPage() {
                 <div className="max-w-5xl mx-auto text-center">
                     <p className="text-accent-brown font-medium mb-4 tracking-wide">PLATAFORMA</p>
                     <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
-                        Diseñada para
+                        Diseñada para el
                         <br />
-                        <span className="text-charcoal-500">el Derecho Mexicano</span>
+                        <span className="text-accent-gold">Derecho Mexicano</span>
                     </h1>
                     <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
                         Iurexia está diseñada especialmente para el sistema jurídico mexicano. Es una plataforma de inteligencia artificial legal creada para ayudar a entender, ordenar y preparar asuntos dentro del marco normativo de México. Está pensada tanto para profesionales del derecho como para personas sin conocimientos jurídicos que necesitan una primera orientación.
@@ -63,7 +63,7 @@ export default function PlataformaPage() {
                     <div className="grid md:grid-cols-2 gap-16">
                         <div>
                             <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-6">
-                                Para Profesionales en derecho
+                                Para Profesionales <span className="text-accent-gold">en derecho</span>
                             </h2>
                             <p className="text-charcoal-600 leading-relaxed">
                                 Iurexia no tiene el propósito de reemplazar al profesional del derecho. Es una herramienta impulsada por inteligencia artificial, especializada en el sistema jurídico mexicano, que potencia la eficiencia en el trabajo legal al ofrecer precisión extrema en investigación, análisis y redacción.
@@ -71,7 +71,7 @@ export default function PlataformaPage() {
                         </div>
                         <div className="border-l-4 border-accent-brown pl-8">
                             <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-6">
-                                Para usuarios que buscan orientación legal
+                                Para usuarios que buscan <span className="text-accent-gold">orientación legal</span>
                             </h2>
                             <p className="text-charcoal-600 leading-relaxed">
                                 Para personas sin conocimientos jurídicos, Iurexia funciona como una herramienta de <strong>orientación</strong>: ubica la situación jurídica, explica rutas posibles y ayuda a reunir información para que un abogado acompañe y ejecute la estrategia con comunicación más clara y efectiva.
@@ -85,7 +85,7 @@ export default function PlataformaPage() {
             <section className="py-16 bg-charcoal-900 text-white">
                 <div className="max-w-5xl mx-auto px-4 text-center">
                     <p className="text-accent-brown font-medium mb-4 tracking-wide">ARQUITECTURA VERIFICADA</p>
-                    <h3 className="font-serif text-3xl md:text-4xl font-medium mb-6">Cero alucinaciones.</h3>
+                    <h3 className="font-serif text-3xl md:text-4xl font-medium mb-6">Cero <span className="text-accent-gold">alucinaciones.</span></h3>
                     <p className="text-xl text-gray-400 max-w-3xl mx-auto">
                         Iurexia opera bajo una arquitectura estricta diseñada por profesionales del derecho mexicanos. Todas las respuestas se generan exclusivamente a partir de <strong className="text-white">fuentes jurídicas verificadas</strong> dentro de nuestra base documental, con trazabilidad y fundamento.
                     </p>
@@ -96,7 +96,7 @@ export default function PlataformaPage() {
             <FeatureSection
                 id="busqueda-hibrida"
                 badge="MOTOR DE BÚSQUEDA"
-                title="Búsqueda Híbrida Inteligente"
+                title={<>Búsqueda Híbrida <span className="text-accent-gold">Inteligente</span></>}
                 subtitle="Precisión milimétrica en cada consulta"
                 description="Sistema de búsqueda híbrida cuidadosamente programada y verificada por el equipo profesional de Iurexia, diseñado para encontrar exactamente lo que necesitas en el derecho mexicano."
                 features={[
@@ -113,7 +113,7 @@ export default function PlataformaPage() {
             <FeatureSection
                 id="agente-analisis"
                 badge="ANÁLISIS INTELIGENTE"
-                title="Agente de Análisis"
+                title={<>Agente de <span className="text-accent-gold">Análisis</span></>}
                 subtitle="Tu analista legal especializado con IA"
                 description="Analiza automáticamente demandas, sentencias, impugnaciones y amparos. Identifica fortalezas, debilidades, contradicciones y áreas de mejora, proponiendo ajustes con fundamento jurídico y coherencia argumentativa."
                 features={[
@@ -132,7 +132,7 @@ export default function PlataformaPage() {
             <FeatureSection
                 id="filtros-jurisdiccionales"
                 badge="SEGURIDAD JURÍDICA"
-                title="Filtros Jurisdiccionales"
+                title={<>Filtros <span className="text-accent-gold">Jurisdiccionales</span></>}
                 subtitle="Resultados precisos por estado"
                 description="Asegura que los resultados se ajusten a la jurisdicción aplicable. Si trabajas en Jalisco, verás normativa y criterios aplicables a Jalisco, además del marco federal correspondiente."
                 features={[
@@ -152,7 +152,7 @@ export default function PlataformaPage() {
                     <div className="text-center mb-16">
                         <p className="text-accent-brown font-medium mb-4 tracking-wide">FUENTES DE DATOS</p>
                         <h2 className="font-serif text-4xl md:text-5xl font-medium mb-6">
-                            Conocimiento legal completo
+                            Conocimiento legal <span className="text-accent-gold">completo</span>
                         </h2>
                         <p className="text-xl text-gray-400 max-w-2xl mx-auto">
                             Acceso a la base de datos legal más completa de México
@@ -164,25 +164,25 @@ export default function PlataformaPage() {
                             icon={<FileText className="w-8 h-8" />}
                             title="Leyes Federales"
                             description="Constitución, leyes orgánicas, reglamentos y decretos federales actualizados."
-                            count="300+"
+                            count="Cientos"
                         />
                         <DataSourceCard
                             icon={<BookOpen className="w-8 h-8" />}
                             title="Códigos Estatales"
                             description="Códigos civiles, penales, procesales y administrativos de los 32 estados."
-                            count="250+"
+                            count="Miles"
                         />
                         <DataSourceCard
                             icon={<Globe className="w-8 h-8" />}
                             title="Jurisprudencia"
                             description="Tesis y jurisprudencia de la SCJN, Tribunales Colegiados y Plenos de Circuito."
-                            count="17,000+"
+                            count="Miles"
                         />
                         <DataSourceCard
                             icon={<Shield className="w-8 h-8" />}
                             title="Bloque de Constitucionalidad"
                             description="Constitución PEUM, Tratados internacionales, Cuadernillos de la Corte Interamericana de Derechos Humanos y Resumen de casos de la CIDH."
-                            count="Nuevo"
+                            count="Miles"
                         />
                     </div>
                 </div>
@@ -268,7 +268,7 @@ export default function PlataformaPage() {
             <section className="py-20 bg-cream-300">
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-6">
-                        Experimenta el futuro de la práctica legal
+                        Experimenta el futuro de la <span className="text-accent-gold">práctica legal</span>
                     </h2>
                     <p className="text-lg text-charcoal-600 mb-8">
                         Únete a los profesionales del derecho que ya transforman su práctica con IA.
@@ -318,7 +318,7 @@ function FeatureSection({
 }: {
     id: string;
     badge: string;
-    title: string;
+    title: React.ReactNode;
     subtitle: string;
     description: string;
     features: string[];
