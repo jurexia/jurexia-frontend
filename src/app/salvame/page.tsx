@@ -569,6 +569,12 @@ export default function SalvamePage() {
                                 Generar Amparo Ahora Gratis
                             </button>
 
+                            {!isAuthenticated && (
+                                <p style={{ marginTop: 16, color: '#a3a3a3', fontSize: '0.95rem', fontWeight: 500 }}>
+                                    Lo único que tienes que hacer es registrarte, <span style={{ color: '#f5f5f5' }}>te tomará un minuto</span>.
+                                </p>
+                            )}
+
                             <div style={{ width: '100%', maxWidth: 600, margin: '40px auto 0', opacity: 0.3 }}>
                                 <EcgLine />
                             </div>
@@ -683,12 +689,24 @@ export default function SalvamePage() {
 
                             <button
                                 className="btn-primary"
-                                onClick={() => setPhase('form')}
+                                onClick={() => {
+                                    if (isAuthenticated) {
+                                        setPhase('form');
+                                    } else {
+                                        router.push('/login?redirect=/salvame');
+                                    }
+                                }}
                                 style={{ padding: '20px 50px', fontSize: '1.25rem' }}
                             >
                                 <MedicalCross size={20} color="white" />
                                 Comenzar proceso gratuito
                             </button>
+
+                            {!isAuthenticated && (
+                                <p style={{ marginTop: 16, color: '#a3a3a3', fontSize: '0.95rem', fontWeight: 500 }}>
+                                    Lo único que tienes que hacer es registrarte, <span style={{ color: '#f5f5f5' }}>te tomará un minuto</span>.
+                                </p>
+                            )}
 
                             <p style={{ marginTop: 24, color: '#666', fontSize: '0.9rem' }}>
                                 Responsabilidad social de <strong style={{ color: '#e5e5e5' }}>Iurexia Technologies</strong>
