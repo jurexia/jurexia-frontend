@@ -2,14 +2,16 @@
 
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { ESTADOS, getTotalLeyes } from '../leyesestatales/estadosData';
 import {
-    BookOpen, ArrowRight, Scale, FileText, ChevronDown, ExternalLink
+    BookOpen, ArrowRight, Scale, FileText, ExternalLink, Globe2,
+    Landmark, Search, Calendar, MapPin, Shield, Users, Gavel,
+    Stethoscope, Activity, HeartHandshake, Baby, Lock
 } from 'lucide-react';
 
-// ─── Sección 1: Constitución ──────────────────────────────────────
+// ─── Data Sections ───
 const CONSTITUCION_NACIONAL = [
     {
         id: 'cpeum',
@@ -20,16 +22,14 @@ const CONSTITUCION_NACIONAL = [
         pdf_fallback: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf',
         chunks: '~1,200 fragmentos indexados',
         fuente: 'Cámara de Diputados — DOF',
-        icono: '🏛️',
+        icono: Landmark,
         disponible: true,
     },
 ];
 
-// ─── Sección 2: Tratados Internacionales ──────────────────────────
 const GCS_TRATADOS = 'https://storage.googleapis.com/iurexia-leyes/Tratados';
 
 const TRATADOS_INTERNACIONALES = [
-    // ─── Sistema Interamericano (OEA) ─────────────────────────
     {
         id: 'cadh',
         nombre: 'Convención Americana sobre Derechos Humanos (Pacto de San José)',
@@ -38,7 +38,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20Americana%20sobre%20Derechos%20Humanos%20(CADH).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
-        icono: '🌎',
+        icono: Globe2,
         disponible: true,
     },
     {
@@ -49,7 +49,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20Interamericana%20Belem%20do%20Para%20(CBdP).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
-        icono: '🌺',
+        icono: Users,
         disponible: true,
     },
     {
@@ -60,7 +60,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20Interamericana%20contra%20Racismo%20e%20Intolerancia%20(CIRDI).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
-        icono: '🌈',
+        icono: HeartHandshake,
         disponible: true,
     },
     {
@@ -71,7 +71,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20Interamericana%20Derechos%20Personas%20Mayores%20(CIPM).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
-        icono: '👴',
+        icono: Activity,
         disponible: true,
     },
     {
@@ -82,11 +82,9 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Protocolo%20de%20San%20Salvador%20-%20Derechos%20Economicos%20Sociales%20(PSS).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
-        icono: '🏥',
+        icono: Shield,
         disponible: true,
     },
-
-    // ─── Sistema Universal (ONU / OHCHR) ──────────────────────
     {
         id: 'dudh',
         nombre: 'Declaración Universal de Derechos Humanos',
@@ -95,7 +93,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Declaracion%20Universal%20de%20Derechos%20Humanos%20(DUDH).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
-        icono: '🌍',
+        icono: Globe2,
         disponible: true,
     },
     {
@@ -106,7 +104,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Pacto%20Internacional%20Derechos%20Civiles%20y%20Politicos%20(PIDCP).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
-        icono: '🕊️',
+        icono: Scale,
         disponible: true,
     },
     {
@@ -117,7 +115,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Pacto%20Internacional%20Derechos%20Economicos%20Sociales%20y%20Culturales%20(PIDESC).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
-        icono: '📋',
+        icono: FileText,
         disponible: true,
     },
     {
@@ -128,7 +126,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20sobre%20los%20Derechos%20del%20Nino%20(CDN).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
-        icono: '👶',
+        icono: Baby,
         disponible: true,
     },
     {
@@ -139,7 +137,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20contra%20la%20Tortura%20ONU%20(CAT).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
-        icono: '🛡️',
+        icono: Shield,
         disponible: true,
     },
     {
@@ -150,7 +148,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20Eliminacion%20Discriminacion%20contra%20la%20Mujer%20(CEDAW).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
-        icono: '♀️',
+        icono: Users,
         disponible: true,
     },
     {
@@ -161,10 +159,9 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20Derechos%20Personas%20con%20Discapacidad%20(CRPD).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
-        icono: '♿',
+        icono: Users,
         disponible: true,
     },
-
     {
         id: 'conv-discriminacion-racial',
         nombre: 'Convención contra la Discriminación Racial (ICERD)',
@@ -173,7 +170,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20Eliminacion%20Discriminacion%20Racial%20(ICERD).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
-        icono: '✊',
+        icono: Scale,
         disponible: true,
     },
     {
@@ -184,11 +181,9 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Convencion%20Derechos%20Trabajadores%20Migratorios%20(CMW).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
-        icono: '🌐',
+        icono: Globe2,
         disponible: true,
     },
-
-    // ─── Instrumentos penitenciarios y de investigación ────────
     {
         id: 'reglas-mandela',
         nombre: 'Reglas Nelson Mandela — Tratamiento de Reclusos',
@@ -197,7 +192,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Reglas%20Nelson%20Mandela%20-%20Tratamiento%20Reclusos%20(ONU).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU / UNODC',
-        icono: '🔒',
+        icono: Lock,
         disponible: true,
     },
     {
@@ -208,7 +203,7 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Reglas%20de%20Bangkok%20-%20Tratamiento%20Reclusas%20(ONU).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU / UNODC',
-        icono: '👩‍⚖️',
+        icono: Lock,
         disponible: true,
     },
     {
@@ -219,11 +214,9 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Protocolo%20de%20Estambul%20-%20Investigacion%20Tortura%20(OHCHR).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU / OHCHR',
-        icono: '🩺',
+        icono: Stethoscope,
         disponible: true,
     },
-
-    // ─── Derechos específicos ──────────────────────────────────
     {
         id: 'principios-yogyakarta',
         nombre: 'Principios de Yogyakarta',
@@ -232,13 +225,11 @@ const TRATADOS_INTERNACIONALES = [
         pdf_url: `${GCS_TRATADOS}/Principios%20de%20Yogyakarta%20-%20Orientacion%20Sexual%20e%20Identidad%20de%20Genero.pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'Panel de Expertos DDHH',
-        icono: '🏳️‍🌈',
+        icono: Globe2,
         disponible: true,
     },
-
 ];
 
-// ─── Sección 3: Leyes Federales ───────────────────────────────────
 const LEYES_FEDERALES = [
     {
         id: 'ley-amparo',
@@ -248,7 +239,7 @@ const LEYES_FEDERALES = [
         disponible: false,
         chunks: 'Próximamente',
         fuente: 'DOF',
-        icono: '⚖️',
+        icono: Gavel,
     },
     {
         id: 'cnpp',
@@ -258,7 +249,7 @@ const LEYES_FEDERALES = [
         disponible: false,
         chunks: 'Próximamente',
         fuente: 'DOF',
-        icono: '🔒',
+        icono: Lock,
     },
     {
         id: 'ccf',
@@ -268,7 +259,7 @@ const LEYES_FEDERALES = [
         disponible: false,
         chunks: 'Próximamente',
         fuente: 'DOF',
-        icono: '📜',
+        icono: FileText,
     },
     {
         id: 'lft',
@@ -278,7 +269,7 @@ const LEYES_FEDERALES = [
         disponible: false,
         chunks: 'Próximamente',
         fuente: 'DOF',
-        icono: '🏭',
+        icono: Users,
     },
     {
         id: 'lfp',
@@ -288,280 +279,361 @@ const LEYES_FEDERALES = [
         disponible: false,
         chunks: 'Próximamente',
         fuente: 'DOF',
-        icono: '🏢',
+        icono: Landmark,
     },
 ];
 
-/* ─── Accordion Button Component ────────────────────────────────── */
-function AccordionButton({
-    label,
-    emoji,
-    isOpen,
-    onClick,
-    subtitle,
-}: {
-    label: string;
-    emoji: string;
-    isOpen: boolean;
-    onClick: () => void;
-    subtitle?: string;
-}) {
-    return (
-        <button
-            onClick={onClick}
-            className={`
-                w-full flex items-center justify-between px-6 py-4 rounded-2xl
-                bg-charcoal-900 text-white font-semibold text-base sm:text-lg
-                hover:bg-charcoal-800 transition-all duration-300
-                shadow-md hover:shadow-lg
-                ${isOpen ? 'rounded-b-none shadow-none' : ''}
-            `}
-        >
-            <span className="flex items-center gap-3 text-left">
-                <span className="text-xl">{emoji}</span>
-                <span className="leading-snug">
-                    {label}
-                    {subtitle && <span className="block text-xs font-normal text-gray-400 mt-0.5">{subtitle}</span>}
-                </span>
-            </span>
-            <ChevronDown className={`w-5 h-5 text-accent-gold shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-        </button>
-    );
-}
+type TabType = 'constitucion' | 'tratados' | 'federales' | 'estatales';
 
 export default function NormativaNacionalPage() {
-    const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
-
-    const toggle = (key: string) =>
-        setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+    const [activeTab, setActiveTab] = useState<TabType>('constitucion');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const totalDocs = ESTADOS.reduce((acc, e) => acc + getTotalLeyes(e.leyes), 0);
 
+    // Filtrado de estados
+    const filteredEstados = useMemo(() => {
+        if (!searchQuery) return ESTADOS;
+        return ESTADOS.filter(e =>
+            e.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            e.abreviatura.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [searchQuery]);
+
+    // Filtrado de Tratados
+    const filteredTratados = useMemo(() => {
+        if (!searchQuery) return TRATADOS_INTERNACIONALES;
+        return TRATADOS_INTERNACIONALES.filter(t =>
+            t.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            t.abreviatura.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [searchQuery]);
+
     return (
-        <main className="min-h-screen bg-cream-300">
-            <Navbar />
+        <main className="min-h-screen bg-[#0A0F1A] text-gray-200">
+            {/* The current Navbar component adapts if we don't pass props, but we will wrap it in dark specific styles if needed. Let's rely on global CSS. */}
+            <div className="dark">
+                <Navbar />
+            </div>
 
-            {/* ─── Hero ─── */}
-            <section className="relative pt-28 sm:pt-36 pb-12 sm:pb-16 px-4 sm:px-6 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-cream-200 via-cream-300 to-cream-300" />
-                <div className="absolute top-20 left-1/4 w-96 h-96 bg-accent-gold/5 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-accent-brown/5 rounded-full blur-3xl" />
+            {/* ─── Hero Section ─── */}
+            <section className="relative pt-32 pb-20 px-4 sm:px-6 overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-charcoal-800 via-[#0A0F1A] to-black" />
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gold-500/20 to-transparent" />
 
-                <div className="relative max-w-5xl mx-auto text-center">
+                <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-accent-gold/5 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+                <div className="relative max-w-5xl mx-auto text-center z-10">
                     <AnimatedSection animation="scale-in">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-charcoal-900 text-white text-xs font-medium tracking-widest uppercase mb-6">
-                            <Scale className="w-3.5 h-3.5 text-accent-gold" />
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gold-400 text-xs font-semibold tracking-widest uppercase mb-8 shadow-[0_0_15px_rgba(201,169,98,0.1)]">
+                            <Scale className="w-4 h-4" />
                             Repositorio Jurídico Nacional
                         </div>
                     </AnimatedSection>
 
                     <AnimatedSection animation="slide-up" delay={100}>
-                        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-charcoal-900 mb-4 leading-tight">
-                            Normativa <span className="text-accent-gold">Nacional</span>
+                        <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-gray-200 to-gray-500">
+                            Normativa <span className="text-gold-400 drop-shadow-[0_0_25px_rgba(201,169,98,0.2)]">Nacional</span>
                         </h1>
                     </AnimatedSection>
 
                     <AnimatedSection animation="fade-in" delay={200}>
-                        <p className="text-base sm:text-lg text-charcoal-700 max-w-2xl mx-auto mb-8 leading-relaxed">
-                            Todo el ordenamiento jurídico mexicano en un solo lugar.
-                            Constitución, tratados internacionales, leyes federales y legislación estatal.
+                        <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+                            Explora el ordenamiento jurídico mexicano más actualizado.
+                            Constitución, tratados, leyes federales y legislación estatal en una interfaz de vanguardia.
                         </p>
                     </AnimatedSection>
 
                     {/* Stats */}
                     <AnimatedSection animation="fade-in" delay={300}>
-                        <div className="flex justify-center gap-6 sm:gap-10 mb-10">
-                            <div className="text-center">
-                                <div className="font-serif text-2xl sm:text-3xl font-bold text-charcoal-900">4</div>
-                                <div className="text-xs sm:text-sm text-charcoal-600">Fuentes</div>
+                        <div className="flex justify-center gap-8 sm:gap-12 mb-12">
+                            <div className="text-center group">
+                                <div className="font-serif text-2xl sm:text-4xl font-bold text-gray-200 group-hover:text-white transition-colors">4</div>
+                                <div className="text-xs sm:text-sm text-gray-500 uppercase tracking-widest mt-1">Fuentes</div>
                             </div>
-                            <div className="w-px bg-cream-500" />
-                            <div className="text-center">
-                                <div className="font-serif text-2xl sm:text-3xl font-bold text-accent-gold">{totalDocs.toLocaleString()}+</div>
-                                <div className="text-xs sm:text-sm text-charcoal-600">Documentos Indexados</div>
+                            <div className="w-px bg-white/10" />
+                            <div className="text-center group">
+                                <div className="font-serif text-2xl sm:text-4xl font-bold text-gold-400 drop-shadow-[0_0_10px_rgba(201,169,98,0.3)]">{totalDocs.toLocaleString()}+</div>
+                                <div className="text-xs sm:text-sm text-gray-500 uppercase tracking-widest mt-1">Docs Indexados</div>
                             </div>
-                            <div className="w-px bg-cream-500" />
-                            <div className="text-center">
-                                <div className="font-serif text-2xl sm:text-3xl font-bold text-charcoal-900">32</div>
-                                <div className="text-xs sm:text-sm text-charcoal-600">Estados</div>
+                            <div className="w-px bg-white/10" />
+                            <div className="text-center group">
+                                <div className="font-serif text-2xl sm:text-4xl font-bold text-gray-200 group-hover:text-white transition-colors">32</div>
+                                <div className="text-xs sm:text-sm text-gray-500 uppercase tracking-widest mt-1">Estados</div>
                             </div>
                         </div>
                     </AnimatedSection>
+
+                    {/* Gloabl Search Bar */}
+                    {(activeTab === 'estatales' || activeTab === 'tratados') && (
+                        <AnimatedSection animation="slide-up" delay={400}>
+                            <div className="max-w-xl mx-auto relative group">
+                                <div className="absolute inset-0 bg-gold-400/20 rounded-2xl blur-xl transition-all duration-500 opacity-0 group-hover:opacity-100 pointer-events-none" />
+                                <div className="relative flex items-center bg-charcoal-800/40 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden focus-within:border-gold-500/50 focus-within:bg-charcoal-800/60 transition-all duration-300 shadow-xl">
+                                    <Search className="w-5 h-5 text-gray-400 ml-5" />
+                                    <input
+                                        type="text"
+                                        placeholder={activeTab === 'estatales' ? "Buscar estado (ej. Nuevo León)..." : "Buscar tratado..."}
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full bg-transparent border-none text-white px-4 py-4 focus:ring-0 placeholder-gray-500 outline-none text-sm md:text-base font-light"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => setSearchQuery('')}
+                                            className="mr-4 text-gray-500 hover:text-gray-300 text-sm font-medium"
+                                        >
+                                            Limpiar
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </AnimatedSection>
+                    )}
                 </div>
             </section>
 
-            {/* ─── Accordion Sections ─── */}
-            <section className="pb-16 px-4 sm:px-6">
-                <div className="max-w-4xl mx-auto flex flex-col gap-4">
+            {/* ─── Main Content Tabs ─── */}
+            <section className="pb-24 px-4 sm:px-6 relative z-10">
+                <div className="max-w-6xl mx-auto">
 
-                    {/* ── 1. Constitución ── */}
-                    <AnimatedSection animation="slide-up" delay={0}>
-                        <AccordionButton
-                            label="Constitución"
-                            emoji="🏛️"
-                            subtitle="Norma suprema del ordenamiento jurídico"
-                            isOpen={!!openSections['constitucion']}
-                            onClick={() => toggle('constitucion')}
-                        />
-                        {openSections['constitucion'] && (
-                            <div className="bg-white rounded-b-2xl border border-t-0 border-cream-400 shadow-md">
-                                {CONSTITUCION_NACIONAL.map(ley => (
-                                    <div key={ley.id} className="p-6 text-center">
-                                        <h3 className="font-serif text-lg font-semibold text-charcoal-900 mb-1">
-                                            {ley.nombre}
-                                        </h3>
-                                        <p className="text-sm text-charcoal-600 mb-2">{ley.descripcion}</p>
-                                        <div className="flex items-center justify-center gap-2 text-xs text-charcoal-500 mb-4">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                            {ley.chunks} · {ley.fuente}
-                                        </div>
-                                        {ley.pdf_url && (
-                                            <a
-                                                href={ley.pdf_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-charcoal-900 text-white text-sm font-semibold hover:bg-charcoal-800 transition-all shadow-sm"
-                                            >
-                                                <FileText className="w-4 h-4" />
-                                                Ver PDF Oficial
-                                                <ExternalLink className="w-3 h-3 opacity-60" />
-                                            </a>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                    {/* Tabs Navigation */}
+                    <AnimatedSection animation="fade-in" delay={100}>
+                        <div className="flex flex-wrap justify-center gap-2 bg-charcoal-800/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md mb-12 sm:mb-16 shadow-2xl overflow-x-auto no-scrollbar max-w-fit mx-auto">
+                            {[
+                                { id: 'constitucion', label: 'Constitución', icon: BookOpen },
+                                { id: 'tratados', label: 'Tratados Internacionales', icon: Globe2 },
+                                { id: 'federales', label: 'Leyes Federales', icon: Landmark },
+                                { id: 'estatales', label: 'Normativa Estatal', icon: MapPin },
+                            ].map(tab => {
+                                const active = activeTab === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => { setActiveTab(tab.id as TabType); setSearchQuery(''); }}
+                                        className={`
+                                            flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap
+                                            ${active
+                                                ? 'bg-charcoal-700/80 text-gold-400 shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-white/10'
+                                                : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent'
+                                            }
+                                        `}
+                                    >
+                                        <tab.icon className={`w-4 h-4 ${active ? 'text-gold-400' : 'text-gray-500'}`} strokeWidth={active ? 2 : 1.5} />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </AnimatedSection>
 
-                    {/* ── 2. Tratados Internacionales ── */}
-                    <AnimatedSection animation="slide-up" delay={60}>
-                        <AccordionButton
-                            label="Tratados Internacionales"
-                            emoji="🌎"
-                            subtitle={`18 instrumentos con PDF · Bloque de constitucionalidad`}
-                            isOpen={!!openSections['tratados']}
-                            onClick={() => toggle('tratados')}
-                        />
-                        {openSections['tratados'] && (
-                            <div className="bg-white rounded-b-2xl border border-t-0 border-cream-400 shadow-md divide-y divide-cream-300">
-                                {TRATADOS_INTERNACIONALES.map(t => (
-                                    <div key={t.id} className="p-5 text-center">
-                                        <div className="text-2xl mb-2">{t.icono}</div>
-                                        <h3 className="font-serif text-base font-semibold text-charcoal-800 mb-1">{t.nombre}</h3>
-                                        <p className="text-xs text-charcoal-500 mb-2">{t.descripcion}</p>
-                                        <div className="flex items-center justify-center gap-2 text-xs text-charcoal-500 mb-3">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                            {t.chunks} · {t.fuente}
-                                        </div>
-                                        {t.pdf_url && (
+                    {/* Tab Content Rendering */}
+                    <div className="min-h-[40vh]">
+                        {/* 1. CONSTITUCIÓN (Bento Large Card) */}
+                        {activeTab === 'constitucion' && (
+                            <AnimatedSection animation="fade-in">
+                                <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
+                                    {CONSTITUCION_NACIONAL.map(ley => (
+                                        <a
+                                            key={ley.id}
+                                            href={ley.pdf_url || ley.pdf_fallback}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="group relative flex flex-col md:flex-row items-center md:items-start p-8 md:p-10 rounded-3xl bg-charcoal-800/30 backdrop-blur-md border border-charcoal-700/50 hover:bg-charcoal-800/50 hover:border-gold-500/40 transition-all duration-500 shadow-2xl overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 bg-gold-400/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-gold-500/10 to-transparent rounded-full -translate-y-32 translate-x-32 blur-2xl" />
+
+                                            <div className="p-5 rounded-2xl bg-charcoal-900 border border-charcoal-700 text-gold-400 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(201,169,98,0.2)] transition-all duration-500 shrink-0 mb-6 md:mb-0 md:mr-8 z-10">
+                                                <ley.icono className="w-10 h-10 stroke-[1.5]" />
+                                            </div>
+
+                                            <div className="flex-1 text-center md:text-left z-10 w-full">
+                                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-charcoal-900/80 border border-charcoal-700 text-[10px] font-semibold uppercase tracking-widest text-emerald-400 mb-4">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                                    {ley.chunks}
+                                                </div>
+                                                <h3 className="text-2xl md:text-3xl font-serif font-bold text-gray-100 leading-tight group-hover:text-gold-100 transition-colors mb-4">
+                                                    {ley.nombre}
+                                                </h3>
+                                                <p className="text-gray-400 lg:text-lg font-light mb-8 max-w-2xl">
+                                                    {ley.descripcion}
+                                                </p>
+
+                                                <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-charcoal-700/50 gap-4">
+                                                    <span className="text-xs font-mono text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                                        <Landmark className="w-3.5 h-3.5" /> {ley.fuente}
+                                                    </span>
+                                                    <span className="inline-flex items-center gap-2 text-gold-400 text-sm font-medium group-hover:translate-x-1 transition-transform">
+                                                        Abrir Documento <ExternalLink className="w-4 h-4" />
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    ))}
+                                </div>
+                            </AnimatedSection>
+                        )}
+
+                        {/* 2. TRATADOS INTERNACIONALES (Bento Grid) */}
+                        {activeTab === 'tratados' && (
+                            <AnimatedSection animation="fade-in">
+                                {filteredTratados.length === 0 ? (
+                                    <div className="text-center py-20 text-gray-500">No se encontraron tratados.</div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {filteredTratados.map(t => (
                                             <a
+                                                key={t.id}
                                                 href={t.pdf_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-charcoal-900 text-white text-xs font-semibold hover:bg-charcoal-800 transition-all shadow-sm"
+                                                className="group relative flex flex-col p-6 rounded-2xl bg-charcoal-800/30 backdrop-blur-sm border border-charcoal-700/50 hover:bg-charcoal-800/60 hover:border-gold-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                                             >
-                                                <FileText className="w-3.5 h-3.5" />
-                                                Ver PDF
-                                                <ExternalLink className="w-3 h-3 opacity-60" />
+                                                <div className="absolute inset-0 bg-gold-400/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                                                <div className="flex items-start gap-4 mb-4">
+                                                    <div className="p-3 rounded-xl bg-charcoal-900 border border-charcoal-700 text-gray-400 group-hover:text-gold-400 group-hover:border-gold-500/30 transition-colors duration-300 shrink-0">
+                                                        <t.icono className="w-6 h-6 stroke-[1.5]" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-gray-100 font-medium leading-snug group-hover:text-gold-200 transition-colors line-clamp-2">
+                                                            {t.nombre}
+                                                        </h3>
+                                                        <span className="text-[10px] text-gray-400 mt-1 block">
+                                                            {t.abreviatura}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <p className="text-sm text-gray-500 font-light line-clamp-2 mb-6 flex-1">
+                                                    {t.descripcion}
+                                                </p>
+
+                                                <div className="mt-auto flex items-center justify-between pt-4 border-t border-charcoal-700/50">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                                        Indexado
+                                                    </div>
+                                                    <ExternalLink className="w-4 h-4 text-charcoal-500 group-hover:text-gold-400 transition-colors" />
+                                                </div>
                                             </a>
-                                        )}
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                )}
+                            </AnimatedSection>
                         )}
-                    </AnimatedSection>
 
-                    {/* ── 3. Leyes Federales ── */}
-                    <AnimatedSection animation="slide-up" delay={120}>
-                        <AccordionButton
-                            label="Leyes Federales"
-                            emoji="⚖️"
-                            subtitle="Legislación de aplicación nacional"
-                            isOpen={!!openSections['federal']}
-                            onClick={() => toggle('federal')}
-                        />
-                        {openSections['federal'] && (
-                            <div className="bg-white rounded-b-2xl border border-t-0 border-cream-400 shadow-md divide-y divide-cream-300">
-                                {LEYES_FEDERALES.map(ley => (
-                                    <div key={ley.id} className="p-5 text-center">
-                                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-cream-200 text-charcoal-600 border border-cream-400 mb-2">
-                                            {ley.materia}
-                                        </span>
-                                        <h3 className="font-serif text-sm font-semibold text-charcoal-800 mb-1">{ley.nombre}</h3>
-                                        <span className="text-[11px] text-charcoal-400">{ley.chunks} · {ley.fuente}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </AnimatedSection>
+                        {/* 3. LEYES FEDERALES (Bento Grid) */}
+                        {activeTab === 'federales' && (
+                            <AnimatedSection animation="fade-in">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {LEYES_FEDERALES.map(ley => (
+                                        <div
+                                            key={ley.id}
+                                            className="group relative flex flex-col p-6 rounded-2xl bg-charcoal-800/20 backdrop-blur-sm border border-charcoal-700/30 opacity-70 cursor-not-allowed"
+                                        >
+                                            <div className="flex items-start gap-4 mb-4">
+                                                <div className="p-3 rounded-xl bg-charcoal-900 border border-charcoal-700 text-charcoal-500 shrink-0">
+                                                    <ley.icono className="w-6 h-6 stroke-[1.5]" />
+                                                </div>
+                                                <div>
+                                                    <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider bg-charcoal-900 text-gray-400 border border-charcoal-700 mb-2">
+                                                        {ley.materia}
+                                                    </span>
+                                                    <h3 className="text-gray-300 font-medium leading-snug line-clamp-2">
+                                                        {ley.nombre}
+                                                    </h3>
+                                                </div>
+                                            </div>
 
-                    {/* ── 4. Leyes Estatales ── */}
-                    <AnimatedSection animation="slide-up" delay={180}>
-                        <AccordionButton
-                            label="Leyes Estatales"
-                            emoji="🗺️"
-                            subtitle={`Legislación de los 32 estados · ${totalDocs.toLocaleString()}+ documentos`}
-                            isOpen={!!openSections['estatal']}
-                            onClick={() => toggle('estatal')}
-                        />
-                        {openSections['estatal'] && (
-                            <div className="bg-white rounded-b-2xl border border-t-0 border-cream-400 shadow-md p-4">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                                    {ESTADOS.map(estado => {
-                                        const totalLeyes = getTotalLeyes(estado.leyes);
-                                        const hasContent = totalLeyes > 0;
-                                        return (
-                                            <Link
-                                                key={estado.slug}
-                                                href={`/leyesestatales/${estado.slug}`}
-                                                className={`group flex flex-col items-center text-center p-3 rounded-xl transition-all duration-200 ${hasContent
-                                                    ? 'hover:bg-cream-100 hover:shadow-md'
-                                                    : 'opacity-50 hover:opacity-70'
-                                                    }`}
-                                            >
-                                                <h4 className={`text-sm font-semibold leading-tight mb-1 transition-colors ${hasContent ? 'text-charcoal-900 group-hover:text-accent-gold' : 'text-charcoal-500'
-                                                    }`}>
-                                                    {estado.nombreCorto}
-                                                </h4>
-                                                <span className={`text-[10px] ${hasContent ? 'text-charcoal-600' : 'text-charcoal-400'}`}>
-                                                    {hasContent ? `${totalLeyes} docs` : 'Próximamente'}
-                                                </span>
-                                                {hasContent && (
-                                                    <ArrowRight className="w-3 h-3 text-accent-gold opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
-                                                )}
-                                            </Link>
-                                        );
-                                    })}
+                                            <div className="mt-auto flex items-center justify-between pt-4 border-t border-charcoal-700/30">
+                                                <div className="flex items-center gap-1.5 text-[10px] font-mono text-gray-500 uppercase tracking-widest">
+                                                    {ley.chunks}
+                                                </div>
+                                                <span className="text-xs text-charcoal-500 font-semibold uppercase tracking-widest">{ley.fuente}</span>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
+                            </AnimatedSection>
                         )}
-                    </AnimatedSection>
+
+                        {/* 4. LEYES ESTATALES (Minimal Cards Grid) */}
+                        {activeTab === 'estatales' && (
+                            <AnimatedSection animation="fade-in">
+                                {filteredEstados.length === 0 ? (
+                                    <div className="text-center py-20 text-gray-500">No se encontraron estados con esa búsqueda.</div>
+                                ) : (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                                        {filteredEstados.map(estado => {
+                                            const totalLeyes = getTotalLeyes(estado.leyes);
+                                            const hasContent = totalLeyes > 0;
+                                            return (
+                                                <Link
+                                                    key={estado.slug}
+                                                    href={`/leyesestatales/${estado.slug}`}
+                                                    className={`group relative flex flex-col p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${hasContent
+                                                            ? 'bg-charcoal-800/40 border-charcoal-700/50 hover:bg-charcoal-800/80 hover:border-gold-500/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-gold-500/5'
+                                                            : 'bg-charcoal-800/10 border-charcoal-800/50 opacity-60 hover:opacity-80'
+                                                        }`}
+                                                >
+                                                    {hasContent && (
+                                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-gold-500/10 to-transparent rounded-full -translate-y-16 translate-x-16 blur-xl" />
+                                                    )}
+
+                                                    <h4 className={`text-base font-semibold leading-tight mb-2 transition-colors relative z-10 ${hasContent ? 'text-gray-200 group-hover:text-gold-300' : 'text-gray-500'
+                                                        }`}>
+                                                        {estado.nombreCorto}
+                                                    </h4>
+
+                                                    <div className="mt-auto flex items-center justify-between relative z-10">
+                                                        <span className={`text-[#10px] sm:text-xs font-mono uppercase tracking-widest ${hasContent ? 'text-gray-400' : 'text-charcoal-600'
+                                                            }`}>
+                                                            {hasContent ? `${totalLeyes} LEYES` : 'PRÓXIMAMENTE'}
+                                                        </span>
+                                                        {hasContent && (
+                                                            <ChevronRight className="w-4 h-4 text-gold-500 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                                                        )}
+                                                    </div>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </AnimatedSection>
+                        )}
+                    </div>
                 </div>
             </section>
 
-            {/* ─── Info Banner ─── */}
-            <section className="py-10 sm:py-14 px-4 sm:px-6">
+            {/* ─── CTA Banner ─── */}
+            <section className="py-16 px-4 sm:px-6 relative z-10">
                 <div className="max-w-4xl mx-auto">
                     <AnimatedSection animation="fade-in">
-                        <div className="relative rounded-3xl bg-charcoal-900 text-white p-8 sm:p-10 overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-accent-gold/10 to-transparent rounded-full -translate-y-32 translate-x-32" />
-                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent-gold/5 to-transparent rounded-full translate-y-24 -translate-x-24" />
-                            <div className="relative text-center">
-                                <h3 className="font-serif text-2xl sm:text-3xl font-semibold mb-4">
-                                    Repositorio en constante <span className="text-accent-gold">actualización</span>
+                        <div className="relative rounded-[2rem] bg-gradient-to-br from-charcoal-800 to-charcoal-900 border border-charcoal-700 p-10 sm:p-14 overflow-hidden shadow-2xl">
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-gold-500/10 via-gold-500/5 to-transparent rounded-full -translate-y-32 translate-x-32 blur-3xl" />
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-emerald-500/5 to-transparent rounded-full translate-y-32 -translate-x-32 blur-2xl" />
+
+                            <div className="relative text-center z-10">
+                                <div className="inline-flex justify-center items-center w-12 h-12 rounded-xl bg-charcoal-900 border border-charcoal-700 text-gold-400 mb-6 shadow-inner">
+                                    <Scale className="w-6 h-6 stroke-[1.5]" />
+                                </div>
+                                <h3 className="font-serif text-3xl sm:text-4xl font-semibold text-white mb-6">
+                                    Repositorio indexado con <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 to-gold-600">Inteligencia Artificial</span>
                                 </h3>
-                                <p className="text-gray-300 leading-relaxed max-w-2xl mx-auto mb-6">
-                                    Iurexia indexa las fuentes oficiales para ofrecerte la legislación más actualizada.
-                                    Cada documento está verificado y vinculado con nuestra IA para que puedas consultar
-                                    artículos directamente desde el chat.
+                                <p className="text-gray-400 leading-relaxed max-w-2xl mx-auto mb-10 text-lg font-light">
+                                    Iurexia procesa diariamente cientos de ordenamientos jurídicos para ofrecerte
+                                    búsquedas semánticas de precisión milimétrica directamente desde nuestro chat especializado.
                                 </p>
-                                <div className="flex flex-wrap justify-center gap-4">
-                                    <Link href="/chat" className="inline-flex items-center gap-2 px-6 py-3 bg-accent-gold text-charcoal-900 font-semibold rounded-full hover:bg-accent-gold/90 transition-all duration-300 hover:shadow-lg hover:shadow-accent-gold/20">
-                                        Consultar con IA
-                                        <ArrowRight className="w-4 h-4" />
+                                <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                                    <Link href="/chat" className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-gold-500 to-gold-600 text-charcoal-900 font-bold rounded-xl hover:from-gold-400 hover:to-gold-500 transition-all duration-300 shadow-[0_0_20px_rgba(201,169,98,0.3)] hover:shadow-[0_0_30px_rgba(201,169,98,0.5)] hover:-translate-y-0.5">
+                                        Hablar con el Chat AI
+                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                     </Link>
-                                    <a href="mailto:soporte@iurexia.com" className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-medium rounded-full hover:bg-white/20 transition-all duration-300 border border-white/10">
-                                        Sugerir una ley
+                                    <a href="mailto:soporte@iurexia.com" className="flex items-center gap-2 px-8 py-4 bg-charcoal-800 text-gray-300 font-medium rounded-xl hover:bg-charcoal-700 hover:text-white transition-all duration-300 border border-charcoal-600 hover:border-charcoal-500">
+                                        Sugerir Ordenamiento
                                     </a>
                                 </div>
                             </div>
@@ -571,19 +643,19 @@ export default function NormativaNacionalPage() {
             </section>
 
             {/* Footer */}
-            <footer className="py-12 bg-cream-300 border-t border-black/5">
-                <div className="max-w-6xl mx-auto px-4">
+            <footer className="py-12 border-t border-charcoal-800 bg-[#0A0F1A] relative z-10">
+                <div className="max-w-6xl mx-auto px-6">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-2">
-                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
+                            <span className="font-serif text-xl font-semibold text-white tracking-wide">Iurex<span className="text-gold-500">ia</span></span>
                         </div>
-                        <div className="flex gap-8 text-sm text-charcoal-600">
-                            <Link href="/privacidad" className="hover:text-charcoal-900 transition-colors">Privacidad</Link>
-                            <Link href="/terminos" className="hover:text-charcoal-900 transition-colors">Términos</Link>
-                            <Link href="/conocenos" className="hover:text-charcoal-900 transition-colors">Conócenos</Link>
-                            <a href="mailto:soporte@iurexia.com" className="hover:text-charcoal-900 transition-colors">Contacto</a>
+                        <div className="flex gap-8 text-sm text-gray-500 font-medium">
+                            <Link href="/privacidad" className="hover:text-gold-400 transition-colors">Privacidad</Link>
+                            <Link href="/terminos" className="hover:text-gold-400 transition-colors">Términos</Link>
+                            <Link href="/conocenos" className="hover:text-gold-400 transition-colors">Conócenos</Link>
+                            <a href="mailto:soporte@iurexia.com" className="hover:text-gold-400 transition-colors">Contacto</a>
                         </div>
-                        <p className="text-sm text-charcoal-500">© 2026 Iurexia. Todos los derechos reservados.</p>
+                        <p className="text-sm text-gray-600">© 2026 Iurexia. Todos los derechos reservados.</p>
                     </div>
                 </div>
             </footer>
