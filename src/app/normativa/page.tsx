@@ -164,17 +164,7 @@ const TRATADOS_INTERNACIONALES = [
         icono: '♿',
         disponible: true,
     },
-    {
-        id: 'conv-dforzada-onu',
-        nombre: 'Convención contra las Desapariciones Forzadas (ONU)',
-        abreviatura: 'CED',
-        descripcion: 'Protección contra desapariciones forzadas — ONU',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20Desapariciones%20Forzadas%20ONU%20(CED).pdf`,
-        chunks: 'Indexado en RAG',
-        fuente: 'ONU',
-        icono: '🔦',
-        disponible: true,
-    },
+
     {
         id: 'conv-discriminacion-racial',
         nombre: 'Convención contra la Discriminación Racial (ICERD)',
@@ -246,18 +236,6 @@ const TRATADOS_INTERNACIONALES = [
         disponible: true,
     },
 
-    // ─── Consejo de Europa ────────────────────────────────────
-    {
-        id: 'conv-datos',
-        nombre: 'Convenio 108 — Protección de Datos Personales',
-        abreviatura: 'C108',
-        descripcion: 'Tratamiento automatizado de datos personales — CoE',
-        pdf_url: `${GCS_TRATADOS}/Convenio%20108%20Proteccion%20Datos%20Personales%20(C108).pdf`,
-        chunks: 'Indexado en RAG',
-        fuente: 'Consejo de Europa',
-        icono: '💻',
-        disponible: true,
-    },
 ];
 
 // ─── Sección 3: Leyes Federales ───────────────────────────────────
@@ -460,7 +438,7 @@ export default function NormativaNacionalPage() {
                         <AccordionButton
                             label="Tratados Internacionales"
                             emoji="🌎"
-                            subtitle={`20 instrumentos con PDF · Bloque de constitucionalidad`}
+                            subtitle={`18 instrumentos con PDF · Bloque de constitucionalidad`}
                             isOpen={!!openSections['tratados']}
                             onClick={() => toggle('tratados')}
                         />
