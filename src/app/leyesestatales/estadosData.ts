@@ -165,12 +165,12 @@ const QUERETARO_LEYES: CategoriaLeyes = {
     ],
     reglamentos: [
         // Reglamentos Municipales del Municipio de Querétaro
-        { nombre: 'Código de Conducta de los Servidores Públicos Municipales de Querétaro 2021', url: '' },
-        { nombre: 'Código Municipal de Querétaro', url: '' },
-        { nombre: 'Lineamientos en Materia de Obra Pública del Municipio de Querétaro', url: '' },
-        { nombre: 'Protocolo para la Implementación de los Puntos de Control de Alcoholimetría para el Municipio de Querétaro', url: '' },
-        { nombre: 'Reglamento para la Movilidad y el Tránsito del Municipio de Querétaro', url: '' },
-        { nombre: 'Reglamento de Justicia Cívica del Municipio de Querétaro (Marzo 2025)', url: '' },
+        { nombre: 'Código de Conducta de los Servidores Públicos Municipales de Querétaro 2021', url: `${QRO_BASE}/Reglamentos/Codigo-Conducta-Servidores-Publicos-QRO-2021.pdf` },
+        { nombre: 'Código Municipal de Querétaro', url: `${QRO_BASE}/Reglamentos/Codigo-Municipal-Queretaro.pdf` },
+        { nombre: 'Lineamientos en Materia de Obra Pública del Municipio de Querétaro', url: `${QRO_BASE}/Reglamentos/Lineamientos-Obra-Publica-Municipio-QRO.pdf` },
+        { nombre: 'Protocolo para la Implementación de los Puntos de Control de Alcoholimetría para el Municipio de Querétaro', url: `${QRO_BASE}/Reglamentos/Protocolo-Alcoholimetria-Municipio-QRO.pdf` },
+        { nombre: 'Reglamento para la Movilidad y el Tránsito del Municipio de Querétaro', url: `${QRO_BASE}/Reglamentos/Reglamento-Movilidad-Transito-Municipio-QRO.pdf` },
+        { nombre: 'Reglamento de Justicia Cívica del Municipio de Querétaro (Marzo 2025)', url: `${QRO_BASE}/Reglamentos/Reglamento-Justicia-Civica-Municipio-QRO-2025.pdf` },
     ],
     otros: [
         // Leyes Orgánicas
