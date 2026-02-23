@@ -34,8 +34,8 @@ const LEYES_PLACEHOLDER: CategoriaLeyes = {
     otros: [],
 };
 
-// ─── Querétaro: FULL DATA from legislaturaqueretaro.gob.mx ───
-const QRO_BASE = 'http://site.legislaturaqueretaro.gob.mx/CloudPLQ/InvEst';
+// ─── Querétaro: FULL DATA — PDFs hosted on GCS ───────────────
+const QRO_BASE = 'https://storage.googleapis.com/iurexia-leyes/Queretaro';
 
 const QUERETARO_LEYES: CategoriaLeyes = {
     constitucion: [
