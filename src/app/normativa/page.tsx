@@ -26,26 +26,237 @@ const CONSTITUCION_NACIONAL = [
 ];
 
 // ─── Sección 2: Tratados Internacionales ──────────────────────────
+const GCS_TRATADOS = 'https://storage.googleapis.com/iurexia-leyes/Tratados';
+
 const TRATADOS_INTERNACIONALES = [
+    // ─── Sistema Interamericano (OEA) ─────────────────────────
     {
         id: 'cadh',
         nombre: 'Convención Americana sobre Derechos Humanos (Pacto de San José)',
         abreviatura: 'CADH',
         descripcion: 'Tratado interamericano de derechos humanos — OEA',
-        chunks: 'Próximamente',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20Americana%20sobre%20Derechos%20Humanos%20(CADH).pdf`,
+        chunks: 'Indexado en RAG',
         fuente: 'OEA',
         icono: '🌎',
-        disponible: false,
+        disponible: true,
+    },
+    {
+        id: 'cbdp',
+        nombre: 'Convención Interamericana Belém do Pará',
+        abreviatura: 'CBdP',
+        descripcion: 'Prevención, sanción y erradicación de la violencia contra la mujer',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20Interamericana%20Belem%20do%20Para%20(CBdP).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'OEA',
+        icono: '🌺',
+        disponible: true,
+    },
+    {
+        id: 'conv-intolerancia',
+        nombre: 'Convención Interamericana contra el Racismo e Intolerancia',
+        abreviatura: 'CIRDI',
+        descripcion: 'Discriminación racial y formas conexas de intolerancia',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20Interamericana%20contra%20Racismo%20e%20Intolerancia%20(CIRDI).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'OEA',
+        icono: '🌈',
+        disponible: true,
+    },
+    {
+        id: 'conv-ddmm',
+        nombre: 'Convención Interamericana sobre Derechos de Personas Mayores',
+        abreviatura: 'CIPM',
+        descripcion: 'Derechos humanos de las personas mayores',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20Interamericana%20Derechos%20Personas%20Mayores%20(CIPM).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'OEA',
+        icono: '👴',
+        disponible: true,
+    },
+    {
+        id: 'protocolo-san-salvador',
+        nombre: 'Protocolo de San Salvador',
+        abreviatura: 'PSS',
+        descripcion: 'Derechos económicos, sociales y culturales — OEA',
+        pdf_url: `${GCS_TRATADOS}/Protocolo%20de%20San%20Salvador%20-%20Derechos%20Economicos%20Sociales%20(PSS).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'OEA',
+        icono: '🏥',
+        disponible: true,
+    },
+
+    // ─── Sistema Universal (ONU / OHCHR) ──────────────────────
+    {
+        id: 'dudh',
+        nombre: 'Declaración Universal de Derechos Humanos',
+        abreviatura: 'DUDH',
+        descripcion: 'Fundamento del derecho internacional de los derechos humanos',
+        pdf_url: `${GCS_TRATADOS}/Declaracion%20Universal%20de%20Derechos%20Humanos%20(DUDH).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU',
+        icono: '🌍',
+        disponible: true,
     },
     {
         id: 'pidcp',
         nombre: 'Pacto Internacional de Derechos Civiles y Políticos',
         abreviatura: 'PIDCP',
-        descripcion: 'Instrumento de Naciones Unidas sobre libertades fundamentales',
-        chunks: 'Próximamente',
+        descripcion: 'Libertades fundamentales — Naciones Unidas',
+        pdf_url: `${GCS_TRATADOS}/Pacto%20Internacional%20Derechos%20Civiles%20y%20Politicos%20(PIDCP).pdf`,
+        chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: '🕊️',
-        disponible: false,
+        disponible: true,
+    },
+    {
+        id: 'pidesc',
+        nombre: 'Pacto Internacional de Derechos Económicos, Sociales y Culturales',
+        abreviatura: 'PIDESC',
+        descripcion: 'Derechos económicos, sociales y culturales — ONU',
+        pdf_url: `${GCS_TRATADOS}/Pacto%20Internacional%20Derechos%20Economicos%20Sociales%20y%20Culturales%20(PIDESC).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU',
+        icono: '📋',
+        disponible: true,
+    },
+    {
+        id: 'cdn',
+        nombre: 'Convención sobre los Derechos del Niño',
+        abreviatura: 'CDN',
+        descripcion: 'Protección integral de la niñez — ONU',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20sobre%20los%20Derechos%20del%20Nino%20(CDN).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU',
+        icono: '👶',
+        disponible: true,
+    },
+    {
+        id: 'conv-tortura',
+        nombre: 'Convención contra la Tortura (CAT)',
+        abreviatura: 'CAT',
+        descripcion: 'Tortura y tratos crueles, inhumanos o degradantes — ONU',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20contra%20la%20Tortura%20ONU%20(CAT).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU',
+        icono: '🛡️',
+        disponible: true,
+    },
+    {
+        id: 'cedaw',
+        nombre: 'CEDAW — Eliminación de Discriminación contra la Mujer',
+        abreviatura: 'CEDAW',
+        descripcion: 'Igualdad de derechos para las mujeres — ONU',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20Eliminacion%20Discriminacion%20contra%20la%20Mujer%20(CEDAW).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU',
+        icono: '♀️',
+        disponible: true,
+    },
+    {
+        id: 'crpd',
+        nombre: 'Convención sobre Derechos de Personas con Discapacidad',
+        abreviatura: 'CRPD',
+        descripcion: 'Inclusión y derechos de personas con discapacidad — ONU',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20Derechos%20Personas%20con%20Discapacidad%20(CRPD).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU',
+        icono: '♿',
+        disponible: true,
+    },
+    {
+        id: 'conv-dforzada-onu',
+        nombre: 'Convención contra las Desapariciones Forzadas (ONU)',
+        abreviatura: 'CED',
+        descripcion: 'Protección contra desapariciones forzadas — ONU',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20Desapariciones%20Forzadas%20ONU%20(CED).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU',
+        icono: '🔦',
+        disponible: true,
+    },
+    {
+        id: 'conv-discriminacion-racial',
+        nombre: 'Convención contra la Discriminación Racial (ICERD)',
+        abreviatura: 'ICERD',
+        descripcion: 'Eliminación de todas las formas de discriminación racial — ONU',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20Eliminacion%20Discriminacion%20Racial%20(ICERD).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU',
+        icono: '✊',
+        disponible: true,
+    },
+    {
+        id: 'conv-derechos-migrantes',
+        nombre: 'Convención sobre Derechos de Trabajadores Migratorios',
+        abreviatura: 'CMW',
+        descripcion: 'Protección de trabajadores migratorios y sus familias — ONU',
+        pdf_url: `${GCS_TRATADOS}/Convencion%20Derechos%20Trabajadores%20Migratorios%20(CMW).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU',
+        icono: '🌐',
+        disponible: true,
+    },
+
+    // ─── Instrumentos penitenciarios y de investigación ────────
+    {
+        id: 'reglas-mandela',
+        nombre: 'Reglas Nelson Mandela — Tratamiento de Reclusos',
+        abreviatura: 'Reglas Mandela',
+        descripcion: 'Reglas mínimas para el tratamiento de reclusos — ONU',
+        pdf_url: `${GCS_TRATADOS}/Reglas%20Nelson%20Mandela%20-%20Tratamiento%20Reclusos%20(ONU).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU / UNODC',
+        icono: '🔒',
+        disponible: true,
+    },
+    {
+        id: 'reglas-bangkok',
+        nombre: 'Reglas de Bangkok — Tratamiento de Reclusas',
+        abreviatura: 'Reglas Bangkok',
+        descripcion: 'Tratamiento de reclusas y medidas no privativas — ONU',
+        pdf_url: `${GCS_TRATADOS}/Reglas%20de%20Bangkok%20-%20Tratamiento%20Reclusas%20(ONU).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU / UNODC',
+        icono: '👩‍⚖️',
+        disponible: true,
+    },
+    {
+        id: 'protocolo-estambul',
+        nombre: 'Protocolo de Estambul',
+        abreviatura: 'Protocolo Estambul',
+        descripcion: 'Investigación y documentación de la tortura — OHCHR',
+        pdf_url: `${GCS_TRATADOS}/Protocolo%20de%20Estambul%20-%20Investigacion%20Tortura%20(OHCHR).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'ONU / OHCHR',
+        icono: '🩺',
+        disponible: true,
+    },
+
+    // ─── Derechos específicos ──────────────────────────────────
+    {
+        id: 'principios-yogyakarta',
+        nombre: 'Principios de Yogyakarta',
+        abreviatura: 'Yogyakarta',
+        descripcion: 'Orientación sexual e identidad de género — Soft law',
+        pdf_url: `${GCS_TRATADOS}/Principios%20de%20Yogyakarta%20-%20Orientacion%20Sexual%20e%20Identidad%20de%20Genero.pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'Panel de Expertos DDHH',
+        icono: '🏳️‍🌈',
+        disponible: true,
+    },
+
+    // ─── Consejo de Europa ────────────────────────────────────
+    {
+        id: 'conv-datos',
+        nombre: 'Convenio 108 — Protección de Datos Personales',
+        abreviatura: 'C108',
+        descripcion: 'Tratamiento automatizado de datos personales — CoE',
+        pdf_url: `${GCS_TRATADOS}/Convenio%20108%20Proteccion%20Datos%20Personales%20(C108).pdf`,
+        chunks: 'Indexado en RAG',
+        fuente: 'Consejo de Europa',
+        icono: '💻',
+        disponible: true,
     },
 ];
 
@@ -249,7 +460,7 @@ export default function NormativaNacionalPage() {
                         <AccordionButton
                             label="Tratados Internacionales"
                             emoji="🌎"
-                            subtitle="Compromisos internacionales de México"
+                            subtitle={`20 instrumentos con PDF · Bloque de constitucionalidad`}
                             isOpen={!!openSections['tratados']}
                             onClick={() => toggle('tratados')}
                         />
@@ -259,10 +470,23 @@ export default function NormativaNacionalPage() {
                                     <div key={t.id} className="p-5 text-center">
                                         <div className="text-2xl mb-2">{t.icono}</div>
                                         <h3 className="font-serif text-base font-semibold text-charcoal-800 mb-1">{t.nombre}</h3>
-                                        <p className="text-xs text-charcoal-500">{t.descripcion}</p>
-                                        <span className="inline-block mt-2 text-[11px] text-charcoal-400 bg-cream-200 px-3 py-1 rounded-full">
-                                            {t.chunks}
-                                        </span>
+                                        <p className="text-xs text-charcoal-500 mb-2">{t.descripcion}</p>
+                                        <div className="flex items-center justify-center gap-2 text-xs text-charcoal-500 mb-3">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                                            {t.chunks} · {t.fuente}
+                                        </div>
+                                        {t.pdf_url && (
+                                            <a
+                                                href={t.pdf_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-charcoal-900 text-white text-xs font-semibold hover:bg-charcoal-800 transition-all shadow-sm"
+                                            >
+                                                <FileText className="w-3.5 h-3.5" />
+                                                Ver PDF
+                                                <ExternalLink className="w-3 h-3 opacity-60" />
+                                            </a>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -313,8 +537,8 @@ export default function NormativaNacionalPage() {
                                                 key={estado.slug}
                                                 href={`/leyesestatales/${estado.slug}`}
                                                 className={`group flex flex-col items-center text-center p-3 rounded-xl transition-all duration-200 ${hasContent
-                                                        ? 'hover:bg-cream-100 hover:shadow-md'
-                                                        : 'opacity-50 hover:opacity-70'
+                                                    ? 'hover:bg-cream-100 hover:shadow-md'
+                                                    : 'opacity-50 hover:opacity-70'
                                                     }`}
                                             >
                                                 <h4 className={`text-sm font-semibold leading-tight mb-1 transition-colors ${hasContent ? 'text-charcoal-900 group-hover:text-accent-gold' : 'text-charcoal-500'
