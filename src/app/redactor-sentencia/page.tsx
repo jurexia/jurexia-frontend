@@ -907,24 +907,23 @@ export default function RedactorSentenciaPage() {
                         {/* Back button */}
                         <button
                             onClick={handleReset}
-                            className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-8"
+                            className="flex items-center gap-2 text-sm text-white/30 hover:text-white/60 transition-colors mb-10 font-light"
                         >
-                            <ArrowLeft className="w-4 h-4" /> Cambiar tipo
+                            <ArrowLeft className="w-4 h-4" /> Volver
                         </button>
 
                         {/* Header */}
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-14 h-14 rounded-xl bg-[#c9a962]/10 flex items-center justify-center text-[#c9a962]">
-                                {selectedTipo.icon}
-                            </div>
-                            <div>
-                                <h2 className="font-serif text-2xl font-medium text-white">
-                                    {selectedTipo.label}
-                                </h2>
-                                <p className="text-sm text-gray-400 mt-0.5">
-                                    Adjunta los 2 documentos del expediente
-                                </p>
-                            </div>
+                        <div className="mb-10">
+                            <p className="text-[#c9a962]/50 text-[11px] tracking-[0.3em] uppercase mb-3 font-light">
+                                Estudio de Fondo
+                            </p>
+                            <h2 className="font-serif text-3xl font-light text-white tracking-tight mb-2">
+                                {selectedTipo.label}
+                            </h2>
+                            <div className="w-12 h-px bg-gradient-to-r from-[#c9a962]/40 to-transparent mb-3" />
+                            <p className="text-[13px] text-white/30 font-light">
+                                Adjunta los 2 documentos del expediente
+                            </p>
                         </div>
 
                         {/* Document Upload Zones */}
@@ -961,18 +960,15 @@ export default function RedactorSentenciaPage() {
                         <button
                             onClick={handleAnalyze}
                             disabled={!allFilesUploaded}
-                            className={`w-full py-4 rounded-full text-base font-bold transition-all duration-300 ${allFilesUploaded
+                            className={`w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${allFilesUploaded
                                 ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
                                 : 'bg-white/[0.04] text-white/20 cursor-not-allowed border border-white/[0.08]'
                                 }`}
                         >
-                            <span className="flex items-center justify-center gap-2">
-                                <Search className="w-5 h-5" />
-                                Analizar Expediente
-                            </span>
+                            Analizar Expediente
                         </button>
 
-                        <p className="text-center text-xs text-gray-500 mt-4">
+                        <p className="text-center text-[11px] text-white/20 mt-4 font-light">
                             El análisis identifica automáticamente los {term.pluralLower} para que usted los califique antes de generar
                         </p>
                     </div>
@@ -1027,18 +1023,14 @@ export default function RedactorSentenciaPage() {
 
                         {/* Analysis Summary (expandable) */}
                         <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
-                                        <Search className="w-5 h-5 text-[#c9a962]" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-medium text-white/90">Resumen del Expediente</h3>
-                                        <p className="text-xs text-gray-400">
-                                            Analizado en {analysisData.analysis_time_seconds}s • {analysisData.agravios.length} {term.pluralLower} identificados
-                                        </p>
-                                    </div>
-                                </div>
+                            <div className="mb-5">
+                                <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
+                                    Expediente
+                                </p>
+                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">Resumen del Expediente</h3>
+                                <p className="text-[11px] text-white/25 mt-1 font-light">
+                                    Analizado en {analysisData.analysis_time_seconds}s · {analysisData.agravios.length} {term.pluralLower} identificados
+                                </p>
                             </div>
 
                             {/* Expediente Data Grid */}
@@ -1096,14 +1088,12 @@ export default function RedactorSentenciaPage() {
 
                         {/* Sentido Propuesto */}
                         <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
-                                    <Gavel className="w-5 h-5 text-[#c9a962]" />
-                                </div>
-                                <div>
-                                    <h3 className="text-base font-medium text-white/90">Sentido del Proyecto</h3>
-                                    <p className="text-xs text-gray-400">¿Cuál es la línea que desea para este proyecto de sentencia?</p>
-                                </div>
+                            <div className="mb-5">
+                                <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
+                                    Sentido
+                                </p>
+                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">Sentido del Proyecto</h3>
+                                <p className="text-[11px] text-white/25 mt-1 font-light">¿Cuál es la línea que desea para este proyecto de sentencia?</p>
                             </div>
                             <div className={`grid gap-3 ${(selectedTipo && SENTIDO_OPTIONS[selectedTipo.id as TipoSentencia]?.length === 2) ? 'grid-cols-2' : 'grid-cols-3'}`}>
                                 {selectedTipo && SENTIDO_OPTIONS[selectedTipo.id as TipoSentencia]?.map(opt => (
@@ -1128,16 +1118,14 @@ export default function RedactorSentenciaPage() {
                         {/* Dispositivo Selector — only when Conceder */}
                         {sentido === 'conceder' && (
                             <div className="rounded-2xl border border-green-500/20 bg-green-500/[0.03] backdrop-blur-sm p-6 mb-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                                        <Sparkles className="w-5 h-5 text-green-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-medium text-white/90">{term.singular} Dispositivo</h3>
-                                        <p className="text-xs text-gray-400">
-                                            ¿Hay un {term.singularLower} que por sí solo resuelve el caso al mayor beneficio?
-                                        </p>
-                                    </div>
+                                <div className="mb-5">
+                                    <p className="text-green-400/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
+                                        Dispositivo
+                                    </p>
+                                    <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">{term.singular} Dispositivo</h3>
+                                    <p className="text-[11px] text-white/25 mt-1 font-light">
+                                        ¿Hay un {term.singularLower} que por sí solo resuelve el caso al mayor beneficio?
+                                    </p>
                                 </div>
                                 <p className="text-xs text-green-400/60 mb-4 flex items-center gap-2">
                                     <span className="text-base">💡</span>
@@ -1186,14 +1174,12 @@ export default function RedactorSentenciaPage() {
                         {/* Thematic Groups with Qualification */}
                         {gruposTematicos.length > 0 && sentido !== 'conceder' && (
                             <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-xl bg-[#c9a962]/10 flex items-center justify-center">
-                                        <FileText className="w-5 h-5 text-[#c9a962]" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-medium text-white/90">Agrupación Temática</h3>
-                                        <p className="text-xs text-gray-400">{gruposTematicos.length} grupos identificados — califique por grupo</p>
-                                    </div>
+                                <div className="mb-5">
+                                    <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
+                                        Agrupación
+                                    </p>
+                                    <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">Agrupación Temática</h3>
+                                    <p className="text-[11px] text-white/25 mt-1 font-light">{gruposTematicos.length} grupos identificados — califique por grupo</p>
                                 </div>
                                 <div className="space-y-3">
                                     {gruposTematicos.map((g, gi) => {
@@ -1281,14 +1267,12 @@ export default function RedactorSentenciaPage() {
 
                         {/* Instructions for Drafting */}
                         <div className="rounded-2xl border border-[#c9a962]/15 bg-[#c9a962]/[0.03] backdrop-blur-sm p-6 mb-6">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-xl bg-[#c9a962]/15 flex items-center justify-center">
-                                    <Edit3 className="w-5 h-5 text-[#c9a962]" />
-                                </div>
-                                <div>
-                                    <h3 className="text-base font-medium text-white/90">Instrucciones para la Redacción</h3>
-                                    <p className="text-xs text-[#c9a962]/60">Dictele la línea argumental al sistema — este es el paso más importante</p>
-                                </div>
+                            <div className="mb-4">
+                                <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
+                                    Instrucciones
+                                </p>
+                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">Instrucciones para la Redacción</h3>
+                                <p className="text-[11px] text-[#c9a962]/50 mt-1 font-light">Dictele la línea argumental al sistema — este es el paso más importante</p>
                             </div>
                             <textarea
                                 value={instrucciones}
@@ -1336,18 +1320,15 @@ export default function RedactorSentenciaPage() {
                         <button
                             onClick={handleGenerate}
                             disabled={!sentido}
-                            className={`w-full py-4 rounded-full text-base font-bold transition-all duration-300 ${sentido
+                            className={`w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${sentido
                                 ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
                                 : 'bg-white/[0.04] text-gray-600 cursor-not-allowed border border-white/[0.08]'
                                 }`}
                         >
-                            <span className="flex items-center justify-center gap-2">
-                                <Sparkles className="w-5 h-5" />
-                                {sentido
-                                    ? `Generar Estudio de Fondo${dispositivoIndex !== null ? ` (solo ${term.singularLower} ${dispositivoIndex})` : ''}`
-                                    : 'Seleccione un sentido para continuar'
-                                }
-                            </span>
+                            {sentido
+                                ? `Generar Estudio de Fondo${dispositivoIndex !== null ? ` (solo ${term.singularLower} ${dispositivoIndex})` : ''}`
+                                : 'Seleccione un sentido para continuar'
+                            }
                         </button>
 
                         <p className="text-center text-xs text-gray-500 mt-4">
