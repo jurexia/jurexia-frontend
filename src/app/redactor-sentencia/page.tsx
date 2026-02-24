@@ -675,40 +675,42 @@ export default function RedactorSentenciaPage() {
                         {viewState === 'tools' && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {/* Header */}
-                                <div className="text-center mb-12">
-                                    <h1 className="font-serif text-4xl md:text-5xl font-semibold text-white mb-4">
+                                <div className="text-center mb-16">
+                                    <p className="text-[#c9a962]/60 text-xs tracking-[0.3em] uppercase mb-6 font-light">
+                                        Herramientas de Redacción
+                                    </p>
+                                    <h1 className="font-serif text-4xl md:text-5xl font-light text-white mb-5 tracking-tight">
                                         Redactor de Sentencias
                                     </h1>
-                                    <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+                                    <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#c9a962]/50 to-transparent mx-auto mb-5" />
+                                    <p className="text-white/35 text-base max-w-lg mx-auto leading-relaxed font-light">
                                         Selecciona la herramienta que mejor se adapte a tu flujo de trabajo.
                                     </p>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* Card 1: Estudio de Fondo (Goes to Jurisdiction) */}
                                     <button
                                         onClick={() => setViewState('jurisdiction')}
-                                        className="group relative rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#1a1a1a] to-[#151515] p-8 text-left transition-all duration-500 hover:border-[#c9a962]/50 hover:shadow-2xl hover:shadow-[#c9a962]/10 hover:scale-[1.02] overflow-hidden"
+                                        className="group relative rounded-xl border border-white/[0.06] bg-[#141414] p-10 text-left transition-all duration-500 hover:border-[#c9a962]/30 hover:bg-[#161616] overflow-hidden"
                                     >
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#c9a962]/10 to-transparent rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
+                                        {/* Subtle top accent line */}
+                                        <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#c9a962]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                         <div className="relative z-10">
-                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#c9a962]/20">
-                                                <FileText className="w-7 h-7 text-[#0f0f0f]" />
-                                            </div>
-                                            <h3 className="font-serif text-xl font-semibold text-white mb-2">
+                                            <span className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light">
+                                                01
+                                            </span>
+                                            <h3 className="font-serif text-2xl font-light text-white mt-4 mb-3 tracking-tight group-hover:text-[#c9a962]/90 transition-colors duration-500">
                                                 Redactar Estudio de Fondo
                                             </h3>
-                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                                            <p className="text-[13px] text-white/30 leading-relaxed font-light">
                                                 Genera un proyecto de sentencia completo desde cero.
                                                 Sube los expedientes y la IA construirá el estudio de fondo.
                                             </p>
-                                            <div className="flex flex-wrap gap-2">
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    Multi-fase
-                                                </span>
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    RAG integrado
-                                                </span>
+                                            <div className="mt-6 flex items-center gap-3 text-[11px] text-white/20 font-light">
+                                                <span>Multi-fase</span>
+                                                <span className="w-1 h-1 rounded-full bg-white/10" />
+                                                <span>RAG integrado</span>
                                             </div>
                                         </div>
                                     </button>
@@ -716,27 +718,25 @@ export default function RedactorSentenciaPage() {
                                     {/* Card 2: Chat (Direct Link) */}
                                     <Link
                                         href="/redactor-sentencia/chat"
-                                        className="group relative rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#1a1a1a] to-[#151515] p-8 text-left transition-all duration-500 hover:border-[#c9a962]/50 hover:shadow-2xl hover:shadow-[#c9a962]/10 hover:scale-[1.02] overflow-hidden"
+                                        className="group relative rounded-xl border border-white/[0.06] bg-[#141414] p-10 text-left transition-all duration-500 hover:border-[#c9a962]/30 hover:bg-[#161616] overflow-hidden"
                                     >
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#c9a962]/10 to-transparent rounded-bl-full opacity-50 group-hover:opacity-100 transition-opacity" />
+                                        {/* Subtle top accent line */}
+                                        <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#c9a962]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                         <div className="relative z-10">
-                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#c9a962]/20">
-                                                <Sparkles className="w-7 h-7 text-[#0f0f0f]" />
-                                            </div>
-                                            <h3 className="font-serif text-xl font-semibold text-white mb-2">
+                                            <span className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light">
+                                                02
+                                            </span>
+                                            <h3 className="font-serif text-2xl font-light text-white mt-4 mb-3 tracking-tight group-hover:text-[#c9a962]/90 transition-colors duration-500">
                                                 Chat de Asistencia
                                             </h3>
-                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                                            <p className="text-[13px] text-white/30 leading-relaxed font-light">
                                                 Modifica, ajusta o continúa sentencias en diálogo abierto.
                                                 Sube un borrador o pega tu texto.
                                             </p>
-                                            <div className="flex flex-wrap gap-2">
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    Chat en tiempo real
-                                                </span>
-                                                <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962]/70 border border-[#c9a962]/15">
-                                                    PDF/DOCX
-                                                </span>
+                                            <div className="mt-6 flex items-center gap-3 text-[11px] text-white/20 font-light">
+                                                <span>Chat en tiempo real</span>
+                                                <span className="w-1 h-1 rounded-full bg-white/10" />
+                                                <span>PDF / DOCX</span>
                                             </div>
                                         </div>
                                     </Link>
@@ -754,38 +754,39 @@ export default function RedactorSentenciaPage() {
                             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                                 <button
                                     onClick={() => setViewState('tools')}
-                                    className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-8"
+                                    className="flex items-center gap-2 text-sm text-white/30 hover:text-white/60 transition-colors mb-10 font-light"
                                 >
-                                    <ArrowLeft className="w-4 h-4" /> Volver a selección de herramienta
+                                    <ArrowLeft className="w-4 h-4" /> Volver
                                 </button>
 
-                                <div className="text-center mb-12">
-                                    <div className="inline-flex items-center gap-2 bg-[#c9a962]/10 text-[#c9a962] px-4 py-1.5 rounded-full text-sm font-medium mb-5 border border-[#c9a962]/20">
-                                        <Scale className="w-4 h-4" />
-                                        Redactar Estudio de Fondo
-                                    </div>
-                                    <h1 className="font-serif text-4xl md:text-5xl font-semibold text-white mb-4">
+                                <div className="text-center mb-16">
+                                    <p className="text-[#c9a962]/60 text-xs tracking-[0.3em] uppercase mb-6 font-light">
+                                        Estudio de Fondo
+                                    </p>
+                                    <h1 className="font-serif text-4xl md:text-5xl font-light text-white mb-5 tracking-tight">
                                         Selecciona la Instancia
                                     </h1>
+                                    <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#c9a962]/50 to-transparent mx-auto" />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* Card 1: TCC (Goes to Tipos) */}
                                     <button
                                         onClick={() => {
                                             setJurisdiction('tcc');
                                             setViewState('tipos');
                                         }}
-                                        className="group relative rounded-2xl border border-[#c9a962]/20 bg-gradient-to-br from-[#1a1a1a] to-[#151515] p-8 text-left transition-all duration-500 hover:border-[#c9a962]/50 hover:shadow-2xl hover:shadow-[#c9a962]/10 hover:scale-[1.02] overflow-hidden"
+                                        className="group relative rounded-xl border border-white/[0.06] bg-[#141414] p-10 text-left transition-all duration-500 hover:border-[#c9a962]/30 hover:bg-[#161616] overflow-hidden"
                                     >
+                                        <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#c9a962]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                         <div className="relative z-10">
-                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-[#c9a962]/20">
-                                                <Gavel className="w-7 h-7 text-[#0f0f0f]" />
-                                            </div>
-                                            <h3 className="font-serif text-xl font-semibold text-white mb-2">
+                                            <span className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light">
+                                                01
+                                            </span>
+                                            <h3 className="font-serif text-2xl font-light text-white mt-4 mb-3 tracking-tight group-hover:text-[#c9a962]/90 transition-colors duration-500">
                                                 Tribunales Colegiados
                                             </h3>
-                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                                            <p className="text-[13px] text-white/30 leading-relaxed font-light">
                                                 Sentencias de Amparo Directo, en Revisión, Queja y Revisión Fiscal.
                                             </p>
                                         </div>
@@ -794,19 +795,19 @@ export default function RedactorSentenciaPage() {
                                     {/* Card 2: Juzgado (Alert) */}
                                     <button
                                         onClick={() => setShowJuzgadoAlert(true)}
-                                        className="group relative rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/50 p-8 text-left transition-all duration-300 hover:bg-[#1a1a1a] hover:border-white/[0.15]"
+                                        className="group relative rounded-xl border border-white/[0.04] bg-[#121212] p-10 text-left transition-all duration-300 hover:border-white/[0.1] hover:bg-[#141414]"
                                     >
-                                        <div className="relative z-10 opacity-70 group-hover:opacity-100 transition-opacity">
-                                            <div className="w-14 h-14 rounded-2xl bg-white/[0.05] flex items-center justify-center mb-5 group-hover:bg-white/[0.1] transition-colors">
-                                                <Shield className="w-7 h-7 text-white/50" />
-                                            </div>
-                                            <h3 className="font-serif text-xl font-semibold text-white mb-2">
+                                        <div className="relative z-10">
+                                            <span className="text-white/15 text-[11px] tracking-[0.25em] uppercase font-light">
+                                                02
+                                            </span>
+                                            <h3 className="font-serif text-2xl font-light text-white/50 mt-4 mb-3 tracking-tight">
                                                 Juzgados de Distrito
                                             </h3>
-                                            <p className="text-sm text-gray-400 leading-relaxed mb-4">
+                                            <p className="text-[13px] text-white/20 leading-relaxed font-light mb-4">
                                                 Sentencias de Amparo Indirecto y procesos penales federales.
                                             </p>
-                                            <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/[0.05] text-white/40 border border-white/[0.08]">
+                                            <span className="text-[11px] text-white/25 font-light tracking-wider uppercase">
                                                 Próximamente
                                             </span>
                                         </div>
@@ -822,50 +823,47 @@ export default function RedactorSentenciaPage() {
                             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                                 <button
                                     onClick={() => setViewState('jurisdiction')}
-                                    className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors mb-8"
+                                    className="flex items-center gap-2 text-sm text-white/30 hover:text-white/60 transition-colors mb-10 font-light"
                                 >
-                                    <ArrowLeft className="w-4 h-4" /> Volver a selección de instancia
+                                    <ArrowLeft className="w-4 h-4" /> Volver
                                 </button>
 
-                                <div className="text-center mb-12">
-                                    <div className="inline-flex items-center gap-2 bg-[#c9a962]/10 text-[#c9a962] px-4 py-1.5 rounded-full text-sm font-medium mb-5 border border-[#c9a962]/20">
-                                        <Gavel className="w-4 h-4" />
+                                <div className="text-center mb-16">
+                                    <p className="text-[#c9a962]/60 text-xs tracking-[0.3em] uppercase mb-6 font-light">
                                         Tribunal Colegiado de Circuito
-                                    </div>
-                                    <h1 className="font-serif text-4xl md:text-5xl font-semibold text-white mb-4">
+                                    </p>
+                                    <h1 className="font-serif text-4xl md:text-5xl font-light text-white mb-5 tracking-tight">
                                         Tipo de Sentencia
                                     </h1>
+                                    <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#c9a962]/50 to-transparent mx-auto" />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {TIPOS.map((tipo) => (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    {TIPOS.map((tipo, index) => (
                                         <button
                                             key={tipo.id}
                                             onClick={() => handleSelectTipo(tipo)}
-                                            className={`group relative rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/80 backdrop-blur-sm p-6 text-left transition-all duration-300 hover:border-[#c9a962]/40 hover:bg-[#1a1a1a] hover:scale-[1.02] hover:shadow-xl hover:shadow-[#c9a962]/10`}
+                                            className="group relative rounded-xl border border-white/[0.06] bg-[#141414] p-8 text-left transition-all duration-400 hover:border-[#c9a962]/30 hover:bg-[#161616]"
                                         >
-                                            <div className="flex items-start gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-[#c9a962]/10 flex items-center justify-center text-[#c9a962] group-hover:scale-110 transition-transform">
-                                                    {tipo.icon}
+                                            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-[#c9a962]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                            <div>
+                                                <span className="text-[#c9a962]/30 text-[11px] tracking-[0.25em] uppercase font-light">
+                                                    0{index + 1}
+                                                </span>
+                                                <h3 className="font-serif text-xl font-light text-white mt-3 mb-2 tracking-tight group-hover:text-[#c9a962]/90 transition-colors duration-500">
+                                                    {tipo.label}
+                                                </h3>
+                                                <p className="text-[13px] text-white/25 leading-relaxed font-light mb-4">
+                                                    {tipo.description}
+                                                </p>
+                                                <div className="flex gap-3 text-[11px] text-white/15 font-light">
+                                                    {tipo.docs.map((doc, i) => (
+                                                        <span key={i} className="flex items-center gap-2">
+                                                            {i > 0 && <span className="w-1 h-1 rounded-full bg-white/10" />}
+                                                            {doc}
+                                                        </span>
+                                                    ))}
                                                 </div>
-                                                <div className="flex-1">
-                                                    <h3 className="font-serif text-lg font-medium text-white/90 mb-1">
-                                                        {tipo.label}
-                                                    </h3>
-                                                    <p className="text-sm text-gray-400 leading-relaxed">
-                                                        {tipo.description}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2 mt-4 pl-16">
-                                                {tipo.docs.map((doc, i) => (
-                                                    <span
-                                                        key={i}
-                                                        className="text-[10px] px-2 py-1 rounded-lg bg-white/[0.04] text-[#c9a962]/70 truncate border border-white/[0.06]"
-                                                    >
-                                                        {doc}
-                                                    </span>
-                                                ))}
                                             </div>
                                         </button>
                                     ))}
