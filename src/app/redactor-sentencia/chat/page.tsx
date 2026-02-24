@@ -705,12 +705,15 @@ export default function ChatSentenciaPage() {
                             <div className="w-full max-w-3xl flex flex-col gap-10">
 
                                 {/* Greeting */}
-                                <div className="text-left md:pl-2">
+                                <div className="text-center">
                                     <h2 className="text-4xl md:text-5xl font-medium text-transparent bg-clip-text bg-gradient-to-br from-[#c9a962] via-white to-white/60 tracking-tight mb-3">
                                         Hola{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name.split(' ')[0]}` : ''}.
                                     </h2>
                                     <p className="text-2xl md:text-3xl text-white/40 font-light">
                                         ¿En qué puedo ayudarte hoy?
+                                    </p>
+                                    <p className="text-sm text-white/30 mt-4 max-w-lg mx-auto leading-relaxed">
+                                        Recuerda que esta herramienta está diseñada especialmente para la redacción judicial. Por favor, formula tus consultas de forma estratégica.
                                     </p>
                                 </div>
 
