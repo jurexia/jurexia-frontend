@@ -703,12 +703,11 @@ export default function ChatSentenciaPage() {
                                 </div>
 
                                 {/* Suggestion Chips (Below Input) */}
-                                <div className="flex flex-wrap gap-3 mt-2">
+                                <div className="flex flex-wrap justify-center gap-3 mt-2">
                                     {[
-                                        { icon: '✍️', label: 'Continuar redacción', desc: 'Retomar escritura' },
-                                        { icon: '🔄', label: 'Cambiar sentido', desc: 'Fundado ↔ Infundado' },
-                                        { icon: '⚖️', label: 'Buscar jurisprudencia', desc: 'Tesis y precedentes' },
-                                        { icon: '📄', label: 'Analizar documento', desc: 'Subir PDF/DOCX' },
+                                        { label: 'Continuar redacción', desc: 'Retomar escritura' },
+                                        { label: 'Cambiar sentido', desc: 'Fundado ↔ Infundado' },
+                                        { label: 'Analizar documento', desc: 'Subir PDF/DOCX' },
                                     ].map((item) => (
                                         <button
                                             key={item.label}
@@ -720,19 +719,26 @@ export default function ChatSentenciaPage() {
                                                     textareaRef.current?.focus();
                                                 }
                                             }}
-                                            className="group flex flex-col items-start p-4 rounded-2xl bg-[#1a1a1a] border border-white/5 hover:border-[#c9a962]/30 hover:bg-[#222222] transition-all duration-300 min-w-[200px]"
+                                            className="group px-5 py-3 rounded-xl transition-all duration-300"
+                                            style={{
+                                                background: 'linear-gradient(135deg, #141414 0%, #1e1e1e 100%)',
+                                                border: '1px solid rgba(201, 169, 98, 0.15)',
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.border = '1px solid rgba(201, 169, 98, 0.4)';
+                                                e.currentTarget.style.boxShadow = '0 0 20px rgba(201, 169, 98, 0.08)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.border = '1px solid rgba(201, 169, 98, 0.15)';
+                                                e.currentTarget.style.boxShadow = 'none';
+                                            }}
                                         >
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <span className="text-lg group-hover:scale-110 transition-transform">{item.icon}</span>
-                                                <span className="text-sm font-medium text-white/80 group-hover:text-[#c9a962] transition-colors">
-                                                    {item.label}
-                                                </span>
-                                            </div>
-                                            {item.desc && (
-                                                <span className="text-xs text-white/40 ml-[36px]">
-                                                    {item.desc}
-                                                </span>
-                                            )}
+                                            <span className="block text-sm font-semibold text-white/90 group-hover:text-white transition-colors">
+                                                {item.label}
+                                            </span>
+                                            <span className="block text-[11px] mt-0.5" style={{ color: '#c9a962' }}>
+                                                {item.desc}
+                                            </span>
                                         </button>
                                     ))}
                                 </div>
