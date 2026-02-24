@@ -13,10 +13,12 @@ import {
     FileText,
     X,
     Sparkles,
+    Scale,
     Gavel,
     Copy,
     Check,
 } from 'lucide-react';
+import { checkCanSentenciaQuery, incrementSentenciaQueryCount, getSession } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ChatMessage from '@/components/ChatMessage';
@@ -110,6 +112,9 @@ export default function ChatSentenciaPage() {
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Sentencia quota exceeded state
+    const [quotaExceeded, setQuotaExceeded] = useState(false);
 
     // Feature toggles
     const [useRag, setUseRag] = useState(true);
@@ -305,6 +310,22 @@ export default function ChatSentenciaPage() {
         setIsLoading(true);
         setError(null);
 
+        // ── Sentencia quota enforcement ──
+        if (user?.id) {
+            try {
+                const { canQuery, remaining } = await checkCanSentenciaQuery(user.id);
+                if (!canQuery) {
+                    // Remove user + assistant messages we just added
+                    setMessages(messages);
+                    setIsLoading(false);
+                    setQuotaExceeded(true);
+                    return;
+                }
+            } catch (err) {
+                console.error('Quota check failed (allowing query):', err);
+            }
+        }
+
         // Ensure we have an active conversation ID before sending
         let currentConvId = activeConversationId;
         if (!currentConvId) {
@@ -379,6 +400,15 @@ export default function ChatSentenciaPage() {
 
             // Clear attachment after successful send
             removeAttachment();
+
+            // ── Increment sentencia query counter ──
+            if (user?.id) {
+                try {
+                    await incrementSentenciaQueryCount(user.id);
+                } catch (err) {
+                    console.error('Failed to increment sentencia query count:', err);
+                }
+            }
 
         } catch (err: any) {
             console.error('Chat sentencia error:', err);
@@ -469,8 +499,8 @@ export default function ChatSentenciaPage() {
                 <button
                     onClick={toggleRag}
                     className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${useRag
-                            ? 'bg-red-600/15 text-red-400 border border-red-500/30 hover:bg-red-600/25'
-                            : 'bg-red-600/10 text-red-500/80 border border-red-500/20 hover:bg-red-600/20'
+                        ? 'bg-red-600/15 text-red-400 border border-red-500/30 hover:bg-red-600/25'
+                        : 'bg-red-600/10 text-red-500/80 border border-red-500/20 hover:bg-red-600/20'
                         }`}
                 >
                     {useRag ? (
@@ -770,6 +800,43 @@ export default function ChatSentenciaPage() {
                         onClose={handleCloseModal}
                     />
                 </main>
+
+                {/* ══ Sentencia Quota Exceeded Modal ══ */}
+                {quotaExceeded && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                        <div className="bg-[#1a1a1a] border border-[#c9a962]/30 rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+                            <div className="text-center">
+                                <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                                    <Scale className="w-8 h-8 text-[#c9a962]" />
+                                </div>
+                                <h3 className="text-xl font-serif font-bold text-white mb-2">
+                                    Consultas de Sentencia agotadas
+                                </h3>
+                                <p className="text-white/60 mb-2">
+                                    Has utilizado todas tus consultas del Redactor de Sentencias este mes
+                                    ({profile?.sentencia_queries_used}/{profile?.sentencia_queries_limit}).
+                                </p>
+                                <p className="text-white/40 text-sm mb-6">
+                                    Tu cuota se renovará automáticamente cuando se procese tu próximo pago.
+                                </p>
+                                <div className="flex gap-3 justify-center">
+                                    <button
+                                        onClick={() => setQuotaExceeded(false)}
+                                        className="px-4 py-2 rounded-lg bg-white/10 text-white/60 hover:bg-white/20 transition-colors"
+                                    >
+                                        Cerrar
+                                    </button>
+                                    <Link
+                                        href="/precios"
+                                        className="px-4 py-2 rounded-lg bg-[#c9a962] text-[#0f0f0f] font-medium hover:bg-[#d4b06e] transition-colors"
+                                    >
+                                        Mejorar plan
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div> {/* End Main Content Wrapper */}
         </div>
     );

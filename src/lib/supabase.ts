@@ -82,6 +82,8 @@ export interface UserProfile {
     queries_limit: number;
     drafts_used: number;
     drafts_limit: number;
+    sentencia_queries_used: number;
+    sentencia_queries_limit: number;
     subscription_start: string;
     subscription_end: string | null;
     stripe_customer_id: string | null;
@@ -224,4 +226,43 @@ export async function checkCanDraft(userId: string): Promise<{ canDraft: boolean
 
     const remaining = profile.drafts_limit - profile.drafts_used
     return { canDraft: remaining > 0, remaining: Math.max(0, remaining) }
+}
+
+// Sentencia query management (separate counter for redactor-sentencia chat)
+export async function incrementSentenciaQueryCount(userId: string) {
+    const { data, error } = await supabase.rpc('consume_sentencia_query', { p_user_id: userId })
+
+    if (error) {
+        console.error('Error calling consume_sentencia_query RPC:', error)
+        // Fallback to direct update
+        const profile = await getUserProfile(userId)
+        if (profile) {
+            return updateUserProfile(userId, { sentencia_queries_used: profile.sentencia_queries_used + 1 })
+        }
+    }
+    return data
+}
+
+export async function checkCanSentenciaQuery(userId: string): Promise<{ canQuery: boolean; remaining: number }> {
+    const { data, error } = await supabase.rpc('get_sentencia_quota_status', { p_user_id: userId })
+
+    if (error || !data) {
+        // Fallback to profile-based check
+        const profile = await getUserProfile(userId)
+        if (!profile || !profile.is_active) {
+            return { canQuery: false, remaining: 0 }
+        }
+        if (profile.sentencia_queries_limit <= 0) {
+            return { canQuery: false, remaining: 0 }
+        }
+        const remaining = profile.sentencia_queries_limit - profile.sentencia_queries_used
+        return { canQuery: remaining > 0, remaining: Math.max(0, remaining) }
+    }
+
+    const canQuery = data.can_query ?? false
+    const limit = data.limit ?? 0
+    const used = data.used ?? 0
+    const remaining = limit <= 0 ? 0 : Math.max(0, limit - used)
+
+    return { canQuery, remaining }
 }

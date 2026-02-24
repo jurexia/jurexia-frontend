@@ -32,12 +32,8 @@ export default function ChatPage() {
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
     const router = useRouter();
 
-    // Redirect ultra_secretarios users to Redactor de Sentencias
-    useEffect(() => {
-        if (!authLoading && profile?.subscription_type === 'ultra_secretarios') {
-            router.replace('/redactor-sentencia/chat');
-        }
-    }, [authLoading, profile, router]);
+    // Quota exceeded state
+    const [quotaExceeded, setQuotaExceeded] = useState(false);
 
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showStateModal, setShowStateModal] = useState(false);
@@ -90,11 +86,16 @@ export default function ChatPage() {
     const [activeConversationId, setActiveConvId] = useState<string | null>(null);
     const [conversationsLoading, setConversationsLoading] = useState(true);
 
+    const handleQuotaExceeded = useCallback(() => {
+        setQuotaExceeded(true);
+    }, []);
+
     const { messages, isLoading, error, sendMessage, clearMessages, setMessages, retryMessage } = useChat({
         estado: selectedEstado || undefined,
         topK: 30,
         materia: selectedMateria || undefined,
         fuero: selectedFuero || undefined,
+        onQuotaExceeded: handleQuotaExceeded,
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -601,6 +602,43 @@ export default function ChatPage() {
                                     className="px-4 py-2 rounded-lg bg-accent-brown text-white hover:bg-accent-brown/90 transition-colors"
                                 >
                                     Ver planes
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ══ Quota Exceeded Modal ══ */}
+            {quotaExceeded && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-charcoal-800 border border-charcoal-600 rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+                        <div className="text-center">
+                            <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                                <Scale className="w-8 h-8 text-amber-400" />
+                            </div>
+                            <h3 className="text-xl font-serif font-bold text-white mb-2">
+                                Consultas agotadas
+                            </h3>
+                            <p className="text-charcoal-300 mb-2">
+                                Has utilizado todas tus consultas de este mes
+                                ({profile?.queries_used}/{profile?.queries_limit}).
+                            </p>
+                            <p className="text-charcoal-400 text-sm mb-6">
+                                Tu cuota se renovará automáticamente cuando se procese tu próximo pago en Stripe.
+                            </p>
+                            <div className="flex gap-3 justify-center">
+                                <button
+                                    onClick={() => setQuotaExceeded(false)}
+                                    className="px-4 py-2 rounded-lg bg-charcoal-700 text-charcoal-300 hover:bg-charcoal-600 transition-colors"
+                                >
+                                    Cerrar
+                                </button>
+                                <Link
+                                    href="/precios"
+                                    className="px-4 py-2 rounded-lg bg-accent-brown text-white hover:bg-accent-brown/90 transition-colors"
+                                >
+                                    Mejorar plan
                                 </Link>
                             </div>
                         </div>

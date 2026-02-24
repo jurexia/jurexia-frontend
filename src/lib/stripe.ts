@@ -112,13 +112,14 @@ export const PLANS = {
         price: 999,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 50,
+        queryLimit: 170,
+        sentenciaQueryLimit: 50,
         draftLimit: 20,
         features: [
-            '50 consultas/mes al Redactor Chat',
+            '170 consultas/mes al chat principal',
+            '50 consultas/mes al Redactor de Sentencias',
             '20 redacciones de sentencia/mes',
-            'Acceso exclusivo al Redactor de Sentencias TCC',
-            'Sin acceso al chat general de Iurexia',
+            'Acceso exclusivo al Redactor TCC',
             'Soporte dedicado'
         ]
     }

@@ -26,12 +26,12 @@ function getSupabaseAdmin() {
 
 // Plan configuration mapping
 export const PLAN_CONFIG = {
-    gratuito: { queriesLimit: 3, draftsLimit: 0, isUnlimited: false },
-    pro_monthly: { queriesLimit: 170, draftsLimit: 0, isUnlimited: false },
-    pro_annual: { queriesLimit: 170, draftsLimit: 0, isUnlimited: false },
-    platinum_monthly: { queriesLimit: 700, draftsLimit: 0, isUnlimited: false },
-    platinum_annual: { queriesLimit: 700, draftsLimit: 0, isUnlimited: false },
-    ultra_secretarios: { queriesLimit: 50, draftsLimit: 20, isUnlimited: false },
+    gratuito: { queriesLimit: 3, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    pro_monthly: { queriesLimit: 170, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    pro_annual: { queriesLimit: 170, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    platinum_monthly: { queriesLimit: 700, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    platinum_annual: { queriesLimit: 700, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    ultra_secretarios: { queriesLimit: 170, draftsLimit: 20, sentenciaQueriesLimit: 50, isUnlimited: false },
 } as const;
 
 export type PlanType = keyof typeof PLAN_CONFIG;
@@ -63,6 +63,8 @@ export async function updateUserSubscription(
         queries_used: 0,
         drafts_limit: config.draftsLimit,
         drafts_used: 0,
+        sentencia_queries_limit: config.sentenciaQueriesLimit,
+        sentencia_queries_used: 0,
         stripe_customer_id: stripeCustomerId || undefined,
         stripe_subscription_id: stripeSubscriptionId || undefined,
         is_active: true,
@@ -147,6 +149,8 @@ export async function downgradeToFree(email: string) {
             queries_used: 0,
             drafts_limit: 0,
             drafts_used: 0,
+            sentencia_queries_limit: 0,
+            sentencia_queries_used: 0,
             stripe_subscription_id: null,
             updated_at: new Date().toISOString(),
         } as Record<string, unknown>)
@@ -176,6 +180,7 @@ export async function resetUserQueries(email: string) {
         .update({
             queries_used: 0,
             drafts_used: 0,
+            sentencia_queries_used: 0,
             updated_at: new Date().toISOString(),
         } as Record<string, unknown>)
         .eq('email', normalizedEmail)

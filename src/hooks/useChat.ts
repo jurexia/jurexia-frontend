@@ -3,12 +3,14 @@
 import { useState, useCallback, useRef } from 'react';
 import { Message, streamChat, SearchResult } from '@/lib/api';
 import { getSession } from '@/lib/supabase';
+import { checkCanQuery, incrementQueryCount } from '@/lib/supabase';
 
 interface UseChatOptions {
     estado?: string;
     topK?: number;
     materia?: string;
     fuero?: string;  // Filtro por fuero: constitucional, federal, estatal
+    onQuotaExceeded?: (remaining: number) => void;
 }
 
 interface UseChatReturn {
@@ -222,6 +224,18 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             const accessToken = session?.access_token;
             const userId = session?.user?.id;
 
+            // ── Quota enforcement ──
+            if (userId) {
+                const { canQuery, remaining } = await checkCanQuery(userId);
+                if (!canQuery) {
+                    // Remove the user message we just added
+                    setMessages(messages);
+                    setIsLoading(false);
+                    options.onQuotaExceeded?.(remaining);
+                    return;
+                }
+            }
+
             const parser = new ThinkingParser();
             let assistantMessageAdded = false;
 
@@ -296,6 +310,15 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
             // Clear retry message after successful response
             setRetryMessage(null);
+
+            // ── Increment quota counter after successful response ──
+            if (userId) {
+                try {
+                    await incrementQueryCount(userId);
+                } catch (err) {
+                    console.error('Failed to increment query count:', err);
+                }
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
             // Remove the empty assistant message on error
@@ -304,7 +327,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [messages, isLoading, options.estado, options.topK, options.materia, options.fuero]);
+    }, [messages, isLoading, options.estado, options.topK, options.materia, options.fuero, options.onQuotaExceeded]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

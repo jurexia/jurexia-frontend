@@ -112,9 +112,17 @@ export function UserAvatar() {
                             Plan {planStyle.label}
                         </div>
                         {profile && (
-                            <p className="text-xs text-charcoal-400 mt-1">
-                                {profile.queries_used}/{profile.queries_limit === -1 ? '∞' : profile.queries_limit} consultas
-                            </p>
+                            <div className="mt-1">
+                                <p className="text-xs text-charcoal-400">
+                                    {profile.queries_used}/{profile.queries_limit === -1 ? '∞' : profile.queries_limit} consultas
+                                </p>
+                                {profile.subscription_type === 'ultra_secretarios' && (
+                                    <p className="text-xs text-charcoal-400">
+                                        {profile.sentencia_queries_used}/{profile.sentencia_queries_limit} sentencias
+                                        · {profile.drafts_used}/{profile.drafts_limit} redacciones
+                                    </p>
+                                )}
+                            </div>
                         )}
                     </div>
 
