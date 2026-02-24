@@ -172,6 +172,84 @@ function parseTesisTexto(texto: string, source?: PdfSource | null): TesisMetadat
     return null;
 }
 
+// ── Tesis body text component with section formatting ────────────────────
+// Detects "Hechos:", "Criterio jurídico:", "Justificación:" sections and renders them
+// with bold headers and visual separation.
+
+const SECTION_HEADERS = [
+    /^(Hechos)\s*:/i,
+    /^(Criterio\s+jur[ií]dico)\s*:/i,
+    /^(Justificaci[oó]n)\s*:/i,
+    /^(Precedentes)\s*:/i,
+    /^(Nota)\s*:/i,
+];
+
+function TesisBodyText({ text }: { text: string }) {
+    // Split text into segments: each segment is either a section or plain text
+    const segments: Array<{ header?: string; content: string }> = [];
+    const lines = text.split('\n');
+    let currentHeader: string | undefined = undefined;
+    let currentContent: string[] = [];
+
+    for (const line of lines) {
+        let matched = false;
+        for (const pattern of SECTION_HEADERS) {
+            const m = line.match(pattern);
+            if (m) {
+                // Flush previous segment
+                if (currentContent.length > 0 || currentHeader) {
+                    segments.push({ header: currentHeader, content: currentContent.join('\n').trim() });
+                }
+                currentHeader = m[1];
+                // Rest of the line after "Header:"
+                const rest = line.slice(line.indexOf(':') + 1).trim();
+                currentContent = rest ? [rest] : [];
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) {
+            currentContent.push(line);
+        }
+    }
+    // Flush last segment
+    if (currentContent.length > 0 || currentHeader) {
+        segments.push({ header: currentHeader, content: currentContent.join('\n').trim() });
+    }
+
+    // If no sections were found, render as plain text
+    const hasSections = segments.some(s => s.header);
+    if (!hasSections) {
+        return (
+            <p className="text-sm text-charcoal-800 leading-relaxed text-justify">
+                {text}
+            </p>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            {segments.map((seg, i) => (
+                <div key={i}>
+                    {seg.header && (
+                        <>
+                            {i > 0 && <div className="border-t border-cream-300 mb-3" />}
+                            <p className="text-xs font-bold text-charcoal-900 uppercase tracking-wider mb-1.5">
+                                {seg.header}:
+                            </p>
+                        </>
+                    )}
+                    {seg.content && (
+                        <p className="text-sm text-charcoal-800 leading-relaxed text-justify">
+                            {seg.content}
+                        </p>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
 // ── Component ────────────────────────────────────────────────────────────
 
 /**
@@ -331,8 +409,8 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                     {/* ════════════════ TESIS VIEW ════════════════ */}
                     {isTesis && tesisMeta ? (
                         <div className="p-5">
-                            {/* Metadata badges */}
-                            <div className="flex flex-wrap gap-2 mb-4">
+                            {/* Metadata badges + tesis identifier row */}
+                            <div className="flex flex-wrap items-center gap-2 mb-4">
                                 {tesisMeta.tipo && (
                                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${tesisMeta.tipo === 'JURISPRUDENCIA'
                                         ? 'bg-accent-gold/15 text-accent-gold border border-accent-gold/30'
@@ -357,32 +435,28 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                         Reg. {tesisMeta.registro}
                                     </span>
                                 )}
-                            </div>
-
-                            {/* Rubro (title) */}
-                            {tesisMeta.rubro && (
-                                <div className="mb-4 bg-charcoal-900 rounded-xl p-4">
-                                    <p className="text-xs font-bold text-white leading-relaxed tracking-wide">
-                                        {tesisMeta.rubro}
-                                    </p>
-                                </div>
-                            )}
-
-                            {/* Tesis identifier */}
-                            {tesisMeta.tesis && (
-                                <div className="flex items-center gap-2 mb-4">
-                                    <div className="w-0.5 h-4 bg-accent-gold rounded-full" />
-                                    <span className="text-xs font-semibold text-accent-gold">
+                                {/* Tesis identifier as badge */}
+                                {tesisMeta.tesis && (
+                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-accent-gold/10 text-accent-gold border border-accent-gold/25">
                                         {tesisMeta.tesis}
                                     </span>
-                                </div>
-                            )}
+                                )}
+                            </div>
 
-                            {/* Body text */}
-                            <div className="bg-white border border-cream-400 rounded-2xl p-5 shadow-sm">
-                                <p className="text-sm text-charcoal-800 leading-relaxed text-justify">
-                                    {tesisMeta.textoBody || source.texto || 'Sin texto disponible.'}
-                                </p>
+                            {/* Rubro (title) directly above body */}
+                            <div className="bg-white border border-cream-400 rounded-2xl shadow-sm overflow-hidden">
+                                {tesisMeta.rubro && (
+                                    <div className="bg-charcoal-900 p-4">
+                                        <p className="text-xs font-bold text-white leading-relaxed tracking-wide text-justify">
+                                            {tesisMeta.rubro}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Body text with formatted sections */}
+                                <div className="p-5">
+                                    <TesisBodyText text={tesisMeta.textoBody || source.texto || 'Sin texto disponible.'} />
+                                </div>
                             </div>
 
                             {/* Divider */}
