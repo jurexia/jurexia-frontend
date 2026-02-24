@@ -13,15 +13,20 @@ import { isAdmin } from '../adminGuard';
 export default function EstadoPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const params = useParams();
+    const slug = params.estado as string;
+    const estado = getEstadoBySlug(slug);
+    const stateHasContent = estado ? getTotalLeyes(estado.leyes) > 0 : false;
 
     useEffect(() => {
-        if (!loading && !isAdmin(user?.email)) {
+        // States with content are public; empty states require admin
+        if (!loading && !stateHasContent && !isAdmin(user?.email)) {
             router.push('/');
         }
-    }, [loading, user, router]);
+    }, [loading, user, router, stateHasContent]);
 
-    // Show nothing while loading or redirecting
-    if (loading || !isAdmin(user?.email)) {
+    // Show spinner while loading auth (only for admin-gated states)
+    if (loading && !stateHasContent) {
         return (
             <main className="min-h-screen bg-cream-300">
                 <Navbar />
@@ -31,9 +36,10 @@ export default function EstadoPage() {
             </main>
         );
     }
-    const params = useParams();
-    const slug = params.estado as string;
-    const estado = getEstadoBySlug(slug);
+    // Block non-admin on empty states
+    if (!stateHasContent && !isAdmin(user?.email)) {
+        return null;
+    }
 
     if (!estado) {
         return (
