@@ -323,6 +323,17 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
         return null;
     }, [source, tesisMeta]);
 
+    // Resolve PDF URL: direct from backend, or lookup from estadosData for state laws
+    const resolvedPdfUrl = useMemo(() => {
+        if (!source) return null;
+        if (source.pdf_url) return source.pdf_url;
+        // Try lawPdfLookup for state laws (e.g. Querétaro codes)
+        if (source.entidad && source.origen) {
+            return findLawPdfUrl(source.origen, source.entidad);
+        }
+        return null;
+    }, [source]);
+
     if (!isOpen || !source) return null;
 
     const isTesis = Boolean(tesisMeta);
@@ -339,16 +350,6 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
         : isTesis
             ? (tesisMeta?.tesis || source.ref || source.origen || 'Tesis')
             : source.origen || 'Fuente legal';
-
-    // Resolve PDF URL: direct from backend, or lookup from estadosData for state laws
-    const resolvedPdfUrl = useMemo(() => {
-        if (source.pdf_url) return source.pdf_url;
-        // Try lawPdfLookup for state laws (e.g. Querétaro codes)
-        if (source.entidad && source.origen) {
-            return findLawPdfUrl(source.origen, source.entidad);
-        }
-        return null;
-    }, [source]);
 
     const hasPdf = Boolean(resolvedPdfUrl);
 
