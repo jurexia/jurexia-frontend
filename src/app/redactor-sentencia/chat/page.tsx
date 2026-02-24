@@ -604,17 +604,30 @@ export default function ChatSentenciaPage() {
                 {/* ── Header ─────────────────────────────────────────────────────── */}
                 <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0f0f0f]/80 backdrop-blur-xl supports-[backdrop-filter]:bg-[#0f0f0f]/60">
                     <div className="max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between">
-                        {/* Left: Back + Title */}
-                        <div className="flex items-center gap-4">
+                        {/* Left: Navigation Pills */}
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href="/chat"
+                                className="px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 hover:opacity-90"
+                                style={{
+                                    background: '#1a1a1a',
+                                    color: 'rgba(255,255,255,0.9)',
+                                    border: '1px solid rgba(255,255,255,0.12)',
+                                }}
+                            >
+                                Chat Iurex<span style={{ color: '#c9a962' }}>ia</span>
+                            </Link>
                             <Link
                                 href="/redactor-sentencia"
-                                className="p-2 rounded-full hover:bg-white/5 transition-colors text-white/60 hover:text-white"
+                                className="px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 hover:opacity-90"
+                                style={{
+                                    background: '#1a1a1a',
+                                    color: '#c9a962',
+                                    border: '1px solid rgba(201, 169, 98, 0.3)',
+                                }}
                             >
-                                <ArrowLeft className="w-5 h-5" />
+                                Redactor
                             </Link>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-lg font-medium text-white tracking-tight">Chat de Redacción</h1>
-                            </div>
                         </div>
 
                         {/* Right: Clear + Avatar */}
