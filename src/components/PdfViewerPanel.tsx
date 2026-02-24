@@ -544,7 +544,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                         <div className="flex items-center gap-2">
                                             <div className="w-0.5 h-4 bg-accent-gold rounded-full" />
                                             <span className="text-xs font-semibold text-charcoal-900 uppercase tracking-widest">
-                                                Ley completa
+                                                Coteja la norma citada con su fuente
                                             </span>
                                         </div>
                                         <a
@@ -566,7 +566,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                             </div>
                                             <div>
                                                 <p className="text-sm font-semibold text-charcoal-900">{leyLabel}</p>
-                                                <p className="text-xs text-charcoal-600">PDF oficial · Fuente gubernamental</p>
+                                                <p className="text-xs text-charcoal-600">PDF oficial · Fuente gubernamental verificada</p>
                                             </div>
                                         </div>
 
