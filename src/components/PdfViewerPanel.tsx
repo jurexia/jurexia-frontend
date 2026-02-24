@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useMemo } from 'react';
 import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel } from 'lucide-react';
+import { findLawPdfUrl } from '@/lib/lawPdfLookup';
 
 interface PdfSource {
     origen: string;
@@ -9,6 +10,7 @@ interface PdfSource {
     texto: string;
     pdf_url?: string | null;
     silo?: string;
+    entidad?: string | null;
 }
 
 interface PdfViewerPanelProps {
@@ -338,7 +340,17 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
             ? (tesisMeta?.tesis || source.ref || source.origen || 'Tesis')
             : source.origen || 'Fuente legal';
 
-    const hasPdf = Boolean(source.pdf_url);
+    // Resolve PDF URL: direct from backend, or lookup from estadosData for state laws
+    const resolvedPdfUrl = useMemo(() => {
+        if (source.pdf_url) return source.pdf_url;
+        // Try lawPdfLookup for state laws (e.g. Querétaro codes)
+        if (source.entidad && source.origen) {
+            return findLawPdfUrl(source.origen, source.entidad);
+        }
+        return null;
+    }, [source]);
+
+    const hasPdf = Boolean(resolvedPdfUrl);
 
     // Header icon & label for tesis vs ley
     const headerIcon = isTesis
@@ -535,7 +547,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                             </span>
                                         </div>
                                         <a
-                                            href={source.pdf_url!}
+                                            href={resolvedPdfUrl!}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="inline-flex items-center gap-1.5 text-xs text-accent-gold hover:text-accent-brown transition-colors font-medium"
@@ -560,7 +572,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                         {/* ── Mobile: CTA button (iframes don't work on mobile) ── */}
                                         <div className="md:hidden">
                                             <a
-                                                href={source.pdf_url!}
+                                                href={resolvedPdfUrl!}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="flex items-center justify-center gap-3 w-full py-4 px-5 rounded-xl bg-gradient-to-r from-accent-gold to-accent-brown text-charcoal-900 font-semibold text-sm shadow-lg active:scale-[0.98] transition-transform"
@@ -576,7 +588,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                         {/* ── Desktop: embedded iframe ── */}
                                         <div className="hidden md:block rounded-xl overflow-hidden border border-cream-400 bg-cream-200" style={{ height: '480px' }}>
                                             <iframe
-                                                src={`${source.pdf_url}#toolbar=1&navpanes=0&scrollbar=1`}
+                                                src={`${resolvedPdfUrl}#toolbar=1&navpanes=0&scrollbar=1`}
                                                 className="w-full h-full"
                                                 title={`PDF: ${leyLabel}`}
                                                 loading="lazy"
