@@ -60,7 +60,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Extract unique document IDs, thinking content, and create numbered references
     const { processedContent, docIdMap, thinkingContent, citationMeta } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string }> } | null };
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null }> } | null };
 
         let content = message.content || '';
 
@@ -173,7 +173,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         content = content.replace(/^\s+/, '').trim();
 
         // Parse and strip <!-- CITATION_META:{...} --> from content
-        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string }> } | null = null;
+        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null }> } | null = null;
         const metaMatch = content.match(/<!-- CITATION_META:(\{.*?\}) -->/);
         if (metaMatch) {
             try {
@@ -563,11 +563,15 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         });
 
         const blob = await Packer.toBlob(doc);
-        const url = URL.createObjectURL(blob);
+        const downloadBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        const url = URL.createObjectURL(downloadBlob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `Iurexia-consulta-${Date.now()}.docx`;
+        a.style.display = 'none';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }, [message.content]);
 
