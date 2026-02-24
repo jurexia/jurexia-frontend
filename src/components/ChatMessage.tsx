@@ -7,7 +7,7 @@ import type { Message } from '@/lib/api';
 interface ChatMessageProps {
     message: Message;
     isStreaming?: boolean;
-    onCitationClick?: (source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string }) => void;
+    onCitationClick?: (source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null }) => void;
 }
 
 // UUID regex for document IDs
@@ -739,6 +739,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         texto: src?.texto || '',
                                         pdf_url: src?.pdf_url,
                                         silo: src?.silo,
+                                        entidad: src?.entidad,
                                     });
                                 }
                             }}
@@ -775,6 +776,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                                             texto: src?.texto || '',
                                                             pdf_url: src?.pdf_url,
                                                             silo: src?.silo,
+                                                            entidad: src?.entidad,
                                                         });
                                                     }}
                                                     className="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-600 text-white text-[10px] font-bold flex-shrink-0 hover:bg-blue-700 transition-colors cursor-pointer"

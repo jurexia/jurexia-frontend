@@ -244,7 +244,7 @@ export default function ChatPage() {
     }, [activeConversationId, clearMessages]);
 
     // Handle citation click
-    const handleCitationClick = useCallback((source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string }) => {
+    const handleCitationClick = useCallback((source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null }) => {
         setActivePdfSource(source);
     }, []);
 
