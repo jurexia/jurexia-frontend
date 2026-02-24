@@ -158,7 +158,12 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
     const scjnUrl = registroNumber ? `https://sjf2.scjn.gob.mx/detalle/tesis/${registroNumber}` : null;
 
     // Derive the ley name from silo for the PDF header
-    const leyLabel = source.silo === 'bloque_constitucional'
+    const isCpeum = source.silo === 'bloque_constitucional'
+        && (
+            !source.origen
+            || /cpeum|constitución\s+pol[ií]tica/i.test(source.origen)
+        );
+    const leyLabel = isCpeum
         ? 'Constitución Política de los Estados Unidos Mexicanos'
         : isTesis
             ? (tesisMeta?.tesis || source.ref || source.origen || 'Tesis')
