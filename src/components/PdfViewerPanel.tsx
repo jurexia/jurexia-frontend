@@ -29,42 +29,18 @@ interface TesisMetadata {
     textoBody?: string; // The actual body text
 }
 
-function parseTesisTexto(texto: string): TesisMetadata | null {
-    // Check if it looks like a tesis (has bracketed metadata)
-    if (!texto.includes('[TIPO:') && !texto.includes('[REGISTRO:')) return null;
-
-    const meta: TesisMetadata = {};
-
-    // Extract bracketed fields
-    const tipoMatch = texto.match(/\[TIPO:\s*([^\]]+)\]/i);
-    if (tipoMatch) meta.tipo = tipoMatch[1].trim();
-
-    const materiaMatch = texto.match(/\[MATERIA:\s*([^\]]+)\]/i);
-    if (materiaMatch) meta.materia = materiaMatch[1].trim();
-
-    const instanciaMatch = texto.match(/\[INSTANCIA:\s*([^\]]+)\]/i);
-    if (instanciaMatch) meta.instancia = instanciaMatch[1].trim();
-
-    const tesisMatch = texto.match(/\[TESIS:\s*([^\]]+)\]/i);
-    if (tesisMatch) meta.tesis = tesisMatch[1].trim();
-
-    const registroMatch = texto.match(/\[REGISTRO:\s*([^\]]+)\]/i);
-    if (registroMatch) meta.registro = registroMatch[1].trim();
-
-    // Remove all bracketed metadata and dash separators
-    let body = texto
-        .replace(/\[(?:TIPO|MATERIA|INSTANCIA|TESIS|REGISTRO|ÉPOCA|FUENTE|LOCALIZACIÓN|PÁGINA):\s*[^\]]*\]/gi, '')
-        .replace(/^[-─]{3,}$/gm, '')  // Remove dash lines
-        .trim();
-
-    // Split rubro (ALL CAPS paragraph) from body text
-    const lines = body.split('\n').filter(l => l.trim());
+/**
+ * Extract rubro (ALL CAPS title) and body from raw tesis text.
+ * Works with or without bracketed metadata.
+ */
+function extractRubroAndBody(rawText: string): { rubro: string | null; body: string } {
+    const lines = rawText.split('\n').filter(l => l.trim());
     const rubroLines: string[] = [];
     let bodyStartIdx = 0;
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        // Rubro is typically all-caps or mostly uppercase
+        // Rubro: ALL-CAPS, at least 10 chars, contains Spanish letters
         if (line.length > 10 && line === line.toUpperCase() && /[A-ZÁÉÍÓÚÑ]/.test(line)) {
             rubroLines.push(line);
         } else {
@@ -74,13 +50,126 @@ function parseTesisTexto(texto: string): TesisMetadata | null {
     }
 
     if (rubroLines.length > 0) {
-        meta.rubro = rubroLines.join(' ');
-        meta.textoBody = lines.slice(bodyStartIdx).join('\n').trim();
-    } else {
+        return {
+            rubro: rubroLines.join(' '),
+            body: lines.slice(bodyStartIdx).join('\n').trim(),
+        };
+    }
+    return { rubro: null, body: rawText };
+}
+
+/**
+ * Try to infer tesis type from the tesis identifier string.
+ * /J. = Jurisprudencia, otherwise Tesis Aislada.
+ */
+function inferTipoFromIdentifier(id: string): string {
+    if (/\/J\./i.test(id)) return 'JURISPRUDENCIA';
+    return 'TESIS AISLADA';
+}
+
+/**
+ * Try to infer instancia from a tesis identifier.
+ * P. = Pleno; 1a. = Primera Sala; 2a. = Segunda Sala; I.Xo = TCC
+ */
+function inferInstancia(id: string): string | undefined {
+    if (/^P\.\/?/i.test(id)) return 'Pleno';
+    if (/^1a\./i.test(id)) return 'Primera Sala';
+    if (/^2a\./i.test(id)) return 'Segunda Sala';
+    if (/^[IVX]+\.\d+[oa]\./i.test(id)) return 'Tribunal Colegiado';
+    return undefined;
+}
+
+/**
+ * Clean and humanize an origen that looks like "2027232_I.3o.C.67 C (11a.)"
+ * → extracts registro "2027232" and tesis id "I.3o.C.67 C (11a.)"
+ */
+function parseOrigenFallback(origen: string): { registro?: string; tesisId?: string } {
+    // Pattern: "NNNNNN_TesisId" or "NNNNNNN_TesisId"
+    const m = origen.match(/^(\d{5,7})[_\s]+(.+)/);
+    if (m) return { registro: m[1], tesisId: m[2].trim() };
+    // Just a registro number
+    const regOnly = origen.match(/^(\d{5,7})$/);
+    if (regOnly) return { registro: regOnly[1] };
+    return {};
+}
+
+function parseTesisTexto(texto: string, source?: PdfSource | null): TesisMetadata | null {
+    const hasBracketedMeta = texto.includes('[TIPO:') || texto.includes('[REGISTRO:');
+    const meta: TesisMetadata = {};
+
+    if (hasBracketedMeta) {
+        // ── Path A: Bracketed metadata (newer ingestion) ──
+        const tipoMatch = texto.match(/\[TIPO:\s*([^\]]+)\]/i);
+        if (tipoMatch) meta.tipo = tipoMatch[1].trim();
+
+        const materiaMatch = texto.match(/\[MATERIA:\s*([^\]]+)\]/i);
+        if (materiaMatch) meta.materia = materiaMatch[1].trim();
+
+        const instanciaMatch = texto.match(/\[INSTANCIA:\s*([^\]]+)\]/i);
+        if (instanciaMatch) meta.instancia = instanciaMatch[1].trim();
+
+        const tesisMatch = texto.match(/\[TESIS:\s*([^\]]+)\]/i);
+        if (tesisMatch) meta.tesis = tesisMatch[1].trim();
+
+        const registroMatch = texto.match(/\[REGISTRO:\s*([^\]]+)\]/i);
+        if (registroMatch) meta.registro = registroMatch[1].trim();
+
+        // Remove all bracketed metadata and dash separators
+        const cleaned = texto
+            .replace(/\[(?:TIPO|MATERIA|INSTANCIA|TESIS|REGISTRO|ÉPOCA|FUENTE|LOCALIZACIÓN|PÁGINA):\s*[^\]]*\]/gi, '')
+            .replace(/^[-─]{3,}$/gm, '')
+            .trim();
+
+        const { rubro, body } = extractRubroAndBody(cleaned);
+        meta.rubro = rubro || undefined;
         meta.textoBody = body;
+
+    } else {
+        // ── Path B: No bracketed metadata (older ingestion) ──
+        // Try to extract rubro + body from the raw text
+        const { rubro, body } = extractRubroAndBody(texto);
+        meta.rubro = rubro || undefined;
+        meta.textoBody = body;
+
+        // Infer metadata from origen and ref
+        if (source) {
+            // Extract registro and tesis ID from origen like "2027232_I.3o.C.67 C (11a.)"
+            const origenParsed = parseOrigenFallback(source.origen || '');
+            if (origenParsed.registro) meta.registro = origenParsed.registro;
+            if (origenParsed.tesisId) {
+                meta.tesis = origenParsed.tesisId;
+                meta.tipo = inferTipoFromIdentifier(origenParsed.tesisId);
+                meta.instancia = inferInstancia(origenParsed.tesisId);
+            }
+
+            // Also try ref like "Tesis I.3o.C.67 C (11a.)" or "P./J. 81/2011 (9a.) | Registro 160596"
+            if (!meta.tesis && source.ref) {
+                const refTesis = source.ref.replace(/^Tesis\s+/i, '').replace(/\s*\|.*$/, '').trim();
+                if (refTesis) {
+                    meta.tesis = refTesis;
+                    meta.tipo = meta.tipo || inferTipoFromIdentifier(refTesis);
+                    meta.instancia = meta.instancia || inferInstancia(refTesis);
+                }
+            }
+            if (!meta.registro && source.ref) {
+                const regMatch = source.ref.match(/Registro\s+(\d+)/i);
+                if (regMatch) meta.registro = regMatch[1];
+            }
+
+            // Fallback: try to get registro from origen start
+            if (!meta.registro) {
+                const origenReg = source.origen?.match(/^(\d{5,7})/);
+                if (origenReg) meta.registro = origenReg[1];
+            }
+        }
     }
 
-    return meta;
+    // If we have at least a rubro or a registro or tesis identifier, consider it valid
+    if (meta.rubro || meta.registro || meta.tesis) {
+        return meta;
+    }
+
+    return null;
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -136,8 +225,10 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
             || source.silo === 'tesis_aisladas'
             || source.silo === 'jurisprudencia_tcc';
         const looksLikeTesis = (source.texto || '').includes('[TIPO:') || (source.texto || '').includes('[REGISTRO:');
-        if (!isTesisSilo && !looksLikeTesis) return null;
-        return parseTesisTexto(source.texto || '');
+        // Also detect from origen pattern: "NNNNNNN_TesisId..."
+        const origenLooksTesis = /^\d{5,7}[_\s]/.test(source.origen || '');
+        if (!isTesisSilo && !looksLikeTesis && !origenLooksTesis) return null;
+        return parseTesisTexto(source.texto || '', source);
     }, [source]);
 
     // Extract registro for SCJN link (from parsed meta or from ref/origen)
@@ -192,7 +283,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
             <div
                 ref={panelRef}
                 className="fixed right-0 top-0 h-full w-full max-w-xl bg-cream-100 shadow-2xl z-50 flex flex-col overflow-hidden"
-                style={{ animation: 'slideInRight 0.25s ease-out' }}
+                style={{ animation: 'slideInRight 0.25s ease-out', fontFamily: 'Arial, Helvetica, sans-serif' }}
             >
                 {/* Header */}
                 <div className="flex items-start justify-between p-5 border-b border-cream-400 bg-charcoal-900">
@@ -289,7 +380,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
 
                             {/* Body text */}
                             <div className="bg-white border border-cream-400 rounded-2xl p-5 shadow-sm">
-                                <p className="text-sm text-charcoal-800 leading-relaxed font-serif text-justify">
+                                <p className="text-sm text-charcoal-800 leading-relaxed text-justify">
                                     {tesisMeta.textoBody || source.texto || 'Sin texto disponible.'}
                                 </p>
                             </div>
@@ -337,7 +428,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                     </span>
                                 </div>
 
-                                <div className="bg-white border border-cream-400 rounded-2xl p-5 text-sm text-charcoal-800 leading-relaxed font-serif whitespace-pre-wrap shadow-sm">
+                                <div className="bg-white border border-cream-400 rounded-2xl p-5 text-sm text-charcoal-800 leading-relaxed whitespace-pre-wrap shadow-sm">
                                     {source.texto || 'Sin texto disponible.'}
                                 </div>
 
