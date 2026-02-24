@@ -785,14 +785,30 @@ export default function ChatSentenciaPage() {
                                         );
                                     })}
                                     {isLoading && messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content && (
-                                        <div className="flex items-start gap-4 px-4 animate-pulse">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center shrink-0 shadow-lg shadow-[#c9a962]/10">
-                                                <Sparkles className="w-4 h-4 text-[#0f0f0f]" />
+                                        <div className="flex items-start gap-4 px-4">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a962] to-[#8b7355] flex items-center justify-center shrink-0 shadow-lg shadow-[#c9a962]/20 animate-pulse">
+                                                <Sparkles className="w-4 h-4 text-[#0f0f0f] animate-spin" style={{ animationDuration: '3s' }} />
                                             </div>
-                                            <div className="space-y-2 pt-1.5">
-                                                <div className="h-4 w-32 bg-white/10 rounded overflow-hidden">
-                                                    <div className="h-full bg-gradient-to-r from-transparent via-white/10 to-transparent w-full animate-shimmer" />
-                                                </div>
+                                            <div className="pt-1.5 flex items-center gap-2">
+                                                <span
+                                                    className="text-sm font-medium animate-pulse"
+                                                    style={{ color: '#c9a962', animationDuration: '2s' }}
+                                                >
+                                                    Generando respuesta jurídica especializada
+                                                </span>
+                                                <span className="flex gap-0.5">
+                                                    {[0, 1, 2].map((i) => (
+                                                        <span
+                                                            key={i}
+                                                            className="w-1.5 h-1.5 rounded-full animate-bounce"
+                                                            style={{
+                                                                backgroundColor: '#c9a962',
+                                                                animationDelay: `${i * 0.2}s`,
+                                                                animationDuration: '1s',
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </span>
                                             </div>
                                         </div>
                                     )}
