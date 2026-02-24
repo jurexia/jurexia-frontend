@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, KeyboardEvent } from 'react';
+import Link from 'next/link';
 import {
     ArrowRight,
     Paperclip,
@@ -10,7 +11,8 @@ import {
     FileEdit,
     Gavel,
     Users,
-    Brain
+    Brain,
+    Scale
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -18,6 +20,8 @@ import TextEnhanceModal from './TextEnhanceModal';
 import DraftModal, { DraftRequest } from './DraftModal';
 import SentenciaModal from './SentenciaModal';
 import { enhanceText } from '@/lib/api';
+import { useAuth } from '@/lib/useAuth';
+import { isAdmin } from '@/app/leyesestatales/adminGuard';
 
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
@@ -41,6 +45,8 @@ export default function ChatInput({
     const [attachedDocument, setAttachedDocument] = useState<{ text: string; fileName: string } | null>(null);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const { user, profile } = useAuth();
+    const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
 
     const handleSubmit = () => {
         if (!isLoading && (message.trim() || attachedDocument)) {
@@ -219,6 +225,21 @@ ${draftRequest.descripcion}`;
                                 onClick={() => handleModeClick('sentencia')}
                                 guideId="sentencia"
                             />
+                            {canAccessRedactor && (
+                                <Link
+                                    href="/redactor-sentencia"
+                                    className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-sm font-medium
+                                              transition-all duration-200 text-white hover:opacity-90"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%)',
+                                        boxShadow: '0 1px 3px rgba(15, 39, 68, 0.3)',
+                                    }}
+                                    title="Acceder al Redactor de Sentencias TCC"
+                                >
+                                    <Scale className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Secretario PJF</span>
+                                </Link>
+                            )}
                         </div>
 
                     </div>

@@ -227,31 +227,6 @@ export default function ChatSidebar({
                 )}
             </div>
 
-            {/* ── Redactor TCC (Admin + Ultra Secretarios) ── */}
-            {canAccessRedactor && !isCollapsed && (
-                <div className="px-3 pb-2">
-                    <Link
-                        href="/redactor-sentencia"
-                        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg font-medium text-sm transition-all duration-200"
-                        style={{
-                            background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%)',
-                            color: '#a78bfa',
-                            border: '1px solid rgba(167, 139, 250, 0.2)',
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(167, 139, 250, 0.25) 0%, rgba(139, 92, 246, 0.18) 100%)';
-                            e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.4)';
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%)';
-                            e.currentTarget.style.borderColor = 'rgba(167, 139, 250, 0.2)';
-                        }}
-                    >
-                        <FileText className="w-4 h-4 flex-shrink-0" />
-                        <span>Redactor TCC</span>
-                    </Link>
-                </div>
-            )}
 
             {/* ── Quick Guide Footer ── */}
             {!isCollapsed && (
