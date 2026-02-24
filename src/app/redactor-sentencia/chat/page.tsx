@@ -23,6 +23,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ChatMessage from '@/components/ChatMessage';
 import DocumentModal from '@/components/DocumentModal';
+import PdfViewerPanel from '@/components/PdfViewerPanel';
 import { useRequireAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -120,8 +121,11 @@ export default function ChatSentenciaPage() {
     const [useRag, setUseRag] = useState(true);
     const [showRagWarning, setShowRagWarning] = useState(false);
 
-    // Document Modal State
-    const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+    // Citation Panel State
+    const [activePdfSource, setActivePdfSource] = useState<{
+        docId: string; origen: string; ref: string; texto: string;
+        pdf_url?: string | null; silo?: string; entidad?: string | null;
+    } | null>(null);
 
     // File attachment
     const [attachedFile, setAttachedFile] = useState<File | null>(null);
@@ -288,12 +292,12 @@ export default function ChatSentenciaPage() {
     }, []);
 
     // ── Document Modal Handlers ─────────────────────────────────────────────
-    const handleCitationClick = useCallback((docId: string) => {
-        setSelectedDocId(docId);
+    const handleCitationClick = useCallback((source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null }) => {
+        setActivePdfSource(source);
     }, []);
 
     const handleCloseModal = useCallback(() => {
-        setSelectedDocId(null);
+        setActivePdfSource(null);
     }, []);
 
     // ── Send Message ────────────────────────────────────────────────────────
@@ -819,11 +823,7 @@ export default function ChatSentenciaPage() {
                         </div>
                     )}
 
-                    {/* ── Document Modal ─────────────────────────────────────────────── */}
-                    <DocumentModal
-                        docId={selectedDocId}
-                        onClose={handleCloseModal}
-                    />
+                    {/* Citation viewer is handled by PdfViewerPanel below */}
                 </main>
 
                 {/* ══ Sentencia Quota Exceeded Modal ══ */}
@@ -863,6 +863,13 @@ export default function ChatSentenciaPage() {
                     </div>
                 )}
             </div> {/* End Main Content Wrapper */}
+
+            {/* ══ Citation Source Viewer (PdfViewerPanel) ══ */}
+            <PdfViewerPanel
+                isOpen={activePdfSource !== null}
+                onClose={() => setActivePdfSource(null)}
+                source={activePdfSource}
+            />
         </div>
     );
 }
