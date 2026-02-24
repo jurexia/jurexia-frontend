@@ -195,7 +195,7 @@ ${draftRequest.descripcion}`;
 
                     {/* Action Buttons Row */}
                     <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
                             {/* Subir Documentos para Análisis */}
                             <ActionButton
                                 icon={Paperclip}
@@ -228,12 +228,15 @@ ${draftRequest.descripcion}`;
                             {canAccessRedactor && (
                                 <Link
                                     href="/redactor-sentencia"
-                                    className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium
-                                              transition-all duration-200 text-charcoal-600 hover:bg-charcoal-50 whitespace-nowrap"
+                                    className="shrink-0 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap
+                                              transition-all duration-200 hover:opacity-90"
+                                    style={{
+                                        background: '#1a1a1a',
+                                        color: '#c9a962',
+                                    }}
                                     title="Acceder al Redactor de Sentencias TCC"
                                 >
-                                    <Gavel className="w-3.5 h-3.5" />
-                                    <span className="hidden sm:inline">Secretario PJF</span>
+                                    Secretario PJF
                                 </Link>
                             )}
                         </div>
