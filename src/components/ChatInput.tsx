@@ -236,8 +236,7 @@ ${draftRequest.descripcion}`;
                                     }}
                                     title="Acceder al Redactor de Sentencias TCC"
                                 >
-                                    <Scale className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Secretario PJF</span>
+                                    <span>Secretario PJF</span>
                                 </Link>
                             )}
                         </div>
