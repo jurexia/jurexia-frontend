@@ -423,7 +423,7 @@ export default function RedactorSentenciaPage() {
                 formData.append('calificaciones', JSON.stringify(califJson));
             }
 
-            const response = await fetch(`${API_URL}/draft-sentencia-stream`, {
+            const response = await fetch(`${API_URL}/redaccion-sentencias`, {
                 method: 'POST',
                 body: formData,
             });
@@ -433,62 +433,28 @@ export default function RedactorSentenciaPage() {
                 throw new Error(errorData.detail || `Error ${response.status}`);
             }
 
-            // ── SSE Stream Consumer ──────────────────────────────────────
+            // ── text/plain streaming (Sálvame pattern) ──────────────────
             const reader = response.body?.getReader();
             if (!reader) throw new Error('No se pudo iniciar el stream');
 
             const decoder = new TextDecoder();
-            let buffer = '';
+            let fullText = '';
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-
-                // Parse SSE events from buffer
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || ''; // Keep incomplete line in buffer
-
-                let currentEvent = '';
-                for (const line of lines) {
-                    if (line.startsWith('event: ')) {
-                        currentEvent = line.slice(7).trim();
-                    } else if (line.startsWith('data: ') && currentEvent) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-
-                            switch (currentEvent) {
-                                case 'phase':
-                                    setStreamingPhase({ step: data.step, progress: data.progress });
-                                    break;
-                                case 'text':
-                                    setStreamingText(prev => prev + data.chunk);
-                                    break;
-                                case 'done':
-                                    setResult(data.final_text);
-                                    if (data.rag_count) setRagCount(data.rag_count);
-                                    setGenerationInfo({
-                                        phasesCompleted: 3,
-                                        totalChars: data.total_chars || 0,
-                                        generationTime: data.elapsed || 0,
-                                    });
-                                    setPhase('result');
-                                    break;
-                                case 'error':
-                                    throw new Error(data.message);
-                            }
-                        } catch (parseErr: any) {
-                            if (parseErr.message && !parseErr.message.includes('JSON')) {
-                                throw parseErr; // Re-throw non-parse errors (like our error events)
-                            }
-                        }
-                        currentEvent = '';
-                    } else if (line === '') {
-                        currentEvent = '';
-                    }
-                }
+                const chunk = decoder.decode(value, { stream: true });
+                fullText += chunk;
+                setStreamingText(fullText);
             }
+
+            setResult(fullText);
+            setGenerationInfo({
+                phasesCompleted: 2,
+                totalChars: fullText.length,
+                generationTime: 0,
+            });
+            setPhase('result');
         } catch (err: any) {
             setError(err.message || 'Error al generar la sentencia');
             setPhase('estrategia');
