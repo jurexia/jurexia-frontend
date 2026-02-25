@@ -74,6 +74,7 @@ export default function RedaccionSentenciasPage() {
     const [selectedTipo, setSelectedTipo] = useState<TipoConfig | null>(null);
     const [files, setFiles] = useState<(File | null)[]>([null, null]);
     const [generatedText, setGeneratedText] = useState('');
+    const [instrucciones, setInstrucciones] = useState('');
     const [error, setError] = useState('');
     const [loaderIdx, setLoaderIdx] = useState(0);
 
@@ -173,6 +174,9 @@ export default function RedaccionSentenciasPage() {
             formData.append('user_email', user.email);
             formData.append('doc1', files[0]!);
             formData.append('doc2', files[1]!);
+            if (instrucciones.trim()) {
+                formData.append('instrucciones', instrucciones.trim());
+            }
 
             const res = await fetch(`${API_URL}/redaccion-sentencias`, {
                 method: 'POST',
@@ -224,6 +228,7 @@ export default function RedaccionSentenciasPage() {
         setSelectedTipo(null);
         setFiles([null, null]);
         setGeneratedText('');
+        setInstrucciones('');
         setError('');
     };
 
@@ -238,7 +243,7 @@ export default function RedaccionSentenciasPage() {
             minHeight: '100vh',
             background: 'linear-gradient(180deg, #0a0a0a 0%, #141210 50%, #0a0a0a 100%)',
             color: '#e8dcc8',
-            fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+            fontFamily: "'Arial Black', 'Arial', sans-serif",
         }}>
             {/* ── Header ──────────────────────────────────────────────────── */}
             <header style={{
@@ -246,19 +251,16 @@ export default function RedaccionSentenciasPage() {
                 borderBottom: '1px solid rgba(201,169,98,0.15)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span style={{ fontSize: '1.5rem' }}>⚖️</span>
-                    <div>
-                        <h1 style={{
-                            fontSize: '1.25rem', fontWeight: 700, color: '#c9a962',
-                            letterSpacing: '0.04em', margin: 0,
-                        }}>
-                            REDACCIÓN DE SENTENCIAS
-                        </h1>
-                        <p style={{ fontSize: '0.75rem', color: '#8b7355', margin: 0 }}>
-                            Tribunales Colegiados de Circuito
-                        </p>
-                    </div>
+                <div>
+                    <h1 style={{
+                        fontSize: '1.25rem', fontWeight: 900, color: '#c9a962',
+                        letterSpacing: '0.06em', margin: 0,
+                    }}>
+                        REDACCIÓN DE SENTENCIAS
+                    </h1>
+                    <p style={{ fontSize: '0.75rem', color: '#8b7355', margin: 0 }}>
+                        Tribunales Colegiados de Circuito
+                    </p>
                 </div>
                 <button
                     onClick={() => router.push('/chat')}
@@ -325,7 +327,7 @@ export default function RedaccionSentenciasPage() {
                                                 background: 'rgba(201,169,98,0.08)',
                                                 padding: '0.2rem 0.5rem', borderRadius: '4px',
                                             }}>
-                                                📄 {doc}
+                                                {doc}
                                             </span>
                                         ))}
                                     </div>
@@ -396,12 +398,6 @@ export default function RedaccionSentenciasPage() {
                                     {files[idx] ? (
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                <span style={{
-                                                    width: '40px', height: '40px', borderRadius: '10px',
-                                                    background: 'rgba(201,169,98,0.1)',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    fontSize: '1.2rem',
-                                                }}>📄</span>
                                                 <div>
                                                     <p style={{ color: '#e8dcc8', fontSize: '0.9rem', fontWeight: 600, margin: 0 }}>
                                                         {files[idx]!.name}
@@ -438,13 +434,42 @@ export default function RedaccionSentenciasPage() {
                             ))}
                         </div>
 
+                        {/* Instructions textarea */}
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{
+                                display: 'block', color: '#c9a962', fontSize: '0.85rem',
+                                fontWeight: 700, marginBottom: '0.5rem', letterSpacing: '0.04em',
+                            }}>
+                                DIRECTRIZ DEL SECRETARIO (opcional)
+                            </label>
+                            <textarea
+                                value={instrucciones}
+                                onChange={e => setInstrucciones(e.target.value)}
+                                placeholder="Escribe aquí la directriz para el proyecto: sentido de la resolución, calificación de los agravios, fundamentos legales, jurisprudencia aplicable..."
+                                style={{
+                                    width: '100%', minHeight: '120px', padding: '1rem',
+                                    background: 'rgba(201,169,98,0.03)',
+                                    border: '1px solid rgba(201,169,98,0.2)',
+                                    borderRadius: '10px', color: '#e8dcc8',
+                                    fontSize: '0.85rem', lineHeight: 1.6,
+                                    fontFamily: "'Arial', sans-serif",
+                                    resize: 'vertical', outline: 'none',
+                                }}
+                                onFocus={e => { e.currentTarget.style.borderColor = 'rgba(201,169,98,0.5)'; }}
+                                onBlur={e => { e.currentTarget.style.borderColor = 'rgba(201,169,98,0.2)'; }}
+                            />
+                            <p style={{ color: '#6b5c44', fontSize: '0.7rem', marginTop: '0.3rem' }}>
+                                Ejemplo: "Conceder el amparo. El primer concepto de violación es fundado porque..."
+                            </p>
+                        </div>
+
                         {error && (
                             <div style={{
                                 background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)',
                                 borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem',
                                 color: '#fca5a5', fontSize: '0.85rem',
                             }}>
-                                ⚠️ {error}
+                                {error}
                             </div>
                         )}
 
@@ -457,10 +482,10 @@ export default function RedaccionSentenciasPage() {
                                     background: 'transparent',
                                     border: '1px solid rgba(201,169,98,0.3)',
                                     borderRadius: '10px', color: '#c9a962',
-                                    cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
+                                    cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,
                                 }}
                             >
-                                ← Cambiar tipo
+                                Cambiar tipo
                             </button>
                             <button
                                 onClick={handleGenerate}
@@ -473,7 +498,7 @@ export default function RedaccionSentenciasPage() {
                                     border: 'none', borderRadius: '10px',
                                     color: allFilesUploaded ? '#0a0a0a' : '#8b7355',
                                     cursor: allFilesUploaded ? 'pointer' : 'not-allowed',
-                                    fontSize: '0.95rem', fontWeight: 700,
+                                    fontSize: '0.95rem', fontWeight: 900,
                                     letterSpacing: '0.02em',
                                 }}
                             >
@@ -550,12 +575,7 @@ export default function RedaccionSentenciasPage() {
                 {phase === 'result' && (
                     <div ref={resultRef}>
                         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                            <div style={{
-                                width: '48px', height: '48px', margin: '0 auto 1rem',
-                                background: 'rgba(34,197,94,0.1)', borderRadius: '50%',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '1.5rem',
-                            }}>✓</div>
+
                             <h2 style={{ color: '#e8dcc8', fontSize: '1.5rem', fontWeight: 700, margin: '0 0 0.25rem' }}>
                                 Estudio de Fondo Generado
                             </h2>
@@ -578,7 +598,7 @@ export default function RedaccionSentenciasPage() {
                                     cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
                                 }}
                             >
-                                {copied ? '✓ Copiado' : '📋 Copiar'}
+                                {copied ? 'Copiado' : 'Copiar'}
                             </button>
                             <button
                                 onClick={handleReset}
@@ -591,7 +611,7 @@ export default function RedaccionSentenciasPage() {
                                     cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
                                 }}
                             >
-                                ← Nuevo expediente
+                                Nuevo expediente
                             </button>
                         </div>
 
