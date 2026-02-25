@@ -423,7 +423,7 @@ export default function RedactorSentenciaPage() {
                 formData.append('calificaciones', JSON.stringify(califJson));
             }
 
-            const response = await fetch(`${API_URL}/redaccion-sentencias`, {
+            const response = await fetch(`${API_URL}/redaccion-sentencias-gemini`, {
                 method: 'POST',
                 body: formData,
             });
