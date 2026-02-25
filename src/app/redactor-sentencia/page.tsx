@@ -231,6 +231,8 @@ export default function RedactorSentenciaPage() {
     const [result, setResult] = useState('');
     const [error, setError] = useState('');
     const [progressStep, setProgressStep] = useState(0);
+    const [streamingText, setStreamingText] = useState('');
+    const [streamingPhase, setStreamingPhase] = useState<{ step: string; progress: number } | null>(null);
     const [tokensInfo, setTokensInfo] = useState<{ input: number; output: number } | null>(null);
     const [copied, setCopied] = useState(false);
     const [exportLoading, setExportLoading] = useState(false);
@@ -388,24 +390,15 @@ export default function RedactorSentenciaPage() {
         }
     };
 
-    // ── Generate (with calificaciones) ────────────────────────────────────
+    // ── Generate (with calificaciones) — SSE STREAMING ────────────────────
     const handleGenerate = async () => {
         if (!selectedTipo || !allFilesUploaded || !user?.email) return;
 
         setPhase('generating');
         setError('');
         setProgressStep(0);
-
-        // Animate progress steps
-        const interval = setInterval(() => {
-            setProgressStep((prev) => {
-                if (prev >= PROGRESS_STEPS.length - 1) {
-                    clearInterval(interval);
-                    return prev;
-                }
-                return prev + 1;
-            });
-        }, 40000);
+        setStreamingText('');
+        setStreamingPhase(null);
 
         try {
             const formData = new FormData();
@@ -430,36 +423,73 @@ export default function RedactorSentenciaPage() {
                 formData.append('calificaciones', JSON.stringify(califJson));
             }
 
-            const response = await fetch(`${API_URL}/draft-sentencia`, {
+            const response = await fetch(`${API_URL}/draft-sentencia-stream`, {
                 method: 'POST',
                 body: formData,
             });
-
-            clearInterval(interval);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }));
                 throw new Error(errorData.detail || `Error ${response.status}`);
             }
 
-            const data = await response.json();
-            setResult(data.sentencia_text);
-            if (data.tokens_input && data.tokens_output) {
-                setTokensInfo({ input: data.tokens_input, output: data.tokens_output });
+            // ── SSE Stream Consumer ──────────────────────────────────────
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error('No se pudo iniciar el stream');
+
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+
+                // Parse SSE events from buffer
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+                let currentEvent = '';
+                for (const line of lines) {
+                    if (line.startsWith('event: ')) {
+                        currentEvent = line.slice(7).trim();
+                    } else if (line.startsWith('data: ') && currentEvent) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+
+                            switch (currentEvent) {
+                                case 'phase':
+                                    setStreamingPhase({ step: data.step, progress: data.progress });
+                                    break;
+                                case 'text':
+                                    setStreamingText(prev => prev + data.chunk);
+                                    break;
+                                case 'done':
+                                    setResult(data.final_text);
+                                    if (data.rag_count) setRagCount(data.rag_count);
+                                    setGenerationInfo({
+                                        phasesCompleted: 3,
+                                        totalChars: data.total_chars || 0,
+                                        generationTime: data.elapsed || 0,
+                                    });
+                                    setPhase('result');
+                                    break;
+                                case 'error':
+                                    throw new Error(data.message);
+                            }
+                        } catch (parseErr: any) {
+                            if (parseErr.message && !parseErr.message.includes('JSON')) {
+                                throw parseErr; // Re-throw non-parse errors (like our error events)
+                            }
+                        }
+                        currentEvent = '';
+                    } else if (line === '') {
+                        currentEvent = '';
+                    }
+                }
             }
-            if (data.rag_results_count) {
-                setRagCount(data.rag_results_count);
-            }
-            if (data.phases_completed) {
-                setGenerationInfo({
-                    phasesCompleted: data.phases_completed,
-                    totalChars: data.total_chars || data.sentencia_text.length,
-                    generationTime: data.generation_time_seconds || 0,
-                });
-            }
-            setPhase('result');
         } catch (err: any) {
-            clearInterval(interval);
             setError(err.message || 'Error al generar la sentencia');
             setPhase('estrategia');
         }
@@ -1348,49 +1378,62 @@ export default function RedactorSentenciaPage() {
                 {/* PHASE 3: GENERATING                                        */}
                 {/* ═══════════════════════════════════════════════════════════ */}
                 {phase === 'generating' && (
-                    <div className="max-w-2xl mx-auto text-center py-16">
-                        {/* Animated gavel */}
-                        <div className="relative w-24 h-24 mx-auto mb-8">
-                            <div className="absolute inset-0 rounded-full bg-[#c9a962]/10 animate-ping" />
-                            <div className="absolute inset-2 rounded-full bg-[#c9a962]/5 animate-pulse" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <Gavel className="w-10 h-10 text-[#c9a962] animate-pulse" />
+                    <div className="max-w-4xl mx-auto py-8">
+                        {/* Header */}
+                        <div className="text-center mb-8">
+                            <div className="relative w-20 h-20 mx-auto mb-6">
+                                <div className="absolute inset-0 rounded-full bg-[#c9a962]/10 animate-ping" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <Gavel className="w-9 h-9 text-[#c9a962] animate-pulse" />
+                                </div>
                             </div>
+                            <h2 className="font-serif text-2xl font-medium text-white mb-2">
+                                Redactando Estudio de Fondo
+                            </h2>
                         </div>
 
-                        <h2 className="font-serif text-2xl font-medium text-white mb-2">
-                            Redactando Estudio de Fondo profundo...
-                        </h2>
-                        <p className="text-sm text-gray-400 mb-10">
-                            Pipeline enfocado con RAG intensivo por agravio — Tiempo estimado: 5-15 minutos
-                        </p>
+                        {/* Real Progress Bar */}
+                        {streamingPhase && (
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm text-white/60">{streamingPhase.step}</span>
+                                    <span className="text-xs text-[#c9a962] font-medium">{streamingPhase.progress}%</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-[#c9a962] to-[#8b7355] rounded-full transition-all duration-1000 ease-out"
+                                        style={{ width: `${streamingPhase.progress}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
 
-                        {/* Progress Steps */}
-                        <div className="space-y-3 text-left max-w-sm mx-auto">
-                            {PROGRESS_STEPS.map((step, i) => (
-                                <div
-                                    key={i}
-                                    className={`flex items-center gap-3 transition-all duration-500 ${i < progressStep
-                                        ? 'opacity-100'
-                                        : i === progressStep
-                                            ? 'opacity-100'
-                                            : 'opacity-20'
-                                        }`}
-                                >
-                                    {i < progressStep ? (
-                                        <CheckCircle className="w-5 h-5 text-[#8b7355] flex-shrink-0" />
-                                    ) : i === progressStep ? (
-                                        <Loader2 className="w-5 h-5 text-[#c9a962] animate-spin flex-shrink-0" />
-                                    ) : (
-                                        <div className="w-5 h-5 rounded-full border border-white/10 flex-shrink-0" />
-                                    )}
-                                    <span className={`text-sm ${i <= progressStep ? 'text-white/70' : 'text-white/25'
-                                        }`}>
-                                        {step.emoji} {step.label}
+                        {/* Streaming Text Preview */}
+                        {streamingText ? (
+                            <div className="rounded-xl border border-white/[0.06] bg-[#0a0a0a] overflow-hidden">
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-[#111]">
+                                    <span className="text-xs text-[#c9a962]/70 tracking-wider uppercase font-medium">
+                                        Vista previa — Generando...
+                                    </span>
+                                    <span className="text-xs text-white/30">
+                                        {streamingText.length.toLocaleString()} caracteres
                                     </span>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="p-6 max-h-[60vh] overflow-y-auto">
+                                    <div className="prose prose-invert prose-sm max-w-none">
+                                        <pre className="whitespace-pre-wrap text-sm text-white/70 font-sans leading-relaxed">
+                                            {streamingText}
+                                            <span className="inline-block w-2 h-4 bg-[#c9a962] animate-pulse ml-0.5" />
+                                        </pre>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-12">
+                                <Loader2 className="w-6 h-6 text-[#c9a962] animate-spin mx-auto mb-3" />
+                                <p className="text-sm text-white/30">Preparando pipeline...</p>
+                            </div>
+                        )}
                     </div>
                 )}
 
