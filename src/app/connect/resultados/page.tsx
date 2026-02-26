@@ -160,7 +160,11 @@ function ResultadosContent() {
                         cedula_number: (row.cedula_number || '') as string,
                         specialties: (row.specialties || []) as string[],
                         bio: (row.bio || '') as string,
-                        office_address: (row.office_address || {}) as { estado?: string; municipio?: string; cp?: string },
+                        office_address: {
+                            estado: (row.estado || (row.office_address as Record<string, string>)?.estado || '') as string,
+                            municipio: (row.municipio || (row.office_address as Record<string, string>)?.municipio || '') as string,
+                            cp: (row.cp || (row.office_address as Record<string, string>)?.cp || '') as string,
+                        },
                         verification_status: (row.verification_status || '') as string,
                         is_pro_active: row.is_pro_active as boolean,
                         avatar_url: (row.avatar_url || undefined) as string | undefined,
