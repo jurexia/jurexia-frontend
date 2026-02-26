@@ -40,7 +40,7 @@ export default function HomePage() {
                     {/* Headline */}
                     <AnimatedSection animation="slide-up" delay={300}>
                         <p className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-charcoal-900 leading-tight mb-12 px-2">
-                            La inteligencia artificial más precisa para el sistema jurídico Mexicano
+                            La inteligencia artificial <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">más precisa</span> para el sistema jurídico Mexicano
                         </p>
                     </AnimatedSection>
 
@@ -186,7 +186,7 @@ export default function HomePage() {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <AnimatedSection animation="slide-up">
                         <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-center text-charcoal-900 mb-3 sm:mb-4">
-                            Mira cómo funciona
+                            Mira cómo <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">funciona</span>
                         </h2>
                     </AnimatedSection>
                     <AnimatedSection animation="fade-in" delay={100}>
@@ -205,7 +205,7 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6">
                     <AnimatedSection animation="slide-up">
                         <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-center text-charcoal-900 mb-10 sm:mb-12 md:mb-16">
-                            Potencia tu práctica legal
+                            Potencia tu <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">práctica legal</span>
                         </h2>
                     </AnimatedSection>
 
@@ -385,7 +385,7 @@ export default function HomePage() {
                     {/* Workflow: How Connect Works */}
                     <div className="max-w-4xl mx-auto">
                         <h3 className="font-serif text-2xl md:text-3xl font-medium text-center text-charcoal-900 mb-12">
-                            ¿Cómo funciona?
+                            ¿Cómo <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">funciona</span>?
                         </h3>
 
                         <div className="grid md:grid-cols-3 gap-8 relative">
@@ -416,7 +416,7 @@ export default function HomePage() {
             <section className="py-20 bg-charcoal-900 text-white">
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                        Comienza hoy con Iurexia
+                        Comienza hoy con <span className="bg-gradient-to-r from-amber-500 to-orange-400 bg-clip-text text-transparent">Iurexia</span>
                     </h2>
                     <p className="text-lg text-gray-300 mb-8">
                         Únete a los profesionales del derecho que ya utilizan IA especializada.
