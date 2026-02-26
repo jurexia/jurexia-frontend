@@ -48,6 +48,9 @@ export default function PerfilPage() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState('');
     const [loadingPortal, setLoadingPortal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancellingSubscription, setCancellingSubscription] = useState(false);
+    const [cancelMessage, setCancelMessage] = useState('');
 
     // Fiscal data state
     const [showFiscalForm, setShowFiscalForm] = useState(false);
@@ -204,6 +207,48 @@ export default function PerfilPage() {
         }
 
         setLoadingPortal(false);
+    };
+
+    const handleCancelSubscription = async () => {
+        if (!profile.stripe_subscription_id) return;
+
+        setCancellingSubscription(true);
+        setCancelMessage('');
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                setCancelMessage('Error: no hay sesión activa');
+                setCancellingSubscription(false);
+                return;
+            }
+
+            const response = await fetch('/api/stripe/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ subscriptionId: profile.stripe_subscription_id }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                setCancelMessage(result.error || 'Error al cancelar');
+            } else {
+                const cancelDate = result.cancelAt
+                    ? new Date(result.cancelAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
+                    : 'el final del periodo';
+                setCancelMessage(`Tu suscripción se cancelará el ${cancelDate}. Mantendrás el acceso hasta esa fecha.`);
+                setShowCancelModal(false);
+            }
+        } catch (error) {
+            console.error('Error cancelling subscription:', error);
+            setCancelMessage('Error de conexión al cancelar la suscripción');
+        }
+
+        setCancellingSubscription(false);
     };
 
     const handleSaveFiscal = async () => {
@@ -460,6 +505,16 @@ export default function PerfilPage() {
                             </div>
                         )}
 
+                        {/* Cancel success/error message */}
+                        {cancelMessage && (
+                            <div className={`p-3 rounded-lg text-sm ${cancelMessage.includes('Error') || cancelMessage.includes('error')
+                                    ? 'bg-red-50 text-red-700 border border-red-200'
+                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                }`}>
+                                {cancelMessage}
+                            </div>
+                        )}
+
                         {/* Botones de acción */}
                         <div className="flex gap-3 pt-4">
                             <button
@@ -478,6 +533,18 @@ export default function PerfilPage() {
                                 </button>
                             )}
                         </div>
+
+                        {/* Cancel subscription button — only for paid plans */}
+                        {profile.stripe_subscription_id && profile.subscription_type !== 'gratuito' && (
+                            <div className="pt-3 border-t border-cream-300">
+                                <button
+                                    onClick={() => setShowCancelModal(true)}
+                                    className="text-sm text-red-500 hover:text-red-700 transition-colors"
+                                >
+                                    Cancelar mi suscripción
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -707,6 +774,44 @@ export default function PerfilPage() {
                     </button>
                 </section>
             </main>
+
+            {/* Cancel Subscription Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <AlertTriangle className="w-6 h-6 text-amber-500" />
+                            <h3 className="font-serif text-2xl font-medium text-charcoal-900">
+                                Cancelar Suscripción
+                            </h3>
+                        </div>
+
+                        <p className="text-charcoal-600 mb-2">
+                            ¿Estás seguro de que deseas cancelar tu suscripción <strong>{planStyle.label}</strong>?
+                        </p>
+                        <p className="text-sm text-charcoal-500 mb-6">
+                            Mantendrás el acceso completo hasta el final de tu periodo de facturación actual. Después de eso, tu cuenta regresará al plan Gratuito.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowCancelModal(false)}
+                                disabled={cancellingSubscription}
+                                className="flex-1 px-4 py-2 bg-charcoal-900 text-white rounded-lg hover:bg-charcoal-800 transition-colors disabled:opacity-50"
+                            >
+                                Mantener Plan
+                            </button>
+                            <button
+                                onClick={handleCancelSubscription}
+                                disabled={cancellingSubscription}
+                                className="flex-1 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                            >
+                                {cancellingSubscription ? 'Cancelando...' : 'Sí, cancelar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Delete Modal */}
             {showDeleteModal && (
