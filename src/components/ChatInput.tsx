@@ -12,7 +12,8 @@ import {
     Gavel,
     Users,
     Brain,
-    Scale
+    Scale,
+    PenTool
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -38,6 +39,7 @@ export default function ChatInput({
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia'>('search');
+    const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
     const [showFileModal, setShowFileModal] = useState(false);
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
@@ -68,6 +70,11 @@ export default function ChatInput({
                 finalMessage = `[DOCUMENTO ADJUNTO: "${attachedDocument.fileName}"]${truncationNote}\n\n${userPrompt}\n\n<!-- DOCUMENTO_INICIO -->\n${docContent}\n<!-- DOCUMENTO_FIN -->`;
 
                 setAttachedDocument(null); // Clear after sending
+            }
+
+            // Prepend [MODO_REDACCION] marker when in Redactar mode
+            if (chatMode === 'redactar' && !attachedDocument) {
+                finalMessage = `[MODO_REDACCION] ${finalMessage}`;
             }
 
             // Always use reasoning for maximum quality
@@ -168,7 +175,12 @@ ${draftRequest.descripcion}`;
                                 onChange={(e) => setMessage(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 onInput={handleInput}
-                                placeholder={attachedDocument ? "Escribe qué quieres hacer con el documento..." : placeholder}
+                                placeholder={attachedDocument
+                                    ? "Escribe qué quieres hacer con el documento..."
+                                    : chatMode === 'redactar'
+                                        ? "Describe qué argumento jurídico necesitas..."
+                                        : placeholder
+                                }
                                 disabled={isLoading}
                                 rows={1}
                                 className="w-full resize-none bg-transparent text-charcoal-900 placeholder:text-gray-400 
@@ -178,19 +190,51 @@ ${draftRequest.descripcion}`;
                             />
                         </div>
 
-                        {/* Submit Button */}
-                        <button
-                            onClick={handleSubmit}
-                            disabled={!message.trim() || isLoading}
-                            className="btn-submit flex-shrink-0"
-                            aria-label="Enviar mensaje"
-                        >
-                            {isLoading ? (
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <ArrowRight className="w-5 h-5" />
-                            )}
-                        </button>
+                        {/* Mode Toggle + Submit */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Buscar / Redactar Toggle Pill */}
+                            <div
+                                className="inline-flex items-center rounded-lg border border-gray-200 overflow-hidden"
+                                style={{ height: '36px' }}
+                            >
+                                <button
+                                    onClick={() => setChatMode('buscar')}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all duration-200 ${chatMode === 'buscar'
+                                            ? 'bg-charcoal-900 text-white'
+                                            : 'bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    title="Modo búsqueda — consulta y análisis"
+                                >
+                                    <Search className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Buscar</span>
+                                </button>
+                                <button
+                                    onClick={() => setChatMode('redactar')}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all duration-200 ${chatMode === 'redactar'
+                                            ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'
+                                            : 'bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    title="Modo redacción — genera argumentos jurídicos"
+                                >
+                                    <PenTool className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Redactar</span>
+                                </button>
+                            </div>
+
+                            {/* Submit Button */}
+                            <button
+                                onClick={handleSubmit}
+                                disabled={!message.trim() || isLoading}
+                                className="btn-submit"
+                                aria-label="Enviar mensaje"
+                            >
+                                {isLoading ? (
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <ArrowRight className="w-5 h-5" />
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Action Buttons Row */}
@@ -205,15 +249,8 @@ ${draftRequest.descripcion}`;
                                 guideId="upload"
                             />
                             <ActionButton
-                                icon={Search}
-                                label="Buscar"
-                                active={activeMode === 'search'}
-                                onClick={() => handleModeClick('search')}
-                                guideId="search"
-                            />
-                            <ActionButton
                                 icon={FileEdit}
-                                label="Redactar"
+                                label="Redactar Guiado"
                                 active={activeMode === 'draft'}
                                 onClick={() => handleModeClick('draft')}
                                 guideId="draft"
