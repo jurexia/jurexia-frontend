@@ -396,9 +396,11 @@ function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: (
             )}
 
             {lawyer.bio && (
-                <p style={{ fontSize: '0.875rem', color: '#888', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: '16px', flexGrow: 1 }}>
-                    {lawyer.bio}
-                </p>
+                <div style={{ maxHeight: '120px', overflowY: 'auto', marginBottom: '16px', flexGrow: 1, paddingRight: '4px' }}>
+                    <p style={{ fontSize: '0.875rem', color: '#888', lineHeight: '1.5', margin: 0 }}>
+                        {lawyer.bio}
+                    </p>
+                </div>
             )}
 
             <div style={{ marginTop: 'auto' }}>
