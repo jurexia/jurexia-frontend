@@ -233,7 +233,7 @@ function ResultadosContent() {
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                         <div>
                             <h1 style={{ fontSize: '1.75rem', fontWeight: 600, color: '#fff', marginBottom: '8px' }}>
-                                Resultados para: <span style={{ color: '#60A5FA' }}>&ldquo;{query}&rdquo;</span>
+                                Resultados para: <span style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #d4af37 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>&ldquo;{query}&rdquo;</span>
                             </h1>
                             {estadoLabel && (
                                 <div className="flex items-center gap-2" style={{ color: '#888', fontSize: '0.875rem' }}>
