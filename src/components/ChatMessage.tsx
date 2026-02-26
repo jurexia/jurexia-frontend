@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer, Loader2 } from 'lucide-react';
 import type { Message } from '@/lib/api';
 
 interface ChatMessageProps {
@@ -716,7 +716,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                         {thinkingContent && (
                             <details className="mx-4 mt-3 mb-1 rounded-lg border border-amber-200/60 bg-amber-50/30 overflow-hidden">
                                 <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-amber-800/70 hover:bg-amber-50/50 transition-colors select-none flex items-center gap-1.5">
-                                    <span>🧠</span>
+                                    <Loader2 className="w-3 h-3 animate-spin text-amber-600/60" />
                                     <span>Ver razonamiento jurídico</span>
                                     <span className="text-amber-600/50 ml-auto text-[10px]">{Math.round(thinkingContent.length / 4)} tokens</span>
                                 </summary>
@@ -1210,10 +1210,11 @@ export function TypingIndicator({ retryMessage }: { retryMessage?: string } = {}
                 <div className="flex items-start gap-2">
                     {/* Animated Message */}
                     <div className="flex flex-col">
-                        <span className="text-charcoal-700 font-medium text-sm transition-opacity duration-300">
-                            🧠 {loadingTexts[textIndex]}
+                        <span className="text-charcoal-700 font-medium text-sm transition-opacity duration-300 flex items-center gap-2">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-accent-brown" />
+                            {loadingTexts[textIndex]}
                         </span>
-                        <span className="text-charcoal-500 text-xs mt-0.5">
+                        <span className="text-charcoal-500 text-xs mt-0.5 ml-5.5">
                             Esto puede tomar unos segundos
                         </span>
                     </div>
