@@ -7,6 +7,9 @@ import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
 import { User, CreditCard, Shield, AlertTriangle, Check, X, FileText, Building2 } from 'lucide-react';
 import ConnectLawyerSection from '@/components/ConnectLawyerSection';
+import AdminLawyerPanel from '@/components/AdminLawyerPanel';
+
+const ADMIN_EMAIL = 'administracion@iurexia.com';
 
 const planColors: Record<string, { bg: string; text: string; label: string }> = {
     gratuito: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Gratuito' },
@@ -508,8 +511,8 @@ export default function PerfilPage() {
                         {/* Cancel success/error message */}
                         {cancelMessage && (
                             <div className={`p-3 rounded-lg text-sm ${cancelMessage.includes('Error') || cancelMessage.includes('error')
-                                    ? 'bg-red-50 text-red-700 border border-red-200'
-                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                ? 'bg-red-50 text-red-700 border border-red-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
                                 }`}>
                                 {cancelMessage}
                             </div>
@@ -719,6 +722,11 @@ export default function PerfilPage() {
                         userName={profile.full_name || user.email || ''}
                         avatarUrl={user.user_metadata?.avatar_url}
                     />
+                )}
+
+                {/* Admin: Registro de Abogados — Solo para admin */}
+                {user.email === ADMIN_EMAIL && (
+                    <AdminLawyerPanel />
                 )}
 
                 {/* Detalles de Cuenta */}
