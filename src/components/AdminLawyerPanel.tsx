@@ -56,10 +56,13 @@ export default function AdminLawyerPanel() {
         );
     };
 
+    const [sepUnavailable, setSepUnavailable] = useState(false);
+
     const handlePreValidate = async () => {
         if (!cedula.trim() || cedula.length < 6) return;
         setAutoValidating(true);
         setSepPreview(null);
+        setSepUnavailable(false);
         try {
             const resp = await fetch(`${API_URL}/connect/validate-cedula`, {
                 method: 'POST',
@@ -74,8 +77,15 @@ export default function AdminLawyerPanel() {
                     institucion: data.institucion || '',
                 });
                 if (!fullName) setFullName(data.nombre);
+            } else if (data.valid && data.pending_verification) {
+                // SEP API unavailable - cédula accepted as pending
+                setSepUnavailable(true);
+            } else if (!data.valid) {
+                setError(data.error || 'Cédula inválida');
             }
-        } catch { /* silently fail */ }
+        } catch {
+            setSepUnavailable(true);
+        }
         setAutoValidating(false);
     };
 
@@ -122,6 +132,7 @@ export default function AdminLawyerPanel() {
                 setBio('');
                 setPhone('');
                 setSepPreview(null);
+                setSepUnavailable(false);
                 // Keep specialties, estado, municipio, cp for consecutive entries
             }
         } catch (err) {
@@ -184,6 +195,19 @@ export default function AdminLawyerPanel() {
                             <p className="text-green-600 text-xs">{sepPreview.institucion}</p>
                         </div>
                     )}
+
+                    {/* SEP unavailable */}
+                    {sepUnavailable && (
+                        <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+                            <div className="flex items-center gap-2 text-amber-700 font-medium mb-1">
+                                <AlertTriangle className="w-4 h-4" />
+                                El Registro Nacional de la SEP no está disponible en este momento
+                            </div>
+                            <p className="text-amber-600 text-xs">
+                                Puedes registrar al abogado ingresando los datos manualmente. La cédula se marcará como &quot;pendiente de verificación&quot; y se validará automáticamente cuando la SEP responda.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Name */}
@@ -211,8 +235,8 @@ export default function AdminLawyerPanel() {
                                 key={s}
                                 onClick={() => toggleSpecialty(s)}
                                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedSpecialties.includes(s)
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 {s}
@@ -329,8 +353,8 @@ export default function AdminLawyerPanel() {
                             <div
                                 key={i}
                                 className={`p-3 rounded-lg text-sm flex items-center justify-between ${r.verification_status === 'verified'
-                                        ? 'bg-green-50 border border-green-200'
-                                        : 'bg-amber-50 border border-amber-200'
+                                    ? 'bg-green-50 border border-green-200'
+                                    : 'bg-amber-50 border border-amber-200'
                                     }`}
                             >
                                 <div>
@@ -343,8 +367,8 @@ export default function AdminLawyerPanel() {
                                     )}
                                 </div>
                                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${r.verification_status === 'verified'
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-amber-100 text-amber-700'
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-amber-100 text-amber-700'
                                     }`}>
                                     {r.verification_status === 'verified' ? '✓ Verificado' : '⏳ Pendiente'}
                                 </span>
