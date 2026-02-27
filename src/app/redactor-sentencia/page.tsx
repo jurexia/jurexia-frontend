@@ -8,7 +8,7 @@ import { useRequireAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from '@/components/UserAvatar';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api-634779006258.us-central1.run.app';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Types & Constants
@@ -1613,3 +1613,4 @@ export default function RedactorSentenciaPage() {
         </div>
     );
 }
+

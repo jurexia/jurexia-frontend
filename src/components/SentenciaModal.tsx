@@ -127,7 +127,7 @@ export default function SentenciaModal({ isOpen, onClose, onSubmit, estado }: Se
     };
 
     const extractTextFromDOCServer = async (file: File): Promise<string> => {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api-634779006258.us-central1.run.app';
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
         const formData = new FormData();
         formData.append('file', file);
         const response = await fetch(`${API_URL}/extract-text`, { method: 'POST', body: formData });

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Shield, Plus, Check, AlertTriangle, Loader2, Trash2, Pencil, X, RefreshCw, Phone, MapPin } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api-634779006258.us-central1.run.app';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
 
 const ESTADOS_MX = [
     'Aguascalientes', 'Baja California', 'Baja California Sur', 'Campeche',
@@ -606,3 +606,4 @@ export default function AdminLawyerPanel() {
         </section>
     );
 }
+

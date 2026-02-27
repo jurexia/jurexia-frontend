@@ -39,7 +39,7 @@ import {
     setActiveConversationId
 } from '@/lib/conversations';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api-634779006258.us-central1.run.app';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PDF / DOCX Text Extraction Helpers
@@ -903,3 +903,4 @@ const css = `
       scrollbar-width: none;
   }
 `;
+
