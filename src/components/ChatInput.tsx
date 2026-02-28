@@ -32,6 +32,7 @@ interface ChatInputProps {
     enableGenioJuridico?: boolean;
     setEnableGenioJuridico?: (value: boolean) => void;
     isCacheActive?: boolean;
+    isCacheLoading?: boolean;
 }
 
 export default function ChatInput({
@@ -41,7 +42,8 @@ export default function ChatInput({
     estado,
     enableGenioJuridico = false,
     setEnableGenioJuridico,
-    isCacheActive = false
+    isCacheActive = false,
+    isCacheLoading = false
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia'>('search');
@@ -256,17 +258,29 @@ ${draftRequest.descripcion}`;
                             {/* GENIO JURIDICO Toggle */}
                             <button
                                 onClick={() => setEnableGenioJuridico?.(!enableGenioJuridico)}
+                                disabled={isCacheLoading}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
-                                    ${enableGenioJuridico
-                                        ? isCacheActive
-                                            ? 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]'
-                                            : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
-                                        : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
+                                    ${isCacheLoading
+                                        ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
+                                        : enableGenioJuridico
+                                            ? isCacheActive
+                                                ? 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]'
+                                                : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
+                                            : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
                                     }`}
-                                title="Activar Genio Jurídico (Context Cache)"
+                                title={isCacheLoading ? 'Preparando corpus legal...' : 'Activar Genio Jurídico (Context Cache)'}
                             >
-                                <Brain className={`w-3.5 h-3.5 ${isCacheActive ? 'text-red-500' : ''}`} />
-                                {isCacheActive ? 'Genio Jurídico Activo' : 'Genio Jurídico'}
+                                {isCacheLoading ? (
+                                    <>
+                                        <div className="w-3.5 h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                                        Preparando Caché...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Brain className={`w-3.5 h-3.5 ${isCacheActive ? 'text-red-500' : ''}`} />
+                                        {isCacheActive ? 'Genio Jurídico Activo' : 'Genio Jurídico'}
+                                    </>
+                                )}
                             </button>
 
                             <div className="h-4 w-[1px] bg-gray-200 mx-1 hidden sm:block" />

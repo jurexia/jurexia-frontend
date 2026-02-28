@@ -52,6 +52,44 @@ export default function ChatPage() {
     // Genio Juridico states
     const [enableGenioJuridico, setEnableGenioJuridico] = useState(false);
     const [isCacheActive, setIsCacheActive] = useState(false);
+    const [isCacheLoading, setIsCacheLoading] = useState(false);
+    const cacheTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Auto-deactivate cache after 8 minutes of inactivity
+    const CACHE_TTL_MS = 8 * 60 * 1000; // 8 minutes
+
+    const resetCacheTimer = useCallback(() => {
+        if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
+        cacheTimerRef.current = setTimeout(() => {
+            setIsCacheActive(false);
+            setIsCacheLoading(false);
+        }, CACHE_TTL_MS);
+    }, []);
+
+    const handleCacheActive = useCallback(() => {
+        setIsCacheActive(true);
+        setIsCacheLoading(false);
+        resetCacheTimer();
+    }, [resetCacheTimer]);
+
+    // When user toggles Genio Jurídico
+    const handleToggleGenio = useCallback((value: boolean) => {
+        setEnableGenioJuridico(value);
+        if (value) {
+            setIsCacheLoading(true);  // Show loading until first CACHE:ACTIVE
+        } else {
+            setIsCacheActive(false);
+            setIsCacheLoading(false);
+            if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
+        }
+    }, []);
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
+        };
+    }, []);
 
     // Selection matrices
     const MATERIAS = [
@@ -86,6 +124,7 @@ export default function ChatPage() {
         fuero: selectedFuero || undefined,
         onQuotaExceeded: handleQuotaExceeded,
         enableGenioJuridico,
+        onCacheActive: handleCacheActive,
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -332,8 +371,9 @@ export default function ChatPage() {
                                     placeholder="Escribe tu consulta legal..."
                                     estado={selectedEstado}
                                     enableGenioJuridico={enableGenioJuridico}
-                                    setEnableGenioJuridico={setEnableGenioJuridico}
+                                    setEnableGenioJuridico={handleToggleGenio}
                                     isCacheActive={isCacheActive}
+                                    isCacheLoading={isCacheLoading}
                                 />
 
                                 <div className="mt-4 text-center">
@@ -363,8 +403,9 @@ export default function ChatPage() {
                             isLoading={isLoading}
                             estado={selectedEstado}
                             enableGenioJuridico={enableGenioJuridico}
-                            setEnableGenioJuridico={setEnableGenioJuridico}
+                            setEnableGenioJuridico={handleToggleGenio}
                             isCacheActive={isCacheActive}
+                            isCacheLoading={isCacheLoading}
                         />
                     </div>
                 )}

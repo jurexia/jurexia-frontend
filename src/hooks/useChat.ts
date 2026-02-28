@@ -12,6 +12,7 @@ interface UseChatOptions {
     fuero?: string;  // Filtro por fuero: constitucional, federal, estatal
     onQuotaExceeded?: (remaining: number) => void;
     enableGenioJuridico?: boolean;
+    onCacheActive?: () => void;  // Fired when backend confirms cache is serving
 }
 
 interface UseChatReturn {
@@ -251,6 +252,16 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 options.fuero,
                 options.enableGenioJuridico,
             )) {
+                // Check for cache active marker: <!--CACHE:ACTIVE-->
+                const cacheMatch = chunk.match(/<!--CACHE:ACTIVE-->/);
+                if (cacheMatch) {
+                    options.onCacheActive?.();
+                    // Strip the marker and continue with remaining content
+                    const remaining = chunk.replace('<!--CACHE:ACTIVE-->', '');
+                    if (!remaining.trim()) continue;
+                    // If there's content after the marker, process it below
+                }
+
                 // Check if this is a retry marker: <!--RETRY:1:2000-->
                 const retryMatch = chunk.match(/<!--RETRY:(\d+):(\d+)-->/);
                 if (retryMatch) {
@@ -329,7 +340,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [messages, isLoading, options.estado, options.topK, options.materia, options.fuero, options.onQuotaExceeded, options.enableGenioJuridico]);
+    }, [messages, isLoading, options.estado, options.topK, options.materia, options.fuero, options.onQuotaExceeded, options.enableGenioJuridico, options.onCacheActive]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);
