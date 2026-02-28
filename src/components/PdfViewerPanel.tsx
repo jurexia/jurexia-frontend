@@ -252,6 +252,245 @@ function TesisBodyText({ text }: { text: string }) {
     );
 }
 
+// ── Legal article text parser ────────────────────────────────────────────────
+// Parses texto like:
+//   "[Ley Sobre el Contrato de Seguro | TITULO III\n\nDisposiciones especiales...\n\nArtículo | ...]\nArtículo 190.- Si el derecho..."
+// Returns structured parts for premium rendering.
+
+interface LeyArticuloParsed {
+    leyName: string | null;
+    seccionTitulo: string | null;       // e.g. "TITULO III"
+    seccionDescripcion: string | null;  // e.g. "Disposiciones especiales del contrato..."
+    articuloLabel: string | null;       // e.g. "Artículo 190"
+    articuloTexto: string;              // The actual article text
+}
+
+function parseLeyArticuloTexto(texto: string, source: PdfSource): LeyArticuloParsed {
+    let leyName: string | null = null;
+    let seccionTitulo: string | null = null;
+    let seccionDescripcion: string | null = null;
+    let articuloLabel: string | null = null;
+    let articuloTexto = texto;
+
+    // Try to parse the bracketed header block: [Ley | TITULO\n\nDesc\n\nArtículo | ...]
+    const bracketMatch = texto.match(/^\[([^\]]+)\]([\s\S]*)/);
+    let mainText = texto;
+
+    if (bracketMatch) {
+        const header = bracketMatch[1]; // e.g. "Ley Sobre el Contrato de Seguro | TITULO III\n\nDisposiciones especiales del contrato de seguro sobre las personas\n\nArtículo | Disposiciones especiales del contrato de seguro sobre las personas"
+        mainText = bracketMatch[2].trim();
+
+        // Split header by newlines and parse pipe-delimited parts
+        const headerLines = header.split(/\n+/).map(l => l.trim()).filter(Boolean);
+        for (const line of headerLines) {
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 2) {
+                const key = parts[0].toLowerCase();
+                const val = parts[1];
+                if (!leyName && (key.toLowerCase().startsWith('ley') || key.toLowerCase().startsWith('código') || key.toLowerCase().startsWith('constitución') || key.toLowerCase().startsWith('reglamento') || key.toLowerCase().startsWith('norma'))) {
+                    leyName = parts[0].trim();
+                    seccionTitulo = val || null;
+                } else if (key.toLowerCase().startsWith('artículo') || key.toLowerCase().startsWith('articulo')) {
+                    // This is the section description line — skip, covered by seccionDescripcion
+                } else if (!leyName) {
+                    leyName = parts[0].trim();
+                    seccionTitulo = val || null;
+                }
+            } else if (!leyName) {
+                // First non-pipe line could be ley name
+            } else if (!seccionDescripcion) {
+                seccionDescripcion = line;
+            }
+        }
+
+        // Get seccionDescripcion from the first non-pipe line after ley line
+        for (const line of headerLines) {
+            if (!line.includes('|') && line.length > 5) {
+                seccionDescripcion = line;
+                break;
+            }
+        }
+    }
+
+    // Extract artículo label from mainText (first line like "Artículo 190.-")
+    const articuloLineMatch = mainText.match(/^(Art[íi]culo\s+[\d\w°]+)[.\-–—]?\s*/i);
+    if (articuloLineMatch) {
+        articuloLabel = articuloLineMatch[1].trim();
+        articuloTexto = mainText.slice(articuloLineMatch[0].length).trim();
+    } else {
+        articuloTexto = mainText;
+    }
+
+    // Fallback: use source.ref for articuloLabel if not found
+    if (!articuloLabel && source.ref) {
+        articuloLabel = source.ref.replace(/\s*\|.*$/, '').trim() || null;
+    }
+
+    // Fallback: use source.origen for leyName
+    if (!leyName) {
+        leyName = source.origen || null;
+    }
+
+    return { leyName, seccionTitulo, seccionDescripcion, articuloLabel, articuloTexto };
+}
+
+// ── LeyArticuloView component ─────────────────────────────────────────────────
+interface LeyArticuloViewProps {
+    source: PdfSource;
+    leyLabel: string;
+    resolvedPdfUrl: string | null;
+    hasPdf: boolean;
+}
+
+function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, hasPdf }: LeyArticuloViewProps) {
+    const parsed = useMemo(
+        () => parseLeyArticuloTexto(source.texto || '', source),
+        [source]
+    );
+
+    const displayLey = parsed.leyName || leyLabel;
+
+    return (
+        <>
+            <div className="p-5 space-y-4">
+                {/* ── Ley + Artículo badges row ── */}
+                <div className="flex flex-wrap items-start gap-2">
+                    {/* Ley chip */}
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-accent-gold/15 text-accent-gold border border-accent-gold/30 leading-tight">
+                        <BookOpen className="w-3 h-3 shrink-0" />
+                        {displayLey}
+                    </span>
+                    {/* Artículo badge */}
+                    {parsed.articuloLabel && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-charcoal-900 text-white border border-charcoal-800 leading-tight">
+                            <Scale className="w-3 h-3 shrink-0" />
+                            {parsed.articuloLabel}
+                        </span>
+                    )}
+                </div>
+
+                {/* ── Sección / Título ── */}
+                {(parsed.seccionTitulo || parsed.seccionDescripcion) && (
+                    <div className="bg-cream-200 border border-cream-400 rounded-xl px-4 py-3">
+                        {parsed.seccionTitulo && (
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal-500 mb-0.5">
+                                {parsed.seccionTitulo}
+                            </p>
+                        )}
+                        {parsed.seccionDescripcion && (
+                            <p className="text-xs font-medium text-charcoal-700 leading-snug italic">
+                                {parsed.seccionDescripcion}
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {/* ── Artículo body ── */}
+                <div className="bg-white border border-cream-300 rounded-2xl shadow-sm overflow-hidden">
+                    {/* Artículo header bar */}
+                    {parsed.articuloLabel && (
+                        <div className="bg-charcoal-900 px-5 py-3 flex items-center gap-2">
+                            <Gavel className="w-3.5 h-3.5 text-accent-gold shrink-0" />
+                            <span className="text-xs font-bold text-white tracking-wide">
+                                {parsed.articuloLabel}
+                            </span>
+                        </div>
+                    )}
+                    {/* Article text */}
+                    <div className="p-5">
+                        <p
+                            className="text-[13.5px] text-charcoal-800 leading-7 text-justify"
+                            style={{ fontFamily: 'Georgia, "Times New Roman", serif', hyphens: 'auto' }}
+                        >
+                            {parsed.articuloTexto || source.texto || 'Sin texto disponible.'}
+                        </p>
+                    </div>
+                </div>
+
+                {/* ── Source attribution ── */}
+                <div className="flex items-center gap-1.5 text-[11px] text-charcoal-500 pt-0.5">
+                    <ChevronRight className="w-3 h-3 text-charcoal-400 shrink-0" />
+                    <span className="font-medium truncate">{source.origen}</span>
+                    {source.ref && (
+                        <>
+                            <span className="text-charcoal-300">·</span>
+                            <span className="text-accent-gold font-semibold">{source.ref}</span>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* Divider */}
+            {hasPdf && <div className="mx-5 border-t border-cream-400" />}
+
+            {/* PDF section */}
+            {hasPdf && (
+                <div className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <div className="w-0.5 h-4 bg-accent-gold rounded-full" />
+                            <span className="text-xs font-semibold text-charcoal-900 uppercase tracking-widest">
+                                Coteja la norma citada con su fuente
+                            </span>
+                        </div>
+                        <a
+                            href={resolvedPdfUrl!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs text-accent-gold hover:text-accent-brown transition-colors font-medium"
+                        >
+                            <ExternalLink className="w-3 h-3" />
+                            Abrir en nueva pestaña
+                        </a>
+                    </div>
+                    <div className="bg-white border border-cream-400 rounded-2xl p-4 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-xl bg-accent-gold/10 flex items-center justify-center">
+                                <BookOpen className="w-5 h-5 text-accent-gold" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-charcoal-900">{displayLey}</p>
+                                <p className="text-xs text-charcoal-600">PDF oficial · Fuente gubernamental verificada</p>
+                            </div>
+                        </div>
+                        <div className="md:hidden">
+                            <a
+                                href={resolvedPdfUrl!}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-3 w-full py-4 px-5 rounded-xl bg-gradient-to-r from-accent-gold to-accent-brown text-charcoal-900 font-semibold text-sm shadow-lg active:scale-[0.98] transition-transform"
+                            >
+                                <ExternalLink className="w-5 h-5" />
+                                Abrir PDF completo
+                            </a>
+                        </div>
+                        <div className="hidden md:block rounded-xl overflow-hidden border border-cream-400 bg-cream-200" style={{ height: '440px' }}>
+                            <iframe
+                                src={`${resolvedPdfUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+                                className="w-full h-full"
+                                title={`PDF: ${displayLey}`}
+                                loading="lazy"
+                            />
+                        </div>
+                        <p className="mt-2 text-[10px] text-charcoal-500 text-center">Fuente oficial verificada · iurexia.com</p>
+                    </div>
+                </div>
+            )}
+
+            {/* No PDF fallback */}
+            {!hasPdf && (
+                <div className="p-5">
+                    <div className="bg-cream-200 rounded-2xl p-4 text-xs text-charcoal-600 text-center">
+                        <BookOpen className="w-5 h-5 mx-auto mb-2 text-charcoal-400" />
+                        PDF oficial en preparación.<br />
+                        Pronto disponible en el repositorio de Normativa Nacional.
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
 // ── Component ────────────────────────────────────────────────────────────
 
 /**
@@ -505,115 +744,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                         </div>
                     ) : (
                         /* ════════════════ STANDARD LEY VIEW ════════════════ */
-                        <>
-                            {/* Article text section */}
-                            <div className="p-5">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-0.5 h-4 bg-accent-gold rounded-full" />
-                                    <span className="text-xs font-semibold text-charcoal-900 uppercase tracking-widest">
-                                        Texto recuperado del contexto legal
-                                    </span>
-                                </div>
-
-                                <div className="bg-white border border-cream-400 rounded-2xl p-5 text-sm text-charcoal-800 leading-relaxed whitespace-pre-wrap shadow-sm">
-                                    {source.texto || 'Sin texto disponible.'}
-                                </div>
-
-                                {/* Source attribution */}
-                                <div className="mt-3 flex items-center gap-2 text-xs text-charcoal-600">
-                                    <ChevronRight className="w-3 h-3 text-charcoal-400" />
-                                    <span className="font-medium">{source.origen}</span>
-                                    {source.ref && (
-                                        <>
-                                            <span className="text-charcoal-400">·</span>
-                                            <span className="text-accent-gold font-medium">{source.ref}</span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Divider */}
-                            {hasPdf && (
-                                <div className="mx-5 border-t border-cream-400" />
-                            )}
-
-                            {/* PDF Viewer section */}
-                            {hasPdf && (
-                                <div className="p-5">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-0.5 h-4 bg-accent-gold rounded-full" />
-                                            <span className="text-xs font-semibold text-charcoal-900 uppercase tracking-widest">
-                                                Coteja la norma citada con su fuente
-                                            </span>
-                                        </div>
-                                        <a
-                                            href={resolvedPdfUrl!}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 text-xs text-accent-gold hover:text-accent-brown transition-colors font-medium"
-                                        >
-                                            <ExternalLink className="w-3 h-3" />
-                                            Abrir en nueva pestaña
-                                        </a>
-                                    </div>
-
-                                    {/* CTA button */}
-                                    <div className="bg-white border border-cream-400 rounded-2xl p-4 shadow-sm">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-xl bg-accent-gold/10 flex items-center justify-center">
-                                                <BookOpen className="w-5 h-5 text-accent-gold" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-semibold text-charcoal-900">{leyLabel}</p>
-                                                <p className="text-xs text-charcoal-600">PDF oficial · Fuente gubernamental verificada</p>
-                                            </div>
-                                        </div>
-
-                                        {/* ── Mobile: CTA button (iframes don't work on mobile) ── */}
-                                        <div className="md:hidden">
-                                            <a
-                                                href={resolvedPdfUrl!}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center justify-center gap-3 w-full py-4 px-5 rounded-xl bg-gradient-to-r from-accent-gold to-accent-brown text-charcoal-900 font-semibold text-sm shadow-lg active:scale-[0.98] transition-transform"
-                                            >
-                                                <ExternalLink className="w-5 h-5" />
-                                                Abrir PDF completo
-                                            </a>
-                                            <p className="mt-2 text-[10px] text-charcoal-500 text-center">
-                                                Se abrirá en el visor PDF de tu dispositivo
-                                            </p>
-                                        </div>
-
-                                        {/* ── Desktop: embedded iframe ── */}
-                                        <div className="hidden md:block rounded-xl overflow-hidden border border-cream-400 bg-cream-200" style={{ height: '480px' }}>
-                                            <iframe
-                                                src={`${resolvedPdfUrl}#toolbar=1&navpanes=0&scrollbar=1`}
-                                                className="w-full h-full"
-                                                title={`PDF: ${leyLabel}`}
-                                                loading="lazy"
-                                            />
-                                        </div>
-
-                                        <p className="mt-2 text-[10px] text-charcoal-500 text-center">
-                                            Fuente oficial verificada · iurexia.com
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* No PDF fallback (only for non-tesis) */}
-                            {!hasPdf && (
-                                <div className="p-5">
-                                    <div className="bg-cream-200 rounded-2xl p-4 text-xs text-charcoal-600 text-center">
-                                        <BookOpen className="w-5 h-5 mx-auto mb-2 text-charcoal-400" />
-                                        PDF oficial en preparación.<br />
-                                        Pronto disponible en el repositorio de Normativa Nacional.
-                                    </div>
-                                </div>
-                            )}
-                        </>
+                        <LeyArticuloView source={source} leyLabel={leyLabel} resolvedPdfUrl={resolvedPdfUrl} hasPdf={hasPdf} />
                     )}
                 </div>
 
