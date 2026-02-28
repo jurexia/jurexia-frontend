@@ -252,6 +252,11 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 options.fuero,
                 options.enableGenioJuridico,
             )) {
+                // Filter keepalive heartbeat from backend (<!--PING-->)
+                // This is sent immediately to prevent mobile carriers from
+                // closing the TCP connection when no data flows for >15s.
+                if (chunk === '<!--PING-->' || chunk.trim() === '<!--PING-->') continue;
+
                 // Check for cache active marker: <!--CACHE:ACTIVE-->
                 const cacheMatch = chunk.match(/<!--CACHE:ACTIVE-->/);
                 if (cacheMatch) {
