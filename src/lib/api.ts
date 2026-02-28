@@ -89,6 +89,7 @@ async function* streamChatInternal(
     userId?: string,
     materia?: string,
     fuero?: string,
+    enableGenioJuridico = false,
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);
@@ -106,7 +107,16 @@ async function* streamChatInternal(
     const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ messages, estado, top_k: topK, enable_reasoning: enableReasoning, user_id: userId, ...(materia ? { materia } : {}), ...(fuero ? { fuero } : {}) }),
+        body: JSON.stringify({
+            messages,
+            estado,
+            top_k: topK,
+            enable_reasoning: enableReasoning,
+            enable_genio_juridico: enableGenioJuridico,
+            user_id: userId,
+            ...(materia ? { materia } : {}),
+            ...(fuero ? { fuero } : {})
+        }),
     });
 
     console.log('[API] Response status:', response.status);
@@ -144,6 +154,7 @@ export async function* streamChat(
     userId?: string,
     materia?: string,
     fuero?: string,
+    enableGenioJuridico = false,
 ): AsyncGenerator<string, void, unknown> {
     const maxRetries = 3;
     let attempt = 0;
@@ -151,7 +162,7 @@ export async function* streamChat(
     while (attempt < maxRetries) {
         try {
             // Attempt to stream chat
-            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, materia, fuero);
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, materia, fuero, enableGenioJuridico);
             return; // Success - exit
         } catch (err) {
             attempt++;

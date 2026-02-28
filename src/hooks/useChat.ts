@@ -11,6 +11,7 @@ interface UseChatOptions {
     materia?: string;
     fuero?: string;  // Filtro por fuero: constitucional, federal, estatal
     onQuotaExceeded?: (remaining: number) => void;
+    enableGenioJuridico?: boolean;
 }
 
 interface UseChatReturn {
@@ -248,6 +249,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 userId,
                 options.materia,
                 options.fuero,
+                options.enableGenioJuridico,
             )) {
                 // Check if this is a retry marker: <!--RETRY:1:2000-->
                 const retryMatch = chunk.match(/<!--RETRY:(\d+):(\d+)-->/);
@@ -327,7 +329,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [messages, isLoading, options.estado, options.topK, options.materia, options.fuero, options.onQuotaExceeded]);
+    }, [messages, isLoading, options.estado, options.topK, options.materia, options.fuero, options.onQuotaExceeded, options.enableGenioJuridico]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

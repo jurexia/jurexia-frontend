@@ -29,13 +29,19 @@ interface ChatInputProps {
     isLoading?: boolean;
     placeholder?: string;
     estado?: string;
+    enableGenioJuridico?: boolean;
+    setEnableGenioJuridico?: (value: boolean) => void;
+    isCacheActive?: boolean;
 }
 
 export default function ChatInput({
     onSubmit,
     isLoading = false,
     placeholder = "Escribe tu consulta legal o sube tu documento para análisis",
-    estado
+    estado,
+    enableGenioJuridico = false,
+    setEnableGenioJuridico,
+    isCacheActive = false
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia'>('search');
@@ -233,6 +239,37 @@ ${draftRequest.descripcion}`;
                                     Redactar
                                 </button>
                             </div>
+
+                            {/* GENIO JURIDICO Toggle + LED Indicator */}
+                            <div className="flex items-center gap-2 px-1 relative">
+                                <button
+                                    onClick={() => setEnableGenioJuridico?.(!enableGenioJuridico)}
+                                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-all duration-300 shadow-sm border 
+                                        ${enableGenioJuridico
+                                            ? 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400 scale-105'
+                                            : 'bg-white text-charcoal-400 border-gray-200 hover:border-purple-300'
+                                        }`}
+                                    title="Activar Genio Jurídico (Context Cache)"
+                                >
+                                    <Brain className={`w-3.5 h-3.5 ${enableGenioJuridico ? 'animate-pulse' : ''}`} />
+                                    Genio Jurídico
+                                </button>
+
+                                {/* Cache Status LED */}
+                                <div className="flex items-center gap-1.5 ml-1">
+                                    <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px] transition-all duration-500 ${isCacheActive
+                                            ? 'bg-green-500 shadow-green-500/80 animate-pulse'
+                                            : 'bg-gray-300 shadow-transparent'
+                                        }`}
+                                        title={isCacheActive ? "Caché de Contexto Activa — Respuesta instantánea" : "Caché Inactiva"}
+                                    />
+                                    <span className={`text-[10px] font-medium hidden sm:inline ${isCacheActive ? 'text-green-600' : 'text-gray-400'}`}>
+                                        {isCacheActive ? 'Activo' : 'RAG'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="h-4 w-[1px] bg-gray-200 mx-1 hidden sm:block" />
 
                             {/* Subir Documentos para Análisis */}
                             <ActionButton
