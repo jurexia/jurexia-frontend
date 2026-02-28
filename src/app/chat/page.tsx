@@ -53,7 +53,9 @@ export default function ChatPage() {
     const [enableGenioJuridico, setEnableGenioJuridico] = useState(false);
     const [isCacheActive, setIsCacheActive] = useState(false);
     const [isCacheLoading, setIsCacheLoading] = useState(false);
+    const [genioError, setGenioError] = useState<string | null>(null);
     const cacheTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Auto-deactivate cache after 8 minutes of inactivity
     const CACHE_TTL_MS = 8 * 60 * 1000; // 8 minutes
@@ -76,6 +78,7 @@ export default function ChatPage() {
     // When user toggles Genio Jurídico — calls /genio/activate to pre-create cache
     const handleToggleGenio = useCallback(async (value: boolean) => {
         setEnableGenioJuridico(value);
+        setGenioError(null);
         if (value) {
             setIsCacheLoading(true);
             try {
@@ -87,14 +90,23 @@ export default function ChatPage() {
                     setIsCacheLoading(false);
                     resetCacheTimer();
                 } else {
+                    // Show error from backend (last_error field)
+                    const errorMsg = data.last_error || 'No se pudo activar el Genio Jurídico';
+                    setGenioError(errorMsg);
                     setIsCacheLoading(false);
                     setEnableGenioJuridico(false);
                     console.error('Cache activation failed:', data);
+                    // Auto-clear error after 5 seconds
+                    if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
+                    genioErrorTimerRef.current = setTimeout(() => setGenioError(null), 5000);
                 }
             } catch (err) {
                 console.error('Failed to activate Genio:', err);
+                setGenioError('Error de conexión al activar Genio Jurídico');
                 setIsCacheLoading(false);
                 setEnableGenioJuridico(false);
+                if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
+                genioErrorTimerRef.current = setTimeout(() => setGenioError(null), 5000);
             }
         } else {
             setIsCacheActive(false);
@@ -103,10 +115,11 @@ export default function ChatPage() {
         }
     }, [resetCacheTimer]);
 
-    // Cleanup timer on unmount
+    // Cleanup timers on unmount
     useEffect(() => {
         return () => {
             if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
+            if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
         };
     }, []);
 
@@ -377,6 +390,7 @@ export default function ChatPage() {
                                     setEnableGenioJuridico={handleToggleGenio}
                                     isCacheActive={isCacheActive}
                                     isCacheLoading={isCacheLoading}
+                                    genioError={genioError}
                                 />
 
                                 <div className="mt-4 text-center">
@@ -409,6 +423,7 @@ export default function ChatPage() {
                             setEnableGenioJuridico={handleToggleGenio}
                             isCacheActive={isCacheActive}
                             isCacheLoading={isCacheLoading}
+                            genioError={genioError}
                         />
                     </div>
                 )}

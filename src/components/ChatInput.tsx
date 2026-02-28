@@ -33,6 +33,7 @@ interface ChatInputProps {
     setEnableGenioJuridico?: (value: boolean) => void;
     isCacheActive?: boolean;
     isCacheLoading?: boolean;
+    genioError?: string | null;
 }
 
 export default function ChatInput({
@@ -43,7 +44,8 @@ export default function ChatInput({
     enableGenioJuridico = false,
     setEnableGenioJuridico,
     isCacheActive = false,
-    isCacheLoading = false
+    isCacheLoading = false,
+    genioError = null,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia'>('search');
@@ -262,18 +264,25 @@ ${draftRequest.descripcion}`;
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
                                     ${isCacheLoading
                                         ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
-                                        : enableGenioJuridico
-                                            ? isCacheActive
-                                                ? 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]'
-                                                : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
-                                            : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
+                                        : genioError
+                                            ? 'bg-red-50 text-red-600 border-red-400'
+                                            : enableGenioJuridico
+                                                ? isCacheActive
+                                                    ? 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]'
+                                                    : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
+                                                : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
                                     }`}
-                                title={isCacheLoading ? 'Preparando corpus legal...' : 'Activar Genio Jurídico (Context Cache)'}
+                                title={genioError ? genioError : isCacheLoading ? 'Preparando corpus legal...' : 'Activar Genio Jurídico (Context Cache)'}
                             >
                                 {isCacheLoading ? (
                                     <>
                                         <div className="w-3.5 h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
                                         Preparando Caché...
+                                    </>
+                                ) : genioError ? (
+                                    <>
+                                        <span className="text-red-500">&#x26A0;</span>
+                                        Error al activar
                                     </>
                                 ) : (
                                     <>
