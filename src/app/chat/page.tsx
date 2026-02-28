@@ -52,6 +52,7 @@ export default function ChatPage() {
     // Genio Juridico states
     const [enableGenioJuridico, setEnableGenioJuridico] = useState(false);
     const [isCacheActive, setIsCacheActive] = useState(false);
+    const [isCacheLoading, setIsCacheLoading] = useState(false);
     const cacheTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Auto-deactivate cache after 8 minutes of inactivity
@@ -61,22 +62,46 @@ export default function ChatPage() {
         if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
         cacheTimerRef.current = setTimeout(() => {
             setIsCacheActive(false);
+            setIsCacheLoading(false);
+            setEnableGenioJuridico(false);
         }, CACHE_TTL_MS);
     }, []);
 
     const handleCacheActive = useCallback(() => {
         setIsCacheActive(true);
+        setIsCacheLoading(false);
         resetCacheTimer();
     }, [resetCacheTimer]);
 
-    // When user toggles Genio Jurídico
-    const handleToggleGenio = useCallback((value: boolean) => {
+    // When user toggles Genio Jurídico — calls /genio/activate to pre-create cache
+    const handleToggleGenio = useCallback(async (value: boolean) => {
         setEnableGenioJuridico(value);
-        if (!value) {
+        if (value) {
+            setIsCacheLoading(true);
+            try {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
+                const res = await fetch(`${API_URL}/genio/activate`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    setIsCacheActive(true);
+                    setIsCacheLoading(false);
+                    resetCacheTimer();
+                } else {
+                    setIsCacheLoading(false);
+                    setEnableGenioJuridico(false);
+                    console.error('Cache activation failed:', data);
+                }
+            } catch (err) {
+                console.error('Failed to activate Genio:', err);
+                setIsCacheLoading(false);
+                setEnableGenioJuridico(false);
+            }
+        } else {
             setIsCacheActive(false);
+            setIsCacheLoading(false);
             if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
         }
-    }, []);
+    }, [resetCacheTimer]);
 
     // Cleanup timer on unmount
     useEffect(() => {
@@ -120,9 +145,6 @@ export default function ChatPage() {
         enableGenioJuridico,
         onCacheActive: handleCacheActive,
     });
-
-    // Loading indicator: only show spinner when actively sending with Genio ON and cache not yet confirmed
-    const isCacheLoading = isLoading && enableGenioJuridico && !isCacheActive;
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
