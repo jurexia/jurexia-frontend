@@ -52,7 +52,6 @@ export default function ChatPage() {
     // Genio Juridico states
     const [enableGenioJuridico, setEnableGenioJuridico] = useState(false);
     const [isCacheActive, setIsCacheActive] = useState(false);
-    const [isCacheLoading, setIsCacheLoading] = useState(false);
     const cacheTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Auto-deactivate cache after 8 minutes of inactivity
@@ -62,24 +61,19 @@ export default function ChatPage() {
         if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
         cacheTimerRef.current = setTimeout(() => {
             setIsCacheActive(false);
-            setIsCacheLoading(false);
         }, CACHE_TTL_MS);
     }, []);
 
     const handleCacheActive = useCallback(() => {
         setIsCacheActive(true);
-        setIsCacheLoading(false);
         resetCacheTimer();
     }, [resetCacheTimer]);
 
     // When user toggles Genio Jurídico
     const handleToggleGenio = useCallback((value: boolean) => {
         setEnableGenioJuridico(value);
-        if (value) {
-            setIsCacheLoading(true);  // Show loading until first CACHE:ACTIVE
-        } else {
+        if (!value) {
             setIsCacheActive(false);
-            setIsCacheLoading(false);
             if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
         }
     }, []);
@@ -127,6 +121,9 @@ export default function ChatPage() {
         onCacheActive: handleCacheActive,
     });
 
+    // Loading indicator: only show spinner when actively sending with Genio ON and cache not yet confirmed
+    const isCacheLoading = isLoading && enableGenioJuridico && !isCacheActive;
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
     const [queriesUsed, setQueriesUsed] = useState<number>(0);
@@ -152,23 +149,7 @@ export default function ChatPage() {
         }
     }, [profile]);
 
-    // Polling for cache status
-    useEffect(() => {
-        const checkCacheStatus = async () => {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390'}/cache-status`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setIsCacheActive(data.cache_available);
-                }
-            } catch (err) {
-                console.error('Error checking cache status:', err);
-            }
-        };
-        checkCacheStatus();
-        const interval = setInterval(checkCacheStatus, 15000); // Poll every 15s for "Genio" light
-        return () => clearInterval(interval);
-    }, []);
+
 
     // Load conversations
     useEffect(() => {
