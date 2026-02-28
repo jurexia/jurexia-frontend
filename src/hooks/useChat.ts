@@ -338,10 +338,28 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 }
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error desconocido');
-            // Remove the empty assistant message on error
-            setMessages(updatedMessages);
+            const errMsg = err instanceof Error ? err.message : 'Error desconocido';
+            setError(errMsg);
             setRetryMessage(null);
+            // CRÍTICO: solo borrar mensajes si NO hubo respuesta parcial.
+            // Si ya había texto generándose, preservarlo con nota.
+            // Borrar siempre causaba el "reset de página" reportado por usuarios.
+            if (!assistantMessageAdded) {
+                setMessages(updatedMessages);
+            } else {
+                // Añadir nota discreta al final de la respuesta parcial
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    const last = newMessages[newMessages.length - 1];
+                    if (last?.role === 'assistant') {
+                        newMessages[newMessages.length - 1] = {
+                            ...last,
+                            content: last.content + '\n\n*[Respuesta incompleta — por favor intenta de nuevo]*',
+                        };
+                    }
+                    return newMessages;
+                });
+            }
         } finally {
             setIsLoading(false);
         }
