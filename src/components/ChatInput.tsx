@@ -155,22 +155,7 @@ ${draftRequest.descripcion}`;
             <div className="w-full max-w-3xl mx-auto">
                 {/* Main Input Container - Harvey Style */}
                 <div className="chat-input-container p-4">
-                    {/* Attached Document Chip */}
-                    {attachedDocument && (
-                        <div className="flex items-center gap-2 mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                            <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                            <span className="text-sm text-blue-800 font-medium truncate flex-1">
-                                {attachedDocument.fileName}
-                            </span>
-                            <button
-                                onClick={() => setAttachedDocument(null)}
-                                className="p-1 hover:bg-blue-100 rounded transition-colors"
-                                title="Quitar documento"
-                            >
-                                <X className="w-4 h-4 text-blue-600" />
-                            </button>
-                        </div>
-                    )}
+                    {/* Attached Document Chip (Legacy location - removing this as it's handled in the input now) */}
 
                     {/* Text Input */}
                     <div className="flex items-end gap-3">
@@ -196,19 +181,47 @@ ${draftRequest.descripcion}`;
                             />
                         </div>
 
-                        {/* Submit Button */}
-                        <button
-                            onClick={handleSubmit}
-                            disabled={!message.trim() || isLoading}
-                            className="btn-submit flex-shrink-0"
-                            aria-label="Enviar mensaje"
-                        >
-                            {isLoading ? (
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <ArrowRight className="w-5 h-5" />
+                        {/* Attach/Submit Row */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Attached Document Indicator (Condensed) */}
+                            {attachedDocument && (
+                                <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 border border-blue-200 rounded-md animate-in fade-in zoom-in duration-300">
+                                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                                    <span className="text-[10px] text-blue-800 font-bold uppercase tracking-tight max-w-[60px] truncate">
+                                        DOC LISTO
+                                    </span>
+                                    <button onClick={() => setAttachedDocument(null)} className="hover:text-red-500 transition-colors">
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
                             )}
-                        </button>
+
+                            {/* Paperclip Button */}
+                            <button
+                                onClick={() => handleModeClick('files')}
+                                className={`p-2 rounded-full transition-all duration-200 ${attachedDocument
+                                    ? 'bg-blue-100 text-blue-600 border border-blue-200'
+                                    : 'text-gray-400 hover:text-charcoal-700 hover:bg-gray-100'
+                                    }`}
+                                title="Adjuntar documento"
+                            >
+                                <Paperclip className="w-5 h-5" />
+                            </button>
+
+                            {/* Submit Button */}
+                            <button
+                                onClick={handleSubmit}
+                                disabled={!message.trim() || isLoading}
+                                className="btn-submit flex-shrink-0"
+                                aria-label="Enviar mensaje"
+                            >
+                                {isLoading ? (
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <ArrowRight className="w-5 h-5" />
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Action Buttons Row */}
@@ -240,45 +253,25 @@ ${draftRequest.descripcion}`;
                                 </button>
                             </div>
 
-                            {/* GENIO JURIDICO Toggle + LED Indicator */}
-                            <div className="flex items-center gap-2 px-1 relative">
-                                <button
-                                    onClick={() => setEnableGenioJuridico?.(!enableGenioJuridico)}
-                                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-all duration-300 shadow-sm border 
-                                        ${enableGenioJuridico
-                                            ? 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400 scale-105'
-                                            : 'bg-white text-charcoal-400 border-gray-200 hover:border-purple-300'
-                                        }`}
-                                    title="Activar Genio Jurídico (Context Cache)"
-                                >
-                                    <Brain className={`w-3.5 h-3.5 ${enableGenioJuridico ? 'animate-pulse' : ''}`} />
-                                    Genio Jurídico
-                                </button>
-
-                                {/* Cache Status LED */}
-                                <div className="flex items-center gap-1.5 ml-1">
-                                    <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px] transition-all duration-500 ${isCacheActive
-                                            ? 'bg-green-500 shadow-green-500/80 animate-pulse'
-                                            : 'bg-gray-300 shadow-transparent'
-                                        }`}
-                                        title={isCacheActive ? "Caché de Contexto Activa — Respuesta instantánea" : "Caché Inactiva"}
-                                    />
-                                    <span className={`text-[10px] font-medium hidden sm:inline ${isCacheActive ? 'text-green-600' : 'text-gray-400'}`}>
-                                        {isCacheActive ? 'Activo' : 'RAG'}
-                                    </span>
-                                </div>
-                            </div>
+                            {/* GENIO JURIDICO Toggle */}
+                            <button
+                                onClick={() => setEnableGenioJuridico?.(!enableGenioJuridico)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
+                                    ${enableGenioJuridico
+                                        ? isCacheActive
+                                            ? 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]'
+                                            : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
+                                        : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
+                                    }`}
+                                title="Activar Genio Jurídico (Context Cache)"
+                            >
+                                <Brain className={`w-3.5 h-3.5 ${isCacheActive ? 'text-red-500' : ''}`} />
+                                {isCacheActive ? 'Genio Jurídico Activo' : 'Genio Jurídico'}
+                            </button>
 
                             <div className="h-4 w-[1px] bg-gray-200 mx-1 hidden sm:block" />
 
-                            {/* Subir Documentos para Análisis */}
-                            <ActionButton
-                                icon={Paperclip}
-                                label="Documento"
-                                active={activeMode === 'files'}
-                                onClick={() => handleModeClick('files')}
-                                guideId="upload"
-                            />
+                            {/* Remaining Actions */}
                             <ActionButton
                                 icon={FileEdit}
                                 label="Escrito"
