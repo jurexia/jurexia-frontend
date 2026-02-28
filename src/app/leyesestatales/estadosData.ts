@@ -35,7 +35,7 @@ const LEYES_PLACEHOLDER: CategoriaLeyes = {
 };
 
 // ─── Querétaro: FULL DATA — PDFs hosted on GCS ───────────────
-const QRO_BASE = 'https://storage.googleapis.com/iurexia-leyes/Queretaro';
+const QRO_BASE = 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/Queretaro';
 
 const QUERETARO_LEYES: CategoriaLeyes = {
     constitucion: [

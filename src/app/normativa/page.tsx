@@ -18,7 +18,7 @@ const CONSTITUCION_NACIONAL = [
         nombre: 'Constitución Política de los Estados Unidos Mexicanos',
         abreviatura: 'CPEUM',
         descripcion: '136 artículos — Norma suprema del ordenamiento jurídico mexicano',
-        pdf_url: 'https://storage.googleapis.com/iurexia-leyes/constitucion/CPEUM-2024.pdf',
+        pdf_url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/constitucion/CPEUM-2024.pdf',
         pdf_fallback: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf',
         chunks: '~1,200 fragmentos indexados',
         fuente: 'Cámara de Diputados — DOF',
@@ -27,7 +27,7 @@ const CONSTITUCION_NACIONAL = [
     },
 ];
 
-const GCS_TRATADOS = 'https://storage.googleapis.com/iurexia-leyes/Tratados';
+const SUPABASE_TRATADOS = 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/Tratados';
 
 const TRATADOS_INTERNACIONALES = [
     {
@@ -35,7 +35,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Convención Americana sobre Derechos Humanos (Pacto de San José)',
         abreviatura: 'CADH',
         descripcion: 'Tratado interamericano de derechos humanos — OEA',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20Americana%20sobre%20Derechos%20Humanos%20(CADH).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20Americana%20sobre%20Derechos%20Humanos%20(CADH).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
         icono: Globe2,
@@ -46,7 +46,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Convención Interamericana Belém do Pará',
         abreviatura: 'CBdP',
         descripcion: 'Prevención, sanción y erradicación de la violencia contra la mujer',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20Interamericana%20Belem%20do%20Para%20(CBdP).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20Interamericana%20Belem%20do%20Para%20(CBdP).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
         icono: Users,
@@ -57,7 +57,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Convención Interamericana contra el Racismo e Intolerancia',
         abreviatura: 'CIRDI',
         descripcion: 'Discriminación racial y formas conexas de intolerancia',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20Interamericana%20contra%20Racismo%20e%20Intolerancia%20(CIRDI).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20Interamericana%20contra%20Racismo%20e%20Intolerancia%20(CIRDI).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
         icono: HeartHandshake,
@@ -68,7 +68,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Convención Interamericana sobre Derechos de Personas Mayores',
         abreviatura: 'CIPM',
         descripcion: 'Derechos humanos de las personas mayores',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20Interamericana%20Derechos%20Personas%20Mayores%20(CIPM).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20Interamericana%20Derechos%20Personas%20Mayores%20(CIPM).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
         icono: Activity,
@@ -79,7 +79,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Protocolo de San Salvador',
         abreviatura: 'PSS',
         descripcion: 'Derechos económicos, sociales y culturales — OEA',
-        pdf_url: `${GCS_TRATADOS}/Protocolo%20de%20San%20Salvador%20-%20Derechos%20Economicos%20Sociales%20(PSS).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Protocolo%20de%20San%20Salvador%20-%20Derechos%20Economicos%20Sociales%20(PSS).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'OEA',
         icono: Shield,
@@ -90,7 +90,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Declaración Universal de Derechos Humanos',
         abreviatura: 'DUDH',
         descripcion: 'Fundamento del derecho internacional de los derechos humanos',
-        pdf_url: `${GCS_TRATADOS}/Declaracion%20Universal%20de%20Derechos%20Humanos%20(DUDH).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Declaracion%20Universal%20de%20Derechos%20Humanos%20(DUDH).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: Globe2,
@@ -101,7 +101,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Pacto Internacional de Derechos Civiles y Políticos',
         abreviatura: 'PIDCP',
         descripcion: 'Libertades fundamentales — Naciones Unidas',
-        pdf_url: `${GCS_TRATADOS}/Pacto%20Internacional%20Derechos%20Civiles%20y%20Politicos%20(PIDCP).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Pacto%20Internacional%20Derechos%20Civiles%20y%20Politicos%20(PIDCP).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: Scale,
@@ -112,7 +112,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Pacto Internacional de Derechos Económicos, Sociales y Culturales',
         abreviatura: 'PIDESC',
         descripcion: 'Derechos económicos, sociales y culturales — ONU',
-        pdf_url: `${GCS_TRATADOS}/Pacto%20Internacional%20Derechos%20Economicos%20Sociales%20y%20Culturales%20(PIDESC).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Pacto%20Internacional%20Derechos%20Economicos%20Sociales%20y%20Culturales%20(PIDESC).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: FileText,
@@ -123,7 +123,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Convención sobre los Derechos del Niño',
         abreviatura: 'CDN',
         descripcion: 'Protección integral de la niñez — ONU',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20sobre%20los%20Derechos%20del%20Nino%20(CDN).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20sobre%20los%20Derechos%20del%20Nino%20(CDN).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: Baby,
@@ -134,7 +134,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Convención contra la Tortura (CAT)',
         abreviatura: 'CAT',
         descripcion: 'Tortura y tratos crueles, inhumanos o degradantes — ONU',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20contra%20la%20Tortura%20ONU%20(CAT).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20contra%20la%20Tortura%20ONU%20(CAT).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: Shield,
@@ -145,7 +145,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'CEDAW — Eliminación de Discriminación contra la Mujer',
         abreviatura: 'CEDAW',
         descripcion: 'Igualdad de derechos para las mujeres — ONU',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20Eliminacion%20Discriminacion%20contra%20la%20Mujer%20(CEDAW).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20Eliminacion%20Discriminacion%20contra%20la%20Mujer%20(CEDAW).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: Users,
@@ -156,7 +156,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Convención sobre Derechos de Personas con Discapacidad',
         abreviatura: 'CRPD',
         descripcion: 'Inclusión y derechos de personas con discapacidad — ONU',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20Derechos%20Personas%20con%20Discapacidad%20(CRPD).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20Derechos%20Personas%20con%20Discapacidad%20(CRPD).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: Users,
@@ -167,7 +167,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Convención contra la Discriminación Racial (ICERD)',
         abreviatura: 'ICERD',
         descripcion: 'Eliminación de todas las formas de discriminación racial — ONU',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20Eliminacion%20Discriminacion%20Racial%20(ICERD).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20Eliminacion%20Discriminacion%20Racial%20(ICERD).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: Scale,
@@ -178,7 +178,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Convención sobre Derechos de Trabajadores Migratorios',
         abreviatura: 'CMW',
         descripcion: 'Protección de trabajadores migratorios y sus familias — ONU',
-        pdf_url: `${GCS_TRATADOS}/Convencion%20Derechos%20Trabajadores%20Migratorios%20(CMW).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Convencion%20Derechos%20Trabajadores%20Migratorios%20(CMW).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU',
         icono: Globe2,
@@ -189,7 +189,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Reglas Nelson Mandela — Tratamiento de Reclusos',
         abreviatura: 'Reglas Mandela',
         descripcion: 'Reglas mínimas para el tratamiento de reclusos — ONU',
-        pdf_url: `${GCS_TRATADOS}/Reglas%20Nelson%20Mandela%20-%20Tratamiento%20Reclusos%20(ONU).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Reglas%20Nelson%20Mandela%20-%20Tratamiento%20Reclusos%20(ONU).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU / UNODC',
         icono: Lock,
@@ -200,7 +200,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Reglas de Bangkok — Tratamiento de Reclusas',
         abreviatura: 'Reglas Bangkok',
         descripcion: 'Tratamiento de reclusas y medidas no privativas — ONU',
-        pdf_url: `${GCS_TRATADOS}/Reglas%20de%20Bangkok%20-%20Tratamiento%20Reclusas%20(ONU).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Reglas%20de%20Bangkok%20-%20Tratamiento%20Reclusas%20(ONU).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU / UNODC',
         icono: Lock,
@@ -211,7 +211,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Protocolo de Estambul',
         abreviatura: 'Protocolo Estambul',
         descripcion: 'Investigación y documentación de la tortura — OHCHR',
-        pdf_url: `${GCS_TRATADOS}/Protocolo%20de%20Estambul%20-%20Investigacion%20Tortura%20(OHCHR).pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Protocolo%20de%20Estambul%20-%20Investigacion%20Tortura%20(OHCHR).pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'ONU / OHCHR',
         icono: Stethoscope,
@@ -222,7 +222,7 @@ const TRATADOS_INTERNACIONALES = [
         nombre: 'Principios de Yogyakarta',
         abreviatura: 'Yogyakarta',
         descripcion: 'Orientación sexual e identidad de género — Soft law',
-        pdf_url: `${GCS_TRATADOS}/Principios%20de%20Yogyakarta%20-%20Orientacion%20Sexual%20e%20Identidad%20de%20Genero.pdf`,
+        pdf_url: `${SUPABASE_TRATADOS}/Principios%20de%20Yogyakarta%20-%20Orientacion%20Sexual%20e%20Identidad%20de%20Genero.pdf`,
         chunks: 'Indexado en RAG',
         fuente: 'Panel de Expertos DDHH',
         icono: Globe2,
@@ -564,8 +564,8 @@ export default function NormativaNacionalPage() {
                                                     key={estado.slug}
                                                     href={`/leyesestatales/${estado.slug}`}
                                                     className={`group relative flex flex-col p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${hasContent
-                                                            ? 'bg-white border-cream-400 hover:border-accent-gold/40 hover:-translate-y-1 hover:shadow-lg'
-                                                            : 'bg-cream-300/50 border-cream-400/50 opacity-60 hover:opacity-80'
+                                                        ? 'bg-white border-cream-400 hover:border-accent-gold/40 hover:-translate-y-1 hover:shadow-lg'
+                                                        : 'bg-cream-300/50 border-cream-400/50 opacity-60 hover:opacity-80'
                                                         }`}
                                                 >
                                                     {hasContent && (
