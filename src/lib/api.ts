@@ -87,7 +87,6 @@ async function* streamChatInternal(
     accessToken?: string,
     enableReasoning = false,
     userId?: string,
-    materia?: string,
     fuero?: string,
     enableGenioJuridico = false,
 ): AsyncGenerator<string, void, unknown> {
@@ -114,7 +113,6 @@ async function* streamChatInternal(
             enable_reasoning: enableReasoning,
             enable_genio_juridico: enableGenioJuridico,
             user_id: userId,
-            ...(materia ? { materia } : {}),
             ...(fuero ? { fuero } : {})
         }),
     });
@@ -152,7 +150,6 @@ export async function* streamChat(
     accessToken?: string,
     enableReasoning = false,
     userId?: string,
-    materia?: string,
     fuero?: string,
     enableGenioJuridico = false,
 ): AsyncGenerator<string, void, unknown> {
@@ -162,7 +159,7 @@ export async function* streamChat(
     while (attempt < maxRetries) {
         try {
             // Attempt to stream chat
-            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, materia, fuero, enableGenioJuridico);
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, enableGenioJuridico);
             return; // Success - exit
         } catch (err) {
             attempt++;

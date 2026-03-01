@@ -40,9 +40,6 @@ export default function ChatPage() {
     const estadoInitializedRef = useRef(false);
     const [showPromptGuide, setShowPromptGuide] = useState(false);
     const [showVisualGuide, setShowVisualGuide] = useState(false);
-    const [selectedMateria, setSelectedMateria] = useState<string>('');
-    const [showMateriaDropdown, setShowMateriaDropdown] = useState(false);
-    const materiaDropdownRef = useRef<HTMLDivElement>(null);
     const [selectedFuero, setSelectedFuero] = useState<string>('');
     const [activePdfSource, setActivePdfSource] = useState<{
         docId: string; origen: string; ref: string; texto: string;
@@ -123,20 +120,6 @@ export default function ChatPage() {
         };
     }, []);
 
-    // Selection matrices
-    const MATERIAS = [
-        { key: '', label: 'Automático' },
-        { key: 'PENAL', label: 'Penal' },
-        { key: 'CIVIL', label: 'Civil' },
-        { key: 'FAMILIAR', label: 'Familiar' },
-        { key: 'LABORAL', label: 'Laboral' },
-        { key: 'MERCANTIL', label: 'Mercantil' },
-        { key: 'ADMINISTRATIVO', label: 'Administrativo' },
-        { key: 'FISCAL', label: 'Fiscal' },
-        { key: 'AGRARIO', label: 'Agrario' },
-        { key: 'CONSTITUCIONAL', label: 'Constitucional' },
-    ];
-
     const FUEROS = [
         { key: '', label: 'Todos' },
         { key: 'constitucional', label: 'Constitucional' },
@@ -152,7 +135,6 @@ export default function ChatPage() {
     const { messages, isLoading, error, sendMessage, clearMessages, setMessages, retryMessage } = useChat({
         estado: selectedEstado || undefined,
         topK: 30,
-        materia: selectedMateria || undefined,
         fuero: selectedFuero || undefined,
         onQuotaExceeded: handleQuotaExceeded,
         enableGenioJuridico,
@@ -362,19 +344,6 @@ export default function ChatPage() {
                                 <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-6">¿En qué te puedo ayudar?</h2>
 
                                 <div className="mb-8 flex justify-center gap-4">
-                                    <div className="relative" ref={materiaDropdownRef}>
-                                        <button onClick={() => setShowMateriaDropdown(!showMateriaDropdown)} className="px-5 py-2.5 bg-charcoal-800 hover:bg-charcoal-900 text-white text-sm font-medium rounded-xl flex items-center gap-2">
-                                            <span>Materia: {selectedMateria ? MATERIAS.find(m => m.key === selectedMateria)?.label : 'Automático'}</span>
-                                            <ChevronDown className="w-4 h-4 text-white/50" />
-                                        </button>
-                                        {showMateriaDropdown && (
-                                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-charcoal-800 rounded-xl shadow-xl border border-white/10 py-1 z-50">
-                                                {MATERIAS.map((m) => (
-                                                    <button key={m.key} onClick={() => { setSelectedMateria(m.key); setShowMateriaDropdown(false); }} className="w-full text-left px-4 py-2 text-sm text-white/80 hover:bg-white/5">{m.label}</button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
                                     <div className="flex bg-charcoal-800/50 p-1 rounded-xl">
                                         {FUEROS.map((f) => (
                                             <button key={f.key} onClick={() => setSelectedFuero(f.key)} className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedFuero === f.key ? 'bg-accent-brown text-white' : 'text-charcoal-500 hover:text-charcoal-300'}`}>{f.label}</button>

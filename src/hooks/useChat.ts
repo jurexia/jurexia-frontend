@@ -8,7 +8,6 @@ import { checkCanQuery, incrementQueryCount } from '@/lib/supabase';
 interface UseChatOptions {
     estado?: string;
     topK?: number;
-    materia?: string;
     fuero?: string;  // Filtro por fuero: constitucional, federal, estatal
     onQuotaExceeded?: (remaining: number) => void;
     enableGenioJuridico?: boolean;
@@ -248,7 +247,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 accessToken,
                 enableReasoning,
                 userId,
-                options.materia,
                 options.fuero,
                 options.enableGenioJuridico,
             )) {
@@ -363,7 +361,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [messages, isLoading, options.estado, options.topK, options.materia, options.fuero, options.onQuotaExceeded, options.enableGenioJuridico, options.onCacheActive]);
+    }, [messages, isLoading, options.estado, options.topK, options.fuero, options.onQuotaExceeded, options.enableGenioJuridico, options.onCacheActive]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);
