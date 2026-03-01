@@ -9,6 +9,7 @@ import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
 import VisualGuideOverlay from '@/components/VisualGuideOverlay';
 import PromptGuide from '@/components/PromptGuide';
+import ChatTour from '@/components/ChatTour';
 import StateSelectorModal from '@/components/StateSelectorModal';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
 import { useChat } from '@/hooks/useChat';
@@ -423,7 +424,8 @@ export default function ChatPage() {
                 </div>
             )}
 
-            <PromptGuide isOpen={showPromptGuide} onClose={() => setShowPromptGuide(false)} />
+            <PromptGuide isOpen={false} onClose={() => setShowPromptGuide(false)} />
+            <ChatTour isOpen={showPromptGuide} onClose={() => setShowPromptGuide(false)} />
 
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
         </div>

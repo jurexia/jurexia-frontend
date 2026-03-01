@@ -202,6 +202,7 @@ ${draftRequest.descripcion}`;
 
                             {/* Paperclip Button */}
                             <button
+                                data-guide="adjuntar"
                                 onClick={() => handleModeClick('files')}
                                 className={`p-2 rounded-full transition-all duration-200 ${attachedDocument
                                     ? 'bg-blue-100 text-blue-600 border border-blue-200'
@@ -231,8 +232,10 @@ ${draftRequest.descripcion}`;
                     {/* Action Buttons Row */}
                     <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
                         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
-                            {/* Buscar / Redactar Toggle Pill */}
-                            <div className="inline-flex items-center rounded-md border border-gray-200 overflow-hidden flex-shrink-0 mr-1">
+                            <div
+                                data-guide="buscar-redactar"
+                                className="inline-flex items-center rounded-md border border-gray-200 overflow-hidden flex-shrink-0 mr-1"
+                            >
                                 <button
                                     onClick={() => setChatMode('buscar')}
                                     className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${chatMode === 'buscar'
@@ -259,6 +262,7 @@ ${draftRequest.descripcion}`;
 
                             {/* GENIO JURIDICO Toggle */}
                             <button
+                                data-guide="genio-juridico"
                                 onClick={() => setEnableGenioJuridico?.(!enableGenioJuridico)}
                                 disabled={isCacheLoading}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
@@ -300,7 +304,7 @@ ${draftRequest.descripcion}`;
                                 label="Escrito"
                                 active={activeMode === 'draft'}
                                 onClick={() => handleModeClick('draft')}
-                                guideId="draft"
+                                guideId="escrito"
                             />
                             <ActionButton
                                 icon={Gavel}
@@ -344,15 +348,16 @@ ${draftRequest.descripcion}`;
                         </a>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Modals */}
-            <FileUploadModal
+            < FileUploadModal
                 isOpen={showFileModal}
                 onClose={() => {
                     setShowFileModal(false);
                     setActiveMode('search');
-                }}
+                }
+                }
                 onTextExtracted={handleFileExtracted}
             />
 
