@@ -4,55 +4,64 @@ import { useEffect, useState, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TourStep {
-    selector: string;          // CSS selector of element to highlight
+    selector: string;
     title: string;
     description: string;
-    position: 'top' | 'bottom' | 'left' | 'right';
-    padding?: number;          // extra padding around highlighted element
+    preferBelow?: boolean; // force tooltip below element
+    padding?: number;
 }
 
 const TOUR_STEPS: TourStep[] = [
     {
+        selector: '[data-guide="jurisdiccion"]',
+        title: '🗺️ Jurisdicción seleccionada',
+        description: 'Al registrarte elegiste tu estado. Toda consulta se filtra automáticamente hacia la legislación de esa entidad federativa. Puedes cambiarlo desde tu perfil cuando lo necesites.',
+        padding: 10,
+        preferBelow: true,
+    },
+    {
+        selector: '[data-guide="fuero-filter"]',
+        title: '⚖️ Filtro de Fuero',
+        description: 'Precisa el ámbito normativo. Todos: búsqueda amplia (recomendado). Constitucional: CPEUM y tratados internacionales. Federal: LFT, LGTOC, Código Civil Federal. Estatal: la legislación de tu estado seleccionado.',
+        padding: 10,
+        preferBelow: true,
+    },
+    {
         selector: '[data-guide="buscar-redactar"]',
         title: '🔍 Buscar / Redactar',
-        description: 'Elige el modo de tu consulta. Buscar: encuentra leyes, artículos y jurisprudencia. Redactar: genera argumentos jurídicos articulados para tu caso.',
-        position: 'top',
+        description: 'Elige el modo de tu consulta. Buscar: encuentra leyes, artículos y jurisprudencia con citas exactas. Redactar: genera argumentos jurídicos articulados e incorpora la normatividad relevante de forma narrativa.',
         padding: 8,
     },
     {
         selector: '[data-guide="genio-juridico"]',
         title: '⚡ Genio Jurídico',
-        description: 'Activa el modelo avanzado con acceso al corpus legal completo. Respuestas más profundas y analíticas. Úsalo para comprender — sin él obtienes citas exactas de artículos.',
-        position: 'top',
+        description: 'Activa el modelo avanzado con acceso al corpus legal completo. Cuando está activo, la calidad y precisión de las respuestas aumenta considerablemente — especialmente en temas de derechos humanos, derecho constitucional, civil y penal, donde la interpretación contextual es crucial.\n\n⚠️ Desactivado: obtendrás citas exactas de artículos pero respuestas menos precisas en materia constitucional/derechos humanos.\n\nRegla: Genio activo = comprensión y análisis profundo. Genio desactivado = referencias exactas para fundar escritos.',
         padding: 8,
     },
     {
         selector: '[data-guide="escrito"]',
-        title: '📄 Escrito',
-        description: 'Redacta automáticamente escritos jurídicos formales: demandas, contestaciones, amparos y más. Solo describe tu caso y Iurexia estructura el documento.',
-        position: 'top',
+        title: '📄 Escrito Jurídico',
+        description: 'Redacta automáticamente escritos jurídicos formales: demandas, contestaciones, recursos de amparo y más. Solo describe tu caso y Iurexia estructura el documento con los fundamentos legales correspondientes.',
         padding: 8,
     },
     {
         selector: '[data-guide="sentencia"]',
-        title: '⚖️ Sentencia / Auditor',
-        description: 'Sube una sentencia o resolución judicial para que Iurexia la analice, detecte inconsistencias y evalúe su apego a derecho.',
-        position: 'top',
+        title: '🔨 Auditor de Sentencias',
+        description: 'Sube o describe una sentencia o resolución judicial. Iurexia la analiza, identifica inconsistencias jurídicas y evalúa su apego a los principios constitucionales y legales aplicables.',
         padding: 8,
     },
     {
         selector: '[data-guide="adjuntar"]',
         title: '📎 Adjuntar Documento',
-        description: 'Sube un PDF, Word o TXT para que Iurexia lo analice en el contexto de tu consulta. Ideal para contratos, resoluciones o cualquier documento legal.',
-        position: 'top',
+        description: 'Sube un PDF, Word o TXT para que Iurexia lo analice en el contexto de tu consulta. Ideal para contratos, actas, resoluciones o cualquier documento que quieras revisar con criterio jurídico.',
         padding: 8,
     },
     {
         selector: '[data-guide="lawyer"]',
         title: '👩‍⚖️ Buscar Abogado',
-        description: 'Iurexia Connect te conecta con abogados verificados de tu estado. Si tu consulta requiere representación real, encuentra al especialista adecuado sin costo.',
-        position: 'top',
+        description: 'Iurexia Connect te conecta con abogados verificados de tu estado. Si tu consulta requiere representación profesional, encuentra al especialista adecuado de forma gratuita.',
         padding: 12,
+        preferBelow: false,
     },
 ];
 
@@ -83,8 +92,7 @@ export default function ChatTour({ isOpen, onClose }: ChatTourProps) {
     useEffect(() => {
         if (!isOpen) { setStep(0); return; }
         const current = TOUR_STEPS[step];
-        // slight delay for scroll settling
-        const t = setTimeout(() => measureElement(current.selector, current.padding ?? 4), 120);
+        const t = setTimeout(() => measureElement(current.selector, current.padding ?? 4), 150);
         return () => clearTimeout(t);
     }, [isOpen, step, measureElement]);
 
@@ -102,180 +110,155 @@ export default function ChatTour({ isOpen, onClose }: ChatTourProps) {
     const isLast = step === TOUR_STEPS.length - 1;
     const isFirst = step === 0;
 
-    // Tooltip placement
     const WH = typeof window !== 'undefined' ? { w: window.innerWidth, h: window.innerHeight } : { w: 1024, h: 768 };
-    const tooltipW = 320;
-    const tooltipH = 160;
+    const tooltipW = 340;
+    const GAP = 20; // gap between element and tooltip — never overlaps
 
     let tooltipStyle: React.CSSProperties = {};
     if (rect) {
-        const below = rect.top + rect.height + 16;
-        const above = rect.top - tooltipH - 16;
         const centerX = Math.min(Math.max(rect.left + rect.width / 2 - tooltipW / 2, 16), WH.w - tooltipW - 16);
+        const spaceBelow = WH.h - (rect.top + rect.height) - GAP;
+        const spaceAbove = rect.top - GAP;
 
-        if (current.position === 'bottom' || above < 60) {
-            tooltipStyle = { top: below, left: centerX };
+        if (current.preferBelow || spaceAbove < 160) {
+            // Place BELOW the element
+            tooltipStyle = { top: rect.top + rect.height + GAP, left: centerX };
         } else {
-            tooltipStyle = { top: above, left: centerX };
+            // Place ABOVE the element
+            tooltipStyle = { bottom: WH.h - rect.top + GAP, left: centerX };
         }
+        void spaceBelow; // suppress unused warning
     } else {
-        // Fallback — center of screen
-        tooltipStyle = { top: WH.h / 2 - tooltipH / 2, left: WH.w / 2 - tooltipW / 2 };
+        tooltipStyle = { top: WH.h / 2 - 80, left: WH.w / 2 - tooltipW / 2 };
     }
+
+    // Split description on \n\n for multi-paragraph support
+    const descParts = current.description.split('\n\n');
 
     return (
         <div className="fixed inset-0 z-[200]" style={{ pointerEvents: 'auto' }}>
-            {/* Dark overlay with cutout */}
-            <svg
-                className="absolute inset-0 w-full h-full"
-                style={{ pointerEvents: 'none' }}
-            >
+            {/* Spotlight SVG overlay */}
+            <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
                 <defs>
                     <mask id="tour-mask">
-                        {/* White = visible (dark overlay) */}
                         <rect width="100%" height="100%" fill="white" />
-                        {/* Black = cutout (transparent spotlight) */}
                         {rect && (
                             <rect
-                                x={rect.left}
-                                y={rect.top}
-                                width={rect.width}
-                                height={rect.height}
-                                rx="10"
-                                fill="black"
+                                x={rect.left} y={rect.top}
+                                width={rect.width} height={rect.height}
+                                rx="10" fill="black"
                             />
                         )}
                     </mask>
                 </defs>
-                <rect
-                    width="100%"
-                    height="100%"
-                    fill="rgba(0,0,0,0.70)"
-                    mask="url(#tour-mask)"
-                />
-                {/* Glow ring around highlighted element */}
+                <rect width="100%" height="100%" fill="rgba(0,0,0,0.72)" mask="url(#tour-mask)" />
                 {rect && (
                     <rect
-                        x={rect.left - 2}
-                        y={rect.top - 2}
-                        width={rect.width + 4}
-                        height={rect.height + 4}
-                        rx="11"
-                        fill="none"
-                        stroke="#c9a962"
-                        strokeWidth="2"
+                        x={rect.left - 2} y={rect.top - 2}
+                        width={rect.width + 4} height={rect.height + 4}
+                        rx="11" fill="none"
+                        stroke="#c9a962" strokeWidth="2"
                         strokeDasharray="6 3"
-                        style={{ animation: 'dash 1.2s linear infinite' }}
+                        style={{ animation: 'tourDash 1.2s linear infinite' }}
                     />
                 )}
             </svg>
 
-            {/* Click outside to close */}
+            {/* Dismiss on backdrop click */}
             <div className="absolute inset-0" onClick={onClose} style={{ pointerEvents: 'auto' }} />
 
             {/* Tooltip Card */}
             <div
                 className="absolute shadow-2xl"
-                style={{
-                    ...tooltipStyle,
-                    width: tooltipW,
-                    pointerEvents: 'auto',
-                    zIndex: 210,
-                }}
+                style={{ ...tooltipStyle, width: tooltipW, pointerEvents: 'auto', zIndex: 210 }}
                 onClick={e => e.stopPropagation()}
             >
                 <div style={{
-                    background: 'linear-gradient(145deg, #1a1a1a, #0f0f0f)',
-                    border: '1px solid rgba(201,169,98,0.35)',
-                    borderRadius: '16px',
-                    padding: '20px',
+                    background: 'linear-gradient(160deg, #1c1c1e 0%, #111111 100%)',
+                    border: '1px solid rgba(201,169,98,0.4)',
+                    borderRadius: '18px',
+                    padding: '22px 22px 18px',
                     position: 'relative',
+                    boxShadow: '0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
                 }}>
                     {/* Close */}
-                    <button
-                        onClick={onClose}
-                        style={{
-                            position: 'absolute', top: 12, right: 12,
-                            color: 'rgba(255,255,255,0.4)',
-                            background: 'none', border: 'none', cursor: 'pointer', padding: 2,
-                        }}
-                    >
-                        <X size={16} />
+                    <button onClick={onClose} style={{
+                        position: 'absolute', top: 14, right: 14,
+                        color: 'rgba(255,255,255,0.35)', background: 'none',
+                        border: 'none', cursor: 'pointer', padding: 2, lineHeight: 0,
+                    }}>
+                        <X size={15} />
                     </button>
 
-                    {/* Step counter */}
+                    {/* Step badge */}
                     <span style={{
-                        fontSize: '10px', fontWeight: 600, letterSpacing: '0.1em',
-                        color: '#c9a962', textTransform: 'uppercase', display: 'block', marginBottom: 8,
+                        fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em',
+                        color: '#c9a962', textTransform: 'uppercase',
+                        display: 'inline-block', marginBottom: 10,
+                        background: 'rgba(201,169,98,0.10)',
+                        padding: '3px 8px', borderRadius: 99,
+                        border: '1px solid rgba(201,169,98,0.2)',
                     }}>
-                        Paso {step + 1} de {TOUR_STEPS.length}
+                        Paso {step + 1} / {TOUR_STEPS.length}
                     </span>
 
                     {/* Title */}
                     <h3 style={{
-                        fontSize: '15px', fontWeight: 700, color: '#f5f5f5',
-                        marginBottom: 8, lineHeight: 1.3,
-                        fontFamily: 'Georgia, serif',
+                        fontSize: '15px', fontWeight: 700, color: '#f0f0f0',
+                        marginBottom: 10, lineHeight: 1.35,
+                        fontFamily: 'Georgia, "Times New Roman", serif',
                     }}>
                         {current.title}
                     </h3>
 
-                    {/* Description */}
-                    <p style={{
-                        fontSize: '13px', color: 'rgba(255,255,255,0.65)',
-                        lineHeight: 1.6, marginBottom: 16,
-                    }}>
-                        {current.description}
-                    </p>
+                    {/* Description — multi-paragraph */}
+                    <div style={{ marginBottom: 18 }}>
+                        {descParts.map((part, i) => (
+                            <p key={i} style={{
+                                fontSize: '12.5px', color: 'rgba(255,255,255,0.62)',
+                                lineHeight: 1.65, marginBottom: i < descParts.length - 1 ? 10 : 0,
+                            }}>
+                                {part}
+                            </p>
+                        ))}
+                    </div>
 
-                    {/* Navigation */}
+                    {/* Navigation row */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        {/* Dots */}
-                        <div style={{ display: 'flex', gap: 5 }}>
+                        {/* Progress dots */}
+                        <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                             {TOUR_STEPS.map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setStep(i)}
-                                    style={{
-                                        width: i === step ? 18 : 6,
-                                        height: 6,
-                                        borderRadius: 9999,
-                                        background: i === step ? '#c9a962' : 'rgba(255,255,255,0.2)',
-                                        border: 'none', cursor: 'pointer',
-                                        transition: 'all 0.25s ease',
-                                        padding: 0,
-                                    }}
-                                />
+                                <button key={i} onClick={() => setStep(i)} style={{
+                                    width: i === step ? 20 : 6, height: 6,
+                                    borderRadius: 9999, padding: 0, border: 'none', cursor: 'pointer',
+                                    background: i === step ? '#c9a962' : 'rgba(255,255,255,0.18)',
+                                    transition: 'all 0.25s ease',
+                                }} />
                             ))}
                         </div>
 
                         {/* Prev / Next */}
                         <div style={{ display: 'flex', gap: 8 }}>
                             {!isFirst && (
-                                <button
-                                    onClick={() => setStep(s => s - 1)}
-                                    style={{
-                                        padding: '6px 14px', borderRadius: 10, fontSize: 12,
-                                        fontWeight: 600, border: '1px solid rgba(255,255,255,0.15)',
-                                        background: 'transparent', color: 'rgba(255,255,255,0.6)',
-                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-                                    }}
-                                >
+                                <button onClick={() => setStep(s => s - 1)} style={{
+                                    padding: '6px 14px', borderRadius: 10, fontSize: 12,
+                                    fontWeight: 600, border: '1px solid rgba(255,255,255,0.12)',
+                                    background: 'transparent', color: 'rgba(255,255,255,0.55)',
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                                }}>
                                     <ChevronLeft size={13} /> Anterior
                                 </button>
                             )}
-                            <button
-                                onClick={() => isLast ? onClose() : setStep(s => s + 1)}
-                                style={{
-                                    padding: '6px 16px', borderRadius: 10, fontSize: 12,
-                                    fontWeight: 700, border: 'none',
-                                    background: isLast
-                                        ? 'linear-gradient(135deg, #c9a962, #a0813d)'
-                                        : 'linear-gradient(135deg, #3b3b3b, #252525)',
-                                    color: isLast ? '#fff' : 'rgba(255,255,255,0.85)',
-                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-                                }}
-                            >
+                            <button onClick={() => isLast ? onClose() : setStep(s => s + 1)} style={{
+                                padding: '6px 18px', borderRadius: 10, fontSize: 12,
+                                fontWeight: 700, border: 'none', cursor: 'pointer',
+                                background: isLast
+                                    ? 'linear-gradient(135deg, #c9a962 0%, #a07830 100%)'
+                                    : 'rgba(255,255,255,0.10)',
+                                color: isLast ? '#fff' : 'rgba(255,255,255,0.85)',
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                transition: 'all 0.2s ease',
+                            }}>
                                 {isLast ? '¡Listo!' : (<>Siguiente <ChevronRight size={13} /></>)}
                             </button>
                         </div>
@@ -284,7 +267,7 @@ export default function ChatTour({ isOpen, onClose }: ChatTourProps) {
             </div>
 
             <style>{`
-                @keyframes dash { to { stroke-dashoffset: -18; } }
+                @keyframes tourDash { to { stroke-dashoffset: -18; } }
             `}</style>
         </div>
     );

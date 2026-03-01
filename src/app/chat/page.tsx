@@ -315,7 +315,7 @@ export default function ChatPage() {
                             <span className="hidden sm:inline">Normativa</span>
                         </Link>
 
-                        <button onClick={() => setShowConfigModal(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm" style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}>
+                        <button data-guide="jurisdiccion" onClick={() => setShowConfigModal(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm" style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}>
                             <span className="hidden sm:inline text-white/70">Jurisdicción:</span>
                             <span className="truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
                         </button>
@@ -342,7 +342,7 @@ export default function ChatPage() {
                                 <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-6">¿En qué te puedo ayudar?</h2>
 
                                 <div className="mb-8 flex justify-center gap-4">
-                                    <div className="flex bg-charcoal-800/50 p-1 rounded-xl">
+                                    <div data-guide="fuero-filter" className="flex bg-charcoal-800/50 p-1 rounded-xl">
                                         {FUEROS.map((f) => (
                                             <button key={f.key} onClick={() => setSelectedFuero(f.key)} className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedFuero === f.key ? 'bg-accent-brown text-white' : 'text-charcoal-500 hover:text-charcoal-300'}`}>{f.label}</button>
                                         ))}
