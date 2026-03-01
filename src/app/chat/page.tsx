@@ -423,6 +423,8 @@ export default function ChatPage() {
                 </div>
             )}
 
+            <PromptGuide isOpen={showPromptGuide} onClose={() => setShowPromptGuide(false)} />
+
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
         </div>
     );
