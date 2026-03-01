@@ -39,7 +39,8 @@ export default function ChatPage() {
     const [showStateModal, setShowStateModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
     const estadoInitializedRef = useRef(false);
-    const [showPromptGuide, setShowPromptGuide] = useState(false);
+    const [showPromptGuide, setShowPromptGuide] = useState(false);     // ChatTour (Guía Rápida)
+    const [showPromptGuideModal, setShowPromptGuideModal] = useState(false); // PromptGuide (¿Cómo hacer mejores consultas?)
     const [showVisualGuide, setShowVisualGuide] = useState(false);
     const [selectedFuero, setSelectedFuero] = useState<string>('');
     const [activePdfSource, setActivePdfSource] = useState<{
@@ -362,9 +363,33 @@ export default function ChatPage() {
 
                                 <div className="mt-4 text-center">
                                     <p className="text-xs text-charcoal-500 mb-2">Mejor pregunta = mejor resultado.</p>
-                                    <button onClick={() => setShowPromptGuide(true)} className="text-xs text-accent-brown hover:text-accent-gold font-medium flex items-center gap-1 mx-auto">
-                                        <HelpCircle className="w-3.5 h-3.5" /> ¿Cómo hacer mejores consultas?
+                                    <button
+                                        onClick={() => setShowPromptGuideModal(true)}
+                                        className="flex items-center gap-1.5 mx-auto"
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                                    >
+                                        <span style={{
+                                            display: 'inline-block',
+                                            width: 8, height: 8, borderRadius: '50%',
+                                            background: '#dc2626',
+                                            animation: 'redPulse 1.4s ease-in-out infinite',
+                                            flexShrink: 0,
+                                        }} />
+                                        <span style={{
+                                            fontSize: '12px', fontWeight: 800,
+                                            color: '#dc2626',
+                                            letterSpacing: '0.01em',
+                                            textDecoration: 'none',
+                                        }}>
+                                            ¿Cómo hacer mejores consultas?
+                                        </span>
                                     </button>
+                                    <style>{`
+                                        @keyframes redPulse {
+                                            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
+                                            50% { opacity: 0.7; box-shadow: 0 0 0 5px rgba(220,38,38,0); }
+                                        }
+                                    `}</style>
                                 </div>
                             </div>
                         </div>
@@ -424,7 +449,7 @@ export default function ChatPage() {
                 </div>
             )}
 
-            <PromptGuide isOpen={false} onClose={() => setShowPromptGuide(false)} />
+            <PromptGuide isOpen={showPromptGuideModal} onClose={() => setShowPromptGuideModal(false)} />
             <ChatTour isOpen={showPromptGuide} onClose={() => setShowPromptGuide(false)} />
 
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
