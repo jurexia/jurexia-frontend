@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Lightbulb, Scale, Briefcase, Users } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Lightbulb, Scale, Briefcase, Users, Zap } from 'lucide-react';
 
 interface PromptGuideProps {
     isOpen: boolean;
@@ -10,10 +10,34 @@ interface PromptGuideProps {
 
 const PROMPT_TIPS = [
     {
+        icon: Zap,
+        category: "✨ Genio Jurídico",
+        title: "Actívalo para análisis profundos",
+        description: "El botón ⚡ Genio Jurídico activa un modelo avanzado con acceso al corpus legal completo. La calidad y precisión de las respuestas aumenta considerablemente: razona mejor, estructura más y explica con mayor detalle.",
+        tips: [
+            "Úsalo cuando quieras entender a fondo un tema legal, una ley o sus implicaciones",
+            "Úsalo para redactar, analizar o interpretar textos jurídicos complejos",
+            "⚠️ Advertencia: al activarlo, pueden no aparecer las citas directas de fuentes. Si necesitas referencias de artículos para fundar un escrito, déjalo desactivado",
+            "Regla de oro: Genio = comprensión y análisis. Sin Genio = fuentes citadas y exactas"
+        ]
+    },
+    {
+        icon: Scale,
+        category: "⚖️ Filtro de Fuero",
+        title: "Enfoca tu búsqueda por ámbito legal",
+        description: "El selector de fuero (Todos / Constitucional / Federal / Estatal) prioriza el tipo de normatividad que Iurexia revisa al responder tu consulta.",
+        tips: [
+            "Todos — búsqueda amplia en todo el corpus (recomendado por defecto)",
+            "Constitucional — prioriza CPEUM, tratados internacionales y derechos humanos",
+            "Federal — leyes federales: LGTOC, LFT, Código Civil Federal, etc.",
+            "Estatal — legislación del estado que seleccionaste al iniciar sesión"
+        ]
+    },
+    {
         icon: Scale,
         category: "Para profesionales",
-        title: "Pregunta sobre problemas jurídicos complejos",
-        description: "Iurexia contiene criterios jurisprudenciales que resuelven controversias profundas del derecho mexicano.",
+        title: "Consultas técnicas y jurisprudencia",
+        description: "Iurexia contiene criterios jurisprudenciales, legislación federal y estatal actualizada. Aprovecha su profundidad con preguntas técnicas.",
         examples: [
             "¿Qué jurisprudencia define los elementos del delito de abuso de confianza equiparado?",
             "¿Existe tesis sobre la procedencia del amparo contra resoluciones del IMSS que niegan pensión?",
@@ -23,37 +47,25 @@ const PROMPT_TIPS = [
     {
         icon: Briefcase,
         category: "Para litigantes",
-        title: "Consulta estrategias procesales",
-        description: "Encuentra criterios sobre procedimientos, plazos, excepciones y recursos que fortalezcan tu estrategia.",
+        title: "Consulta fuentes para fundar escritos",
+        description: "Si necesitas citas concretas de artículos o tesis para fundar una demanda, deja el Genio desactivado — obtendrás las referencias exactas del corpus.",
         examples: [
-            "¿Qué dice la jurisprudencia sobre la suplencia de la queja deficiente en amparo laboral?",
+            "¿Qué dicen los artículos 14 y 16 de la CPEUM sobre el principio de legalidad?",
             "¿Cuándo procede la suspensión provisional contra el cierre de un establecimiento mercantil?",
-            "¿Qué criterios existen sobre la caducidad de la instancia en juicios civiles?"
+            "¿Qué dice la jurisprudencia sobre la suplencia de la queja deficiente en amparo laboral?"
         ]
     },
     {
         icon: Users,
         category: "Para ciudadanos",
-        title: "Consultas claras y específicas",
-        description: "No necesitas ser abogado. Describe tu situación con detalle y Iurexia encontrará la información relevante.",
+        title: "Describe tu situación con detalle",
+        description: "No necesitas ser abogado. Cuéntale a Iurexia qué te pasó, en qué estado, y obtendrás orientación legal clara y fundamentada.",
         examples: [
-            "En Guanajuato, ¿qué requisitos necesito para tramitar un divorcio y cuál es el procedimiento?",
-            "¿En qué delito incurre una persona que, abusando de mi confianza, robó dinero de mi negocio?",
-            "¿Qué derechos tengo si mi arrendador quiere desalojarme sin previo aviso en Jalisco?"
+            "En Querétaro, ¿qué derechos tengo si mi patrón me despidió sin darme liquidación?",
+            "Un vecino construyó en mi terreno sin permiso. ¿Qué puedo hacer legalmente en Jalisco?",
+            "¿Qué riesgos legales tiene firmar un contrato de compraventa sin escritura?"
         ]
     },
-    {
-        icon: Lightbulb,
-        category: "Consejos generales",
-        title: "Maximiza la precisión de tus resultados",
-        description: "Pequeños ajustes en tu pregunta pueden mejorar significativamente la calidad de la respuesta.",
-        tips: [
-            "Menciona el estado si tu consulta involucra leyes estatales",
-            "Especifica si buscas leyes, jurisprudencia o ambas",
-            "Incluye hechos relevantes de tu caso para respuestas más precisas",
-            "Usa términos técnicos si los conoces (ej. 'suspensión provisional' vs 'que paren el acto')"
-        ]
-    }
 ];
 
 export default function PromptGuide({ isOpen, onClose }: PromptGuideProps) {
@@ -90,7 +102,7 @@ export default function PromptGuide({ isOpen, onClose }: PromptGuideProps) {
                     <div className="bg-gradient-to-r from-accent-brown to-accent-gold p-4 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-white">
                             <Lightbulb className="w-5 h-5" />
-                            <h2 className="font-serif text-lg font-semibold">Guía para mejores consultas</h2>
+                            <h2 className="font-serif text-lg font-semibold">Guía de uso — Iurexia</h2>
                         </div>
                         <button
                             onClick={onClose}
@@ -134,21 +146,21 @@ export default function PromptGuide({ isOpen, onClose }: PromptGuideProps) {
                                     <p className="text-xs font-medium text-charcoal-500 uppercase tracking-wide mb-2">
                                         Ejemplos de consultas:
                                     </p>
-                                    {currentTip.examples.map((example, idx) => (
+                                    {currentTip.examples?.map((example, idx) => (
                                         <div key={idx} className="flex items-start gap-2">
                                             <span className="text-accent-gold mt-0.5">→</span>
-                                            <p className="text-sm text-charcoal-700 italic">"{example}"</p>
+                                            <p className="text-sm text-charcoal-700 italic">&ldquo;{example}&rdquo;</p>
                                         </div>
                                     ))}
                                 </>
                             ) : (
                                 <>
                                     <p className="text-xs font-medium text-charcoal-500 uppercase tracking-wide mb-2">
-                                        Consejos:
+                                        Cómo funciona:
                                     </p>
                                     {currentTip.tips?.map((tip, idx) => (
                                         <div key={idx} className="flex items-start gap-2">
-                                            <span className="text-green-600 font-bold">✓</span>
+                                            <span className="text-accent-brown font-bold mt-0.5">•</span>
                                             <p className="text-sm text-charcoal-700">{tip}</p>
                                         </div>
                                     ))}
@@ -174,8 +186,8 @@ export default function PromptGuide({ isOpen, onClose }: PromptGuideProps) {
                                         key={index}
                                         onClick={() => setCurrentSlide(index)}
                                         className={`h-2 rounded-full transition-all ${index === currentSlide
-                                                ? 'bg-accent-brown w-5'
-                                                : 'bg-cream-400 hover:bg-cream-500 w-2'
+                                            ? 'bg-accent-brown w-5'
+                                            : 'bg-cream-400 hover:bg-cream-500 w-2'
                                             }`}
                                     />
                                 ))}
