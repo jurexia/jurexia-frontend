@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
     Users, Shield, BarChart3, AlertTriangle, Ban, CheckCircle,
-    Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard
+    Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
@@ -81,6 +81,9 @@ const PLAN_LABELS: Record<string, { label: string; color: string }> = {
     ultra_secretarios: { label: 'Ultra Secretarios', color: '#8b5cf6' },
 };
 
+// Estados con legislación ya ingestada en Qdrant
+const INGESTED_STATES = ['QUERETARO', 'CDMX', 'CIUDAD_DE_MEXICO'];
+
 function formatDate(d: string | null): string {
     if (!d) return '—';
     return new Date(d).toLocaleDateString('es-MX', {
@@ -112,6 +115,7 @@ export default function AdminPage() {
     const [showReviewed, setShowReviewed] = useState(false);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [stripeData, setStripeData] = useState<Record<string, StripeSubData>>({});
+    const [welcomeSent, setWelcomeSent] = useState<Set<string>>(new Set());
 
     const getToken = useCallback(() => {
         return session?.access_token || '';
@@ -391,22 +395,66 @@ export default function AdminPage() {
                                                 <td style={{ padding: '12px 16px', color: '#888' }}>{u.estado || '—'}</td>
                                                 <td style={{ padding: '12px 16px', color: '#666', whiteSpace: 'nowrap' }}>{formatDate(u.created_at)}</td>
                                                 <td style={{ padding: '12px 16px' }}>
-                                                    {u.email !== ADMIN_EMAIL && (
-                                                        <button
-                                                            onClick={() => u.is_blocked ? unblockUser(u.id) : blockUser(u.id)}
-                                                            disabled={actionLoading === u.id}
-                                                            style={{
-                                                                display: 'flex', alignItems: 'center', gap: '6px',
-                                                                padding: '6px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                                                                fontSize: '0.75rem', fontWeight: 600, transition: 'all 0.2s',
-                                                                background: u.is_blocked ? 'rgba(34, 197, 94, 0.15)' : 'rgba(220, 38, 38, 0.15)',
-                                                                color: u.is_blocked ? '#86efac' : '#fca5a5',
-                                                                opacity: actionLoading === u.id ? 0.5 : 1,
-                                                            }}
-                                                        >
-                                                            {u.is_blocked ? <><Unlock className="w-3.5 h-3.5" /> Desbloquear</> : <><Ban className="w-3.5 h-3.5" /> Bloquear</>}
-                                                        </button>
-                                                    )}
+                                                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                        {u.email !== ADMIN_EMAIL && (
+                                                            <button
+                                                                onClick={() => u.is_blocked ? unblockUser(u.id) : blockUser(u.id)}
+                                                                disabled={actionLoading === u.id}
+                                                                style={{
+                                                                    display: 'flex', alignItems: 'center', gap: '4px',
+                                                                    padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                                                                    fontSize: '0.7rem', fontWeight: 600, transition: 'all 0.2s',
+                                                                    background: u.is_blocked ? 'rgba(34, 197, 94, 0.15)' : 'rgba(220, 38, 38, 0.15)',
+                                                                    color: u.is_blocked ? '#86efac' : '#fca5a5',
+                                                                    opacity: actionLoading === u.id ? 0.5 : 1,
+                                                                }}
+                                                            >
+                                                                {u.is_blocked ? <><Unlock className="w-3 h-3" /> Desbloquear</> : <><Ban className="w-3 h-3" /> Bloquear</>}
+                                                            </button>
+                                                        )}
+                                                        {isPaid && u.estado && !INGESTED_STATES.includes(u.estado) && !welcomeSent.has(u.email) && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    setActionLoading(u.id);
+                                                                    try {
+                                                                        const res = await fetch('/api/admin/welcome-email', {
+                                                                            method: 'POST',
+                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({
+                                                                                email: u.email,
+                                                                                name: u.full_name || u.email.split('@')[0],
+                                                                                estado: u.estado,
+                                                                                planLabel: plan.label,
+                                                                            }),
+                                                                        });
+                                                                        if (res.ok) {
+                                                                            setWelcomeSent(prev => new Set(Array.from(prev).concat(u.email)));
+                                                                            alert('✅ Email de bienvenida enviado');
+                                                                        } else {
+                                                                            const err = await res.json();
+                                                                            alert(`Error: ${err.error}`);
+                                                                        }
+                                                                    } catch { alert('Error al enviar email'); }
+                                                                    setActionLoading(null);
+                                                                }}
+                                                                disabled={actionLoading === u.id}
+                                                                title="Enviar email de bienvenida"
+                                                                style={{
+                                                                    display: 'flex', alignItems: 'center', gap: '4px',
+                                                                    padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                                                                    fontSize: '0.7rem', fontWeight: 600, transition: 'all 0.2s',
+                                                                    background: 'rgba(201, 168, 76, 0.15)',
+                                                                    color: '#e8c56d',
+                                                                    opacity: actionLoading === u.id ? 0.5 : 1,
+                                                                }}
+                                                            >
+                                                                <Mail className="w-3 h-3" /> 📩
+                                                            </button>
+                                                        )}
+                                                        {isPaid && u.estado && !INGESTED_STATES.includes(u.estado) && welcomeSent.has(u.email) && (
+                                                            <span style={{ fontSize: '0.7rem', color: '#86efac' }}>✅ Enviado</span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
