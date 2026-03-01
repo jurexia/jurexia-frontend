@@ -1,58 +1,47 @@
 import { NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 
-/**
- * GET /api/admin/subscriptions
- * 
- * Receives a list of stripe_subscription_ids and returns enriched data for each.
- * Query param: ids=sub_xxx,sub_yyy,...
- */
+function safeDate(ts: any): string {
+    if (!ts) return '';
+    try {
+        const d = typeof ts === 'number' ? new Date(ts * 1000) : new Date(ts);
+        return isNaN(d.getTime()) ? '' : d.toISOString();
+    } catch { return ''; }
+}
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const idsParam = searchParams.get('ids');
 
-    if (!idsParam) {
-        return NextResponse.json({ subscriptions: {}, error: 'No ids provided' });
-    }
+    if (!idsParam) return NextResponse.json({ subscriptions: {} });
 
     const ids = idsParam.split(',').filter(Boolean);
-    if (ids.length === 0) {
-        return NextResponse.json({ subscriptions: {}, error: 'Empty ids' });
-    }
+    if (ids.length === 0) return NextResponse.json({ subscriptions: {} });
 
-    // Verify Stripe is configured
     if (!process.env.STRIPE_SECRET_KEY) {
-        return NextResponse.json({
-            subscriptions: {},
-            error: 'STRIPE_SECRET_KEY not configured',
-            env_keys: Object.keys(process.env).filter(k => k.includes('STRIPE')).join(', ')
-        });
+        return NextResponse.json({ subscriptions: {}, error: 'STRIPE_SECRET_KEY not configured' });
     }
 
     let stripe;
-    try {
-        stripe = getStripe();
-    } catch (e: any) {
-        return NextResponse.json({ subscriptions: {}, error: `Stripe init failed: ${e.message}` });
-    }
+    try { stripe = getStripe(); }
+    catch (e: any) { return NextResponse.json({ subscriptions: {}, error: `Stripe init: ${e.message}` }); }
 
     const subscriptions: Record<string, any> = {};
     const errors: string[] = [];
 
-    // Fetch each subscription
     for (const subId of ids) {
         try {
             const sub: any = await stripe.subscriptions.retrieve(subId);
             const item = sub.items?.data?.[0];
             subscriptions[subId] = {
-                status: sub.status,
-                created: new Date(sub.created * 1000).toISOString(),
-                current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-                current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-                cancel_at_period_end: sub.cancel_at_period_end,
-                amount: item?.price?.unit_amount || 0,
-                currency: item?.price?.currency || 'mxn',
-                interval: item?.price?.recurring?.interval || 'month',
+                status: sub.status || 'unknown',
+                created: safeDate(sub.created),
+                current_period_end: safeDate(sub.current_period_end),
+                current_period_start: safeDate(sub.current_period_start),
+                cancel_at_period_end: !!sub.cancel_at_period_end,
+                amount: item?.price?.unit_amount || item?.plan?.amount || 0,
+                currency: item?.price?.currency || item?.plan?.currency || 'mxn',
+                interval: item?.price?.recurring?.interval || item?.plan?.interval || 'month',
             };
         } catch (err: any) {
             errors.push(`${subId}: ${err.message || String(err)}`);
