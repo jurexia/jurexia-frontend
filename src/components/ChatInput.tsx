@@ -276,12 +276,12 @@ ${draftRequest.descripcion}`;
                                                     : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
                                                 : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
                                     }`}
-                                title={genioError ? genioError : isCacheLoading ? 'Preparando corpus legal...' : 'Activar Genio Jurídico (Context Cache)'}
+                                title={genioError ? genioError : isCacheLoading ? 'Activando Genio Jurídico...' : 'Activar Genio Jurídico'}
                             >
                                 {isCacheLoading ? (
                                     <>
                                         <div className="w-3.5 h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                                        Preparando Caché...
+                                        Activando Genio Jurídico...
                                     </>
                                 ) : genioError ? (
                                     <>
