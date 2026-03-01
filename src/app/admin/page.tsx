@@ -412,7 +412,7 @@ export default function AdminPage() {
                                                                 {u.is_blocked ? <><Unlock className="w-3 h-3" /> Desbloquear</> : <><Ban className="w-3 h-3" /> Bloquear</>}
                                                             </button>
                                                         )}
-                                                        {isPaid && u.estado && !INGESTED_STATES.includes(u.estado) && !welcomeSent.has(u.email) && (
+                                                        {isPaid && !welcomeSent.has(u.email) && (
                                                             <button
                                                                 onClick={async () => {
                                                                     setActionLoading(u.id);
@@ -423,8 +423,9 @@ export default function AdminPage() {
                                                                             body: JSON.stringify({
                                                                                 email: u.email,
                                                                                 name: u.full_name || u.email.split('@')[0],
-                                                                                estado: u.estado,
+                                                                                estado: u.estado || 'tu entidad',
                                                                                 planLabel: plan.label,
+                                                                                isIngested: u.estado ? INGESTED_STATES.includes(u.estado) : false,
                                                                             }),
                                                                         });
                                                                         if (res.ok) {
@@ -451,7 +452,7 @@ export default function AdminPage() {
                                                                 <Mail className="w-3 h-3" /> 📩
                                                             </button>
                                                         )}
-                                                        {isPaid && u.estado && !INGESTED_STATES.includes(u.estado) && welcomeSent.has(u.email) && (
+                                                        {isPaid && welcomeSent.has(u.email) && (
                                                             <span style={{ fontSize: '0.7rem', color: '#86efac' }}>✅ Enviado</span>
                                                         )}
                                                     </div>

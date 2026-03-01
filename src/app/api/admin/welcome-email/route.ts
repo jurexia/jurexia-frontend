@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-function buildWelcomeEmail(params: { name: string; estado: string; planLabel: string }) {
-    const { name, estado, planLabel } = params;
+function buildWelcomeEmail(params: { name: string; estado: string; planLabel: string; isIngested: boolean }) {
+    const { name, estado, planLabel, isIngested } = params;
     const firstName = name.split(' ')[0] || name;
 
     return `
@@ -52,10 +52,17 @@ function buildWelcomeEmail(params: { name: string; estado: string; planLabel: st
                                 <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#c9a84c;text-transform:uppercase;letter-spacing:1px;">
                                     📍 Tu Estado: ${estado}
                                 </p>
+                                ${isIngested ? `
+                                <p style="margin:0;font-size:14px;color:#86efac;line-height:1.7;">
+                                    ✅ <strong style="color:#fff;">¡Excelentes noticias!</strong> La legislación de <strong style="color:#fff;">${estado}</strong> ya se encuentra completamente integrada en nuestra base de datos. 
+                                    Puedes consultar códigos, leyes y reglamentos de tu entidad directamente en el chat.
+                                </p>
+                                ` : `
                                 <p style="margin:0;font-size:14px;color:#ccc;line-height:1.7;">
                                     Estamos trabajando activamente para integrar la legislación completa de <strong style="color:#fff;">${estado}</strong> a nuestra base de datos. 
                                     Muy pronto tendrás acceso a los códigos, leyes y reglamentos de tu entidad directamente en tus consultas.
                                 </p>
+                                `}
                             </div>
 
                             <!-- Repertorio disponible AHORA -->
@@ -152,7 +159,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { email, name, estado, planLabel } = body;
+        const { email, name, estado, planLabel, isIngested } = body;
 
         if (!email || !name || !estado) {
             return NextResponse.json(
@@ -172,6 +179,7 @@ export async function POST(req: NextRequest) {
                 name,
                 estado,
                 planLabel: planLabel || 'PRO',
+                isIngested: !!isIngested,
             }),
         });
 
