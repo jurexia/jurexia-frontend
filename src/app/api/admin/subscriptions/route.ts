@@ -12,58 +12,57 @@ export async function GET(request: Request) {
     const idsParam = searchParams.get('ids');
 
     if (!idsParam) {
-        return NextResponse.json({ subscriptions: {} });
+        return NextResponse.json({ subscriptions: {}, error: 'No ids provided' });
     }
 
     const ids = idsParam.split(',').filter(Boolean);
     if (ids.length === 0) {
-        return NextResponse.json({ subscriptions: {} });
+        return NextResponse.json({ subscriptions: {}, error: 'Empty ids' });
     }
 
-    const stripe = getStripe();
-    const subscriptions: Record<string, {
-        status: string;
-        created: string;
-        current_period_end: string;
-        current_period_start: string;
-        cancel_at_period_end: boolean;
-        amount: number;
-        currency: string;
-        interval: string;
-    }> = {};
-
-    // Fetch in parallel with concurrency limit of 10
-    const chunks: string[][] = [];
-    for (let i = 0; i < ids.length; i += 10) {
-        chunks.push(ids.slice(i, i + 10));
+    // Verify Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY) {
+        return NextResponse.json({
+            subscriptions: {},
+            error: 'STRIPE_SECRET_KEY not configured',
+            env_keys: Object.keys(process.env).filter(k => k.includes('STRIPE')).join(', ')
+        });
     }
 
-    for (const chunk of chunks) {
-        const results = await Promise.allSettled(
-            chunk.map(async (subId) => {
-                try {
-                    const sub: any = await stripe.subscriptions.retrieve(subId);
-                    const item = sub.items.data[0];
-                    subscriptions[subId] = {
-                        status: sub.status,
-                        created: new Date(sub.created * 1000).toISOString(),
-                        current_period_end: new Date(
-                            sub.current_period_end * 1000
-                        ).toISOString(),
-                        current_period_start: new Date(
-                            sub.current_period_start * 1000
-                        ).toISOString(),
-                        cancel_at_period_end: sub.cancel_at_period_end,
-                        amount: item?.price?.unit_amount || 0,
-                        currency: item?.price?.currency || 'mxn',
-                        interval: item?.price?.recurring?.interval || 'month',
-                    };
-                } catch (err) {
-                    console.error(`Failed to fetch subscription ${subId}:`, err);
-                }
-            })
-        );
+    let stripe;
+    try {
+        stripe = getStripe();
+    } catch (e: any) {
+        return NextResponse.json({ subscriptions: {}, error: `Stripe init failed: ${e.message}` });
     }
 
-    return NextResponse.json({ subscriptions });
+    const subscriptions: Record<string, any> = {};
+    const errors: string[] = [];
+
+    // Fetch each subscription
+    for (const subId of ids) {
+        try {
+            const sub: any = await stripe.subscriptions.retrieve(subId);
+            const item = sub.items?.data?.[0];
+            subscriptions[subId] = {
+                status: sub.status,
+                created: new Date(sub.created * 1000).toISOString(),
+                current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+                current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+                cancel_at_period_end: sub.cancel_at_period_end,
+                amount: item?.price?.unit_amount || 0,
+                currency: item?.price?.currency || 'mxn',
+                interval: item?.price?.recurring?.interval || 'month',
+            };
+        } catch (err: any) {
+            errors.push(`${subId}: ${err.message || String(err)}`);
+        }
+    }
+
+    return NextResponse.json({
+        subscriptions,
+        total: ids.length,
+        fetched: Object.keys(subscriptions).length,
+        ...(errors.length > 0 ? { errors } : {})
+    });
 }
