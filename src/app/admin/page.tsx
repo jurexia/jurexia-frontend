@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
     Users, Shield, BarChart3, AlertTriangle, Ban, CheckCircle,
-    Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock
+    Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
@@ -31,6 +31,17 @@ interface UserProfile {
     created_at: string;
     updated_at: string;
     last_query_at: string | null;
+}
+
+interface StripeSubData {
+    status: string;
+    created: string;
+    current_period_end: string;
+    current_period_start: string;
+    cancel_at_period_end: boolean;
+    amount: number;
+    currency: string;
+    interval: string;
 }
 
 interface SecurityAlert {
@@ -100,6 +111,7 @@ export default function AdminPage() {
     const [searchFilter, setSearchFilter] = useState('');
     const [showReviewed, setShowReviewed] = useState(false);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [stripeData, setStripeData] = useState<Record<string, StripeSubData>>({});
 
     const getToken = useCallback(() => {
         return session?.access_token || '';
@@ -128,7 +140,24 @@ export default function AdminPage() {
                     });
                     if (!res.ok) throw new Error(`Error ${res.status}`);
                     const data = await res.json();
-                    setUsers(Array.isArray(data.users) ? data.users : []);
+                    const userList: UserProfile[] = Array.isArray(data.users) ? data.users : [];
+                    setUsers(userList);
+
+                    // Fetch Stripe subscription data for users with stripe_subscription_id
+                    const subIds = userList
+                        .map(u => u.stripe_subscription_id)
+                        .filter((id): id is string => !!id);
+                    if (subIds.length > 0) {
+                        try {
+                            const stripeRes = await fetch(`/api/admin/subscriptions?ids=${subIds.join(',')}`);
+                            if (stripeRes.ok) {
+                                const stripeJson = await stripeRes.json();
+                                setStripeData(stripeJson.subscriptions || {});
+                            }
+                        } catch (e) {
+                            console.warn('Could not fetch Stripe data:', e);
+                        }
+                    }
                 } else if (tab === 'alertas') {
                     const res = await fetch(`${API_URL}/admin/alerts?reviewed=${showReviewed}`, {
                         headers: { Authorization: `Bearer ${token}` },
@@ -297,7 +326,7 @@ export default function AdminPage() {
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid #333' }}>
-                                        {['Email', 'Plan', 'Prompts', 'Redacciones', 'Estado', 'Última Actividad', 'Registrado', 'Acciones'].map(h => (
+                                        {['Email', 'Plan', 'Suscripción', 'Renovación', 'Pago', 'Prompts', 'Estado', 'Registrado', 'Acciones'].map(h => (
                                             <th key={h} style={{ textAlign: 'left', padding: '12px 16px', color: '#888', fontWeight: 500, whiteSpace: 'nowrap' }}>{h}</th>
                                         ))}
                                     </tr>
@@ -305,13 +334,24 @@ export default function AdminPage() {
                                 <tbody>
                                     {filteredUsers.map(u => {
                                         const plan = PLAN_LABELS[u.subscription_type] || { label: u.subscription_type, color: '#888' };
+                                        const sub = u.stripe_subscription_id ? stripeData[u.stripe_subscription_id] : null;
+                                        const isActiveSub = sub?.status === 'active' || sub?.status === 'trialing';
+                                        const isPaid = u.subscription_type !== 'gratuito';
                                         return (
-                                            <tr key={u.id} style={{ borderBottom: '1px solid #1a1a1a', opacity: u.is_blocked ? 0.5 : 1 }}>
+                                            <tr key={u.id} style={{
+                                                borderBottom: '1px solid #1a1a1a',
+                                                opacity: u.is_blocked ? 0.5 : 1,
+                                                ...(isPaid && isActiveSub ? {
+                                                    background: 'rgba(59, 130, 246, 0.06)',
+                                                    borderLeft: '3px solid #3b82f6',
+                                                } : {}),
+                                            }}>
                                                 <td style={{ padding: '12px 16px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         {u.is_blocked && <Ban className="w-4 h-4 flex-shrink-0" style={{ color: '#ef4444' }} />}
+                                                        {isPaid && isActiveSub && !u.is_blocked && <CreditCard className="w-4 h-4 flex-shrink-0" style={{ color: '#3b82f6' }} />}
                                                         <div>
-                                                            <div style={{ color: u.is_blocked ? '#ef4444' : '#e5e5e5', fontWeight: 500 }}>{u.email}</div>
+                                                            <div style={{ color: u.is_blocked ? '#ef4444' : isPaid && isActiveSub ? '#93c5fd' : '#e5e5e5', fontWeight: 500 }}>{u.email}</div>
                                                             {u.full_name && <div style={{ color: '#666', fontSize: '0.75rem' }}>{u.full_name}</div>}
                                                         </div>
                                                     </div>
@@ -319,10 +359,36 @@ export default function AdminPage() {
                                                 <td style={{ padding: '12px 16px' }}>
                                                     <span style={{ padding: '3px 10px', borderRadius: '20px', background: plan.color + '22', color: plan.color, fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{plan.label}</span>
                                                 </td>
+                                                {/* Suscripción — fecha de inicio */}
+                                                <td style={{ padding: '12px 16px', color: '#888', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
+                                                    {sub ? formatDate(sub.created) : '—'}
+                                                </td>
+                                                {/* Renovación — próxima fecha de cobro */}
+                                                <td style={{ padding: '12px 16px', color: isActiveSub ? '#93c5fd' : '#888', whiteSpace: 'nowrap', fontSize: '0.8rem', fontWeight: isActiveSub ? 600 : 400 }}>
+                                                    {sub ? formatDate(sub.current_period_end) : '—'}
+                                                </td>
+                                                {/* Pago — estado */}
+                                                <td style={{ padding: '12px 16px' }}>
+                                                    {sub ? (
+                                                        <span style={{
+                                                            padding: '3px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700,
+                                                            ...(sub.status === 'active' ? { background: 'rgba(34,197,94,0.15)', color: '#86efac' }
+                                                                : sub.status === 'past_due' ? { background: 'rgba(245,158,11,0.15)', color: '#fcd34d' }
+                                                                    : sub.status === 'canceled' ? { background: 'rgba(220,38,38,0.15)', color: '#fca5a5' }
+                                                                        : { background: '#1a1a1a', color: '#888' }),
+                                                        }}>
+                                                            {sub.status === 'active' ? '✅ Pagado'
+                                                                : sub.status === 'past_due' ? '⚠️ Vencido'
+                                                                    : sub.status === 'canceled' ? '❌ Cancelado'
+                                                                        : sub.status}
+                                                            {sub.cancel_at_period_end && sub.status === 'active' ? ' (no renueva)' : ''}
+                                                        </span>
+                                                    ) : (
+                                                        <span style={{ color: '#555', fontSize: '0.75rem' }}>—</span>
+                                                    )}
+                                                </td>
                                                 <td style={{ padding: '12px 16px', color: '#ccc' }}>{u.queries_used}/{u.queries_limit === -1 ? '∞' : u.queries_limit}</td>
-                                                <td style={{ padding: '12px 16px', color: '#ccc' }}>{u.drafts_used}/{u.drafts_limit === -1 ? '∞' : u.drafts_limit}</td>
                                                 <td style={{ padding: '12px 16px', color: '#888' }}>{u.estado || '—'}</td>
-                                                <td style={{ padding: '12px 16px', color: '#888', whiteSpace: 'nowrap' }}>{timeAgo(u.last_query_at)}</td>
                                                 <td style={{ padding: '12px 16px', color: '#666', whiteSpace: 'nowrap' }}>{formatDate(u.created_at)}</td>
                                                 <td style={{ padding: '12px 16px' }}>
                                                     {u.email !== ADMIN_EMAIL && (
@@ -346,7 +412,7 @@ export default function AdminPage() {
                                         );
                                     })}
                                     {filteredUsers.length === 0 && (
-                                        <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No se encontraron usuarios</td></tr>
+                                        <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No se encontraron usuarios</td></tr>
                                     )}
                                 </tbody>
                             </table>
