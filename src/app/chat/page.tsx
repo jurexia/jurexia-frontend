@@ -303,10 +303,7 @@ export default function ChatPage() {
                 onSelectConversation={handleSelectConversation}
                 onNewConversation={handleNewConversation}
                 onDeleteConversation={handleDeleteConversation}
-                onToggleGuide={() => {
-                    if (messages.length > 0) handleNewConversation();
-                    setShowVisualGuide(true);
-                }}
+                onToggleGuide={() => setShowPromptGuide(true)}
             />
 
             <div className="flex flex-col h-screen md:ml-72">
