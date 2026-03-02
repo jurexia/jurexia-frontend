@@ -100,25 +100,6 @@ export default function SentenciaModal({ isOpen, onClose, onSubmit, estado }: Se
         }
     };
 
-    const extractTextFromPDF = async (file: File): Promise<string> => {
-        const pdfjsLib = await import('pdfjs-dist');
-        try {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-        } catch {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
-        }
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            const pageText = textContent.items.map((item: any) => item.str).join(' ');
-            fullText += pageText + '\n\n';
-        }
-        return fullText.trim();
-    };
-
     const extractTextFromDOCX = async (file: File): Promise<string> => {
         const mammoth = await import('mammoth');
         const arrayBuffer = await file.arrayBuffer();
@@ -149,7 +130,7 @@ export default function SentenciaModal({ isOpen, onClose, onSubmit, estado }: Se
             if (selectedFile) {
                 const extension = selectedFile.name.split('.').pop()?.toLowerCase();
                 if (extension === 'pdf') {
-                    documentText = await extractTextFromPDF(selectedFile);
+                    documentText = await extractTextFromDOCServer(selectedFile);
                 } else if (extension === 'docx') {
                     documentText = await extractTextFromDOCX(selectedFile);
                 } else if (extension === 'doc') {
