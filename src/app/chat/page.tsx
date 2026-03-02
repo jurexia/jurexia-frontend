@@ -342,7 +342,26 @@ export default function ChatPage() {
                                         </span>
                                     </Link>
                                 </div>
-                                <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-6">¿En qué te puedo ayudar?</h2>
+                                <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">¿En qué te puedo ayudar?</h2>
+
+                                {/* Elegant Suggestions */}
+                                <div className="mb-10 flex flex-col items-center gap-3">
+                                    {[
+                                        "¿Cómo registro mi marca?",
+                                        "¿Qué pasa si me despiden injustificadamente sin liquidación?",
+                                        "¿Qué hago si mi esposo se llevó a mi hija?",
+                                        "¿Cómo entablo una defensa adecuada en materia penal sobre un delito determinado?",
+                                        "¿Qué es el derecho a la libertad de expresión y cuál es su fundamento?"
+                                    ].map((s, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => handleSendMessage(s)}
+                                            className="font-serif italic text-charcoal-500 hover:text-accent-brown transition-all duration-300 text-sm md:text-[15px] opacity-70 hover:opacity-100 max-w-lg leading-relaxed border-b border-transparent hover:border-accent-brown/20"
+                                        >
+                                            {s}
+                                        </button>
+                                    ))}
+                                </div>
 
                                 <div className="mb-8 flex justify-center gap-4">
                                     <div data-guide="fuero-filter" className="flex bg-charcoal-800/50 p-1 rounded-xl">
