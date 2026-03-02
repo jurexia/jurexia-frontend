@@ -243,7 +243,7 @@ export default function ChatSidebar({
                             setIsMobileOpen(false);
                         }}
                         className="w-full flex items-center justify-between px-4 py-2.5
-                                 rounded-lg transition-all duration-200 group"
+                                 rounded-lg transition-all duration-200 group animate-shine-gold"
                         style={{
                             background: 'rgba(255,255,255,0.06)',
                             border: '1px solid rgba(201, 169, 98, 0.15)',
@@ -254,7 +254,7 @@ export default function ChatSidebar({
                         <div className="flex items-center gap-2">
                             <BookOpen className="w-4 h-4" style={{ color: '#c9a962' }} />
                             <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                                Guía Rápida
+                                Guía rápida de uso
                             </span>
                         </div>
                         <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: 'rgba(255,255,255,0.4)' }} />

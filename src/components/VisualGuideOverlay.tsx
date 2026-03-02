@@ -468,7 +468,7 @@ export default function VisualGuideOverlay({ isOpen, onClose }: VisualGuideOverl
             >
                 <BookOpen className="w-4 h-4" style={{ color: '#c9a962' }} />
                 <span className="text-sm font-medium text-white">
-                    Guía Rápida
+                    Guía rápida de uso
                 </span>
                 <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     {currentStep + 1} / {GUIDE_STEPS.length}

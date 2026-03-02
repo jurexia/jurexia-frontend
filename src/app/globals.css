@@ -1059,3 +1059,39 @@ h6 {
 .state-selector-buttons .state-selector-confirm {
   flex: 1;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   QUICK GUIDE ANIMATION - Golden Shine
+   ══════════════════════════════════════════════════════════════════ */
+
+@keyframes goldShineSweep {
+  0% {
+    top: -100%;
+  }
+
+  100% {
+    top: 200%;
+  }
+}
+
+.animate-shine-gold {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.animate-shine-gold::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 60%;
+  background: linear-gradient(to bottom,
+      transparent 0%,
+      rgba(201, 169, 98, 0.1) 20%,
+      rgba(255, 255, 255, 0.45) 50%,
+      rgba(201, 169, 98, 0.1) 80%,
+      transparent 100%);
+  animation: goldShineSweep 3.5s infinite linear;
+  pointer-events: none;
+  z-index: 10;
+}
