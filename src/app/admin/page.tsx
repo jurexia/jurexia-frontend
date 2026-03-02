@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
     Users, Shield, BarChart3, AlertTriangle, Ban, CheckCircle,
-    Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail
+    Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail, Bell
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
@@ -116,6 +116,7 @@ export default function AdminPage() {
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [stripeData, setStripeData] = useState<Record<string, StripeSubData>>({});
     const [welcomeSent, setWelcomeSent] = useState<Set<string>>(new Set());
+    const [updateSent, setUpdateSent] = useState<Set<string>>(new Set());
 
     const getToken = useCallback(() => {
         return session?.access_token || '';
@@ -453,7 +454,48 @@ export default function AdminPage() {
                                                             </button>
                                                         )}
                                                         {isPaid && welcomeSent.has(u.email) && (
-                                                            <span style={{ fontSize: '0.7rem', color: '#86efac' }}>✅ Enviado</span>
+                                                            <span style={{ fontSize: '0.7rem', color: '#86efac', marginRight: '8px' }}>✅ Welcome</span>
+                                                        )}
+                                                        {isPaid && u.estado === 'GUANAJUATO' && !updateSent.has(u.email) && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    setActionLoading(u.id);
+                                                                    try {
+                                                                        const res = await fetch('/api/admin/state-update', {
+                                                                            method: 'POST',
+                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({
+                                                                                email: u.email,
+                                                                                name: u.full_name || u.email.split('@')[0],
+                                                                                estado: u.estado,
+                                                                            }),
+                                                                        });
+                                                                        if (res.ok) {
+                                                                            setUpdateSent(prev => new Set(Array.from(prev).concat(u.email)));
+                                                                            alert(`✅ Notificación de Guanajuato enviada a ${u.email}`);
+                                                                        } else {
+                                                                            const err = await res.json();
+                                                                            alert(`Error: ${err.error}`);
+                                                                        }
+                                                                    } catch { alert('Error al enviar notificación'); }
+                                                                    setActionLoading(null);
+                                                                }}
+                                                                disabled={actionLoading === u.id}
+                                                                title="Notificar Ingesta Guanajuato"
+                                                                style={{
+                                                                    display: 'flex', alignItems: 'center', gap: '4px',
+                                                                    padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                                                                    fontSize: '0.7rem', fontWeight: 600, transition: 'all 0.2s',
+                                                                    background: 'rgba(34, 197, 94, 0.15)',
+                                                                    color: '#86efac',
+                                                                    opacity: actionLoading === u.id ? 0.5 : 1,
+                                                                }}
+                                                            >
+                                                                <Bell className="w-3 h-3" /> GTO
+                                                            </button>
+                                                        )}
+                                                        {isPaid && u.estado === 'GUANAJUATO' && updateSent.has(u.email) && (
+                                                            <span style={{ fontSize: '0.7rem', color: '#86efac' }}>✅ Notif. GTO</span>
                                                         )}
                                                     </div>
                                                 </td>
