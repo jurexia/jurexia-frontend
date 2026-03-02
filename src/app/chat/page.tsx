@@ -336,9 +336,11 @@ export default function ChatPage() {
                         <div className="h-full flex flex-col items-center justify-center px-4 -mt-8">
                             <div className="max-w-2xl w-full text-center">
                                 <div className="mb-4">
-                                    <span className="font-serif text-5xl font-semibold text-charcoal-900">
-                                        Iurex<span className="text-accent-gold">ia</span>
-                                    </span>
+                                    <Link href="/" className="cursor-pointer hover:opacity-90 transition-opacity">
+                                        <span className="font-serif text-5xl font-semibold text-charcoal-900">
+                                            Iurex<span className="text-accent-gold">ia</span>
+                                        </span>
+                                    </Link>
                                 </div>
                                 <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-6">¿En qué te puedo ayudar?</h2>
 
