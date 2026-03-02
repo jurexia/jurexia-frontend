@@ -76,12 +76,10 @@ export default function SecretariosPage() {
                             <AnimateOnScroll delay={0.3}>
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <button
-                                        onClick={handleSubscribe}
-                                        disabled={loading}
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0a0f1a] font-bold rounded-full hover:from-[#d4b470] hover:to-[#c9a962] transition-all hover:shadow-lg hover:shadow-[#c9a962]/20 disabled:opacity-50"
+                                        disabled={true}
+                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gray-700 text-gray-400 font-bold rounded-full cursor-not-allowed opacity-80"
                                     >
-                                        {loading ? 'Procesando...' : 'Comenzar Ahora — $999/mes'}
-                                        <ArrowRight className="w-5 h-5" />
+                                        Próximamente
                                     </button>
                                     <a
                                         href="#features"
@@ -391,12 +389,10 @@ export default function SecretariosPage() {
                                         <p className="text-gray-500 mb-8">IVA incluido · Cancela cuando quieras</p>
 
                                         <button
-                                            onClick={handleSubscribe}
-                                            disabled={loading}
-                                            className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0a0f1a] font-bold text-lg rounded-full hover:from-[#d4b470] hover:to-[#c9a962] transition-all hover:shadow-lg hover:shadow-[#c9a962]/20 disabled:opacity-50"
+                                            disabled={true}
+                                            className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-gray-700 text-gray-400 font-bold text-lg rounded-full cursor-not-allowed opacity-80"
                                         >
-                                            {loading ? 'Procesando...' : 'Suscribirme al Plan Secretario'}
-                                            <ArrowRight className="w-5 h-5" />
+                                            Próximamente
                                         </button>
                                         <p className="text-center text-xs text-gray-500 mt-3">
                                             14 días de garantía de devolución
@@ -499,12 +495,10 @@ export default function SecretariosPage() {
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.3} direction="scale">
                         <button
-                            onClick={handleSubscribe}
-                            disabled={loading}
-                            className="inline-flex items-center gap-2 px-10 py-5 bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0a0f1a] font-bold text-lg rounded-full hover:from-[#d4b470] hover:to-[#c9a962] transition-all hover:shadow-lg hover:shadow-[#c9a962]/20 disabled:opacity-50"
+                            disabled={true}
+                            className="inline-flex items-center gap-2 px-10 py-5 bg-gray-700 text-gray-400 font-bold text-lg rounded-full cursor-not-allowed opacity-80"
                         >
-                            {loading ? 'Procesando...' : 'Comenzar Ahora — $999 MXN/mes'}
-                            <ArrowRight className="w-5 h-5" />
+                            Próximamente
                         </button>
                     </AnimateOnScroll>
                 </div>
