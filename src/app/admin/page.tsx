@@ -82,7 +82,7 @@ const PLAN_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 // Estados con legislación ya ingestada en Qdrant
-const INGESTED_STATES = ['QUERETARO', 'CDMX', 'CIUDAD_DE_MEXICO'];
+const INGESTED_STATES = ['QUERETARO', 'CDMX', 'CIUDAD_DE_MEXICO', 'GUANAJUATO'];
 
 function formatDate(d: string | null): string {
     if (!d) return '—';
