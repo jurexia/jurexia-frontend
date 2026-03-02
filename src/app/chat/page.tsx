@@ -56,6 +56,16 @@ export default function ChatPage() {
     const cacheTimerRef = useRef<NodeJS.Timeout | null>(null);
     const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Suggestion rotation state
+    const SUGGESTIONS = [
+        "¿Cómo registro mi marca?",
+        "¿Qué pasa si me despiden injustificadamente sin liquidación?",
+        "¿Qué hago si mi esposo se llevó a mi hija?",
+        "¿Cómo entablo una defensa adecuada en materia penal sobre un delito determinado?",
+        "¿Qué es el derecho a la libertad de expresión y cuál es su fundamento?"
+    ];
+    const [suggestionIndex, setSuggestionIndex] = useState(0);
+
     // Auto-deactivate cache after 8 minutes of inactivity
     const CACHE_TTL_MS = 8 * 60 * 1000; // 8 minutes
 
@@ -113,6 +123,14 @@ export default function ChatPage() {
             if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
         }
     }, [resetCacheTimer]);
+
+    // suggestion rotation timer
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setSuggestionIndex((prev) => (prev + 1) % SUGGESTIONS.length);
+        }, 4500); // 4.5 seconds per suggestion (includes fade time)
+        return () => clearInterval(timer);
+    }, [SUGGESTIONS.length]);
 
     // Cleanup timers on unmount
     useEffect(() => {
@@ -344,23 +362,14 @@ export default function ChatPage() {
                                 </div>
                                 <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">¿En qué te puedo ayudar?</h2>
 
-                                {/* Elegant Suggestions */}
-                                <div className="mb-10 flex flex-col items-center gap-3">
-                                    {[
-                                        "¿Cómo registro mi marca?",
-                                        "¿Qué pasa si me despiden injustificadamente sin liquidación?",
-                                        "¿Qué hago si mi esposo se llevó a mi hija?",
-                                        "¿Cómo entablo una defensa adecuada en materia penal sobre un delito determinado?",
-                                        "¿Qué es el derecho a la libertad de expresión y cuál es su fundamento?"
-                                    ].map((s, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => handleSendMessage(s)}
-                                            className="font-serif italic text-charcoal-500 hover:text-accent-brown transition-all duration-300 text-sm md:text-[15px] opacity-70 hover:opacity-100 max-w-lg leading-relaxed border-b border-transparent hover:border-accent-brown/20"
-                                        >
-                                            {s}
-                                        </button>
-                                    ))}
+                                {/* Elegant Rotating Suggestions */}
+                                <div className="h-16 mb-8 flex items-center justify-center overflow-hidden">
+                                    <div
+                                        key={suggestionIndex}
+                                        className="font-serif italic text-charcoal-900/40 text-sm md:text-base text-center max-w-lg leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-1000 ease-out"
+                                    >
+                                        {SUGGESTIONS[suggestionIndex]}
+                                    </div>
                                 </div>
 
                                 <div className="mb-8 flex justify-center gap-4">
