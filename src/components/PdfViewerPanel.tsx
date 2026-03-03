@@ -348,6 +348,8 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, hasPdf }: LeyArticu
         [source]
     );
 
+    const isCuadernillo = /cuadernillo|corte idh|corte interamericana/i.test(source.origen || '') || /cuadernillo|corte idh|corte interamericana/i.test(leyLabel);
+
     const displayLey = parsed.leyName || leyLabel;
 
     return (
@@ -421,10 +423,31 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, hasPdf }: LeyArticu
             </div>
 
             {/* Divider */}
-            {hasPdf && <div className="mx-5 border-t border-cream-400" />}
+            {(hasPdf || isCuadernillo) && <div className="mx-5 border-t border-cream-400" />}
 
-            {/* PDF section */}
-            {hasPdf && (
+            {/* Cuadernillo section */}
+            {isCuadernillo ? (
+                <div className="p-5">
+                    <div className="bg-white border border-cream-400 rounded-2xl p-6 shadow-sm flex flex-col items-center text-center">
+                        <div className="w-12 h-12 rounded-xl bg-accent-gold/10 flex items-center justify-center mb-4">
+                            <ExternalLink className="w-6 h-6 text-accent-gold" />
+                        </div>
+                        <h3 className="text-sm font-bold text-charcoal-900 mb-2">Cuadernillos de Jurisprudencia CoIDH</h3>
+                        <p className="text-xs text-charcoal-600 mb-5 leading-relaxed">
+                            Coteja esta fuente directamente en el repositorio oficial de la Corte Interamericana de Derechos Humanos.
+                        </p>
+                        <a
+                            href="https://corteidh.or.cr/cdf/cuadernillos-jurisprudencia.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-5 py-3 bg-charcoal-900 text-white rounded-xl text-sm font-medium hover:bg-charcoal-800 transition-colors shadow-sm"
+                        >
+                            <ExternalLink className="w-4 h-4 text-accent-gold" />
+                            Ir al Repositorio Oficial CIDH
+                        </a>
+                    </div>
+                </div>
+            ) : hasPdf ? (
                 <div className="p-5">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
@@ -475,10 +498,7 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, hasPdf }: LeyArticu
                         <p className="mt-2 text-[10px] text-charcoal-500 text-center">Fuente oficial verificada · iurexia.com</p>
                     </div>
                 </div>
-            )}
-
-            {/* No PDF fallback */}
-            {!hasPdf && (
+            ) : (
                 <div className="p-5">
                     <div className="bg-cream-200 rounded-2xl p-4 text-xs text-charcoal-600 text-center">
                         <BookOpen className="w-5 h-5 mx-auto mb-2 text-charcoal-400" />
