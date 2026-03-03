@@ -39,6 +39,15 @@ export const metadata: Metadata = {
         description: 'La inteligencia artificial más precisa para el sistema jurídico mexicano',
         images: ['/og-image.png'],
     },
+    icons: {
+        icon: [
+            { url: '/favicon.ico' },
+            { url: '/icon.png', type: 'image/png' },
+        ],
+        apple: [
+            { url: '/apple-icon.png' }
+        ],
+    },
 }
 
 export default function RootLayout({
@@ -59,6 +68,24 @@ export default function RootLayout({
                 <meta name="DC.subject" content="Legal Technology, Mexican Law, Legal Research, Artificial Intelligence" />
                 <meta name="DC.creator" content="Iurexia" />
                 <meta name="DC.language" content="es-MX" />
+
+                {/* JSON-LD Structured Data for Organization */}
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            "@context": "https://schema.org",
+                            "@type": "Organization",
+                            "name": "Iurexia",
+                            "url": "https://iurexia.com",
+                            "logo": "https://iurexia.com/icon.png",
+                            "description": "La IA jurídica más precisa para México. Investigación legal, análisis de documentos y conexión con abogados verificados.",
+                            "sameAs": [
+                                "https://iurexia.com"
+                            ]
+                        })
+                    }}
+                />
             </head>
             <body className="min-h-screen bg-cream-300">
                 <AuthProvider>

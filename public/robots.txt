@@ -3,18 +3,26 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://www.iurexia.com/sitemap.xml
+Sitemap: https://iurexia.com/sitemap.xml
 
 # Bloquear rutas privadas y API
 Disallow: /api/
 Disallow: /chat/
 Disallow: /cuenta/
+Disallow: /admin/
+Disallow: /perfil/
+Disallow: /auth/
+Disallow: /checkout/
 Disallow: /_next/
 Disallow: /static/
 
-# Permitir páginas públicas importantes
+# Permitir páginas públicas explícitamente
 Allow: /plataforma
 Allow: /precios
 Allow: /connect
+Allow: /soluciones
+Allow: /salvame
+Allow: /conocenos
+Allow: /secretarios
 Allow: /registro
 Allow: /login

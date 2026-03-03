@@ -11,6 +11,24 @@ import { AnimatedSection } from '@/components/AnimatedSection';
 export default function HomePage() {
     return (
         <main className="min-h-screen">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "SoftwareApplication",
+                        "name": "Iurexia",
+                        "operatingSystem": "Web",
+                        "applicationCategory": "BusinessApplication",
+                        "offers": {
+                            "@type": "Offer",
+                            "price": "0",
+                            "priceCurrency": "MXN"
+                        },
+                        "description": "La inteligencia artificial más precisa para el sistema jurídico Mexicano. Herramienta legal de investigación y análisis de sentencias."
+                    })
+                }}
+            />
             <Navbar />
 
             {/* Hero Section - Harvey.AI Style */}
