@@ -219,6 +219,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         const updatedMessages = [...messages, userMessage];
         setMessages(updatedMessages);
 
+        let assistantMessageAdded = false;
         try {
             // Get Supabase session for auth token
             const session = await getSession();
@@ -238,7 +239,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             }
 
             const parser = new ThinkingParser();
-            let assistantMessageAdded = false;
 
             for await (const chunk of streamChat(
                 updatedMessages,

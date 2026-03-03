@@ -254,7 +254,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 
     // Handle cancel_at_period_end — user keeps access until period ends
     if (subscription.cancel_at_period_end) {
-        const periodEnd = new Date(subscription.current_period_end * 1000);
+        const periodEnd = new Date((subscription as any).current_period_end * 1000);
         console.log(`⏳ User ${email} scheduled cancellation — access until ${periodEnd.toISOString()}`);
         // Don't downgrade yet; Stripe will send subscription.deleted when period actually ends
         return;

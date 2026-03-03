@@ -3,9 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 // Server-side Supabase client with service_role key
 // This client bypasses Row Level Security (RLS) - use ONLY in server-side code (API routes, webhooks)
 
-let adminInstance: ReturnType<typeof createClient> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let adminInstance: any = null;
 
-function getSupabaseAdmin() {
+function getSupabaseAdmin(): any {
     if (!adminInstance) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -69,7 +70,7 @@ export async function updateUserSubscription(
         stripe_subscription_id: stripeSubscriptionId || undefined,
         is_active: true,
         updated_at: new Date().toISOString(),
-    } as Record<string, unknown>;
+    } as any;
 
     const { data, error } = await getSupabaseAdmin()
         .from('user_profiles')
@@ -153,7 +154,7 @@ export async function downgradeToFree(email: string) {
             sentencia_queries_used: 0,
             stripe_subscription_id: null,
             updated_at: new Date().toISOString(),
-        } as Record<string, unknown>)
+        } as any)
         .eq('email', normalizedEmail)
         .select();
 
@@ -182,7 +183,7 @@ export async function resetUserQueries(email: string) {
             drafts_used: 0,
             sentencia_queries_used: 0,
             updated_at: new Date().toISOString(),
-        } as Record<string, unknown>)
+        } as any)
         .eq('email', normalizedEmail)
         .select();
 
