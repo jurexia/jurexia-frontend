@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { AnimatedSection } from '@/components/AnimatedSection';
-import { ESTADOS, getTotalLeyes } from '../leyesestatales/estadosData';
+import { ESTADOS, getTotalLeyes, FEDERAL_LEYES } from '../leyesestatales/estadosData';
 import {
     BookOpen, ArrowRight, Scale, FileText, ExternalLink, Globe2,
     Landmark, Search, MapPin, Shield, Users, Gavel, ChevronRight,
@@ -230,58 +230,7 @@ const TRATADOS_INTERNACIONALES = [
     },
 ];
 
-const LEYES_FEDERALES = [
-    {
-        id: 'ley-amparo',
-        nombre: 'Ley de Amparo, Reglamentaria de los artículos 103 y 107 CPEUM',
-        abreviatura: 'Ley de Amparo',
-        materia: 'Procesal Constitucional',
-        disponible: false,
-        chunks: 'Próximamente',
-        fuente: 'DOF',
-        icono: Gavel,
-    },
-    {
-        id: 'cnpp',
-        nombre: 'Código Nacional de Procedimientos Penales',
-        abreviatura: 'CNPP',
-        materia: 'Penal',
-        disponible: false,
-        chunks: 'Próximamente',
-        fuente: 'DOF',
-        icono: Lock,
-    },
-    {
-        id: 'ccf',
-        nombre: 'Código Civil Federal',
-        abreviatura: 'CCF',
-        materia: 'Civil',
-        disponible: false,
-        chunks: 'Próximamente',
-        fuente: 'DOF',
-        icono: FileText,
-    },
-    {
-        id: 'lft',
-        nombre: 'Ley Federal del Trabajo',
-        abreviatura: 'LFT',
-        materia: 'Laboral',
-        disponible: false,
-        chunks: 'Próximamente',
-        fuente: 'DOF',
-        icono: Users,
-    },
-    {
-        id: 'lfp',
-        nombre: 'Ley Federal del Procedimiento Contencioso Administrativo',
-        abreviatura: 'LFPCA',
-        materia: 'Administrativo',
-        disponible: false,
-        chunks: 'Próximamente',
-        fuente: 'DOF',
-        icono: Landmark,
-    },
-];
+// FEDERAL_LEYES is imported from estadosData — 72 laws with Supabase URLs
 
 type TabType = 'constitucion' | 'tratados' | 'federales' | 'estatales';
 
@@ -306,6 +255,26 @@ export default function NormativaNacionalPage() {
             t.abreviatura.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [searchQuery]);
+
+    // Flatten all federal laws (constitucion + leyes + codigos + reglamentos + otros) into a single list
+    const ALL_FEDERAL_LEYES = useMemo(() => {
+        const cats = ['constitucion', 'leyes', 'codigos', 'reglamentos', 'otros'] as const;
+        return cats.flatMap(cat =>
+            FEDERAL_LEYES[cat].map(ley => ({
+                nombre: ley.nombre,
+                url: ley.url,
+                categoria: cat,
+            }))
+        );
+    }, []);
+
+    const filteredFederales = useMemo(() => {
+        if (!searchQuery) return ALL_FEDERAL_LEYES;
+        const q = searchQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return ALL_FEDERAL_LEYES.filter(ley =>
+            ley.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
+        );
+    }, [searchQuery, ALL_FEDERAL_LEYES]);
 
     return (
         <main className="min-h-screen bg-cream-300">
@@ -357,15 +326,19 @@ export default function NormativaNacionalPage() {
                         </div>
                     </AnimatedSection>
 
-                    {/* Search Bar — shown only on Estatales and Tratados tabs */}
-                    {(activeTab === 'estatales' || activeTab === 'tratados') && (
+                    {/* Search Bar — shown on Estatales, Tratados, and Federales tabs */}
+                    {(activeTab === 'estatales' || activeTab === 'tratados' || activeTab === 'federales') && (
                         <AnimatedSection animation="slide-up" delay={400}>
                             <div className="max-w-xl mx-auto relative">
                                 <div className="flex items-center bg-white border border-cream-400 rounded-2xl overflow-hidden focus-within:border-accent-gold/50 focus-within:shadow-lg transition-all duration-300 shadow-md">
                                     <Search className="w-5 h-5 text-charcoal-500 ml-5" />
                                     <input
                                         type="text"
-                                        placeholder={activeTab === 'estatales' ? "Buscar estado (ej. Nuevo León)..." : "Buscar tratado..."}
+                                        placeholder={
+                                            activeTab === 'estatales' ? 'Buscar estado (ej. Nuevo León)...' :
+                                                activeTab === 'federales' ? 'Buscar ley federal (ej. Amparo, Trabajo, Civil...)' :
+                                                    'Buscar tratado...'
+                                        }
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full bg-transparent border-none text-charcoal-900 px-4 py-4 focus:ring-0 placeholder-charcoal-400 outline-none text-sm md:text-base"
@@ -517,35 +490,85 @@ export default function NormativaNacionalPage() {
                         {/* 3. LEYES FEDERALES */}
                         {activeTab === 'federales' && (
                             <AnimatedSection animation="fade-in">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                    {LEYES_FEDERALES.map(ley => (
-                                        <div
-                                            key={ley.id}
-                                            className="group relative flex flex-col p-6 rounded-2xl bg-white/60 border border-cream-400 opacity-70 cursor-not-allowed"
-                                        >
-                                            <div className="flex items-start gap-4 mb-4">
-                                                <div className="p-3 rounded-xl bg-cream-300 border border-cream-500 text-charcoal-400 shrink-0">
-                                                    <ley.icono className="w-6 h-6 stroke-[1.5]" />
-                                                </div>
-                                                <div>
-                                                    <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider bg-cream-300 text-charcoal-500 border border-cream-500 mb-2">
-                                                        {ley.materia}
-                                                    </span>
-                                                    <h3 className="text-charcoal-700 font-medium leading-snug line-clamp-2">
-                                                        {ley.nombre}
-                                                    </h3>
-                                                </div>
-                                            </div>
+                                {filteredFederales.length === 0 ? (
+                                    <div className="text-center py-20">
+                                        <p className="text-charcoal-400">No se encontraron leyes con "{searchQuery}".</p>
+                                        <button onClick={() => setSearchQuery('')} className="mt-4 text-accent-gold text-sm underline">Ver todas las leyes</button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {searchQuery && (
+                                            <p className="text-center text-sm text-charcoal-400 mb-6">
+                                                {filteredFederales.length} {filteredFederales.length === 1 ? 'resultado' : 'resultados'} para &ldquo;<strong>{searchQuery}</strong>&rdquo;
+                                            </p>
+                                        )}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                            {filteredFederales.map((ley, idx) => {
+                                                const CatIcon = ley.categoria === 'codigos' ? Lock :
+                                                    ley.categoria === 'constitucion' ? Landmark :
+                                                        ley.categoria === 'reglamentos' ? Scale :
+                                                            ley.categoria === 'otros' ? FileText : Gavel;
+                                                const catColor = ley.categoria === 'codigos' ? 'bg-rose-50 border-rose-200 text-rose-700' :
+                                                    ley.categoria === 'constitucion' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                                        ley.categoria === 'reglamentos' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                                                            ley.categoria === 'otros' ? 'bg-purple-50 border-purple-200 text-purple-700' :
+                                                                'bg-emerald-50 border-emerald-200 text-emerald-700';
+                                                const catLabel = ley.categoria === 'codigos' ? 'Código' :
+                                                    ley.categoria === 'constitucion' ? 'Const.' :
+                                                        ley.categoria === 'reglamentos' ? 'Reglamento' :
+                                                            ley.categoria === 'otros' ? 'General' : 'Ley';
 
-                                            <div className="mt-auto flex items-center justify-between pt-4 border-t border-cream-400">
-                                                <div className="flex items-center gap-1.5 text-[10px] font-mono text-charcoal-400 uppercase tracking-widest">
-                                                    {ley.chunks}
-                                                </div>
-                                                <span className="text-xs text-charcoal-400 font-semibold uppercase tracking-widest">{ley.fuente}</span>
-                                            </div>
+                                                if (!ley.url) return (
+                                                    <div key={idx} className="flex flex-col p-5 rounded-2xl bg-white/50 border border-cream-400 opacity-60 cursor-not-allowed">
+                                                        <div className="flex items-start gap-3 mb-4">
+                                                            <div className="p-2.5 rounded-xl bg-cream-300 border border-cream-500 text-charcoal-400 shrink-0">
+                                                                <CatIcon className="w-5 h-5 stroke-[1.5]" />
+                                                            </div>
+                                                            <div>
+                                                                <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border mb-1.5 ${catColor}`}>
+                                                                    {catLabel}
+                                                                </span>
+                                                                <h3 className="text-charcoal-600 text-sm font-medium leading-snug line-clamp-3">{ley.nombre}</h3>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-auto pt-3 border-t border-cream-400 text-[10px] text-charcoal-400 font-mono uppercase tracking-widest">Próximamente</div>
+                                                    </div>
+                                                );
+
+                                                return (
+                                                    <a
+                                                        key={idx}
+                                                        href={ley.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="group flex flex-col p-5 rounded-2xl bg-white border border-cream-400 hover:border-accent-gold/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                                    >
+                                                        <div className="flex items-start gap-3 mb-4">
+                                                            <div className="p-2.5 rounded-xl bg-cream-300 border border-cream-500 text-charcoal-600 group-hover:text-accent-gold group-hover:border-accent-gold/30 transition-colors shrink-0">
+                                                                <CatIcon className="w-5 h-5 stroke-[1.5]" />
+                                                            </div>
+                                                            <div>
+                                                                <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border mb-1.5 ${catColor}`}>
+                                                                    {catLabel}
+                                                                </span>
+                                                                <h3 className="text-charcoal-900 text-sm font-medium leading-snug line-clamp-3 group-hover:text-accent-gold transition-colors">
+                                                                    {ley.nombre}
+                                                                </h3>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-auto flex items-center justify-between pt-3 border-t border-cream-400">
+                                                            <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                                DOF
+                                                            </div>
+                                                            <ExternalLink className="w-3.5 h-3.5 text-charcoal-400 group-hover:text-accent-gold transition-colors" />
+                                                        </div>
+                                                    </a>
+                                                );
+                                            })}
                                         </div>
-                                    ))}
-                                </div>
+                                    </>
+                                )}
                             </AnimatedSection>
                         )}
 
