@@ -237,6 +237,7 @@ type TabType = 'constitucion' | 'tratados' | 'federales' | 'estatales';
 export default function NormativaNacionalPage() {
     const [activeTab, setActiveTab] = useState<TabType>('constitucion');
     const [searchQuery, setSearchQuery] = useState('');
+    const [globalSearch, setGlobalSearch] = useState('');
 
     const totalDocs = ESTADOS.reduce((acc, e) => acc + getTotalLeyes(e.leyes), 0);
 
@@ -256,15 +257,11 @@ export default function NormativaNacionalPage() {
         );
     }, [searchQuery]);
 
-    // Flatten all federal laws (constitucion + leyes + codigos + reglamentos + otros) into a single list
+    // ── Flatten all federal laws into a flat list for the tab view ──
     const ALL_FEDERAL_LEYES = useMemo(() => {
         const cats = ['constitucion', 'leyes', 'codigos', 'reglamentos', 'otros'] as const;
         return cats.flatMap(cat =>
-            FEDERAL_LEYES[cat].map(ley => ({
-                nombre: ley.nombre,
-                url: ley.url,
-                categoria: cat,
-            }))
+            FEDERAL_LEYES[cat].map(ley => ({ nombre: ley.nombre, url: ley.url, categoria: cat }))
         );
     }, []);
 
@@ -275,6 +272,40 @@ export default function NormativaNacionalPage() {
             ley.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
         );
     }, [searchQuery, ALL_FEDERAL_LEYES]);
+
+    // ── Global search across ALL repositories ──
+    type GlobalResult = { section: string; nombre: string; url?: string; fuente: string };
+    const globalResults = useMemo((): GlobalResult[] | null => {
+        const q = globalSearch.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (q.length < 2) return null;
+        const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const results: GlobalResult[] = [];
+        // Constitución
+        CONSTITUCION_NACIONAL.forEach(l => {
+            if (norm(l.nombre).includes(q) || norm(l.abreviatura || '').includes(q))
+                results.push({ section: 'Constitución', nombre: l.nombre, url: l.pdf_url, fuente: 'DOF' });
+        });
+        // Tratados
+        TRATADOS_INTERNACIONALES.forEach(t => {
+            if (norm(t.nombre).includes(q) || norm(t.abreviatura).includes(q) || norm(t.descripcion || '').includes(q))
+                results.push({ section: 'Tratados', nombre: t.nombre, url: t.pdf_url, fuente: t.fuente });
+        });
+        // Federales
+        ALL_FEDERAL_LEYES.forEach(ley => {
+            if (norm(ley.nombre).includes(q))
+                results.push({ section: 'Federal', nombre: ley.nombre, url: ley.url, fuente: 'DOF' });
+        });
+        // Estados
+        ESTADOS.forEach(estado => {
+            if (estado.slug === 'federal') return;
+            const all = [...estado.leyes.constitucion, ...estado.leyes.leyes, ...estado.leyes.codigos, ...estado.leyes.reglamentos, ...estado.leyes.otros];
+            all.forEach(ley => {
+                if (norm(ley.nombre).includes(q))
+                    results.push({ section: estado.nombreCorto, nombre: ley.nombre, url: ley.url, fuente: estado.abreviatura });
+            });
+        });
+        return results.slice(0, 60);
+    }, [globalSearch, ALL_FEDERAL_LEYES]);
 
     return (
         <main className="min-h-screen bg-cream-300">
@@ -326,35 +357,7 @@ export default function NormativaNacionalPage() {
                         </div>
                     </AnimatedSection>
 
-                    {/* Search Bar — shown on Estatales, Tratados, and Federales tabs */}
-                    {(activeTab === 'estatales' || activeTab === 'tratados' || activeTab === 'federales') && (
-                        <AnimatedSection animation="slide-up" delay={400}>
-                            <div className="max-w-xl mx-auto relative">
-                                <div className="flex items-center bg-white border border-cream-400 rounded-2xl overflow-hidden focus-within:border-accent-gold/50 focus-within:shadow-lg transition-all duration-300 shadow-md">
-                                    <Search className="w-5 h-5 text-charcoal-500 ml-5" />
-                                    <input
-                                        type="text"
-                                        placeholder={
-                                            activeTab === 'estatales' ? 'Buscar estado (ej. Nuevo León)...' :
-                                                activeTab === 'federales' ? 'Buscar ley federal (ej. Amparo, Trabajo, Civil...)' :
-                                                    'Buscar tratado...'
-                                        }
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full bg-transparent border-none text-charcoal-900 px-4 py-4 focus:ring-0 placeholder-charcoal-400 outline-none text-sm md:text-base"
-                                    />
-                                    {searchQuery && (
-                                        <button
-                                            onClick={() => setSearchQuery('')}
-                                            className="mr-4 text-charcoal-400 hover:text-charcoal-700 text-sm font-medium"
-                                        >
-                                            Limpiar
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </AnimatedSection>
-                    )}
+                    {/* ─── Search Bar removed from hero; moved to above tabs section ─── */}
                 </div>
             </section>
 
@@ -362,261 +365,336 @@ export default function NormativaNacionalPage() {
             <section className="pb-24 px-4 sm:px-6">
                 <div className="max-w-6xl mx-auto">
 
-                    {/* Tab Navigation */}
-                    <AnimatedSection animation="fade-in" delay={100}>
-                        <div className="flex flex-wrap justify-center gap-2 bg-white/60 backdrop-blur-sm p-1.5 rounded-2xl border border-cream-400 mb-12 sm:mb-16 shadow-lg max-w-fit mx-auto">
-                            {[
-                                { id: 'constitucion', label: 'Constitución', icon: BookOpen },
-                                { id: 'tratados', label: 'Tratados Internacionales', icon: Globe2 },
-                                { id: 'federales', label: 'Leyes Federales', icon: Landmark },
-                                { id: 'estatales', label: 'Normativa Estatal', icon: MapPin },
-                            ].map(tab => {
-                                const active = activeTab === tab.id;
-                                return (
+                    {/* ── Global Search Bar (always visible, above tabs) ── */}
+                    <AnimatedSection animation="fade-in" delay={50}>
+                        <div className="max-w-2xl mx-auto mb-8">
+                            <div className="flex items-center bg-white border-2 border-cream-400 rounded-2xl overflow-hidden focus-within:border-accent-gold/60 focus-within:shadow-xl transition-all duration-300 shadow-md">
+                                <Search className="w-5 h-5 text-accent-gold ml-5 shrink-0" />
+                                <input
+                                    id="global-law-search"
+                                    type="text"
+                                    placeholder="Buscar en todo el repositorio — leyes, códigos, tratados, estados..."
+                                    value={globalSearch}
+                                    onChange={(e) => setGlobalSearch(e.target.value)}
+                                    className="w-full bg-transparent border-none text-charcoal-900 px-4 py-3.5 focus:ring-0 placeholder-charcoal-400 outline-none text-sm"
+                                />
+                                {globalSearch && (
                                     <button
-                                        key={tab.id}
-                                        onClick={() => { setActiveTab(tab.id as TabType); setSearchQuery(''); }}
-                                        className={`
-                                            flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap
-                                            ${active
-                                                ? 'bg-charcoal-900 text-white shadow-lg'
-                                                : 'text-charcoal-600 hover:text-charcoal-900 hover:bg-cream-400/50'
-                                            }
-                                        `}
+                                        onClick={() => setGlobalSearch('')}
+                                        className="mr-4 shrink-0 text-xs font-medium text-charcoal-400 hover:text-charcoal-700 transition-colors px-2"
                                     >
-                                        <tab.icon className={`w-4 h-4 ${active ? 'text-accent-gold' : 'text-charcoal-500'}`} strokeWidth={active ? 2 : 1.5} />
-                                        {tab.label}
+                                        ✕ Limpiar
                                     </button>
-                                );
-                            })}
+                                )}
+                            </div>
+                            {globalSearch.length > 1 && globalResults !== null && (
+                                <p className="text-xs text-center text-charcoal-400 mt-2">
+                                    {globalResults.length === 0 ? 'Sin resultados' : `${globalResults.length}${globalResults.length === 60 ? '+' : ''} resultado${globalResults.length !== 1 ? 's' : ''} en todo el repositorio`}
+                                </p>
+                            )}
                         </div>
                     </AnimatedSection>
 
-                    {/* Tab Content */}
-                    <div className="min-h-[40vh]">
-
-                        {/* 1. CONSTITUCIÓN */}
-                        {activeTab === 'constitucion' && (
-                            <AnimatedSection animation="fade-in">
-                                <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
-                                    {CONSTITUCION_NACIONAL.map(ley => (
-                                        <a
-                                            key={ley.id}
-                                            href={ley.pdf_url || ley.pdf_fallback}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group relative flex flex-col md:flex-row items-center md:items-start p-8 md:p-10 rounded-3xl bg-white border border-cream-400 hover:border-accent-gold/40 transition-all duration-500 shadow-md hover:shadow-xl overflow-hidden"
-                                        >
-                                            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-accent-gold/10 to-transparent rounded-full -translate-y-32 translate-x-32 blur-2xl" />
-
-                                            <div className="p-5 rounded-2xl bg-cream-300 border border-cream-500 text-accent-gold group-hover:scale-110 transition-all duration-500 shrink-0 mb-6 md:mb-0 md:mr-8 z-10">
-                                                <ley.icono className="w-10 h-10 stroke-[1.5]" />
-                                            </div>
-
-                                            <div className="flex-1 text-center md:text-left z-10 w-full">
-                                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-semibold uppercase tracking-widest text-emerald-600 mb-4">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                    {ley.chunks}
-                                                </div>
-                                                <h3 className="text-2xl md:text-3xl font-serif font-bold text-charcoal-900 leading-tight group-hover:text-accent-gold transition-colors mb-4">
-                                                    {ley.nombre}
-                                                </h3>
-                                                <p className="text-charcoal-600 lg:text-lg mb-8 max-w-2xl">
-                                                    {ley.descripcion}
-                                                </p>
-
-                                                <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-cream-400 gap-4">
-                                                    <span className="text-xs font-mono text-charcoal-500 uppercase tracking-widest flex items-center gap-2">
-                                                        <Landmark className="w-3.5 h-3.5" /> {ley.fuente}
-                                                    </span>
-                                                    <span className="inline-flex items-center gap-2 text-accent-gold text-sm font-medium group-hover:translate-x-1 transition-transform">
-                                                        Abrir Documento <ExternalLink className="w-4 h-4" />
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    ))}
+                    {/* ── Global Search Results Panel ── */}
+                    {globalResults !== null && (
+                        <AnimatedSection animation="fade-in">
+                            {globalResults.length === 0 ? (
+                                <div className="text-center py-20">
+                                    <Search className="w-10 h-10 text-charcoal-300 mx-auto mb-4" />
+                                    <p className="text-charcoal-500 font-medium">Sin resultados para &ldquo;<strong>{globalSearch}</strong>&rdquo;</p>
+                                    <p className="text-charcoal-400 text-sm mt-2">Intenta con otro término — nombre de ley, código o materia.</p>
                                 </div>
-                            </AnimatedSection>
-                        )}
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {globalResults.map((r, idx) => {
+                                        const sectionColor =
+                                            r.section === 'Constitución' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                                r.section === 'Tratados' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                                                    r.section === 'Federal' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                                        'bg-violet-50 border-violet-200 text-violet-700';
+                                        const SectionIcon =
+                                            r.section === 'Constitución' ? Landmark :
+                                                r.section === 'Tratados' ? Globe2 :
+                                                    r.section === 'Federal' ? Gavel : MapPin;
+                                        if (!r.url) return (
+                                            <div key={idx} className="flex flex-col p-4 rounded-xl bg-white/50 border border-cream-400 opacity-50 cursor-not-allowed">
+                                                <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border mb-2 w-fit ${sectionColor}`}>{r.section}</span>
+                                                <p className="text-charcoal-600 text-sm leading-snug line-clamp-3">{r.nombre}</p>
+                                                <span className="text-[10px] text-charcoal-400 mt-3 font-mono uppercase">Próximamente</span>
+                                            </div>
+                                        );
+                                        return (
+                                            <a key={idx} href={r.url} target="_blank" rel="noopener noreferrer"
+                                                className="group flex flex-col p-4 rounded-xl bg-white border border-cream-400 hover:border-accent-gold/40 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border ${sectionColor}`}>
+                                                        <SectionIcon className="w-2.5 h-2.5" />{r.section}
+                                                    </span>
+                                                    <ExternalLink className="w-3.5 h-3.5 text-charcoal-300 group-hover:text-accent-gold transition-colors" />
+                                                </div>
+                                                <p className="text-charcoal-900 text-sm font-medium leading-snug line-clamp-3 group-hover:text-accent-gold transition-colors flex-1">{r.nombre}</p>
+                                                <span className="text-[10px] text-charcoal-400 mt-3 font-mono uppercase tracking-widest">{r.fuente}</span>
+                                            </a>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </AnimatedSection>
+                    )}
 
-                        {/* 2. TRATADOS INTERNACIONALES */}
-                        {activeTab === 'tratados' && (
-                            <AnimatedSection animation="fade-in">
-                                {filteredTratados.length === 0 ? (
-                                    <div className="text-center py-20 text-charcoal-400">No se encontraron tratados.</div>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                        {filteredTratados.map(t => (
+                    {/* ── Normal Tab Content (hidden when global search is active) ── */}
+                    {globalResults === null && (<>
+                        {/* Tab Navigation */}
+                        <AnimatedSection animation="fade-in" delay={100}>
+                            <div className="flex flex-wrap justify-center gap-2 bg-white/60 backdrop-blur-sm p-1.5 rounded-2xl border border-cream-400 mb-12 sm:mb-16 shadow-lg max-w-fit mx-auto">
+                                {[
+                                    { id: 'constitucion', label: 'Constitución', icon: BookOpen },
+                                    { id: 'tratados', label: 'Tratados Internacionales', icon: Globe2 },
+                                    { id: 'federales', label: 'Leyes Federales', icon: Landmark },
+                                    { id: 'estatales', label: 'Normativa Estatal', icon: MapPin },
+                                ].map(tab => {
+                                    const active = activeTab === tab.id;
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => { setActiveTab(tab.id as TabType); setSearchQuery(''); }}
+                                            className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 whitespace-nowrap ${active ? 'bg-charcoal-900 text-white shadow-lg' : 'text-charcoal-600 hover:text-charcoal-900 hover:bg-cream-400/50'
+                                                }`}
+                                        >
+                                            <tab.icon className={`w-4 h-4 ${active ? 'text-accent-gold' : 'text-charcoal-500'}`} strokeWidth={active ? 2 : 1.5} />
+                                            {tab.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </AnimatedSection>
+
+                        {/* Tab Content */}
+                        <div className="min-h-[40vh]">
+
+                            {/* 1. CONSTITUCIÓN */}
+                            {activeTab === 'constitucion' && (
+                                <AnimatedSection animation="fade-in">
+                                    <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
+                                        {CONSTITUCION_NACIONAL.map(ley => (
                                             <a
-                                                key={t.id}
-                                                href={t.pdf_url}
+                                                key={ley.id}
+                                                href={ley.pdf_url || ley.pdf_fallback}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="group relative flex flex-col p-6 rounded-2xl bg-white border border-cream-400 hover:border-accent-gold/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                                className="group relative flex flex-col md:flex-row items-center md:items-start p-8 md:p-10 rounded-3xl bg-white border border-cream-400 hover:border-accent-gold/40 transition-all duration-500 shadow-md hover:shadow-xl overflow-hidden"
                                             >
-                                                <div className="flex items-start gap-4 mb-4">
-                                                    <div className="p-3 rounded-xl bg-cream-300 border border-cream-500 text-charcoal-500 group-hover:text-accent-gold group-hover:border-accent-gold/30 transition-colors duration-300 shrink-0">
-                                                        <t.icono className="w-6 h-6 stroke-[1.5]" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="text-charcoal-900 font-medium leading-snug group-hover:text-accent-gold transition-colors line-clamp-2">
-                                                            {t.nombre}
-                                                        </h3>
-                                                        <span className="text-[10px] text-charcoal-400 mt-1 block">
-                                                            {t.abreviatura}
-                                                        </span>
-                                                    </div>
+                                                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-accent-gold/10 to-transparent rounded-full -translate-y-32 translate-x-32 blur-2xl" />
+
+                                                <div className="p-5 rounded-2xl bg-cream-300 border border-cream-500 text-accent-gold group-hover:scale-110 transition-all duration-500 shrink-0 mb-6 md:mb-0 md:mr-8 z-10">
+                                                    <ley.icono className="w-10 h-10 stroke-[1.5]" />
                                                 </div>
 
-                                                <p className="text-sm text-charcoal-500 line-clamp-2 mb-6 flex-1">
-                                                    {t.descripcion}
-                                                </p>
-
-                                                <div className="mt-auto flex items-center justify-between pt-4 border-t border-cream-400">
-                                                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                        Indexado
+                                                <div className="flex-1 text-center md:text-left z-10 w-full">
+                                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-semibold uppercase tracking-widest text-emerald-600 mb-4">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                        {ley.chunks}
                                                     </div>
-                                                    <ExternalLink className="w-4 h-4 text-charcoal-400 group-hover:text-accent-gold transition-colors" />
+                                                    <h3 className="text-2xl md:text-3xl font-serif font-bold text-charcoal-900 leading-tight group-hover:text-accent-gold transition-colors mb-4">
+                                                        {ley.nombre}
+                                                    </h3>
+                                                    <p className="text-charcoal-600 lg:text-lg mb-8 max-w-2xl">
+                                                        {ley.descripcion}
+                                                    </p>
+
+                                                    <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-cream-400 gap-4">
+                                                        <span className="text-xs font-mono text-charcoal-500 uppercase tracking-widest flex items-center gap-2">
+                                                            <Landmark className="w-3.5 h-3.5" /> {ley.fuente}
+                                                        </span>
+                                                        <span className="inline-flex items-center gap-2 text-accent-gold text-sm font-medium group-hover:translate-x-1 transition-transform">
+                                                            Abrir Documento <ExternalLink className="w-4 h-4" />
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </a>
                                         ))}
                                     </div>
-                                )}
-                            </AnimatedSection>
-                        )}
+                                </AnimatedSection>
+                            )}
 
-                        {/* 3. LEYES FEDERALES */}
-                        {activeTab === 'federales' && (
-                            <AnimatedSection animation="fade-in">
-                                {filteredFederales.length === 0 ? (
-                                    <div className="text-center py-20">
-                                        <p className="text-charcoal-400">No se encontraron leyes con "{searchQuery}".</p>
-                                        <button onClick={() => setSearchQuery('')} className="mt-4 text-accent-gold text-sm underline">Ver todas las leyes</button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {searchQuery && (
-                                            <p className="text-center text-sm text-charcoal-400 mb-6">
-                                                {filteredFederales.length} {filteredFederales.length === 1 ? 'resultado' : 'resultados'} para &ldquo;<strong>{searchQuery}</strong>&rdquo;
-                                            </p>
-                                        )}
+                            {/* 2. TRATADOS INTERNACIONALES */}
+                            {activeTab === 'tratados' && (
+                                <AnimatedSection animation="fade-in">
+                                    {filteredTratados.length === 0 ? (
+                                        <div className="text-center py-20 text-charcoal-400">No se encontraron tratados.</div>
+                                    ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                            {filteredFederales.map((ley, idx) => {
-                                                const CatIcon = ley.categoria === 'codigos' ? Lock :
-                                                    ley.categoria === 'constitucion' ? Landmark :
-                                                        ley.categoria === 'reglamentos' ? Scale :
-                                                            ley.categoria === 'otros' ? FileText : Gavel;
-                                                const catColor = ley.categoria === 'codigos' ? 'bg-rose-50 border-rose-200 text-rose-700' :
-                                                    ley.categoria === 'constitucion' ? 'bg-amber-50 border-amber-200 text-amber-700' :
-                                                        ley.categoria === 'reglamentos' ? 'bg-blue-50 border-blue-200 text-blue-700' :
-                                                            ley.categoria === 'otros' ? 'bg-purple-50 border-purple-200 text-purple-700' :
-                                                                'bg-emerald-50 border-emerald-200 text-emerald-700';
-                                                const catLabel = ley.categoria === 'codigos' ? 'Código' :
-                                                    ley.categoria === 'constitucion' ? 'Const.' :
-                                                        ley.categoria === 'reglamentos' ? 'Reglamento' :
-                                                            ley.categoria === 'otros' ? 'General' : 'Ley';
-
-                                                if (!ley.url) return (
-                                                    <div key={idx} className="flex flex-col p-5 rounded-2xl bg-white/50 border border-cream-400 opacity-60 cursor-not-allowed">
-                                                        <div className="flex items-start gap-3 mb-4">
-                                                            <div className="p-2.5 rounded-xl bg-cream-300 border border-cream-500 text-charcoal-400 shrink-0">
-                                                                <CatIcon className="w-5 h-5 stroke-[1.5]" />
-                                                            </div>
-                                                            <div>
-                                                                <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border mb-1.5 ${catColor}`}>
-                                                                    {catLabel}
-                                                                </span>
-                                                                <h3 className="text-charcoal-600 text-sm font-medium leading-snug line-clamp-3">{ley.nombre}</h3>
-                                                            </div>
+                                            {filteredTratados.map(t => (
+                                                <a
+                                                    key={t.id}
+                                                    href={t.pdf_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="group relative flex flex-col p-6 rounded-2xl bg-white border border-cream-400 hover:border-accent-gold/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                                >
+                                                    <div className="flex items-start gap-4 mb-4">
+                                                        <div className="p-3 rounded-xl bg-cream-300 border border-cream-500 text-charcoal-500 group-hover:text-accent-gold group-hover:border-accent-gold/30 transition-colors duration-300 shrink-0">
+                                                            <t.icono className="w-6 h-6 stroke-[1.5]" />
                                                         </div>
-                                                        <div className="mt-auto pt-3 border-t border-cream-400 text-[10px] text-charcoal-400 font-mono uppercase tracking-widest">Próximamente</div>
+                                                        <div>
+                                                            <h3 className="text-charcoal-900 font-medium leading-snug group-hover:text-accent-gold transition-colors line-clamp-2">
+                                                                {t.nombre}
+                                                            </h3>
+                                                            <span className="text-[10px] text-charcoal-400 mt-1 block">
+                                                                {t.abreviatura}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                );
 
+                                                    <p className="text-sm text-charcoal-500 line-clamp-2 mb-6 flex-1">
+                                                        {t.descripcion}
+                                                    </p>
+
+                                                    <div className="mt-auto flex items-center justify-between pt-4 border-t border-cream-400">
+                                                        <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                            Indexado
+                                                        </div>
+                                                        <ExternalLink className="w-4 h-4 text-charcoal-400 group-hover:text-accent-gold transition-colors" />
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    )}
+                                </AnimatedSection>
+                            )}
+
+                            {/* 3. LEYES FEDERALES */}
+                            {activeTab === 'federales' && (
+                                <AnimatedSection animation="fade-in">
+                                    {filteredFederales.length === 0 ? (
+                                        <div className="text-center py-20">
+                                            <p className="text-charcoal-400">No se encontraron leyes con "{searchQuery}".</p>
+                                            <button onClick={() => setSearchQuery('')} className="mt-4 text-accent-gold text-sm underline">Ver todas las leyes</button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {searchQuery && (
+                                                <p className="text-center text-sm text-charcoal-400 mb-6">
+                                                    {filteredFederales.length} {filteredFederales.length === 1 ? 'resultado' : 'resultados'} para &ldquo;<strong>{searchQuery}</strong>&rdquo;
+                                                </p>
+                                            )}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                                {filteredFederales.map((ley, idx) => {
+                                                    const CatIcon = ley.categoria === 'codigos' ? Lock :
+                                                        ley.categoria === 'constitucion' ? Landmark :
+                                                            ley.categoria === 'reglamentos' ? Scale :
+                                                                ley.categoria === 'otros' ? FileText : Gavel;
+                                                    const catColor = ley.categoria === 'codigos' ? 'bg-rose-50 border-rose-200 text-rose-700' :
+                                                        ley.categoria === 'constitucion' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                                            ley.categoria === 'reglamentos' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                                                                ley.categoria === 'otros' ? 'bg-purple-50 border-purple-200 text-purple-700' :
+                                                                    'bg-emerald-50 border-emerald-200 text-emerald-700';
+                                                    const catLabel = ley.categoria === 'codigos' ? 'Código' :
+                                                        ley.categoria === 'constitucion' ? 'Const.' :
+                                                            ley.categoria === 'reglamentos' ? 'Reglamento' :
+                                                                ley.categoria === 'otros' ? 'General' : 'Ley';
+
+                                                    if (!ley.url) return (
+                                                        <div key={idx} className="flex flex-col p-5 rounded-2xl bg-white/50 border border-cream-400 opacity-60 cursor-not-allowed">
+                                                            <div className="flex items-start gap-3 mb-4">
+                                                                <div className="p-2.5 rounded-xl bg-cream-300 border border-cream-500 text-charcoal-400 shrink-0">
+                                                                    <CatIcon className="w-5 h-5 stroke-[1.5]" />
+                                                                </div>
+                                                                <div>
+                                                                    <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border mb-1.5 ${catColor}`}>
+                                                                        {catLabel}
+                                                                    </span>
+                                                                    <h3 className="text-charcoal-600 text-sm font-medium leading-snug line-clamp-3">{ley.nombre}</h3>
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-auto pt-3 border-t border-cream-400 text-[10px] text-charcoal-400 font-mono uppercase tracking-widest">Próximamente</div>
+                                                        </div>
+                                                    );
+
+                                                    return (
+                                                        <a
+                                                            key={idx}
+                                                            href={ley.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="group flex flex-col p-5 rounded-2xl bg-white border border-cream-400 hover:border-accent-gold/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                                        >
+                                                            <div className="flex items-start gap-3 mb-4">
+                                                                <div className="p-2.5 rounded-xl bg-cream-300 border border-cream-500 text-charcoal-600 group-hover:text-accent-gold group-hover:border-accent-gold/30 transition-colors shrink-0">
+                                                                    <CatIcon className="w-5 h-5 stroke-[1.5]" />
+                                                                </div>
+                                                                <div>
+                                                                    <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border mb-1.5 ${catColor}`}>
+                                                                        {catLabel}
+                                                                    </span>
+                                                                    <h3 className="text-charcoal-900 text-sm font-medium leading-snug line-clamp-3 group-hover:text-accent-gold transition-colors">
+                                                                        {ley.nombre}
+                                                                    </h3>
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-auto flex items-center justify-between pt-3 border-t border-cream-400">
+                                                                <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                                    DOF
+                                                                </div>
+                                                                <ExternalLink className="w-3.5 h-3.5 text-charcoal-400 group-hover:text-accent-gold transition-colors" />
+                                                            </div>
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
+                                        </>
+                                    )}
+                                </AnimatedSection>
+                            )}
+
+                            {/* 4. NORMATIVA ESTATAL */}
+                            {activeTab === 'estatales' && (
+                                <AnimatedSection animation="fade-in">
+                                    {filteredEstados.length === 0 ? (
+                                        <div className="text-center py-20 text-charcoal-400">No se encontraron estados con esa búsqueda.</div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                                            {filteredEstados.map(estado => {
+                                                const totalLeyes = getTotalLeyes(estado.leyes);
+                                                const hasContent = totalLeyes > 0;
                                                 return (
-                                                    <a
-                                                        key={idx}
-                                                        href={ley.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="group flex flex-col p-5 rounded-2xl bg-white border border-cream-400 hover:border-accent-gold/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                                    <Link
+                                                        key={estado.slug}
+                                                        href={`/leyesestatales/${estado.slug}`}
+                                                        className={`group relative flex flex-col p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${hasContent
+                                                            ? 'bg-white border-cream-400 hover:border-accent-gold/40 hover:-translate-y-1 hover:shadow-lg'
+                                                            : 'bg-cream-300/50 border-cream-400/50 opacity-60 hover:opacity-80'
+                                                            }`}
                                                     >
-                                                        <div className="flex items-start gap-3 mb-4">
-                                                            <div className="p-2.5 rounded-xl bg-cream-300 border border-cream-500 text-charcoal-600 group-hover:text-accent-gold group-hover:border-accent-gold/30 transition-colors shrink-0">
-                                                                <CatIcon className="w-5 h-5 stroke-[1.5]" />
-                                                            </div>
-                                                            <div>
-                                                                <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border mb-1.5 ${catColor}`}>
-                                                                    {catLabel}
-                                                                </span>
-                                                                <h3 className="text-charcoal-900 text-sm font-medium leading-snug line-clamp-3 group-hover:text-accent-gold transition-colors">
-                                                                    {ley.nombre}
-                                                                </h3>
-                                                            </div>
+                                                        {hasContent && (
+                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-accent-gold/10 to-transparent rounded-full -translate-y-16 translate-x-16 blur-xl" />
+                                                        )}
+
+                                                        <h4 className={`text-base font-semibold leading-tight mb-2 transition-colors relative z-10 ${hasContent ? 'text-charcoal-900 group-hover:text-accent-gold' : 'text-charcoal-400'
+                                                            }`}>
+                                                            {estado.nombreCorto}
+                                                        </h4>
+
+                                                        <div className="mt-auto flex items-center justify-between relative z-10">
+                                                            <span className={`text-xs font-mono uppercase tracking-widest ${hasContent ? 'text-charcoal-500' : 'text-charcoal-400'
+                                                                }`}>
+                                                                {hasContent ? `${totalLeyes} LEYES` : 'PRÓXIMAMENTE'}
+                                                            </span>
+                                                            {hasContent && (
+                                                                <ChevronRight className="w-4 h-4 text-accent-gold opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                                                            )}
                                                         </div>
-                                                        <div className="mt-auto flex items-center justify-between pt-3 border-t border-cream-400">
-                                                            <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                                DOF
-                                                            </div>
-                                                            <ExternalLink className="w-3.5 h-3.5 text-charcoal-400 group-hover:text-accent-gold transition-colors" />
-                                                        </div>
-                                                    </a>
+                                                    </Link>
                                                 );
                                             })}
                                         </div>
-                                    </>
-                                )}
-                            </AnimatedSection>
-                        )}
-
-                        {/* 4. NORMATIVA ESTATAL */}
-                        {activeTab === 'estatales' && (
-                            <AnimatedSection animation="fade-in">
-                                {filteredEstados.length === 0 ? (
-                                    <div className="text-center py-20 text-charcoal-400">No se encontraron estados con esa búsqueda.</div>
-                                ) : (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                                        {filteredEstados.map(estado => {
-                                            const totalLeyes = getTotalLeyes(estado.leyes);
-                                            const hasContent = totalLeyes > 0;
-                                            return (
-                                                <Link
-                                                    key={estado.slug}
-                                                    href={`/leyesestatales/${estado.slug}`}
-                                                    className={`group relative flex flex-col p-4 sm:p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${hasContent
-                                                        ? 'bg-white border-cream-400 hover:border-accent-gold/40 hover:-translate-y-1 hover:shadow-lg'
-                                                        : 'bg-cream-300/50 border-cream-400/50 opacity-60 hover:opacity-80'
-                                                        }`}
-                                                >
-                                                    {hasContent && (
-                                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-accent-gold/10 to-transparent rounded-full -translate-y-16 translate-x-16 blur-xl" />
-                                                    )}
-
-                                                    <h4 className={`text-base font-semibold leading-tight mb-2 transition-colors relative z-10 ${hasContent ? 'text-charcoal-900 group-hover:text-accent-gold' : 'text-charcoal-400'
-                                                        }`}>
-                                                        {estado.nombreCorto}
-                                                    </h4>
-
-                                                    <div className="mt-auto flex items-center justify-between relative z-10">
-                                                        <span className={`text-xs font-mono uppercase tracking-widest ${hasContent ? 'text-charcoal-500' : 'text-charcoal-400'
-                                                            }`}>
-                                                            {hasContent ? `${totalLeyes} LEYES` : 'PRÓXIMAMENTE'}
-                                                        </span>
-                                                        {hasContent && (
-                                                            <ChevronRight className="w-4 h-4 text-accent-gold opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                                                        )}
-                                                    </div>
-                                                </Link>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </AnimatedSection>
-                        )}
-                    </div>
+                                    )}
+                                </AnimatedSection>
+                            )}
+                        </div> {/* END Tab Content */}
+                    </>)} {/* END globalResults === null */}
                 </div>
             </section>
 
