@@ -137,13 +137,29 @@ export default function ChatInput({
 
     const handleDraft = (draftRequest: DraftRequest) => {
         // Create a special message that triggers draft mode in the backend
-        const draftMessage = `[REDACTAR_DOCUMENTO]
+        let draftMessage: string;
+
+        if (draftRequest.tipo === 'denuncia_administrativa') {
+            // Formato enriquecido para denuncia administrativa
+            draftMessage = `[REDACTAR_DOCUMENTO]
+Tipo: ${draftRequest.tipo}
+Subtipo: ${draftRequest.subtipo}
+Nivel: ${draftRequest.nivel_autoridad === 'estatal' ? `Estatal (${draftRequest.estado})` : 'Federal'}
+Cargo: ${draftRequest.cargo_denunciado || 'Juez'}
+Materia: ${draftRequest.materia_denuncia || 'Civil'}
+Jurisdicción: ${draftRequest.estado}
+
+Descripción del caso:
+${draftRequest.descripcion}`;
+        } else {
+            draftMessage = `[REDACTAR_DOCUMENTO]
 Tipo: ${draftRequest.tipo}
 Subtipo: ${draftRequest.subtipo}
 Jurisdicción: ${draftRequest.estado}
 
 Descripción del caso:
 ${draftRequest.descripcion}`;
+        }
 
         onSubmit(draftMessage);
         setActiveMode('search');
