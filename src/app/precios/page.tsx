@@ -50,7 +50,8 @@ export default function PreciosPage() {
                                     "3 consultas/mes",
                                     "Búsqueda con IA en legislación mexicana verificada",
                                     "Filtros de jurisdicción",
-                                    "Acceso a base documental completa"
+                                    "Acceso a base documental completa",
+                                    "Sin acceso a Genio Amparo"
                                 ]}
                                 buttonText="Comenzar Gratis"
                                 buttonHref="/chat"
@@ -68,6 +69,7 @@ export default function PreciosPage() {
                                 description="Para profesionales que necesitan potencia"
                                 features={[
                                     "170 consultas/mes",
+                                    "Genio Amparo — IA avanzada en materia de amparo",
                                     "Registra tu cédula para conectar con clientes de tu zona",
                                     "Búsqueda con IA en legislación mexicana verificada y en constante actualización",
                                     "Análisis de documentos (auditoría y mejoras)",
@@ -117,6 +119,7 @@ export default function PreciosPage() {
                                 description="Ideal para despachos y corporativos"
                                 features={[
                                     "700 consultas/mes — ideal para despachos y corporativos",
+                                    "Genio Amparo — IA avanzada en materia de amparo",
                                     "Registra tu cédula para conectar con clientes de tu zona",
                                     "Todo lo del Plan Pro incluido",
                                     "Consulta personalizada con equipo legal de Iurexia (vía correo)",
@@ -214,6 +217,7 @@ export default function PreciosPage() {
                                     <ComparisonRow feature="Registro connect para captar clientes" free="—" pro="✓" proAnual="✓" platinum="✓" />
                                     <ComparisonRow feature="Análisis de documentos" free="—" pro="✓" proAnual="✓" platinum="✓" />
                                     <ComparisonRow feature="Auditoría de demandas" free="—" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Genio Amparo (IA avanzada)" free="—" pro="✓" proAnual="✓" platinum="✓" />
                                     <ComparisonRow feature="Sugerencias con fundamento" free="—" pro="✓" proAnual="✓" platinum="✓" />
                                     <ComparisonRow feature="Soporte prioritario" free="—" pro="✓" proAnual="✓" platinum="VIP" />
                                     <ComparisonRow feature="Consulta con equipo legal (vía correo)" free="—" pro="—" proAnual="—" platinum="✓" />
@@ -239,6 +243,7 @@ export default function PreciosPage() {
                     <div className="space-y-4">
                         {[
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
+                            { question: '¿Qué es Genio Amparo y por qué es exclusivo PRO?', answer: 'Genio Amparo es una capa de inteligencia artificial avanzada especializada en materia de amparo mexicano. Se activa con un clic dentro del chat y utiliza un modelo de IA más potente para generar razonamientos jurídicos profundos con fundamento verificado. Debido al costo computacional del modelo avanzado que utiliza, Genio Amparo está disponible exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },
                             { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro más 700 consultas al mes y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan un volumen alto de consultas. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal.' },
                             { question: '¿Puedo cambiar de plan en cualquier momento?', answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación.' },
                             { question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo.' },

@@ -254,6 +254,112 @@ export default function HomePage() {
             </section>
 
             {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* GENIO AMPARO PRO — SECCIÓN EXCLUSIVA */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            <section className="relative py-16 sm:py-20 overflow-hidden">
+                {/* Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-indigo-950 to-charcoal-900" />
+                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(168,85,247,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(99,102,241,0.3) 0%, transparent 50%)' }} />
+
+                <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        {/* Content */}
+                        <div>
+                            <AnimatedSection animation="slide-up">
+                                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-400/30 text-purple-300 text-xs font-bold tracking-widest uppercase mb-6">
+                                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                    Exclusivo PRO
+                                </div>
+                            </AnimatedSection>
+
+                            <AnimatedSection animation="slide-up" delay={100}>
+                                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+                                    Genio <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">Amparo</span>
+                                </h2>
+                            </AnimatedSection>
+
+                            <AnimatedSection animation="fade-in" delay={200}>
+                                <p className="text-lg text-gray-300 mb-6 leading-relaxed">
+                                    Tu copiloto de inteligencia artificial especializado en <span className="text-purple-300 font-medium">materia de amparo mexicano</span>. Genio Amparo analiza, razona y genera argumentos jurídicos con fundamento verificado — en tiempo real mientras trabajas.
+                                </p>
+                                <p className="text-base text-gray-400 mb-8 leading-relaxed">
+                                    Activado mediante un solo clic en el chat, Genio Amparo utiliza un modelo avanzado para procesar el contexto legal completo de tu consulta, incluyendo legislación, jurisprudencia y tesis aplicables a tu jurisdicción.
+                                </p>
+                            </AnimatedSection>
+
+                            <AnimatedSection animation="slide-up" delay={300}>
+                                <ul className="space-y-3 mb-8">
+                                    {['Razonamiento jurídico profundo en materia de amparo', 'Fundamentación con artículos y tesis verificadas', 'Análisis contextual por jurisdicción estatal y federal', 'Generación de argumentos con técnica jurídica profesional'].map((item, i) => (
+                                        <li key={i} className="flex items-start gap-3">
+                                            <svg className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                            <span className="text-gray-300 text-sm">{item}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </AnimatedSection>
+
+                            <AnimatedSection animation="fade-in" delay={400}>
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <Link
+                                        href="/precios"
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium rounded-full hover:from-purple-500 hover:to-indigo-500 transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30"
+                                    >
+                                        Desbloquear Genio Amparo
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                    </Link>
+                                    <Link
+                                        href="/plataforma"
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-purple-400/30 text-purple-300 font-medium rounded-full hover:bg-purple-500/10 transition-all"
+                                    >
+                                        Conocer más
+                                    </Link>
+                                </div>
+                            </AnimatedSection>
+                        </div>
+
+                        {/* Visual Card */}
+                        <AnimatedSection animation="scale-in" delay={300}>
+                            <div className="relative">
+                                <div className="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-3xl blur-xl" />
+                                <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
+                                    {/* Mock chat interface */}
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-medium text-sm">Genio Amparo</p>
+                                            <p className="text-purple-300 text-xs">Activo • Razonando...</p>
+                                        </div>
+                                        <div className="ml-auto px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/30">
+                                            <span className="text-purple-300 text-[10px] font-bold">PRO</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                                            <p className="text-gray-400 text-xs mb-1">Tu consulta</p>
+                                            <p className="text-white text-sm">¿Qué fundamento constitucional aplica para impugnar la falta de fundamentación en un acto de autoridad?</p>
+                                        </div>
+                                        <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-400/20">
+                                            <p className="text-purple-300 text-xs mb-1">🧠 Genio Amparo razona...</p>
+                                            <p className="text-gray-300 text-sm">El artículo 16 constitucional establece que todo acto de autoridad debe estar fundado y motivado. La tesis 2a./J. 144/2006 precisa que...</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Free user lock notice */}
+                                    <div className="mt-6 p-3 rounded-xl bg-gray-800/50 border border-gray-700/50 flex items-center gap-3">
+                                        <svg className="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                        <p className="text-gray-500 text-xs">Los usuarios gratuitos no tienen acceso a Genio Amparo. <span className="text-purple-400">Actualiza a PRO</span> para desbloquear.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </AnimatedSection>
+                    </div>
+                </div>
+            </section>
+
+            {/* ═══════════════════════════════════════════════════════════════ */}
             {/* IUREXIA CONNECT — ECOSISTEMA LEGAL INTELIGENTE */}
             {/* ═══════════════════════════════════════════════════════════════ */}
             <section className="relative py-16 sm:py-20 md:py-24 overflow-hidden">
