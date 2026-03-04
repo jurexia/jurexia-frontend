@@ -15,6 +15,7 @@ import PdfViewerPanel from '@/components/PdfViewerPanel';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
+import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { useRouter } from 'next/navigation';
 import { getEstadoLabel } from '@/lib/estados';
 import {
@@ -289,13 +290,16 @@ export default function ChatPage() {
 
     const handleSendMessage = useCallback(async (content: string, enableReasoning = false) => {
         if (!user) return;
+        const isAdminUser = isAdmin(user?.email);
         const remaining = queriesLimit - queriesUsed;
-        if (remaining <= 0) {
+        if (remaining <= 0 && !isAdminUser) {
             setShowLimitModal(true);
             return;
         }
         const sendPromise = sendMessage(content, enableReasoning);
-        setQueriesUsed(prev => prev + 1);
+        if (!isAdminUser) {
+            setQueriesUsed(prev => prev + 1);
+        }
 
         (async () => {
             try {

@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Message, streamChat, SearchResult } from '@/lib/api';
 import { getSession } from '@/lib/supabase';
 import { checkCanQuery, incrementQueryCount } from '@/lib/supabase';
+import { isAdmin } from '@/app/leyesestatales/adminGuard';
 
 interface UseChatOptions {
     estado?: string;
@@ -227,7 +228,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             const userId = session?.user?.id;
 
             // ── Quota enforcement ──
-            if (userId) {
+            const isAdminUser = isAdmin(session?.user?.email);
+            if (userId && !isAdminUser) {
                 const { canQuery, remaining } = await checkCanQuery(userId);
                 if (!canQuery) {
                     // Remove the user message we just added
@@ -328,7 +330,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             setRetryMessage(null);
 
             // ── Increment quota counter after successful response ──
-            if (userId) {
+            if (userId && !isAdminUser) {
                 try {
                     await incrementQueryCount(userId);
                 } catch (err) {

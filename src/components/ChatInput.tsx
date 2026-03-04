@@ -24,6 +24,7 @@ import SentenciaModal from './SentenciaModal';
 import { enhanceText } from '@/lib/api';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
+import { Lock } from 'lucide-react';
 
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
@@ -62,6 +63,8 @@ export default function ChatInput({
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const { user, profile } = useAuth();
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
+    const isFreeUser = !profile?.subscription_type || profile?.subscription_type === 'gratuito';
+    const isGenioLocked = isFreeUser && !isAdmin(user?.email);
 
     const handleSubmit = () => {
         if (!isLoading && (message.trim() || attachedDocument)) {
@@ -283,12 +286,12 @@ ${draftRequest.descripcion}`;
                             <button
                                 data-guide="genio-juridico"
                                 onClick={() => {
-                                    if (!isPro) return; // Gate: solo Pro/Platinum
+                                    if (isGenioLocked && !isPro) return; // Gate: solo Pro/Platinum o Admin
                                     setEnableGenioJuridico?.(!enableGenioJuridico);
                                 }}
-                                disabled={isCacheLoading || !isPro}
+                                disabled={isCacheLoading || (isGenioLocked && !isPro)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
-                                    ${!isPro
+                                    ${(isGenioLocked && !isPro)
                                         ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-70'
                                         : isCacheLoading
                                             ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
@@ -300,9 +303,9 @@ ${draftRequest.descripcion}`;
                                                         : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
                                                     : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
                                     }`}
-                                title={!isPro ? 'Función exclusiva para plan Pro — Actualiza tu plan' : genioError ? genioError : isCacheLoading ? 'Activando Genio Amparo...' : 'Activar Genio Amparo'}
+                                title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro — Actualiza tu plan' : genioError ? genioError : isCacheLoading ? 'Activando Genio Amparo...' : 'Activar Genio Amparo'}
                             >
-                                {!isPro ? (
+                                {(isGenioLocked && !isPro) ? (
                                     <>
                                         <Lock className="w-3.5 h-3.5" />
                                         Genio Amparo <span className="text-[9px] ml-0.5 font-normal">PRO</span>
