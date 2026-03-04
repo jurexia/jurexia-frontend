@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown, BookOpen } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown, BookOpen, FileText } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
@@ -34,8 +34,8 @@ export default function ChatPage() {
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
     const router = useRouter();
 
-    // Gate: solo Pro/Platinum pueden usar Genio Amparo
     const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type || '');
+    const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com';
 
     // States
     const [quotaExceeded, setQuotaExceeded] = useState(false);
@@ -428,6 +428,25 @@ export default function ChatPage() {
                                             50% { opacity: 0.7; box-shadow: 0 0 0 5px rgba(220,38,38,0); }
                                         }
                                     `}</style>
+
+                                    {/* Admin-only: Link to DeepSeek sentence drafting chat */}
+                                    {canAccessRedactor && (
+                                        <div className="mt-3">
+                                            <Link
+                                                href="/redaccionsentencias"
+                                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.03]"
+                                                style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}
+                                            >
+                                                <FileText className="w-4 h-4" />
+                                                Redacción de Sentencias (DeepSeek)
+                                            </Link>
+                                        </div>
+                                    )}
+
+                                    {/* Temporary debug info */}
+                                    <div className="mt-2 text-[10px] text-gray-400">
+                                        Debug Email: {user?.email || 'No email detectado'} | canAccess: {String(canAccessRedactor)} | isPro: {String(isPro)}
+                                    </div>
                                 </div>
                             </div>
                         </div>
