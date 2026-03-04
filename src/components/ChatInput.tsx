@@ -24,7 +24,6 @@ import SentenciaModal from './SentenciaModal';
 import { enhanceText } from '@/lib/api';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
-import { Lock } from 'lucide-react';
 
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
