@@ -35,7 +35,7 @@ export default function ChatPage() {
     const router = useRouter();
 
     const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type || '');
-    const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com';
+    const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com' || profile?.can_access_sentencia === true;
 
     // States
     const [quotaExceeded, setQuotaExceeded] = useState(false);

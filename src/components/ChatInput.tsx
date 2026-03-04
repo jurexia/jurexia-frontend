@@ -61,7 +61,7 @@ export default function ChatInput({
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const { user, profile } = useAuth();
-    const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
+    const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || profile?.can_access_sentencia === true;
     const isFreeUser = !profile?.subscription_type || profile?.subscription_type === 'gratuito';
     const isGenioLocked = isFreeUser && !isAdmin(user?.email);
 

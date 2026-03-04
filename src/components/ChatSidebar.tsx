@@ -39,7 +39,7 @@ export default function ChatSidebar({
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const { user, profile } = useAuth();
     const userIsAdmin = isAdmin(user?.email);
-    const canAccessRedactor = userIsAdmin || profile?.subscription_type === 'ultra_secretarios';
+    const canAccessRedactor = userIsAdmin || profile?.subscription_type === 'ultra_secretarios' || profile?.can_access_sentencia === true;
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);

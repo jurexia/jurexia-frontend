@@ -28,6 +28,7 @@ interface UserProfile {
     estado: string | null;
     is_active: boolean;
     is_blocked: boolean;
+    can_access_sentencia: boolean;
     created_at: string;
     updated_at: string;
     last_query_at: string | null;
@@ -213,6 +214,23 @@ export default function AdminPage() {
             });
             if (!res.ok) throw new Error('Error al desbloquear');
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_blocked: false } : u));
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const toggleSentencia = async (userId: string) => {
+        setActionLoading(userId);
+        try {
+            const res = await fetch(`${API_URL}/admin/users/${userId}/toggle-sentencia`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
+            if (!res.ok) throw new Error('Error al cambiar acceso');
+            const data = await res.json();
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, can_access_sentencia: data.can_access_sentencia } : u));
         } catch (e: any) {
             setError(e.message);
         } finally {
@@ -411,6 +429,23 @@ export default function AdminPage() {
                                                                 }}
                                                             >
                                                                 {u.is_blocked ? <><Unlock className="w-3 h-3" /> Desbloquear</> : <><Ban className="w-3 h-3" /> Bloquear</>}
+                                                            </button>
+                                                        )}
+                                                        {u.email !== ADMIN_EMAIL && (
+                                                            <button
+                                                                onClick={() => toggleSentencia(u.id)}
+                                                                disabled={actionLoading === u.id}
+                                                                title={u.can_access_sentencia ? 'Deshabilitar Redactor de Sentencias' : 'Habilitar Redactor de Sentencias'}
+                                                                style={{
+                                                                    display: 'flex', alignItems: 'center', gap: '4px',
+                                                                    padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                                                                    fontSize: '0.7rem', fontWeight: 600, transition: 'all 0.2s',
+                                                                    background: u.can_access_sentencia ? 'rgba(34, 197, 94, 0.15)' : 'rgba(100, 100, 100, 0.15)',
+                                                                    color: u.can_access_sentencia ? '#86efac' : '#888',
+                                                                    opacity: actionLoading === u.id ? 0.5 : 1,
+                                                                }}
+                                                            >
+                                                                ⚖️ {u.can_access_sentencia ? 'Sentencia ✓' : 'Sentencia'}
                                                             </button>
                                                         )}
                                                         {isPaid && !welcomeSent.has(u.email) && (

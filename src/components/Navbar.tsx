@@ -15,7 +15,7 @@ export default function Navbar() {
     const isLoggedIn = !!user;
     const isLoading = loading;
     const userIsAdmin = isAdmin(user?.email);
-    const canAccessRedactor = userIsAdmin || profile?.subscription_type === 'ultra_secretarios';
+    const canAccessRedactor = userIsAdmin || profile?.subscription_type === 'ultra_secretarios' || profile?.can_access_sentencia === true;
     const isAdminEmail = user?.email === ADMIN_EMAIL;
 
     return (
