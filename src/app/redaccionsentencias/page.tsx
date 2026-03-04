@@ -678,6 +678,17 @@ export default function RedaccionSentenciasPage() {
                             <SectionLabel>Primera Instancia · Estudio de Fondo</SectionLabel>
                             <PageTitle>Documentos del <span className="text-accent-gold">expediente</span></PageTitle>
                             <PageSubtitle>Carga la demanda, las contestaciones y define el sentido de tu resolución</PageSubtitle>
+
+                            <div className="mt-4 p-3 bg-accent-gold/5 border border-accent-gold/20 rounded-xl flex items-center gap-3 max-w-2xl mx-auto shadow-sm">
+                                <div className="w-8 h-8 rounded-lg bg-accent-gold/10 flex items-center justify-center shrink-0">
+                                    <svg className="w-4 h-4 text-accent-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <p className="text-xs text-accent-brown leading-tight text-left">
+                                    Entre mejor sea la calidad de tus pdf a cargar, mejor resultado tendrás en su lectura. Asegurate de tener pdf limpios y legibles.
+                                </p>
+                            </div>
                         </div>
 
                         {/* ── 1. Demanda ──────────────────────────────────────── */}
