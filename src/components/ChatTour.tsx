@@ -34,8 +34,8 @@ const TOUR_STEPS: TourStep[] = [
     },
     {
         selector: '[data-guide="genio-juridico"]',
-        title: '⚡ Genio Jurídico',
-        description: 'Activa el modelo avanzado con acceso al corpus legal completo. Cuando está activo, la calidad y precisión de las respuestas aumenta considerablemente — especialmente en temas de derechos humanos, derecho constitucional, civil y penal, donde la interpretación contextual es crucial.\n\n⚠️ Desactivado: obtendrás citas exactas de artículos pero respuestas menos precisas en materia constitucional/derechos humanos.\n\nRegla: Genio activo = comprensión y análisis profundo. Genio desactivado = referencias exactas para fundar escritos.',
+        title: '⚡ Genio Amparo',
+        description: 'Activa el modelo avanzado con acceso al corpus constitucional y la Ley de Amparo. Cuando está activo, la calidad y precisión de las respuestas aumenta considerablemente — especialmente en temas de derechos humanos, derecho constitucional, donde la interpretación contextual es crucial.\n\n⚠️ Desactivado: obtendrás citas exactas de artículos pero respuestas menos precisas en materia constitucional/derechos humanos.\n\nRegla: Genio activo = comprensión y análisis profundo. Genio desactivado = referencias exactas para fundar escritos.',
         padding: 8,
     },
     {

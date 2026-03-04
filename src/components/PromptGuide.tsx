@@ -11,9 +11,9 @@ interface PromptGuideProps {
 const PROMPT_TIPS = [
     {
         icon: Zap,
-        category: '✨ Genio Jurídico',
+        category: '✨ Genio Amparo',
         title: 'Actívalo para análisis profundos',
-        description: 'El botón ⚡ Genio Jurídico activa un modelo avanzado con acceso al corpus legal completo. La calidad y precisión aumenta considerablemente: razona mejor, estructura más y analiza con mayor detalle.',
+        description: 'El botón ⚡ Genio Amparo activa un modelo avanzado con acceso al corpus constitucional y de amparo. La calidad y precisión aumenta considerablemente: razona mejor, estructura más y analiza con mayor detalle.',
         tips: [
             'Úsalo cuando quieras entender a fondo un tema legal, una ley o sus implicaciones',
             'Ideal para redactar, analizar o interpretar textos jurídicos complejos',

@@ -84,7 +84,7 @@ export default function ChatPage() {
         resetCacheTimer();
     }, [resetCacheTimer]);
 
-    // When user toggles Genio Jurídico — calls /genio/activate to pre-create cache
+    // When user toggles Genio Amparo — calls /genio/activate to pre-create cache
     const handleToggleGenio = useCallback(async (value: boolean) => {
         setEnableGenioJuridico(value);
         setGenioError(null);
@@ -100,7 +100,7 @@ export default function ChatPage() {
                     resetCacheTimer();
                 } else {
                     // Show error from backend (last_error field)
-                    const errorMsg = data.last_error || 'No se pudo activar el Genio Jurídico';
+                    const errorMsg = data.last_error || 'No se pudo activar el Genio Amparo';
                     setGenioError(errorMsg);
                     setIsCacheLoading(false);
                     setEnableGenioJuridico(false);
@@ -111,7 +111,7 @@ export default function ChatPage() {
                 }
             } catch (err) {
                 console.error('Failed to activate Genio:', err);
-                setGenioError('Error de conexión al activar Genio Jurídico');
+                setGenioError('Error de conexión al activar Genio Amparo');
                 setIsCacheLoading(false);
                 setEnableGenioJuridico(false);
                 if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);

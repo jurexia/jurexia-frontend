@@ -276,7 +276,7 @@ ${draftRequest.descripcion}`;
                                 </button>
                             </div>
 
-                            {/* GENIO JURIDICO Toggle */}
+                            {/* GENIO AMPARO Toggle */}
                             <button
                                 data-guide="genio-juridico"
                                 onClick={() => setEnableGenioJuridico?.(!enableGenioJuridico)}
@@ -292,12 +292,12 @@ ${draftRequest.descripcion}`;
                                                     : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
                                                 : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
                                     }`}
-                                title={genioError ? genioError : isCacheLoading ? 'Activando Genio Jurídico...' : 'Activar Genio Jurídico'}
+                                title={genioError ? genioError : isCacheLoading ? 'Activando Genio Amparo...' : 'Activar Genio Amparo'}
                             >
                                 {isCacheLoading ? (
                                     <>
                                         <div className="w-3.5 h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                                        Activando Genio Jurídico...
+                                        Activando Genio Amparo...
                                     </>
                                 ) : genioError ? (
                                     <>
@@ -307,7 +307,7 @@ ${draftRequest.descripcion}`;
                                 ) : (
                                     <>
                                         <Brain className={`w-3.5 h-3.5 ${isCacheActive ? 'text-red-500' : ''}`} />
-                                        {isCacheActive ? 'Genio Jurídico Activo' : 'Genio Jurídico'}
+                                        {isCacheActive ? 'Genio Amparo Activo' : 'Genio Amparo'}
                                     </>
                                 )}
                             </button>
