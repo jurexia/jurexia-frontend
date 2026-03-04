@@ -149,8 +149,8 @@ export default function PlataformaPage() {
             {/* Feature 4: Genio Amparo PRO */}
             <FeatureSection
                 id="genio-amparo"
-                badge="EXCLUSIVO PRO"
-                title={<>Genio <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Amparo</span></>}
+                badge="✦ EXCLUSIVO PRO"
+                title={<>Genio <span className="text-accent-gold">Amparo</span></>}
                 subtitle="Tu copiloto de IA en materia de amparo"
                 description="Genio Amparo es una capa de inteligencia artificial avanzada que se activa con un clic dentro del chat. Especializado en materia de amparo mexicano, analiza el contexto completo de tu consulta — legislación, jurisprudencia y tesis de tu jurisdicción — para generar razonamientos jurídicos profundos con fundamento verificado."
                 features={[
@@ -161,7 +161,7 @@ export default function PlataformaPage() {
                     "Exclusivo para usuarios Pro y Platinum — no disponible en plan gratuito"
                 ]}
                 visual={<GenioAmparoVisual />}
-                bgColor="bg-gradient-to-br from-purple-50 via-indigo-50 to-white"
+                bgColor="bg-white"
                 reverse
             />
 
@@ -597,33 +597,33 @@ function DataSourceCard({
 
 function GenioAmparoVisual() {
     return (
-        <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-3xl p-8 shadow-lg">
+        <div className="bg-gradient-to-br from-cream-200 to-cream-300 rounded-3xl p-8 shadow-lg">
             <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    <div className="w-8 h-8 rounded-lg bg-accent-gold/20 flex items-center justify-center">
+                        <span className="text-accent-gold font-serif text-base font-bold">G</span>
                     </div>
                     <span className="font-medium text-charcoal-900">Genio Amparo</span>
-                    <span className="ml-auto px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold">PRO</span>
+                    <span className="ml-auto px-2 py-0.5 rounded-full bg-accent-gold/10 text-accent-brown text-[10px] font-bold">PRO</span>
                 </div>
 
                 <div className="space-y-3 mb-4">
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                        <p className="text-xs text-gray-400 mb-1">Consulta</p>
+                    <div className="p-3 bg-cream-100 rounded-lg border border-cream-300">
+                        <p className="text-[10px] text-charcoal-500 uppercase tracking-wider mb-1">Consulta</p>
                         <p className="text-sm text-charcoal-800">¿Procede el amparo indirecto contra actos de autoridad administrativa que carecen de fundamentación?</p>
                     </div>
-                    <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
-                        <p className="text-xs text-purple-500 mb-1">🧠 Razonamiento profundo</p>
+                    <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
+                        <p className="text-[10px] text-accent-brown uppercase tracking-wider mb-1">Genio Amparo razona</p>
                         <p className="text-sm text-charcoal-700">Conforme al artículo 107, fracción IV, de la Ley de Amparo, en relación con el artículo 16 constitucional, el amparo indirecto procede contra actos que...</p>
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between pt-3 border-t border-cream-300">
                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                        <span className="text-xs text-purple-600 font-medium">Modelo avanzado activo</span>
+                        <div className="w-2 h-2 rounded-full bg-accent-gold animate-pulse" />
+                        <span className="text-xs text-accent-brown font-medium">Modelo avanzado activo</span>
                     </div>
-                    <span className="text-xs text-gray-400">Solo Plan Pro/Platinum</span>
+                    <span className="text-xs text-charcoal-500">Solo Plan Pro/Platinum</span>
                 </div>
             </div>
         </div>
