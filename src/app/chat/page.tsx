@@ -33,6 +33,9 @@ export default function ChatPage() {
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
     const router = useRouter();
 
+    // Gate: solo Pro/Platinum pueden usar Genio Amparo
+    const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type || '');
+
     // States
     const [quotaExceeded, setQuotaExceeded] = useState(false);
     const [selectedEstado, setSelectedEstado] = useState<string>('');
@@ -389,6 +392,7 @@ export default function ChatPage() {
                                     isCacheActive={isCacheActive}
                                     isCacheLoading={isCacheLoading}
                                     genioError={genioError}
+                                    isPro={isPro}
                                 />
 
                                 <div className="mt-4 text-center">
@@ -446,6 +450,7 @@ export default function ChatPage() {
                             isCacheActive={isCacheActive}
                             isCacheLoading={isCacheLoading}
                             genioError={genioError}
+                            isPro={isPro}
                         />
                     </div>
                 )}

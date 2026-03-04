@@ -13,7 +13,8 @@ import {
     Users,
     Brain,
     Scale,
-    PenTool
+    PenTool,
+    Lock
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -34,6 +35,7 @@ interface ChatInputProps {
     isCacheActive?: boolean;
     isCacheLoading?: boolean;
     genioError?: string | null;
+    isPro?: boolean;
 }
 
 export default function ChatInput({
@@ -46,6 +48,7 @@ export default function ChatInput({
     isCacheActive = false,
     isCacheLoading = false,
     genioError = null,
+    isPro = false,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia'>('search');
@@ -279,22 +282,32 @@ ${draftRequest.descripcion}`;
                             {/* GENIO AMPARO Toggle */}
                             <button
                                 data-guide="genio-juridico"
-                                onClick={() => setEnableGenioJuridico?.(!enableGenioJuridico)}
-                                disabled={isCacheLoading}
+                                onClick={() => {
+                                    if (!isPro) return; // Gate: solo Pro/Platinum
+                                    setEnableGenioJuridico?.(!enableGenioJuridico);
+                                }}
+                                disabled={isCacheLoading || !isPro}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
-                                    ${isCacheLoading
-                                        ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
-                                        : genioError
-                                            ? 'bg-red-50 text-red-600 border-red-400'
-                                            : enableGenioJuridico
-                                                ? isCacheActive
-                                                    ? 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]'
-                                                    : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
-                                                : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
+                                    ${!isPro
+                                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-70'
+                                        : isCacheLoading
+                                            ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
+                                            : genioError
+                                                ? 'bg-red-50 text-red-600 border-red-400'
+                                                : enableGenioJuridico
+                                                    ? isCacheActive
+                                                        ? 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]'
+                                                        : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
+                                                    : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
                                     }`}
-                                title={genioError ? genioError : isCacheLoading ? 'Activando Genio Amparo...' : 'Activar Genio Amparo'}
+                                title={!isPro ? 'Función exclusiva para plan Pro — Actualiza tu plan' : genioError ? genioError : isCacheLoading ? 'Activando Genio Amparo...' : 'Activar Genio Amparo'}
                             >
-                                {isCacheLoading ? (
+                                {!isPro ? (
+                                    <>
+                                        <Lock className="w-3.5 h-3.5" />
+                                        Genio Amparo <span className="text-[9px] ml-0.5 font-normal">PRO</span>
+                                    </>
+                                ) : isCacheLoading ? (
                                     <>
                                         <div className="w-3.5 h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
                                         Activando Genio Amparo...
