@@ -434,19 +434,12 @@ export default function ChatPage() {
                                         <div className="mt-3">
                                             <Link
                                                 href="/redaccionsentencias"
-                                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.03]"
-                                                style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}
+                                                className="inline-flex items-center justify-center px-8 py-3 rounded-full text-sm font-bold text-white bg-charcoal-900 shadow-md hover:bg-black transition-all duration-200 hover:scale-[1.02]"
                                             >
-                                                <FileText className="w-4 h-4" />
-                                                Redacción de Sentencias (DeepSeek)
+                                                Crea un borrador de sentencia
                                             </Link>
                                         </div>
                                     )}
-
-                                    {/* Temporary debug info */}
-                                    <div className="mt-2 text-[10px] text-gray-400">
-                                        Debug Email: {user?.email || 'No email detectado'} | canAccess: {String(canAccessRedactor)} | isPro: {String(isPro)}
-                                    </div>
                                 </div>
                             </div>
                         </div>
