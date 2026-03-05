@@ -52,8 +52,8 @@ export default function ChatPage() {
         pdf_url?: string | null; silo?: string;
     } | null>(null);
 
-    // Genio Juridico states
-    const [enableGenioJuridico, setEnableGenioJuridico] = useState(false);
+    // Genio Multi-Domain states
+    const [activeGenioId, setActiveGenioId] = useState<string | null>(null);
     const [isCacheActive, setIsCacheActive] = useState(false);
     const [isCacheLoading, setIsCacheLoading] = useState(false);
     const [genioError, setGenioError] = useState<string | null>(null);
@@ -70,15 +70,15 @@ export default function ChatPage() {
     ];
     const [suggestionIndex, setSuggestionIndex] = useState(0);
 
-    // Auto-deactivate cache after 8 minutes of inactivity
-    const CACHE_TTL_MS = 8 * 60 * 1000; // 8 minutes
+    // Auto-deactivate cache after 5 minutes of inactivity
+    const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
     const resetCacheTimer = useCallback(() => {
         if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
         cacheTimerRef.current = setTimeout(() => {
             setIsCacheActive(false);
             setIsCacheLoading(false);
-            setEnableGenioJuridico(false);
+            setActiveGenioId(null);
         }, CACHE_TTL_MS);
     }, []);
 
@@ -88,36 +88,42 @@ export default function ChatPage() {
         resetCacheTimer();
     }, [resetCacheTimer]);
 
-    // When user toggles Genio Amparo — calls /genio/activate to pre-create cache
-    const handleToggleGenio = useCallback(async (value: boolean) => {
-        setEnableGenioJuridico(value);
+    // When user toggles a Genio — calls /genio/activate with genio_id
+    const handleToggleGenio = useCallback(async (genioId: string | null) => {
+        // If same genio is clicked again, deactivate it
+        if (genioId === activeGenioId) {
+            genioId = null;
+        }
+        setActiveGenioId(genioId);
         setGenioError(null);
-        if (value) {
+        if (genioId) {
             setIsCacheLoading(true);
             try {
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
-                const res = await fetch(`${API_URL}/genio/activate`, { method: 'POST' });
+                const res = await fetch(`${API_URL}/genio/activate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ genio_id: genioId }),
+                });
                 const data = await res.json();
                 if (data.success) {
                     setIsCacheActive(true);
                     setIsCacheLoading(false);
                     resetCacheTimer();
                 } else {
-                    // Show error from backend (last_error field)
-                    const errorMsg = data.last_error || 'No se pudo activar el Genio Amparo';
+                    const errorMsg = data.last_error || `No se pudo activar el Genio ${genioId}`;
                     setGenioError(errorMsg);
                     setIsCacheLoading(false);
-                    setEnableGenioJuridico(false);
+                    setActiveGenioId(null);
                     console.error('Cache activation failed:', data);
-                    // Auto-clear error after 5 seconds
                     if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
                     genioErrorTimerRef.current = setTimeout(() => setGenioError(null), 5000);
                 }
             } catch (err) {
                 console.error('Failed to activate Genio:', err);
-                setGenioError('Error de conexión al activar Genio Amparo');
+                setGenioError(`Error de conexión al activar Genio ${genioId}`);
                 setIsCacheLoading(false);
-                setEnableGenioJuridico(false);
+                setActiveGenioId(null);
                 if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
                 genioErrorTimerRef.current = setTimeout(() => setGenioError(null), 5000);
             }
@@ -126,7 +132,7 @@ export default function ChatPage() {
             setIsCacheLoading(false);
             if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
         }
-    }, [resetCacheTimer]);
+    }, [resetCacheTimer, activeGenioId]);
 
     // suggestion rotation timer
     useEffect(() => {
@@ -161,7 +167,7 @@ export default function ChatPage() {
         topK: 30,
         fuero: selectedFuero || undefined,
         onQuotaExceeded: handleQuotaExceeded,
-        enableGenioJuridico,
+        genioId: activeGenioId,
         onCacheActive: handleCacheActive,
     });
 
@@ -391,8 +397,8 @@ export default function ChatPage() {
                                     onSubmit={handleSendMessage}
                                     placeholder="Escribe tu consulta legal..."
                                     estado={selectedEstado}
-                                    enableGenioJuridico={enableGenioJuridico}
-                                    setEnableGenioJuridico={handleToggleGenio}
+                                    activeGenioId={activeGenioId}
+                                    setActiveGenioId={handleToggleGenio}
                                     isCacheActive={isCacheActive}
                                     isCacheLoading={isCacheLoading}
                                     genioError={genioError}
@@ -461,8 +467,8 @@ export default function ChatPage() {
                             onSubmit={handleSendMessage}
                             isLoading={isLoading}
                             estado={selectedEstado}
-                            enableGenioJuridico={enableGenioJuridico}
-                            setEnableGenioJuridico={handleToggleGenio}
+                            activeGenioId={activeGenioId}
+                            setActiveGenioId={handleToggleGenio}
                             isCacheActive={isCacheActive}
                             isCacheLoading={isCacheLoading}
                             genioError={genioError}
