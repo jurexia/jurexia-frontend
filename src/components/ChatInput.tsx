@@ -368,6 +368,13 @@ ${draftRequest.descripcion}`;
                                     idle: 'bg-white text-gray-500 border-gray-200 hover:border-teal-300',
                                     spinnerBorder: 'border-teal-400', iconOn: 'text-teal-500'
                                 },
+                                {
+                                    id: 'agrario', label: 'Agrario',
+                                    activeOn: 'bg-white text-lime-600 border-lime-500 animate-[pulseRedGlow_2s_infinite]',
+                                    activating: 'bg-gradient-to-r from-lime-700 to-green-800 text-white border-lime-400',
+                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-lime-300',
+                                    spinnerBorder: 'border-lime-400', iconOn: 'text-lime-500'
+                                },
                             ].map((g) => (
                                 <button
                                     key={g.id}
