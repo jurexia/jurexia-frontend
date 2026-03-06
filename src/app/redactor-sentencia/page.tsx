@@ -1262,23 +1262,6 @@ export default function RedactorSentenciaPage() {
                                 </div>
                             )}
 
-                            {/* Expandable: Acto Reclamado */}
-                            {analysisData.resumen_acto_reclamado && (
-                                <>
-                                    <button
-                                        onClick={() => setExpandedSummary(expandedSummary === 'acto' ? null : 'acto')}
-                                        className="w-full flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors"
-                                    >
-                                        <span className="text-xs text-white/40 uppercase tracking-wider">Acto Reclamado</span>
-                                        <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${expandedSummary === 'acto' ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {expandedSummary === 'acto' && (
-                                        <div className="p-4 bg-white/[0.02] rounded-xl border border-white/[0.04] mt-2">
-                                            <p className="text-sm text-white/60 leading-relaxed">{analysisData.resumen_acto_reclamado}</p>
-                                        </div>
-                                    )}
-                                </>
-                            )}
                         </div>
 
                         {/* ══ Problemas Jurídicos Identificados ══ */}
@@ -1335,6 +1318,56 @@ export default function RedactorSentenciaPage() {
                             )}
                         </div>
 
+                        {/* ══ Problemas Jurídicos Detectados ══ */}
+                        <div className="rounded-2xl border border-amber-500/[0.15] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
+                            <div className="mb-5">
+                                <p className="text-amber-400/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
+                                    Análisis
+                                </p>
+                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">
+                                    Problemas Jurídicos Detectados
+                                </h3>
+                                <p className="text-[11px] text-white/25 mt-1 font-light">
+                                    Síntesis de los problemas que debe resolver la sentencia — activa el Genio y RAG para fundamentar
+                                </p>
+                            </div>
+
+                            <div className="space-y-3">
+                                {analysisData.agravios.map((agravio: any, i: number) => (
+                                    <div key={`prob-${agravio.numero || i}`} className="p-4 bg-white/[0.02] rounded-xl border border-white/[0.06]">
+                                        <div className="flex items-start gap-3">
+                                            <span className="flex-shrink-0 mt-0.5 text-amber-400/70 text-lg">⚖️</span>
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium text-white/80 mb-1.5">
+                                                    Problema {agravio.numero || i + 1}: {agravio.titulo}
+                                                </p>
+                                                <p className="text-[12px] text-white/40 leading-relaxed">
+                                                    {agravio.resumen ? (
+                                                        agravio.resumen.length > 200 ? agravio.resumen.substring(0, 200) + '...' : agravio.resumen
+                                                    ) : 'Sin resumen disponible'}
+                                                </p>
+                                                {agravio.articulos_mencionados && agravio.articulos_mencionados.length > 0 && (
+                                                    <div className="mt-2 flex flex-wrap gap-1">
+                                                        {agravio.articulos_mencionados.map((art: string, ai: number) => (
+                                                            <span key={ai} className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400/60 border border-amber-500/15">
+                                                                {art}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-4 p-3 bg-amber-500/[0.04] rounded-xl border border-amber-500/10">
+                                <p className="text-[11px] text-amber-400/50 text-center leading-relaxed">
+                                    👇 Activa el Genio Jurídico correspondiente para obtener la fundamentación legal y determinar el sentido de la resolución
+                                </p>
+                            </div>
+                        </div>
+
                         {/* ══ Activar y Seleccionar Genio ══ */}
                         <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
                             <div className="mb-4">
@@ -1359,12 +1392,12 @@ export default function RedactorSentenciaPage() {
                                             onClick={() => handleToggleGenio(g)}
                                             disabled={isCacheLoading && !isSelected}
                                             className={`relative px-3 py-2.5 rounded-lg text-xs font-medium capitalize transition-all duration-200 overflow-hidden ${isActive
-                                                    ? 'bg-green-500/20 text-green-400 border border-green-500/40 shadow-lg shadow-green-500/10'
-                                                    : isLoading
-                                                        ? 'bg-[#c9a962]/10 text-[#c9a962] border border-[#c9a962]/30'
-                                                        : isSelected
-                                                            ? 'bg-[#c9a962] text-[#0f0f0f] shadow-lg shadow-[#c9a962]/20'
-                                                            : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
+                                                ? 'bg-green-500/20 text-green-400 border border-green-500/40 shadow-lg shadow-green-500/10'
+                                                : isLoading
+                                                    ? 'bg-[#c9a962]/10 text-[#c9a962] border border-[#c9a962]/30'
+                                                    : isSelected
+                                                        ? 'bg-[#c9a962] text-[#0f0f0f] shadow-lg shadow-[#c9a962]/20'
+                                                        : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
                                                 } ${isCacheLoading && !isSelected ? 'opacity-40 cursor-not-allowed' : ''}`}
                                         >
                                             <span className="flex items-center justify-center gap-1.5">
@@ -1432,8 +1465,8 @@ export default function RedactorSentenciaPage() {
                             onClick={handleSolve}
                             disabled={!isCacheActive}
                             className={`w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${isCacheActive
-                                    ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
-                                    : 'bg-white/[0.04] text-gray-600 cursor-not-allowed border border-white/[0.08]'
+                                ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
+                                : 'bg-white/[0.04] text-gray-600 cursor-not-allowed border border-white/[0.08]'
                                 }`}
                         >
                             {isCacheActive
