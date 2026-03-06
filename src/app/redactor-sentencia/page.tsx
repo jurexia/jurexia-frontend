@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Upload, FileText, Gavel, Scale, Shield, AlertTriangle, Loader2, Copy, Download, ArrowLeft, CheckCircle, X, Search, ChevronDown, ChevronUp, Edit3, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -264,6 +264,95 @@ export default function RedactorSentenciaPage() {
     const [ftPrompt, setFtPrompt] = useState('');
     const [selectedGenio, setSelectedGenio] = useState('amparo');
     const [solveError, setSolveError] = useState('');
+
+    // ── Genio Cache Activation (same pattern as chat) ──
+    const [isCacheActive, setIsCacheActive] = useState(false);
+    const [isCacheLoading, setIsCacheLoading] = useState(false);
+    const [genioError, setGenioError] = useState<string | null>(null);
+    const [cacheActivatedAt, setCacheActivatedAt] = useState<number | null>(null);
+    const [cacheTimeLeft, setCacheTimeLeft] = useState(0);
+    const cacheTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const countdownRef = useRef<NodeJS.Timeout | null>(null);
+    const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+    // Countdown ticker — updates every second
+    useEffect(() => {
+        if (isCacheActive && cacheActivatedAt) {
+            countdownRef.current = setInterval(() => {
+                const elapsed = Date.now() - cacheActivatedAt;
+                const remaining = Math.max(0, CACHE_TTL_MS - elapsed);
+                setCacheTimeLeft(remaining);
+                if (remaining <= 0) {
+                    setIsCacheActive(false);
+                    setIsCacheLoading(false);
+                    setCacheActivatedAt(null);
+                    setCacheTimeLeft(0);
+                    if (countdownRef.current) clearInterval(countdownRef.current);
+                }
+            }, 1000);
+            return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+        }
+    }, [isCacheActive, cacheActivatedAt]);
+
+    // Cleanup timers on unmount
+    useEffect(() => {
+        return () => {
+            if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
+            if (countdownRef.current) clearInterval(countdownRef.current);
+            if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
+        };
+    }, []);
+
+    const handleToggleGenio = useCallback(async (genioId: string) => {
+        // If same genio clicked and already active, deactivate
+        if (genioId === selectedGenio && isCacheActive) {
+            setIsCacheActive(false);
+            setIsCacheLoading(false);
+            setCacheActivatedAt(null);
+            setCacheTimeLeft(0);
+            if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
+            return;
+        }
+
+        setSelectedGenio(genioId);
+        setGenioError(null);
+        setIsCacheLoading(true);
+
+        try {
+            const res = await fetch(`${API_URL}/genio/activate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ genio_id: genioId }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setIsCacheActive(true);
+                setIsCacheLoading(false);
+                setCacheActivatedAt(Date.now());
+                setCacheTimeLeft(CACHE_TTL_MS);
+                // Auto-deactivate after TTL
+                if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
+                cacheTimerRef.current = setTimeout(() => {
+                    setIsCacheActive(false);
+                    setIsCacheLoading(false);
+                    setCacheActivatedAt(null);
+                    setCacheTimeLeft(0);
+                }, CACHE_TTL_MS);
+            } else {
+                const errorMsg = data.last_error || `No se pudo activar el Genio ${genioId}`;
+                setGenioError(errorMsg);
+                setIsCacheLoading(false);
+                if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
+                genioErrorTimerRef.current = setTimeout(() => setGenioError(null), 5000);
+            }
+        } catch (err) {
+            setGenioError(`Error de conexión al activar Genio ${genioId}`);
+            setIsCacheLoading(false);
+            if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
+            genioErrorTimerRef.current = setTimeout(() => setGenioError(null), 5000);
+        }
+    }, [selectedGenio, isCacheActive]);
 
     // Dynamic terminology
     const term = getTerminology(selectedTipo?.id);
@@ -1246,33 +1335,88 @@ export default function RedactorSentenciaPage() {
                             )}
                         </div>
 
-                        {/* ══ Seleccionar Genio ══ */}
+                        {/* ══ Activar y Seleccionar Genio ══ */}
                         <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
                             <div className="mb-4">
                                 <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
                                     Fundamentación
                                 </p>
                                 <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">
-                                    Seleccionar Genio para Fundamentación
+                                    Activar Genio para Fundamentación
                                 </h3>
                                 <p className="text-[11px] text-white/25 mt-1 font-light">
-                                    El Genio buscará artículos de ley relevantes — Qdrant RAG buscará tesis y jurisprudencias aplicables
+                                    Selecciona y activa el Genio — se encenderá por 5 minutos máximo
                                 </p>
                             </div>
-                            <div className="grid grid-cols-4 gap-2">
-                                {['amparo', 'civil', 'mercantil', 'penal', 'laboral', 'fiscal', 'administrativo', 'agrario'].map(g => (
-                                    <button
-                                        key={g}
-                                        onClick={() => setSelectedGenio(g)}
-                                        className={`px-3 py-2.5 rounded-lg text-xs font-medium capitalize transition-all duration-200 ${selectedGenio === g
-                                            ? 'bg-[#c9a962] text-[#0f0f0f] shadow-lg shadow-[#c9a962]/20'
-                                            : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
-                                            }`}
-                                    >
-                                        {g}
-                                    </button>
-                                ))}
+                            <div className="grid grid-cols-4 gap-2 mb-3">
+                                {['amparo', 'civil', 'mercantil', 'penal', 'laboral', 'fiscal', 'administrativo', 'agrario'].map(g => {
+                                    const isSelected = selectedGenio === g;
+                                    const isActive = isSelected && isCacheActive;
+                                    const isLoading = isSelected && isCacheLoading;
+                                    return (
+                                        <button
+                                            key={g}
+                                            onClick={() => handleToggleGenio(g)}
+                                            disabled={isCacheLoading && !isSelected}
+                                            className={`relative px-3 py-2.5 rounded-lg text-xs font-medium capitalize transition-all duration-200 overflow-hidden ${isActive
+                                                    ? 'bg-green-500/20 text-green-400 border border-green-500/40 shadow-lg shadow-green-500/10'
+                                                    : isLoading
+                                                        ? 'bg-[#c9a962]/10 text-[#c9a962] border border-[#c9a962]/30'
+                                                        : isSelected
+                                                            ? 'bg-[#c9a962] text-[#0f0f0f] shadow-lg shadow-[#c9a962]/20'
+                                                            : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
+                                                } ${isCacheLoading && !isSelected ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                        >
+                                            <span className="flex items-center justify-center gap-1.5">
+                                                {isLoading && (
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                )}
+                                                {isActive && (
+                                                    <span className="relative flex h-2 w-2">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                                                    </span>
+                                                )}
+                                                {g}
+                                            </span>
+                                            {/* TTL countdown bar */}
+                                            {isActive && cacheTimeLeft > 0 && (
+                                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500/20">
+                                                    <div
+                                                        className="h-full bg-green-400 transition-all duration-1000 ease-linear"
+                                                        style={{ width: `${(cacheTimeLeft / CACHE_TTL_MS) * 100}%` }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
                             </div>
+
+                            {/* Status indicator */}
+                            {isCacheActive && (
+                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/[0.06] border border-green-500/[0.12] mb-1">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                                    </span>
+                                    <span className="text-[11px] text-green-400/80">
+                                        Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)} activo — {Math.ceil(cacheTimeLeft / 60000)}:{String(Math.floor((cacheTimeLeft % 60000) / 1000)).padStart(2, '0')} restantes
+                                    </span>
+                                </div>
+                            )}
+                            {isCacheLoading && (
+                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#c9a962]/[0.06] border border-[#c9a962]/[0.12] mb-1">
+                                    <Loader2 className="w-3 h-3 text-[#c9a962] animate-spin" />
+                                    <span className="text-[11px] text-[#c9a962]/80">Activando Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)}...</span>
+                                </div>
+                            )}
+                            {genioError && (
+                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/[0.06] border border-red-500/[0.15] mb-1">
+                                    <AlertTriangle className="w-3 h-3 text-red-400" />
+                                    <span className="text-[11px] text-red-400/80">{genioError}</span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Error */}
@@ -1286,13 +1430,23 @@ export default function RedactorSentenciaPage() {
                         {/* Solve Button */}
                         <button
                             onClick={handleSolve}
-                            className="w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30"
+                            disabled={!isCacheActive}
+                            className={`w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${isCacheActive
+                                    ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
+                                    : 'bg-white/[0.04] text-gray-600 cursor-not-allowed border border-white/[0.08]'
+                                }`}
                         >
-                            ⚖️ Consultar Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)} + RAG
+                            {isCacheActive
+                                ? `⚖️ Consultar Genio ${selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)} + RAG`
+                                : '🔒 Activa un Genio para consultar'
+                            }
                         </button>
 
                         <p className="text-center text-xs text-gray-500 mt-4">
-                            Tras la consulta configurarás el sentido, calificación e instrucciones de redacción
+                            {isCacheActive
+                                ? 'Tras la consulta configurarás el sentido, calificación e instrucciones de redacción'
+                                : 'Selecciona un Genio arriba para encenderlo — se activará por máximo 5 minutos'
+                            }
                         </p>
                     </div>
                 )}
