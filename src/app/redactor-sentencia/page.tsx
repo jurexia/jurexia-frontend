@@ -1096,7 +1096,7 @@ export default function RedactorSentenciaPage() {
                             Analizando expediente...
                         </h2>
                         <p className="text-sm text-gray-400 mb-4">
-                            Gemini 2.5 Pro está leyendo los 3 documentos e identificando agravios
+                            Iurexia está leyendo tus documentos e identificando los problemas jurídicos
                         </p>
                         <div className="space-y-2 text-left max-w-sm mx-auto">
                             <div className="flex items-center gap-3 opacity-100">
