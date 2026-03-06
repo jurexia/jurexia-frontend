@@ -1192,225 +1192,86 @@ export default function RedactorSentenciaPage() {
                             )}
                         </div>
 
-                        {/* Sentido Propuesto */}
+                        {/* ══ Problemas Jurídicos Identificados ══ */}
                         <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
                             <div className="mb-5">
                                 <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
-                                    Sentido
+                                    Problemas Jurídicos
                                 </p>
-                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">Sentido del Proyecto</h3>
-                                <p className="text-[11px] text-white/25 mt-1 font-light">¿Cuál es la línea que desea para este proyecto de sentencia?</p>
+                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">
+                                    {term.plural} Identificados
+                                </h3>
+                                <p className="text-[11px] text-white/25 mt-1 font-light">
+                                    {analysisData.agravios.length} {term.pluralLower} extraídos de los documentos — revísalos antes de consultar al Genio
+                                </p>
                             </div>
-                            <div className={`grid gap-3 ${(selectedTipo && SENTIDO_OPTIONS[selectedTipo.id as TipoSentencia]?.length === 2) ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                                {selectedTipo && SENTIDO_OPTIONS[selectedTipo.id as TipoSentencia]?.map(opt => (
-                                    <button
-                                        key={opt.value}
-                                        onClick={() => setSentido(sentido === opt.value ? null : opt.value)}
-                                        className={`p-4 rounded-xl border text-left transition-all duration-200 ${sentido === opt.value
-                                            ? 'border-[#c9a962]/50 bg-[#c9a962]/10 shadow-sm shadow-[#c9a962]/10'
-                                            : 'border-white/[0.08] bg-[#1a1a1a]/40 hover:border-white/[0.15] hover:bg-[#1a1a1a]/70'
-                                            }`}
-                                    >
-                                        <span className="text-lg mb-1 block">{opt.icon}</span>
-                                        <span className={`text-sm font-medium block mb-1 ${sentido === opt.value ? 'text-[#c9a962]' : 'text-white/80'}`}>
-                                            {opt.label}
-                                        </span>
-                                        <span className="text-[10px] text-white/30">{opt.desc}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
 
-                        {/* Dispositivo Selector — only when Conceder */}
-                        {sentido === 'conceder' && (
-                            <div className="rounded-2xl border border-green-500/20 bg-green-500/[0.03] backdrop-blur-sm p-6 mb-6">
-                                <div className="mb-5">
-                                    <p className="text-green-400/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
-                                        Dispositivo
-                                    </p>
-                                    <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">{term.singular} Dispositivo</h3>
-                                    <p className="text-[11px] text-white/25 mt-1 font-light">
-                                        ¿Hay un {term.singularLower} que por sí solo resuelve el caso al mayor beneficio?
-                                    </p>
+                            {analysisData.agravios.length === 0 ? (
+                                <div className="p-4 bg-amber-500/[0.06] rounded-xl border border-amber-500/20">
+                                    <p className="text-sm text-amber-300/80">⚠️ No se identificaron {term.pluralLower}. Verifica los documentos subidos.</p>
                                 </div>
-                                <p className="text-xs text-green-400/60 mb-4 flex items-center gap-2">
-                                    <span className="text-base">💡</span>
-                                    Si selecciona un {term.singularLower} como dispositivo, los demás se omitirán con un párrafo formulaico — ahorrando ~60% en tiempo y costo.
-                                </p>
-                                <div className="space-y-2">
-                                    {calificaciones.map(c => (
-                                        <button
-                                            key={c.numero}
-                                            onClick={() => dispositivoIndex === c.numero ? clearDispositivo() : applyDispositivo(c.numero)}
-                                            className={`w-full text-left p-3 rounded-xl border transition-all duration-200 flex items-center gap-3 ${dispositivoIndex === c.numero
-                                                ? 'border-green-500/40 bg-green-500/10'
-                                                : dispositivoIndex !== null
-                                                    ? 'border-white/[0.04] bg-white/[0.01] opacity-50'
-                                                    : 'border-white/[0.08] bg-[#1a1a1a]/40 hover:border-green-500/20 hover:bg-green-500/[0.03]'
-                                                }`}
-                                        >
-                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${dispositivoIndex === c.numero
-                                                ? 'border-green-400 bg-green-400'
-                                                : 'border-white/20'
-                                                }`}>
-                                                {dispositivoIndex === c.numero && (
-                                                    <CheckCircle className="w-3 h-3 text-[#0f0f0f]" />
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <span className="text-xs text-[#c9a962]/70 font-medium">{term.singular} {c.numero}</span>
-                                                <p className="text-sm text-white/80 font-medium truncate">{c.titulo}</p>
-                                            </div>
-                                            {dispositivoIndex === c.numero && (
-                                                <span className="text-[10px] px-2 py-1 rounded-full bg-green-500/20 text-green-400 font-medium flex-shrink-0">DISPOSITIVO</span>
+                            ) : (
+                                <div className="space-y-3">
+                                    {analysisData.agravios.map((agravio, i) => (
+                                        <div key={agravio.numero || i} className="border border-white/[0.06] rounded-xl overflow-hidden">
+                                            <button
+                                                onClick={() => setExpandedAgravio(expandedAgravio === agravio.numero ? null : agravio.numero)}
+                                                className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/[0.02] transition-colors"
+                                            >
+                                                <span className="text-[10px] px-2 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962] font-semibold flex-shrink-0">
+                                                    {term.singular} {agravio.numero || i + 1}
+                                                </span>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm text-white/80 font-medium truncate">{agravio.titulo}</p>
+                                                </div>
+                                                <ChevronDown className={`w-4 h-4 text-white/30 transition-transform flex-shrink-0 ${expandedAgravio === agravio.numero ? 'rotate-180' : ''}`} />
+                                            </button>
+                                            {expandedAgravio === agravio.numero && (
+                                                <div className="px-4 pb-4 border-t border-white/[0.04]">
+                                                    <p className="text-sm text-white/50 leading-relaxed mt-3">{agravio.resumen}</p>
+                                                    {agravio.articulos_mencionados && agravio.articulos_mencionados.length > 0 && (
+                                                        <div className="mt-3 flex flex-wrap gap-1">
+                                                            {agravio.articulos_mencionados.map((art: string, ai: number) => (
+                                                                <span key={ai} className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400/70 border border-blue-500/20">
+                                                                    {art}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
-                                        </button>
+                                        </div>
                                     ))}
                                 </div>
-                                {dispositivoIndex !== null && (
-                                    <div className="mt-4 p-3 rounded-xl bg-green-500/[0.06] border border-green-500/[0.12]">
-                                        <p className="text-xs text-green-400/80">
-                                            ✅ Solo se redactará el estudio de fondo del {term.singularLower} {dispositivoIndex}. Los demás {calificaciones.length - 1} {term.pluralLower} se declararán innecesarios de estudio.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                            )}
+                        </div>
 
-                        {/* Thematic Groups with Qualification */}
-                        {gruposTematicos.length > 0 && sentido !== 'conceder' && (
-                            <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
-                                <div className="mb-5">
-                                    <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
-                                        Agrupación
-                                    </p>
-                                    <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">Agrupación Temática</h3>
-                                    <p className="text-[11px] text-white/25 mt-1 font-light">{gruposTematicos.length} grupos identificados — califique por grupo</p>
-                                </div>
-                                <div className="space-y-3">
-                                    {gruposTematicos.map((g, gi) => {
-                                        const colors = ['border-l-blue-500/40', 'border-l-purple-500/40', 'border-l-emerald-500/40', 'border-l-amber-500/40', 'border-l-pink-500/40'];
-                                        const groupCalif = calificaciones.filter(c => g.agravios_nums.includes(c.numero));
-                                        const currentCalif = groupCalif.length > 0 && groupCalif.every(c => c.calificacion === groupCalif[0].calificacion && c.calificacion !== 'sin_calificar')
-                                            ? groupCalif[0].calificacion : null;
-                                        return (
-                                            <div key={gi} className={`border-l-2 ${colors[gi % colors.length]} rounded-r-xl overflow-hidden transition-all duration-300 ${currentCalif === 'fundado' ? 'bg-green-500/[0.04]' :
-                                                currentCalif === 'infundado' ? 'bg-red-500/[0.04]' :
-                                                    currentCalif === 'inoperante' ? 'bg-amber-500/[0.04]' : 'bg-white/[0.02]'
-                                                }`}>
-                                                {/* Group header */}
-                                                <div className="px-4 py-3">
-                                                    <div className="flex items-center justify-between gap-3">
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm text-white/80 font-medium">{g.tema}</p>
-                                                            <p className="text-[10px] text-white/30 mt-0.5">
-                                                                {term.plural}: {g.agravios_nums.join(', ')} {g.descripcion ? `— ${g.descripcion}` : ''}
-                                                            </p>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => setExpandedAgravio(expandedAgravio === gi + 9000 ? null : gi + 9000)}
-                                                            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
-                                                        >
-                                                            <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${expandedAgravio === gi + 9000 ? 'rotate-180' : ''}`} />
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Per-group qualification buttons */}
-                                                    <div className="flex flex-wrap gap-2 mt-3">
-                                                        {(['fundado', 'infundado', 'inoperante'] as const).map(opt => (
-                                                            <button
-                                                                key={opt}
-                                                                onClick={() => updateGroupCalificacion(gi, opt)}
-                                                                className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 ${currentCalif === opt
-                                                                    ? opt === 'fundado'
-                                                                        ? 'bg-green-500/20 text-green-400 border border-green-500/40'
-                                                                        : opt === 'infundado'
-                                                                            ? 'bg-red-500/20 text-red-400 border border-red-500/40'
-                                                                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                                                                    : 'bg-[#1a1a1a]/40 text-gray-400 border border-white/[0.06] hover:bg-[#1a1a1a]/70 hover:text-white/60'
-                                                                    }`}
-                                                            >
-                                                                {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                                                            </button>
-                                                        ))}
-                                                        {currentCalif && (
-                                                            <span className="text-[10px] text-white/20 self-center ml-1">✓ {g.agravios_nums.length} {term.pluralLower}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Expandable: individual agravios in this group */}
-                                                {expandedAgravio === gi + 9000 && (
-                                                    <div className="px-4 pb-3 space-y-2">
-                                                        {g.agravios_nums.map(num => {
-                                                            const agravio = analysisData.agravios.find(a => a.numero === num);
-                                                            const calif = calificaciones.find(c => c.numero === num);
-                                                            if (!agravio) return null;
-                                                            return (
-                                                                <div key={num} className="bg-white/[0.03] rounded-lg p-3 border border-white/[0.04]">
-                                                                    <div className="flex items-center gap-2 mb-1">
-                                                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#c9a962]/10 text-[#c9a962] font-medium">{term.singular} {num}</span>
-                                                                        {calif && calif.calificacion !== 'sin_calificar' && (
-                                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${calif.calificacion === 'fundado' ? 'bg-green-500/15 text-green-400' :
-                                                                                calif.calificacion === 'infundado' ? 'bg-red-500/15 text-red-400' :
-                                                                                    'bg-amber-500/15 text-amber-400'
-                                                                                }`}>{calif.calificacion.toUpperCase()}</span>
-                                                                        )}
-                                                                    </div>
-                                                                    <p className="text-xs text-white/70 font-medium">{agravio.titulo}</p>
-                                                                    <p className="text-[11px] text-white/40 mt-1">{agravio.resumen}</p>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Instructions for Drafting */}
-                        <div className="rounded-2xl border border-[#c9a962]/15 bg-[#c9a962]/[0.03] backdrop-blur-sm p-6 mb-6">
+                        {/* ══ Seleccionar Genio ══ */}
+                        <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
                             <div className="mb-4">
                                 <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
-                                    Instrucciones
+                                    Fundamentación
                                 </p>
-                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">Instrucciones para la Redacción</h3>
-                                <p className="text-[11px] text-[#c9a962]/50 mt-1 font-light">Dictele la línea argumental al sistema — este es el paso más importante</p>
+                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">
+                                    Seleccionar Genio para Fundamentación
+                                </h3>
+                                <p className="text-[11px] text-white/25 mt-1 font-light">
+                                    El Genio buscará artículos de ley relevantes — Qdrant RAG buscará tesis y jurisprudencias aplicables
+                                </p>
                             </div>
-                            <textarea
-                                value={instrucciones}
-                                onChange={e => { setInstrucciones(e.target.value); setAutoMode(false); }}
-                                rows={5}
-                                placeholder={selectedTipo?.id === 'amparo_directo'
-                                    ? 'Ej: El concepto de violación primero es fundado por violación al debido proceso. Aplicar suplencia de la queja por materia laboral. Los conceptos 2 y 3 son inoperantes por no combatir las consideraciones...'
-                                    : selectedTipo?.id === 'amparo_revision'
-                                        ? 'Ej: Los agravios son infundados, la sentencia del juez de distrito está correctamente fundada. El agravio 1 no controvierte las consideraciones del a quo...'
-                                        : selectedTipo?.id === 'revision_fiscal'
-                                            ? 'Ej: Desechar por improcedente. No reúne los requisitos de importancia y trascendencia del Art. 63 LFPCA...'
-                                            : 'Ej: La queja es fundada. El juez de distrito aplicó incorrectamente el artículo 97 fracción I de la Ley de Amparo...'
-                                }
-                                className="w-full bg-white/[0.04] border border-[#c9a962]/20 rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/40 focus:ring-1 focus:ring-[#c9a962]/10 transition-colors resize-none"
-                            />
-
-                            {/* Auto-draft toggle */}
-                            <div className="mt-3 flex items-center gap-3">
-                                <button
-                                    onClick={() => {
-                                        setAutoMode(!autoMode);
-                                        if (!autoMode) setInstrucciones('');
-                                    }}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs transition-all duration-200 border ${autoMode
-                                        ? 'bg-[#c9a962]/10 border-[#c9a962]/30 text-[#c9a962]'
-                                        : 'bg-white/[0.03] border-white/[0.06] text-gray-400 hover:text-white/60 hover:border-white/[0.12]'
-                                        }`}
-                                >
-                                    <Sparkles className="w-3.5 h-3.5" />
-                                    Borrador automático a raíz de precedentes
-                                    <span className="text-[10px] text-white/20">(no sugerido)</span>
-                                </button>
+                            <div className="grid grid-cols-4 gap-2">
+                                {['amparo', 'civil', 'mercantil', 'penal', 'laboral', 'fiscal', 'administrativo', 'agrario'].map(g => (
+                                    <button
+                                        key={g}
+                                        onClick={() => setSelectedGenio(g)}
+                                        className={`px-3 py-2.5 rounded-lg text-xs font-medium capitalize transition-all duration-200 ${selectedGenio === g
+                                            ? 'bg-[#c9a962] text-[#0f0f0f] shadow-lg shadow-[#c9a962]/20'
+                                            : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
+                                            }`}
+                                    >
+                                        {g}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
@@ -1422,43 +1283,16 @@ export default function RedactorSentenciaPage() {
                             </div>
                         )}
 
-                        {/* Genio Selector + Solve Button */}
-                        <div className="mb-6">
-                            <label className="block text-xs text-white/40 mb-2 tracking-wider uppercase font-light">
-                                Seleccionar Genio para fundamentación
-                            </label>
-                            <div className="grid grid-cols-4 gap-2 mb-4">
-                                {['amparo', 'civil', 'mercantil', 'penal', 'laboral', 'fiscal', 'administrativo', 'agrario'].map(g => (
-                                    <button
-                                        key={g}
-                                        onClick={() => setSelectedGenio(g)}
-                                        className={`px-3 py-2 rounded-lg text-xs font-medium capitalize transition-all duration-200 ${selectedGenio === g
-                                            ? 'bg-[#c9a962] text-[#0f0f0f] shadow-lg shadow-[#c9a962]/20'
-                                            : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
-                                            }`}
-                                    >
-                                        {g}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
+                        {/* Solve Button */}
                         <button
                             onClick={handleSolve}
-                            disabled={!sentido}
-                            className={`w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${sentido
-                                ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
-                                : 'bg-white/[0.04] text-gray-600 cursor-not-allowed border border-white/[0.08]'
-                                }`}
+                            className="w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30"
                         >
-                            {sentido
-                                ? `⚖️ Consultar Genio ${selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)} + RAG`
-                                : 'Seleccione un sentido para continuar'
-                            }
+                            ⚖️ Consultar Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)} + RAG
                         </button>
 
                         <p className="text-center text-xs text-gray-500 mt-4">
-                            El Genio fundamentará con artículos de ley • Qdrant buscará tesis y jurisprudencias aplicables
+                            Tras la consulta configurarás el sentido, calificación e instrucciones de redacción
                         </p>
                     </div>
                 )}
