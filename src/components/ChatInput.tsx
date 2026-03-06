@@ -314,66 +314,83 @@ ${draftRequest.descripcion}`;
                         </div>
                     </div>
 
-                    {/* Genio Buttons Row — below action buttons */}
+                    {/* ── Genio Premium Section ───────────────────────────── */}
                     <div className="mt-3 pt-3 border-t border-gray-100">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mr-1">Genios</span>
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="w-0.5 h-4 rounded-full bg-[#c9a962]" />
+                            <span
+                                className="text-[11px] font-bold tracking-[0.2em] uppercase"
+                                style={{
+                                    background: 'linear-gradient(135deg, #c9a962, #e8d5a3, #c9a962)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    animation: 'pulseGold 2.5s ease-in-out infinite',
+                                }}
+                            >
+                                GENIOS
+                            </span>
+                            <div className="flex-1 h-[1px] bg-gradient-to-r from-[#c9a962]/30 to-transparent" />
+                            {(isGenioLocked && !isPro) && (
+                                <span className="text-[9px] font-medium text-[#c9a962]/70 tracking-wide">PRO</span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-1 flex-wrap">
                             {[
                                 {
-                                    id: 'amparo', label: 'Amparo',
-                                    activeOn: 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]',
-                                    activating: 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400',
-                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-purple-300',
-                                    spinnerBorder: 'border-purple-400', iconOn: 'text-red-500'
+                                    id: 'amparo', label: 'Amparo', dot: 'bg-purple-500',
+                                    activeOn: 'bg-gradient-to-r from-purple-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+                                    activating: 'bg-gradient-to-r from-purple-600 to-indigo-700 text-white border-purple-400',
+                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
+                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-purple-600'
                                 },
                                 {
-                                    id: 'mercantil', label: 'Mercantil',
-                                    activeOn: 'bg-white text-emerald-600 border-emerald-500 animate-[pulseRedGlow_2s_infinite]',
-                                    activating: 'bg-gradient-to-r from-emerald-700 to-teal-800 text-white border-emerald-400',
-                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300',
-                                    spinnerBorder: 'border-emerald-400', iconOn: 'text-emerald-500'
+                                    id: 'mercantil', label: 'Mercantil', dot: 'bg-emerald-500',
+                                    activeOn: 'bg-gradient-to-r from-emerald-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+                                    activating: 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white border-emerald-400',
+                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
+                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-emerald-600'
                                 },
                                 {
-                                    id: 'civil', label: 'Civil',
-                                    activeOn: 'bg-white text-blue-600 border-blue-500 animate-[pulseRedGlow_2s_infinite]',
-                                    activating: 'bg-gradient-to-r from-blue-700 to-cyan-800 text-white border-blue-400',
-                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-blue-300',
-                                    spinnerBorder: 'border-blue-400', iconOn: 'text-blue-500'
+                                    id: 'civil', label: 'Civil', dot: 'bg-blue-500',
+                                    activeOn: 'bg-gradient-to-r from-blue-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+                                    activating: 'bg-gradient-to-r from-blue-600 to-cyan-700 text-white border-blue-400',
+                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
+                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-blue-600'
                                 },
                                 {
-                                    id: 'penal', label: 'Penal',
-                                    activeOn: 'bg-white text-rose-600 border-rose-500 animate-[pulseRedGlow_2s_infinite]',
-                                    activating: 'bg-gradient-to-r from-rose-700 to-red-800 text-white border-rose-400',
-                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-rose-300',
-                                    spinnerBorder: 'border-rose-400', iconOn: 'text-rose-500'
+                                    id: 'penal', label: 'Penal', dot: 'bg-rose-500',
+                                    activeOn: 'bg-gradient-to-r from-rose-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+                                    activating: 'bg-gradient-to-r from-rose-600 to-red-700 text-white border-rose-400',
+                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
+                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-rose-600'
                                 },
                                 {
-                                    id: 'laboral', label: 'Laboral',
-                                    activeOn: 'bg-white text-amber-600 border-amber-500 animate-[pulseRedGlow_2s_infinite]',
-                                    activating: 'bg-gradient-to-r from-amber-700 to-orange-800 text-white border-amber-400',
-                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-amber-300',
-                                    spinnerBorder: 'border-amber-400', iconOn: 'text-amber-500'
+                                    id: 'laboral', label: 'Laboral', dot: 'bg-amber-500',
+                                    activeOn: 'bg-gradient-to-r from-amber-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+                                    activating: 'bg-gradient-to-r from-amber-600 to-orange-700 text-white border-amber-400',
+                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
+                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-amber-600'
                                 },
                                 {
-                                    id: 'fiscal', label: 'Fiscal',
-                                    activeOn: 'bg-white text-violet-600 border-violet-500 animate-[pulseRedGlow_2s_infinite]',
-                                    activating: 'bg-gradient-to-r from-violet-700 to-purple-800 text-white border-violet-400',
-                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-violet-300',
-                                    spinnerBorder: 'border-violet-400', iconOn: 'text-violet-500'
+                                    id: 'fiscal', label: 'Fiscal', dot: 'bg-violet-500',
+                                    activeOn: 'bg-gradient-to-r from-violet-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+                                    activating: 'bg-gradient-to-r from-violet-600 to-purple-700 text-white border-violet-400',
+                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
+                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-violet-600'
                                 },
                                 {
-                                    id: 'administrativo', label: 'Adtvo',
-                                    activeOn: 'bg-white text-teal-600 border-teal-500 animate-[pulseRedGlow_2s_infinite]',
-                                    activating: 'bg-gradient-to-r from-teal-700 to-cyan-800 text-white border-teal-400',
-                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-teal-300',
-                                    spinnerBorder: 'border-teal-400', iconOn: 'text-teal-500'
+                                    id: 'administrativo', label: 'Adtvo', dot: 'bg-teal-500',
+                                    activeOn: 'bg-gradient-to-r from-teal-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+                                    activating: 'bg-gradient-to-r from-teal-600 to-cyan-700 text-white border-teal-400',
+                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
+                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-teal-600'
                                 },
                                 {
-                                    id: 'agrario', label: 'Agrario',
-                                    activeOn: 'bg-white text-lime-600 border-lime-500 animate-[pulseRedGlow_2s_infinite]',
-                                    activating: 'bg-gradient-to-r from-lime-700 to-green-800 text-white border-lime-400',
-                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-lime-300',
-                                    spinnerBorder: 'border-lime-400', iconOn: 'text-lime-500'
+                                    id: 'agrario', label: 'Agrario', dot: 'bg-lime-500',
+                                    activeOn: 'bg-gradient-to-r from-lime-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+                                    activating: 'bg-gradient-to-r from-lime-600 to-green-700 text-white border-lime-400',
+                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
+                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-lime-600'
                                 },
                             ].map((g) => (
                                 <button
@@ -384,40 +401,45 @@ ${draftRequest.descripcion}`;
                                         setActiveGenioId?.(activeGenioId === g.id ? null : g.id);
                                     }}
                                     disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
+                                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all duration-300 border flex-shrink-0
                                         ${(isGenioLocked && !isPro)
-                                            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-70'
+                                            ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
                                             : (isCacheLoading && activeGenioId === g.id)
                                                 ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
                                                 : genioError && activeGenioId === g.id
-                                                    ? 'bg-red-50 text-red-600 border-red-400'
+                                                    ? 'bg-red-50 text-red-600 border-red-300'
                                                     : activeGenioId === g.id
                                                         ? isCacheActive
                                                             ? g.activeOn
                                                             : g.activating
                                                         : g.idle
                                         }`}
+                                    style={(activeGenioId === g.id && isCacheActive && !(isGenioLocked && !isPro))
+                                        ? { animation: 'genioActiveGlow 2.5s ease-in-out infinite' }
+                                        : undefined}
                                     title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro' : activeGenioId === g.id ? `Desactivar Genio ${g.label}` : `Activar Genio ${g.label}`}
                                 >
                                     {(isGenioLocked && !isPro) ? (
                                         <>
-                                            <Lock className="w-3 h-3" />
-                                            {g.label} <span className="text-[9px] ml-0.5 font-normal">PRO</span>
+                                            <Lock className="w-2.5 h-2.5" />
+                                            <span className="text-gray-400">{g.label}</span>
                                         </>
                                     ) : (isCacheLoading && activeGenioId === g.id) ? (
                                         <>
-                                            <div className={`w-3 h-3 border-2 ${g.spinnerBorder} border-t-transparent rounded-full animate-spin`} />
-                                            Activando...
+                                            <div className={`w-2.5 h-2.5 border-2 ${g.spinnerBorder} border-t-transparent rounded-full animate-spin`} />
+                                            <span>Activando...</span>
                                         </>
                                     ) : (genioError && activeGenioId === g.id) ? (
                                         <>
-                                            <span className="text-red-500">&#x26A0;</span>
-                                            Error
+                                            <span className="text-red-500 text-[11px]">&#x26A0;</span>
+                                            <span>Error</span>
                                         </>
                                     ) : (
                                         <>
-                                            <Brain className={`w-3 h-3 ${(activeGenioId === g.id && isCacheActive) ? g.iconOn : ''}`} />
-                                            {(activeGenioId === g.id && isCacheActive) ? `${g.label} ON` : g.label}
+                                            <span className={`w-1.5 h-1.5 rounded-full ${(activeGenioId === g.id && isCacheActive) ? g.dot + ' animate-pulse' : (activeGenioId === g.id ? 'bg-white' : g.dot + ' opacity-40')}`} />
+                                            <span className={(activeGenioId === g.id && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenioId === g.id ? '' : 'text-gray-600')}>
+                                                {(activeGenioId === g.id && isCacheActive) ? `${g.label} ON` : g.label}
+                                            </span>
                                         </>
                                     )}
                                 </button>
