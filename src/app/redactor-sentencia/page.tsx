@@ -218,8 +218,8 @@ export default function RedactorSentenciaPage() {
     // Access gate: only admin or ultra_secretarios
     const canAccess = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
 
-    // State Machine: 'select' → 'upload' → 'analyzing' → 'estrategia' → 'generating' → 'result'
-    const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'estrategia' | 'generating' | 'result'>('select');
+    // State Machine: 'select' → 'upload' → 'analyzing' → 'estrategia' → 'solving' → 'prompt_review' → 'generating' → 'result'
+    const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'estrategia' | 'solving' | 'prompt_review' | 'generating' | 'result'>('select');
 
     // New Navigation State
     const [viewState, setViewState] = useState<'tools' | 'jurisdiction' | 'tipos'>('tools');
@@ -232,7 +232,7 @@ export default function RedactorSentenciaPage() {
     const [error, setError] = useState('');
     const [progressStep, setProgressStep] = useState(0);
     const [streamingText, setStreamingText] = useState('');
-    const [streamingPhase, setStreamingPhase] = useState<{ step: string; progress: number } | null>(null);
+    const [streamingPhase, setStreamingPhase] = useState<{ step: string; progress: number; group?: number; totalGroups?: number } | null>(null);
     const [tokensInfo, setTokensInfo] = useState<{ input: number; output: number } | null>(null);
     const [copied, setCopied] = useState(false);
     const [exportLoading, setExportLoading] = useState(false);
@@ -257,6 +257,13 @@ export default function RedactorSentenciaPage() {
         totalChars: number;
         generationTime: number;
     } | null>(null);
+
+    // ── V2 state: Genio + RAG solve results ──
+    const [genioSolution, setGenioSolution] = useState('');
+    const [ragResults, setRagResults] = useState<Array<{ id: string; fuente: string; texto: string; score: number; silo: string }>>([]);
+    const [ftPrompt, setFtPrompt] = useState('');
+    const [selectedGenio, setSelectedGenio] = useState('amparo');
+    const [solveError, setSolveError] = useState('');
 
     // Dynamic terminology
     const term = getTerminology(selectedTipo?.id);
@@ -333,7 +340,7 @@ export default function RedactorSentenciaPage() {
         setPhase('upload');
     };
 
-    // ── Analyze (Phase 0.5) ─────────────────────────────────────────────
+    // ── Analyze (v2 — extracts problemas jurídicos) ──────────────────────
     const handleAnalyze = async () => {
         if (!selectedTipo || !allFilesUploaded || !user?.email) return;
 
@@ -347,7 +354,7 @@ export default function RedactorSentenciaPage() {
             formData.append('doc1', files[0]!);
             formData.append('doc2', files[1]!);
 
-            const response = await fetch(`${API_URL}/analyze-expediente`, {
+            const response = await fetch(`${API_URL}/redactor/v2/analyze`, {
                 method: 'POST',
                 body: formData,
             });
@@ -357,19 +364,48 @@ export default function RedactorSentenciaPage() {
                 throw new Error(errorData.detail || `Error ${response.status}`);
             }
 
-            const data: AnalysisData = await response.json();
-            setAnalysisData(data);
+            const data = await response.json();
 
-            // Auto-fill metadata from analysis
-            if (data.datos_expediente.numero) setMetaExpediente(data.datos_expediente.numero);
-            if (data.datos_expediente.materia) setMetaMateria(data.datos_expediente.materia.toUpperCase());
-            if (data.datos_expediente.quejoso_recurrente) setMetaQuejoso(data.datos_expediente.quejoso_recurrente);
+            // Map v2 response to existing AnalysisData format
+            const analysisCompat: AnalysisData = {
+                resumen_caso: data.resumen_caso || '',
+                resumen_acto_reclamado: data.resumen_acto_reclamado || '',
+                datos_expediente: {
+                    numero: data.expediente?.numero || '?',
+                    tipo_asunto: data.tipo || '',
+                    quejoso_recurrente: data.expediente?.quejoso || '',
+                    autoridades_responsables: data.expediente?.autoridades || [],
+                    materia: data.materia || '',
+                    tribunal: data.expediente?.tribunal || '',
+                },
+                agravios: (data.problemas_juridicos || []).map((p: any) => ({
+                    numero: p.numero,
+                    titulo: p.titulo,
+                    resumen: p.descripcion,
+                    texto_integro: '',
+                    articulos_mencionados: p.articulos_mencionados || [],
+                    derechos_invocados: [],
+                })),
+                observaciones_preliminares: data.observaciones || '',
+                analysis_time_seconds: 0,
+            };
+            setAnalysisData(analysisCompat);
 
-            // Build calificaciones from agravios
-            const califs: CalificacionEntry[] = data.agravios.map(a => ({
-                numero: a.numero,
-                titulo: a.titulo,
-                resumen: a.resumen,
+            // Auto-fill metadata
+            if (data.expediente?.numero) setMetaExpediente(data.expediente.numero);
+            if (data.materia) setMetaMateria(data.materia.toUpperCase());
+            if (data.expediente?.quejoso) setMetaQuejoso(data.expediente.quejoso);
+
+            // Set default genio from first problema's suggestion
+            if (data.problemas_juridicos?.[0]?.genio_sugerido) {
+                setSelectedGenio(data.problemas_juridicos[0].genio_sugerido);
+            }
+
+            // Build calificaciones from problemas
+            const califs: CalificacionEntry[] = (data.problemas_juridicos || []).map((p: any) => ({
+                numero: p.numero,
+                titulo: p.titulo,
+                resumen: p.descripcion,
                 calificacion: 'sin_calificar' as const,
                 notas: '',
                 expanded: false,
@@ -377,12 +413,6 @@ export default function RedactorSentenciaPage() {
             }));
             setCalificaciones(califs);
 
-            // Store thematic groups from analysis
-            if (data.grupos_tematicos && data.grupos_tematicos.length > 0) {
-                setGruposTematicos(data.grupos_tematicos);
-            }
-
-            // Go to strategy phase first
             setPhase('estrategia');
         } catch (err: any) {
             setError(err.message || 'Error al analizar el expediente');
@@ -390,9 +420,52 @@ export default function RedactorSentenciaPage() {
         }
     };
 
-    // ── Generate (with calificaciones) — SSE STREAMING ────────────────────
+    // ── Solve (v2 — Genio + RAG in parallel) ─────────────────────────────
+    const handleSolve = async () => {
+        if (!selectedTipo || !user?.email) return;
+
+        setPhase('solving');
+        setSolveError('');
+
+        try {
+            // Build combined problema text from all calificaciones
+            const problemaText = calificaciones.map(c =>
+                `${c.titulo}: ${c.resumen} [Calificación: ${c.calificacion}]`
+            ).join('\n\n');
+
+            const formData = new FormData();
+            formData.append('problema', problemaText);
+            formData.append('genio_id', selectedGenio);
+            formData.append('tipo', selectedTipo.id);
+            formData.append('sentido', sentido || '');
+            formData.append('user_email', user.email);
+
+            const response = await fetch(`${API_URL}/redactor/v2/solve`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }));
+                throw new Error(errorData.detail || `Error ${response.status}`);
+            }
+
+            const data = await response.json();
+            setGenioSolution(data.genio_solution || '');
+            setRagResults(data.rag_results || []);
+            setFtPrompt(data.prompt || '');
+            setRagCount(data.rag_results?.length || 0);
+
+            setPhase('prompt_review');
+        } catch (err: any) {
+            setSolveError(err.message || 'Error al consultar Genio/RAG');
+            setPhase('estrategia');
+        }
+    };
+
+    // ── Generate (v2 — fine-tuned model with SSE) ──────────────────────────
     const handleGenerate = async () => {
-        if (!selectedTipo || !allFilesUploaded || !user?.email) return;
+        if (!selectedTipo || !user?.email || !ftPrompt) return;
 
         setPhase('generating');
         setError('');
@@ -404,26 +477,23 @@ export default function RedactorSentenciaPage() {
             const formData = new FormData();
             formData.append('tipo', selectedTipo.id);
             formData.append('user_email', user.email);
-            formData.append('instrucciones', instrucciones);
-            formData.append('sentido', sentido || '');
-            formData.append('auto_mode', autoMode ? 'true' : 'false');
-            formData.append('doc1', files[0]!);
-            formData.append('doc2', files[1]!);
 
-            // Send calificaciones JSON if we have them from Phase 0.5
-            if (calificaciones.length > 0) {
-                const califJson = calificaciones.map(c => ({
-                    numero: c.numero,
-                    titulo: c.titulo,
-                    resumen: c.resumen,
-                    calificacion: c.calificacion,
-                    notas: c.notas,
-                    dispositivo: c.dispositivo,
+            // Build groups from gruposTematicos if available
+            if (gruposTematicos.length > 1) {
+                const groups = gruposTematicos.map(g => ({
+                    titulo: g.tema,
+                    numeros: g.agravios_nums,
+                    prompt: ftPrompt.replace(
+                        /PROBLEMA JURÍDICO:[\s\S]*?(?=FUNDAMENTACIÓN)/,
+                        `PROBLEMA JURÍDICO (${term.pluralLower} ${g.agravios_nums.join(', ')}: ${g.tema}):\n${g.agravios_nums.map(n => analysisData?.agravios?.find(a => a.numero === n)?.resumen || '').join('\n')}\n\n`
+                    ),
                 }));
-                formData.append('calificaciones', JSON.stringify(califJson));
+                formData.append('groups', JSON.stringify(groups));
+            } else {
+                formData.append('prompt', ftPrompt);
             }
 
-            const response = await fetch(`${API_URL}/redaccion-sentencias-gemini`, {
+            const response = await fetch(`${API_URL}/redactor/v2/generate`, {
                 method: 'POST',
                 body: formData,
             });
@@ -433,31 +503,71 @@ export default function RedactorSentenciaPage() {
                 throw new Error(errorData.detail || `Error ${response.status}`);
             }
 
-            // ── text/plain streaming (Sálvame pattern) ──────────────────
+            // ── SSE streaming (event: text / phase / done / error) ────
             const reader = response.body?.getReader();
             if (!reader) throw new Error('No se pudo iniciar el stream');
 
             const decoder = new TextDecoder();
             let fullText = '';
+            let buffer = '';
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                const chunk = decoder.decode(value, { stream: true });
-                fullText += chunk;
-                setStreamingText(fullText);
+                buffer += decoder.decode(value, { stream: true });
+
+                // Parse SSE events
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                let eventType = '';
+                for (const line of lines) {
+                    if (line.startsWith('event: ')) {
+                        eventType = line.slice(7).trim();
+                    } else if (line.startsWith('data: ') && eventType) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (eventType === 'text' && data.chunk) {
+                                fullText += data.chunk;
+                                setStreamingText(fullText);
+                            } else if (eventType === 'phase') {
+                                setStreamingPhase({
+                                    step: data.step,
+                                    progress: data.progress,
+                                    group: data.group,
+                                    totalGroups: data.total_groups,
+                                });
+                            } else if (eventType === 'done') {
+                                setGenerationInfo({
+                                    phasesCompleted: data.groups_completed || 1,
+                                    totalChars: data.total_chars || fullText.length,
+                                    generationTime: data.elapsed || 0,
+                                });
+                            } else if (eventType === 'error') {
+                                throw new Error(data.message);
+                            }
+                        } catch (parseErr: any) {
+                            if (parseErr.message && !parseErr.message.includes('JSON')) {
+                                throw parseErr;
+                            }
+                        }
+                        eventType = '';
+                    }
+                }
             }
 
             setResult(fullText);
-            setGenerationInfo({
-                phasesCompleted: 2,
-                totalChars: fullText.length,
-                generationTime: 0,
-            });
+            if (!generationInfo) {
+                setGenerationInfo({
+                    phasesCompleted: 1,
+                    totalChars: fullText.length,
+                    generationTime: 0,
+                });
+            }
             setPhase('result');
         } catch (err: any) {
             setError(err.message || 'Error al generar la sentencia');
-            setPhase('estrategia');
+            setPhase('prompt_review');
         }
     };
 
@@ -1312,9 +1422,29 @@ export default function RedactorSentenciaPage() {
                             </div>
                         )}
 
-                        {/* Generate Button */}
+                        {/* Genio Selector + Solve Button */}
+                        <div className="mb-6">
+                            <label className="block text-xs text-white/40 mb-2 tracking-wider uppercase font-light">
+                                Seleccionar Genio para fundamentación
+                            </label>
+                            <div className="grid grid-cols-4 gap-2 mb-4">
+                                {['amparo', 'civil', 'mercantil', 'penal', 'laboral', 'fiscal', 'administrativo', 'agrario'].map(g => (
+                                    <button
+                                        key={g}
+                                        onClick={() => setSelectedGenio(g)}
+                                        className={`px-3 py-2 rounded-lg text-xs font-medium capitalize transition-all duration-200 ${selectedGenio === g
+                                            ? 'bg-[#c9a962] text-[#0f0f0f] shadow-lg shadow-[#c9a962]/20'
+                                            : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
+                                            }`}
+                                    >
+                                        {g}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         <button
-                            onClick={handleGenerate}
+                            onClick={handleSolve}
                             disabled={!sentido}
                             className={`w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${sentido
                                 ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
@@ -1322,22 +1452,129 @@ export default function RedactorSentenciaPage() {
                                 }`}
                         >
                             {sentido
-                                ? `Generar Estudio de Fondo${dispositivoIndex !== null ? ` (solo ${term.singularLower} ${dispositivoIndex})` : ''}`
+                                ? `⚖️ Consultar Genio ${selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)} + RAG`
                                 : 'Seleccione un sentido para continuar'
                             }
                         </button>
 
                         <p className="text-center text-xs text-gray-500 mt-4">
-                            {autoMode
-                                ? 'El sistema generará basándose exclusivamente en precedentes y jurisprudencia'
-                                : instrucciones
-                                    ? 'Se aplicarán sus instrucciones y se enriquecerá con RAG automático'
-                                    : 'Agregue instrucciones para guiar la redacción o use el borrador automático'
-                            }
+                            El Genio fundamentará con artículos de ley • Qdrant buscará tesis y jurisprudencias aplicables
                         </p>
                     </div>
                 )}
 
+
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* PHASE: SOLVING (Genio + RAG loading)                       */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {phase === 'solving' && (
+                    <div className="max-w-4xl mx-auto py-8">
+                        <div className="text-center mb-8">
+                            <div className="relative w-20 h-20 mx-auto mb-6">
+                                <div className="absolute inset-0 rounded-full bg-[#c9a962]/10 animate-ping" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <Search className="w-9 h-9 text-[#c9a962] animate-pulse" />
+                                </div>
+                            </div>
+                            <h2 className="font-serif text-2xl font-medium text-white mb-2">
+                                Consultando Genio + RAG
+                            </h2>
+                            <p className="text-white/40 text-sm">
+                                Buscando fundamentación legal y jurisprudencias aplicables...
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 px-6 py-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                                <Loader2 className="w-5 h-5 text-[#c9a962] animate-spin" />
+                                <span className="text-sm text-white/60">Consultando Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)}...</span>
+                            </div>
+                            <div className="flex items-center gap-3 px-6 py-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                                <Loader2 className="w-5 h-5 text-[#c9a962] animate-spin" />
+                                <span className="text-sm text-white/60">Buscando tesis y jurisprudencias en Qdrant RAG...</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* PHASE: PROMPT REVIEW (review Genio + RAG, edit prompt)     */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {phase === 'prompt_review' && (
+                    <div className="max-w-4xl mx-auto py-8">
+                        <button
+                            onClick={() => setPhase('estrategia')}
+                            className="flex items-center gap-2 text-sm text-white/30 hover:text-white/60 transition-colors mb-6 font-light"
+                        >
+                            <ArrowLeft className="w-4 h-4" /> Volver a Estrategia
+                        </button>
+
+                        <h2 className="font-serif text-2xl font-medium text-white mb-8">
+                            Revisión del Prompt
+                        </h2>
+
+                        {/* Genio Solution */}
+                        <div className="mb-6">
+                            <h3 className="flex items-center gap-2 text-sm font-medium text-[#c9a962] mb-3">
+                                <Sparkles className="w-4 h-4" />
+                                Fundamentación del Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)}
+                            </h3>
+                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-5 max-h-60 overflow-y-auto">
+                                <p className="text-sm text-white/60 whitespace-pre-wrap leading-relaxed">{genioSolution || 'Sin resultados'}</p>
+                            </div>
+                        </div>
+
+                        {/* RAG Results */}
+                        <div className="mb-6">
+                            <h3 className="flex items-center gap-2 text-sm font-medium text-[#c9a962] mb-3">
+                                <Search className="w-4 h-4" />
+                                Tesis y Jurisprudencias ({ragResults.length} encontradas)
+                            </h3>
+                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] divide-y divide-white/[0.04] max-h-60 overflow-y-auto">
+                                {ragResults.length > 0 ? ragResults.slice(0, 10).map((r, i) => (
+                                    <div key={r.id || i} className="px-5 py-3">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-xs font-medium text-[#c9a962]/70">{r.fuente || 'Sin fuente'}</span>
+                                            <span className="text-[10px] text-white/20 px-2 py-0.5 rounded-full bg-white/[0.04]">
+                                                {r.silo} • {r.score}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-white/40 line-clamp-2">{r.texto}</p>
+                                    </div>
+                                )) : (
+                                    <div className="px-5 py-4 text-sm text-white/30">No se encontraron tesis relevantes</div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Editable Prompt */}
+                        <div className="mb-6">
+                            <h3 className="flex items-center gap-2 text-sm font-medium text-[#c9a962] mb-3">
+                                <Edit3 className="w-4 h-4" />
+                                Prompt para el Modelo Fine-tuned
+                                <span className="text-[10px] text-white/20 ml-auto">~{Math.round(ftPrompt.length / 4).toLocaleString()} tokens est.</span>
+                            </h3>
+                            <textarea
+                                value={ftPrompt}
+                                onChange={(e) => setFtPrompt(e.target.value)}
+                                rows={12}
+                                className="w-full rounded-xl bg-white/[0.03] border border-white/[0.06] p-5 text-sm text-white/70 font-mono leading-relaxed resize-y focus:outline-none focus:border-[#c9a962]/30 transition-colors"
+                            />
+                        </div>
+
+                        {/* Generate Button */}
+                        <button
+                            onClick={handleGenerate}
+                            className="w-full py-4 rounded-full text-sm font-medium tracking-wide bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30 transition-all duration-300"
+                        >
+                            ✨ Generar Estudio de Fondo
+                        </button>
+                        <p className="text-center text-xs text-gray-500 mt-3">
+                            Solo se genera el estudio de fondo — después podrás unirlo con tu adelanto (consideraciones previas) para la sentencia completa
+                        </p>
+                    </div>
+                )}
 
 
                 {/* ═══════════════════════════════════════════════════════════ */}
@@ -1363,7 +1600,14 @@ export default function RedactorSentenciaPage() {
                             <div className="mb-6">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-sm text-white/60">{streamingPhase.step}</span>
-                                    <span className="text-xs text-[#c9a962] font-medium">{streamingPhase.progress}%</span>
+                                    <div className="flex items-center gap-2">
+                                        {streamingPhase.totalGroups && streamingPhase.totalGroups > 1 && (
+                                            <span className="text-[10px] text-white/30 px-2 py-0.5 rounded-full bg-white/[0.04]">
+                                                Grupo {streamingPhase.group}/{streamingPhase.totalGroups}
+                                            </span>
+                                        )}
+                                        <span className="text-xs text-[#c9a962] font-medium">{streamingPhase.progress}%</span>
+                                    </div>
                                 </div>
                                 <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                                     <div
@@ -1473,7 +1717,7 @@ export default function RedactorSentenciaPage() {
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-medium text-white/90">Exportar Sentencia Completa</h3>
-                                    <p className="text-xs text-gray-400">Combine su adelanto con el estudio de fondo</p>
+                                    <p className="text-xs text-gray-400">Suba su adelanto (consideraciones previas) para integrar la sentencia completa</p>
                                 </div>
                             </div>
                             <p className="text-xs text-white/30 mb-4 ml-[52px]">
