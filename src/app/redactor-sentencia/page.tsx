@@ -471,6 +471,7 @@ export default function RedactorSentenciaPage() {
                     numero: p.numero,
                     titulo: p.titulo,
                     resumen: p.descripcion,
+                    interrogante: p.interrogante || '',
                     texto_integro: '',
                     articulos_mencionados: p.articulos_mencionados || [],
                     derechos_invocados: [],
@@ -1334,17 +1335,18 @@ export default function RedactorSentenciaPage() {
 
                             <div className="space-y-3">
                                 {analysisData.agravios.map((agravio: any, i: number) => (
-                                    <div key={`prob-${agravio.numero || i}`} className="p-4 bg-white/[0.02] rounded-xl border border-white/[0.06]">
+                                    <div key={`prob-${agravio.numero || i}`} className="p-4 bg-white/[0.02] rounded-xl border border-amber-500/[0.08]">
                                         <div className="flex items-start gap-3">
-                                            <span className="flex-shrink-0 mt-0.5 text-amber-400/70 text-lg">⚖️</span>
+                                            <span className="flex-shrink-0 mt-0.5 text-amber-400/70 text-xl">❓</span>
                                             <div className="flex-1">
-                                                <p className="text-sm font-medium text-white/80 mb-1.5">
-                                                    Problema {agravio.numero || i + 1}: {agravio.titulo}
+                                                <p className="text-[10px] text-amber-400/40 uppercase tracking-wider mb-1">
+                                                    Problema jurídico {agravio.numero || i + 1}
                                                 </p>
-                                                <p className="text-[12px] text-white/40 leading-relaxed">
-                                                    {agravio.resumen ? (
-                                                        agravio.resumen.length > 200 ? agravio.resumen.substring(0, 200) + '...' : agravio.resumen
-                                                    ) : 'Sin resumen disponible'}
+                                                <p className="text-sm font-medium text-white/80 italic leading-relaxed mb-2">
+                                                    {agravio.interrogante || `¿${agravio.titulo}?`}
+                                                </p>
+                                                <p className="text-[11px] text-white/30">
+                                                    Derivado de: {agravio.titulo}
                                                 </p>
                                                 {agravio.articulos_mencionados && agravio.articulos_mencionados.length > 0 && (
                                                     <div className="mt-2 flex flex-wrap gap-1">
