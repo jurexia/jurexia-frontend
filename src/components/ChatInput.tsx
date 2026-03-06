@@ -318,111 +318,101 @@ ${draftRequest.descripcion}`;
                     <div className="mt-3 pt-3 border-t border-gray-100">
                         <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mr-1">Genios</span>
-                            {/* Genio Amparo — Active */}
-                            <button
-                                data-guide="genio-amparo"
-                                onClick={() => {
-                                    if (isGenioLocked && !isPro) return;
-                                    setActiveGenioId?.(activeGenioId === 'amparo' ? null : 'amparo');
-                                }}
-                                disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
-                                    ${(isGenioLocked && !isPro)
-                                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-70'
-                                        : (isCacheLoading && activeGenioId === 'amparo')
-                                            ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
-                                            : genioError && activeGenioId === 'amparo'
-                                                ? 'bg-red-50 text-red-600 border-red-400'
-                                                : activeGenioId === 'amparo'
-                                                    ? isCacheActive
-                                                        ? 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]'
-                                                        : 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400'
-                                                    : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
-                                    }`}
-                                title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro' : activeGenioId === 'amparo' ? 'Desactivar Genio Amparo' : 'Activar Genio Amparo'}
-                            >
-                                {(isGenioLocked && !isPro) ? (
-                                    <>
-                                        <Lock className="w-3 h-3" />
-                                        Amparo <span className="text-[9px] ml-0.5 font-normal">PRO</span>
-                                    </>
-                                ) : (isCacheLoading && activeGenioId === 'amparo') ? (
-                                    <>
-                                        <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                                        Activando...
-                                    </>
-                                ) : (genioError && activeGenioId === 'amparo') ? (
-                                    <>
-                                        <span className="text-red-500">&#x26A0;</span>
-                                        Error
-                                    </>
-                                ) : (
-                                    <>
-                                        <Brain className={`w-3 h-3 ${(activeGenioId === 'amparo' && isCacheActive) ? 'text-red-500' : ''}`} />
-                                        {(activeGenioId === 'amparo' && isCacheActive) ? 'Amparo ON' : 'Amparo'}
-                                    </>
-                                )}
-                            </button>
-
-                            {/* Genio Mercantil — Active */}
-                            <button
-                                data-guide="genio-mercantil"
-                                onClick={() => {
-                                    if (isGenioLocked && !isPro) return;
-                                    setActiveGenioId?.(activeGenioId === 'mercantil' ? null : 'mercantil');
-                                }}
-                                disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
-                                    ${(isGenioLocked && !isPro)
-                                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-70'
-                                        : (isCacheLoading && activeGenioId === 'mercantil')
-                                            ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
-                                            : genioError && activeGenioId === 'mercantil'
-                                                ? 'bg-red-50 text-red-600 border-red-400'
-                                                : activeGenioId === 'mercantil'
-                                                    ? isCacheActive
-                                                        ? 'bg-white text-emerald-600 border-emerald-500 animate-[pulseRedGlow_2s_infinite]'
-                                                        : 'bg-gradient-to-r from-emerald-700 to-teal-800 text-white border-emerald-400'
-                                                    : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300'
-                                    }`}
-                                title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro' : activeGenioId === 'mercantil' ? 'Desactivar Genio Mercantil' : 'Activar Genio Mercantil'}
-                            >
-                                {(isGenioLocked && !isPro) ? (
-                                    <>
-                                        <Lock className="w-3 h-3" />
-                                        Mercantil <span className="text-[9px] ml-0.5 font-normal">PRO</span>
-                                    </>
-                                ) : (isCacheLoading && activeGenioId === 'mercantil') ? (
-                                    <>
-                                        <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                                        Activando...
-                                    </>
-                                ) : (genioError && activeGenioId === 'mercantil') ? (
-                                    <>
-                                        <span className="text-red-500">&#x26A0;</span>
-                                        Error
-                                    </>
-                                ) : (
-                                    <>
-                                        <Scale className={`w-3 h-3 ${(activeGenioId === 'mercantil' && isCacheActive) ? 'text-emerald-500' : ''}`} />
-                                        {(activeGenioId === 'mercantil' && isCacheActive) ? 'Mercantil ON' : 'Mercantil'}
-                                    </>
-                                )}
-                            </button>
-
-                            <div className="h-4 w-[1px] bg-gray-200 mx-0.5" />
-
-                            {/* Coming Soon Genios */}
-                            {['Civil', 'Penal', 'Laboral', 'Fiscal', 'Adtvo'].map((name) => (
+                            {[
+                                {
+                                    id: 'amparo', label: 'Amparo',
+                                    activeOn: 'bg-white text-red-600 border-red-500 animate-[pulseRedGlow_2s_infinite]',
+                                    activating: 'bg-gradient-to-r from-purple-700 to-indigo-800 text-white border-purple-400',
+                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-purple-300',
+                                    spinnerBorder: 'border-purple-400', iconOn: 'text-red-500'
+                                },
+                                {
+                                    id: 'mercantil', label: 'Mercantil',
+                                    activeOn: 'bg-white text-emerald-600 border-emerald-500 animate-[pulseRedGlow_2s_infinite]',
+                                    activating: 'bg-gradient-to-r from-emerald-700 to-teal-800 text-white border-emerald-400',
+                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300',
+                                    spinnerBorder: 'border-emerald-400', iconOn: 'text-emerald-500'
+                                },
+                                {
+                                    id: 'civil', label: 'Civil',
+                                    activeOn: 'bg-white text-blue-600 border-blue-500 animate-[pulseRedGlow_2s_infinite]',
+                                    activating: 'bg-gradient-to-r from-blue-700 to-cyan-800 text-white border-blue-400',
+                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-blue-300',
+                                    spinnerBorder: 'border-blue-400', iconOn: 'text-blue-500'
+                                },
+                                {
+                                    id: 'penal', label: 'Penal',
+                                    activeOn: 'bg-white text-rose-600 border-rose-500 animate-[pulseRedGlow_2s_infinite]',
+                                    activating: 'bg-gradient-to-r from-rose-700 to-red-800 text-white border-rose-400',
+                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-rose-300',
+                                    spinnerBorder: 'border-rose-400', iconOn: 'text-rose-500'
+                                },
+                                {
+                                    id: 'laboral', label: 'Laboral',
+                                    activeOn: 'bg-white text-amber-600 border-amber-500 animate-[pulseRedGlow_2s_infinite]',
+                                    activating: 'bg-gradient-to-r from-amber-700 to-orange-800 text-white border-amber-400',
+                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-amber-300',
+                                    spinnerBorder: 'border-amber-400', iconOn: 'text-amber-500'
+                                },
+                                {
+                                    id: 'fiscal', label: 'Fiscal',
+                                    activeOn: 'bg-white text-violet-600 border-violet-500 animate-[pulseRedGlow_2s_infinite]',
+                                    activating: 'bg-gradient-to-r from-violet-700 to-purple-800 text-white border-violet-400',
+                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-violet-300',
+                                    spinnerBorder: 'border-violet-400', iconOn: 'text-violet-500'
+                                },
+                                {
+                                    id: 'administrativo', label: 'Adtvo',
+                                    activeOn: 'bg-white text-teal-600 border-teal-500 animate-[pulseRedGlow_2s_infinite]',
+                                    activating: 'bg-gradient-to-r from-teal-700 to-cyan-800 text-white border-teal-400',
+                                    idle: 'bg-white text-gray-500 border-gray-200 hover:border-teal-300',
+                                    spinnerBorder: 'border-teal-400', iconOn: 'text-teal-500'
+                                },
+                            ].map((g) => (
                                 <button
-                                    key={name}
-                                    disabled
-                                    className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium border border-dashed border-gray-200 text-gray-350 bg-gray-50 cursor-not-allowed opacity-60 flex-shrink-0"
-                                    title={`Genio ${name} - Próximamente`}
+                                    key={g.id}
+                                    data-guide={`genio-${g.id}`}
+                                    onClick={() => {
+                                        if (isGenioLocked && !isPro) return;
+                                        setActiveGenioId?.(activeGenioId === g.id ? null : g.id);
+                                    }}
+                                    disabled={isCacheLoading || (isGenioLocked && !isPro)}
+                                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all duration-300 border flex-shrink-0
+                                        ${(isGenioLocked && !isPro)
+                                            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-70'
+                                            : (isCacheLoading && activeGenioId === g.id)
+                                                ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
+                                                : genioError && activeGenioId === g.id
+                                                    ? 'bg-red-50 text-red-600 border-red-400'
+                                                    : activeGenioId === g.id
+                                                        ? isCacheActive
+                                                            ? g.activeOn
+                                                            : g.activating
+                                                        : g.idle
+                                        }`}
+                                    title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro' : activeGenioId === g.id ? `Desactivar Genio ${g.label}` : `Activar Genio ${g.label}`}
                                 >
-                                    <Brain className="w-3 h-3 text-gray-300" />
-                                    {name}
-                                    <span className="text-[8px] font-normal text-gray-400 ml-0.5">Prox.</span>
+                                    {(isGenioLocked && !isPro) ? (
+                                        <>
+                                            <Lock className="w-3 h-3" />
+                                            {g.label} <span className="text-[9px] ml-0.5 font-normal">PRO</span>
+                                        </>
+                                    ) : (isCacheLoading && activeGenioId === g.id) ? (
+                                        <>
+                                            <div className={`w-3 h-3 border-2 ${g.spinnerBorder} border-t-transparent rounded-full animate-spin`} />
+                                            Activando...
+                                        </>
+                                    ) : (genioError && activeGenioId === g.id) ? (
+                                        <>
+                                            <span className="text-red-500">&#x26A0;</span>
+                                            Error
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Brain className={`w-3 h-3 ${(activeGenioId === g.id && isCacheActive) ? g.iconOn : ''}`} />
+                                            {(activeGenioId === g.id && isCacheActive) ? `${g.label} ON` : g.label}
+                                        </>
+                                    )}
                                 </button>
                             ))}
                         </div>
