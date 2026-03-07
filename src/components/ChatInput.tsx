@@ -30,8 +30,8 @@ interface ChatInputProps {
     isLoading?: boolean;
     placeholder?: string;
     estado?: string;
-    activeGenioId?: string | null;
-    setActiveGenioId?: (genioId: string | null) => void;
+    activeGenios?: string[];
+    setActiveGenios?: (genios: string[]) => void;
     isCacheActive?: boolean;
     isCacheLoading?: boolean;
     genioError?: string | null;
@@ -43,8 +43,8 @@ export default function ChatInput({
     isLoading = false,
     placeholder = "Escribe tu consulta legal o sube tu documento para análisis",
     estado,
-    activeGenioId = null,
-    setActiveGenioId,
+    activeGenios = [],
+    setActiveGenios,
     isCacheActive = false,
     isCacheLoading = false,
     genioError = null,
@@ -398,47 +398,58 @@ ${draftRequest.descripcion}`;
                                     data-guide={`genio-${g.id}`}
                                     onClick={() => {
                                         if (isGenioLocked && !isPro) return;
-                                        setActiveGenioId?.(activeGenioId === g.id ? null : g.id);
+                                        if (!setActiveGenios) return;
+
+                                        if (activeGenios.includes(g.id)) {
+                                            setActiveGenios(activeGenios.filter(id => id !== g.id));
+                                        } else {
+                                            if (activeGenios.length >= 2) {
+                                                // Replace the oldest one (first one)
+                                                setActiveGenios([activeGenios[1], g.id]);
+                                            } else {
+                                                setActiveGenios([...activeGenios, g.id]);
+                                            }
+                                        }
                                     }}
                                     disabled={isCacheLoading || (isGenioLocked && !isPro)}
                                     className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all duration-300 border flex-shrink-0
                                         ${(isGenioLocked && !isPro)
                                             ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
-                                            : (isCacheLoading && activeGenioId === g.id)
+                                            : (isCacheLoading && activeGenios.includes(g.id))
                                                 ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
-                                                : genioError && activeGenioId === g.id
+                                                : genioError && activeGenios.includes(g.id)
                                                     ? 'bg-red-50 text-red-600 border-red-300'
-                                                    : activeGenioId === g.id
+                                                    : activeGenios.includes(g.id)
                                                         ? isCacheActive
                                                             ? g.activeOn
                                                             : g.activating
                                                         : g.idle
                                         }`}
-                                    style={(activeGenioId === g.id && isCacheActive && !(isGenioLocked && !isPro))
+                                    style={(activeGenios.includes(g.id) && isCacheActive && !(isGenioLocked && !isPro))
                                         ? { animation: 'genioActiveGlow 2.5s ease-in-out infinite' }
                                         : undefined}
-                                    title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro' : activeGenioId === g.id ? `Desactivar Genio ${g.label}` : `Activar Genio ${g.label}`}
+                                    title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro' : activeGenios.includes(g.id) ? `Desactivar Genio ${g.label}` : `Activar Genio ${g.label}`}
                                 >
                                     {(isGenioLocked && !isPro) ? (
                                         <>
                                             <Lock className="w-2.5 h-2.5" />
                                             <span className="text-gray-400">{g.label}</span>
                                         </>
-                                    ) : (isCacheLoading && activeGenioId === g.id) ? (
+                                    ) : (isCacheLoading && activeGenios.includes(g.id)) ? (
                                         <>
                                             <div className={`w-2.5 h-2.5 border-2 ${g.spinnerBorder} border-t-transparent rounded-full animate-spin`} />
                                             <span>Activando...</span>
                                         </>
-                                    ) : (genioError && activeGenioId === g.id) ? (
+                                    ) : (genioError && activeGenios.includes(g.id)) ? (
                                         <>
                                             <span className="text-red-500 text-[11px]">&#x26A0;</span>
                                             <span>Error</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${(activeGenioId === g.id && isCacheActive) ? g.dot + ' animate-pulse' : (activeGenioId === g.id ? 'bg-white' : g.dot + ' opacity-40')}`} />
-                                            <span className={(activeGenioId === g.id && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenioId === g.id ? '' : 'text-gray-600')}>
-                                                {(activeGenioId === g.id && isCacheActive) ? `${g.label} ON` : g.label}
+                                            <span className={`w-1.5 h-1.5 rounded-full ${(activeGenios.includes(g.id) && isCacheActive) ? g.dot + ' animate-pulse' : (activeGenios.includes(g.id) ? 'bg-white' : g.dot + ' opacity-40')}`} />
+                                            <span className={(activeGenios.includes(g.id) && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenios.includes(g.id) ? '' : 'text-gray-600')}>
+                                                {(activeGenios.includes(g.id) && isCacheActive) ? `${g.label} ON` : g.label}
                                             </span>
                                         </>
                                     )}

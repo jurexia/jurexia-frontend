@@ -59,8 +59,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Extract unique document IDs, thinking content, and create numbered references
-    const { processedContent, docIdMap, thinkingContent, citationMeta } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null }> } | null };
+    const { processedContent, docIdMap, thinkingContent, citationMeta, isSynthesizing } = useMemo(() => {
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null }> } | null, isSynthesizing: false };
 
         let content = message.content || '';
 
@@ -70,6 +70,16 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         if (thinkingMatch) {
             thinking = thinkingMatch[1];
             content = content.replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/, '').trim();
+        }
+
+        // Determine if DeepSeek synthesis is happening
+        let isSynthesizing = false;
+        if (content.includes('<!--SYNTHESIS:START-->')) {
+            isSynthesizing = !content.includes('<!--SYNTHESIS:END-->');
+            // Clean up synthesis markers AND the "Consultando a los genios..." text that might be inside
+            content = content.replace(/<!--SYNTHESIS:START-->[\s\S]*?<!--SYNTHESIS:END-->/g, '');
+            // Also clean up dangling start markers if it's still streaming
+            content = content.replace(/<!--SYNTHESIS:START-->[\s\S]*/, '');
         }
 
         // Create map to track citation numbers in order of FIRST APPEARANCE
@@ -182,7 +192,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             content = content.replace(/\n*<!-- CITATION_META:\{.*?\} -->/g, '').trim();
         }
 
-        return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta };
+        return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing };
     }, [message.content, isUser]);
 
     // Generate document header with logo (text-based for reliable export)
@@ -725,6 +735,13 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     dangerouslySetInnerHTML={{ __html: formatMarkdown(thinkingContent) }}
                                 />
                             </details>
+                        )}
+                        {/* Synthesis indicator (while DeepSeek is working) */}
+                        {isSynthesizing && isStreaming && (
+                            <div className="mx-4 mt-3 mb-1 px-3 py-2 text-xs font-medium text-blue-800/80 bg-blue-50/50 rounded-lg border border-blue-200/60 flex items-center gap-2 animate-pulse">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600/60" />
+                                <span>Los Genios están deliberando. Sintetizando respuesta final...</span>
+                            </div>
                         )}
                         <div
                             ref={contentRef}

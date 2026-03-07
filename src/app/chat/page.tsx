@@ -53,7 +53,7 @@ export default function ChatPage() {
     } | null>(null);
 
     // Genio Multi-Domain states
-    const [activeGenioId, setActiveGenioId] = useState<string | null>(null);
+    const [activeGenios, setActiveGenios] = useState<string[]>([]);
     const [isCacheActive, setIsCacheActive] = useState(false);
     const [isCacheLoading, setIsCacheLoading] = useState(false);
     const [genioError, setGenioError] = useState<string | null>(null);
@@ -78,7 +78,7 @@ export default function ChatPage() {
         cacheTimerRef.current = setTimeout(() => {
             setIsCacheActive(false);
             setIsCacheLoading(false);
-            setActiveGenioId(null);
+            setActiveGenios([]);
         }, CACHE_TTL_MS);
     }, []);
 
@@ -89,21 +89,21 @@ export default function ChatPage() {
     }, [resetCacheTimer]);
 
     // When user toggles a Genio — calls /genio/activate with genio_id
-    const handleToggleGenio = useCallback(async (genioId: string | null) => {
-        // If same genio is clicked again, deactivate it
-        if (genioId === activeGenioId) {
-            genioId = null;
-        }
-        setActiveGenioId(genioId);
+    const handleToggleGenios = useCallback(async (genios: string[]) => {
+        setActiveGenios(genios);
         setGenioError(null);
-        if (genioId) {
+
+        // If there are any genios selected, activate the most recently added one
+        // Note: For now, we only activate caching for the FIRST (oldest) genio due to API limitations
+        if (genios.length > 0) {
+            const primaryGenioId = genios[0];
             setIsCacheLoading(true);
             try {
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
                 const res = await fetch(`${API_URL}/genio/activate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ genio_id: genioId }),
+                    body: JSON.stringify({ genio_id: primaryGenioId }),
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -111,19 +111,18 @@ export default function ChatPage() {
                     setIsCacheLoading(false);
                     resetCacheTimer();
                 } else {
-                    const errorMsg = data.last_error || `No se pudo activar el Genio ${genioId}`;
+                    const errorMsg = data.last_error || `No se pudo activar el Genio principal`;
                     setGenioError(errorMsg);
                     setIsCacheLoading(false);
-                    setActiveGenioId(null);
+                    setActiveGenios(genios.slice(1)); // Remove the failed one
                     console.error('Cache activation failed:', data);
                     if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
                     genioErrorTimerRef.current = setTimeout(() => setGenioError(null), 5000);
                 }
             } catch (err) {
                 console.error('Failed to activate Genio:', err);
-                setGenioError(`Error de conexión al activar Genio ${genioId}`);
+                setGenioError(`Error de conexión al activar Genio`);
                 setIsCacheLoading(false);
-                setActiveGenioId(null);
                 if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
                 genioErrorTimerRef.current = setTimeout(() => setGenioError(null), 5000);
             }
@@ -132,7 +131,7 @@ export default function ChatPage() {
             setIsCacheLoading(false);
             if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);
         }
-    }, [resetCacheTimer, activeGenioId]);
+    }, [resetCacheTimer]);
 
     // suggestion rotation timer
     useEffect(() => {
@@ -167,7 +166,7 @@ export default function ChatPage() {
         topK: 30,
         fuero: selectedFuero || undefined,
         onQuotaExceeded: handleQuotaExceeded,
-        genioId: activeGenioId,
+        genioIds: activeGenios,
         onCacheActive: handleCacheActive,
     });
 
@@ -397,8 +396,8 @@ export default function ChatPage() {
                                     onSubmit={handleSendMessage}
                                     placeholder="Escribe tu consulta legal..."
                                     estado={selectedEstado}
-                                    activeGenioId={activeGenioId}
-                                    setActiveGenioId={handleToggleGenio}
+                                    activeGenios={activeGenios}
+                                    setActiveGenios={handleToggleGenios}
                                     isCacheActive={isCacheActive}
                                     isCacheLoading={isCacheLoading}
                                     genioError={genioError}
@@ -467,8 +466,8 @@ export default function ChatPage() {
                             onSubmit={handleSendMessage}
                             isLoading={isLoading}
                             estado={selectedEstado}
-                            activeGenioId={activeGenioId}
-                            setActiveGenioId={handleToggleGenio}
+                            activeGenios={activeGenios}
+                            setActiveGenios={handleToggleGenios}
                             isCacheActive={isCacheActive}
                             isCacheLoading={isCacheLoading}
                             genioError={genioError}
