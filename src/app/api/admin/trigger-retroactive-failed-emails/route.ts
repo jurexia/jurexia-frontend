@@ -96,7 +96,8 @@ export async function GET(req: NextRequest) {
     try {
         // Authenticate admin using getToken
         const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-        if (!token?.email || token.email !== process.env.ADMIN_EMAIL) {
+        const adminEmail = process.env.ADMIN_EMAIL || 'administracion@iurexia.com';
+        if (!token?.email || token.email !== adminEmail) {
             return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
         }
 
