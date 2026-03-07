@@ -80,16 +80,16 @@ export default function RegistroPage() {
                     <h1 className="font-serif text-2xl font-medium text-charcoal-900 text-center mb-2">
                         Crea tu cuenta
                     </h1>
-                    <p className="text-charcoal-500 text-center mb-6">
-                        Comienza con 3 consultas gratis
-                    </p>
+                    <h1 className="text-4xl font-serif text-white mb-4">
+                        Comienza con 5 consultas gratis
+                    </h1>
 
                     {/* Benefits */}
                     <div className="bg-green-50 rounded-xl p-4 mb-6">
                         <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm text-green-700">
-                                <Check className="w-4 h-4" />
-                                <span>3 consultas mensuales gratis</span>
+                            <div className="flex items-center gap-3 text-white/80">
+                                <Check className="w-5 h-5 text-accent-gold flex-shrink-0" />
+                                <span>5 consultas mensuales gratis</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-green-700">
                                 <Check className="w-4 h-4" />
