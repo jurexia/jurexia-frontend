@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Check, Zap, Crown, Star, Calendar, Loader2 } from 'lucide-react';
+import { Scale, ArrowRight, Check, Zap, Crown, Star, Calendar, Loader2, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
@@ -37,7 +37,7 @@ export default function PreciosPage() {
             {/* Pricing Cards - Row 1: Gratuito, Pro Mensual, Pro Anual */}
             <section className="py-8 px-4 overflow-hidden">
                 <div className="max-w-7xl mx-auto">
-                    <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <AnimateOnScroll delay={0}>
                             <PricingCard
                                 icon={<Zap className="w-6 h-6" />}
@@ -52,7 +52,7 @@ export default function PreciosPage() {
                                     "Búsqueda con IA en legislación mexicana verificada",
                                     "Filtros de jurisdicción",
                                     "Acceso a base documental completa",
-                                    "Sin acceso a Genio Amparo"
+                                    <span className="text-gray-400">Sin acceso a Genio Amparo ni Análisis</span>
                                 ]}
                                 buttonText="Comenzar Gratis"
                                 buttonHref="/chat"
@@ -60,7 +60,29 @@ export default function PreciosPage() {
                             />
                         </AnimateOnScroll>
 
-                        <AnimateOnScroll delay={0.15}>
+                        <AnimateOnScroll delay={0.1}>
+                            <PricingCard
+                                icon={<ShieldCheck className="w-6 h-6" />}
+                                name="Plan Básico"
+                                price="$79"
+                                originalPrice="$149"
+                                period="MXN/mes"
+                                description="Búsqueda RAG rápida y económica"
+                                features={[
+                                    "70 consultas/mes",
+                                    "Búsqueda inteligente RAG en base de datos",
+                                    "Filtros de jurisdicción",
+                                    "Acceso a base documental completa",
+                                    <span className="text-gray-500">Sin acceso a Inteligencia Avanzada</span>
+                                ]}
+                                buttonText="Elegir Básico"
+                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_BASICO_MONTHLY}
+                                highlighted={false}
+                                isBasic={true}
+                            />
+                        </AnimateOnScroll>
+
+                        <AnimateOnScroll delay={0.2}>
                             <PricingCard
                                 icon={<Crown className="w-6 h-6" />}
                                 name="Plan Pro"
@@ -70,10 +92,10 @@ export default function PreciosPage() {
                                 description="Para profesionales que necesitan potencia"
                                 features={[
                                     "140 consultas/mes",
-                                    "Genio Amparo — IA avanzada en materia de amparo",
-                                    "Registra tu cédula para conectar con clientes de tu zona",
-                                    "Búsqueda con IA en legislación mexicana verificada y en constante actualización",
-                                    "Análisis de documentos (auditoría y mejoras)",
+                                    <span className="text-accent-gold font-medium">Genio Amparo — IA avanzada en materia de amparo</span>,
+                                    <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
+                                    "Registra tu cédula para conectar clientes",
+                                    "Búsqueda con IA verificada en constante actualización",
                                     "Filtros por entidad federativa + marco federal",
                                     "Soporte prioritario"
                                 ]}
@@ -94,11 +116,11 @@ export default function PreciosPage() {
                                 description="Máximo ahorro por pago adelantado"
                                 features={[
                                     "140 consultas/mes (1,680/año)",
-                                    "Registra tu cédula para conectar con clientes de tu zona",
-                                    "Todo lo del Plan Pro incluido",
+                                    <span className="text-charcoal-700 font-medium">Todo lo del Plan Pro incluido:</span>,
+                                    <span className="text-accent-gold font-medium ml-2">— Genio Amparo</span>,
+                                    <span className="text-accent-gold font-medium ml-2">— Análisis de Documentos</span>,
                                     "Ahorro de $910 MXN al año",
                                     "Precio fijo garantizado",
-                                    "Soporte prioritario"
                                 ]}
                                 buttonText="Ahorrar con Plan Anual"
                                 priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL}
@@ -119,12 +141,11 @@ export default function PreciosPage() {
                                 period="MXN/mes"
                                 description="Ideal para despachos y corporativos"
                                 features={[
-                                    "560 consultas/mes — ideal para despachos y corporativos",
-                                    "Genio Amparo — IA avanzada en materia de amparo",
-                                    "Registra tu cédula para conectar con clientes de tu zona",
-                                    "Todo lo del Plan Pro incluido",
+                                    "560 consultas/mes — ideal para despachos",
+                                    <span className="text-accent-gold font-medium">Genio Amparo — IA avanzada en materia de amparo</span>,
+                                    <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
+                                    "Registra tu cédula para conectar clientes",
                                     "Consulta personalizada con equipo legal de Iurexia (vía correo)",
-                                    "Asesoría legal sobre estrategia (un abogado te contestará a la brevedad)",
                                     "Soporte VIP dedicado"
                                 ]}
                                 buttonText="Elegir Platinum"
@@ -145,12 +166,11 @@ export default function PreciosPage() {
                                 description="Máximo ahorro para despachos y corporativos"
                                 features={[
                                     "560 consultas/mes (6,720/año)",
-                                    "Registra tu cédula para conectar con clientes de tu zona",
-                                    "Todo lo del Plan Platinum incluido",
-                                    "Asesoría legal personalizada continua (vía correo)",
+                                    <span className="text-charcoal-700 font-medium">Todo lo del Plan Platinum incluido:</span>,
+                                    <span className="text-accent-gold font-medium ml-2">— Genio Amparo</span>,
+                                    <span className="text-accent-gold font-medium ml-2">— Análisis de Documentos</span>,
                                     "Ahorro de $4,810 MXN al año",
                                     "Precio fijo garantizado",
-                                    "Soporte VIP dedicado"
                                 ]}
                                 buttonText="Ahorrar con Platinum Anual"
                                 priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_ANNUAL}
@@ -204,25 +224,24 @@ export default function PreciosPage() {
                                     <tr className="border-b border-gray-200">
                                         <th className="text-left py-4 px-3 font-medium text-charcoal-900">Característica</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900">Gratuito</th>
+                                        <th className="text-center py-4 px-3 font-medium text-charcoal-900">Básico</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-accent-brown/5">Pro</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900">Pro Anual</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-gradient-to-r from-amber-50 to-yellow-50">Platinum</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <ComparisonRow feature="Consultas/mes" free="5" pro="140" proAnual="140" platinum="560" />
-                                    <ComparisonRow feature="Búsqueda con IA verificada" free="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Filtros jurisdiccionales" free="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Base documental completa" free="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Directorio de abogados (Connect)" free="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Registro connect para captar clientes" free="—" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Análisis de documentos" free="—" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Auditoría de demandas" free="—" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Genio Amparo (IA avanzada)" free="—" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Sugerencias con fundamento" free="—" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Soporte prioritario" free="—" pro="✓" proAnual="✓" platinum="VIP" />
-                                    <ComparisonRow feature="Consulta con equipo legal (vía correo)" free="—" pro="—" proAnual="—" platinum="✓" />
-                                    <ComparisonRow feature="Asesoría legal sobre estrategia" free="—" pro="—" proAnual="—" platinum="✓" />
+                                    <ComparisonRow feature="Consultas/mes" free="5" basico="70" pro="140" proAnual="140" platinum="560" />
+                                    <ComparisonRow feature="Búsqueda con IA verificada" free="✓" basico="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Filtros jurisdiccionales" free="✓" basico="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Base documental completa" free="✓" basico="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Directorio de abogados (Connect)" free="✓" basico="✓" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Registro connect para captar clientes" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" />
+                                    <ComparisonRow feature="Análisis y auditoría de documentos" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
+                                    <ComparisonRow feature="Genio Amparo (IA avanzada)" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
+                                    <ComparisonRow feature="Sugerencias con fundamento" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
+                                    <ComparisonRow feature="Soporte prioritario" free="—" basico="Estándar" pro="✓" proAnual="✓" platinum="VIP" />
+                                    <ComparisonRow feature="Consulta legal estratégica (vía correo)" free="—" basico="—" pro="—" proAnual="—" platinum="✓" />
                                 </tbody>
                             </table>
                         </div>
@@ -324,6 +343,7 @@ function PricingCard({
     priceId,
     highlighted = false,
     isPlatinum = false,
+    isBasic = false,
     badge
 }: {
     icon: React.ReactNode;
@@ -332,15 +352,17 @@ function PricingCard({
     originalPrice: string | null;
     period: string;
     description: string;
-    features: string[];
+    features: React.ReactNode[];
     buttonText: string;
     buttonHref?: string;
     priceId?: string;
     highlighted?: boolean;
     isPlatinum?: boolean;
+    isBasic?: boolean;
     badge?: string;
 }) {
     const [loading, setLoading] = useState(false);
+    const [showWarning, setShowWarning] = useState(false);
     const { user } = useAuth();
 
     const handleSubscribe = async () => {
@@ -356,6 +378,11 @@ function PricingCard({
             alert('Por favor inicia sesión para suscribirte.');
             window.location.href = '/login?redirect=/precios';
             return;
+        }
+
+        if (isBasic && !showWarning) {
+            setShowWarning(true);
+            return; // Detener flujo para mostrar modal
         }
 
         setLoading(true);
@@ -484,15 +511,55 @@ function PricingCard({
                     {buttonText}
                 </Link>
             )}
+
+            {/* Modal Warning Básico */}
+            {showWarning && isBasic && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-in fade-in zoom-in duration-200">
+                        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="w-8 h-8 text-amber-600" />
+                        </div>
+                        <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                            Aviso Importante
+                        </h3>
+                        <p className="text-charcoal-600 mb-6 text-sm">
+                            El <strong>Plan Básico</strong> es excelente para búsquedas rápidas en nuestra base de datos, pero <span className="font-semibold text-charcoal-900">NO incluye el acceso a Genio Amparo ni las Auditorías de Sentencias.</span>
+                            <br /><br />
+                            Si necesitas razonamiento jurídico avanzado, te recomendamos el <strong className="text-accent-gold">Plan Pro</strong>.
+                        </p>
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={handleSubscribe}
+                                disabled={loading}
+                                className="w-full px-4 py-2 border border-charcoal-200 text-charcoal-700 rounded-xl hover:bg-gray-50 transition-colors font-medium disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Procesando...' : 'Continuar con Plan Básico'}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowWarning(false);
+                                    // Could theoretically scroll or click PRO button here
+                                }}
+                                disabled={loading}
+                                className="w-full px-4 py-2 bg-charcoal-900 text-white rounded-xl hover:bg-charcoal-800 transition-colors font-medium"
+                            >
+                                Cambiar a Plan Pro
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-function ComparisonRow({ feature, free, pro, proAnual, platinum }: { feature: string; free: string; pro: string; proAnual: string; platinum: string }) {
+function ComparisonRow({ feature, free, basico, pro, proAnual, platinum, goldFeature = false }: { feature: string; free: string; basico: string; pro: string; proAnual: string; platinum: string; goldFeature?: boolean }) {
     return (
         <tr className="border-b border-gray-100">
-            <td className="py-4 px-3 text-charcoal-700">{feature}</td>
+            <td className={`py-4 px-3 ${goldFeature ? 'text-accent-gold font-medium' : 'text-charcoal-700'}`}>{feature}</td>
             <td className="py-4 px-3 text-center text-charcoal-600">{free}</td>
+            <td className="py-4 px-3 text-center text-charcoal-600 font-medium bg-stone-50/50">{basico}</td>
             <td className="py-4 px-3 text-center text-charcoal-900 bg-accent-brown/5 font-medium">{pro}</td>
             <td className="py-4 px-3 text-center text-charcoal-600">{proAnual}</td>
             <td className="py-4 px-3 text-center text-charcoal-900 bg-gradient-to-r from-amber-50 to-yellow-50 font-medium">{platinum}</td>

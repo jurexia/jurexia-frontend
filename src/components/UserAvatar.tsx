@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 
 const planColors: Record<string, { bg: string; text: string; label: string }> = {
     gratuito: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Gratuito' },
+    basico_monthly: { bg: 'bg-stone-100', text: 'text-stone-700', label: 'Básico' },
     pro_monthly: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Pro' },
     pro_annual: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Pro Anual' },
     platinum_monthly: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum' },

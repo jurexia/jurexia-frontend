@@ -47,6 +47,19 @@ export const PLANS = {
             'Acceso a base documental completa'
         ]
     },
+    basico_monthly: {
+        name: 'Plan Básico',
+        get priceId() { return getPriceId('STRIPE_PRICE_BASICO_MONTHLY'); },
+        price: 79,
+        currency: 'MXN',
+        interval: 'month' as const,
+        queryLimit: 70,
+        features: [
+            '70 consultas/mes',
+            'Búsqueda inteligente RAG',
+            'Soporte estándar',
+        ]
+    },
     pro_monthly: {
         name: 'Plan Pro',
         get priceId() { return getPriceId('STRIPE_PRICE_PRO_MONTHLY'); },

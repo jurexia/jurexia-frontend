@@ -29,6 +29,7 @@ function getSupabaseAdmin() {
 function mapPlanIdToSubscriptionType(planId: PlanId): PlanType {
     const mapping: Record<PlanId, PlanType> = {
         gratuito: 'gratuito',
+        basico_monthly: 'basico_monthly',
         pro_monthly: 'pro_monthly',
         pro_annual: 'pro_annual',
         platinum_monthly: 'platinum_monthly',
