@@ -159,6 +159,9 @@ export async function GET(req: NextRequest) {
             } else {
                 results.push({ email: targetEmail, attemptCount, status: 'sent' });
             }
+
+            // Respetar el Rate Limit de Resend (2 req/sec) para evitar error 429
+            await new Promise(resolve => setTimeout(resolve, 600));
         }
 
         return NextResponse.json({ success: true, processedCount: invoices.data.length, results });
