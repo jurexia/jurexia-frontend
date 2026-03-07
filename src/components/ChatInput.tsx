@@ -239,6 +239,32 @@ ${draftRequest.descripcion}`;
 
     return (
         <>
+            <style>{`
+                @keyframes textMirror {
+                    0% { background-position: -150% center; }
+                    100% { background-position: 150% center; }
+                }
+                @keyframes iconMirror {
+                    0% { color: #111111; }
+                    40% { color: #111111; }
+                    50% { color: #c9a962; }
+                    60% { color: #111111; }
+                    100% { color: #111111; }
+                }
+                .mirror-genios-text {
+                    background: linear-gradient(
+                        110deg,
+                        #111111 40%,
+                        #c9a962 50%,
+                        #111111 60%
+                    );
+                    background-size: 200% auto;
+                    color: transparent;
+                    -webkit-background-clip: text;
+                    background-clip: text;
+                    animation: textMirror 3s ease-in-out infinite alternate;
+                }
+            `}</style>
             <div className="w-full max-w-3xl mx-auto relative z-20">
 
 
