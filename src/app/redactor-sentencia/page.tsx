@@ -443,6 +443,8 @@ export default function RedactorSentenciaPage() {
             formData.append('doc1', files[0]!);
             formData.append('doc2', files[1]!);
 
+            setStreamingPhase({ step: 'Iniciando conexión segura...', progress: 5 })
+
             const response = await fetch(`${API_URL}/redactor/v2/analyze`, {
                 method: 'POST',
                 body: formData,
@@ -453,7 +455,49 @@ export default function RedactorSentenciaPage() {
                 throw new Error(errorData.detail || `Error ${response.status}`);
             }
 
-            const data = await response.json();
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error('No se pudo iniciar el stream');
+
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let data: any = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                let eventType = '';
+                for (const line of lines) {
+                    if (line.startsWith('event: ')) {
+                        eventType = line.slice(7).trim();
+                    } else if (line.startsWith('data: ') && eventType) {
+                        try {
+                            const parsedData = JSON.parse(line.slice(6));
+                            if (eventType === 'phase') {
+                                setStreamingPhase({
+                                    step: parsedData.step,
+                                    progress: parsedData.progress,
+                                });
+                            } else if (eventType === 'done') {
+                                data = parsedData;
+                            } else if (eventType === 'error') {
+                                throw new Error(parsedData.message);
+                            }
+                        } catch (parseErr: any) {
+                            if (parseErr.message && !parseErr.message.includes('JSON')) {
+                                throw parseErr;
+                            }
+                        }
+                        eventType = '';
+                    }
+                }
+            }
+
+            if (!data) throw new Error("Respuesta incompleta del servidor");
 
             // Map v2 response to existing AnalysisData format
             const analysisCompat: AnalysisData = {
@@ -1121,34 +1165,32 @@ export default function RedactorSentenciaPage() {
                 {/* PHASE 2.5: ANALYZING                                        */}
                 {/* ═══════════════════════════════════════════════════════════ */}
                 {phase === 'analyzing' && (
-                    <div className="max-w-2xl mx-auto text-center py-16">
-                        <div className="relative w-24 h-24 mx-auto mb-8">
-                            <div className="absolute inset-0 rounded-full bg-[#c9a962]/10 animate-ping" />
-                            <div className="absolute inset-2 rounded-full bg-[#c9a962]/5 animate-pulse" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <Search className="w-10 h-10 text-[#c9a962] animate-pulse" />
+                    <div className="max-w-4xl mx-auto py-16">
+                        <div className="text-center mb-8">
+                            <div className="relative w-20 h-20 mx-auto mb-6">
+                                <div className="absolute inset-0 rounded-full bg-[#c9a962]/10 animate-ping" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <Search className="w-9 h-9 text-[#c9a962] animate-pulse" />
+                                </div>
                             </div>
+                            <h2 className="font-serif text-2xl font-medium text-white mb-2">
+                                Analizando expediente...
+                            </h2>
                         </div>
-                        <h2 className="font-serif text-2xl font-medium text-white mb-2">
-                            Analizando expediente...
-                        </h2>
-                        <p className="text-sm text-gray-400 mb-4">
-                            Iurexia está leyendo tus documentos e identificando los problemas jurídicos
-                        </p>
-                        <div className="space-y-2 text-left max-w-sm mx-auto">
-                            <div className="flex items-center gap-3 opacity-100">
-                                <Loader2 className="w-5 h-5 text-[#c9a962] animate-spin flex-shrink-0" />
-                                <span className="text-sm text-white/70">🔬 Extrayendo datos estructurados...</span>
+                        {streamingPhase && (
+                            <div className="mb-6 max-w-lg mx-auto">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm text-white/60">{streamingPhase.step}</span>
+                                    <span className="text-xs text-[#c9a962] font-medium">{streamingPhase.progress}%</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-[#c9a962] to-[#8b7355] rounded-full transition-all duration-1000 ease-out"
+                                        style={{ width: `${streamingPhase.progress}%` }}
+                                    />
+                                </div>
                             </div>
-                            <div className="flex items-center gap-3 opacity-40">
-                                <div className="w-5 h-5 rounded-full border border-white/10 flex-shrink-0" />
-                                <span className="text-sm text-white/25">📋 Identificando {term.pluralLower} individuales...</span>
-                            </div>
-                            <div className="flex items-center gap-3 opacity-40">
-                                <div className="w-5 h-5 rounded-full border border-white/10 flex-shrink-0" />
-                                <span className="text-sm text-white/25">⚖️ Generando resumen del caso...</span>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 )}
 
@@ -1602,14 +1644,10 @@ export default function RedactorSentenciaPage() {
                             </div>
                         </details>
 
-                        {/* Sentencia content */}
-                        <div className="rounded-2xl border border-white/[0.08] bg-[#141414] overflow-hidden">
-                            <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
-                                <span className="text-sm font-medium text-[#c9a962]/70">Proyecto de Sentencia</span>
-                                <span className="text-xs text-gray-500 font-mono">{selectedTipo?.id}</span>
-                            </div>
-                            <div className="px-6 py-6 max-h-[70vh] overflow-y-auto">
-                                <pre className="whitespace-pre-wrap text-sm text-white/80 leading-relaxed font-serif">
+                        {/* Minimalist Sentencia content */}
+                        <div className="max-w-3xl mx-auto rounded-none bg-transparent">
+                            <div className="pt-8 pb-16">
+                                <pre className="whitespace-pre-wrap text-[18px] text-white leading-relaxed font-serif">
                                     {result}
                                 </pre>
                             </div>
