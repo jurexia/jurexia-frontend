@@ -296,7 +296,22 @@ export default function AdminPage() {
             const res = await fetch('/api/admin/trigger-retroactive-failed-emails');
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Error al enviar correos');
-            alert(`Éxito: Se procesaron ${data.processedCount} facturas.`);
+
+            const sent = data.results?.filter((r: any) => r.status === 'sent') || [];
+            const errors = data.results?.filter((r: any) => r.status === 'error') || [];
+            const skipped = data.results?.filter((r: any) => r.status === 'skipped') || [];
+
+            let msg = `Proceso finalizado. Se encontraron ${data.processedCount} facturas fallidas.\n\n`;
+            msg += `✅ Correos enviados con éxito: ${sent.length}\n`;
+            msg += `⏭️ Omitidas (sin email): ${skipped.length}\n`;
+
+            if (errors.length > 0) {
+                msg += `❌ Errores de envío en Resend: ${errors.length}\n`;
+                msg += `Primer error detectado: ${errors[0].error}\n`;
+                alert(msg + '\nPor favor comparte esta información con tu equipo técnico.');
+            } else {
+                alert(msg);
+            }
         } catch (e: any) {
             setError(e.message);
         } finally {
