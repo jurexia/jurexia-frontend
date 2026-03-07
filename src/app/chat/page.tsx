@@ -372,7 +372,9 @@ export default function ChatPage() {
                                         </span>
                                     </Link>
                                 </div>
-                                <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">¿En qué te puedo ayudar?</h2>
+                                <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">
+                                    ¿En qué te puedo ayudar{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}?
+                                </h2>
 
                                 {/* Elegant Rotating Suggestions */}
                                 <div className="h-16 mb-8 flex items-center justify-center overflow-hidden">
