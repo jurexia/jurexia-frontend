@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown, BookOpen, FileText } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown, BookOpen, FileText, Plus } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
@@ -341,6 +341,11 @@ export default function ChatPage() {
             <div className="flex flex-col h-screen md:ml-72">
                 <header className="fixed top-0 left-0 right-0 md:left-72 z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 h-14">
                     <div className="max-w-4xl mx-auto px-4 h-full flex items-center justify-end gap-2">
+                        <Link href="/salvame" className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-charcoal-900 text-white text-xs font-bold hover:bg-charcoal-800 shadow-sm tracking-wide">
+                            <Plus className="w-4 h-4 text-red-600 stroke-[4]" />
+                            <span className="hidden sm:inline">SALVAME</span>
+                        </Link>
+
                         <Link href="/normativa" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-charcoal-900 text-white text-xs font-semibold hover:bg-charcoal-800 shadow-sm">
                             <BookOpen className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Normativa</span>
