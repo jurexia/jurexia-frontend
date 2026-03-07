@@ -4,42 +4,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual de Usuario Pro - Iurexia</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap"
+    <title>Manual de Uso Completo - Iurexia</title>
+    <!-- Ya no cargamos Inter, usaremos Arial -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --charcoal: #1a1a1a;
+            --charcoal: #111111;
+            /* Más oscuro, contraste fuerte */
             --charcoal-light: #2c2c2c;
             --gold: #c9a962;
-            --cream: #f8f5f0;
+            --cream: #f4f1ea;
+            /* Ligeramente más contrastado */
             --white: #ffffff;
-            --gray-text: #666666;
-            --border: #e2dcd0;
+            --gray-text: #444444;
+            /* Más oscuro */
+            --border: #dcd6c8;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             background-color: var(--cream);
             color: var(--charcoal);
             line-height: 1.6;
             margin: 0;
             padding: 0;
-            /* To make it print friendly */
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
 
-        /* Container designed for A4 constraints */
         .container {
-            max-width: 900px;
+            max-width: 1000px;
+            /* Un poco más ancho para albergar imágenes grandes */
             margin: 0 auto;
-            padding: 40px;
+            padding: 40px 50px;
             background-color: var(--white);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
         }
 
+        /* 
+           Tonos bicolores Iurexia (Dorado y Negro). 
+           Usaremos span con clase 'gold-text' y 'black-text' para lograr el efecto.
+        */
         h1,
         h2,
         h3 {
@@ -48,61 +54,94 @@
             margin-top: 0;
         }
 
+        .gold-text {
+            color: var(--gold);
+        }
+
+        .black-text {
+            color: var(--charcoal);
+        }
+
         h1 {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             text-align: center;
-            border-bottom: 2px solid var(--gold);
-            padding-bottom: 20px;
-            margin-bottom: 40px;
+            border-bottom: 3px solid var(--charcoal);
+            padding-bottom: 25px;
+            margin-bottom: 45px;
+            letter-spacing: -0.5px;
         }
 
         h2 {
-            font-size: 1.8rem;
-            color: var(--gold);
-            margin-top: 50px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
+            font-size: 2rem;
+            margin-top: 60px;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 12px;
         }
 
         h3 {
-            font-size: 1.3rem;
-            margin-top: 30px;
+            font-size: 1.4rem;
+            margin-top: 35px;
+            color: var(--charcoal);
+            border-left: 4px solid var(--gold);
+            padding-left: 10px;
         }
 
         p {
             color: var(--charcoal-light);
-            font-size: 1.05rem;
+            font-size: 1.1rem;
+            /* Un poco más grande para mejor lectura en Arial */
             margin-bottom: 20px;
         }
 
         .highlight {
-            color: var(--gold);
-            font-weight: 600;
+            color: var(--charcoal);
+            background-color: rgba(201, 169, 98, 0.15);
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
-        /* Layout grids */
+        /* Enlaces o botones simulados */
+        .btn-sim {
+            background-color: var(--charcoal);
+            color: var(--gold);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid var(--gold);
+        }
+
+        /* Layouts */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            gap: 40px;
             align-items: start;
             margin-bottom: 40px;
         }
 
+        /* Para dar más espacio a las imágenes cuando están al lado de texto */
         .grid-2-image-right {
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 30px;
+            grid-template-columns: 0.8fr 1.2fr;
+            /* Imagen más grande */
+            gap: 40px;
             align-items: center;
             margin-bottom: 40px;
         }
 
         .img-container {
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            background-color: var(--cream);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            background-color: var(--charcoal);
+            /* Fondo oscuro para contraste */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -115,24 +154,36 @@
             display: block;
         }
 
-        /* Info Boxes */
+        /* Imágenes gigantes (para redactar y funciones de escrito) */
+        .img-large {
+            max-width: 90%;
+            /* Mucho más amplias */
+            margin: 0 auto;
+        }
+
         .info-box {
-            background-color: #faf9f7;
-            border-left: 4px solid var(--gold);
-            padding: 20px 25px;
+            background-color: var(--charcoal);
+            color: var(--white);
+            border-left: 5px solid var(--gold);
+            padding: 25px 30px;
             border-radius: 0 12px 12px 0;
-            margin: 30px 0;
+            margin: 35px 0;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
         }
 
         .info-box strong {
             display: block;
             font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: var(--charcoal);
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            color: var(--gold);
         }
 
-        /* Step lists */
+        .info-box p {
+            color: var(--cream);
+            font-size: 1.1rem;
+        }
+
         .step-list {
             list-style: none;
             padding: 0;
@@ -141,64 +192,95 @@
         .step-list li {
             position: relative;
             padding-left: 45px;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            background-color: #faf9f7;
+            padding: 20px 20px 20px 55px;
+            border-radius: 8px;
+            border: 1px solid #eee;
         }
 
         .step-list li::before {
             content: "✦";
             position: absolute;
-            left: 0;
-            top: 0;
+            left: 20px;
+            top: 20px;
             color: var(--gold);
             font-size: 1.5rem;
             line-height: 1;
         }
 
         .step-list h4 {
-            margin: 0 0 5px 0;
-            font-size: 1.1rem;
+            margin: 0 0 8px 0;
+            font-size: 1.15rem;
             color: var(--charcoal);
+            font-weight: bold;
         }
 
         .step-list p {
             margin: 0;
-            font-size: 0.95rem;
-            color: var(--gray-text);
+            font-size: 1.05rem;
+            color: var(--charcoal-light);
         }
 
-        /* Sub-grid for many small screenshots */
+        /* Galería para los escritos: Ahora solo 2 columnas para que sean muy grandes */
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 40px;
         }
 
         .gallery-item {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
+            background-color: #fcfbf9;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
         }
 
         .gallery-item span {
-            font-size: 0.9rem;
-            font-weight: 600;
+            font-size: 1.1rem;
+            font-weight: bold;
             color: var(--charcoal);
             text-align: center;
+            font-family: 'Playfair Display', serif;
         }
 
-        /* Arrow pointers decoration */
-        .pointer-text {
-            background-color: var(--charcoal);
+        /* Tips section */
+        .tips-container {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+            padding: 35px;
+            border-radius: 12px;
+            color: white;
+            margin-top: 30px;
+            border-top: 4px solid var(--gold);
+        }
+
+        .tips-container h3 {
             color: var(--gold);
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            border-left: none;
+            padding-left: 0;
+            margin-top: 0;
+        }
+
+        .tips-container p {
+            color: #ddd;
+        }
+
+        .tips-container ul {
+            padding-left: 20px;
+        }
+
+        .tips-container li {
+            margin-bottom: 15px;
+            color: #efefef;
+            font-size: 1.05rem;
+        }
+
+        .tips-container li strong {
+            color: var(--gold);
         }
 
         @media print {
@@ -209,6 +291,7 @@
             .container {
                 box-shadow: none;
                 padding: 0;
+                max-width: 100%;
             }
 
             .avoid-break {
@@ -219,6 +302,25 @@
             h2 {
                 page-break-after: avoid;
             }
+
+            .info-box,
+            .tips-container {
+                background-color: #f5f5f5 !important;
+                color: black !important;
+                border-left: 5px solid black !important;
+            }
+
+            .info-box strong,
+            .tips-container h3,
+            .tips-container li strong {
+                color: black !important;
+            }
+
+            .info-box p,
+            .tips-container p,
+            .tips-container li {
+                color: #333 !important;
+            }
         }
     </style>
 </head>
@@ -226,22 +328,23 @@
 <body>
 
     <div class="container">
-        <h1>Manual de Alto Nivel <br><span style="color: #c9a962; font-size: 2rem;">Iurexia Pro</span></h1>
+        <h1><span class="black-text">Manual de Uso</span> <span class="gold-text">Completo</span></h1>
 
         <div class="info-box">
             <strong>Bienvenido a la Inteligencia Jurídica de Iurexia</strong>
             <p>Este documento es tu guía visual para aprovechar al máximo el motor analítico de Iurexia. Nuestra
-                plataforma está diseñada para proporcionarte resoluciones, análisis y redacción jurídica de **alto
-                nivel**. Todo el procesamiento es enteramente nativo de Iurexia, blindado para entregarte resultados
-                conforme a la estricta técnica jurídica.</p>
+                plataforma está diseñada para proporcionarte resoluciones, análisis y redacción jurídica de un rigor
+                técnico impecable. Todo el procesamiento es enteramente nativo, blindado para entregarte resultados
+                certeros.</p>
         </div>
 
         <!-- SECCIÓN 1 -->
-        <h2 class="avoid-break">1. El Tablero de Control de Iurexia</h2>
+        <h2 class="avoid-break"><span class="black-text">1. El Tablero de </span><span class="gold-text">Control</span>
+        </h2>
         <p>Desde la barra inferior de tu panel tienes el control total de la herramienta. Es la cabina de mando donde
             diriges el tipo de análisis que Iurexia realizará por ti.</p>
 
-        <div class="img-container avoid-break" style="margin-bottom: 20px;">
+        <div class="img-container avoid-break img-large" style="margin-bottom: 30px;">
             <img src="images/Captura de pantalla 2026-03-07 014257.png" alt="Panel Principal">
         </div>
 
@@ -253,44 +356,44 @@
             </li>
             <li>
                 <h4>Modo "Buscar"</h4>
-                <p>Por defecto. Ideal para consultas abstractas, búsqueda de fundamentos y análisis jurisprudencial
-                    donde requieres que Iurexia traiga a la mesa la norma pura.</p>
+                <p>Activado por defecto. Ideal para consultas abstractas, búsqueda de fundamentos y análisis
+                    jurisprudencial donde requieres que Iurexia traiga a la mesa la norma pura y la jurisprudencia
+                    aplicable.</p>
             </li>
             <li>
-                <h4>Botón de Especialistas (Buscar Abogado)</h4>
-                <p>El botón azul inferior te permite conectar con abogados especializados de nuestra red de confianza en
-                    tu Estado.</p>
+                <h4>Botón de Especialistas</h4>
+                <p>El botón azul te permite conectar con abogados especializados de nuestra red de confianza en el
+                    Estado que hayas seleccionado.</p>
             </li>
         </ul>
 
         <!-- SECCIÓN 2 -->
-        <h2 class="avoid-break" style="margin-top: 60px;">2. El Modo "Redactar"</h2>
-        <div class="grid-2-image-right avoid-break">
-            <div>
-                <p>Si cambias el switch a <span class="pointer-text">Redactar</span>, Iurexia deja de comportarse como
-                    un simple motor de búsqueda y adopta la postura de un abogado proyectista.</p>
-                <p>Usa este modo cuando tu petición implique que la plataforma genere <strong>argumentos
-                        estructurados</strong>, esbozos de demandas, contestaciones, cláusulas o estrategias
-                    argumentativas complejas.</p>
-                <p><em>Iurexia procesará los hechos que le narres y arrojará un discurso jurídico hilado y con un nivel
-                        técnico de excelencia.</em></p>
-            </div>
-            <div class="img-container" style="padding: 20px;">
-                <img src="images/Captura de pantalla 2026-03-07 014332.png" alt="Boton Redactar">
-            </div>
+        <h2 class="avoid-break"><span class="black-text">2. El Modo </span><span class="gold-text">Redactar</span></h2>
+
+        <p>Si cambias el switch a <span class="btn-sim">Redactar</span>, Iurexia deja de comportarse como un simple
+            motor de búsqueda y adopta la postura de un abogado proyectista.</p>
+
+        <div class="img-container avoid-break img-large" style="margin: 30px auto;">
+            <img src="images/Captura de pantalla 2026-03-07 014332.png" alt="Boton Redactar">
         </div>
 
-        <!-- SECCIÓN 3 -->
-        <h2 class="avoid-break">3. Generador de Documentos: "Escrito"</h2>
-        <p>Al hacer clic en <span class="highlight">Escrito</span>, accedes al generador especializado de Iurexia. Esta
-            herramienta categoriza y parametriza la creación de documentos formales listos para litigar o celebrar.</p>
+        <p>Usa este modo cuando tu petición implique que la plataforma genere <strong>argumentos estructurados</strong>,
+            esbozos de querellas, contestaciones, cláusulas contractuales o estrategias argumentativas. Iurexia
+            procesará los hechos que le narres y arrojará un discurso jurídico hilado y con base legal firme.</p>
 
-        <div class="img-container avoid-break" style="margin-bottom: 30px;">
+
+        <!-- SECCIÓN 3 -->
+        <h2 class="avoid-break"><span class="black-text">3. Generador de Documentos: </span><span
+                class="gold-text">Escrito</span></h2>
+        <p>Al hacer clic en <span class="highlight">Escrito</span>, accedes al generador especializado. Esta herramienta
+            categoriza y parametriza la creación de documentos formales listos para litigar o celebrar.</p>
+
+        <div class="img-container avoid-break img-large" style="margin-bottom: 40px;">
             <img src="images/Captura de pantalla 2026-03-07 014357.png" alt="Modal Escrito">
         </div>
 
-        <p class="avoid-break">Iurexia te guía paso a paso según la materia. A continuación un desglose visual de las
-            especializaciones documentales:</p>
+        <p class="avoid-break">Iurexia te guía paso a paso según la materia. Selecciona la categoría, llena los campos
+            esenciales, y el motor estructurará el documento. A continuación un desglose de las especializaciones:</p>
 
         <div class="gallery-grid avoid-break">
             <div class="gallery-item">
@@ -333,65 +436,115 @@
 
 
         <!-- SECCIÓN 4 -->
-        <h2 class="avoid-break" style="margin-top: 60px;">4. Los Genios Jurídicos</h2>
+        <h2 class="avoid-break"><span class="black-text">4. Los Genios </span><span class="gold-text">Jurídicos</span>
+        </h2>
         <p>Son los "socios" hiper-especializados de Iurexia. Al activar un Genio, el sistema enfoca todos sus motores
-            analíticos en esa rama específica del derecho.</p>
+            analíticos de jurisprudencia y doctrina en esa rama específica del derecho mexicano.</p>
 
         <div class="grid-2 avoid-break">
+            <div class="img-container">
+                <img src="images/Captura de pantalla 2026-03-07 015106.png" alt="Ejemplo Genio">
+            </div>
             <div>
-                <ul class="step-list">
+                <ul class="step-list" style="margin-top: 0;">
                     <li>
                         <h4>Activación Simultánea</h4>
                         <p>Puedes activar hasta <strong>dos Genios de forma simultánea</strong> (por ejemplo: Amparo y
-                            Penal). Si activas más de uno, Iurexia combinará ambas doctrinas para darte una solución
-                            transversal de alto nivel.</p>
+                            Penal). El motor cruzará ambos acervos normativos para darte una perspectiva
+                            multidisciplinaria.</p>
                     </li>
                     <li>
-                        <h4>Modo Analítico Restricto</h4>
-                        <p><strong>Atención:</strong> Si hay más de un Genio activo, <em>el sistema bloquea la
-                                herramienta de "Redactar"</em>. Esto garantiza la congruencia y el rigor técnico. Si
-                            necesitas un texto narrativo, quédate con un solo Genio a la vez.</p>
+                        <h4>Modo Analítico Estricto</h4>
+                        <p><strong>Bloqueo de redacción:</strong> Para garantizar un análisis profundo y estricto,
+                            cuando activas más de un Genio a la vez, el modo "Redactar" se bloquea automáticamente. Los
+                            Genios cruzados están diseñados para investigar y razonar, no para pre-redactar.</p>
                     </li>
                 </ul>
-            </div>
-            <div class="img-container shadow-xl">
-                <img src="images/Captura de pantalla 2026-03-07 015106.png" alt="Ejemplo Genio">
             </div>
         </div>
 
         <!-- SECCIÓN 5 -->
-        <h2 class="avoid-break" style="margin-top: 60px;">5. Análisis Documental y Revisor de Sentencias</h2>
+        <h2 class="avoid-break"><span class="black-text">5. Análisis Documental y </span><span
+                class="gold-text">Resoluciones</span></h2>
 
         <div class="grid-2 avoid-break">
             <div>
-                <h3>Consultas sobre Documentos Propios</h3>
-                <p>El icono de <span class="pointer-text">Clip 📎</span> en el cuadro de chat te permite cargar tus
-                    demandas, contratos o cualquier PDF/Word.</p>
-                <p>Una vez arriba, Iurexia lee enteramente tu documento y le puedes hacer preguntas, buscar
-                    discrepancias o pedirle resúmenes.</p>
-                <div class="img-container" style="max-width: 80%; margin-top: 20px;">
+                <h3>Consultas de Archivos Propios</h3>
+                <p>El icono de <span class="btn-sim">Clip 📎</span> te permite cargar PDFs o documentos Word de tus
+                    expedientes.</p>
+                <div class="img-container" style="margin: 20px 0;">
                     <img src="images/Captura de pantalla 2026-03-07 015131.png" alt="Subir Doc">
                 </div>
+                <p>Una vez arriba, Iurexia lee el contenido. Puedes pedirle resúmenes precisos, que busque posibles
+                    contradicciones, o que extraiga los puntos resolutivos de fallos inmensos.</p>
             </div>
             <div>
-                <h3>La herramienta <span class="pointer-text">Sentencia</span></h3>
-                <p>Esta es una de las herramientas más potentes de la suite Iurexia Pro. Exclusiva para realizar una
-                    auditoría legal completa de una resolución jurisdiccional.</p>
-                <p>El sistema revisa minuciosamente incongruencias, violaciones al bloque constitucional, desapegos
-                    jurisdiccionales e impericias. Al finalizar, entrega un nivel de escrutinio digno de un magistrado
-                    revisor.</p>
-                <div class="img-container" style="max-width: 80%; margin-top: 20px;">
+                <h3>Herramienta <span class="btn-sim">Sentencia</span></h3>
+                <p>Exclusiva para realizar una auditoría legal completa de resoluciones jurisdiccionales de amparo o de
+                    fondo.</p>
+                <div class="img-container" style="margin: 20px 0;">
                     <img src="images/Captura de pantalla 2026-03-07 015651.png" alt="Revisor Sentencia">
                 </div>
+                <p>El motor revisa minuciosamente violaciones procedimentales, aplicación indebida de la norma y
+                    suplencia de la queja. Entrega un nivel de escrutinio digno de un magistrado revisor.</p>
             </div>
         </div>
 
-        <div style="margin-top: 60px; text-align: center; border-top: 1px solid var(--border); padding-top: 30px;">
+        <!-- SECCIÓN 6 -->
+        <h2 class="avoid-break"><span class="black-text">6. El Arte de Preguntar: </span><span
+                class="gold-text">Ingeniería de Prompts</span></h2>
+
+        <p>Para obtener los resultados más contundentes y técnicos de Iurexia, la forma en la que formulas tu
+            instrucción (prompt) es vital. Iurexia responde al nivel de rigor que le exijas.</p>
+
+        <div class="tips-container avoid-break">
+            <h3>Fórmula del Prompt Jurídico Perfecto</h3>
+            <p>Los mejores resultados se obtienen estructurando tu petición en tres partes esenciales:</p>
+
+            <ul style="margin-top: 20px;">
+                <li>
+                    <strong>1. El Rol o Contexto:</strong> Define cómo quieres que Iurexia actúe. <br>
+                    <em>"Actúa como un magistrado penal de apelación..."</em> o <em>"Asume el rol de abogado litigante
+                        laboralista del lado patronal..."</em>
+                </li>
+                <li>
+                    <strong>2. Los Hechos Concretos (Premisa menor):</strong> Proporciona datos sin paja, directos a la
+                    controversia.<br>
+                    <em>"Mi cliente fue despedido verbalmente sin acta administrativa previa, alegando abandono de
+                        trabajo que no ocurrió..."</em>
+                </li>
+                <li>
+                    <strong>3. La Tarea Específica y el Tono:</strong> Qué necesitas exactamente y cómo lo quieres
+                    entregado.<br>
+                    <em>"Redacta un capítulo de conceptos de violación argumentando la ilegalidad del despido. Usa un
+                        tono persuasivo, incisivo, y cita jurisprudencia de la SCJN aplicable a la carga de la prueba
+                        sobre el abandono."</em>
+                </li>
+            </ul>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 30px 0;">
+
+            <h3>Mejores Prácticas Generales</h3>
+            <ul>
+                <li><strong>Evita ambigüedades:</strong> No pidas "hablame de contratos". Pide "Redacta la cláusula
+                    penal de rescisión anticipada para un contrato de arrendamiento comercial".</li>
+                <li><strong>Inyecta la teoría procesal:</strong> Dile explícitamente qué excepciones procesales o
+                    agravios formales quieres que explore.</li>
+                <li><strong>Itera con el motor:</strong> Si la respuesta inicial es buena pero le falta profundidad en
+                    un punto, dile: <em>"Profundiza exclusivamente en el segundo concepto de violación, agregando
+                        estándares de convencionalidad de la CIDH."</em></li>
+                <li><strong>Usa el modo correcto:</strong> Si exiges redacción extensa estando en modo "Buscar", Iurexia
+                    tenderá a darte fichas jurisprudenciales. Asegúrate de estar en modo <strong>Redactar</strong>.</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 60px; text-align: center; border-top: 3px solid var(--charcoal); padding-top: 30px;">
             <p
-                style="font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--gold); font-weight: bold; margin-bottom: 5px;">
-                Iurexia Pro</p>
-            <p style="font-size: 0.9rem; color: var(--charcoal-light);">El más alto nivel de infraestructura tecnológica
-                al servicio del abogado de excelencia.</p>
+                style="font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
+                <span class="black-text">Iurexia</span> <span class="gold-text">Pro</span>
+            </p>
+            <p style="font-size: 1rem; color: var(--gray-text); font-weight: bold;">El más alto nivel de infraestructura
+                tecnológica al servicio del abogado de excelencia.</p>
         </div>
 
     </div>
