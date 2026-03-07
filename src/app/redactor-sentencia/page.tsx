@@ -14,7 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender
 // Types & Constants
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type TipoSentencia = 'amparo_directo' | 'amparo_revision' | 'revision_fiscal' | 'recurso_queja';
+type TipoSentencia = 'amparo_directo' | 'amparo_revision' | 'revision_fiscal' | 'recurso_queja' | 'amparo_indirecto';
 
 interface TipoConfig {
     id: TipoSentencia;
@@ -22,7 +22,7 @@ interface TipoConfig {
     shortLabel: string;
     description: string;
     icon: React.ReactNode;
-    docs: [string, string]; // Labels for the 3 required documents
+    docs: string[]; // Labels for the required/optional documents
     color: string; // accent color class
 }
 
@@ -65,12 +65,24 @@ const TIPOS: TipoConfig[] = [
     },
 ];
 
+const TIPOS_JUZGADO: TipoConfig[] = [
+    {
+        id: 'amparo_indirecto',
+        label: 'Amparo Indirecto',
+        shortLabel: 'Indirecto',
+        description: 'Juicio de amparo indirecto contra actos de autoridad',
+        icon: <Gavel className="w-6 h-6" />,
+        docs: ['Demanda', 'Acto Reclamado', 'Informe Justificado (Opcional)'],
+        color: 'from-[#c9a962]/10 to-[#8b7355]/5',
+    }
+];
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Dynamic Terminology based on tipo
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function getTerminology(tipoId?: TipoSentencia) {
-    if (tipoId === 'amparo_directo') {
+    if (tipoId === 'amparo_directo' || tipoId === 'amparo_indirecto') {
         return { singular: 'Concepto de Violación', plural: 'Conceptos de Violación', singularLower: 'concepto de violación', pluralLower: 'conceptos de violación' };
     }
     return { singular: 'Agravio', plural: 'Agravios', singularLower: 'agravio', pluralLower: 'agravios' };
@@ -104,6 +116,13 @@ const SENTIDO_OPTIONS: Record<TipoSentencia, { value: string; label: string; ico
     recurso_queja: [
         { value: 'fundada', label: 'Declarar fundada', icon: '✅', desc: 'Los agravios prosperan' },
         { value: 'infundada', label: 'Declarar infundada', icon: '❌', desc: 'Los agravios no prosperan' },
+    ],
+    amparo_indirecto: [
+        { value: 'conceder', label: 'Conceder', icon: '✅', desc: 'El amparo es procedente y fundado' },
+        { value: 'negar', label: 'Negar', icon: '❌', desc: 'Los conceptos son infundados/inoperantes' },
+        { value: 'sobreseer', label: 'Sobreseer', icon: '⚠️', desc: 'Existe causa de improcedencia' },
+        { value: 'desechar', label: 'Desechar', icon: '🚫', desc: 'Desechamiento de plano' },
+        { value: 'incompetencia', label: 'Incompetencia', icon: '⚖️', desc: 'Carece de competencia legal' },
     ],
 };
 
@@ -225,9 +244,8 @@ export default function RedactorSentenciaPage() {
     const [viewState, setViewState] = useState<'tools' | 'jurisdiction' | 'tipos'>('tools');
     const [jurisdiction, setJurisdiction] = useState<'tcc' | 'juzgado' | null>(null); // Keep for data context if needed
 
-    const [showJuzgadoAlert, setShowJuzgadoAlert] = useState(false);
     const [selectedTipo, setSelectedTipo] = useState<TipoConfig | null>(null);
-    const [files, setFiles] = useState<(File | null)[]>([null, null]);
+    const [files, setFiles] = useState<(File | null)[]>([]);
     const [result, setResult] = useState('');
     const [error, setError] = useState('');
     const [progressStep, setProgressStep] = useState(0);
@@ -395,7 +413,8 @@ export default function RedactorSentenciaPage() {
     const [calificaciones, setCalificaciones] = useState<CalificacionEntry[]>([]);
     const [expandedAgravio, setExpandedAgravio] = useState<number | null>(null);
 
-    const allFilesUploaded = files.every((f) => f !== null);
+    const requiredFilesCount = selectedTipo?.docs.filter(d => !d.includes('Opcional')).length || 2;
+    const allFilesUploaded = files.length > 0 && files.slice(0, requiredFilesCount).every((f) => f !== null);
 
     // ── Access Gate (redirect unauthorized, after all hooks) ──────────────
     useEffect(() => {
@@ -423,7 +442,7 @@ export default function RedactorSentenciaPage() {
     // ── Select Type ───────────────────────────────────────────────────────
     const handleSelectTipo = (tipo: TipoConfig) => {
         setSelectedTipo(tipo);
-        setFiles([null, null]);
+        setFiles(Array(tipo.docs.length).fill(null));
         setError('');
         setResult('');
         setPhase('upload');
@@ -442,6 +461,9 @@ export default function RedactorSentenciaPage() {
             formData.append('user_email', user.email);
             formData.append('doc1', files[0]!);
             formData.append('doc2', files[1]!);
+            if (files.length > 2 && files[2]) {
+                formData.append('doc3', files[2]!);
+            }
 
             setStreamingPhase({ step: 'Iniciando conexión segura...', progress: 5 })
 
@@ -979,24 +1001,25 @@ export default function RedactorSentenciaPage() {
                                         </div>
                                     </button>
 
-                                    {/* Card 2: Juzgado (Alert) */}
+                                    {/* Card 2: Juzgado */}
                                     <button
-                                        onClick={() => setShowJuzgadoAlert(true)}
-                                        className="group relative rounded-xl border border-white/[0.04] bg-[#121212] p-10 text-left transition-all duration-300 hover:border-white/[0.1] hover:bg-[#141414]"
+                                        onClick={() => {
+                                            setJurisdiction('juzgado');
+                                            setViewState('tipos');
+                                        }}
+                                        className="group relative rounded-xl border border-white/[0.06] bg-[#141414] p-10 text-left transition-all duration-500 hover:border-[#c9a962]/30 hover:bg-[#161616] overflow-hidden"
                                     >
+                                        <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#c9a962]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                         <div className="relative z-10">
-                                            <span className="text-white/15 text-[11px] tracking-[0.25em] uppercase font-light">
+                                            <span className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light">
                                                 02
                                             </span>
-                                            <h3 className="font-serif text-2xl font-light text-white/50 mt-4 mb-3 tracking-tight">
+                                            <h3 className="font-serif text-2xl font-light text-white mt-4 mb-3 tracking-tight group-hover:text-[#c9a962]/90 transition-colors duration-500">
                                                 Juzgados de Distrito
                                             </h3>
-                                            <p className="text-[13px] text-white/20 leading-relaxed font-light mb-4">
+                                            <p className="text-[13px] text-white/30 leading-relaxed font-light mb-4">
                                                 Sentencias de Amparo Indirecto y procesos penales federales.
                                             </p>
-                                            <span className="text-[11px] text-white/25 font-light tracking-wider uppercase">
-                                                Próximamente
-                                            </span>
                                         </div>
                                     </button>
                                 </div>
@@ -1017,7 +1040,7 @@ export default function RedactorSentenciaPage() {
 
                                 <div className="text-center mb-16">
                                     <p className="text-[#c9a962]/60 text-xs tracking-[0.3em] uppercase mb-6 font-light">
-                                        Tribunal Colegiado de Circuito
+                                        {jurisdiction === 'tcc' ? 'Tribunal Colegiado de Circuito' : 'Juzgado de Distrito'}
                                     </p>
                                     <h1 className="font-serif text-4xl md:text-5xl font-light text-white mb-5 tracking-tight">
                                         Tipo de Sentencia
@@ -1026,7 +1049,7 @@ export default function RedactorSentenciaPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    {TIPOS.map((tipo, index) => (
+                                    {(jurisdiction === 'tcc' ? TIPOS : TIPOS_JUZGADO).map((tipo, index) => (
                                         <button
                                             key={tipo.id}
                                             onClick={() => handleSelectTipo(tipo)}
@@ -1058,31 +1081,6 @@ export default function RedactorSentenciaPage() {
                             </div>
                         )}
 
-                        {/* Juzgado Alert Modal */}
-                        {showJuzgadoAlert && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                                <div className="bg-[#1a1a1a] border border-white/[0.1] rounded-2xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
-                                    <div className="text-center">
-                                        <div className="w-16 h-16 rounded-full bg-[#c9a962]/10 flex items-center justify-center mx-auto mb-4">
-                                            <Sparkles className="w-8 h-8 text-[#c9a962]" />
-                                        </div>
-                                        <h3 className="font-serif text-2xl font-medium text-white mb-2">
-                                            Próximamente
-                                        </h3>
-                                        <p className="text-gray-400 mb-6 leading-relaxed">
-                                            Estamos trabajando en el módulo especializado para <strong>Juzgados de Distrito</strong>.
-                                            Estará disponible en la próxima actualización.
-                                        </p>
-                                        <button
-                                            onClick={() => setShowJuzgadoAlert(false)}
-                                            className="bg-white text-black px-6 py-2.5 rounded-full font-medium hover:bg-white/90 transition-colors"
-                                        >
-                                            Entendido
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
 
