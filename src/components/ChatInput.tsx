@@ -404,8 +404,9 @@ ${draftRequest.descripcion}`;
                                             setActiveGenios(activeGenios.filter(id => id !== g.id));
                                         } else {
                                             if (activeGenios.length >= 2) {
-                                                // Replace the oldest one (first one)
-                                                setActiveGenios([activeGenios[1], g.id]);
+                                                // Alert user when trying to select a 3rd Genio
+                                                alert("Solo puedes seleccionar un máximo de dos Genios simultáneamente.");
+                                                return;
                                             } else {
                                                 setActiveGenios([...activeGenios, g.id]);
                                             }
