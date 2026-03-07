@@ -788,6 +788,18 @@ h6 {
   }
 }
 
+@keyframes shimmerGold {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 3px rgba(201, 169, 98, 0.3)) brightness(0.95);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 10px rgba(201, 169, 98, 0.8)) drop-shadow(0 0 20px rgba(201, 169, 98, 0.4)) brightness(1.15);
+  }
+}
+
 @keyframes genioActiveGlow {
 
   0%,
