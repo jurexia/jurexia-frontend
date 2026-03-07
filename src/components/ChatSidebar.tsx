@@ -237,6 +237,27 @@ export default function ChatSidebar({
                         background: 'rgba(0,0,0,0.15)',
                     }}
                 >
+                    <a
+                        href="/guia-pro/Guia_Iurexia_Pro.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-between px-4 py-2.5 mb-2
+                                 rounded-lg transition-all duration-200 group"
+                        style={{
+                            background: 'rgba(201, 169, 98, 0.08)',
+                            border: '1px solid rgba(201, 169, 98, 0.25)',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201, 169, 98, 0.15)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'rgba(201, 169, 98, 0.08)')}
+                    >
+                        <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" style={{ color: '#c9a962' }} />
+                            <span className="text-sm font-medium" style={{ color: '#c9a962' }}>
+                                Guía completa de uso
+                            </span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" style={{ color: 'rgba(201, 169, 98, 0.6)' }} />
+                    </a>
                     <button
                         onClick={() => {
                             onToggleGuide?.();
