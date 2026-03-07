@@ -322,6 +322,69 @@
                 color: #333 !important;
             }
         }
+
+        /* -------------------------------------
+           ✨ ANIMACIONES AL SCROLLEAR ✨
+        ------------------------------------- */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Clase base (oculta el elemento y lo mueve un poco) */
+        .reveal {
+            opacity: 0;
+            transform: translateY(35px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: opacity, transform;
+        }
+
+        /* Elemento visible */
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Clases de retrasos para crear secuencias de cascada */
+        .delay-100 {
+            transition-delay: 100ms;
+        }
+
+        .delay-200 {
+            transition-delay: 200ms;
+        }
+
+        .delay-300 {
+            transition-delay: 300ms;
+        }
+
+        /* Efectos sutiles hover para elementos de interacción (más "premium") */
+        .img-container {
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .img-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-item {
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-3px);
+            border-color: var(--gold);
+        }
+
+        .step-list li {
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .step-list li:hover {
+            background-color: #fff;
+            border-color: var(--gold);
+            box-shadow: 0 4px 15px rgba(201, 169, 98, 0.1);
+        }
     </style>
 </head>
 
@@ -329,6 +392,9 @@
 
     <div class="container">
         <h1><span class="black-text">Manual de Uso</span> <span class="gold-text">Completo</span></h1>
+        <p
+            style="text-align: center; font-size: 1.4rem; font-family: 'Playfair Display', serif; margin-top: -25px; margin-bottom: 45px; color: var(--gold); font-weight: 600;">
+            (Planes Pro y superior)</p>
 
         <div class="info-box">
             <strong>Bienvenido a la Inteligencia Jurídica de Iurexia</strong>
@@ -549,6 +615,61 @@
 
     </div>
 
+    <!-- -------------------------------------
+         🖋️ SCRIPT PARA ANIMACIONES 🖋️
+    ------------------------------------- -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Selecciona todos los elementos que queramos que aparezcan
+            const tagsToAnimate = ["h2", ".info-box", ".img-container", ".step-list li", ".gallery-item", ".tips-container", ".grid-2 > div"];
+
+            // Les agregamos la clase base "reveal" primero a cada uno
+            tagsToAnimate.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => {
+                    el.classList.add("reveal");
+                });
+            });
+
+            // Agregamos retrasos en escalera a los elementos de listas y grid para el efcto dominó
+            document.querySelectorAll(".step-list").forEach(list => {
+                const items = list.querySelectorAll("li");
+                items.forEach((item, index) => {
+                    // Limitar a máximo 3 para que no tarde demasiado el último
+                    let delayClass = `delay-${Math.min((index + 1) * 100, 300)}`;
+                    item.classList.add(delayClass);
+                });
+            });
+
+            document.querySelectorAll(".gallery-grid").forEach(grid => {
+                const items = grid.querySelectorAll(".gallery-item");
+                items.forEach((item, index) => {
+                    let delayClass = `delay-${Math.min((index % 2 + 1) * 100, 200)}`;
+                    item.classList.add(delayClass);
+                });
+            });
+
+
+            // Lógica del IntersectionObserver
+            const observerOptions = {
+                root: null,
+                rootMargin: "0px",
+                threshold: 0.15 // Al 15% de visibilidad se dispara
+            };
+
+            const revealOnScroll = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("active");
+                        // Descomentar para que se reproduzca una sola vez y no cada vez que se hace scroll (Optimiza rendimiento)
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const revealElements = document.querySelectorAll(".reveal");
+            revealElements.forEach(el => revealOnScroll.observe(el));
+        });
+    </script>
 </body>
 
 </html>
