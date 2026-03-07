@@ -232,7 +232,7 @@ export default function RedactorSentenciaPage() {
     const [error, setError] = useState('');
     const [progressStep, setProgressStep] = useState(0);
     const [streamingText, setStreamingText] = useState('');
-    const [streamingPhase, setStreamingPhase] = useState<{ step: string; progress: number; group?: number; totalGroups?: number } | null>(null);
+    const [streamingPhase, setStreamingPhase] = useState<{ step: string; progress: number; group?: string | number; totalGroups?: number } | null>(null);
     const [tokensInfo, setTokensInfo] = useState<{ input: number; output: number } | null>(null);
     const [copied, setCopied] = useState(false);
     const [exportLoading, setExportLoading] = useState(false);
@@ -510,52 +510,9 @@ export default function RedactorSentenciaPage() {
         }
     };
 
-    // ── Solve (v2 — Genio + RAG in parallel) ─────────────────────────────
-    const handleSolve = async () => {
-        if (!selectedTipo || !user?.email) return;
-
-        setPhase('solving');
-        setSolveError('');
-
-        try {
-            // Build combined problema text from all calificaciones
-            const problemaText = calificaciones.map(c =>
-                `${c.titulo}: ${c.resumen} [Calificación: ${c.calificacion}]`
-            ).join('\n\n');
-
-            const formData = new FormData();
-            formData.append('problema', problemaText);
-            formData.append('genio_id', selectedGenio);
-            formData.append('tipo', selectedTipo.id);
-            formData.append('sentido', sentido || '');
-            formData.append('user_email', user.email);
-
-            const response = await fetch(`${API_URL}/redactor/v2/solve`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }));
-                throw new Error(errorData.detail || `Error ${response.status}`);
-            }
-
-            const data = await response.json();
-            setGenioSolution(data.genio_solution || '');
-            setRagResults(data.rag_results || []);
-            setFtPrompt(data.prompt || '');
-            setRagCount(data.rag_results?.length || 0);
-
-            setPhase('prompt_review');
-        } catch (err: any) {
-            setSolveError(err.message || 'Error al consultar Genio/RAG');
-            setPhase('estrategia');
-        }
-    };
-
-    // ── Generate (v2 — fine-tuned model with SSE) ──────────────────────────
+    // ── Generate (v3 — Comprehensive per-problem with RAG and Gemini) ─────
     const handleGenerate = async () => {
-        if (!selectedTipo || !user?.email || !ftPrompt) return;
+        if (!selectedTipo || !user?.email || !allCalificadas) return;
 
         setPhase('generating');
         setError('');
@@ -567,23 +524,14 @@ export default function RedactorSentenciaPage() {
             const formData = new FormData();
             formData.append('tipo', selectedTipo.id);
             formData.append('user_email', user.email);
+            formData.append('resumen_caso', analysisData?.resumen_caso || '');
+            formData.append('resumen_acto_reclamado', analysisData?.resumen_acto_reclamado || '');
 
-            // Build groups from gruposTematicos if available
-            if (gruposTematicos.length > 1) {
-                const groups = gruposTematicos.map(g => ({
-                    titulo: g.tema,
-                    numeros: g.agravios_nums,
-                    prompt: ftPrompt.replace(
-                        /PROBLEMA JURÍDICO:[\s\S]*?(?=FUNDAMENTACIÓN)/,
-                        `PROBLEMA JURÍDICO (${term.pluralLower} ${g.agravios_nums.join(', ')}: ${g.tema}):\n${g.agravios_nums.map(n => analysisData?.agravios?.find(a => a.numero === n)?.resumen || '').join('\n')}\n\n`
-                    ),
-                }));
-                formData.append('groups', JSON.stringify(groups));
-            } else {
-                formData.append('prompt', ftPrompt);
-            }
+            const problemasActivos = calificaciones.filter(c => c.calificacion !== 'sin_calificar' && c.calificacion !== 'innecesario');
+            formData.append('problemas_json', JSON.stringify(problemasActivos));
+            formData.append('sentido_global', sentido || '');
 
-            const response = await fetch(`${API_URL}/redactor/v2/generate`, {
+            const response = await fetch(`${API_URL}/redactor/v3/generate_comprehensive`, {
                 method: 'POST',
                 body: formData,
             });
@@ -606,7 +554,6 @@ export default function RedactorSentenciaPage() {
                 if (done) break;
                 buffer += decoder.decode(value, { stream: true });
 
-                // Parse SSE events
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || '';
 
@@ -624,12 +571,12 @@ export default function RedactorSentenciaPage() {
                                 setStreamingPhase({
                                     step: data.step,
                                     progress: data.progress,
-                                    group: data.group,
-                                    totalGroups: data.total_groups,
+                                    group: `${data.problema_actual}/${data.total_problemas}: ${data.titulo_problema}`,
+                                    totalGroups: data.total_problemas,
                                 });
                             } else if (eventType === 'done') {
                                 setGenerationInfo({
-                                    phasesCompleted: data.groups_completed || 1,
+                                    phasesCompleted: data.total_problemas,
                                     totalChars: data.total_chars || fullText.length,
                                     generationTime: data.elapsed || 0,
                                 });
@@ -649,7 +596,7 @@ export default function RedactorSentenciaPage() {
             setResult(fullText);
             if (!generationInfo) {
                 setGenerationInfo({
-                    phasesCompleted: 1,
+                    phasesCompleted: problemasActivos.length,
                     totalChars: fullText.length,
                     generationTime: 0,
                 });
@@ -657,7 +604,7 @@ export default function RedactorSentenciaPage() {
             setPhase('result');
         } catch (err: any) {
             setError(err.message || 'Error al generar la sentencia');
-            setPhase('prompt_review');
+            setPhase('estrategia');
         }
     };
 
@@ -1259,199 +1206,109 @@ export default function RedactorSentenciaPage() {
                             </button>
                             {expandedSummary === 'caso' && (
                                 <div className="p-4 bg-white/[0.02] rounded-xl border border-white/[0.04] mb-2">
-                                    <p className="text-sm text-white/60 leading-relaxed">{analysisData.resumen_caso}</p>
+                                    <p className="text-sm text-white/60 leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap">{analysisData.resumen_caso}</p>
                                 </div>
+                            )}
+
+                            {/* Expandable: Resumen del Acto Reclamado */}
+                            {analysisData.resumen_acto_reclamado && (
+                                <>
+                                    <button
+                                        onClick={() => setExpandedSummary(expandedSummary === 'acto' ? null : 'acto')}
+                                        className="w-full flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors mb-2"
+                                    >
+                                        <span className="text-xs text-white/40 uppercase tracking-wider">Resumen del Acto Reclamado</span>
+                                        <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${expandedSummary === 'acto' ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {expandedSummary === 'acto' && (
+                                        <div className="p-4 bg-white/[0.02] rounded-xl border border-white/[0.04] mb-2">
+                                            <p className="text-sm text-[#c9a962]/80 leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap">{analysisData.resumen_acto_reclamado}</p>
+                                        </div>
+                                    )}
+                                </>
                             )}
 
                         </div>
 
-                        {/* ══ Problemas Jurídicos Identificados ══ */}
-                        <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
+                        {/* ══ Calificación de Problemas Jurídicos ══ */}
+                        <div className="rounded-2xl border border-[#c9a962]/20 bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
                             <div className="mb-5">
                                 <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
-                                    Problemas Jurídicos
+                                    Instrucciones de Resolución
                                 </p>
                                 <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">
-                                    {term.plural} Identificados
+                                    Calificación de Problemas Jurídicos
                                 </h3>
-                                <p className="text-[11px] text-white/25 mt-1 font-light">
-                                    {analysisData.agravios.length} {term.pluralLower} extraídos de los documentos — revísalos antes de consultar al Genio
+                                <p className="text-[11px] text-white/40 mt-1 leading-relaxed">
+                                    A continuación se presentan los problemas jurídicos extraídos. Para cada uno, selecciona el sentido de la resolución y agrega notas o instrucciones específicas para el proyecto. Los problemas marcados como "Innecesario" serán omitidos.
                                 </p>
                             </div>
 
-                            {analysisData.agravios.length === 0 ? (
-                                <div className="p-4 bg-amber-500/[0.06] rounded-xl border border-amber-500/20">
-                                    <p className="text-sm text-amber-300/80">⚠️ No se identificaron {term.pluralLower}. Verifica los documentos subidos.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {analysisData.agravios.map((agravio, i) => (
-                                        <div key={agravio.numero || i} className="border border-white/[0.06] rounded-xl overflow-hidden">
-                                            <button
-                                                onClick={() => setExpandedAgravio(expandedAgravio === agravio.numero ? null : agravio.numero)}
-                                                className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/[0.02] transition-colors"
-                                            >
-                                                <span className="text-[10px] px-2 py-1 rounded-full bg-[#c9a962]/10 text-[#c9a962] font-semibold flex-shrink-0">
-                                                    {term.singular} {agravio.numero || i + 1}
-                                                </span>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm text-white/80 font-medium truncate">{agravio.titulo}</p>
+                            <div className="space-y-4">
+                                {calificaciones.map((calif, i) => (
+                                    <div key={i} className={`border rounded-xl transition-all duration-300 overflow-hidden ${calif.calificacion === 'sin_calificar' ? 'border-[#c9a962]/30 bg-[#c9a962]/[0.02]' :
+                                        calif.calificacion === 'innecesario' ? 'border-white/[0.05] bg-white/[0.01] opacity-60' :
+                                            'border-green-500/30 bg-green-500/[0.02]'
+                                        }`}>
+                                        <div className="p-4">
+                                            <div className="flex items-start justify-between gap-4 mb-3">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#c9a962]/10 text-[#c9a962] font-semibold">
+                                                            Problema {calif.numero || i + 1}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm font-medium text-white/90 mb-1 leading-snug">{calif.titulo}</p>
+                                                    <button
+                                                        onClick={() => updateCalificacion(i, 'expanded', !calif.expanded)}
+                                                        className="text-[11px] text-[#c9a962]/70 hover:text-[#c9a962] transition-colors flex items-center gap-1"
+                                                    >
+                                                        {calif.expanded ? 'Ocultar síntesis' : 'Ver síntesis del problema'}
+                                                        <ChevronDown className={`w-3 h-3 transition-transform ${calif.expanded ? 'rotate-180' : ''}`} />
+                                                    </button>
                                                 </div>
-                                                <ChevronDown className={`w-4 h-4 text-white/30 transition-transform flex-shrink-0 ${expandedAgravio === agravio.numero ? 'rotate-180' : ''}`} />
-                                            </button>
-                                            {expandedAgravio === agravio.numero && (
-                                                <div className="px-4 pb-4 border-t border-white/[0.04]">
-                                                    <p className="text-sm text-white/50 leading-relaxed mt-3">{agravio.resumen}</p>
-                                                    {agravio.articulos_mencionados && agravio.articulos_mencionados.length > 0 && (
-                                                        <div className="mt-3 flex flex-wrap gap-1">
-                                                            {agravio.articulos_mencionados.map((art: string, ai: number) => (
-                                                                <span key={ai} className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400/70 border border-blue-500/20">
-                                                                    {art}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                                <div className="w-48 flex-shrink-0">
+                                                    <select
+                                                        value={calif.calificacion}
+                                                        onChange={(e) => updateCalificacion(i, 'calificacion', e.target.value)}
+                                                        className={`w-full text-[13px] bg-[#0f0f0f] border rounded-lg px-3 py-2 cursor-pointer transition-colors focus:outline-none ${calif.calificacion === 'sin_calificar' ? 'border-[#c9a962]/50 text-[#c9a962]' :
+                                                            calif.calificacion === 'innecesario' ? 'border-white/10 text-white/40' :
+                                                                'border-green-500/50 text-green-400'
+                                                            }`}
+                                                    >
+                                                        <option value="sin_calificar" disabled>— Seleccionar —</option>
+                                                        <option value="fundado">Fundado</option>
+                                                        <option value="infundado">Infundado</option>
+                                                        <option value="inoperante">Inoperante</option>
+                                                        <option value="fundado_operante">Fundado pero Inoperante</option>
+                                                        <option value="innecesario">Innecesario estudiar</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {calif.expanded && (
+                                                <div className="mt-3 p-3 bg-white/[0.02] rounded-lg border border-white/[0.04]">
+                                                    <p className="text-[13px] text-white/60 leading-relaxed whitespace-pre-wrap">{calif.resumen}</p>
                                                 </div>
                                             )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
 
-                        {/* ══ Problemas Jurídicos Detectados ══ */}
-                        <div className="rounded-2xl border border-amber-500/[0.15] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
-                            <div className="mb-5">
-                                <p className="text-amber-400/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
-                                    Análisis
-                                </p>
-                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">
-                                    Problemas Jurídicos Detectados
-                                </h3>
-                                <p className="text-[11px] text-white/25 mt-1 font-light">
-                                    Síntesis de los problemas que debe resolver la sentencia — activa el Genio y RAG para fundamentar
-                                </p>
-                            </div>
-
-                            <div className="space-y-3">
-                                {analysisData.agravios.map((agravio: any, i: number) => (
-                                    <div key={`prob-${agravio.numero || i}`} className="p-4 bg-white/[0.02] rounded-xl border border-amber-500/[0.08]">
-                                        <div className="flex items-start gap-3">
-                                            <span className="flex-shrink-0 mt-0.5 text-amber-400/70 text-xl">❓</span>
-                                            <div className="flex-1">
-                                                <p className="text-[10px] text-amber-400/40 uppercase tracking-wider mb-1">
-                                                    Problema jurídico {agravio.numero || i + 1}
-                                                </p>
-                                                <p className="text-sm font-medium text-white/80 italic leading-relaxed mb-2">
-                                                    {agravio.interrogante || `¿${agravio.titulo}?`}
-                                                </p>
-                                                <p className="text-[11px] text-white/30">
-                                                    Derivado de: {agravio.titulo}
-                                                </p>
-                                                {agravio.articulos_mencionados && agravio.articulos_mencionados.length > 0 && (
-                                                    <div className="mt-2 flex flex-wrap gap-1">
-                                                        {agravio.articulos_mencionados.map((art: string, ai: number) => (
-                                                            <span key={ai} className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400/60 border border-amber-500/15">
-                                                                {art}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
+                                            {calif.calificacion !== 'innecesario' && calif.calificacion !== 'sin_calificar' && (
+                                                <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                    <label className="block text-[11px] text-white/40 uppercase tracking-wider mb-2">
+                                                        Instrucciones o Notas del Secretario (Opcional)
+                                                    </label>
+                                                    <textarea
+                                                        value={calif.notas}
+                                                        onChange={(e) => updateCalificacion(i, 'notas', e.target.value)}
+                                                        placeholder={`Ej. El problema es ${calif.calificacion} porque la responsable omitió valorar la prueba testimonial...`}
+                                                        className="w-full bg-[#0a0a0a] border border-white/[0.08] rounded-xl p-3 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-[#c9a962]/50 transition-colors resize-y min-h-[80px]"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="mt-4 p-3 bg-amber-500/[0.04] rounded-xl border border-amber-500/10">
-                                <p className="text-[11px] text-amber-400/50 text-center leading-relaxed">
-                                    👇 Activa el Genio Jurídico correspondiente para obtener la fundamentación legal y determinar el sentido de la resolución
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* ══ Activar y Seleccionar Genio ══ */}
-                        <div className="rounded-2xl border border-white/[0.08] bg-[#1a1a1a]/60 backdrop-blur-sm p-6 mb-6">
-                            <div className="mb-4">
-                                <p className="text-[#c9a962]/40 text-[11px] tracking-[0.25em] uppercase font-light mb-2">
-                                    Fundamentación
-                                </p>
-                                <h3 className="font-serif text-xl font-light text-white/90 tracking-tight">
-                                    Activar Genio para Fundamentación
-                                </h3>
-                                <p className="text-[11px] text-white/25 mt-1 font-light">
-                                    Selecciona y activa el Genio — se encenderá por 5 minutos máximo
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-4 gap-2 mb-3">
-                                {['amparo', 'civil', 'mercantil', 'penal', 'laboral', 'fiscal', 'administrativo', 'agrario'].map(g => {
-                                    const isSelected = selectedGenio === g;
-                                    const isActive = isSelected && isCacheActive;
-                                    const isLoading = isSelected && isCacheLoading;
-                                    return (
-                                        <button
-                                            key={g}
-                                            onClick={() => handleToggleGenio(g)}
-                                            disabled={isCacheLoading && !isSelected}
-                                            className={`relative px-3 py-2.5 rounded-lg text-xs font-medium capitalize transition-all duration-200 overflow-hidden ${isActive
-                                                ? 'bg-green-500/20 text-green-400 border border-green-500/40 shadow-lg shadow-green-500/10'
-                                                : isLoading
-                                                    ? 'bg-[#c9a962]/10 text-[#c9a962] border border-[#c9a962]/30'
-                                                    : isSelected
-                                                        ? 'bg-[#c9a962] text-[#0f0f0f] shadow-lg shadow-[#c9a962]/20'
-                                                        : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]'
-                                                } ${isCacheLoading && !isSelected ? 'opacity-40 cursor-not-allowed' : ''}`}
-                                        >
-                                            <span className="flex items-center justify-center gap-1.5">
-                                                {isLoading && (
-                                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                                )}
-                                                {isActive && (
-                                                    <span className="relative flex h-2 w-2">
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                                                    </span>
-                                                )}
-                                                {g}
-                                            </span>
-                                            {/* TTL countdown bar */}
-                                            {isActive && cacheTimeLeft > 0 && (
-                                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-green-500/20">
-                                                    <div
-                                                        className="h-full bg-green-400 transition-all duration-1000 ease-linear"
-                                                        style={{ width: `${(cacheTimeLeft / CACHE_TTL_MS) * 100}%` }}
-                                                    />
-                                                </div>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Status indicator */}
-                            {isCacheActive && (
-                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/[0.06] border border-green-500/[0.12] mb-1">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                                    </span>
-                                    <span className="text-[11px] text-green-400/80">
-                                        Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)} activo — {Math.ceil(cacheTimeLeft / 60000)}:{String(Math.floor((cacheTimeLeft % 60000) / 1000)).padStart(2, '0')} restantes
-                                    </span>
-                                </div>
-                            )}
-                            {isCacheLoading && (
-                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#c9a962]/[0.06] border border-[#c9a962]/[0.12] mb-1">
-                                    <Loader2 className="w-3 h-3 text-[#c9a962] animate-spin" />
-                                    <span className="text-[11px] text-[#c9a962]/80">Activando Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)}...</span>
-                                </div>
-                            )}
-                            {genioError && (
-                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/[0.06] border border-red-500/[0.15] mb-1">
-                                    <AlertTriangle className="w-3 h-3 text-red-400" />
-                                    <span className="text-[11px] text-red-400/80">{genioError}</span>
-                                </div>
-                            )}
                         </div>
 
                         {/* Error */}
@@ -1462,139 +1319,22 @@ export default function RedactorSentenciaPage() {
                             </div>
                         )}
 
-                        {/* Solve Button */}
-                        <button
-                            onClick={handleSolve}
-                            disabled={!isCacheActive}
-                            className={`w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${isCacheActive
-                                ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
-                                : 'bg-white/[0.04] text-gray-600 cursor-not-allowed border border-white/[0.08]'
-                                }`}
-                        >
-                            {isCacheActive
-                                ? `⚖️ Consultar Genio ${selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)} + RAG`
-                                : '🔒 Activa un Genio para consultar'
-                            }
-                        </button>
-
-                        <p className="text-center text-xs text-gray-500 mt-4">
-                            {isCacheActive
-                                ? 'Tras la consulta configurarás el sentido, calificación e instrucciones de redacción'
-                                : 'Selecciona un Genio arriba para encenderlo — se activará por máximo 5 minutos'
-                            }
-                        </p>
-                    </div>
-                )}
-
-
-                {/* ═══════════════════════════════════════════════════════════ */}
-                {/* PHASE: SOLVING (Genio + RAG loading)                       */}
-                {/* ═══════════════════════════════════════════════════════════ */}
-                {phase === 'solving' && (
-                    <div className="max-w-4xl mx-auto py-8">
-                        <div className="text-center mb-8">
-                            <div className="relative w-20 h-20 mx-auto mb-6">
-                                <div className="absolute inset-0 rounded-full bg-[#c9a962]/10 animate-ping" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <Search className="w-9 h-9 text-[#c9a962] animate-pulse" />
-                                </div>
-                            </div>
-                            <h2 className="font-serif text-2xl font-medium text-white mb-2">
-                                Consultando Genio + RAG
-                            </h2>
-                            <p className="text-white/40 text-sm">
-                                Buscando fundamentación legal y jurisprudencias aplicables...
-                            </p>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3 px-6 py-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                                <Loader2 className="w-5 h-5 text-[#c9a962] animate-spin" />
-                                <span className="text-sm text-white/60">Consultando Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)}...</span>
-                            </div>
-                            <div className="flex items-center gap-3 px-6 py-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                                <Loader2 className="w-5 h-5 text-[#c9a962] animate-spin" />
-                                <span className="text-sm text-white/60">Buscando tesis y jurisprudencias en Qdrant RAG...</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-
-                {/* ═══════════════════════════════════════════════════════════ */}
-                {/* PHASE: PROMPT REVIEW (review Genio + RAG, edit prompt)     */}
-                {/* ═══════════════════════════════════════════════════════════ */}
-                {phase === 'prompt_review' && (
-                    <div className="max-w-4xl mx-auto py-8">
-                        <button
-                            onClick={() => setPhase('estrategia')}
-                            className="flex items-center gap-2 text-sm text-white/30 hover:text-white/60 transition-colors mb-6 font-light"
-                        >
-                            <ArrowLeft className="w-4 h-4" /> Volver a Estrategia
-                        </button>
-
-                        <h2 className="font-serif text-2xl font-medium text-white mb-8">
-                            Revisión del Prompt
-                        </h2>
-
-                        {/* Genio Solution */}
-                        <div className="mb-6">
-                            <h3 className="flex items-center gap-2 text-sm font-medium text-[#c9a962] mb-3">
-                                <Sparkles className="w-4 h-4" />
-                                Fundamentación del Genio {selectedGenio.charAt(0).toUpperCase() + selectedGenio.slice(1)}
-                            </h3>
-                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-5 max-h-60 overflow-y-auto">
-                                <p className="text-sm text-white/60 whitespace-pre-wrap leading-relaxed">{genioSolution || 'Sin resultados'}</p>
-                            </div>
-                        </div>
-
-                        {/* RAG Results */}
-                        <div className="mb-6">
-                            <h3 className="flex items-center gap-2 text-sm font-medium text-[#c9a962] mb-3">
-                                <Search className="w-4 h-4" />
-                                Tesis y Jurisprudencias ({ragResults.length} encontradas)
-                            </h3>
-                            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] divide-y divide-white/[0.04] max-h-60 overflow-y-auto">
-                                {ragResults.length > 0 ? ragResults.slice(0, 10).map((r, i) => (
-                                    <div key={r.id || i} className="px-5 py-3">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="text-xs font-medium text-[#c9a962]/70">{r.fuente || 'Sin fuente'}</span>
-                                            <span className="text-[10px] text-white/20 px-2 py-0.5 rounded-full bg-white/[0.04]">
-                                                {r.silo} • {r.score}
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-white/40 line-clamp-2">{r.texto}</p>
-                                    </div>
-                                )) : (
-                                    <div className="px-5 py-4 text-sm text-white/30">No se encontraron tesis relevantes</div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Editable Prompt */}
-                        <div className="mb-6">
-                            <h3 className="flex items-center gap-2 text-sm font-medium text-[#c9a962] mb-3">
-                                <Edit3 className="w-4 h-4" />
-                                Prompt para el Modelo Fine-tuned
-                                <span className="text-[10px] text-white/20 ml-auto">~{Math.round(ftPrompt.length / 4).toLocaleString()} tokens est.</span>
-                            </h3>
-                            <textarea
-                                value={ftPrompt}
-                                onChange={(e) => setFtPrompt(e.target.value)}
-                                rows={12}
-                                className="w-full rounded-xl bg-white/[0.03] border border-white/[0.06] p-5 text-sm text-white/70 font-mono leading-relaxed resize-y focus:outline-none focus:border-[#c9a962]/30 transition-colors"
-                            />
-                        </div>
-
                         {/* Generate Button */}
                         <button
                             onClick={handleGenerate}
-                            className="w-full py-4 rounded-full text-sm font-medium tracking-wide bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30 transition-all duration-300"
+                            disabled={!allCalificadas}
+                            className={`w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${allCalificadas
+                                ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
+                                : 'bg-white/[0.04] text-gray-500 cursor-not-allowed border border-white/[0.08]'
+                                }`}
                         >
-                            ✨ Generar Estudio de Fondo
+                            {allCalificadas
+                                ? '✨ Generar Sentencia (Automático V3)'
+                                : '⚠️ Califica todos los problemas para continuar'}
                         </button>
-                        <p className="text-center text-xs text-gray-500 mt-3">
-                            Solo se genera el estudio de fondo — después podrás unirlo con tu adelanto (consideraciones previas) para la sentencia completa
+
+                        <p className="text-center text-xs text-gray-500 mt-4">
+                            El sistema generará el proyecto de sentencia procesando e hilando cada problema individualmente mediante generación de IA fundamentada con RAG.
                         </p>
                     </div>
                 )}
