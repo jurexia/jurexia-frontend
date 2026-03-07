@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRequireAuth } from '@/lib/useAuth';
 import { UserAvatar } from '@/components/UserAvatar';
 import { auditSentencia, SentenciaAuditResponse, SentenciaHallazgo } from '@/lib/api';
+import { Crown } from 'lucide-react';
 
 
 
@@ -153,7 +154,7 @@ function CollapsibleSection({ title, icon, children, defaultOpen = false }: {
 
 
 export default function SentenciaPage() {
-    const { user, loading: authLoading } = useRequireAuth();
+    const { user, profile, loading: authLoading } = useRequireAuth();
     const [documentText, setDocumentText] = useState('');
     const [fileName, setFileName] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -161,6 +162,10 @@ export default function SentenciaPage() {
     const [result, setResult] = useState<SentenciaAuditResponse | null>(null);
     const [analysisStep, setAnalysisStep] = useState('');
     const [dragActive, setDragActive] = useState(false);
+
+    // Determines if the user has access to the tool
+    const hasAccess = profile?.subscription_type &&
+        !['gratuito', 'basico_monthly'].includes(profile.subscription_type);
 
     const handleFile = useCallback(async (file: File) => {
         setError('');
@@ -280,7 +285,45 @@ export default function SentenciaPage() {
 
             {/* Main Content */}
             <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 pb-12">
-                {!result ? (
+                {!hasAccess ? (
+                    /* ═══════════════════════════ PAYWALL STATE ═══════════════════════════ */
+                    <div className="max-w-2xl mx-auto text-center py-12">
+                        <div className="w-20 h-20 bg-accent-gold/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Shield className="w-10 h-10 text-accent-gold" />
+                        </div>
+                        <h1 className="font-serif text-3xl md:text-4xl font-semibold text-charcoal-900 mb-4">
+                            Auditor de Sentencias Iurex<span className="text-accent-gold">ia</span>
+                        </h1>
+                        <p className="text-charcoal-600 text-lg mb-8 max-w-lg mx-auto leading-relaxed">
+                            Esta herramienta de inteligencia artificial avanzada pertenece a los planes <span className="text-charcoal-900 font-semibold">Pro</span> y <span className="text-charcoal-900 font-semibold">Platinum</span>. Escanea sentencias, audita la viabilidad legal y elabora proyectos de resolución.
+                        </p>
+
+                        <div className="bg-white border border-black/5 rounded-2xl p-6 md:p-8 max-w-md mx-auto shadow-xl">
+                            <h3 className="font-medium text-charcoal-900 mb-4">La suscripción te otorga:</h3>
+                            <ul className="text-sm text-charcoal-600 text-left space-y-3 mb-8">
+                                <li className="flex items-start gap-3">
+                                    <CheckCircle className="w-5 h-5 text-accent-gold flex-shrink-0" />
+                                    <span>Análisis jurisprudencial y detección de tesis contradictorias</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <CheckCircle className="w-5 h-5 text-accent-gold flex-shrink-0" />
+                                    <span>Control de Convencionalidad (CT 293/2011) automático</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <CheckCircle className="w-5 h-5 text-accent-gold flex-shrink-0" />
+                                    <span>Metodología de análisis profundo en segundos</span>
+                                </li>
+                            </ul>
+                            <Link
+                                href="/precios"
+                                className="btn-primary w-full shadow-lg shadow-accent-brown/20 flex items-center justify-center gap-2"
+                            >
+                                <Crown className="w-5 h-5" />
+                                Ver Planes Premium
+                            </Link>
+                        </div>
+                    </div>
+                ) : !result ? (
                     /* ═══════════════════════════ UPLOAD STATE ═══════════════════════════ */
                     <div className="max-w-2xl mx-auto">
                         {/* Header */}
