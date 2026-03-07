@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare } from 'lucide-react';
+import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare, Brain, Paperclip } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { useEffect, useRef, useState } from 'react';
 
@@ -24,31 +24,89 @@ export default function PlataformaPage() {
                     </p>
 
                     {/* Platform Preview */}
-                    <div className="relative mt-16 mb-20">
-                        <div className="bg-gradient-to-br from-charcoal-800 to-charcoal-900 rounded-3xl p-8 shadow-2xl">
-                            <div className="bg-white rounded-2xl overflow-hidden shadow-inner">
-                                <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b">
-                                    <div className="flex gap-1.5">
+                    <div className="relative mt-16 mb-20 mx-auto max-w-4xl text-left pointer-events-none select-none">
+                        <div className="bg-[#141414] rounded-[2rem] p-4 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border-[8px] border-charcoal-900 border-b-[12px]">
+                            <div className="bg-cream-300 rounded-xl overflow-hidden shadow-inner flex flex-col h-[500px]">
+                                {/* Browser Toolbar */}
+                                <div className="flex items-center gap-2 px-4 py-3 bg-white/70 border-b border-black/5">
+                                    <div className="flex gap-1.5 w-16">
                                         <div className="w-3 h-3 rounded-full bg-red-400"></div>
                                         <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                                         <div className="w-3 h-3 rounded-full bg-green-400"></div>
                                     </div>
-                                    <div className="flex-1 text-center text-xs text-gray-400">Iurexia.app</div>
+                                    <div className="flex-1 text-center text-xs text-charcoal-500 font-medium">iurexia.app</div>
+                                    <div className="w-16"></div>
                                 </div>
-                                <div className="p-8">
-                                    <div className="flex items-center gap-4 mb-6">
-                                        <Scale className="w-8 h-8 text-charcoal-900" />
-                                        <span className="font-serif text-2xl text-charcoal-900">Iurexia</span>
+
+                                {/* Inner Chat view */}
+                                <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 relative">
+                                    <div className="mb-4">
+                                        <span className="font-serif text-3xl sm:text-4xl font-semibold text-charcoal-900">
+                                            Iurex<span className="text-accent-gold">ia</span>
+                                        </span>
                                     </div>
-                                    <div className="bg-cream-300/50 rounded-xl p-4 mb-4">
-                                        <p className="text-charcoal-600">
-                                            ¿Qué jurisprudencia aplica para impugnar la constitucionalidad del artículo 107 de la Ley de Amparo?
-                                        </p>
+                                    <h2 className="font-serif text-xl sm:text-2xl font-medium text-charcoal-900 mb-6 text-center">
+                                        ¿En qué te puedo ayudar, Licenciado?
+                                    </h2>
+
+                                    <div className="font-serif italic text-charcoal-900/40 text-sm mb-8 text-center max-w-md hidden sm:block">
+                                        "Estoy diseñando una demanda de amparo contra actos de revisión administrativa..."
                                     </div>
-                                    <div className="flex gap-2">
-                                        <span className="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs rounded-full">📚 Jurisprudencia</span>
-                                        <span className="px-3 py-1.5 bg-green-50 text-green-600 text-xs rounded-full">⚖️ Leyes Federales</span>
-                                        <span className="px-3 py-1.5 bg-purple-50 text-purple-600 text-xs rounded-full">🏛️ SCJN</span>
+
+                                    <div className="mb-6 flex justify-center gap-2">
+                                        <div className="flex bg-charcoal-800/50 p-1.5 rounded-xl shadow-inner">
+                                            <button className="px-4 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-br from-accent-gold to-accent-brown text-white shadow-md">Federal</button>
+                                            <button className="px-4 py-1.5 rounded-lg text-xs font-medium text-charcoal-400">Común</button>
+                                        </div>
+                                    </div>
+
+                                    {/* Chat Input Container */}
+                                    <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-gray-100 p-2 sm:p-3 relative z-10 transition-shadow">
+                                        <div className="flex items-center px-4 py-3 border-b border-gray-100/60 pb-3 mb-2">
+                                            <button className="flex items-center gap-1.5 px-3 py-1 bg-charcoal-900 text-white rounded-full text-xs font-medium shadow-sm">
+                                                <Search className="w-3.5 h-3.5" />
+                                                <span>Buscar</span>
+                                            </button>
+                                            <button className="flex items-center gap-1.5 px-3 py-1 text-gray-400 rounded-full text-xs font-medium">
+                                                <FileText className="w-3.5 h-3.5" />
+                                                <span>Analizar</span>
+                                            </button>
+                                        </div>
+                                        <div className="flex items-center px-3">
+                                            <div className="w-full text-charcoal-900 py-2 outline-none text-[15px] font-normal leading-relaxed overflow-hidden whitespace-nowrap overflow-ellipsis">
+                                                ¿Qué jurisprudencia aplica para impugnar la constitucionalidad del artículo 107 de la Ley de Amparo?
+                                            </div>
+                                            <div className="flex flex-shrink-0 ml-auto items-center gap-2 pl-2">
+                                                <button className="hidden sm:flex p-2 rounded-full text-gray-400 bg-gray-50 border border-gray-200/50">
+                                                    <Paperclip className="w-4 h-4" />
+                                                </button>
+                                                <div className="w-9 h-9 flex items-center justify-center rounded-full bg-accent-gold text-white shadow-md shadow-accent-gold/30">
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center w-full mt-3 pt-2 sm:pt-3 pb-1 border-t border-gray-100/60 gap-1 sm:gap-1.5 px-2">
+                                            <div className="flex items-center flex-shrink-0 gap-1 pr-2 mr-0.5 border-r border-gray-200/40">
+                                                <Brain className="w-3 h-3 text-charcoal-500" />
+                                                <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-charcoal-600">Genios</span>
+                                            </div>
+
+                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-medium border border-[#c9a962] bg-gradient-to-r from-purple-50 to-white text-purple-700 shadow-[0_0_8px_rgba(201,169,98,0.2)]">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                                Amparo
+                                            </div>
+
+                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-medium border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-colors">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 opacity-60"></span>
+                                                Mercantil
+                                            </div>
+
+                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-medium border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-colors hidden sm:flex">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 opacity-60"></span>
+                                                Civil
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
