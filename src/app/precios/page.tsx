@@ -67,10 +67,10 @@ export default function PreciosPage() {
                                 price="$79"
                                 originalPrice="$149"
                                 period="MXN/mes"
-                                description="Búsqueda RAG rápida y económica"
+                                description="Búsqueda rápida en la base de datos legal de Iurexia"
                                 features={[
                                     "70 consultas/mes",
-                                    "Búsqueda inteligente RAG en base de datos",
+                                    "Búsqueda inteligente en la base de datos legal de Iurexia",
                                     "Filtros de jurisdicción",
                                     "Acceso a base documental completa",
                                     <span className="text-gray-500">Sin acceso a Inteligencia Avanzada</span>

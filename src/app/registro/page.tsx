@@ -93,7 +93,7 @@ export default function RegistroPage() {
                             </div>
                             <div className="flex items-center gap-2 text-sm text-green-700">
                                 <Check className="w-4 h-4" />
-                                <span>Búsqueda híbrida RAG</span>
+                                <span>Búsqueda jurídica con IA</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-green-700">
                                 <Check className="w-4 h-4" />

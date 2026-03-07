@@ -70,7 +70,7 @@ export default function ConocenosPage() {
                                     Arquitectura anti-alucinaciones con verificación en tiempo real
                                 </h3>
                                 <p className="text-charcoal-700 leading-relaxed">
-                                    Cada respuesta de Iurexia incluye referencias trazables a documentos específicos. Trabajamos con un sistema de recuperación de información (RAG) que vincula cada afirmación legal con su fuente original. No prometemos infalibilidad —ninguna IA puede hacerlo con responsabilidad—, pero sí reducimos drásticamente el riesgo de inventar contenido inexistente. Si el sistema no encuentra fundamento en la base de datos, lo indica expresamente.
+                                    Cada respuesta de Iurexia incluye referencias trazables a documentos específicos. Trabajamos con un sistema de recuperación de información basado en Inteligencia Artificial que vincula cada afirmación legal con su fuente original. No prometemos infalibilidad —ninguna IA puede hacerlo con responsabilidad—, pero sí reducimos drásticamente el riesgo de inventar contenido inexistente. Si el sistema no encuentra fundamento en la base de datos, lo indica expresamente.
                                 </p>
                             </div>
 

@@ -42,7 +42,7 @@ export const PLANS = {
         features: [
             '5 consultas/mes',
             'Acceso a Leyes del Estado',
-            'Búsqueda jurídica con RAG',
+            'Búsqueda inteligente en la base de datos legal de Iurexia',
             'Filtros de jurisdicción',
             'Acceso a base documental completa'
         ]
@@ -56,7 +56,7 @@ export const PLANS = {
         queryLimit: 70,
         features: [
             '70 consultas/mes',
-            'Búsqueda inteligente RAG',
+            'Búsqueda inteligente en la base de datos legal de Iurexia',
             'Soporte estándar',
         ]
     },
@@ -69,7 +69,7 @@ export const PLANS = {
         queryLimit: 140,
         features: [
             '140 consultas/mes',
-            'RAG jurídico sin alucinaciones',
+            'Búsqueda jurídica precisa y fundamentada',
             'Análisis de documentos',
             'Filtros por entidad federativa',
             'Soporte prioritario'

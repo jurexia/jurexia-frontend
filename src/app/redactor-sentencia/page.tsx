@@ -218,9 +218,9 @@ function DocumentDropZone({
 
 const PROGRESS_STEPS = [
     { label: 'Extrayendo datos estructurados de los PDFs...', emoji: '🔬' },
-    { label: 'RAG multi-silo por agravio (jurisprudencia + legislación + constitución)...', emoji: '🔍' },
+    { label: 'Búsqueda multi-silo por agravio (jurisprudencia + legislación + constitución)...', emoji: '🔍' },
     { label: 'Gemini redacta análisis profundo de cada agravio...', emoji: '✍️' },
-    { label: 'RAG de enriquecimiento (buscando citas adicionales)...', emoji: '📚' },
+    { label: 'Búsqueda de enriquecimiento (buscando citas adicionales)...', emoji: '📚' },
     { label: 'Gemini enriquece las citas verificadas...', emoji: '✨' },
     { label: 'Redactando efectos de la sentencia y puntos resolutivos...', emoji: '⚖️' },
     { label: 'Verificando coherencia del estudio de fondo...', emoji: '✅' },
@@ -276,7 +276,7 @@ export default function RedactorSentenciaPage() {
         generationTime: number;
     } | null>(null);
 
-    // ── V2 state: Genio + RAG solve results ──
+    // ── V2 state: Genio + Solve results ──
     const [genioSolution, setGenioSolution] = useState('');
     const [ragResults, setRagResults] = useState<Array<{ id: string; fuente: string; texto: string; score: number; silo: string }>>([]);
     const [ftPrompt, setFtPrompt] = useState('');
@@ -576,7 +576,7 @@ export default function RedactorSentenciaPage() {
         }
     };
 
-    // ── Generate (v3 — Comprehensive per-problem with RAG and Gemini) ─────
+    // ── Generate (v3 — Comprehensive per-problem with IA and Gemini) ─────
     const handleGenerate = async () => {
         if (!selectedTipo || !user?.email || !allCalificadas) return;
 
@@ -919,7 +919,10 @@ export default function RedactorSentenciaPage() {
                                             <div className="mt-6 flex items-center gap-3 text-[11px] text-white/20 font-light">
                                                 <span>Multi-fase</span>
                                                 <span className="w-1 h-1 rounded-full bg-white/10" />
-                                                <span>RAG integrado</span>
+                                                <div className="flex items-center gap-1.5 opacity-40">
+                                                    <Search className="w-3.5 h-3.5" />
+                                                    <span>Búsqueda integrada</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </button>
@@ -1374,7 +1377,7 @@ export default function RedactorSentenciaPage() {
                         </button>
 
                         <p className="text-center text-xs text-gray-500 mt-4">
-                            El sistema generará el proyecto de sentencia procesando e hilando cada problema individualmente mediante generación de IA fundamentada con RAG.
+                            El sistema generará el proyecto de sentencia procesando e hilando cada problema individualmente mediante generación de IA fundamentada en documentos legales.
                         </p>
                     </div>
                 )}
@@ -1506,7 +1509,7 @@ export default function RedactorSentenciaPage() {
                                     {result.length.toLocaleString()} caracteres
                                     {generationInfo && <> • {generationInfo.phasesCompleted} fases completadas</>}
                                     {generationInfo && generationInfo.generationTime > 0 && <> • {Math.round(generationInfo.generationTime)}s</>}
-                                    {ragCount > 0 && <> • {ragCount} fuentes RAG</>}
+                                    {ragCount > 0 && <> • {ragCount} fuentes referenciadas</>}
                                     {' '}• Revisa y ajusta antes de presentar
                                 </p>
                             </div>
