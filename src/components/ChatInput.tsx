@@ -240,37 +240,37 @@ ${draftRequest.descripcion}`;
         <>
             <div className="w-full max-w-3xl mx-auto relative z-20">
 
-                {/* ── Genio Premium Vertical Sidebar / Mobile Wrapping Horizontal ───────────────────────────── */}
+                {/* ── Genio Premium Vertical Sidebar / Mobile Scrolling Horizontal ───────────────────────────── */}
                 <div
                     data-guide="genios-container"
                     className="
                         flex xl:flex-col
                         xl:absolute xl:left-full xl:ml-3 xl:bottom-0
-                        flex-wrap xl:flex-nowrap
+                        flex-row overflow-x-auto scrollbar-hide
                         mb-2 xl:mb-0
-                        w-full xl:w-[130px]
-                        p-1.5 xl:p-2
-                        bg-white/70 backdrop-blur-md border border-gray-100 xl:border-gray-200/60
+                        w-full xl:w-[110px]
+                        p-1 xl:p-1.5
+                        bg-white/50 backdrop-blur-md border border-gray-100/60 xl:border-gray-200/50
                         rounded-xl xl:shadow-sm
-                        gap-1.5 xl:gap-1.5
+                        gap-1.5 xl:gap-1
                         justify-start xl:justify-end
                     "
                 >
                     {/* Header Desktop */}
-                    <div className="hidden xl:flex items-center gap-1.5 mb-1 px-1">
-                        <Brain className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    <div className="hidden xl:flex items-center justify-center gap-1 mb-0.5 px-1">
+                        <Brain className="w-3 h-3 text-[#c9a962] drop-shadow-[0_0_6px_rgba(201,169,98,0.8)]" />
+                        <span className="text-[9px] font-semibold text-[#c9a962] uppercase tracking-widest drop-shadow-[0_0_4px_rgba(201,169,98,0.5)]">
                             Genios
                         </span>
                         {(isGenioLocked && !isPro) && (
-                            <span className="text-[8px] font-bold text-[#c9a962] ml-auto">PRO</span>
+                            <span className="text-[7.5px] font-bold text-[#c9a962] ml-auto">PRO</span>
                         )}
                     </div>
 
                     {/* Header Mobile */}
-                    <div className="flex xl:hidden items-center flex-shrink-0 mr-1 gap-1.5 pr-2 border-r border-gray-200">
-                        <Brain className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Genios</span>
+                    <div className="flex xl:hidden items-center flex-shrink-0 mr-1 gap-1 pr-1.5 border-r border-gray-200/60">
+                        <Brain className="w-3.5 h-3.5 text-[#c9a962] drop-shadow-[0_0_6px_rgba(201,169,98,0.8)]" />
+                        <span className="text-[9.5px] font-bold text-[#c9a962] uppercase tracking-wide drop-shadow-[0_0_4px_rgba(201,169,98,0.5)]">Genios</span>
                         {(isGenioLocked && !isPro) && (
                             <span className="text-[8px] text-[#c9a962] font-bold ml-1">PRO</span>
                         )}
@@ -295,9 +295,9 @@ ${draftRequest.descripcion}`;
                                 }
                             }}
                             disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                            className={`flex items-center gap-1.5 px-2 py-1 xl:py-1.5 rounded-md text-[10px] xl:text-[11px] font-medium transition-all duration-200 border flex-shrink-0 xl:w-full
+                            className={`flex items-center gap-1.5 px-1.5 py-1 xl:px-2 xl:py-1 rounded-md text-[9px] xl:text-[10px] font-medium transition-all duration-200 border flex-shrink-0 xl:w-full
                                 ${(isGenioLocked && !isPro)
-                                    ? 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed opacity-70'
+                                    ? 'bg-gray-50/50 text-gray-400 border-gray-100/50 cursor-not-allowed opacity-70'
                                     : (isCacheLoading && activeGenios.includes(g.id))
                                         ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
                                         : genioError && activeGenios.includes(g.id)
