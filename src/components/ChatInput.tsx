@@ -65,6 +65,67 @@ export default function ChatInput({
     const isFreeUser = !profile?.subscription_type || profile?.subscription_type === 'gratuito';
     const isGenioLocked = isFreeUser && !isAdmin(user?.email);
 
+    const geniosList = [
+        {
+            id: 'amparo', label: 'Amparo', dot: 'bg-purple-500',
+            activeOn: 'bg-gradient-to-r from-purple-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-purple-600 to-indigo-700 text-white border-purple-400',
+            idle: 'bg-[#1a1a1c] text-gray-300 border-[#333] hover:border-[#c9a962]/40 hover:bg-[#222]',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-purple-600'
+        },
+        {
+            id: 'mercantil', label: 'Mercantil', dot: 'bg-emerald-500',
+            activeOn: 'bg-gradient-to-r from-emerald-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white border-emerald-400',
+            idle: 'bg-[#1a1a1c] text-gray-300 border-[#333] hover:border-[#c9a962]/40 hover:bg-[#222]',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-emerald-600'
+        },
+        {
+            id: 'civil', label: 'Civil', dot: 'bg-blue-500',
+            activeOn: 'bg-gradient-to-r from-blue-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-blue-600 to-cyan-700 text-white border-blue-400',
+            idle: 'bg-[#1a1a1c] text-gray-300 border-[#333] hover:border-[#c9a962]/40 hover:bg-[#222]',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-blue-600'
+        },
+        {
+            id: 'penal', label: 'Penal', dot: 'bg-rose-500',
+            activeOn: 'bg-gradient-to-r from-rose-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-rose-600 to-red-700 text-white border-rose-400',
+            idle: 'bg-[#1a1a1c] text-gray-300 border-[#333] hover:border-[#c9a962]/40 hover:bg-[#222]',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-rose-600'
+        },
+        {
+            id: 'laboral', label: 'Laboral', dot: 'bg-amber-500',
+            activeOn: 'bg-gradient-to-r from-amber-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-amber-600 to-orange-700 text-white border-amber-400',
+            idle: 'bg-[#1a1a1c] text-gray-300 border-[#333] hover:border-[#c9a962]/40 hover:bg-[#222]',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-amber-600'
+        },
+        {
+            id: 'fiscal', label: 'Fiscal', dot: 'bg-violet-500',
+            activeOn: 'bg-gradient-to-r from-violet-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-violet-600 to-purple-700 text-white border-violet-400',
+            idle: 'bg-[#1a1a1c] text-gray-300 border-[#333] hover:border-[#c9a962]/40 hover:bg-[#222]',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-violet-600'
+        },
+        {
+            id: 'administrativo', label: 'Adtvo', dot: 'bg-teal-500',
+            activeOn: 'bg-gradient-to-r from-teal-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-teal-600 to-cyan-700 text-white border-teal-400',
+            idle: 'bg-[#1a1a1c] text-gray-300 border-[#333] hover:border-[#c9a962]/40 hover:bg-[#222]',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-teal-600'
+        },
+        {
+            id: 'agrario', label: 'Agrario', dot: 'bg-lime-500',
+            activeOn: 'bg-gradient-to-r from-lime-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-lime-600 to-green-700 text-white border-lime-400',
+            idle: 'bg-[#1a1a1c] text-gray-300 border-[#333] hover:border-[#c9a962]/40 hover:bg-[#222]',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-lime-600'
+        },
+    ];
+
+
+
     const handleSubmit = () => {
         if (!isLoading && (message.trim() || attachedDocument)) {
             let finalMessage = message.trim();
@@ -177,7 +238,116 @@ ${draftRequest.descripcion}`;
 
     return (
         <>
-            <div className="w-full max-w-3xl mx-auto">
+            <div className="w-full max-w-3xl mx-auto relative z-20">
+
+                {/* ── Genio Premium Vertical Sidebar / Mobile Horizontal ───────────────────────────── */}
+                <div
+                    data-guide="genios-container"
+                    className="
+                        flex xl:flex-col
+                        xl:absolute xl:left-full xl:ml-6 xl:bottom-[-20px]
+                        flex-row overflow-x-auto scrollbar-hide
+                        p-2.5 xl:p-3
+                        bg-[#111] xl:border xl:border-[#c9a962]/30 
+                        shadow-[0_-5px_15px_rgba(0,0,0,0.1)] xl:shadow-[0_8px_32px_rgba(0,0,0,0.4),0_0_15px_rgba(201,169,98,0.15)] 
+                        rounded-xl xl:rounded-2xl
+                        mb-3 xl:mb-0
+                        w-full xl:w-[130px]
+                        gap-2
+                    "
+                >
+                    {/* Header Desktop */}
+                    <div className="hidden xl:flex flex-col items-center mb-1 w-full relative">
+                        <div className="absolute top-0 right-0">
+                            {(isGenioLocked && !isPro) && (
+                                <span className="text-[8px] font-bold text-[#c9a962] bg-[#c9a962]/10 px-1 py-0.5 rounded border border-[#c9a962]/30">PRO</span>
+                            )}
+                        </div>
+                        <Brain className="w-6 h-6 text-[#c9a962] mb-1 drop-shadow-[0_0_5px_rgba(201,169,98,0.8)]" />
+                        <span className="text-[11px] font-bold tracking-[0.2em] text-[#c9a962] uppercase text-center leading-tight">
+                            Genios<br />Jurídicos
+                        </span>
+                        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#c9a962]/40 to-transparent mt-2" />
+                    </div>
+
+                    {/* Header Mobile */}
+                    <div className="flex xl:hidden items-center flex-shrink-0 mr-1 gap-1.5 pr-2 border-r border-[#333]">
+                        <Brain className="w-4 h-4 text-[#c9a962]" />
+                        <span className="text-[11px] font-bold text-[#c9a962] uppercase tracking-wide">Genios</span>
+                        {(isGenioLocked && !isPro) && (
+                            <span className="text-[9px] text-[#c9a962]/80 ml-1">PRO</span>
+                        )}
+                    </div>
+
+                    <div className="flex flex-row xl:flex-col gap-1.5 flex-1 xl:w-full">
+                        {geniosList.map((g) => (
+                            <button
+                                key={g.id}
+                                onClick={() => {
+                                    if (isGenioLocked && !isPro) return;
+                                    if (!setActiveGenios) return;
+
+                                    if (activeGenios.includes(g.id)) {
+                                        setActiveGenios(activeGenios.filter(id => id !== g.id));
+                                    } else {
+                                        if (activeGenios.length >= 2) {
+                                            alert("Solo puedes seleccionar un máximo de dos Genios simultáneamente.");
+                                            return;
+                                        } else {
+                                            setActiveGenios([...activeGenios, g.id]);
+                                        }
+                                    }
+                                }}
+                                disabled={isCacheLoading || (isGenioLocked && !isPro)}
+                                className={`flex items-center gap-2 px-2.5 py-1.5 xl:py-2 rounded-lg text-[11px] xl:text-[12px] font-semibold transition-all duration-300 border flex-shrink-0 xl:w-full
+                                    ${(isGenioLocked && !isPro)
+                                        ? 'bg-[#151515] text-[#444] border-[#222] cursor-not-allowed opacity-60'
+                                        : (isCacheLoading && activeGenios.includes(g.id))
+                                            ? 'bg-gradient-to-r from-amber-900/40 to-yellow-900/40 text-amber-500 border-amber-700/50 cursor-wait'
+                                            : genioError && activeGenios.includes(g.id)
+                                                ? 'bg-red-900/40 text-red-500 border-red-700/50'
+                                                : activeGenios.includes(g.id)
+                                                    ? isCacheActive
+                                                        ? g.activeOn
+                                                        : g.activating
+                                                    : g.idle
+                                    }`}
+                                style={(activeGenios.includes(g.id) && isCacheActive && !(isGenioLocked && !isPro))
+                                    ? { animation: 'genioActiveGlow 2.5s ease-in-out infinite' }
+                                    : undefined}
+                                title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro' : activeGenios.includes(g.id) ? `Desactivar Genio ${g.label}` : `Activar Genio ${g.label}`}
+                            >
+                                {(isGenioLocked && !isPro) ? (
+                                    <>
+                                        <Lock className="w-3 h-3 text-[#444]" />
+                                        <span>{g.label}</span>
+                                    </>
+                                ) : (isCacheLoading && activeGenios.includes(g.id)) ? (
+                                    <>
+                                        <div className={`w-3 h-3 border-2 ${g.spinnerBorder} border-t-transparent rounded-full animate-spin`} />
+                                        <span className="hidden xl:inline">Cargando</span>
+                                    </>
+                                ) : (genioError && activeGenios.includes(g.id)) ? (
+                                    <>
+                                        <span className="text-[12px]">&#x26A0;</span>
+                                        <span>Error</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${(activeGenios.includes(g.id) && isCacheActive) ? g.dot + ' animate-pulse' : (activeGenios.includes(g.id) ? 'bg-white' : g.dot + ' opacity-40')}`} />
+                                        <span className={(activeGenios.includes(g.id) && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenios.includes(g.id) ? '' : 'text-gray-300 group-hover:text-white')}>
+                                            {g.label}
+                                        </span>
+                                    </>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                    {genioError && (
+                        <p className="text-[10px] text-red-500 mt-1 w-full text-center xl:break-words">{genioError}</p>
+                    )}
+                </div>
+
                 {/* Main Input Container - Harvey Style */}
                 <div className="chat-input-container p-4">
                     {/* Attached Document Chip (Legacy location - removing this as it's handled in the input now) */}
@@ -314,153 +484,8 @@ ${draftRequest.descripcion}`;
                         </div>
                     </div>
 
-                    {/* ── Genio Premium Section ───────────────────────────── */}
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-0.5 h-4 rounded-full bg-[#c9a962]" />
-                            <span
-                                className="text-[11px] font-bold tracking-[0.2em] uppercase"
-                                style={{
-                                    background: 'linear-gradient(135deg, #c9a962, #e8d5a3, #c9a962)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent',
-                                    animation: 'pulseGold 2.5s ease-in-out infinite',
-                                }}
-                            >
-                                GENIOS
-                            </span>
-                            <div className="flex-1 h-[1px] bg-gradient-to-r from-[#c9a962]/30 to-transparent" />
-                            {(isGenioLocked && !isPro) && (
-                                <span className="text-[9px] font-medium text-[#c9a962]/70 tracking-wide">PRO</span>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-1 flex-wrap">
-                            {[
-                                {
-                                    id: 'amparo', label: 'Amparo', dot: 'bg-purple-500',
-                                    activeOn: 'bg-gradient-to-r from-purple-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-                                    activating: 'bg-gradient-to-r from-purple-600 to-indigo-700 text-white border-purple-400',
-                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
-                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-purple-600'
-                                },
-                                {
-                                    id: 'mercantil', label: 'Mercantil', dot: 'bg-emerald-500',
-                                    activeOn: 'bg-gradient-to-r from-emerald-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-                                    activating: 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white border-emerald-400',
-                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
-                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-emerald-600'
-                                },
-                                {
-                                    id: 'civil', label: 'Civil', dot: 'bg-blue-500',
-                                    activeOn: 'bg-gradient-to-r from-blue-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-                                    activating: 'bg-gradient-to-r from-blue-600 to-cyan-700 text-white border-blue-400',
-                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
-                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-blue-600'
-                                },
-                                {
-                                    id: 'penal', label: 'Penal', dot: 'bg-rose-500',
-                                    activeOn: 'bg-gradient-to-r from-rose-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-                                    activating: 'bg-gradient-to-r from-rose-600 to-red-700 text-white border-rose-400',
-                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
-                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-rose-600'
-                                },
-                                {
-                                    id: 'laboral', label: 'Laboral', dot: 'bg-amber-500',
-                                    activeOn: 'bg-gradient-to-r from-amber-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-                                    activating: 'bg-gradient-to-r from-amber-600 to-orange-700 text-white border-amber-400',
-                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
-                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-amber-600'
-                                },
-                                {
-                                    id: 'fiscal', label: 'Fiscal', dot: 'bg-violet-500',
-                                    activeOn: 'bg-gradient-to-r from-violet-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-                                    activating: 'bg-gradient-to-r from-violet-600 to-purple-700 text-white border-violet-400',
-                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
-                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-violet-600'
-                                },
-                                {
-                                    id: 'administrativo', label: 'Adtvo', dot: 'bg-teal-500',
-                                    activeOn: 'bg-gradient-to-r from-teal-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-                                    activating: 'bg-gradient-to-r from-teal-600 to-cyan-700 text-white border-teal-400',
-                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
-                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-teal-600'
-                                },
-                                {
-                                    id: 'agrario', label: 'Agrario', dot: 'bg-lime-500',
-                                    activeOn: 'bg-gradient-to-r from-lime-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-                                    activating: 'bg-gradient-to-r from-lime-600 to-green-700 text-white border-lime-400',
-                                    idle: 'bg-white border-gray-200 hover:border-[#c9a962]/40 hover:shadow-sm',
-                                    spinnerBorder: 'border-[#c9a962]', iconOn: 'text-lime-600'
-                                },
-                            ].map((g) => (
-                                <button
-                                    key={g.id}
-                                    data-guide={`genio-${g.id}`}
-                                    onClick={() => {
-                                        if (isGenioLocked && !isPro) return;
-                                        if (!setActiveGenios) return;
-
-                                        if (activeGenios.includes(g.id)) {
-                                            setActiveGenios(activeGenios.filter(id => id !== g.id));
-                                        } else {
-                                            if (activeGenios.length >= 2) {
-                                                // Alert user when trying to select a 3rd Genio
-                                                alert("Solo puedes seleccionar un máximo de dos Genios simultáneamente.");
-                                                return;
-                                            } else {
-                                                setActiveGenios([...activeGenios, g.id]);
-                                            }
-                                        }
-                                    }}
-                                    disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all duration-300 border flex-shrink-0
-                                        ${(isGenioLocked && !isPro)
-                                            ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
-                                            : (isCacheLoading && activeGenios.includes(g.id))
-                                                ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
-                                                : genioError && activeGenios.includes(g.id)
-                                                    ? 'bg-red-50 text-red-600 border-red-300'
-                                                    : activeGenios.includes(g.id)
-                                                        ? isCacheActive
-                                                            ? g.activeOn
-                                                            : g.activating
-                                                        : g.idle
-                                        }`}
-                                    style={(activeGenios.includes(g.id) && isCacheActive && !(isGenioLocked && !isPro))
-                                        ? { animation: 'genioActiveGlow 2.5s ease-in-out infinite' }
-                                        : undefined}
-                                    title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro' : activeGenios.includes(g.id) ? `Desactivar Genio ${g.label}` : `Activar Genio ${g.label}`}
-                                >
-                                    {(isGenioLocked && !isPro) ? (
-                                        <>
-                                            <Lock className="w-2.5 h-2.5" />
-                                            <span className="text-gray-400">{g.label}</span>
-                                        </>
-                                    ) : (isCacheLoading && activeGenios.includes(g.id)) ? (
-                                        <>
-                                            <div className={`w-2.5 h-2.5 border-2 ${g.spinnerBorder} border-t-transparent rounded-full animate-spin`} />
-                                            <span>Activando...</span>
-                                        </>
-                                    ) : (genioError && activeGenios.includes(g.id)) ? (
-                                        <>
-                                            <span className="text-red-500 text-[11px]">&#x26A0;</span>
-                                            <span>Error</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${(activeGenios.includes(g.id) && isCacheActive) ? g.dot + ' animate-pulse' : (activeGenios.includes(g.id) ? 'bg-white' : g.dot + ' opacity-40')}`} />
-                                            <span className={(activeGenios.includes(g.id) && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenios.includes(g.id) ? '' : 'text-gray-600')}>
-                                                {(activeGenios.includes(g.id) && isCacheActive) ? `${g.label} ON` : g.label}
-                                            </span>
-                                        </>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                        {genioError && (
-                            <p className="text-[10px] text-red-500 mt-1.5 pl-1">{genioError}</p>
-                        )}
-                    </div>
+                    {/* ── Chat Action Section (Moved inside chat-input-container) */}
+                    <div className="mt-3 pt-3 border-t border-gray-100 hidden md:block" />
 
                     {/* Connect Badge — Free Plan CTA */}
                     <div className="mt-3 pt-3 border-t border-gray-50">

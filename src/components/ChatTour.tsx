@@ -33,9 +33,9 @@ const TOUR_STEPS: TourStep[] = [
         padding: 8,
     },
     {
-        selector: '[data-guide="genio-juridico"]',
-        title: '⚡ Genio Amparo',
-        description: 'Activa el modelo avanzado con acceso al corpus constitucional y la Ley de Amparo. Cuando está activo, la calidad y precisión de las respuestas aumenta considerablemente — especialmente en temas de derechos humanos, derecho constitucional, donde la interpretación contextual es crucial.\n\n⚠️ Desactivado: obtendrás citas exactas de artículos pero respuestas menos precisas en materia constitucional/derechos humanos.\n\nRegla: Genio activo = comprensión y análisis profundo. Genio desactivado = referencias exactas para fundar escritos.',
+        selector: '[data-guide="genios-container"]',
+        title: '⚡ Genios Jurídicos (Solo Pro)',
+        description: 'Activa modelos avanzados especializados por materia (Amparo, Civil, Penal, etc.) para un análisis profundo con razonamiento experto.\n\nReglas de uso:\n• Exclusivo para usuarios Pro y superiores.\n• Puedes activar hasta 2 Genios simultáneamente.\n• Tienes un tiempo máximo de 3 minutos tras activar el Genio para formular tu consulta antes de que la sesión expire.\n\n⚠️ Desactivado: Obtendrás respuestas normativas rápidas, pero sin el nivel de especialización y razonamiento avanzado de un Genio.',
         padding: 8,
     },
     {
