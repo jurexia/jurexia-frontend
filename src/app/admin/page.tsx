@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
     Users, Shield, BarChart3, AlertTriangle, Ban, CheckCircle,
-    Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail, Bell
+    Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail, Bell,
+    MoreVertical, ChevronLeft, ChevronRight, Filter, Scale
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
@@ -113,6 +114,10 @@ export default function AdminPage() {
     const [loadingData, setLoadingData] = useState(true);
     const [error, setError] = useState('');
     const [searchFilter, setSearchFilter] = useState('');
+    const [filterPlan, setFilterPlan] = useState('all');
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(20);
     const [showReviewed, setShowReviewed] = useState(false);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [stripeData, setStripeData] = useState<Record<string, StripeSubData>>({});
@@ -254,15 +259,38 @@ export default function AdminPage() {
         }
     };
 
-    const filteredUsers = users.filter(u =>
-        (u.email || '').toLowerCase().includes(searchFilter.toLowerCase()) ||
-        (u.full_name || '').toLowerCase().includes(searchFilter.toLowerCase())
-    );
+    const filteredUsers = users.filter(u => {
+        const matchSearch = (u.email || '').toLowerCase().includes(searchFilter.toLowerCase()) ||
+            (u.full_name || '').toLowerCase().includes(searchFilter.toLowerCase());
+
+        let matchPlan = true;
+        if (filterPlan !== 'all') {
+            if (filterPlan === 'pagados') matchPlan = u.subscription_type !== 'gratuito';
+            else if (filterPlan === 'gratuitos') matchPlan = u.subscription_type === 'gratuito';
+            else matchPlan = u.subscription_type === filterPlan;
+        }
+
+        let matchStatus = true;
+        if (filterStatus !== 'all') {
+            if (filterStatus === 'activos') matchStatus = !u.is_blocked;
+            else if (filterStatus === 'bloqueados') matchStatus = u.is_blocked;
+        }
+
+        return matchSearch && matchPlan && matchStatus;
+    });
+
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    const currentUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // reset pagination on filter change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchFilter, filterPlan, filterStatus]);
 
     if (loading || !user || user.email !== ADMIN_EMAIL) {
         return (
-            <div style={{ backgroundColor: '#0a0a0a', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ color: '#666' }}>Verificando acceso administrativo...</div>
+            <div className="flex bg-[#0a0a0a] min-h-screen items-center justify-center">
+                <div className="text-gray-500 font-medium tracking-wide">Verificando acceso administrativo...</div>
             </div>
         );
     }
@@ -274,39 +302,32 @@ export default function AdminPage() {
     ];
 
     return (
-        <div style={{ backgroundColor: '#0a0a0a', minHeight: '100vh', color: '#f5f5f5', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
+        <div className="bg-[#050505] min-h-screen text-gray-200 font-sans selection:bg-accent-gold/20 selection:text-accent-gold">
             <Navbar />
 
-            <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '100px 24px 60px' }}>
+            <div className="max-w-[1400px] mx-auto pt-24 pb-16 px-6">
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                            <Shield className="w-6 h-6" style={{ color: '#dc2626' }} />
-                            <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: '#f5f5f5' }}>Panel de Administración</h1>
+                        <div className="flex items-center gap-3 mb-2">
+                            <Shield className="w-7 h-7 text-red-500" />
+                            <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">Panel de Administración</h1>
                         </div>
-                        <p style={{ color: '#666', fontSize: '0.9rem' }}>Iurexia Technologies — Gestión de usuarios y seguridad</p>
+                        <p className="text-gray-500 text-sm font-medium">Iurexia Technologies — Gestión de usuarios y seguridad</p>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(220, 38, 38, 0.1)', border: '1px solid rgba(220, 38, 38, 0.3)', borderRadius: '12px' }}>
-                        <Lock className="w-4 h-4" style={{ color: '#ef4444' }} />
-                        <span style={{ fontSize: '0.8rem', color: '#fca5a5' }}>Acceso restringido</span>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl shadow-sm">
+                        <Lock className="w-4 h-4 text-red-500" />
+                        <span className="text-sm font-medium text-red-400">Acceso restringido</span>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', background: '#111', borderRadius: '12px', padding: '4px', border: '1px solid #222' }}>
+                <div className="flex flex-wrap gap-1 mb-8 bg-[#111] rounded-xl p-1.5 border border-[#222] shadow-sm max-w-2xl">
                     {tabs.map(t => (
                         <button
                             key={t.key}
                             onClick={() => setTab(t.key)}
-                            style={{
-                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                padding: '12px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                                fontSize: '0.9rem', fontWeight: tab === t.key ? 600 : 400,
-                                background: tab === t.key ? '#1a1a1a' : 'transparent',
-                                color: tab === t.key ? '#fff' : '#888',
-                                transition: 'all 0.2s',
-                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm transition-all focus:outline-none ${tab === t.key ? 'bg-[#1a1a1a] text-white font-semibold shadow-md border border-[#333]' : 'text-gray-500 hover:text-gray-300 hover:bg-[#151515] font-medium border border-transparent'}`}
                         >
                             <t.icon className="w-4 h-4" />
                             {t.label}
@@ -316,136 +337,162 @@ export default function AdminPage() {
 
                 {/* Error banner */}
                 {error && (
-                    <div style={{ padding: '12px 16px', background: 'rgba(220, 38, 38, 0.1)', border: '1px solid #dc2626', borderRadius: '12px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#fca5a5', fontSize: '0.9rem' }}>{error}</span>
-                        <button onClick={() => setError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fca5a5' }}><X className="w-4 h-4" /></button>
+                    <div className="flex justify-between items-center p-4 bg-red-500/10 border border-red-500/30 rounded-xl mb-6 shadow-sm">
+                        <span className="text-red-400 text-sm font-medium">{error}</span>
+                        <button onClick={() => setError('')} className="text-red-400 hover:text-red-300 transition-colors focus:outline-none">
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
                 )}
 
                 {/* Loading */}
                 {loadingData && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px', color: '#666' }}>
-                        <RefreshCw className="w-5 h-5 animate-spin" style={{ marginRight: '12px' }} />
-                        Cargando datos...
+                    <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                        <RefreshCw className="w-8 h-8 animate-spin text-[#333] mb-4" />
+                        <span className="font-medium text-sm text-gray-400">Cargando datos...</span>
                     </div>
                 )}
 
                 {/* ═══ TAB: USUARIOS ═══ */}
                 {!loadingData && tab === 'usuarios' && (
                     <div>
-                        {/* Search bar */}
-                        <div style={{ position: 'relative', marginBottom: '24px', maxWidth: '400px' }}>
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                            <input
-                                type="text"
-                                placeholder="Buscar por email o nombre..."
-                                value={searchFilter}
-                                onChange={(e) => setSearchFilter(e.target.value)}
-                                style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', paddingTop: '10px', paddingBottom: '10px', background: '#111', border: '1px solid #333', borderRadius: '10px', color: '#fff', fontSize: '0.85rem', outline: 'none' }}
-                            />
+                        {/* Search and Filters */}
+                        <div className="flex flex-col md:flex-row gap-4 mb-6 relative z-10 w-full lg:max-w-4xl">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal-500" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por email o nombre..."
+                                    value={searchFilter}
+                                    onChange={(e) => setSearchFilter(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 bg-[#111] border border-[#333] rounded-xl text-white text-sm focus:outline-none focus:border-accent-gold/50 transition-colors placeholder:text-gray-500 shadow-sm"
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <div className="relative rounded-xl border border-[#333] bg-[#111] flex items-center px-3 hover:border-accent-gold/50 transition-colors shadow-sm">
+                                    <Filter className="w-3.5 h-3.5 text-charcoal-400 mr-2 shrink-0" />
+                                    <select
+                                        value={filterPlan}
+                                        onChange={(e) => setFilterPlan(e.target.value)}
+                                        className="bg-transparent text-gray-300 text-sm focus:outline-none appearance-none py-2 pr-8 cursor-pointer font-medium"
+                                    >
+                                        <option value="all">Todos los Planes</option>
+                                        <option value="pagados">Solo Premium</option>
+                                        <option value="gratuitos">Gratuitos</option>
+                                        <option value="pro_monthly">Pro Mensual</option>
+                                        <option value="pro_annual">Pro Anual</option>
+                                        <option value="platinum_monthly">Platinum Mensual</option>
+                                        <option value="ultra_secretarios">Ultra Secretarios</option>
+                                    </select>
+                                    <ChevronDown className="w-4 h-4 text-charcoal-500 absolute right-3 pointer-events-none" />
+                                </div>
+
+                                <div className="relative rounded-xl border border-[#333] bg-[#111] flex items-center px-3 hover:border-accent-gold/50 transition-colors shadow-sm">
+                                    <select
+                                        value={filterStatus}
+                                        onChange={(e) => setFilterStatus(e.target.value)}
+                                        className="bg-transparent text-gray-300 text-sm focus:outline-none appearance-none py-2 pr-8 cursor-pointer font-medium"
+                                    >
+                                        <option value="all">Cualquier Estado</option>
+                                        <option value="activos">Activos</option>
+                                        <option value="bloqueados">Bloqueados</option>
+                                    </select>
+                                    <ChevronDown className="w-4 h-4 text-charcoal-500 absolute right-3 pointer-events-none" />
+                                </div>
+                            </div>
                         </div>
 
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                                <thead>
-                                    <tr style={{ borderBottom: '1px solid #333' }}>
-                                        {['Email', 'Plan', 'Suscripción', 'Renovación', 'Pago', 'Prompts', 'Estado', 'Registrado', 'Acciones'].map(h => (
-                                            <th key={h} style={{ textAlign: 'left', padding: '12px 16px', color: '#888', fontWeight: 500, whiteSpace: 'nowrap' }}>{h}</th>
+                        <div className="overflow-x-auto rounded-2xl border border-[#222] bg-[#0d0d0d] pb-1 shadow-2xl">
+                            <table className="w-full text-left text-sm text-gray-400">
+                                <thead className="bg-[#131313] border-b border-[#222] text-gray-500 font-medium">
+                                    <tr>
+                                        {['Email', 'Plan', 'Suscripción', 'Renovación', 'Estado de Pago', 'Prompts', 'Entidad', 'Fecha Reg.', 'Acciones'].map(h => (
+                                            <th key={h} className="px-5 py-4 whitespace-nowrap">{h}</th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    {filteredUsers.map(u => {
+                                <tbody className="divide-y divide-[#1a1a1a]">
+                                    {currentUsers.map(u => {
                                         const plan = PLAN_LABELS[u.subscription_type] || { label: u.subscription_type, color: '#888' };
                                         const sub = u.stripe_subscription_id ? stripeData[u.stripe_subscription_id] : null;
                                         const isActiveSub = sub?.status === 'active' || sub?.status === 'trialing';
                                         const isPaid = u.subscription_type !== 'gratuito';
+
                                         return (
-                                            <tr key={u.id} style={{
-                                                borderBottom: '1px solid #1a1a1a',
-                                                opacity: u.is_blocked ? 0.5 : 1,
-                                                ...(isPaid && isActiveSub ? {
-                                                    background: 'rgba(59, 130, 246, 0.06)',
-                                                    borderLeft: '3px solid #3b82f6',
-                                                } : {}),
-                                            }}>
-                                                <td style={{ padding: '12px 16px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        {u.is_blocked && <Ban className="w-4 h-4 flex-shrink-0" style={{ color: '#ef4444' }} />}
-                                                        {isPaid && isActiveSub && !u.is_blocked && <CreditCard className="w-4 h-4 flex-shrink-0" style={{ color: '#3b82f6' }} />}
-                                                        <div>
-                                                            <div style={{ color: u.is_blocked ? '#ef4444' : isPaid && isActiveSub ? '#93c5fd' : '#e5e5e5', fontWeight: 500 }}>{u.email}</div>
-                                                            {u.full_name && <div style={{ color: '#666', fontSize: '0.75rem' }}>{u.full_name}</div>}
+                                            <tr key={u.id} className={`transition-colors hover:bg-[#151515] ${u.is_blocked ? 'opacity-50 grayscale' : ''} ${isPaid && isActiveSub && !u.is_blocked ? 'border-l-[3px] border-l-blue-500 bg-blue-500/5' : ''}`}>
+
+                                                <td className="px-5 py-4 min-w-[220px]">
+                                                    <div className="flex items-center gap-3">
+                                                        {u.is_blocked && <Ban className="w-4 h-4 text-red-500 shrink-0" />}
+                                                        {isPaid && isActiveSub && !u.is_blocked && <CreditCard className="w-4 h-4 text-blue-400 shrink-0" />}
+                                                        <div className="flex flex-col">
+                                                            <span className={`font-medium ${u.is_blocked ? 'text-red-400' : isPaid && isActiveSub ? 'text-blue-300' : 'text-gray-200'}`}>{u.email}</span>
+                                                            {u.full_name && <span className="text-xs text-gray-500 truncate max-w-[180px]">{u.full_name}</span>}
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '12px 16px' }}>
-                                                    <span style={{ padding: '3px 10px', borderRadius: '20px', background: plan.color + '22', color: plan.color, fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{plan.label}</span>
+
+                                                <td className="px-5 py-4">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border" style={{ backgroundColor: `${plan.color}15`, color: plan.color, borderColor: `${plan.color}25` }}>
+                                                        {plan.label}
+                                                    </span>
                                                 </td>
-                                                {/* Suscripción — fecha de inicio */}
-                                                <td style={{ padding: '12px 16px', color: '#888', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
+
+                                                <td className="px-5 py-4 text-gray-500 text-xs whitespace-nowrap">
                                                     {sub ? formatDate(sub.created) : '—'}
                                                 </td>
-                                                {/* Renovación — próxima fecha de cobro */}
-                                                <td style={{ padding: '12px 16px', color: isActiveSub ? '#93c5fd' : '#888', whiteSpace: 'nowrap', fontSize: '0.8rem', fontWeight: isActiveSub ? 600 : 400 }}>
+
+                                                <td className={`px-5 py-4 text-xs whitespace-nowrap ${isActiveSub ? 'text-blue-300 font-medium' : 'text-gray-500'}`}>
                                                     {sub ? formatDate(sub.current_period_end) : '—'}
                                                 </td>
-                                                {/* Pago — estado */}
-                                                <td style={{ padding: '12px 16px' }}>
+
+                                                <td className="px-5 py-4">
                                                     {sub ? (
-                                                        <span style={{
-                                                            padding: '3px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700,
-                                                            ...(sub.status === 'active' ? { background: 'rgba(34,197,94,0.15)', color: '#86efac' }
-                                                                : sub.status === 'past_due' ? { background: 'rgba(245,158,11,0.15)', color: '#fcd34d' }
-                                                                    : sub.status === 'canceled' ? { background: 'rgba(220,38,38,0.15)', color: '#fca5a5' }
-                                                                        : { background: '#1a1a1a', color: '#888' }),
-                                                        }}>
-                                                            {sub.status === 'active' ? '✅ Pagado'
-                                                                : sub.status === 'past_due' ? '⚠️ Vencido'
-                                                                    : sub.status === 'canceled' ? '❌ Cancelado'
-                                                                        : sub.status}
-                                                            {sub.cancel_at_period_end && sub.status === 'active' ? ' (no renueva)' : ''}
+                                                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${sub.status === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                                            sub.status === 'past_due' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                                                                sub.status === 'canceled' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                                                                    'bg-[#222] text-gray-400'
+                                                            }`}>
+                                                            {sub.status === 'active' ? '✅ Pagado' : sub.status === 'past_due' ? '⚠️ Vencido' : sub.status === 'canceled' ? '❌ Cancelado' : sub.status}
+                                                            {sub.cancel_at_period_end && sub.status === 'active' && <span className="text-gray-500 ml-1 lowercase text-[9px] font-normal">(no renueva)</span>}
                                                         </span>
-                                                    ) : (
-                                                        <span style={{ color: '#555', fontSize: '0.75rem' }}>—</span>
-                                                    )}
+                                                    ) : <span className="text-gray-600">—</span>}
                                                 </td>
-                                                <td style={{ padding: '12px 16px', color: '#ccc' }}>{u.queries_used}/{u.queries_limit === -1 ? '∞' : u.queries_limit}</td>
-                                                <td style={{ padding: '12px 16px', color: '#888' }}>{u.estado || '—'}</td>
-                                                <td style={{ padding: '12px 16px', color: '#666', whiteSpace: 'nowrap' }}>{formatDate(u.created_at)}</td>
-                                                <td style={{ padding: '12px 16px' }}>
-                                                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+
+                                                <td className="px-5 py-4 whitespace-nowrap text-xs">
+                                                    <span className="text-gray-300 font-medium">{u.queries_used}</span>
+                                                    <span className="text-gray-600"> / {u.queries_limit === -1 ? '∞' : u.queries_limit}</span>
+                                                </td>
+
+                                                <td className="px-5 py-4 text-gray-400 text-xs font-medium">
+                                                    {u.estado ? u.estado.replace(/_/g, ' ') : '—'}
+                                                </td>
+
+                                                <td className="px-5 py-4 text-gray-500 text-xs whitespace-nowrap">
+                                                    {formatDate(u.created_at)}
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center gap-2">
                                                         {u.email !== ADMIN_EMAIL && (
                                                             <button
                                                                 onClick={() => u.is_blocked ? unblockUser(u.id) : blockUser(u.id)}
                                                                 disabled={actionLoading === u.id}
-                                                                style={{
-                                                                    display: 'flex', alignItems: 'center', gap: '4px',
-                                                                    padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                                                                    fontSize: '0.7rem', fontWeight: 600, transition: 'all 0.2s',
-                                                                    background: u.is_blocked ? 'rgba(34, 197, 94, 0.15)' : 'rgba(220, 38, 38, 0.15)',
-                                                                    color: u.is_blocked ? '#86efac' : '#fca5a5',
-                                                                    opacity: actionLoading === u.id ? 0.5 : 1,
-                                                                }}
+                                                                className={`p-2 rounded-lg transition-colors focus:outline-none ${u.is_blocked ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'} ${actionLoading === u.id ? 'opacity-50' : ''}`}
+                                                                title={u.is_blocked ? "Desbloquear usuario" : "Bloquear usuario"}
                                                             >
-                                                                {u.is_blocked ? <><Unlock className="w-3 h-3" /> Desbloquear</> : <><Ban className="w-3 h-3" /> Bloquear</>}
+                                                                {u.is_blocked ? <Unlock className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
                                                             </button>
                                                         )}
                                                         {u.email !== ADMIN_EMAIL && (
                                                             <button
                                                                 onClick={() => toggleSentencia(u.id)}
                                                                 disabled={actionLoading === u.id}
-                                                                title={u.can_access_sentencia ? 'Deshabilitar Redactor de Sentencias' : 'Habilitar Redactor de Sentencias'}
-                                                                style={{
-                                                                    display: 'flex', alignItems: 'center', gap: '4px',
-                                                                    padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                                                                    fontSize: '0.7rem', fontWeight: 600, transition: 'all 0.2s',
-                                                                    background: u.can_access_sentencia ? 'rgba(34, 197, 94, 0.15)' : 'rgba(100, 100, 100, 0.15)',
-                                                                    color: u.can_access_sentencia ? '#86efac' : '#888',
-                                                                    opacity: actionLoading === u.id ? 0.5 : 1,
-                                                                }}
+                                                                className={`p-2 rounded-lg transition-colors focus:outline-none flex items-center gap-1 ${u.can_access_sentencia ? 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20' : 'bg-[#1a1a1a] text-gray-500 hover:text-gray-300 hover:bg-[#222]'} ${actionLoading === u.id ? 'opacity-50' : ''}`}
+                                                                title={u.can_access_sentencia ? "Deshabilitar Auditor de Sentencias" : "Habilitar Auditor de Sentencias"}
                                                             >
-                                                                ⚖️ {u.can_access_sentencia ? 'Sentencia ✓' : 'Sentencia'}
+                                                                <Scale className="w-4 h-4" />
                                                             </button>
                                                         )}
                                                         {isPaid && !welcomeSent.has(u.email) && (
@@ -466,7 +513,6 @@ export default function AdminPage() {
                                                                         });
                                                                         if (res.ok) {
                                                                             setWelcomeSent(prev => new Set(Array.from(prev).concat(u.email)));
-                                                                            alert('✅ Email de bienvenida enviado');
                                                                         } else {
                                                                             const err = await res.json();
                                                                             alert(`Error: ${err.error}`);
@@ -475,21 +521,14 @@ export default function AdminPage() {
                                                                     setActionLoading(null);
                                                                 }}
                                                                 disabled={actionLoading === u.id}
+                                                                className={`p-2 rounded-lg transition-colors bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 focus:outline-none ${actionLoading === u.id ? 'opacity-50' : ''}`}
                                                                 title="Enviar email de bienvenida"
-                                                                style={{
-                                                                    display: 'flex', alignItems: 'center', gap: '4px',
-                                                                    padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                                                                    fontSize: '0.7rem', fontWeight: 600, transition: 'all 0.2s',
-                                                                    background: 'rgba(201, 168, 76, 0.15)',
-                                                                    color: '#e8c56d',
-                                                                    opacity: actionLoading === u.id ? 0.5 : 1,
-                                                                }}
                                                             >
-                                                                <Mail className="w-3 h-3" /> 📩
+                                                                <Mail className="w-4 h-4" />
                                                             </button>
                                                         )}
                                                         {isPaid && welcomeSent.has(u.email) && (
-                                                            <span style={{ fontSize: '0.7rem', color: '#86efac', marginRight: '8px' }}>✅ Welcome</span>
+                                                            <span title="Email Welcome Enviado" className="text-green-400"><CheckCircle className="w-4 h-4" /></span>
                                                         )}
                                                         {isPaid && u.estado === 'GUANAJUATO' && !updateSent.has(u.email) && (
                                                             <button
@@ -507,7 +546,6 @@ export default function AdminPage() {
                                                                         });
                                                                         if (res.ok) {
                                                                             setUpdateSent(prev => new Set(Array.from(prev).concat(u.email)));
-                                                                            alert(`✅ Notificación de Guanajuato enviada a ${u.email}`);
                                                                         } else {
                                                                             const err = await res.json();
                                                                             alert(`Error: ${err.error}`);
@@ -516,35 +554,59 @@ export default function AdminPage() {
                                                                     setActionLoading(null);
                                                                 }}
                                                                 disabled={actionLoading === u.id}
+                                                                className={`p-2 rounded-lg transition-colors bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 focus:outline-none ${actionLoading === u.id ? 'opacity-50' : ''}`}
                                                                 title="Notificar Ingesta Guanajuato"
-                                                                style={{
-                                                                    display: 'flex', alignItems: 'center', gap: '4px',
-                                                                    padding: '5px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                                                                    fontSize: '0.7rem', fontWeight: 600, transition: 'all 0.2s',
-                                                                    background: 'rgba(34, 197, 94, 0.15)',
-                                                                    color: '#86efac',
-                                                                    opacity: actionLoading === u.id ? 0.5 : 1,
-                                                                }}
                                                             >
-                                                                <Bell className="w-3 h-3" /> GTO
+                                                                <Bell className="w-4 h-4" />
                                                             </button>
                                                         )}
                                                         {isPaid && u.estado === 'GUANAJUATO' && updateSent.has(u.email) && (
-                                                            <span style={{ fontSize: '0.7rem', color: '#86efac' }}>✅ Notif. GTO</span>
+                                                            <span title="Notificación de Estado enviada" className="text-green-400"><CheckCircle className="w-4 h-4" /></span>
                                                         )}
                                                     </div>
                                                 </td>
                                             </tr>
                                         );
                                     })}
-                                    {filteredUsers.length === 0 && (
-                                        <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No se encontraron usuarios</td></tr>
+
+                                    {currentUsers.length === 0 && (
+                                        <tr>
+                                            <td colSpan={9} className="text-center py-20 text-gray-500">
+                                                <Users className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                                                <p className="font-medium text-sm">No se encontraron usuarios</p>
+                                                <p className="text-xs mt-1 text-gray-600">Intenta ajustar tus filtros de búsqueda.</p>
+                                            </td>
+                                        </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
-                        <div style={{ marginTop: '16px', color: '#666', fontSize: '0.8rem' }}>
-                            {filteredUsers.length} usuario{filteredUsers.length !== 1 ? 's' : ''} encontrado{filteredUsers.length !== 1 ? 's' : ''}
+
+                        {/* Pagination */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between mt-6 bg-[#111] border border-[#222] rounded-xl px-5 py-3 shadow-md gap-4">
+                            <span className="text-xs text-gray-400 font-medium">
+                                Mostrando <strong className="text-gray-200">{filteredUsers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}</strong> a <strong className="text-gray-200">{Math.min(currentPage * itemsPerPage, filteredUsers.length)}</strong> de <strong className="text-gray-200">{filteredUsers.length}</strong> usuarios
+                            </span>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1 || filteredUsers.length === 0}
+                                    className="p-1.5 rounded-lg border border-[#333] bg-[#1a1a1a] text-gray-400 hover:text-white hover:border-gray-600 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <div className="flex items-center px-3 text-xs font-semibold text-gray-300">
+                                    Página {currentPage} de {totalPages || 1}
+                                </div>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages || totalPages === 0}
+                                    className="p-1.5 rounded-lg border border-[#333] bg-[#1a1a1a] text-gray-400 hover:text-white hover:border-gray-600 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
