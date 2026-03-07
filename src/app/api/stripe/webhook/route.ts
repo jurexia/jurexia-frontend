@@ -9,6 +9,7 @@ import {
     PlanType,
     PLAN_CONFIG,
 } from '@/lib/supabase-admin';
+import { Resend } from 'resend';
 
 // Disable body parsing, we need the raw body for webhook verification
 export const dynamic = 'force-dynamic';
@@ -166,6 +167,84 @@ export async function POST(request: NextRequest) {
 
 // ─── Handler Functions ──────────────────────────────────────────────
 
+function buildPaymentFailedEmail(name: string, attemptCount: number) {
+    const firstName = name.split(' ')[0] || 'Estimado/a';
+
+    return `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a;padding:40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#111111;border-radius:16px;overflow:hidden;border:1px solid #222;">
+                    <!-- Header con gradiente -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#1a1a1a 0%,#1f1f1f 100%);padding:32px 40px;border-bottom:1px solid #333;">
+                            <span style="font-size:26px;font-weight:800;color:#ffffff;letter-spacing:1px;">
+                                IUREX<span style="color:#c9a84c;">IA</span>
+                            </span>
+                        </td>
+                    </tr>
+                    <!-- Cuerpo principal -->
+                    <tr>
+                        <td style="padding:40px;">
+                            <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#ffffff;">
+                                Acción Requerida en tu Suscripción ⚠️
+                            </h1>
+                            <p style="margin:0 0 28px;font-size:15px;color:#999;line-height:1.6;">
+                                Hola ${firstName},
+                            </p>
+                            
+                            <div style="background-color:#1a1a1a;border:1px solid #dc262640;border-left:4px solid #dc2626;border-radius:12px;padding:24px;margin-bottom:24px;">
+                                <p style="margin:0;font-size:15px;color:#fca5a5;line-height:1.7;">
+                                    <strong>No hemos podido procesar el cargo de tu mensualidad.</strong><br/>
+                                    Esto suele ocurrir porque los fondos son insuficientes o la tarjeta ha caducado.
+                                </p>
+                            </div>
+
+                            <p style="margin:0 0 24px;font-size:15px;color:#ccc;line-height:1.6;">
+                                Para seguir disfrutando del Genio Jurídico y acceso ilimitado a nuestros modelos de IA, por favor <strong>actualiza tu método de pago</strong> en la plataforma.
+                            </p>
+                            
+                            <div style="background-color:#0d1b0d;border:1px solid #1a3a1a;border-radius:12px;padding:24px;margin-bottom:28px;">
+                                <p style="margin:0;font-size:14px;color:#86efac;line-height:1.6;">
+                                    🔄 Realizaremos intentos de cobro automáticos (intento ${attemptCount} de 3) en los próximos días. <strong>Si el último intento falla, tu suscripción pasará de forma automática al plan Gratuito.</strong>
+                                </p>
+                            </div>
+
+                            <table cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding:8px 0 0;">
+                                        <a href="https://www.iurexia.com/plataforma"
+                                           style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8c56d);color:#1a1a1a;font-size:15px;font-weight:700;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.3px;">
+                                            Actualizar Método de Pago →
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color:#0a0a0a;padding:24px 40px;border-top:1px solid #222;">
+                            <p style="margin:0 0 4px;font-size:12px;color:#666;text-align:center;">
+                                Si tienes dudas sobre tu facturación contáctanos a <a href="mailto:soporte@iurexia.com" style="color:#c9a84c;text-decoration:none;">soporte@iurexia.com</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;
+}
+
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const email = (session.customer_email || session.metadata?.userEmail || '').toLowerCase().trim();
 
@@ -317,7 +396,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
     const email = (invoice.customer_email || '').toLowerCase().trim();
-    const attemptCount = invoice.attempt_count ?? 0;
+    const attemptCount = invoice.attempt_count ?? 1;
 
     console.log('⚠️ Payment failed:', {
         invoiceId: invoice.id,
@@ -325,13 +404,49 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
         attemptCount,
     });
 
-    if (attemptCount >= 3 && email) {
-        // After 3+ failed attempts, proactively downgrade to prevent continued usage
+    if (!email) {
+        console.warn('⚠️ No email to send payment failed notification to');
+        return;
+    }
+
+    if (attemptCount >= 4) {
+        // After final failed attempts, proactively downgrade to prevent continued usage
         // Stripe will eventually cancel the subscription, but this is a safety net
         console.warn(`🚨 Payment failed ${attemptCount} times for ${email} — proactive downgrade`);
         await downgradeToFree(email);
     } else {
-        // Just log; Stripe's dunning process will handle retries
-        console.log(`⚠️ Payment failed for ${email} (attempt ${attemptCount}) — awaiting retry`);
+        console.log(`⚠️ Payment failed for ${email} (attempt ${attemptCount}) — awaiting retry and sending email`);
+
+        try {
+            // Get user's name for personalization
+            const supabase = getSupabaseAdmin();
+            const { data: user } = await supabase
+                .from('users')
+                .select('full_name')
+                .eq('email', email)
+                .single();
+
+            const fullName = user?.full_name || 'Usuario';
+
+            // Send warning email
+            const apiKey = process.env.RESEND_API_KEY;
+            if (apiKey) {
+                const resend = new Resend(apiKey);
+                const fromEmail = process.env.FROM_EMAIL || 'Iurexia Facturación <noreply@iurexia.com>';
+
+                await resend.emails.send({
+                    from: fromEmail,
+                    to: email,
+                    subject: '⚠️ Error al procesar tu pago de Iurexia',
+                    html: buildPaymentFailedEmail(fullName, attemptCount),
+                });
+                console.log(`📧 Failed payment notification sent to ${email}`);
+            } else {
+                console.warn('⚠️ RESEND_API_KEY not set - skipping failed payment email');
+            }
+        } catch (err) {
+            console.error(`❌ Failed to send payment failed email to ${email}:`, err);
+        }
     }
 }
+
