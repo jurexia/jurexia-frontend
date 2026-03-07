@@ -293,7 +293,9 @@ export default function AdminPage() {
         setIsSendingMails(true);
         setError('');
         try {
-            const res = await fetch('/api/admin/trigger-retroactive-failed-emails');
+            const res = await fetch('/api/admin/trigger-retroactive-failed-emails', {
+                headers: { Authorization: `Bearer ${getToken()}` }
+            });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Error al enviar correos');
 

@@ -94,19 +94,25 @@ function buildPaymentFailedEmail(name: string, attemptCount: number) {
 
 export async function GET(req: NextRequest) {
     try {
-        // Authenticate admin using getToken
-        const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-        const adminEmail = process.env.ADMIN_EMAIL || 'administracion@iurexia.com';
-        if (!token?.email || token.email !== adminEmail) {
-            return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
+        const authHeader = req.headers.get('authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized. Missing Bearer Token.' }, { status: 401 });
         }
 
+        const token = authHeader.split(' ')[1];
+        const supabase = getSupabaseAdmin();
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+        const adminEmail = process.env.ADMIN_EMAIL || 'administracion@iurexia.com';
+        if (authError || !user || user.email !== adminEmail) {
+            console.error('Admin Auth Failed:', authError || `El usuario ${user?.email} no es admin`);
+            return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
+        }
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
             apiVersion: '2023-10-16' as any,
         });
 
         const resend = new Resend(process.env.RESEND_API_KEY);
-        const supabase = getSupabaseAdmin();
 
         console.log('Buscando facturas fallidas...');
         const invoices = await stripe.invoices.list({
