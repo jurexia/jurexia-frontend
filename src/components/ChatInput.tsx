@@ -382,21 +382,21 @@ ${draftRequest.descripcion}`;
                     <div
                         data-guide="genios-container"
                         className="
-                            flex flex-row items-center overflow-x-auto scrollbar-hide
-                            w-full mt-3 pt-3 border-t border-gray-100
-                            gap-2
+                            flex flex-wrap items-center justify-center
+                            w-full mt-2 pt-2 border-t border-gray-100/60
+                            gap-1.5 sm:gap-2
                         "
                     >
-                        <div className="flex items-center flex-shrink-0 mr-1 gap-1.5 pr-3 border-r border-gray-200/60">
-                            <Brain className="w-4 h-4 text-[#c9a962] drop-shadow-[0_0_6px_rgba(201,169,98,0.8)]" />
+                        <div className="flex items-center flex-shrink-0 mr-1 gap-1.5 pr-2 border-r border-gray-200/60">
+                            <Brain className="w-3.5 h-3.5 text-[#c9a962] drop-shadow-[0_0_6px_rgba(201,169,98,0.8)]" />
                             <span
-                                className="text-[11px] font-bold text-[#c9a962] uppercase tracking-[0.15em] drop-shadow-[0_0_4px_rgba(201,169,98,0.5)]"
-                                style={isPro ? { animation: 'pulseGold 3s ease-in-out infinite' } : undefined}
+                                className="text-[10px] sm:text-[11px] font-bold text-[#c9a962] uppercase tracking-[0.15em] drop-shadow-[0_0_4px_rgba(201,169,98,0.5)]"
+                                style={isPro ? { animation: 'pulseGold 2s ease-in-out infinite' } : undefined}
                             >
                                 Genios
                             </span>
                             {(isGenioLocked && !isPro) && (
-                                <span className="text-[9px] font-bold text-[#c9a962] ml-1 bg-[#c9a962]/10 px-1.5 py-0.5 rounded">PRO</span>
+                                <span className="text-[8px] font-bold text-[#c9a962] ml-1 bg-[#c9a962]/10 px-1 py-0.5 rounded">PRO</span>
                             )}
                         </div>
 
@@ -419,18 +419,18 @@ ${draftRequest.descripcion}`;
                                     }
                                 }}
                                 disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px] sm:text-[11px] font-medium transition-all duration-200 border flex-shrink-0
+                                className={`flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-medium transition-all duration-300 border flex-shrink-0
                                     ${(isGenioLocked && !isPro)
                                         ? 'bg-gray-50/50 text-gray-400 border-gray-100/50 cursor-not-allowed opacity-70'
                                         : (isCacheLoading && activeGenios.includes(g.id))
-                                            ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait'
+                                            ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait shadow-sm'
                                             : genioError && activeGenios.includes(g.id)
-                                                ? 'bg-red-50 text-red-600 border-red-300'
+                                                ? 'bg-red-50 text-red-600 border-red-300 shadow-sm'
                                                 : activeGenios.includes(g.id)
                                                     ? isCacheActive
-                                                        ? g.activeOn
-                                                        : g.activating
-                                                    : g.idle
+                                                        ? `${g.activeOn} shadow-sm border-transparent`
+                                                        : `${g.activating} border-gray-300/50 bg-white shadow-sm`
+                                                    : `${g.idle} hover:shadow-sm hover:border-gray-300/80`
                                     }`}
                                 style={(activeGenios.includes(g.id) && isCacheActive && !(isGenioLocked && !isPro))
                                     ? { animation: 'genioActiveGlow 2.5s ease-in-out infinite' }
@@ -439,23 +439,23 @@ ${draftRequest.descripcion}`;
                             >
                                 {(isGenioLocked && !isPro) ? (
                                     <>
-                                        <Lock className="w-3 h-3 text-gray-400" />
+                                        <Lock className="w-2.5 h-2.5 text-gray-400" />
                                         <span>{g.label}</span>
                                     </>
                                 ) : (isCacheLoading && activeGenios.includes(g.id)) ? (
                                     <>
-                                        <div className={`w-3 h-3 border-2 ${g.spinnerBorder} border-t-transparent rounded-full animate-spin`} />
+                                        <div className={`w-2.5 h-2.5 border-2 ${g.spinnerBorder} border-t-transparent rounded-full animate-spin`} />
                                         <span>Cargando</span>
                                     </>
                                 ) : (genioError && activeGenios.includes(g.id)) ? (
                                     <>
-                                        <span className="text-[12px]">&#x26A0;</span>
+                                        <span className="text-[11px]">&#x26A0;</span>
                                         <span>Error</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${(activeGenios.includes(g.id) && isCacheActive) ? g.dot + ' animate-pulse' : (activeGenios.includes(g.id) ? 'bg-white' : g.dot + ' opacity-50')}`} />
-                                        <span className={(activeGenios.includes(g.id) && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenios.includes(g.id) ? '' : 'text-gray-600 group-hover:text-gray-900')}>
+                                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${(activeGenios.includes(g.id) && isCacheActive) ? g.dot + ' animate-pulse' : (activeGenios.includes(g.id) ? 'bg-white' : g.dot + ' opacity-60')}`} />
+                                        <span className={(activeGenios.includes(g.id) && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenios.includes(g.id) ? '' : 'text-gray-600 group-hover:text-gray-900 transition-colors')}>
                                             {g.label}
                                         </span>
                                     </>
@@ -463,7 +463,7 @@ ${draftRequest.descripcion}`;
                             </button>
                         ))}
                         {genioError && (
-                            <p className="text-[10px] sm:text-[11px] text-red-500 ml-2 whitespace-nowrap">{genioError}</p>
+                            <p className="text-[9px] sm:text-[10px] text-red-500 ml-2 whitespace-nowrap">{genioError}</p>
                         )}
                     </div>
 
