@@ -333,12 +333,20 @@ ${draftRequest.descripcion}`;
                                     Buscar
                                 </button>
                                 <button
-                                    onClick={() => setChatMode('redactar')}
-                                    className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${chatMode === 'redactar'
-                                        ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'
-                                        : 'bg-white text-gray-500 hover:text-gray-700'
+                                    onClick={() => {
+                                        if (activeGenios.length >= 2) {
+                                            alert("Modo redacción no disponible con 2 genios activos, desactiva al menos uno.");
+                                            return;
+                                        }
+                                        setChatMode('redactar');
+                                    }}
+                                    className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${activeGenios.length >= 2
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-70'
+                                            : chatMode === 'redactar'
+                                                ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'
+                                                : 'bg-white text-gray-500 hover:text-gray-700'
                                         }`}
-                                    title="Modo redacción — genera argumentos jurídicos"
+                                    title={activeGenios.length >= 2 ? "Modo redacción no disponible con 2 genios activos" : "Modo redacción — genera argumentos jurídicos"}
                                 >
                                     <PenTool className="w-3 h-3" />
                                     Redactar
@@ -415,6 +423,13 @@ ${draftRequest.descripcion}`;
                                             return;
                                         } else {
                                             setActiveGenios([...activeGenios, g.id]);
+                                            if (chatMode === 'redactar') {
+                                                setChatMode('buscar');
+                                                // Optional slight delay so user notices the mode change
+                                                setTimeout(() => {
+                                                    alert("Modo redacción deshabilitado al activar múltiples genios.");
+                                                }, 50);
+                                            }
                                         }
                                     }
                                 }}
