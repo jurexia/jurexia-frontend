@@ -7,42 +7,7 @@ import { useRequireAuth } from '@/lib/useAuth';
 import { UserAvatar } from '@/components/UserAvatar';
 import { auditSentencia, SentenciaAuditResponse, SentenciaHallazgo } from '@/lib/api';
 
-// Mexican states for jurisdiction selector (same as chat)
-const ESTADOS_MEXICO = [
-    { value: '', label: 'Sin seleccionar' },
-    { value: 'AGUASCALIENTES', label: 'Aguascalientes' },
-    { value: 'BAJA_CALIFORNIA', label: 'Baja California' },
-    { value: 'BAJA_CALIFORNIA_SUR', label: 'Baja California Sur' },
-    { value: 'CAMPECHE', label: 'Campeche' },
-    { value: 'CHIAPAS', label: 'Chiapas' },
-    { value: 'CHIHUAHUA', label: 'Chihuahua' },
-    { value: 'CIUDAD_DE_MEXICO', label: 'Ciudad de México' },
-    { value: 'COAHUILA_DE_ZARAGOZA', label: 'Coahuila' },
-    { value: 'COLIMA', label: 'Colima' },
-    { value: 'DURANGO', label: 'Durango' },
-    { value: 'GUANAJUATO', label: 'Guanajuato' },
-    { value: 'GUERRERO', label: 'Guerrero' },
-    { value: 'HIDALGO', label: 'Hidalgo' },
-    { value: 'JALISCO', label: 'Jalisco' },
-    { value: 'ESTADO_DE_MEXICO', label: 'Estado de México' },
-    { value: 'MICHOACAN', label: 'Michoacán' },
-    { value: 'MORELOS', label: 'Morelos' },
-    { value: 'NAYARIT', label: 'Nayarit' },
-    { value: 'NUEVO_LEON', label: 'Nuevo León' },
-    { value: 'OAXACA', label: 'Oaxaca' },
-    { value: 'PUEBLA', label: 'Puebla' },
-    { value: 'QUERETARO', label: 'Querétaro' },
-    { value: 'QUINTANA_ROO', label: 'Quintana Roo' },
-    { value: 'SAN_LUIS_POTOSI', label: 'San Luis Potosí' },
-    { value: 'SINALOA', label: 'Sinaloa' },
-    { value: 'SONORA', label: 'Sonora' },
-    { value: 'TABASCO', label: 'Tabasco' },
-    { value: 'TAMAULIPAS', label: 'Tamaulipas' },
-    { value: 'TLAXCALA', label: 'Tlaxcala' },
-    { value: 'VERACRUZ', label: 'Veracruz' },
-    { value: 'YUCATAN', label: 'Yucatán' },
-    { value: 'ZACATECAS', label: 'Zacatecas' },
-];
+
 
 function SeveridadBadge({ severidad }: { severidad: string }) {
     const colors: Record<string, string> = {
@@ -191,7 +156,6 @@ export default function SentenciaPage() {
     const { user, loading: authLoading } = useRequireAuth();
     const [documentText, setDocumentText] = useState('');
     const [fileName, setFileName] = useState('');
-    const [estado, setEstado] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState('');
     const [result, setResult] = useState<SentenciaAuditResponse | null>(null);
@@ -276,7 +240,7 @@ export default function SentenciaPage() {
             await new Promise(r => setTimeout(r, 400));
             setAnalysisStep('Generando dictamen con DeepSeek Reasoner...');
 
-            const response = await auditSentencia(documentText, estado || undefined);
+            const response = await auditSentencia(documentText, undefined);
             setResult(response);
         } catch (err: any) {
             setError(err.message || 'Error al auditar la sentencia. Intenta de nuevo.');
@@ -341,10 +305,10 @@ export default function SentenciaPage() {
                             onDragOver={(e) => e.preventDefault()}
                             onDrop={handleDrop}
                             className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-200 mb-6 ${dragActive
-                                    ? 'border-accent-gold bg-accent-gold/5'
-                                    : fileName
-                                        ? 'border-green-300 bg-green-50/50'
-                                        : 'border-charcoal-200 bg-white/50 hover:border-charcoal-300'
+                                ? 'border-accent-gold bg-accent-gold/5'
+                                : fileName
+                                    ? 'border-green-300 bg-green-50/50'
+                                    : 'border-charcoal-200 bg-white/50 hover:border-charcoal-300'
                                 }`}
                         >
                             {fileName ? (
@@ -401,21 +365,7 @@ export default function SentenciaPage() {
                             </div>
                         )}
 
-                        {/* Estado selector */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-charcoal-700 mb-2">
-                                Jurisdicción (opcional):
-                            </label>
-                            <select
-                                value={estado}
-                                onChange={(e) => setEstado(e.target.value)}
-                                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold"
-                            >
-                                {ESTADOS_MEXICO.map(e => (
-                                    <option key={e.value} value={e.value}>{e.label}</option>
-                                ))}
-                            </select>
-                        </div>
+
 
                         {/* Error */}
                         {error && (
@@ -444,14 +394,7 @@ export default function SentenciaPage() {
                             )}
                         </button>
 
-                        {/* Info pills */}
-                        <div className="flex flex-wrap gap-2 justify-center mt-6">
-                            {['Art. 217 Ley de Amparo', 'CT 293/2011', 'Motor Radilla', 'Suplencia de Queja'].map(tag => (
-                                <span key={tag} className="text-xs px-3 py-1.5 rounded-full bg-charcoal-900/5 text-charcoal-500 font-medium">
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
+
                     </div>
                 ) : (
                     /* ═══════════════════════════ RESULTS STATE ═══════════════════════════ */

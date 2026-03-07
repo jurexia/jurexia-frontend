@@ -1,43 +1,9 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { X, Upload, FileText, File, Loader2, AlertCircle, Gavel, MapPin } from 'lucide-react';
+import { X, Upload, FileText, File, Loader2, AlertCircle, Gavel } from 'lucide-react';
 
-const ESTADOS_MEXICO = [
-    { value: '', label: 'Sin seleccionar' },
-    { value: 'AGUASCALIENTES', label: 'Aguascalientes' },
-    { value: 'BAJA_CALIFORNIA', label: 'Baja California' },
-    { value: 'BAJA_CALIFORNIA_SUR', label: 'Baja California Sur' },
-    { value: 'CAMPECHE', label: 'Campeche' },
-    { value: 'CHIAPAS', label: 'Chiapas' },
-    { value: 'CHIHUAHUA', label: 'Chihuahua' },
-    { value: 'CIUDAD_DE_MEXICO', label: 'Ciudad de México' },
-    { value: 'COAHUILA_DE_ZARAGOZA', label: 'Coahuila' },
-    { value: 'COLIMA', label: 'Colima' },
-    { value: 'DURANGO', label: 'Durango' },
-    { value: 'GUANAJUATO', label: 'Guanajuato' },
-    { value: 'GUERRERO', label: 'Guerrero' },
-    { value: 'HIDALGO', label: 'Hidalgo' },
-    { value: 'JALISCO', label: 'Jalisco' },
-    { value: 'ESTADO_DE_MEXICO', label: 'Estado de México' },
-    { value: 'MICHOACAN', label: 'Michoacán' },
-    { value: 'MORELOS', label: 'Morelos' },
-    { value: 'NAYARIT', label: 'Nayarit' },
-    { value: 'NUEVO_LEON', label: 'Nuevo León' },
-    { value: 'OAXACA', label: 'Oaxaca' },
-    { value: 'PUEBLA', label: 'Puebla' },
-    { value: 'QUERETARO', label: 'Querétaro' },
-    { value: 'QUINTANA_ROO', label: 'Quintana Roo' },
-    { value: 'SAN_LUIS_POTOSI', label: 'San Luis Potosí' },
-    { value: 'SINALOA', label: 'Sinaloa' },
-    { value: 'SONORA', label: 'Sonora' },
-    { value: 'TABASCO', label: 'Tabasco' },
-    { value: 'TAMAULIPAS', label: 'Tamaulipas' },
-    { value: 'TLAXCALA', label: 'Tlaxcala' },
-    { value: 'VERACRUZ', label: 'Veracruz' },
-    { value: 'YUCATAN', label: 'Yucatán' },
-    { value: 'ZACATECAS', label: 'Zacatecas' },
-];
+
 
 interface SentenciaModalProps {
     isOpen: boolean;
@@ -52,7 +18,6 @@ export default function SentenciaModal({ isOpen, onClose, onSubmit, estado }: Se
     const [pastedText, setPastedText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedEstado, setSelectedEstado] = useState(estado || '');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt'];
@@ -153,7 +118,7 @@ export default function SentenciaModal({ isOpen, onClose, onSubmit, estado }: Se
                 : '';
 
             const fileName = selectedFile?.name || 'Texto pegado';
-            const estadoParam = selectedEstado || estado || '';
+            const estadoParam = estado || '';
 
             // Format as special message for the backend
             const message = `[AUDITAR_SENTENCIA]
@@ -284,32 +249,7 @@ ${docContent}
                         </div>
                     )}
 
-                    {/* Jurisdiction selector */}
-                    <div className="mt-4">
-                        <label className="flex items-center gap-1.5 text-xs font-medium text-charcoal-600 mb-1.5">
-                            <MapPin className="w-3 h-3" />
-                            Jurisdicción (opcional):
-                        </label>
-                        <select
-                            value={selectedEstado}
-                            onChange={(e) => setSelectedEstado(e.target.value)}
-                            className="w-full rounded-lg border border-cream-400 bg-white px-3 py-2 text-sm text-charcoal-900 
-                                 focus:outline-none focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold"
-                        >
-                            {ESTADOS_MEXICO.map(e => (
-                                <option key={e.value} value={e.value}>{e.label}</option>
-                            ))}
-                        </select>
-                    </div>
 
-                    {/* Protocols info */}
-                    <div className="mt-4 flex flex-wrap gap-1.5">
-                        {['Art. 217', 'CT 293/2011', 'Motor Radilla', 'Suplencia'].map(tag => (
-                            <span key={tag} className="text-xs px-2 py-1 rounded-full bg-charcoal-900/5 text-charcoal-500 font-medium">
-                                {tag}
-                            </span>
-                        ))}
-                    </div>
 
                     {/* Error */}
                     {error && (
