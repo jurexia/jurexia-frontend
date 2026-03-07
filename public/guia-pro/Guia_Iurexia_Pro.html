@@ -11,21 +11,18 @@
     <style>
         :root {
             --charcoal: #111111;
-            /* Más oscuro, contraste fuerte */
             --charcoal-light: #2c2c2c;
             --gold: #c9a962;
-            --cream: #f4f1ea;
-            /* Ligeramente más contrastado */
-            --white: #ffffff;
-            --gray-text: #444444;
-            /* Más oscuro */
-            --border: #dcd6c8;
+            --cream: #121212;
+            --white: #1a1a1a;
+            --gray-text: #b3b3b3;
+            --border: #333333;
         }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            background-color: var(--cream);
-            color: var(--charcoal);
+            background-color: var(--charcoal);
+            color: #efefef;
             line-height: 1.6;
             margin: 0;
             padding: 0;
@@ -35,37 +32,27 @@
 
         .container {
             max-width: 1000px;
-            /* Un poco más ancho para albergar imágenes grandes */
             margin: 0 auto;
-            padding: 40px 50px;
-            background-color: var(--white);
-            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+            padding: 50px 60px;
+            background: linear-gradient(135deg, #111111 0%, #1a1a1a 100%);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            border-left: 1px solid rgba(201, 169, 98, 0.2);
+            border-right: 1px solid rgba(201, 169, 98, 0.2);
         }
 
-        /* 
-           Tonos bicolores Iurexia (Dorado y Negro). 
-           Usaremos span con clase 'gold-text' y 'black-text' para lograr el efecto.
-        */
-        h1,
-        h2,
-        h3 {
+        h1, h2, h3 {
             font-family: 'Playfair Display', serif;
-            color: var(--charcoal);
+            color: #ffffff;
             margin-top: 0;
         }
 
-        .gold-text {
-            color: var(--gold);
-        }
-
-        .black-text {
-            color: var(--charcoal);
-        }
+        .gold-text { color: var(--gold); }
+        .black-text { color: #ffffff; }
 
         h1 {
             font-size: 2.8rem;
             text-align: center;
-            border-bottom: 3px solid var(--charcoal);
+            border-bottom: 3px solid rgba(201, 169, 98, 0.3);
             padding-bottom: 25px;
             margin-bottom: 45px;
             letter-spacing: -0.5px;
@@ -81,29 +68,26 @@
         h3 {
             font-size: 1.4rem;
             margin-top: 35px;
-            color: var(--charcoal);
             border-left: 4px solid var(--gold);
             padding-left: 10px;
         }
 
         p {
-            color: var(--charcoal-light);
+            color: var(--gray-text);
             font-size: 1.1rem;
-            /* Un poco más grande para mejor lectura en Arial */
             margin-bottom: 20px;
         }
 
         .highlight {
-            color: var(--charcoal);
-            background-color: rgba(201, 169, 98, 0.15);
+            color: #ffffff;
+            background-color: rgba(201, 169, 98, 0.2);
             font-weight: bold;
             padding: 2px 6px;
             border-radius: 4px;
         }
 
-        /* Enlaces o botones simulados */
         .btn-sim {
-            background-color: var(--charcoal);
+            background-color: transparent;
             color: var(--gold);
             padding: 6px 12px;
             border-radius: 6px;
@@ -116,7 +100,6 @@
             border: 1px solid var(--gold);
         }
 
-        /* Layouts */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -125,11 +108,9 @@
             margin-bottom: 40px;
         }
 
-        /* Para dar más espacio a las imágenes cuando están al lado de texto */
         .grid-2-image-right {
             display: grid;
             grid-template-columns: 0.8fr 1.2fr;
-            /* Imagen más grande */
             gap: 40px;
             align-items: center;
             margin-bottom: 40px;
@@ -139,38 +120,34 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-            background-color: var(--charcoal);
-            /* Fondo oscuro para contraste */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            background-color: #000;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
+            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.6s ease, border-color 0.6s ease;
+        }
+        .img-container img { max-width: 100%; height: auto; display: block; opacity: 0.95; transition: opacity 0.5s; }
+        .img-container:hover img { opacity: 1; }
+        .img-container:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            border-color: var(--gold);
+            z-index: 10;
         }
 
-        .img-container img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* Imágenes gigantes (para redactar y funciones de escrito) */
-        .img-large {
-            max-width: 90%;
-            /* Mucho más amplias */
-            margin: 0 auto;
-        }
+        .img-large { max-width: 90%; margin: 0 auto; }
 
         .info-box {
-            background-color: var(--charcoal);
-            color: var(--white);
+            background: linear-gradient(135deg, #1f1f1f 0%, #2c2c2c 100%);
+            color: #ffffff;
             border-left: 5px solid var(--gold);
             padding: 25px 30px;
             border-radius: 0 12px 12px 0;
             margin: 35px 0;
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
         }
-
         .info-box strong {
             display: block;
             font-family: 'Playfair Display', serif;
@@ -178,27 +155,19 @@
             margin-bottom: 12px;
             color: var(--gold);
         }
+        .info-box p { color: #f4f1ea; font-size: 1.1rem; }
 
-        .info-box p {
-            color: var(--cream);
-            font-size: 1.1rem;
-        }
-
-        .step-list {
-            list-style: none;
-            padding: 0;
-        }
-
+        .step-list { list-style: none; padding: 0; }
         .step-list li {
             position: relative;
             padding-left: 45px;
             margin-bottom: 30px;
-            background-color: #faf9f7;
+            background-color: #1a1a1a;
             padding: 20px 20px 20px 55px;
             border-radius: 8px;
-            border: 1px solid #eee;
+            border: 1px solid var(--border);
+            transition: all 0.5s ease;
         }
-
         .step-list li::before {
             content: "✦";
             position: absolute;
@@ -208,183 +177,109 @@
             font-size: 1.5rem;
             line-height: 1;
         }
-
-        .step-list h4 {
-            margin: 0 0 8px 0;
-            font-size: 1.15rem;
-            color: var(--charcoal);
-            font-weight: bold;
+        .step-list h4 { margin: 0 0 8px 0; font-size: 1.15rem; color: #ffffff; font-weight: bold; }
+        .step-list p { margin: 0; font-size: 1.05rem; color: var(--gray-text); }
+        .step-list li:hover {
+            background-color: #222;
+            border-color: var(--gold);
+            box-shadow: 0 10px 25px rgba(201, 169, 98, 0.15);
+            transform: translateX(10px);
         }
 
-        .step-list p {
-            margin: 0;
-            font-size: 1.05rem;
-            color: var(--charcoal-light);
-        }
-
-        /* Galería para los escritos: Ahora solo 2 columnas para que sean muy grandes */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 30px;
             margin-top: 40px;
         }
-
         .gallery-item {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            background-color: #fcfbf9;
+            background-color: #1a1a1a;
             padding: 15px;
             border-radius: 10px;
             border: 1px solid var(--border);
+            transition: transform 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
         }
-
         .gallery-item span {
             font-size: 1.1rem;
             font-weight: bold;
-            color: var(--charcoal);
+            color: #ffffff;
             text-align: center;
             font-family: 'Playfair Display', serif;
         }
+        .gallery-item:hover {
+            transform: translateY(-5px) scale(1.03);
+            border-color: var(--gold);
+            box-shadow: 0 15px 35px rgba(201, 169, 98, 0.15);
+        }
 
-        /* Tips section */
         .tips-container {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1f1f1f 100%);
             padding: 35px;
             border-radius: 12px;
             color: white;
             margin-top: 30px;
-            border-top: 4px solid var(--gold);
+            border: 1px solid var(--gold);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
         }
-
-        .tips-container h3 {
-            color: var(--gold);
-            border-left: none;
-            padding-left: 0;
-            margin-top: 0;
-        }
-
-        .tips-container p {
-            color: #ddd;
-        }
-
-        .tips-container ul {
-            padding-left: 20px;
-        }
-
-        .tips-container li {
-            margin-bottom: 15px;
-            color: #efefef;
-            font-size: 1.05rem;
-        }
-
-        .tips-container li strong {
-            color: var(--gold);
-        }
+        .tips-container h3 { color: var(--gold); border-left: none; padding-left: 0; margin-top: 0; }
+        .tips-container p { color: #ddd; }
+        .tips-container ul { padding-left: 20px; }
+        .tips-container li { margin-bottom: 15px; color: #efefef; font-size: 1.05rem; }
+        .tips-container li strong { color: var(--gold); }
 
         @media print {
-            body {
-                background: white;
-            }
-
-            .container {
-                box-shadow: none;
-                padding: 0;
-                max-width: 100%;
-            }
-
-            .avoid-break {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
-
-            h2 {
-                page-break-after: avoid;
-            }
-
-            .info-box,
-            .tips-container {
-                background-color: #f5f5f5 !important;
-                color: black !important;
-                border-left: 5px solid black !important;
-            }
-
-            .info-box strong,
-            .tips-container h3,
-            .tips-container li strong {
-                color: black !important;
-            }
-
-            .info-box p,
-            .tips-container p,
-            .tips-container li {
-                color: #333 !important;
-            }
+            body { background: white; color: black; }
+            .container { box-shadow: none; border: none; background: white; padding: 0; max-width: 100%; }
+            .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+            h1, h2, h3, p, .black-text, .gold-text { color: black !important; text-shadow: none !important; }
+            .info-box, .tips-container, .step-list li, .gallery-item { background: #f5f5f5 !important; color: black !important; border-color: black !important; box-shadow: none !important; }
+            .info-box strong, .tips-container h3, .tips-container li strong { color: black !important; }
+            .info-box p, .tips-container p, .tips-container li { color: #333 !important; }
+            .img-container { background: white !important; box-shadow: none !important; border: 1px solid #ccc !important; }
         }
 
         /* -------------------------------------
-           ✨ ANIMACIONES AL SCROLLEAR ✨
+           ✨ ANIMACIONES DE ALTO IMPACTO ✨
         ------------------------------------- */
-        html {
-            scroll-behavior: smooth;
-        }
+        html { scroll-behavior: smooth; overflow-x: hidden; }
 
-        /* Clase base (oculta el elemento y lo mueve un poco) */
-        .reveal {
+        .reveal-left {
             opacity: 0;
-            transform: translateY(35px);
-            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: translateX(-100px) scale(0.95);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: opacity, transform;
+        }
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(100px) scale(0.95);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: opacity, transform;
+        }
+        .reveal-bottom {
+            opacity: 0;
+            transform: translateY(100px) scale(0.95);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: opacity, transform;
+        }
+        .reveal-zoom {
+            opacity: 0;
+            transform: scale(0.85);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
             will-change: opacity, transform;
         }
 
-        /* Elemento visible */
-        .reveal.active {
+        .reveal-left.active, .reveal-right.active, .reveal-bottom.active, .reveal-zoom.active {
             opacity: 1;
-            transform: translateY(0);
+            transform: translate(0) scale(1);
         }
 
-        /* Clases de retrasos para crear secuencias de cascada */
-        .delay-100 {
-            transition-delay: 100ms;
-        }
-
-        .delay-200 {
-            transition-delay: 200ms;
-        }
-
-        .delay-300 {
-            transition-delay: 300ms;
-        }
-
-        /* Efectos sutiles hover para elementos de interacción (más "premium") */
-        .img-container {
-            transition: transform 0.4s ease, box-shadow 0.4s ease;
-        }
-
-        .img-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .gallery-item {
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-
-        .gallery-item:hover {
-            transform: translateY(-3px);
-            border-color: var(--gold);
-        }
-
-        .step-list li {
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .step-list li:hover {
-            background-color: #fff;
-            border-color: var(--gold);
-            box-shadow: 0 4px 15px rgba(201, 169, 98, 0.1);
-        }
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+        .delay-400 { transition-delay: 400ms; }
     </style>
 </head>
 
@@ -616,57 +511,66 @@
     </div>
 
     <!-- -------------------------------------
-         🖋️ SCRIPT PARA ANIMACIONES 🖋️
+         🖋️ SCRIPT PARA ANIMACIONES DE ALTO IMPACTO 🖋️
     ------------------------------------- -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Selecciona todos los elementos que queramos que aparezcan
-            const tagsToAnimate = ["h2", ".info-box", ".img-container", ".step-list li", ".gallery-item", ".tips-container", ".grid-2 > div"];
+            // Títulos desde la izquierda
+            document.querySelectorAll("h1, h2").forEach(el => el.classList.add("reveal-left"));
+            
+            // Subtítulos desde la derecha
+            document.querySelectorAll("h3").forEach(el => el.classList.add("reveal-right"));
+            
+            // Textos y cajas info: Textos desde abajo, info-box un zoom dramático
+            document.querySelectorAll(".info-box, .tips-container").forEach(el => el.classList.add("reveal-zoom"));
+            document.querySelectorAll("p:not(.tips-container p):not(.step-list p):not(.info-box p)").forEach(el => el.classList.add("reveal-bottom"));
 
-            // Les agregamos la clase base "reveal" primero a cada uno
-            tagsToAnimate.forEach(selector => {
-                document.querySelectorAll(selector).forEach(el => {
-                    el.classList.add("reveal");
-                });
+            // Imágenes: Alternar izquierda y derecha
+            document.querySelectorAll(".img-container").forEach((el, index) => {
+                if (index % 2 === 0) {
+                    el.classList.add("reveal-right");
+                } else {
+                    el.classList.add("reveal-left");
+                }
             });
 
-            // Agregamos retrasos en escalera a los elementos de listas y grid para el efcto dominó
+            // Listas en cascada desde la derecha
             document.querySelectorAll(".step-list").forEach(list => {
                 const items = list.querySelectorAll("li");
                 items.forEach((item, index) => {
-                    // Limitar a máximo 3 para que no tarde demasiado el último
-                    let delayClass = `delay-${Math.min((index + 1) * 100, 300)}`;
+                    item.classList.add("reveal-right");
+                    let delayClass = `delay-${Math.min((index + 1) * 100, 400)}`;
                     item.classList.add(delayClass);
                 });
             });
 
+            // Galería con zoom
             document.querySelectorAll(".gallery-grid").forEach(grid => {
                 const items = grid.querySelectorAll(".gallery-item");
                 items.forEach((item, index) => {
-                    let delayClass = `delay-${Math.min((index % 2 + 1) * 100, 200)}`;
+                    item.classList.add("reveal-zoom");
+                    let delayClass = `delay-${Math.min((index % 2 + 1) * 100, 300)}`;
                     item.classList.add(delayClass);
                 });
             });
 
-
-            // Lógica del IntersectionObserver
+            // Observer
             const observerOptions = {
                 root: null,
                 rootMargin: "0px",
-                threshold: 0.15 // Al 15% de visibilidad se dispara
+                threshold: 0.1
             };
 
             const revealOnScroll = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add("active");
-                        // Descomentar para que se reproduzca una sola vez y no cada vez que se hace scroll (Optimiza rendimiento)
-                        observer.unobserve(entry.target);
+                        observer.unobserve(entry.target); 
                     }
                 });
             }, observerOptions);
 
-            const revealElements = document.querySelectorAll(".reveal");
+            const revealElements = document.querySelectorAll(".reveal-left, .reveal-right, .reveal-bottom, .reveal-zoom");
             revealElements.forEach(el => revealOnScroll.observe(el));
         });
     </script>
