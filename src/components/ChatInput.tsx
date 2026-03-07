@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, KeyboardEvent } from 'react';
+import { useState, useRef, KeyboardEvent, useEffect } from 'react';
 import Link from 'next/link';
 import {
     ArrowRight,
@@ -14,7 +14,8 @@ import {
     Brain,
     Scale,
     PenTool,
-    Lock
+    Lock,
+    Mic
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -51,6 +52,7 @@ export default function ChatInput({
     isPro = false,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
+    const [isListening, setIsListening] = useState(false);
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
     const [showFileModal, setShowFileModal] = useState(false);
@@ -60,6 +62,8 @@ export default function ChatInput({
     const [attachedDocument, setAttachedDocument] = useState<{ text: string; fileName: string } | null>(null);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const recognitionRef = useRef<any>(null);
+    const baseMessageRef = useRef('');
     const { user, profile } = useAuth();
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || profile?.can_access_sentencia === true;
     const canAccessSentencia = profile?.subscription_type && !['gratuito', 'basico_monthly'].includes(profile.subscription_type);
@@ -125,9 +129,75 @@ export default function ChatInput({
         },
     ];
 
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'es-MX';
+
+                recognition.onstart = () => setIsListening(true);
+
+                recognition.onresult = (event: any) => {
+                    let fullSessionTranscript = '';
+                    for (let i = 0; i < event.results.length; i++) {
+                        fullSessionTranscript += event.results[i][0].transcript;
+                    }
+
+                    const newMsg = baseMessageRef.current + (baseMessageRef.current && fullSessionTranscript ? ' ' : '') + fullSessionTranscript;
+                    setMessage(newMsg);
+
+                    if (textareaRef.current) {
+                        textareaRef.current.style.height = 'auto';
+                        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+                    }
+                };
+
+                recognition.onerror = (event: any) => {
+                    console.error('Speech recognition error', event.error);
+                    setIsListening(false);
+                };
+
+                recognition.onend = () => {
+                    setIsListening(false);
+                };
+
+                recognitionRef.current = recognition;
+            }
+        }
+
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+        };
+    }, []);
+
+    const toggleListening = () => {
+        if (!recognitionRef.current) {
+            alert('El dictado por voz no es compatible con este navegador. Te recomendamos usar Google Chrome o Safari.');
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            baseMessageRef.current = message;
+            try {
+                recognitionRef.current.start();
+            } catch (e) {
+                console.error("Error starting recognition", e);
+            }
+        }
+    };
 
 
     const handleSubmit = () => {
+        if (isListening && recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
         if (!isLoading && (message.trim() || attachedDocument)) {
             let finalMessage = message.trim();
             let displayMessage = message.trim(); // What user sees in chat
@@ -312,13 +382,30 @@ ${draftRequest.descripcion}`;
                                 </div>
                             )}
 
+                            {/* Mic Button */}
+                            <button
+                                type="button"
+                                data-guide="dictado"
+                                onClick={toggleListening}
+                                disabled={isLoading}
+                                className={`p-2 rounded-full transition-all duration-200 flex-shrink-0 ${isListening
+                                        ? 'bg-red-100 text-red-600 border border-red-200 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                                        : 'text-gray-400 hover:text-charcoal-700 hover:bg-gray-100 border border-transparent disabled:opacity-50'
+                                    }`}
+                                title={isListening ? "Detener dictado" : "Dictado por voz"}
+                            >
+                                <Mic className="w-5 h-5" />
+                            </button>
+
                             {/* Paperclip Button */}
                             <button
+                                type="button"
+                                disabled={isLoading}
                                 data-guide="adjuntar"
                                 onClick={() => handleModeClick('files')}
-                                className={`p-2 rounded-full transition-all duration-200 ${attachedDocument
+                                className={`p-2 rounded-full transition-all duration-200 flex-shrink-0 ${attachedDocument
                                     ? 'bg-blue-100 text-blue-600 border border-blue-200'
-                                    : 'text-gray-400 hover:text-charcoal-700 hover:bg-gray-100'
+                                    : 'text-gray-400 hover:text-charcoal-700 hover:bg-gray-100 border border-transparent disabled:opacity-50'
                                     }`}
                                 title="Adjuntar documento"
                             >
