@@ -53,9 +53,9 @@ export const PLANS = {
         price: 149,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 170,
+        queryLimit: 140,
         features: [
-            '170 consultas/mes',
+            '140 consultas/mes',
             'RAG jurídico sin alucinaciones',
             'Análisis de documentos',
             'Filtros por entidad federativa',
@@ -68,9 +68,9 @@ export const PLANS = {
         price: 1490,
         currency: 'MXN',
         interval: 'year' as const,
-        queryLimit: 170, // per month
+        queryLimit: 140, // per month
         features: [
-            '170 consultas/mes (2,040/año)',
+            '140 consultas/mes (1,680/año)',
             'Todo lo del Plan Pro incluido',
             'Ahorro de $910 MXN al año',
             'Precio fijo garantizado',
@@ -83,9 +83,9 @@ export const PLANS = {
         price: 599,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 700,
+        queryLimit: 560,
         features: [
-            '700 consultas/mes — ideal para despachos',
+            '560 consultas/mes — ideal para despachos',
             'Todo lo del Plan Pro incluido',
             'Consulta con equipo legal',
             'Contrato de servicios profesionales',
@@ -98,9 +98,9 @@ export const PLANS = {
         price: 5990,
         currency: 'MXN',
         interval: 'year' as const,
-        queryLimit: 700,
+        queryLimit: 560,
         features: [
-            '700 consultas/mes (8,400/año)',
+            '560 consultas/mes (6,720/año)',
             'Todo lo del Plan Platinum incluido',
             'Ahorro de $4,810 MXN al año',
             'Precio fijo garantizado',
@@ -113,11 +113,11 @@ export const PLANS = {
         price: 999,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 170,
+        queryLimit: 140,
         sentenciaQueryLimit: 50,
         draftLimit: 20,
         features: [
-            '170 consultas/mes al chat principal',
+            '140 consultas/mes al chat principal',
             '50 consultas/mes al Redactor de Sentencias',
             '20 redacciones de sentencia/mes',
             'Acceso exclusivo al Redactor TCC',

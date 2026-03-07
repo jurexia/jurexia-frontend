@@ -69,7 +69,7 @@ export default function PreciosPage() {
                                 period="MXN/mes"
                                 description="Para profesionales que necesitan potencia"
                                 features={[
-                                    "170 consultas/mes",
+                                    "140 consultas/mes",
                                     "Genio Amparo — IA avanzada en materia de amparo",
                                     "Registra tu cédula para conectar con clientes de tu zona",
                                     "Búsqueda con IA en legislación mexicana verificada y en constante actualización",
@@ -93,7 +93,7 @@ export default function PreciosPage() {
                                 period="MXN/año"
                                 description="Máximo ahorro por pago adelantado"
                                 features={[
-                                    "170 consultas/mes (2,040/año)",
+                                    "140 consultas/mes (1,680/año)",
                                     "Registra tu cédula para conectar con clientes de tu zona",
                                     "Todo lo del Plan Pro incluido",
                                     "Ahorro de $910 MXN al año",
@@ -119,7 +119,7 @@ export default function PreciosPage() {
                                 period="MXN/mes"
                                 description="Ideal para despachos y corporativos"
                                 features={[
-                                    "700 consultas/mes — ideal para despachos y corporativos",
+                                    "560 consultas/mes — ideal para despachos y corporativos",
                                     "Genio Amparo — IA avanzada en materia de amparo",
                                     "Registra tu cédula para conectar con clientes de tu zona",
                                     "Todo lo del Plan Pro incluido",
@@ -144,7 +144,7 @@ export default function PreciosPage() {
                                 period="MXN/año"
                                 description="Máximo ahorro para despachos y corporativos"
                                 features={[
-                                    "700 consultas/mes (8,400/año)",
+                                    "560 consultas/mes (6,720/año)",
                                     "Registra tu cédula para conectar con clientes de tu zona",
                                     "Todo lo del Plan Platinum incluido",
                                     "Asesoría legal personalizada continua (vía correo)",
@@ -210,7 +210,7 @@ export default function PreciosPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <ComparisonRow feature="Consultas/mes" free="5" pro="170" proAnual="170" platinum="700" />
+                                    <ComparisonRow feature="Consultas/mes" free="5" pro="140" proAnual="140" platinum="560" />
                                     <ComparisonRow feature="Búsqueda con IA verificada" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                     <ComparisonRow feature="Filtros jurisdiccionales" free="✓" pro="✓" proAnual="✓" platinum="✓" />
                                     <ComparisonRow feature="Base documental completa" free="✓" pro="✓" proAnual="✓" platinum="✓" />
@@ -249,7 +249,7 @@ export default function PreciosPage() {
                             { question: '¿Puedo cambiar de plan en cualquier momento?', answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación.' },
                             { question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo.' },
                             { question: '¿Hay garantía de devolución?', answer: 'Ofrecemos 14 días de garantía de devolución en los planes mensuales. Si no estás satisfecho, te devolvemos el 100% de tu pago sin preguntas.' },
-                            { question: '¿Qué pasa si se acaban mis consultas?', answer: 'Te notificaremos cuando te queden pocas consultas. Puedes esperar al siguiente mes o actualizar a un plan con más consultas en cualquier momento. El Plan Platinum incluye 700 consultas al mes, ideal para despachos y corporativos.' },
+                            { question: '¿Qué pasa si se acaban mis consultas?', answer: 'Te notificaremos cuando te queden pocas consultas. Puedes esperar al siguiente mes o actualizar a un plan con más consultas en cualquier momento. El Plan Platinum incluye 560 consultas al mes, ideal para despachos y corporativos.' },
                         ].map((faq, i) => (
                             <AnimateOnScroll key={i} delay={i * 0.08}>
                                 <FAQItem question={faq.question} answer={faq.answer} />

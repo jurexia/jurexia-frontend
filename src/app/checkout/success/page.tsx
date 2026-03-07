@@ -60,7 +60,7 @@ const PRO_THEME: PlanTheme = {
     buttonBg: 'bg-accent-brown',
     buttonHover: 'hover:bg-accent-brown/90',
     features: [
-        'Realizar hasta 170 o 700 consultas/mes según tu plan',
+        'Realizar hasta 140 o 560 consultas/mes según tu plan',
         'Analizar documentos legales con IA',
         'Acceder a soporte prioritario',
     ],
@@ -298,8 +298,8 @@ export default function CheckoutSuccessPage() {
                 }
             `}</style>
             <main className={`min-h-screen flex items-center justify-center px-4 transition-colors duration-500 ${isUltra
-                    ? 'bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900'
-                    : 'bg-cream-300'
+                ? 'bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900'
+                : 'bg-cream-300'
                 }`}>
                 <Suspense fallback={<LoadingFallback />}>
                     <CheckoutSuccessContent />

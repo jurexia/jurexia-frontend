@@ -173,7 +173,7 @@ export default function SubscriptionPage() {
                             <div className="flex justify-between text-sm mb-2">
                                 <span className="text-charcoal-600">Consultas realizadas</span>
                                 <span className="font-medium text-charcoal-900">
-                                    {userPlan.includes('platinum') ? '∞' : '12 / 170'}
+                                    {userPlan.includes('platinum') ? '∞' : `12 / ${userPlan.includes('pro') ? '140' : '5'}`}
                                 </span>
                             </div>
                             {!userPlan.includes('platinum') && (
