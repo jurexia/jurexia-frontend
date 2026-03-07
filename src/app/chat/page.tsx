@@ -450,7 +450,7 @@ export default function ChatPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="max-w-3xl mx-auto px-4 py-6 pb-64 space-y-4">
+                        <div className="max-w-3xl mx-auto px-4 py-6 pb-[500px] space-y-4">
                             {messages.map((message, index) => (
                                 <ChatMessage key={index} message={message} isStreaming={isLoading && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} />
                             ))}

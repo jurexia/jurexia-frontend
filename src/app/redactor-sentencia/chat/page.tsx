@@ -771,7 +771,7 @@ export default function ChatSentenciaPage() {
                     {hasMessages && (
                         <div className="flex-1 flex flex-col h-full">
                             {/* Messages List - Scrollable */}
-                            <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth">
+                            <div className="flex-1 overflow-y-auto px-4 pt-6 pb-[500px] scroll-smooth">
                                 <div className="max-w-3xl mx-auto space-y-8">
                                     {messages.map((msg, idx) => {
                                         // Skip the empty assistant message placeholder — we show the shimmer instead
