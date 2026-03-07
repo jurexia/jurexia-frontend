@@ -37,8 +37,8 @@ export default function PreciosPage() {
             {/* Pricing Cards - Row 1: Gratuito, Pro Mensual, Pro Anual */}
             <section className="py-8 px-4 overflow-hidden">
                 <div className="max-w-7xl mx-auto">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <AnimateOnScroll delay={0}>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 items-stretch">
+                        <AnimateOnScroll delay={0} className="h-full">
                             <PricingCard
                                 icon={<Zap className="w-6 h-6" />}
                                 name="Plan Gratuito"
@@ -60,7 +60,7 @@ export default function PreciosPage() {
                             />
                         </AnimateOnScroll>
 
-                        <AnimateOnScroll delay={0.1}>
+                        <AnimateOnScroll delay={0.1} className="h-full">
                             <PricingCard
                                 icon={<ShieldCheck className="w-6 h-6" />}
                                 name="Plan Básico"
@@ -82,7 +82,7 @@ export default function PreciosPage() {
                             />
                         </AnimateOnScroll>
 
-                        <AnimateOnScroll delay={0.2}>
+                        <AnimateOnScroll delay={0.2} className="h-full">
                             <PricingCard
                                 icon={<Crown className="w-6 h-6" />}
                                 name="Plan Pro"
@@ -106,7 +106,7 @@ export default function PreciosPage() {
                             />
                         </AnimateOnScroll>
 
-                        <AnimateOnScroll delay={0.3}>
+                        <AnimateOnScroll delay={0.3} className="h-full">
                             <PricingCard
                                 icon={<Calendar className="w-6 h-6" />}
                                 name="Plan Pro Anual"
@@ -131,8 +131,8 @@ export default function PreciosPage() {
                     </div>
 
                     {/* Row 2: Platinum Plans */}
-                    <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                        <AnimateOnScroll delay={0.1}>
+                    <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto items-stretch">
+                        <AnimateOnScroll delay={0.1} className="h-full">
                             <PricingCard
                                 icon={<Star className="w-6 h-6" />}
                                 name="Plan Platinum"
@@ -156,7 +156,7 @@ export default function PreciosPage() {
                             />
                         </AnimateOnScroll>
 
-                        <AnimateOnScroll delay={0.25}>
+                        <AnimateOnScroll delay={0.25} className="h-full">
                             <PricingCard
                                 icon={<Star className="w-6 h-6" />}
                                 name="Plan Platinum Anual"
@@ -410,7 +410,7 @@ function PricingCard({
     const cardStyles = isPlatinum
         ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200 hover:shadow-xl hover:border-amber-300'
         : highlighted
-            ? 'bg-charcoal-900 text-white shadow-2xl scale-105'
+            ? 'bg-charcoal-900 text-white shadow-2xl relative z-10'
             : 'bg-white border border-black/5 hover:shadow-lg';
 
     const badgeStyles = isPlatinum
@@ -427,7 +427,7 @@ function PricingCard({
             : 'bg-charcoal-900 text-white hover:bg-charcoal-800';
 
     return (
-        <div className={`relative rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 ${cardStyles}`}>
+        <div className={`relative rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full ${cardStyles}`}>
             {badge && (
                 <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide ${badgeStyles}`}>
                     {badge}
@@ -488,29 +488,31 @@ function PricingCard({
                 ))}
             </ul>
 
-            {priceId ? (
-                <button
-                    onClick={handleSubscribe}
-                    disabled={loading}
-                    className={`${buttonBaseStyles} ${buttonColorStyles} flex items-center justify-center gap-2`}
-                >
-                    {loading ? (
-                        <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Procesando...
-                        </>
-                    ) : (
-                        buttonText
-                    )}
-                </button>
-            ) : (
-                <Link
-                    href={buttonHref || '/chat'}
-                    className={`${buttonBaseStyles} ${buttonColorStyles}`}
-                >
-                    {buttonText}
-                </Link>
-            )}
+            <div className="mt-auto pt-6">
+                {priceId ? (
+                    <button
+                        onClick={handleSubscribe}
+                        disabled={loading}
+                        className={`${buttonBaseStyles} ${buttonColorStyles} flex items-center justify-center gap-2`}
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Procesando...
+                            </>
+                        ) : (
+                            buttonText
+                        )}
+                    </button>
+                ) : (
+                    <Link
+                        href={buttonHref || '/chat'}
+                        className={`${buttonBaseStyles} ${buttonColorStyles}`}
+                    >
+                        {buttonText}
+                    </Link>
+                )}
+            </div>
 
             {/* Modal Warning Básico */}
             {showWarning && isBasic && (
