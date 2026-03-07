@@ -242,8 +242,9 @@ export default function NormativaNacionalPage() {
     const totalDocs = ESTADOS.reduce((acc, e) => acc + getTotalLeyes(e.leyes), 0);
 
     const filteredEstados = useMemo(() => {
-        if (!searchQuery) return ESTADOS;
-        return ESTADOS.filter(e =>
+        const justStates = ESTADOS.filter(e => e.slug !== 'federal');
+        if (!searchQuery) return justStates;
+        return justStates.filter(e =>
             e.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
             e.abreviatura.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -471,6 +472,29 @@ export default function NormativaNacionalPage() {
 
                         {/* Tab Content */}
                         <div className="min-h-[40vh]">
+
+                            {/* Local Search Bar for active tab (except constitucion) */}
+                            {activeTab !== 'constitucion' && (
+                                <AnimatedSection animation="fade-in" delay={150}>
+                                    <div className="max-w-md mx-auto mb-8">
+                                        <div className="flex items-center bg-white border border-cream-400 rounded-xl overflow-hidden focus-within:border-accent-gold/60 transition-all shadow-sm">
+                                            <Search className="w-4 h-4 text-charcoal-400 ml-4 shrink-0" />
+                                            <input
+                                                type="text"
+                                                placeholder={`Buscar en ${activeTab === 'tratados' ? 'tratados' : activeTab === 'federales' ? 'leyes federales' : 'estados'}...`}
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="w-full bg-transparent border-none text-charcoal-900 px-3 py-2.5 focus:ring-0 placeholder-charcoal-400 outline-none text-sm"
+                                            />
+                                            {searchQuery && (
+                                                <button onClick={() => setSearchQuery('')} className="mr-3 text-xs font-medium text-charcoal-400 hover:text-charcoal-700 transition-colors px-2 py-1">
+                                                    Limpiar
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </AnimatedSection>
+                            )}
 
                             {/* 1. CONSTITUCIÓN */}
                             {activeTab === 'constitucion' && (

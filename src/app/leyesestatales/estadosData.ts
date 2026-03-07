@@ -194,11 +194,11 @@ const QUERETARO_LEYES: CategoriaLeyes = {
 const CDMX_LEYES: CategoriaLeyes = {
     constitucion: [
         { nombre: 'Constitución Política de la Ciudad de México', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/CONSTITUCION_POLITICA_DE_LA_CDMX_14.4.pdf' },
-        { nombre: 'Constitución Política de la Ciudad de México', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/LEY_CONSTITUCIONAL_DE_DERECHOS_HUMANOS_Y_SUS_GARANTIAS_DE_LA_CIUDAD_DE_MEXICO_2.1.pdf' },
-        { nombre: 'Constitución Política de la Ciudad de México', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/LEY_DE_LA_SALA_CONSTITUCIONAL_DEL_PODER_JUDICIAL_DE_LA_CIUDAD_DE_MEXICO_2.1.pdf' },
-        { nombre: 'Constitución Política de la Ciudad de México', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/LEY_ORG_SALA_CONSTITUCIONAL_DEL_PJCDMX_2.1.pdf' },
     ],
     leyes: [
+        { nombre: 'Ley Constitucional de Derechos Humanos y sus Garantías de la Ciudad de México', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/LEY_CONSTITUCIONAL_DE_DERECHOS_HUMANOS_Y_SUS_GARANTIAS_DE_LA_CIUDAD_DE_MEXICO_2.1.pdf' },
+        { nombre: 'Ley de la Sala Constitucional del Poder Judicial de la Ciudad de México', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/LEY_DE_LA_SALA_CONSTITUCIONAL_DEL_PODER_JUDICIAL_DE_LA_CIUDAD_DE_MEXICO_2.1.pdf' },
+        { nombre: 'Ley Orgánica de la Sala Constitucional del Poder Judicial de la CDMX', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/LEY_ORG_SALA_CONSTITUCIONAL_DEL_PJCDMX_2.1.pdf' },
         { nombre: 'Ley  De Justicia Administrativa De La Cdmx 3.1', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/LEY__DE_JUSTICIA_ADMINISTRATIVA_DE_LA_CDMX_3.1.pdf' },
         { nombre: 'Ley  Org Del Inst De Planeacion Democratica  Y Prospectiva De La Cdmx 3.4', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/LEY__ORG_DEL_INST_DE_PLANEACION_DEMOCRATICA__Y_PROSPECTIVA_DE_LA_CDMX_3.4.pdf' },
         { nombre: 'Ley Acceso Gratuito Internet Cdmx 1', url: 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CDMX/LEY_ACCESO_GRATUITO_INTERNET_CDMX_1.pdf' },
@@ -622,7 +622,6 @@ export const FEDERAL_LEYES: CategoriaLeyes = {
 
 
 export const ESTADOS: Estado[] = [
-    { slug: 'federal', nombre: 'Legislación Federal y Nacional', nombreCorto: 'Federal', abreviatura: 'FED', region: 'centro', leyesCount: 72, ultimaActualizacion: '2026-03-03', leyes: FEDERAL_LEYES },
     { slug: 'aguascalientes', nombre: 'Aguascalientes', nombreCorto: 'Aguascalientes', abreviatura: 'AGS', region: 'centro', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'baja-california', nombre: 'Baja California', nombreCorto: 'Baja California', abreviatura: 'BC', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'baja-california-sur', nombre: 'Baja California Sur', nombreCorto: 'B.C. Sur', abreviatura: 'BCS', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
@@ -659,6 +658,7 @@ export const ESTADOS: Estado[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────
 export function getEstadoBySlug(slug: string): Estado | undefined {
+    if (slug === 'federal') return { slug: 'federal', nombre: 'Legislación Federal y Nacional', nombreCorto: 'Federal', abreviatura: 'FED', region: 'centro', leyesCount: 72, ultimaActualizacion: '2026-03-03', leyes: FEDERAL_LEYES };
     return ESTADOS.find(e => e.slug === slug);
 }
 
