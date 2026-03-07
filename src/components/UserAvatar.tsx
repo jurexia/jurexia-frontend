@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { LogOut, User, CreditCard } from 'lucide-react';
+import { LogOut, User, CreditCard, Settings, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { signOut } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,8 @@ export function UserAvatar() {
     const { user, profile, loading, isAuthenticated } = useAuth();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
+    const [showCancelWarning, setShowCancelWarning] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Close dropdown when clicking outside
@@ -36,6 +38,31 @@ export function UserAvatar() {
     const handleSignOut = async () => {
         await signOut();
         router.push('/');
+    };
+
+    const handleManageSubscription = async () => {
+        if (!profile?.stripe_customer_id) return;
+
+        setIsCancelling(true);
+        try {
+            const response = await fetch('/api/stripe/portal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId: profile.stripe_customer_id }),
+            });
+
+            const { url } = await response.json();
+            if (url) {
+                window.open(url, '_blank');
+            }
+        } catch (error) {
+            console.error('Error opening portal:', error);
+            alert('Error al abrir el portal de facturación');
+        } finally {
+            setIsCancelling(false);
+            setShowCancelWarning(false);
+            setIsOpen(false);
+        }
     };
 
     if (loading) {
@@ -144,6 +171,18 @@ export function UserAvatar() {
                             <CreditCard className="w-4 h-4" />
                             <span>Planes</span>
                         </Link>
+                        {profile?.subscription_type && profile.subscription_type !== 'gratuito' && (
+                            <button
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    setShowCancelWarning(true);
+                                }}
+                                className="flex items-center gap-3 w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                                <Settings className="w-4 h-4" />
+                                <span className="text-left">Cancelar Suscripción</span>
+                            </button>
+                        )}
                     </div>
 
                     {/* Logout */}
@@ -155,6 +194,39 @@ export function UserAvatar() {
                             <LogOut className="w-4 h-4" />
                             <span>Cerrar sesión</span>
                         </button>
+                    </div>
+                </div>
+            )}
+            {/* Modal de Advertencia de Cancelación */}
+            {showCancelWarning && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-in fade-in zoom-in duration-200">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="w-8 h-8 text-red-600" />
+                        </div>
+                        <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                            Cancelar Suscripción
+                        </h3>
+                        <p className="text-charcoal-600 mb-6 text-sm">
+                            Si cancelas, perderás tus beneficios del <strong>Plan {planStyle.label}</strong> y las consultas restantes una vez que termine tu periodo actual. ¿Estás seguro que deseas continuar?
+                        </p>
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={handleManageSubscription}
+                                disabled={isCancelling}
+                                className="w-full px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
+                                {isCancelling ? 'Redirigiendo...' : 'Sí, gestionar cancelación'}
+                            </button>
+                            <button
+                                onClick={() => setShowCancelWarning(false)}
+                                disabled={isCancelling}
+                                className="w-full px-4 py-2 border border-charcoal-200 text-charcoal-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                            >
+                                No, mantener mi plan
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
