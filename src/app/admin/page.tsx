@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     Users, Shield, BarChart3, AlertTriangle, Ban, CheckCircle,
     Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail, Bell,
-    MoreVertical, ChevronLeft, ChevronRight, Filter, Scale
+    MoreVertical, ChevronLeft, ChevronRight, Filter, Scale, Send
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
@@ -123,6 +123,7 @@ export default function AdminPage() {
     const [stripeData, setStripeData] = useState<Record<string, StripeSubData>>({});
     const [welcomeSent, setWelcomeSent] = useState<Set<string>>(new Set());
     const [updateSent, setUpdateSent] = useState<Set<string>>(new Set());
+    const [isSendingMails, setIsSendingMails] = useState(false);
 
     const getToken = useCallback(() => {
         return session?.access_token || '';
@@ -287,6 +288,22 @@ export default function AdminPage() {
         setCurrentPage(1);
     }, [searchFilter, filterPlan, filterStatus]);
 
+    const triggerRetroactiveMails = async () => {
+        if (!confirm('¿Estás seguro de enviar los correos de impago a todos los usuarios con facturas fallidas?')) return;
+        setIsSendingMails(true);
+        setError('');
+        try {
+            const res = await fetch('/api/admin/trigger-retroactive-failed-emails');
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error al enviar correos');
+            alert(`Éxito: Se procesaron ${data.processedCount} facturas.`);
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setIsSendingMails(false);
+        }
+    };
+
     if (loading || !user || user.email !== ADMIN_EMAIL) {
         return (
             <div className="flex bg-[#0a0a0a] min-h-screen items-center justify-center">
@@ -315,9 +332,23 @@ export default function AdminPage() {
                         </div>
                         <p className="text-gray-500 text-sm font-medium">Iurexia Technologies — Gestión de usuarios y seguridad</p>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl shadow-sm">
-                        <Lock className="w-4 h-4 text-red-500" />
-                        <span className="text-sm font-medium text-red-400">Acceso restringido</span>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={triggerRetroactiveMails}
+                            disabled={isSendingMails}
+                            className="flex items-center gap-2 px-4 py-2 bg-accent-gold/10 hover:bg-accent-gold/20 border border-accent-gold/30 rounded-xl shadow-sm text-accent-gold font-medium transition-colors disabled:opacity-50"
+                        >
+                            {isSendingMails ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Send className="w-4 h-4" />
+                            )}
+                            Notificar Impagos
+                        </button>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl shadow-sm">
+                            <Lock className="w-4 h-4 text-red-500" />
+                            <span className="text-sm font-medium text-red-400">Acceso restringido</span>
+                        </div>
                     </div>
                 </div>
 
