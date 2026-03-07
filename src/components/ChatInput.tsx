@@ -400,14 +400,13 @@ ${draftRequest.descripcion}`;
                     >
                         <div
                             className="flex items-center flex-shrink-0 gap-1 pr-1.5 sm:pr-2 mr-0.5 border-r border-gray-200/40"
-                            style={isPro ? { animation: 'shimmerGold 2.5s ease-in-out infinite' } : undefined}
                         >
-                            <Brain className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#c9a962] drop-shadow-[0_0_8px_rgba(201,169,98,0.9)]" />
-                            <span className="text-[9px] sm:text-[10px] font-extrabold text-[#c9a962] uppercase tracking-widest drop-shadow-[0_0_6px_rgba(201,169,98,0.7)]">
+                            <Brain className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ animation: 'iconMirror 3s ease-in-out infinite alternate' }} />
+                            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest mirror-genios-text">
                                 Genios
                             </span>
                             {(isGenioLocked && !isPro) && (
-                                <span className="text-[7px] font-bold text-[#c9a962] bg-[#c9a962]/10 px-1 py-0.5 rounded">PRO</span>
+                                <span className="text-[7px] font-bold text-charcoal-900 bg-[#c9a962]/20 px-1 py-0.5 rounded ml-0.5" style={{ animation: 'iconMirror 3s ease-in-out infinite alternate' }}>PRO</span>
                             )}
                         </div>
 
