@@ -72,18 +72,18 @@ export default function ChatInput({
 
     const geniosList = [
         {
+            id: 'cidh', label: 'CIDH', dot: 'bg-cyan-500',
+            activeOn: 'bg-gradient-to-r from-cyan-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-cyan-600 to-blue-700 text-white border-cyan-400',
+            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-cyan-600'
+        },
+        {
             id: 'amparo', label: 'Amparo', dot: 'bg-purple-500',
             activeOn: 'bg-gradient-to-r from-purple-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
             activating: 'bg-gradient-to-r from-purple-600 to-indigo-700 text-white border-purple-400',
             idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
             spinnerBorder: 'border-[#c9a962]', iconOn: 'text-purple-600'
-        },
-        {
-            id: 'mercantil', label: 'Mercantil', dot: 'bg-emerald-500',
-            activeOn: 'bg-gradient-to-r from-emerald-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white border-emerald-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-emerald-600'
         },
         {
             id: 'civil', label: 'Civil', dot: 'bg-blue-500',
@@ -107,6 +107,13 @@ export default function ChatInput({
             spinnerBorder: 'border-[#c9a962]', iconOn: 'text-amber-600'
         },
         {
+            id: 'agrario', label: 'Agrario', dot: 'bg-lime-500',
+            activeOn: 'bg-gradient-to-r from-lime-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-lime-600 to-green-700 text-white border-lime-400',
+            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-lime-600'
+        },
+        {
             id: 'fiscal', label: 'Fiscal', dot: 'bg-violet-500',
             activeOn: 'bg-gradient-to-r from-violet-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
             activating: 'bg-gradient-to-r from-violet-600 to-purple-700 text-white border-violet-400',
@@ -119,20 +126,6 @@ export default function ChatInput({
             activating: 'bg-gradient-to-r from-teal-600 to-cyan-700 text-white border-teal-400',
             idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
             spinnerBorder: 'border-[#c9a962]', iconOn: 'text-teal-600'
-        },
-        {
-            id: 'agrario', label: 'Agrario', dot: 'bg-lime-500',
-            activeOn: 'bg-gradient-to-r from-lime-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-lime-600 to-green-700 text-white border-lime-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-lime-600'
-        },
-        {
-            id: 'cidh', label: 'CIDH', dot: 'bg-cyan-500',
-            activeOn: 'bg-gradient-to-r from-cyan-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-cyan-600 to-blue-700 text-white border-cyan-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-cyan-600'
         },
     ];
 
@@ -591,7 +584,6 @@ ${draftRequest.descripcion}`;
                                     </>
                                 ) : (
                                     <>
-                                        <span className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${(activeGenios.includes(g.id) && isCacheActive) ? g.dot + ' animate-pulse' : (activeGenios.includes(g.id) ? 'bg-white' : g.dot + ' opacity-60')}`} />
                                         <span className={(activeGenios.includes(g.id) && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenios.includes(g.id) ? '' : 'text-gray-500')}>
                                             {g.label}
                                         </span>
