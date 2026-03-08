@@ -127,6 +127,13 @@ export default function ChatInput({
             idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
             spinnerBorder: 'border-[#c9a962]', iconOn: 'text-lime-600'
         },
+        {
+            id: 'cidh', label: 'CIDH', dot: 'bg-cyan-500',
+            activeOn: 'bg-gradient-to-r from-cyan-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-cyan-600 to-blue-700 text-white border-cyan-400',
+            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-cyan-600'
+        },
     ];
 
     useEffect(() => {
@@ -389,8 +396,8 @@ ${draftRequest.descripcion}`;
                                 onClick={toggleListening}
                                 disabled={isLoading}
                                 className={`p-2 rounded-full transition-all duration-200 flex-shrink-0 ${isListening
-                                        ? 'bg-red-100 text-red-600 border border-red-200 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.4)]'
-                                        : 'text-gray-400 hover:text-charcoal-700 hover:bg-gray-100 border border-transparent disabled:opacity-50'
+                                    ? 'bg-red-100 text-red-600 border border-red-200 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                                    : 'text-gray-400 hover:text-charcoal-700 hover:bg-gray-100 border border-transparent disabled:opacity-50'
                                     }`}
                                 title={isListening ? "Detener dictado" : "Dictado por voz"}
                             >
