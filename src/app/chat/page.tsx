@@ -70,8 +70,8 @@ export default function ChatPage() {
     ];
     const [suggestionIndex, setSuggestionIndex] = useState(0);
 
-    // Auto-deactivate cache after 5 minutes of inactivity
-    const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+    // Auto-deactivate cache after 3 minutes of inactivity (safety: evita costos excesivos)
+    const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
 
     const resetCacheTimer = useCallback(() => {
         if (cacheTimerRef.current) clearTimeout(cacheTimerRef.current);

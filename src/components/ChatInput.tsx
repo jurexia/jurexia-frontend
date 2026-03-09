@@ -461,13 +461,11 @@ ${draftRequest.descripcion}`;
                                         }
                                         setChatMode('redactar');
                                     }}
-                                    className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${activeGenios.length >= 2
-                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-70'
-                                        : chatMode === 'redactar'
-                                            ? 'bg-charcoal-900 text-white'
-                                            : 'bg-white text-gray-500 hover:text-gray-700'
+                                    className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${chatMode === 'redactar'
+                                        ? 'bg-charcoal-900 text-white'
+                                        : 'bg-white text-gray-500 hover:text-gray-700'
                                         }`}
-                                    title={activeGenios.length >= 2 ? "Modo redacción no disponible con 2 genios activos" : "Modo redacción — genera argumentos jurídicos"}
+                                    title="Modo redacción — genera argumentos jurídicos"
                                 >
                                     <PenTool className="w-3 h-3" />
                                     Redactar
@@ -538,21 +536,11 @@ ${draftRequest.descripcion}`;
                                     if (!setActiveGenios) return;
 
                                     if (activeGenios.includes(g.id)) {
-                                        setActiveGenios(activeGenios.filter(id => id !== g.id));
+                                        // Ya está activo → desactivar
+                                        setActiveGenios([]);
                                     } else {
-                                        if (activeGenios.length >= 2) {
-                                            alert("Solo puedes seleccionar un máximo de dos Genios simultáneamente.");
-                                            return;
-                                        } else {
-                                            setActiveGenios([...activeGenios, g.id]);
-                                            if (chatMode === 'redactar') {
-                                                setChatMode('buscar');
-                                                // Optional slight delay so user notices the mode change
-                                                setTimeout(() => {
-                                                    alert("Modo redacción deshabilitado al activar múltiples genios.");
-                                                }, 50);
-                                            }
-                                        }
+                                        // Activar este genio (reemplaza cualquier otro activo)
+                                        setActiveGenios([g.id]);
                                     }
                                 }}
                                 disabled={isCacheLoading || (isGenioLocked && !isPro)}
