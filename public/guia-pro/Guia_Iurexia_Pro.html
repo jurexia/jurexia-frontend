@@ -4,473 +4,742 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iurexia Pro - Playbook Estratégico & Multi-Genio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+    <title>Manual de Uso Completo - Iurexia</title>
+    <!-- Ya no cargamos Inter, usaremos Arial -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap"
         rel="stylesheet">
-
     <style>
         :root {
-            --bg-base: #0a0a0b;
-            --bg-surface: #121316;
-            --bg-surface-elevated: #1a1c21;
-            --text-primary: #ededed;
-            --text-secondary: #a1a1aa;
-            --gold: #d4b872;
-            --gold-muted: rgba(212, 184, 114, 0.2);
-            --border-subtle: #27272a;
-            --border-gold: rgba(212, 184, 114, 0.4);
-            --font-headings: 'Playfair Display', serif;
-            --font-body: 'Inter', sans-serif;
-            --transition-smooth: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            --charcoal: #111111;
+            --charcoal-light: #2c2c2c;
+            --gold: #c9a962;
+            --cream: #121212;
+            --white: #1a1a1a;
+            --gray-text: #b3b3b3;
+            --border: #333333;
         }
 
         body {
-            font-family: var(--font-body);
-            background-color: var(--bg-base);
-            color: var(--text-primary);
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: var(--charcoal);
+            color: #efefef;
             line-height: 1.6;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
 
-        /* Nav Header */
-        header {
-            position: sticky;
-            top: 0;
-            background: rgba(10, 10, 11, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-subtle);
-            padding: 20px 0;
-            z-index: 100;
-        }
-
-        .header-content {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-family: var(--font-headings);
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #ffffff;
-        }
-
-        .logo span {
-            color: var(--gold);
-            font-style: italic;
-        }
-
-        /* Container Main */
         .container {
             max-width: 1000px;
             margin: 0 auto;
-            padding: 60px 40px 100px;
+            padding: 50px 60px;
+            background: linear-gradient(135deg, #111111 0%, #1a1a1a 100%);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            border-left: 1px solid rgba(201, 169, 98, 0.2);
+            border-right: 1px solid rgba(201, 169, 98, 0.2);
         }
 
-        /* Typography */
         h1,
         h2,
-        h3,
-        h4 {
-            font-family: var(--font-headings);
-            font-weight: 400;
+        h3 {
+            font-family: 'Playfair Display', serif;
             color: #ffffff;
             margin-top: 0;
         }
 
-        .hero-title {
-            font-size: 3.5rem;
-            line-height: 1.1;
-            margin-bottom: 24px;
-            letter-spacing: -1px;
-        }
-
-        .hero-subtitle {
-            font-family: var(--font-body);
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            font-weight: 300;
-            max-width: 700px;
-            margin-bottom: 60px;
-        }
-
-        .accent {
+        .gold-text {
             color: var(--gold);
-            font-style: italic;
         }
 
-        h2.section-title {
-            font-size: 2.2rem;
-            margin-top: 80px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid var(--border-subtle);
-            padding-bottom: 15px;
-        }
-
-        h3.subsection-title {
-            font-size: 1.5rem;
-            margin-top: 40px;
-            margin-bottom: 20px;
+        .black-text {
             color: #ffffff;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            text-align: center;
+            border-bottom: 3px solid rgba(201, 169, 98, 0.3);
+            padding-bottom: 25px;
+            margin-bottom: 45px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-top: 60px;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 12px;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin-top: 35px;
+            border-left: 4px solid var(--gold);
+            padding-left: 10px;
         }
 
         p {
+            color: var(--gray-text);
             font-size: 1.1rem;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-            font-weight: 300;
+            margin-bottom: 20px;
         }
 
-        /* Components */
-        .metric-banner {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-            background: var(--border-subtle);
-            border: 1px solid var(--border-gold);
-            margin: 40px 0;
+        .highlight {
+            color: #ffffff;
+            background-color: rgba(201, 169, 98, 0.2);
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
-        .metric-box {
-            background: var(--bg-surface);
-            padding: 30px;
-            text-align: center;
-        }
-
-        .metric-value {
-            font-family: var(--font-headings);
-            font-size: 2.5rem;
+        .btn-sim {
+            background-color: transparent;
             color: var(--gold);
-            margin-bottom: 10px;
-        }
-
-        .metric-label {
+            padding: 6px 12px;
+            border-radius: 6px;
             font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--text-secondary);
-            font-weight: 500;
+            border: 1px solid var(--gold);
         }
 
-        .insight-box {
-            background: linear-gradient(145deg, var(--bg-surface), var(--bg-surface-elevated));
-            border-left: 3px solid var(--gold);
-            padding: 30px 40px;
-            margin: 40px 0;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .insight-box h3 {
-            font-family: var(--font-body);
-            font-weight: 500;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--gold);
-            margin-bottom: 15px;
-        }
-
-        .insight-box p {
-            font-family: var(--font-headings);
-            font-size: 1.4rem;
-            color: #ffffff;
-            margin: 0;
-            line-height: 1.5;
-            font-style: italic;
-        }
-
-        /* Workflows / Lists */
-        .workflow-list {
-            list-style: none;
-            padding: 0;
-            counter-reset: workflow-counter;
-        }
-
-        .workflow-item {
-            position: relative;
-            padding-left: 60px;
-            margin-bottom: 40px;
-        }
-
-        .workflow-item::before {
-            counter-increment: workflow-counter;
-            content: "0" counter(workflow-counter);
-            position: absolute;
-            left: 0;
-            top: 2px;
-            font-family: var(--font-headings);
-            font-size: 1.8rem;
-            color: var(--gold);
-            opacity: 0.5;
-        }
-
-        .workflow-item h4 {
-            font-family: var(--font-body);
-            font-size: 1.2rem;
-            font-weight: 500;
-            color: #ffffff;
-            margin-bottom: 10px;
-        }
-
-        .workflow-item p {
-            margin: 0;
-            font-size: 1.05rem;
-        }
-
-        /* Images */
-        .image-showcase {
-            margin: 50px 0;
-            position: relative;
-            border-radius: 4px;
-            overflow: hidden;
-            border: 1px solid var(--border-subtle);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            transition: var(--transition-smooth);
-        }
-
-        .image-showcase::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border: 1px solid var(--border-gold);
-            opacity: 0;
-            transition: var(--transition-smooth);
-            pointer-events: none;
-        }
-
-        .image-showcase:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 35px 60px rgba(0, 0, 0, 0.7);
-        }
-
-        .image-showcase:hover::after {
-            opacity: 1;
-        }
-
-        .image-showcase img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .image-caption {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            text-align: center;
-            margin-top: 15px;
-            font-style: italic;
-        }
-
-        /* Two columns */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 40px;
+            align-items: start;
+            margin-bottom: 40px;
+        }
+
+        .grid-2-image-right {
+            display: grid;
+            grid-template-columns: 0.8fr 1.2fr;
+            gap: 40px;
             align-items: center;
+            margin-bottom: 40px;
         }
 
-        /* Animations */
-        .fade-up {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: var(--transition-smooth);
+        .img-container {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.6s ease, border-color 0.6s ease;
         }
 
-        .fade-up.visible {
+        .img-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            opacity: 0.95;
+            transition: opacity 0.5s;
+        }
+
+        .img-container:hover img {
             opacity: 1;
-            transform: translateY(0);
         }
 
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
+        .img-container:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            border-color: var(--gold);
+            z-index: 10;
+        }
 
-            .metric-banner {
-                grid-template-columns: 1fr;
-            }
+        .img-large {
+            max-width: 90%;
+            margin: 0 auto;
+        }
 
-            .grid-2 {
-                grid-template-columns: 1fr;
+        .info-box {
+            background: linear-gradient(135deg, #1f1f1f 0%, #2c2c2c 100%);
+            color: #ffffff;
+            border-left: 5px solid var(--gold);
+            padding: 25px 30px;
+            border-radius: 0 12px 12px 0;
+            margin: 35px 0;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .info-box strong {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            color: var(--gold);
+        }
+
+        .info-box p {
+            color: #f4f1ea;
+            font-size: 1.1rem;
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-list li {
+            position: relative;
+            padding-left: 45px;
+            margin-bottom: 30px;
+            background-color: #1a1a1a;
+            padding: 20px 20px 20px 55px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.5s ease;
+        }
+
+        .step-list li::before {
+            content: "✦";
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            color: var(--gold);
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .step-list h4 {
+            margin: 0 0 8px 0;
+            font-size: 1.15rem;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .step-list p {
+            margin: 0;
+            font-size: 1.05rem;
+            color: var(--gray-text);
+        }
+
+        .step-list li:hover {
+            background-color: #222;
+            border-color: var(--gold);
+            box-shadow: 0 10px 25px rgba(201, 169, 98, 0.15);
+            transform: translateX(10px);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .gallery-item {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            transition: transform 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        .gallery-item span {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px) scale(1.03);
+            border-color: var(--gold);
+            box-shadow: 0 15px 35px rgba(201, 169, 98, 0.15);
+        }
+
+        .tips-container {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1f1f1f 100%);
+            padding: 35px;
+            border-radius: 12px;
+            color: white;
+            margin-top: 30px;
+            border: 1px solid var(--gold);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .tips-container h3 {
+            color: var(--gold);
+            border-left: none;
+            padding-left: 0;
+            margin-top: 0;
+        }
+
+        .tips-container p {
+            color: #ddd;
+        }
+
+        .tips-container ul {
+            padding-left: 20px;
+        }
+
+        .tips-container li {
+            margin-bottom: 15px;
+            color: #efefef;
+            font-size: 1.05rem;
+        }
+
+        .tips-container li strong {
+            color: var(--gold);
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
             }
 
             .container {
-                padding: 40px 20px;
+                box-shadow: none;
+                border: none;
+                background: white;
+                padding: 0;
+                max-width: 100%;
             }
+
+            .avoid-break {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            h1,
+            h2,
+            h3,
+            p,
+            .black-text,
+            .gold-text {
+                color: black !important;
+                text-shadow: none !important;
+            }
+
+            .info-box,
+            .tips-container,
+            .step-list li,
+            .gallery-item {
+                background: #f5f5f5 !important;
+                color: black !important;
+                border-color: black !important;
+                box-shadow: none !important;
+            }
+
+            .info-box strong,
+            .tips-container h3,
+            .tips-container li strong {
+                color: black !important;
+            }
+
+            .info-box p,
+            .tips-container p,
+            .tips-container li {
+                color: #333 !important;
+            }
+
+            .img-container {
+                background: white !important;
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                transform: none !important;
+                transition: none !important;
+            }
+        }
+
+        /* -------------------------------------
+           📱 MOBILE RESPONSIVENESS 📱
+        ------------------------------------- */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            .grid-2,
+            .grid-2-image-right {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            h2 {
+                font-size: 1.6rem;
+            }
+
+            .img-container:hover {
+                transform: translateY(-4px) scale(1.01);
+                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        /* -------------------------------------
+           ✨ ANIMACIONES DE ALTO IMPACTO ✨
+        ------------------------------------- */
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-100px) scale(0.95);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: opacity, transform;
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(100px) scale(0.95);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: opacity, transform;
+        }
+
+        .reveal-bottom {
+            opacity: 0;
+            transform: translateY(100px) scale(0.95);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: opacity, transform;
+        }
+
+        .reveal-zoom {
+            opacity: 0;
+            transform: scale(0.85);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            will-change: opacity, transform;
+        }
+
+        .reveal-left.active,
+        .reveal-right.active,
+        .reveal-bottom.active,
+        .reveal-zoom.active {
+            opacity: 1;
+            transform: translate(0) scale(1);
+        }
+
+        .delay-100 {
+            transition-delay: 100ms;
+        }
+
+        .delay-200 {
+            transition-delay: 200ms;
+        }
+
+        .delay-300 {
+            transition-delay: 300ms;
+        }
+
+        .delay-400 {
+            transition-delay: 400ms;
         }
     </style>
 </head>
 
 <body>
 
-    <header>
-        <div class="header-content">
-            <div class="logo">IUREXIA <span>PRO</span></div>
-        </div>
-    </header>
-
     <div class="container">
+        <h1><span class="black-text">Manual de Uso</span> <span class="gold-text">Completo</span></h1>
+        <p
+            style="text-align: center; font-size: 1.4rem; font-family: 'Playfair Display', serif; margin-top: -25px; margin-bottom: 45px; color: var(--gold); font-weight: 600;">
+            (Planes Pro y superior)</p>
 
-        <div class="fade-up">
-            <h1 class="hero-title">El motor de inteligencia jurídica que <span class="accent">transforma la
-                    capacidad</span> de tu firma legal.</h1>
-            <p class="hero-subtitle">Descubre cómo los equipos legales de alto rendimiento integran la
-                <strong>Arquitectura Multi-Genio</strong> de Iurexia para multiplicar su rentabilidad, reducir horas no
-                facturables y entregar análisis de calado magistral sin incrementar personal.</p>
+        <div class="info-box">
+            <strong>Bienvenido a la Inteligencia Jurídica de Iurexia</strong>
+            <p>Este documento es tu guía visual para aprovechar al máximo el motor analítico de Iurexia. Nuestra
+                plataforma está diseñada para proporcionarte resoluciones, análisis y redacción jurídica de un rigor
+                técnico impecable. Todo el procesamiento es enteramente nativo, blindado para entregarte resultados
+                certeros.</p>
         </div>
 
-        <div class="metric-banner fade-up">
-            <div class="metric-box">
-                <div class="metric-value">15-30</div>
-                <div class="metric-label">Horas Ahorradas / Mes</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-value">60%</div>
-                <div class="metric-label">Mayor Velocidad de Respuesta</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-value">ROI</div>
-                <div class="metric-label">Inversión Recuperada</div>
-            </div>
+        <!-- SECCIÓN 1 -->
+        <h2 class="avoid-break"><span class="black-text">1. El Tablero de </span><span class="gold-text">Control</span>
+        </h2>
+        <p>Desde la barra inferior de tu panel tienes el control total de la herramienta. Es la cabina de mando donde
+            diriges el tipo de análisis que Iurexia realizará por ti.</p>
+
+        <div class="img-container avoid-break img-large" style="margin-bottom: 30px;">
+            <img src="images/Captura de pantalla 2026-03-07 014257.png" alt="Panel Principal">
         </div>
 
-        <div class="insight-box fade-up">
-            <h3>Nuestra Filosofía</h3>
-            <p>"No buscamos automatizar al abogado, sino expandir drásticamente su capacidad operativa. Iurexia es la
-                infraestructura que absorbe la complejidad normativa para que tú domines la estrategia del caso."</p>
-        </div>
-
-        <!-- SECTION 1: El Nuevo Panel -->
-        <h2 class="section-title fade-up">1. La Cabina de Mando Integral</h2>
-        <p class="fade-up">El nuevo entorno de Iurexia Pro está diseñado no como un simple buscador de leyes, sino como
-            un <strong>ecosistema de flujos de trabajo (workflows)</strong>. Desde esta cabina centralizas la
-            inteligencia, la redacción especializada y el análisis documental profundo.</p>
-
-        <div class="image-showcase fade-up">
-            <img src="images/panel_iurexia_v5_1.png" alt="Panel Principal de Iurexia Pro V5">
-        </div>
-        <p class="image-caption fade-up">Vista principal: Redacción de documentos, Carga de expedientes y Selección
-            Inteligente de Genios.</p>
-
-        <ul class="workflow-list fade-up">
-            <li class="workflow-item">
-                <h4>Filtro Jurisdiccional de Precisión</h4>
-                <p>La capacidad de limitar el universo de búsqueda a un Estado de la República o exclusivamente al
-                    ámbito Federal elimina el "ruido" legal. Iurexia te entrega doctrina y jurisprudencia estrictamente
-                    vinculante al fuero de tu controversia.</p>
+        <ul class="step-list avoid-break">
+            <li>
+                <h4>Filtros Normativos (Superior)</h4>
+                <p>Selecciona si el motor de Iurexia debe enfocarse en buscar respuestas dentro de la legislación
+                    "Estatal", "Federal", "Constitucional" o "Todos".</p>
             </li>
-            <li class="workflow-item">
-                <h4>Transición Fluida: De la Investigación a la Acción</h4>
-                <p>Nuestra interfaz divide limpiamente el proceso: usa el modo <em>Buscar</em> para la concepción de
-                    teorías del caso, y el modo <em>Redactar</em> para materializar borradores formales y
-                    argumentaciones procesales.</p>
+            <li>
+                <h4>Modo "Buscar"</h4>
+                <p>Activado por defecto. Ideal para consultas abstractas, búsqueda de fundamentos y análisis
+                    jurisprudencial donde requieres que Iurexia traiga a la mesa la norma pura y la jurisprudencia
+                    aplicable.</p>
+            </li>
+            <li>
+                <h4>Botón de Especialistas</h4>
+                <p>El botón azul te permite conectar con abogados especializados de nuestra red de confianza en el
+                    Estado que hayas seleccionado.</p>
             </li>
         </ul>
 
-        <!-- SECTION 2: Arquitectura Multi-Genio -->
-        <h2 class="section-title fade-up">2. Arquitectura <span class="accent">Multi-Genio</span>: Análisis Cruzado</h2>
-        <p class="fade-up">El avance más revolucionario para estrategas legales complejos. Los problemas legales rara
-            vez son aislados. La <strong>Arquitectura Multi-Genio</strong> te permite invocar simultáneamente a
-            múltiples inteligencias jurídicas especializadas para auditar tu caso desde vértices distintos.</p>
+        <!-- SECCIÓN 2 -->
+        <h2 class="avoid-break"><span class="black-text">2. El Modo </span><span class="gold-text">Redactar</span></h2>
 
-        <div class="image-showcase fade-up">
-            <img src="images/panel_iurexia_v5_2.png" alt="Arquitectura Multi-Genio Activa">
-        </div>
-        <p class="image-caption fade-up">Genios Operando de Forma Simultánea: Cruzando Amparo, Derechos Humanos y Fiscal
-            en tiempo real.</p>
+        <p>Si cambias el switch a <span class="btn-sim">Redactar</span>, Iurexia deja de comportarse como un simple
+            motor de búsqueda y adopta la postura de un abogado proyectista.</p>
 
-        <div class="grid-2 fade-up" style="margin-top: 40px;">
-            <div>
-                <h3 class="subsection-title" style="margin-top: 0;">Multiplicador de Perspectiva</h3>
-                <p>Activa, por ejemplo, el <strong>Genio Laboral</strong> y el <strong>Genio de Amparo</strong> en la
-                    misma consulta. Iurexia no solo responderá sobre derecho del trabajo, sino que someterá cada
-                    respuesta al escrutinio del control constitucional y las reglas del amparo directo.</p>
-            </div>
-            <div>
-                <h3 class="subsection-title" style="margin-top: 0;">Bloqueo de Pluralidad (Strict Mode)</h3>
-                <p>Cuando cruzas especialidades, Iurexia prioriza el razonamiento jurídico. El modo de "Redacción
-                    General" se desactiva estratégicamente para obligar a la IA a entregarte <strong>auditorías de
-                        viabilidad</strong> y <strong>análisis dogmático puro</strong> en lugar de machotes
-                    superficiales.</p>
-            </div>
+        <div class="img-container avoid-break img-large" style="margin: 30px auto;">
+            <img src="images/Captura de pantalla 2026-03-07 014332.png" alt="Boton Redactar">
         </div>
 
-        <!-- SECTION 3: La Auditoría Definitiva -->
-        <h2 class="section-title fade-up">3. Auditoría Jurisdiccional (Workflow de Sentencias)</h2>
-        <p class="fade-up">El verdadero Retorno de Inversión (ROI) en despachos que manejan gran volumen ocurre cuando
-            se acorta el tiempo de revisión humana en documentos masivos.</p>
+        <p>Usa este modo cuando tu petición implique que la plataforma genere <strong>argumentos estructurados</strong>,
+            esbozos de querellas, contestaciones, cláusulas contractuales o estrategias argumentativas. Iurexia
+            procesará los hechos que le narres y arrojará un discurso jurídico hilado y con base legal firme.</p>
 
-        <ul class="workflow-list fade-up">
-            <li class="workflow-item">
-                <h4>In-take de Resoluciones Judiciales</h4>
-                <p>Sube resoluciones complejas de tribunales colegiados o juzgados de distrito. Iurexia audita de
-                    inmediato fallos procesales, faltas de exhaustividad y violaciones a derechos fundamentales.</p>
-            </li>
-            <li class="workflow-item">
-                <h4>Descubrimiento y Extracción</h4>
-                <p>Convierte 2 horas de revisión de pruebas o lectura de expedientes en 15 minutos de extracción precisa
-                    de datos. Permite a los Socios y Abogados Senior dedicar el 90% de su tiempo a perfeccionar la
-                    estrategia procesal y el trato con el cliente.</p>
-            </li>
-        </ul>
 
-        <!-- SECTION 4: Seguridad -->
-        <h2 class="section-title fade-up">4. Confianza y <span class="accent">Security by Design</span></h2>
-        <p class="fade-up">El secreto profesional no es opcional. Las firmas top exigen privacidad total.</p>
+        <!-- SECCIÓN 3 -->
+        <h2 class="avoid-break"><span class="black-text">3. Generador de Documentos: </span><span
+                class="gold-text">Escrito</span></h2>
+        <p>Al hacer clic en <span class="highlight">Escrito</span>, accedes al generador especializado. Esta herramienta
+            categoriza y parametriza la creación de documentos formales listos para litigar o celebrar.</p>
 
-        <div class="insight-box fade-up" style="border-left-color: #4a5568;">
-            <p style="font-size: 1.2rem; font-style: normal; font-family: var(--font-body); font-weight: 300;">
-                <strong style="color: #ffffff;">Tus datos se quedan contigo.</strong><br><br>
-                Los análisis que conduces, los documentos que auditas y las estrategias que proyectas están
-                <strong>aislados (Data Privacy Shield)</strong>. Iurexia <strong>JAMÁS utilizará el contenido
-                    confidencial de tus casos o clientes para entrenar modelos de inteligencia artificial
-                    compartidos.</strong> Ofrecemos un entorno blindado, diseñado para cumplir con los estándares éticos
-                y obligaciones de confidencialidad inherentes a la profesión jurídica en México.
+        <div class="img-container avoid-break img-large" style="margin-bottom: 40px;">
+            <img src="images/Captura de pantalla 2026-03-07 014357.png" alt="Modal Escrito">
+        </div>
+
+        <p class="avoid-break">Iurexia te guía paso a paso según la materia. Selecciona la categoría, llena los campos
+            esenciales, y el motor estructurará el documento. A continuación un desglose de las especializaciones:</p>
+
+        <div class="gallery-grid avoid-break">
+            <div class="gallery-item">
+                <span>Contratos Formales</span>
+                <div class="img-container">
+                    <img src="images/Captura de pantalla 2026-03-07 014419.png" alt="Contratos">
+                </div>
+            </div>
+            <div class="gallery-item">
+                <span>Control de Demandas</span>
+                <div class="img-container">
+                    <img src="images/Captura de pantalla 2026-03-07 014440.png" alt="Demandas">
+                </div>
+            </div>
+            <div class="gallery-item">
+                <span>Amparo Especializado</span>
+                <div class="img-container">
+                    <img src="images/Captura de pantalla 2026-03-07 014501.png" alt="Amparo">
+                </div>
+            </div>
+            <div class="gallery-item">
+                <span>Medios de Impugnación</span>
+                <div class="img-container">
+                    <img src="images/Captura de pantalla 2026-03-07 014523.png" alt="Impugnacion">
+                </div>
+            </div>
+            <div class="gallery-item">
+                <span>Peticiones y Oficios</span>
+                <div class="img-container">
+                    <img src="images/Captura de pantalla 2026-03-07 014541.png" alt="Peticiones">
+                </div>
+            </div>
+            <div class="gallery-item">
+                <span>Denuncias Disciplinarias</span>
+                <div class="img-container">
+                    <img src="images/Captura de pantalla 2026-03-07 014604.png" alt="Denuncias">
+                </div>
+            </div>
+        </div>
+
+
+        <!-- SECCIÓN 4 -->
+        <h2 class="avoid-break"><span class="black-text">4. Los Genios </span><span class="gold-text">Jurídicos</span>
+        </h2>
+        <p>Son los "socios" hiper-especializados de Iurexia. Al activar un Genio, el sistema enfoca todos sus motores
+            analíticos de jurisprudencia y doctrina en esa rama específica del derecho mexicano.</p>
+
+        <div class="grid-2 avoid-break">
+            <div class="img-container">
+                <img src="images/Captura de pantalla 2026-03-07 015106.png" alt="Ejemplo Genio">
+            </div>
+            <div>
+                <ul class="step-list" style="margin-top: 0;">
+                    <li>
+                        <h4>Activación Simultánea</h4>
+                        <p>Puedes activar hasta <strong>dos Genios de forma simultánea</strong> (por ejemplo: Amparo y
+                            Penal). El motor cruzará ambos acervos normativos para darte una perspectiva
+                            multidisciplinaria.</p>
+                    </li>
+                    <li>
+                        <h4>Modo Analítico Estricto</h4>
+                        <p><strong>Bloqueo de redacción:</strong> Para garantizar un análisis profundo y estricto,
+                            cuando activas más de un Genio a la vez, el modo "Redactar" se bloquea automáticamente. Los
+                            Genios cruzados están diseñados para investigar y razonar, no para pre-redactar.</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 5 -->
+        <h2 class="avoid-break"><span class="black-text">5. Análisis Documental y </span><span
+                class="gold-text">Resoluciones</span></h2>
+
+        <div class="grid-2 avoid-break">
+            <div>
+                <h3>Consultas de Archivos Propios</h3>
+                <p>El icono de <span class="btn-sim">Clip 📎</span> te permite cargar PDFs o documentos Word de tus
+                    expedientes.</p>
+                <div class="img-container" style="margin: 20px 0;">
+                    <img src="images/Captura de pantalla 2026-03-07 015131.png" alt="Subir Doc">
+                </div>
+                <p>Una vez arriba, Iurexia lee el contenido. Puedes pedirle resúmenes precisos, que busque posibles
+                    contradicciones, o que extraiga los puntos resolutivos de fallos inmensos.</p>
+            </div>
+            <div>
+                <h3>Herramienta <span class="btn-sim">Sentencia</span></h3>
+                <p>Exclusiva para realizar una auditoría legal completa de resoluciones jurisdiccionales de amparo o de
+                    fondo.</p>
+                <div class="img-container" style="margin: 20px 0;">
+                    <img src="images/Captura de pantalla 2026-03-07 015651.png" alt="Revisor Sentencia">
+                </div>
+                <p>El motor revisa minuciosamente violaciones procedimentales, aplicación indebida de la norma y
+                    suplencia de la queja. Entrega un nivel de escrutinio digno de un magistrado revisor.</p>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 6 -->
+        <h2 class="avoid-break"><span class="black-text">6. El Arte de Preguntar: </span><span
+                class="gold-text">Ingeniería de Prompts</span></h2>
+
+        <p>Para obtener los resultados más contundentes y técnicos de Iurexia, la forma en la que formulas tu
+            instrucción (prompt) es vital. Iurexia responde al nivel de rigor que le exijas.</p>
+
+        <div class="tips-container avoid-break">
+            <h3>Fórmula del Prompt Jurídico Perfecto</h3>
+            <p>Los mejores resultados se obtienen estructurando tu petición en tres partes esenciales:</p>
+
+            <ul style="margin-top: 20px;">
+                <li>
+                    <strong>1. El Rol o Contexto:</strong> Define cómo quieres que Iurexia actúe. <br>
+                    <em>"Actúa como un magistrado penal de apelación..."</em> o <em>"Asume el rol de abogado litigante
+                        laboralista del lado patronal..."</em>
+                </li>
+                <li>
+                    <strong>2. Los Hechos Concretos (Premisa menor):</strong> Proporciona datos sin paja, directos a la
+                    controversia.<br>
+                    <em>"Mi cliente fue despedido verbalmente sin acta administrativa previa, alegando abandono de
+                        trabajo que no ocurrió..."</em>
+                </li>
+                <li>
+                    <strong>3. La Tarea Específica y el Tono:</strong> Qué necesitas exactamente y cómo lo quieres
+                    entregado.<br>
+                    <em>"Redacta un capítulo de conceptos de violación argumentando la ilegalidad del despido. Usa un
+                        tono persuasivo, incisivo, y cita jurisprudencia de la SCJN aplicable a la carga de la prueba
+                        sobre el abandono."</em>
+                </li>
+            </ul>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 30px 0;">
+
+            <h3>Mejores Prácticas Generales</h3>
+            <ul>
+                <li><strong>Evita ambigüedades:</strong> No pidas "hablame de contratos". Pide "Redacta la cláusula
+                    penal de rescisión anticipada para un contrato de arrendamiento comercial".</li>
+                <li><strong>Inyecta la teoría procesal:</strong> Dile explícitamente qué excepciones procesales o
+                    agravios formales quieres que explore.</li>
+                <li><strong>Itera con el motor:</strong> Si la respuesta inicial es buena pero le falta profundidad en
+                    un punto, dile: <em>"Profundiza exclusivamente en el segundo concepto de violación, agregando
+                        estándares de convencionalidad de la CIDH."</em></li>
+                <li><strong>Usa el modo correcto:</strong> Si exiges redacción extensa estando en modo "Buscar", Iurexia
+                    tenderá a darte fichas jurisprudenciales. Asegúrate de estar en modo <strong>Redactar</strong>.</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 60px; text-align: center; border-top: 3px solid var(--charcoal); padding-top: 30px;">
+            <p
+                style="font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
+                <span class="black-text">Iurexia</span> <span class="gold-text">Pro</span>
             </p>
-        </div>
-
-        <div style="margin-top: 100px; text-align: center;" class="fade-up">
-            <div class="logo" style="margin-bottom: 20px;">IUREXIA <span>PRO</span></div>
-            <p style="font-family: var(--font-headings); font-size: 1.4rem; color: var(--gold); font-style: italic;">
-                Potencia tu destreza técnica. Escala tu firma.</p>
+            <p style="font-size: 1rem; color: var(--gray-text); font-weight: bold;">El más alto nivel de infraestructura
+                tecnológica al servicio del abogado de excelencia.</p>
         </div>
 
     </div>
 
+    <!-- -------------------------------------
+         🖋️ SCRIPT PARA ANIMACIONES DE ALTO IMPACTO 🖋️
+    ------------------------------------- -->
     <script>
-        // Intersection Observer for fade-up animations
         document.addEventListener("DOMContentLoaded", () => {
+            // Títulos desde la izquierda
+            document.querySelectorAll("h1, h2").forEach(el => el.classList.add("reveal-left"));
+
+            // Subtítulos desde la derecha
+            document.querySelectorAll("h3").forEach(el => el.classList.add("reveal-right"));
+
+            // Textos y cajas info: Textos desde abajo, info-box un zoom dramático
+            document.querySelectorAll(".info-box, .tips-container").forEach(el => el.classList.add("reveal-zoom"));
+            document.querySelectorAll("p:not(.tips-container p):not(.step-list p):not(.info-box p)").forEach(el => el.classList.add("reveal-bottom"));
+
+            // Imágenes: Alternar izquierda y derecha
+            document.querySelectorAll(".img-container").forEach((el, index) => {
+                if (index % 2 === 0) {
+                    el.classList.add("reveal-right");
+                } else {
+                    el.classList.add("reveal-left");
+                }
+            });
+
+            // Listas en cascada desde la derecha
+            document.querySelectorAll(".step-list").forEach(list => {
+                const items = list.querySelectorAll("li");
+                items.forEach((item, index) => {
+                    item.classList.add("reveal-right");
+                    let delayClass = `delay-${Math.min((index + 1) * 100, 400)}`;
+                    item.classList.add(delayClass);
+                });
+            });
+
+            // Galería con zoom
+            document.querySelectorAll(".gallery-grid").forEach(grid => {
+                const items = grid.querySelectorAll(".gallery-item");
+                items.forEach((item, index) => {
+                    item.classList.add("reveal-zoom");
+                    let delayClass = `delay-${Math.min((index % 2 + 1) * 100, 300)}`;
+                    item.classList.add(delayClass);
+                });
+            });
+
+            // Observer
             const observerOptions = {
                 root: null,
                 rootMargin: "0px",
-                threshold: 0.15
+                threshold: 0.1
             };
 
-            const observer = new IntersectionObserver((entries, observer) => {
+            const revealOnScroll = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        entry.target.classList.add("visible");
+                        entry.target.classList.add("active");
                         observer.unobserve(entry.target);
                     }
                 });
             }, observerOptions);
 
-            document.querySelectorAll(".fade-up").forEach(el => observer.observe(el));
+            const revealElements = document.querySelectorAll(".reveal-left, .reveal-right, .reveal-bottom, .reveal-zoom");
+            revealElements.forEach(el => revealOnScroll.observe(el));
         });
     </script>
 </body>
