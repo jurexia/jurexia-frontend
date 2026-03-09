@@ -724,14 +724,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     <>
                         {/* Thinking/Reasoning section (collapsible) */}
                         {thinkingContent && (
-                            <details className="mx-4 mt-3 mb-1 rounded-lg border border-amber-200/60 bg-amber-50/30 overflow-hidden">
-                                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-amber-800/70 hover:bg-amber-50/50 transition-colors select-none flex items-center gap-1.5">
-                                    <Loader2 className="w-3 h-3 animate-spin text-amber-600/60" />
+                            <details className="mx-4 mt-3 mb-1 rounded-lg border border-cream-400/60 bg-cream-50/50 overflow-hidden">
+                                <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-charcoal-500 hover:bg-cream-100/50 transition-colors select-none flex items-center gap-1.5">
+                                    <Loader2 className="w-3 h-3 animate-spin text-charcoal-400" />
                                     <span>Ver razonamiento jurídico</span>
-                                    <span className="text-amber-600/50 ml-auto text-[10px]">{Math.round(thinkingContent.length / 4)} tokens</span>
+                                    <span className="text-charcoal-400/50 ml-auto text-[10px]">{Math.round(thinkingContent.length / 4)} tokens</span>
                                 </summary>
                                 <div
-                                    className="px-3 py-2 text-xs text-charcoal-600 leading-relaxed border-t border-amber-200/40 max-h-64 overflow-y-auto prose-thinking"
+                                    className="px-3 py-2 text-xs text-charcoal-600 leading-relaxed border-t border-cream-200/40 max-h-64 overflow-y-auto prose-thinking bg-white"
                                     dangerouslySetInnerHTML={{ __html: formatMarkdown(thinkingContent) }}
                                 />
                             </details>

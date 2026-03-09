@@ -457,7 +457,7 @@ ${draftRequest.descripcion}`;
                                     className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${activeGenios.length >= 2
                                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-70'
                                         : chatMode === 'redactar'
-                                            ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'
+                                            ? 'bg-charcoal-900 text-white'
                                             : 'bg-white text-gray-500 hover:text-gray-700'
                                         }`}
                                     title={activeGenios.length >= 2 ? "Modo redacción no disponible con 2 genios activos" : "Modo redacción — genera argumentos jurídicos"}
