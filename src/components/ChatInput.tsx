@@ -121,6 +121,13 @@ export default function ChatInput({
             spinnerBorder: 'border-[#c9a962]', iconOn: 'text-violet-600'
         },
         {
+            id: 'mercantil', label: 'Mercantil', dot: 'bg-amber-500',
+            activeOn: 'bg-gradient-to-r from-amber-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
+            activating: 'bg-gradient-to-r from-amber-600 to-yellow-700 text-white border-amber-400',
+            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
+            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-amber-600'
+        },
+        {
             id: 'administrativo', label: 'Adtvo', dot: 'bg-teal-500',
             activeOn: 'bg-gradient-to-r from-teal-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
             activating: 'bg-gradient-to-r from-teal-600 to-cyan-700 text-white border-teal-400',
