@@ -537,10 +537,13 @@ ${draftRequest.descripcion}`;
 
                                     if (activeGenios.includes(g.id)) {
                                         // Ya está activo → desactivar
-                                        setActiveGenios([]);
+                                        setActiveGenios(activeGenios.filter(id => id !== g.id));
+                                    } else if (activeGenios.length < 2) {
+                                        // Hay espacio → agregar
+                                        setActiveGenios([...activeGenios, g.id]);
                                     } else {
-                                        // Activar este genio (reemplaza cualquier otro activo)
-                                        setActiveGenios([g.id]);
+                                        // Ya hay 2 → reemplazar el más antiguo
+                                        setActiveGenios([activeGenios[1], g.id]);
                                     }
                                 }}
                                 disabled={isCacheLoading || (isGenioLocked && !isPro)}

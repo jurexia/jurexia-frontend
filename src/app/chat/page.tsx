@@ -88,34 +88,39 @@ export default function ChatPage() {
         resetCacheTimer();
     }, [resetCacheTimer]);
 
-    // When user toggles a Genio — calls /genio/activate with genio_id
+    // When user toggles a Genio — calls /genio/activate for EACH selected genio
     const handleToggleGenios = useCallback(async (genios: string[]) => {
         setActiveGenios(genios);
         setGenioError(null);
 
-        // If there are any genios selected, activate the most recently added one
-        // Note: For now, we only activate caching for the FIRST (oldest) genio due to API limitations
         if (genios.length > 0) {
-            const primaryGenioId = genios[0];
             setIsCacheLoading(true);
             try {
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
-                const res = await fetch(`${API_URL}/genio/activate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ genio_id: primaryGenioId }),
-                });
-                const data = await res.json();
-                if (data.success) {
+                // Activate cache for ALL selected genios in parallel
+                const results = await Promise.all(
+                    genios.map(async (genioId) => {
+                        const res = await fetch(`${API_URL}/genio/activate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ genio_id: genioId }),
+                        });
+                        return { genioId, ...(await res.json()) };
+                    })
+                );
+                const failed = results.filter(r => !r.success);
+                if (failed.length === 0) {
                     setIsCacheActive(true);
                     setIsCacheLoading(false);
                     resetCacheTimer();
                 } else {
-                    const errorMsg = data.last_error || `No se pudo activar el Genio principal`;
+                    // Remove failed genios, keep successful ones
+                    const successIds = results.filter(r => r.success).map(r => r.genioId);
+                    const errorMsg = failed.map(f => f.last_error || `Genio ${f.genioId} falló`).join('; ');
                     setGenioError(errorMsg);
+                    setActiveGenios(successIds);
+                    setIsCacheActive(successIds.length > 0);
                     setIsCacheLoading(false);
-                    setActiveGenios(genios.slice(1)); // Remove the failed one
-                    console.error('Cache activation failed:', data);
                     if (genioErrorTimerRef.current) clearTimeout(genioErrorTimerRef.current);
                     genioErrorTimerRef.current = setTimeout(() => setGenioError(null), 5000);
                 }
