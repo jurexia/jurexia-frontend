@@ -523,7 +523,7 @@ ${draftRequest.descripcion}`;
                             )}
                         </div>
 
-                        {geniosList.map((g) => (
+                        {geniosList.map((g, index) => [
                             <button
                                 key={g.id}
                                 onClick={() => {
@@ -549,18 +549,18 @@ ${draftRequest.descripcion}`;
                                     }
                                 }}
                                 disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                                className={`flex items-center justify-center gap-0.5 px-1 py-0.5 sm:py-1 rounded-md text-[9px] sm:text-[10px] font-medium transition-all duration-300 border flex-shrink min-w-0
+                                className={`group flex items-center justify-center gap-0.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] transition-all duration-300 flex-shrink min-w-0 bg-transparent outline-none
                                     ${(isGenioLocked && !isPro)
-                                        ? 'bg-gray-50/50 text-gray-400 border-gray-100/50 cursor-not-allowed opacity-70'
+                                        ? 'text-gray-400 cursor-not-allowed opacity-70 font-medium'
                                         : (isCacheLoading && activeGenios.includes(g.id))
-                                            ? 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-300 cursor-wait shadow-sm'
+                                            ? 'text-amber-600 cursor-wait font-medium'
                                             : genioError && activeGenios.includes(g.id)
-                                                ? 'bg-red-50 text-red-600 border-red-300 shadow-sm'
+                                                ? 'text-red-500 font-medium'
                                                 : activeGenios.includes(g.id)
                                                     ? isCacheActive
-                                                        ? `${g.activeOn} shadow-sm border-transparent`
-                                                        : `${g.activating} border-gray-300/50 bg-white shadow-sm`
-                                                    : `${g.idle} hover:shadow-sm hover:border-gray-300/80`
+                                                        ? `${g.iconOn} font-bold drop-shadow-sm`
+                                                        : `${g.iconOn} font-bold opacity-80 animate-pulse`
+                                                    : `text-gray-500 font-medium hover:text-charcoal-900`
                                     }`}
                                 style={(activeGenios.includes(g.id) && isCacheActive && !(isGenioLocked && !isPro))
                                     ? { animation: 'genioActiveGlow 2.5s ease-in-out infinite' }
@@ -584,13 +584,16 @@ ${draftRequest.descripcion}`;
                                     </>
                                 ) : (
                                     <>
-                                        <span className={`truncate ${(activeGenios.includes(g.id) && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenios.includes(g.id) ? '' : 'text-gray-500')}`}>
+                                        <span className="truncate">
                                             {g.label}
                                         </span>
                                     </>
                                 )}
-                            </button>
-                        ))}
+                            </button>,
+                            index < geniosList.length - 1 && (
+                                <span key={`${g.id}-sep`} className="text-gray-300 mx-0.5 sm:mx-1 select-none text-[10px] font-light flex-shrink-0">|</span>
+                            )
+                        ])}
                         {genioError && (
                             <p className="text-[8px] text-red-500 ml-1 whitespace-nowrap">{genioError}</p>
                         )}
