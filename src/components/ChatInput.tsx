@@ -558,8 +558,8 @@ ${draftRequest.descripcion}`;
                                                 ? 'text-red-500 font-medium'
                                                 : activeGenios.includes(g.id)
                                                     ? isCacheActive
-                                                        ? `${g.iconOn} font-bold drop-shadow-sm`
-                                                        : `${g.iconOn} font-bold opacity-80 animate-pulse`
+                                                        ? `text-[#c9a962] font-bold drop-shadow-sm`
+                                                        : `text-[#c9a962] font-bold opacity-80 animate-pulse`
                                                     : `text-gray-500 font-medium hover:text-charcoal-900`
                                     }`}
                                 style={(activeGenios.includes(g.id) && isCacheActive && !(isGenioLocked && !isPro))
