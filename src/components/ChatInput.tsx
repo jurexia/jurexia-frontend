@@ -549,7 +549,7 @@ ${draftRequest.descripcion}`;
                                     }
                                 }}
                                 disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                                className={`flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-medium transition-all duration-300 border whitespace-nowrap
+                                className={`flex items-center justify-center min-w-[60px] gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-[11px] font-medium transition-all duration-300 border whitespace-nowrap
                                     ${(isGenioLocked && !isPro)
                                         ? 'bg-gray-50/50 text-gray-400 border-gray-100/50 cursor-not-allowed opacity-70'
                                         : (isCacheLoading && activeGenios.includes(g.id))
