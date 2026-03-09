@@ -506,9 +506,9 @@ ${draftRequest.descripcion}`;
                     <div
                         data-guide="genios-container"
                         className="
-                            flex flex-wrap items-center
+                            flex flex-nowrap items-center justify-between
                             w-full mt-2 pt-2 pb-1 border-t border-gray-100/60
-                            gap-1 sm:gap-1.5
+                            gap-0.5 sm:gap-1 overflow-hidden
                         "
                     >
                         <div
@@ -549,7 +549,7 @@ ${draftRequest.descripcion}`;
                                     }
                                 }}
                                 disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                                className={`flex items-center justify-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[9px] sm:text-[10px] font-medium transition-all duration-300 border whitespace-nowrap
+                                className={`flex items-center justify-center gap-0.5 px-1 py-0.5 sm:py-1 rounded-md text-[9px] sm:text-[10px] font-medium transition-all duration-300 border flex-shrink min-w-0
                                     ${(isGenioLocked && !isPro)
                                         ? 'bg-gray-50/50 text-gray-400 border-gray-100/50 cursor-not-allowed opacity-70'
                                         : (isCacheLoading && activeGenios.includes(g.id))
@@ -569,8 +569,8 @@ ${draftRequest.descripcion}`;
                             >
                                 {(isGenioLocked && !isPro) ? (
                                     <>
-                                        <Lock className="w-2 h-2 text-gray-400" />
-                                        <span>{g.label}</span>
+                                        <Lock className="w-2 h-2 flex-shrink-0 text-gray-400" />
+                                        <span className="truncate">{g.label}</span>
                                     </>
                                 ) : (isCacheLoading && activeGenios.includes(g.id)) ? (
                                     <>
@@ -584,7 +584,7 @@ ${draftRequest.descripcion}`;
                                     </>
                                 ) : (
                                     <>
-                                        <span className={(activeGenios.includes(g.id) && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenios.includes(g.id) ? '' : 'text-gray-500')}>
+                                        <span className={`truncate ${(activeGenios.includes(g.id) && isCacheActive) ? g.iconOn + ' font-bold' : (activeGenios.includes(g.id) ? '' : 'text-gray-500')}`}>
                                             {g.label}
                                         </span>
                                     </>
