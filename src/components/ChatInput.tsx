@@ -506,9 +506,9 @@ ${draftRequest.descripcion}`;
                     <div
                         data-guide="genios-container"
                         className="
-                            flex flex-nowrap items-center
+                            flex flex-wrap items-center
                             w-full mt-2 pt-2 pb-1 border-t border-gray-100/60
-                            gap-0.5 sm:gap-1 overflow-x-auto scrollbar-hide
+                            gap-1 sm:gap-1.5
                         "
                     >
                         <div
