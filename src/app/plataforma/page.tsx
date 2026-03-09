@@ -20,7 +20,7 @@ export default function PlataformaPage() {
                         <span className="text-accent-gold">Derecho Mexicano</span>
                     </h1>
                     <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
-                        Iurexia está diseñada especialmente para el sistema jurídico mexicano. Es una plataforma de inteligencia artificial legal creada para ayudar a entender, ordenar y preparar asuntos dentro del marco normativo de México. Está pensada tanto para profesionales del derecho como para personas sin conocimientos jurídicos que necesitan una primera orientación.
+                        Infraestructura de inteligencia artificial diseñada para expandir radicalmente la capacidad operativa de las firmas legales y empresas en México. Automatiza la investigación jurisprudencial, acelera el flujo de nuevos asuntos y audita resoluciones masivas; liberando a los abogados para enfocarse en el trabajo estratégico de más alto valor y recuperando horas rentables.
                     </p>
 
                     {/* Platform Preview */}
@@ -121,18 +121,18 @@ export default function PlataformaPage() {
                     <div className="grid md:grid-cols-2 gap-16">
                         <div>
                             <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-6">
-                                Para Profesionales <span className="text-accent-gold">en derecho</span>
+                                Escala las operaciones de <span className="text-accent-gold">tu Firma</span>
                             </h2>
                             <p className="text-charcoal-600 leading-relaxed">
-                                Iurexia no tiene el propósito de reemplazar al profesional del derecho. Es una herramienta impulsada por inteligencia artificial, especializada en el sistema jurídico mexicano, que potencia la eficiencia en el trabajo legal al ofrecer precisión extrema en investigación, análisis y redacción.
+                                Transforma drásticamente los márgenes de rentabilidad, especialmente en casos de tarifa fija (Fixed-Fee). Reduce las horas no facturables dedicadas a buscar precedentes o redactar revisiones iniciales. Iurexia multiplica tu capacidad de respuesta, permitiéndote tomar más clientela sin tener que contratar más personal.
                             </p>
                         </div>
                         <div className="border-l-4 border-accent-brown pl-8">
                             <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-6">
-                                Para usuarios que buscan <span className="text-accent-gold">orientación legal</span>
+                                Reduce costos en equipos <span className="text-accent-gold">In-House</span>
                             </h2>
                             <p className="text-charcoal-600 leading-relaxed">
-                                Para personas sin conocimientos jurídicos, Iurexia funciona como una herramienta de <strong>orientación</strong>: ubica la situación jurídica, explica rutas posibles y ayuda a reunir información para que un abogado acompañe y ejecute la estrategia con comunicación más clara y efectiva.
+                                Para departamentos corporativos, Iurexia agiliza la respuesta a consultas de las demás áreas del negocio. Disminuye agresivamente el gasto en despachos de abogados externos resolviendo internamente y con certeza las primeras fases de la estrategia legal corporativa.
                             </p>
                         </div>
                     </div>
@@ -145,7 +145,7 @@ export default function PlataformaPage() {
                     <p className="text-accent-brown font-medium mb-4 tracking-wide">ARQUITECTURA VERIFICADA</p>
                     <h3 className="font-serif text-3xl md:text-4xl font-medium mb-6">Cero <span className="text-accent-gold">alucinaciones.</span></h3>
                     <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                        Iurexia opera bajo una arquitectura estricta diseñada por profesionales del derecho mexicanos. Todas las respuestas se generan exclusivamente a partir de <strong className="text-white">fuentes jurídicas verificadas</strong> dentro de nuestra base documental, con trazabilidad y fundamento.
+                        Iurexia opera con <strong>Security by Design (Blindaje de Datos)</strong>, protegiendo el secreto profesional de los litigios. Todas las respuestas proceden de <strong className="text-white">fuentes jurídicas públicas</strong>, y a diferencia de los modelos de IA tradicionales, en Iurexia <strong className="text-accent-gold">jamás usamos la información confidencial de tus casos o clientes para entrenar nuestros modelos</strong> compartidos.
                     </p>
                 </div>
             </section>
