@@ -195,6 +195,78 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing };
     }, [message.content, isUser]);
 
+    // ── CLEAN CONTENT FOR EXPORT ──────────────────────────────────────
+    // Strips ALL citation artifacts so downloaded PDF/DOCX are clean legal prose
+    const cleanContentForExport = useCallback((raw: string): string => {
+        let clean = raw;
+
+        // 1. Remove <!-- CITATION_META:{...} --> blocks (including multiline)
+        clean = clean.replace(/\n*<!--\s*CITATION_META:\{[\s\S]*?\}\s*-->/g, '');
+
+        // 2. Remove [Doc ID: uuid] in all variants
+        clean = clean.replace(/\[Doc ID:\s*[a-f0-9-]+\]/gi, '');
+        clean = clean.replace(/\[Doc IDs?:[^\]]*\]/gi, '');
+
+        // 3. Remove [, uuid] and [text, uuid] patterns
+        clean = clean.replace(/\[\s*,?\s*[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\s*\]/gi, '');
+        clean = clean.replace(/\[[^\]]*,\s*[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\s*\]/gi, '');
+
+        // 4. Remove standalone Doc uuid references
+        clean = clean.replace(/Doc\s+[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, '');
+
+        // 5. Remove parenthetical (Doc ID: xxx) references
+        clean = clean.replace(/\(Doc ID:\s*[a-f0-9-]+\)/gi, '');
+
+        // 6. Remove standalone UUIDs (36-char hex with dashes) that aren't part of URLs
+        clean = clean.replace(/(?<![\/a-f0-9])[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?![\/a-f0-9])/gi, '');
+
+        // 7. Remove partial UUID fragments like [-985d-5043-8e4e-b43aaee99c66]
+        clean = clean.replace(/\[-[a-f0-9-]{10,35}\]/gi, '');
+
+        // 8. Remove leftover "Doc ID:" text
+        clean = clean.replace(/Doc ID:\s*[a-f0-9-]*/gi, '');
+
+        // 9. Remove <!-- THINKING_START/END --> blocks
+        clean = clean.replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/g, '');
+
+        // 10. Remove <!--PING--> and <!--CACHE:ACTIVE--> markers
+        clean = clean.replace(/<!--\s*PING\s*-->/g, '');
+        clean = clean.replace(/<!--\s*CACHE:\w+\s*-->/g, '');
+
+        // 11. Remove <!-- SYNTHESIS --> markers
+        clean = clean.replace(/<!--SYNTHESIS:\w+-->/g, '');
+
+        // 12. Clean up double spaces and excessive blank lines left by removals
+        clean = clean.replace(/  +/g, ' ');
+        clean = clean.replace(/\n{3,}/g, '\n\n');
+        clean = clean.replace(/\(\s*\)/g, ''); // empty parentheses
+        clean = clean.replace(/\[\s*\]/g, '');  // empty brackets
+
+        return clean.trim();
+    }, []);
+
+    // Clean HTML content for PDF export (strips citation badge elements)
+    const cleanHtmlForExport = useCallback((html: string): string => {
+        let clean = html;
+
+        // Remove <sup class="citation-badge" ...>[N]</sup> elements
+        clean = clean.replace(/<sup class="citation-badge"[^>]*>\[?\d+\]?<\/sup>/gi, '');
+
+        // Remove any remaining citation-badge elements
+        clean = clean.replace(/<[^>]*citation-badge[^>]*>[^<]*<\/[^>]*>/gi, '');
+
+        // Remove <!-- CITATION_META --> that might be in rendered HTML
+        clean = clean.replace(/<!--\s*CITATION_META:\{[\s\S]*?\}\s*-->/g, '');
+
+        // Remove standalone UUIDs from rendered text
+        clean = clean.replace(/(?<![\/a-f0-9])[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(?![\/a-f0-9])/gi, '');
+
+        // Clean up double spaces
+        clean = clean.replace(/  +/g, ' ');
+
+        return clean;
+    }, []);
+
     // Generate document header with logo (text-based for reliable export)
     const generateHeader = () => {
         const date = new Date().toLocaleDateString('es-MX', {
@@ -221,7 +293,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Dynamic import of html2pdf
         const html2pdf = (await import('html2pdf.js')).default;
 
-        const content = contentRef.current.innerHTML;
+        const rawHtml = contentRef.current.innerHTML;
+        const content = cleanHtmlForExport(rawHtml);
         const fullHtml = `
             <div style="font-family: 'Times New Roman', serif; padding: 40px; max-width: 800px;">
                 ${generateHeader()}
@@ -261,8 +334,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             day: 'numeric'
         });
 
-        // Get the raw message content (with markdown)
-        const rawContent = message.content;
+        // Get the raw message content and strip ALL citation artifacts
+        const rawContent = cleanContentForExport(message.content);
 
         // Parse markdown content into structured paragraphs
         const lines = rawContent.split('\n');
