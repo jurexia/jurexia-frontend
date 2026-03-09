@@ -47,6 +47,7 @@ export async function updateUserSubscription(
     subscriptionType: PlanType,
     stripeCustomerId?: string,
     stripeSubscriptionId?: string,
+    resetUsage: boolean = false
 ) {
     const normalizedEmail = email.toLowerCase().trim();
     const config = PLAN_CONFIG[subscriptionType];
@@ -59,19 +60,22 @@ export async function updateUserSubscription(
         stripeSubscriptionId,
     });
 
-    const updatePayload = {
+    const updatePayload: any = {
         subscription_type: subscriptionType,
         queries_limit: config.queriesLimit,
-        queries_used: 0,
         drafts_limit: config.draftsLimit,
-        drafts_used: 0,
         sentencia_queries_limit: config.sentenciaQueriesLimit,
-        sentencia_queries_used: 0,
         stripe_customer_id: stripeCustomerId || undefined,
         stripe_subscription_id: stripeSubscriptionId || undefined,
         is_active: true,
         updated_at: new Date().toISOString(),
-    } as any;
+    };
+
+    if (resetUsage) {
+        updatePayload.queries_used = 0;
+        updatePayload.drafts_used = 0;
+        updatePayload.sentencia_queries_used = 0;
+    }
 
     const { data, error } = await getSupabaseAdmin()
         .from('user_profiles')

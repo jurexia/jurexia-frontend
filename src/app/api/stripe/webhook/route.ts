@@ -305,6 +305,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         subscriptionType,
         session.customer as string,
         session.subscription as string,
+        true
     );
 
     console.log(`🎉 handleCheckoutCompleted finished successfully for ${email}`);
