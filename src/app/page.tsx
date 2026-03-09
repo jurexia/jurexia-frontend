@@ -254,7 +254,7 @@ export default function HomePage() {
             </section>
 
             {/* ═══════════════════════════════════════════════════════════════ */}
-            {/* GENIO AMPARO PRO — SECCIÓN EXCLUSIVA */}
+            {/* ARQUITECTURA MULTI-GENIO PRO — SECCIÓN EXCLUSIVA */}
             {/* ═══════════════════════════════════════════════════════════════ */}
             <section className="relative py-16 sm:py-20 overflow-hidden">
                 {/* Background */}
@@ -274,22 +274,22 @@ export default function HomePage() {
 
                             <AnimatedSection animation="slide-up" delay={100}>
                                 <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
-                                    Genio <span className="text-accent-gold">Amparo</span>
+                                    Arquitectura <span className="text-accent-gold">Multi-Genio</span>
                                 </h2>
                             </AnimatedSection>
 
                             <AnimatedSection animation="fade-in" delay={200}>
                                 <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-                                    Tu copiloto de inteligencia artificial especializado en <span className="text-accent-gold font-medium">materia de amparo mexicano</span>. Genio Amparo analiza, razona y genera argumentos jurídicos con fundamento verificado — en tiempo real mientras trabajas.
+                                    Tu copiloto de inteligencia artificial impulsado por <span className="text-accent-gold font-medium">expertos especializados por materia</span>. Nuestros Genios (Amparo, CIDH, Civil, Penal, etc.) analizan, razonan y generan argumentos jurídicos con fundamento verificado — en tiempo real mientras trabajas.
                                 </p>
                                 <p className="text-base text-gray-400 mb-8 leading-relaxed">
-                                    Activado mediante un solo clic en el chat, Genio Amparo utiliza un modelo avanzado para procesar el contexto legal completo de tu consulta, incluyendo legislación, jurisprudencia y tesis aplicables a tu jurisdicción.
+                                    Activa hasta <span className="text-white font-medium">dos Genios simultáneamente</span> en tu chat para analizar tu caso desde múltiples perspectivas legales. El modelo avanzado procesa el contexto complejo integrando legislación, jurisprudencia y tratados de tu jurisdicción.
                                 </p>
                             </AnimatedSection>
 
                             <AnimatedSection animation="slide-up" delay={300}>
                                 <ul className="space-y-3 mb-8">
-                                    {['Razonamiento jurídico profundo en materia de amparo', 'Fundamentación con artículos y tesis verificadas', 'Análisis contextual por jurisdicción estatal y federal', 'Generación de argumentos con técnica jurídica profesional'].map((item, i) => (
+                                    {['Razonamiento jurídico interdisciplinario de precisión', 'Uso simultáneo de hasta 2 expertos virtuales', 'Fundamentación automatizada con artículos y tesis verificadas', 'Análisis contextual especializado por materia y jurisdicción'].map((item, i) => (
                                         <li key={i} className="flex items-start gap-3">
                                             <span className="text-accent-gold font-bold mt-0.5">—</span>
                                             <span className="text-gray-300 text-sm">{item}</span>
@@ -304,7 +304,7 @@ export default function HomePage() {
                                         href="/precios"
                                         className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent-gold text-charcoal-900 font-semibold rounded-full hover:bg-accent-gold/90 transition-all shadow-lg shadow-accent-gold/10 hover:shadow-accent-gold/20"
                                     >
-                                        Desbloquear Genio Amparo →
+                                        Desbloquear Genios PRO →
                                     </Link>
                                     <Link
                                         href="/plataforma"
@@ -323,12 +323,15 @@ export default function HomePage() {
                                 <div className="relative bg-charcoal-800 rounded-3xl p-8 border border-white/10">
                                     {/* Header */}
                                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
-                                        <div className="w-10 h-10 rounded-xl bg-accent-gold/20 flex items-center justify-center">
-                                            <span className="text-accent-gold font-serif text-lg font-bold">G</span>
+                                        <div className="w-10 h-10 rounded-xl bg-accent-gold/20 flex flex-col items-center justify-center relative">
+                                            <div className="flex gap-0.5">
+                                                <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+                                                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                                            </div>
                                         </div>
                                         <div>
-                                            <p className="text-white font-medium text-sm">Genio Amparo</p>
-                                            <p className="text-accent-gold/70 text-xs">Activo • Razonando...</p>
+                                            <p className="text-white font-medium text-sm">Genios Especializados</p>
+                                            <p className="text-accent-gold/70 text-xs">Amparo + CIDH Activos</p>
                                         </div>
                                         <span className="ml-auto px-2.5 py-1 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-bold tracking-wide">PRO</span>
                                     </div>
@@ -337,17 +340,19 @@ export default function HomePage() {
                                     <div className="space-y-3">
                                         <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                                             <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1">Tu consulta</p>
-                                            <p className="text-white text-sm leading-relaxed">¿Qué fundamento constitucional aplica para impugnar la falta de fundamentación en un acto de autoridad?</p>
+                                            <p className="text-white text-sm leading-relaxed">¿Cómo impugno una orden de aprehensión sin fundamentación considerando los criterios interamericanos?</p>
                                         </div>
                                         <div className="p-3 rounded-xl bg-accent-gold/5 border border-accent-gold/10">
-                                            <p className="text-accent-gold text-[10px] uppercase tracking-wider mb-1">Genio Amparo razona</p>
-                                            <p className="text-gray-300 text-sm leading-relaxed">El artículo 16 constitucional establece que todo acto de autoridad debe estar fundado y motivado. La tesis 2a./J. 144/2006 precisa que...</p>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <p className="text-accent-gold text-[10px] uppercase tracking-wider">Perspectiva Combinada</p>
+                                            </div>
+                                            <p className="text-gray-300 text-sm leading-relaxed">Vía amparo indirecto (Art. 107 L.A.) alegando violación al debido proceso. La Corte IDH en <i>Caso Cabrera García</i> establece que toda restricción a la libertad personal debe...</p>
                                         </div>
                                     </div>
 
                                     {/* Free user notice */}
                                     <div className="mt-6 p-3 rounded-xl bg-charcoal-900/60 border border-white/5 text-center">
-                                        <p className="text-gray-500 text-xs">Los usuarios gratuitos no tienen acceso a Genio Amparo. <span className="text-accent-gold font-medium">Actualiza a PRO</span> para desbloquear.</p>
+                                        <p className="text-gray-500 text-xs">Los usuarios gratuitos no tienen acceso a Genios Especializados. <span className="text-accent-gold font-medium">Actualiza a PRO</span> para desbloquear.</p>
                                     </div>
                                 </div>
                             </div>

@@ -52,7 +52,7 @@ export default function PreciosPage() {
                                     "Búsqueda con IA en legislación mexicana verificada",
                                     "Filtros de jurisdicción",
                                     "Acceso a base documental completa",
-                                    <span className="text-gray-400">Sin acceso a Genio Amparo ni Análisis</span>
+                                    <span className="text-gray-400">Sin acceso a Genios Especializados ni Análisis</span>
                                 ]}
                                 buttonText="Comenzar Gratis"
                                 buttonHref="/chat"
@@ -92,7 +92,7 @@ export default function PreciosPage() {
                                 description="Para profesionales que necesitan potencia"
                                 features={[
                                     "140 consultas/mes",
-                                    <span className="text-accent-gold font-medium">Genio Amparo — IA avanzada en materia de amparo</span>,
+                                    <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Búsqueda con IA verificada en constante actualización",
@@ -117,7 +117,7 @@ export default function PreciosPage() {
                                 features={[
                                     "140 consultas/mes (1,680/año)",
                                     <span className="text-charcoal-700 font-medium">Todo lo del Plan Pro incluido:</span>,
-                                    <span className="text-accent-gold font-medium ml-2">— Genio Amparo</span>,
+                                    <span className="text-accent-gold font-medium ml-2">— Arquitectura Multi-Genio</span>,
                                     <span className="text-accent-gold font-medium ml-2">— Análisis de Documentos</span>,
                                     "Ahorro de $910 MXN al año",
                                     "Precio fijo garantizado",
@@ -142,7 +142,7 @@ export default function PreciosPage() {
                                 description="Ideal para despachos y corporativos"
                                 features={[
                                     "560 consultas/mes — ideal para despachos",
-                                    <span className="text-accent-gold font-medium">Genio Amparo — IA avanzada en materia de amparo</span>,
+                                    <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Consulta personalizada con equipo legal de Iurexia (vía correo)",
@@ -167,7 +167,7 @@ export default function PreciosPage() {
                                 features={[
                                     "560 consultas/mes (6,720/año)",
                                     <span className="text-charcoal-700 font-medium">Todo lo del Plan Platinum incluido:</span>,
-                                    <span className="text-accent-gold font-medium ml-2">— Genio Amparo</span>,
+                                    <span className="text-accent-gold font-medium ml-2">— Arquitectura Multi-Genio</span>,
                                     <span className="text-accent-gold font-medium ml-2">— Análisis de Documentos</span>,
                                     "Ahorro de $4,810 MXN al año",
                                     "Precio fijo garantizado",
@@ -238,7 +238,7 @@ export default function PreciosPage() {
                                     <ComparisonRow feature="Directorio de abogados (Connect)" free="✓" basico="✓" pro="✓" proAnual="✓" platinum="✓" />
                                     <ComparisonRow feature="Registro connect para captar clientes" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" />
                                     <ComparisonRow feature="Análisis y auditoría de documentos" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
-                                    <ComparisonRow feature="Genio Amparo (IA avanzada)" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
+                                    <ComparisonRow feature="Genios Especializados (IA avanzada)" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
                                     <ComparisonRow feature="Sugerencias con fundamento" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
                                     <ComparisonRow feature="Soporte prioritario" free="—" basico="Estándar" pro="✓" proAnual="✓" platinum="VIP" />
                                     <ComparisonRow feature="Consulta legal estratégica (vía correo)" free="—" basico="—" pro="—" proAnual="—" platinum="✓" />
@@ -263,7 +263,7 @@ export default function PreciosPage() {
                     <div className="space-y-4">
                         {[
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
-                            { question: '¿Qué es Genio Amparo y por qué es exclusivo PRO?', answer: 'Genio Amparo es una capa de inteligencia artificial avanzada especializada en materia de amparo mexicano. Se activa con un clic dentro del chat y utiliza un modelo de IA más potente para generar razonamientos jurídicos profundos con fundamento verificado. Debido al costo computacional del modelo avanzado que utiliza, Genio Amparo está disponible exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },
+                            { question: '¿Qué son los Genios Especializados y por qué son exclusivos PRO?', answer: 'Los Genios son una capa de inteligencia artificial avanzada especializada en materias específicas (Amparo, CIDH, Civil, Penal, etc.). Se activan con un clic dentro del chat (pudiendo usar hasta 2 al mismo tiempo) y utilizan un modelo de IA más potente para generar razonamientos jurídicos interdisciplinarios con fundamento verificado. Debido al alto costo computacional de este procesamiento complejo simultáneo, los Genios están disponibles exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },
                             { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro más 700 consultas al mes y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan un volumen alto de consultas. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal.' },
                             { question: '¿Puedo cambiar de plan en cualquier momento?', answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación.' },
                             { question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo.' },
@@ -525,7 +525,7 @@ function PricingCard({
                             Aviso Importante
                         </h3>
                         <p className="text-charcoal-600 mb-6 text-sm">
-                            El <strong>Plan Básico</strong> es excelente para búsquedas rápidas en nuestra base de datos, pero <span className="font-semibold text-charcoal-900">NO incluye el acceso a Genio Amparo ni las Auditorías de Sentencias.</span>
+                            El <strong>Plan Básico</strong> es excelente para búsquedas rápidas en nuestra base de datos, pero <span className="font-semibold text-charcoal-900">NO incluye el acceso a los Genios Especializados ni las Auditorías de Sentencias.</span>
                             <br /><br />
                             Si necesitas razonamiento jurídico avanzado, te recomendamos el <strong className="text-accent-gold">Plan Pro</strong>.
                         </p>

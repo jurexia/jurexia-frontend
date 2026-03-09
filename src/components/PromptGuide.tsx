@@ -11,14 +11,14 @@ interface PromptGuideProps {
 const PROMPT_TIPS = [
     {
         icon: Zap,
-        category: '✨ Genio Amparo',
-        title: 'Actívalo para análisis profundos',
-        description: 'El botón ⚡ Genio Amparo activa un modelo avanzado con acceso al corpus constitucional y de amparo. La calidad y precisión aumenta considerablemente: razona mejor, estructura más y analiza con mayor detalle.',
+        category: '✨ Genios Especializados',
+        title: 'Actívalos para análisis profundos y combinados',
+        description: 'Los Genios (Amparo, CIDH, Civil, Penal, etc.) activan un modelo avanzado con acceso a corpus por materia. Puedes activar hasta 2 simultáneamente. La calidad y precisión aumenta considerablemente: razona mejor, cruza información y analiza con mayor detalle interdisciplinario.',
         tips: [
-            'Úsalo cuando quieras entender a fondo un tema legal, una ley o sus implicaciones',
-            'Ideal para redactar, analizar o interpretar textos jurídicos complejos',
-            '⚠️ Advertencia: al activarlo, pueden no aparecer las citas directas de artículos. Si necesitas referencias exactas para fundar un escrito, déjalo desactivado',
-            'Regla de oro — Genio activo: comprensión y análisis profundo. Genio desactivado: fuentes citadas y exactas',
+            'Úsalos cuando quieras entender a fondo un tema legal, cruzar leyes o sus implicaciones',
+            'Ideal para redactar, analizar o interpretar textos jurídicos complejos desde múltiples ópticas',
+            '⚠️ Advertencia: al activar genios, el razonamiento prima sobre la cita textual corta. Si necesitas citas directas y exactas de artículos para fundar un escrito, prueba buscar con los genios desactivados',
+            'Regla de oro — Genio activo: comprensión y análisis profundo. Genio desactivado: fuentes citadas y directas',
         ],
     },
     {

@@ -204,18 +204,18 @@ export default function PlataformaPage() {
                 bgColor="bg-cream-300"
             />
 
-            {/* Feature 4: Genio Amparo PRO */}
+            {/* Feature 4: Arquitectura Multi-Genio PRO */}
             <FeatureSection
-                id="genio-amparo"
+                id="arquitectura-multi-genio"
                 badge="✦ EXCLUSIVO PRO"
-                title={<>Genio <span className="text-accent-gold">Amparo</span></>}
-                subtitle="Tu copiloto de IA en materia de amparo"
-                description="Genio Amparo es una capa de inteligencia artificial avanzada que se activa con un clic dentro del chat. Especializado en materia de amparo mexicano, analiza el contexto completo de tu consulta — legislación, jurisprudencia y tesis de tu jurisdicción — para generar razonamientos jurídicos profundos con fundamento verificado."
+                title={<>Arquitectura <span className="text-accent-gold">Multi-Genio</span></>}
+                subtitle="El mejor equipo de especialistas legales"
+                description="Una capa de inteligencia artificial avanzada compuesta por expertos (Amparo, CIDH, Civil, etc.) que se activan con un clic dentro del chat. Utilizables de forma independiente o activando hasta 2 de manera concurrente, analizan el contexto completo de tu consulta para generar razonamientos jurídicos interdisciplinarios con fundamento verificado."
                 features={[
-                    "Razonamiento jurídico profundo en materia de amparo directo e indirecto",
+                    "Razonamiento jurídico profundo y específico por materia",
+                    "Uso concurrente de hasta 2 expertos virtuales para perspectivas completas",
                     "Fundamentación automatizada con artículos constitucionales y tesis verificadas",
                     "Análisis contextual filtrado por jurisdicción estatal y federal",
-                    "Generación de argumentos con técnica jurídica profesional",
                     "Exclusivo para usuarios Pro y Platinum — no disponible en plan gratuito"
                 ]}
                 visual={<GenioAmparoVisual />}
@@ -658,28 +658,31 @@ function GenioAmparoVisual() {
         <div className="bg-gradient-to-br from-cream-200 to-cream-300 rounded-3xl p-8 shadow-lg">
             <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-accent-gold/20 flex items-center justify-center">
-                        <span className="text-accent-gold font-serif text-base font-bold">G</span>
+                    <div className="w-8 h-8 rounded-lg bg-accent-gold/20 flex flex-col items-center justify-center relative">
+                        <div className="flex gap-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                        </div>
                     </div>
-                    <span className="font-medium text-charcoal-900">Genio Amparo</span>
+                    <span className="font-medium text-charcoal-900">Genios Especializados</span>
                     <span className="ml-auto px-2 py-0.5 rounded-full bg-accent-gold/10 text-accent-brown text-[10px] font-bold">PRO</span>
                 </div>
 
                 <div className="space-y-3 mb-4">
                     <div className="p-3 bg-cream-100 rounded-lg border border-cream-300">
                         <p className="text-[10px] text-charcoal-500 uppercase tracking-wider mb-1">Consulta</p>
-                        <p className="text-sm text-charcoal-800">¿Procede el amparo indirecto contra actos de autoridad administrativa que carecen de fundamentación?</p>
+                        <p className="text-sm text-charcoal-800">¿Cómo impugno una orden de aprehensión sin fundamentación considerando los criterios interamericanos?</p>
                     </div>
                     <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
-                        <p className="text-[10px] text-accent-brown uppercase tracking-wider mb-1">Genio Amparo razona</p>
-                        <p className="text-sm text-charcoal-700">Conforme al artículo 107, fracción IV, de la Ley de Amparo, en relación con el artículo 16 constitucional, el amparo indirecto procede contra actos que...</p>
+                        <p className="text-[10px] text-accent-brown uppercase tracking-wider mb-1">Perspectiva Combinada</p>
+                        <p className="text-sm text-charcoal-700">Vía amparo indirecto (Art. 107 L.A.) alegando violación al debido proceso. La Corte IDH en <i>Caso Cabrera García</i> establece que toda restricción a la libertad personal debe...</p>
                     </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-cream-300">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-accent-gold animate-pulse" />
-                        <span className="text-xs text-accent-brown font-medium">Modelo avanzado activo</span>
+                        <span className="text-xs text-accent-brown font-medium">Amparo + CIDH Activos</span>
                     </div>
                     <span className="text-xs text-charcoal-500">Solo Plan Pro/Platinum</span>
                 </div>
