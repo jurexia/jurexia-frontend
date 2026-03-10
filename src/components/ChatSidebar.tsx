@@ -76,12 +76,17 @@ export default function ChatSidebar({
             <div className="px-4 pt-3 pb-2">
                 <div className="flex items-center justify-between">
                     {!isCollapsed && (
-                        <span
-                            className="text-[10px] font-semibold uppercase tracking-[0.2em]"
-                            style={{ color: 'rgba(201, 169, 98, 0.6)' }}
-                        >
-                            Historial
-                        </span>
+                        <div>
+                            <span
+                                className="text-[10px] font-semibold uppercase tracking-[0.2em]"
+                                style={{ color: 'rgba(201, 169, 98, 0.6)' }}
+                            >
+                                Historial
+                            </span>
+                            <p className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                                10 conversaciones anteriores
+                            </p>
+                        </div>
                     )}
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}

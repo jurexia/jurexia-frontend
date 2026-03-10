@@ -35,6 +35,12 @@ interface DbMessage {
 }
 
 // ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const MAX_CONVERSATIONS = 10;  // FIFO: mantener solo las 10 más recientes
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -77,12 +83,13 @@ export async function getConversations(): Promise<Conversation[]> {
     }
 
     try {
-        // Get all conversations for user, ordered by most recent first
+        // Get conversations for user, limited to MAX_CONVERSATIONS, ordered by most recent first
         const { data: dbConversations, error } = await supabase
             .from('conversations')
             .select('*')
             .eq('user_id', userId)
-            .order('updated_at', { ascending: false });
+            .order('updated_at', { ascending: false })
+            .limit(MAX_CONVERSATIONS);
 
         if (error) {
             console.error('Error fetching conversations:', error);
@@ -160,7 +167,7 @@ export async function getConversation(id: string): Promise<Conversation | null> 
     }
 }
 
-// Create a new conversation
+// Create a new conversation (with FIFO enforcement: max 10)
 export async function createConversation(estado?: string): Promise<Conversation | null> {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -169,6 +176,31 @@ export async function createConversation(estado?: string): Promise<Conversation 
     }
 
     try {
+        // ── FIFO: Delete oldest conversations if at limit ──────────────
+        const { data: existingConvs, error: countError } = await supabase
+            .from('conversations')
+            .select('id, updated_at')
+            .eq('user_id', userId)
+            .order('updated_at', { ascending: false });
+
+        if (!countError && existingConvs && existingConvs.length >= MAX_CONVERSATIONS) {
+            // Delete the oldest conversations beyond the limit (keep MAX-1 to make room for new)
+            const toDelete = existingConvs.slice(MAX_CONVERSATIONS - 1);
+            const idsToDelete = toDelete.map(c => c.id);
+            console.log(`🗑️ FIFO: Deleting ${idsToDelete.length} oldest conversation(s) for user ${userId}`);
+
+            const { error: deleteError } = await supabase
+                .from('conversations')
+                .delete()
+                .in('id', idsToDelete);
+
+            if (deleteError) {
+                console.error('Error deleting old conversations:', deleteError);
+                // Don't block creation — just log
+            }
+        }
+
+        // ── Create the new conversation ────────────────────────────────
         const { data: dbConv, error } = await supabase
             .from('conversations')
             .insert({
