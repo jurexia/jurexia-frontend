@@ -590,7 +590,6 @@ const JALISCO_LEYES: CategoriaLeyes = {
     ],
     codigos: [
         { nombre: 'Código Civil del Estado de Jalisco', url: `${JALISCO_BASE}/Código Civil del Estado de Jalisco-121125.pdf` },
-        { nombre: 'Código Civil del Estado de Jalisco (anterior)', url: `${JALISCO_BASE}/Código Civil del Estado de Jalisco (anterior) .pdf` },
         { nombre: 'Código de Asistencia Social del Estado de Jalisco', url: `${JALISCO_BASE}/Código de Asistencia Social del Estado de Jalisco-251125.pdf` },
         { nombre: 'Código de Ética del Congreso del Estado de Jalisco', url: `${JALISCO_BASE}/Código de Ética del Congreso del Estado de Jalisco -100223.pdf` },
         { nombre: 'Código de Procedimientos Civiles del Estado de Jalisco', url: `${JALISCO_BASE}/Código de Procedimientos Civiles del Estado de Jalisco-250424.pdf` },
