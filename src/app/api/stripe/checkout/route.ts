@@ -51,6 +51,45 @@ export async function POST(request: NextRequest) {
 
         if (existingCustomers.data.length > 0) {
             customerId = existingCustomers.data[0].id;
+
+            // ═══ DUPLICATE SUBSCRIPTION GUARD ═══
+            // Prevent double charges by checking if customer already has a subscription
+            const existingSubs = await stripe.subscriptions.list({
+                customer: customerId,
+                limit: 5,
+            });
+
+            const activeSub = existingSubs.data.find(
+                (s) => s.status === 'active' || s.status === 'trialing'
+            );
+            const pastDueSub = existingSubs.data.find(
+                (s) => s.status === 'past_due'
+            );
+
+            if (activeSub) {
+                console.log(`⚠️ DUPLICATE GUARD: Customer ${customerEmail} already has active subscription ${activeSub.id} — blocking new checkout`);
+                return NextResponse.json(
+                    {
+                        error: 'Ya tienes una suscripción activa. Si deseas cambiar de plan, gestiona tu suscripción desde tu perfil.',
+                        code: 'SUBSCRIPTION_EXISTS',
+                    },
+                    { status: 409 }
+                );
+            }
+
+            if (pastDueSub) {
+                // Redirect to billing portal so user can update payment method
+                console.log(`⚠️ DUPLICATE GUARD: Customer ${customerEmail} has past_due subscription ${pastDueSub.id} — redirecting to billing portal`);
+                const portalSession = await stripe.billingPortal.sessions.create({
+                    customer: customerId,
+                    return_url: `${request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://iurexia.com'}/chat`,
+                });
+                return NextResponse.json({
+                    url: portalSession.url,
+                    code: 'PAST_DUE_REDIRECT',
+                    message: 'Tu suscripción tiene un pago pendiente. Te redirigimos para actualizar tu método de pago.'
+                });
+            }
         }
 
         // Determine the base URL for redirects
