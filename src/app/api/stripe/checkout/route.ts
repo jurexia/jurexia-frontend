@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
             customerId = existingCustomers.data[0].id;
 
             // ═══ DUPLICATE SUBSCRIPTION GUARD ═══
-            // Prevent double charges by checking if customer already has a subscription
+            // Prevent double charges while allowing plan upgrades/changes
             const existingSubs = await stripe.subscriptions.list({
                 customer: customerId,
                 limit: 5,
@@ -67,28 +67,48 @@ export async function POST(request: NextRequest) {
             );
 
             if (activeSub) {
-                console.log(`⚠️ DUPLICATE GUARD: Customer ${customerEmail} already has active subscription ${activeSub.id} — blocking new checkout`);
-                return NextResponse.json(
-                    {
-                        error: 'Ya tienes una suscripción activa. Si deseas cambiar de plan, gestiona tu suscripción desde tu perfil.',
-                        code: 'SUBSCRIPTION_EXISTS',
-                    },
-                    { status: 409 }
-                );
+                const currentPriceId = activeSub.items.data[0]?.price.id;
+
+                if (currentPriceId === priceId) {
+                    // SAME plan → true duplicate → block
+                    console.log(`⚠️ DUPLICATE GUARD: ${customerEmail} already on same plan (${currentPriceId}) — blocking`);
+                    return NextResponse.json(
+                        {
+                            error: 'Ya tienes este plan activo. Si deseas gestionar tu suscripción, visita tu perfil.',
+                            code: 'SUBSCRIPTION_EXISTS',
+                        },
+                        { status: 409 }
+                    );
+                } else {
+                    // DIFFERENT plan → upgrade/change → cancel old, proceed with new
+                    console.log(`🔄 PLAN CHANGE: ${customerEmail} switching from ${currentPriceId} to ${priceId} — canceling old sub ${activeSub.id}`);
+                    await stripe.subscriptions.cancel(activeSub.id, {
+                        prorate: true,
+                    });
+                }
             }
 
             if (pastDueSub) {
-                // Redirect to billing portal so user can update payment method
-                console.log(`⚠️ DUPLICATE GUARD: Customer ${customerEmail} has past_due subscription ${pastDueSub.id} — redirecting to billing portal`);
-                const portalSession = await stripe.billingPortal.sessions.create({
-                    customer: customerId,
-                    return_url: `${request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://iurexia.com'}/chat`,
-                });
-                return NextResponse.json({
-                    url: portalSession.url,
-                    code: 'PAST_DUE_REDIRECT',
-                    message: 'Tu suscripción tiene un pago pendiente. Te redirigimos para actualizar tu método de pago.'
-                });
+                const currentPriceId = pastDueSub.items.data[0]?.price.id;
+
+                if (currentPriceId === priceId) {
+                    // Same plan but past_due → redirect to fix payment
+                    console.log(`⚠️ PAST_DUE GUARD: ${customerEmail} has past_due sub for same plan — redirecting to portal`);
+                    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://iurexia.com';
+                    const portalSession = await stripe.billingPortal.sessions.create({
+                        customer: customerId,
+                        return_url: `${origin}/chat`,
+                    });
+                    return NextResponse.json({
+                        url: portalSession.url,
+                        code: 'PAST_DUE_REDIRECT',
+                        message: 'Tu suscripción tiene un pago pendiente. Te redirigimos para actualizar tu método de pago.'
+                    });
+                } else {
+                    // Different plan + past_due → cancel old, proceed with upgrade
+                    console.log(`🔄 PLAN CHANGE: ${customerEmail} past_due on ${currentPriceId}, upgrading to ${priceId} — canceling old`);
+                    await stripe.subscriptions.cancel(pastDueSub.id);
+                }
             }
         }
 
