@@ -158,6 +158,7 @@ export async function downgradeToFree(email: string) {
             sentencia_queries_limit: 0,
             sentencia_queries_used: 0,
             stripe_subscription_id: null,
+            is_active: false,  // FIX #5: Marcar como inactivo al downgrade
             updated_at: new Date().toISOString(),
         } as any)
         .eq('email', normalizedEmail)

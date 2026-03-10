@@ -77,7 +77,7 @@ export interface UserProfile {
     email: string;
     full_name: string | null;
     estado: string | null;
-    subscription_type: 'gratuito' | 'pro_monthly' | 'pro_annual' | 'platinum_monthly' | 'platinum_annual' | 'ultra_secretarios';
+    subscription_type: 'gratuito' | 'basico_monthly' | 'pro_monthly' | 'pro_annual' | 'platinum_monthly' | 'platinum_annual' | 'ultra_secretarios';
     queries_used: number;
     queries_limit: number;
     drafts_used: number;

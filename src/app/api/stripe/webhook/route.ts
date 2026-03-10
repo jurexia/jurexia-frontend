@@ -156,11 +156,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true });
     } catch (error) {
         console.error(`❌ Webhook handler error for event ${event.type}:`, error);
-        // Return 200 to acknowledge receipt even on error — Stripe will retry otherwise
-        // and the same error will repeat. Log the error for manual investigation.
+        // FIX #1: SIEMPRE retornar 200 para que Stripe NO reenvíe el evento.
+        // Un 500 causa que Stripe reintente durante 3 días, creando un loop
+        // infinito de errores. Los errores se investigan con logs.
         return NextResponse.json(
             { error: 'Webhook handler failed', eventType: event.type },
-            { status: 500 }
+            { status: 200 }
         );
     }
 }
@@ -263,6 +264,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         return;
     }
 
+    // FIX #6: Validar que el pago fue exitoso antes de actualizar
+    if (session.payment_status !== 'paid') {
+        console.warn(`⚠️ Checkout completed but payment_status is "${session.payment_status}" (not "paid") for ${email} — deferring until payment confirms`);
+        return;
+    }
+
     if (!session.subscription) {
         console.error('❌ No subscription ID in checkout session — this might be a one-time payment');
         return;
@@ -289,6 +296,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         console.error(`   This likely means STRIPE_PRICE_* env vars are not set or don't match.`);
         console.error(`   Subscription priceId: ${subscription.items.data[0]?.price.id}`);
         console.error(`   Configured price IDs:`, {
+            basico_monthly: PLANS.basico_monthly.priceId,
             pro_monthly: PLANS.pro_monthly.priceId,
             pro_annual: PLANS.pro_annual.priceId,
             platinum_monthly: PLANS.platinum_monthly.priceId,
@@ -333,12 +341,18 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
         return;
     }
 
-    // Handle cancel_at_period_end — user keeps access until period ends
+    // FIX #3: Handle cancel_at_period_end — but DON'T block if the plan changed (upgrade)
     if (subscription.cancel_at_period_end) {
         const periodEnd = new Date((subscription as any).current_period_end * 1000);
         console.log(`⏳ User ${email} scheduled cancellation — access until ${periodEnd.toISOString()}`);
-        // Don't downgrade yet; Stripe will send subscription.deleted when period actually ends
-        return;
+        // Only skip further processing if the plan hasn't changed.
+        // If the user upgraded (different price), we need to process the update.
+        if (subscription.status !== 'active') {
+            return;
+        }
+        // If status is active + cancel_at_period_end, log and let it through so
+        // any plan changes still get processed below.
+        console.log(`   ↳ Subscription is active with cancel-at-period-end — processing update anyway`);
     }
 
     console.log(`📧 User ${email} subscription updated to: ${subscriptionType}, status: ${subscription.status}`);

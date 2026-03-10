@@ -48,6 +48,26 @@ const ULTRA_THEME: PlanTheme = {
     ctaHref: '/redactor-sentencia',
 };
 
+const BASICO_THEME: PlanTheme = {
+    title: '¡Bienvenido a Iurexia Básico!',
+    subtitle: 'Tu suscripción Básica ha sido activada.',
+    description: 'Ahora tienes acceso a 70 consultas legales por mes con búsqueda inteligente.',
+    icon: 'check',
+    iconBg: 'bg-green-100',
+    iconColor: 'text-green-600',
+    pageBg: 'bg-cream-300',
+    titleColor: 'text-charcoal-900',
+    buttonBg: 'bg-accent-brown',
+    buttonHover: 'hover:bg-accent-brown/90',
+    features: [
+        'Realizar hasta 70 consultas/mes',
+        'Búsqueda inteligente en la base legal',
+        'Soporte estándar',
+    ],
+    ctaText: 'Comenzar a usar Iurexia',
+    ctaHref: '/chat',
+};
+
 const PRO_THEME: PlanTheme = {
     title: '¡Bienvenido a Iurexia Pro!',
     subtitle: 'Tu suscripción ha sido activada exitosamente.',
@@ -107,7 +127,8 @@ function CheckoutSuccessContent() {
 
     // Determine plan type from profile
     const isUltra = profile?.subscription_type === 'ultra_secretarios';
-    const theme = isUltra ? ULTRA_THEME : PRO_THEME;
+    const isBasico = profile?.subscription_type === 'basico_monthly';
+    const theme = isUltra ? ULTRA_THEME : isBasico ? BASICO_THEME : PRO_THEME;
 
     useEffect(() => {
         if (sessionId) {

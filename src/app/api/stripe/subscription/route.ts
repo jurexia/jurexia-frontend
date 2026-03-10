@@ -55,14 +55,19 @@ export async function GET(request: NextRequest) {
 
         const customerId = customers.data[0].id;
 
-        // Get active subscriptions
-        const subscriptions = await stripe.subscriptions.list({
+        // FIX #2: Buscar suscripciones active, trialing, Y past_due
+        // Un usuario con pago pendiente (past_due) aún tiene plan activo
+        const allSubs = await stripe.subscriptions.list({
             customer: customerId,
-            status: 'active',
-            limit: 1,
+            limit: 5,
         });
 
-        if (subscriptions.data.length === 0) {
+        // Priorizar: active > trialing > past_due
+        const subscription = allSubs.data.find(s => s.status === 'active')
+            || allSubs.data.find(s => s.status === 'trialing')
+            || allSubs.data.find(s => s.status === 'past_due');
+
+        if (!subscription) {
             return NextResponse.json({
                 plan: 'gratuito',
                 status: 'none',
@@ -71,7 +76,6 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        const subscription = subscriptions.data[0];
         const planId = getPlanFromSubscription(subscription);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sub = subscription as any;
