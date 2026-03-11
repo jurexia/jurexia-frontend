@@ -1998,6 +1998,334 @@ const GUANAJUATO_LEYES: CategoriaLeyes = {
     otros: []
 };
 
+
+
+// --- Michoacan: FULL DATA --- PDFs from congresomich.gob.mx -----
+
+const MICHOACAN_LEYES: CategoriaLeyes = {
+
+    constitucion: [
+
+        { nombre: 'Constitución Política del Estado Libre y Soberano de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVIDECRETOLEGISLATIVO-005.pdf' },
+
+        { nombre: 'Ley Reglamentaria de la fracción XVII bis, del Artículo 44 de la Constitución Política del Estado Libre y Soberano de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-REGLAMENTARIA-DE-LA-FRACCIÓN-XVII-BIS-DEL-ARTÍCULO-44-DE-LA-CONSTITUCIÓN-POLÍTICA-REF-27-FEB-2019.pdf' },
+
+    ],
+
+    leyes: [
+
+        { nombre: 'Ley Contra las Adicciones en el Estado de Michoacán.', url: 'http://congresomich.gob.mx/file/LEY-CONTRA-LAS-ADICCIONES-EN-EL-ESTADO-DE-MICHOACÁN-PO-11-DE-JULIO-DE-2022.pdf' },
+
+        { nombre: 'Ley Estatal de Educación en el Nivel Medio Superior y la Formación para el Trabajo del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-ESTATAL-DE-EDUCACIÓN-EN-EL-NIVEL-MEDIO-SUPERIOR-Y-LA-FORMACIÓN-PARA-EL-TRABAJO-5-OCTUBRE-2021.pdf' },
+
+        { nombre: 'Ley Inquilinaria del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-INQUILINARIA-DEL-ESTADO-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley Orgánica Municipal del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO652.pdf' },
+
+        { nombre: 'Ley Orgánica de División Territorial de Michoacán', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO445.pdf' },
+
+        { nombre: 'Ley Orgánica de la Administración Pública del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO679.pdf' },
+
+        { nombre: 'Ley Orgánica de la Fiscalía General del Estado de Michoacán.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO465-Fe-de-erratas.pdf' },
+
+        { nombre: 'Ley Orgánica de la Universidad Michoacana de San Nicolás de Hidalgo', url: 'http://congresomich.gob.mx/file/Ley-Orgánica-de-la-Universidad-Michoacana-de-San-Nicolás-de-Hidalgo.pdf' },
+
+        { nombre: 'Ley Orgánica del Centro de Conciliación Laboral del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-ORGÁNICA-DEL-CENTRO-DE-CONCILIACIÓN-LABORAL-DEL-ESTADO-REF-8-DE-JULIO-2022-1.pdf' },
+
+        { nombre: 'Ley Orgánica del Instituto de Vivienda del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY_ORGANICA_DEL_INSTITUTO_DE_VIVIENDA_DEL_ESTADO_DE_MICHOACAN_DE_OCAMPO.pdf' },
+
+        { nombre: 'Ley Orgánica del Poder Judicial del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LXXVIDECRETOLEGISLATIVO-095.pdf' },
+
+        { nombre: 'Ley Orgánica del Registro Civil del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO465-Fe-de-erratas.pdf' },
+
+        { nombre: 'Ley Orgánica y de Procedimientos del Congreso del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/última-reforma-Ley-orgánica-y-de-procedimientos-del-Congreso-del-Estado-de-Michoacán-de-Ocampo.pdf' },
+
+        { nombre: 'Ley Reglamentaria de Tierras Ociosas', url: 'http://congresomich.gob.mx/file/Ley-Reglamentaria-de-Tierras-Ociosas.pdf' },
+
+        { nombre: 'Ley Sobre el Régimen de Propiedad en Condominio', url: 'http://congresomich.gob.mx/file/Ley-Sobre-el-Régimen-de-Propiedad-en-Condominio.pdf' },
+
+        { nombre: 'Ley de Adopción y Acogimiento Familiar del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO353.pdf' },
+
+        { nombre: 'Ley de Adquisiciones, Arrendamientos y Prestación de Servicios Relacionados con Bienes Muebles e Inmueble (Sic) del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-ADQUISICIONES-ARRENDAMIENTOS-Y-PRESTACION-DE-SERVICIOS-REF-5-DE-NOV-2020.pdf' },
+
+        { nombre: 'Ley de Agricultura Urbana y Periurbana del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO458.pdf' },
+
+        { nombre: 'Ley de Amnistía del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-AMNISTIA-REF-28-DE-AGOSTO-DE-2019.pdf' },
+
+        { nombre: 'Ley de Arancel de Abogados en el Estado de Michoacán', url: 'http://congresomich.gob.mx/file/Ley-de-Arancel-de-Abogados-en-el-Estado-de-Michoacán.pdf' },
+
+        { nombre: 'Ley de Arancel de Notarios', url: 'http://congresomich.gob.mx/file/Ley-de-Arancel-de-Notarios.pdf' },
+
+        { nombre: 'Ley de Archivos Administrativos e Históricos del Estado de Michoacán de Ocampo y sus Municipios', url: 'http://congresomich.gob.mx/file/Ley-de-Archivos-Administrativos-e-Históricos-del-Estado-de-Michoacán-de-Ocampo-y-sus-Municipios..pdf' },
+
+        { nombre: 'Ley de Asistencia Social del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO695.pdf' },
+
+        { nombre: 'Ley de Asociaciones Público Privadas para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-ASOCIACIONES-PÚBLICO-PRIVADAS-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley de Atención a Víctimas para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO660.pdf' },
+
+        { nombre: 'Ley de Bibliotecas para el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-BIBLIOTECAS-PARA-EL-ESTADO-19-DE-JULIO-DE-2018.pdf' },
+
+        { nombre: 'Ley de Cambio Climático del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO-08.pdf' },
+
+        { nombre: 'Ley de Caminos y Puentes del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-CAMINOS-Y-PUENTES-REF-28-DIC-2017.pdf' },
+
+        { nombre: 'Ley de Catastro del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY_DE_CATASTRO_DEL_ESTADO_REF_01_FEB_2017.pdf' },
+
+        { nombre: 'Ley de Ciencia, Tecnología e Innovación del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO439.pdf' },
+
+        { nombre: 'Ley de Comunicaciones y Transportes del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/Ley-de-Comunicaciones-y-Transportes-del-Estado-de-Michoacán.pdf' },
+
+        { nombre: 'Ley de Cooperación de los Productores de Limón del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/Ley-de-Cooperación-de-los-Productores-de-Limón-del-Estado-de-Michoacán.pdf' },
+
+        { nombre: 'Ley de Coordinación Fiscal del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVIDECRETOLEGISLATIVO-111.pdf' },
+
+        { nombre: 'Ley de Cultura Física y Deporte del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-CULTURA-FÍSICA-Y-DEPORTE-REF-28-DE-AGOSTO-DE-2019.pdf' },
+
+        { nombre: 'Ley de Derechos, el Bienestar y Protección de los Animales en el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO643.pdf' },
+
+        { nombre: 'Ley de Desarrollo Cultural para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO-08.pdf' },
+
+        { nombre: 'Ley de Desarrollo Forestal Sustentable del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-DESARROLLO-FORESTAL-SUSTENTABLE-REF-2-de-Diciembre-de-2022.pdf' },
+
+        { nombre: 'Ley de Desarrollo Rural Integral Sustentable del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-DESARROLLO-RURAL-INTEGRAL-SUSTENTABLE-REF-25-DE-JULIO-DE-2023.pdf' },
+
+        { nombre: 'Ley de Desarrollo Social del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-DE-DESARROLLO-SOCIAL-DEL-ESTADO-DE-MICHOACÁN-REF-4-DE-DICIEMBRE-DE-2020.pdf' },
+
+        { nombre: 'Ley de Deuda Pública del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-DEUDA-PUBLICA-REF-28-DIC-2017.pdf' },
+
+        { nombre: 'Ley de Educación para el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO673.pdf' },
+
+        { nombre: 'Ley de Ejecución de Sanciones Penales del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-EJECUCIÓN-DE-SANCIONES-PENALES-REF-28-AGOSTO-2019.pdf' },
+
+        { nombre: 'Ley de Entidades Paraestatales del Estado de Michoacán.', url: 'http://congresomich.gob.mx/file/LEY-DE-ENTIDADES-PARAESTATALES-DEL-ESTADO-REF-18-DE-JULIO-DE-2017.pdf' },
+
+        { nombre: 'Ley de Expropiación del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/Ley-de-Expropiación-del-Estado-de-Michoacán-de-Ocampo.pdf' },
+
+        { nombre: 'Ley de Extinción de Dominio del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-EXTINCIÓN-DE-DOMINIO-REF-28-DE-AGOSTO-DE-2019.pdf' },
+
+        { nombre: 'Ley de Financiamiento Rural para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-FINANCIAMIENTO-RURAL-REF-26-DE-JUNIO-DE-2023.pdf' },
+
+        { nombre: 'Ley de Firma Electrónica Certificada del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-FIRMA-ELECTRÓNICA-CERTIFICADA-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley de Fiscalización Superior y Rendición de Cuentas del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO450.pdf' },
+
+        { nombre: 'Ley de Fomento Apícola del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-FOMENTO-APÍCOLA-REF-18-DE-NOV-DE-2022.pdf' },
+
+        { nombre: 'Ley de Fomento a la Lectura y el Libro del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/Ley-de-Fomento-a-la-Lectura-y-el-Libro-del-Estado-de-Michoacán-de-Ocampo.pdf' },
+
+        { nombre: 'Ley de Fomento al Primer Empleo y a la Primera Empresa para el Estado de Michoacán de Ocampo y sus Municipios', url: 'http://congresomich.gob.mx/file/LEY-DE-FOMENTO-AL-PRIMER-EMPLEO-Y-A-LA-PRIMERA-EMPRESA-PARA-EL-ESTADO-DE-MICHOACÁN-DE-OCAMPO-Y-SUS-MUNICIPIOS-REF-01-AGOSTO-2019.pdf' },
+
+        { nombre: 'Ley de Fomento y Desarrollo Artesanal del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO645.pdf' },
+
+        { nombre: 'Ley de Fomento y Fortalecimiento a las Actividades Realizadas por Organizaciones de la Sociedad Civil en el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-FOMENTO-Y-FORTALECIMIENTO-A-LAS-ACTIVIDADES-REALIZADAS-POR-ORGANIZACIONES-DE-LA-SOCIEDAD-CIVIL-REF-4-DE-DIC-2020.pdf' },
+
+        { nombre: 'Ley de Fomento y Protección del Maíz Criollo Como Patrimonio Alimentario del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/Ley-de-Fomento-y-Protección-del-Maíz-Criollo-Como-Patrimonio-Alimentario-del-Estado-de-Michoacán-de-Ocampo..pdf' },
+
+        { nombre: 'Ley de Fondos de Aseguramiento Agropecuario y Rural para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/Ley-de-Fondos-de-Aseguramiento-Agropecuario-y-Rural-para-el-Estado-de-Michoacán-de-Ocampo.pdf' },
+
+        { nombre: 'Ley de Ganadería del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO644.pdf' },
+
+        { nombre: 'Ley de Gobierno Digital del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-GOBIERNO-DIGITAL-DEL-ESTADO-DE-MICHOACÁN-DE-OCAMPO-5-OCT-2021.pdf' },
+
+        { nombre: 'Ley de Hacienda Municipal del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-HACIENDA-MUNICIPAL-DEL-ESTADO-REF-22-DE-DIC-2022.pdf' },
+
+        { nombre: 'Ley de Hacienda del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVIDECRETOLEGISLATIVO-109.pdf' },
+
+        { nombre: 'Ley de Indulto', url: 'http://congresomich.gob.mx/file/Ley-de-Indulto.pdf' },
+
+        { nombre: 'Ley de Ingresos del Estado de Michoacán de Ocampo, para el Ejercicio Fiscal del año 2024.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO606.pdf' },
+
+        { nombre: 'Ley de Instituciones de Asistencia Privada del Estado de Michoacán.', url: 'http://congresomich.gob.mx/file/LEY-DE-INSTITUCIONES-DE-ASISTENCIA-PRIVADA-DEL-ESTADO-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley de Justicia Alternativa y Restaurativa del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-JUSTICIA-ALTERNATIVA-Y-RESTAURATIVA-REF-30-DE-JUNIO-DE-2020.pdf' },
+
+        { nombre: 'Ley de Justicia Comunal del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-JUSTICIA-COMUNAL-REF-28-DE-AGOSTO-DE-2019.pdf' },
+
+        { nombre: 'Ley de Justicia Cívica del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO567.pdf' },
+
+        { nombre: 'Ley de Justicia en materia Electoral y de Participación Ciudadana del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-JUSTICIA-EN-MATERIA-ELECTORAL-Y-DE-PARTICIPACIÓN-CIUDADANA-REF-2-DE-JUNIO-DE-2023.pdf' },
+
+        { nombre: 'Ley de Mecanismos de Participación Ciudadana del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-MECANISMOS-DE-PARTICIPACIÓN-CIUDADANA-REF-2-DE-JUNIO-DE-2023.pdf' },
+
+        { nombre: 'Ley de Mejora Regulatoria del Estado de Michoacán de Ocampo y sus Municipios.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO433.pdf' },
+
+        { nombre: 'Ley de Movilidad y Seguridad Vial del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-MOVILIDAD-Y-SEGURIDAD-VIAL-FE-DE-ERRATAS-16-DE-JUNIO-DE-2023.pdf' },
+
+        { nombre: 'Ley de Obra Pública y Servicios Relacionados con la misma para el Estado de Michoacán de Ocampo y sus Municipios', url: 'http://congresomich.gob.mx/file/LEY-DE-OBRA-PÚBLICA-Y-SERVICIOS-RELACIONADOS-22-DIC-2022.pdf' },
+
+        { nombre: 'Ley de Organizaciones Agrícolas del Estado de Michoacán.', url: 'http://congresomich.gob.mx/file/LEY-DE-ORGANIZACIONES-AGRÍCOLAS-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley de Pensiones Civiles para el Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-DE-PENSIONES-CIVILES-REFORMA-5-DE-OCTUBRE-DE-2018.pdf' },
+
+        { nombre: 'Ley de Pesca y Acuacultura Sustentables para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-PESCA-Y-ACUACULTURA-SUSTENTABLES-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley de Planeación del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY_DE_PLANEACION_DEL_ESTADO_27-JUNIO-2014.pdf' },
+
+        { nombre: 'Ley de Productos Orgánicos para el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-PRODUCTOS-ORGÁNICOS-PARA-EL-ESTADO-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley de Profesiones del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/NUEVA-LEY-DE-PROFESIONES-20-DE-ENERO-DE-2020.pdf' },
+
+        { nombre: 'Ley de Protección Civil del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-PROTECCIÓN-CIVIL-DEL-ESTADO-13-JUNIO-DE-2023.pdf' },
+
+        { nombre: 'Ley de Protección Integral a las Personas Adultas Mayores del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-PROTECCIÓN-INTEGRAL-A-LAS-PERSONAS-ADULTAS-MAYORES-REF-31-DE-MARZO-DE-2023.pdf' },
+
+        { nombre: 'Ley de Protección de Datos Personales en Posesión de Sujetos Obligados del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-PROTECCIÓN-DE-DATOS-PERSONALES-EN-POSESIÓN-DE-SUJETOS-REF-13-DE-NOV-2017.pdf' },
+
+        { nombre: 'Ley de Protección de los No Fumadores del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-PROTECCIÓN-DE-LOS-NO-FUMADORES-REF-11-MAYO-2018.pdf' },
+
+        { nombre: 'Ley de Remuneraciones de los Servidores Públicos del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-REMUNERACIONES-DE-LOS-SERVIDORES-PÚBLICOS-REF-22-DE-AGOSTO-DE-2019.pdf' },
+
+        { nombre: 'Ley de Responsabilidad Ambiental para el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO-08.pdf' },
+
+        { nombre: 'Ley de Responsabilidad Patrimonial del Estado de Michoacán y sus Municipios.', url: 'http://congresomich.gob.mx/file/NUEVA-LEY-DE-RESPONSABILIDAD-PATRIMONIAL-DEL-ESTADO-PUBLICADA-01-SEPT-20171023.pdf' },
+
+        { nombre: 'Ley de Responsabilidades Administrativas para el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-RESPONSABILIDADES-ADMINISTRATIVAS-13-MAYO-2021.pdf' },
+
+        { nombre: 'Ley de Responsabilidades y Registro Patrimonial de los Servidores Públicos del Estado de Michoacán y sus Municipios', url: 'http://congresomich.gob.mx/file/LEY-DE-RESPONSABILIDADES-Y-REGISTRO-PATRIMONIAL-DE-LOS-SERVIDORES-PUBLICOS-REF-14-DE-FEBRERO-DE-2018.pdf' },
+
+        { nombre: 'Ley de Salud Mental del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO648.pdf' },
+
+        { nombre: 'Ley de Salud del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO650.pdf' },
+
+        { nombre: 'Ley de Seguridad Privada del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-SEGURIDAD-PRIVADA-REF-28-AGOSTO-201940391.pdf' },
+
+        { nombre: 'Ley de Transparencia, Acceso a la Información Pública y Protección de Datos Personales del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO608-2024-01-25.pdf' },
+
+        { nombre: 'Ley de Trasplantes y Donación de Órganos, Tejidos y Células en el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO651.pdf' },
+
+        { nombre: 'Ley de Turismo del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-TURISMO-REF-25-DE-JULIO-DE-2023.pdf' },
+
+        { nombre: 'Ley de Voluntad Vital Anticipada del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DE-VOLUNTAD-VITAL-ANTICIPADA-REF-14-DE-AGOSTO-DE-201838870.pdf' },
+
+        { nombre: 'Ley de Zonas Económicas Especiales del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/NUEVA-LEY-DE-ZONAS-ECONÓMICAS-ESPECIALES-DEL-ESTADO-PO-30-MARZO-DE-2017-11A-SECC.pdf' },
+
+        { nombre: 'Ley de la Atención y Protección a Personas con la Condición del Espectro Autista para el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-LA-ATENCIÓN-Y-PROTECCIÓN-A-PERSONAS-CON-LA-CONDICIÓN-DEL-ESPECTRO-AUTISTA-P.O.-04-DIC-2020.pdf' },
+
+        { nombre: 'Ley de la Comisión Estatal de los Derechos Humanos de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO671.pdf' },
+
+        { nombre: 'Ley de la Comisión Estatal para la Protección contra Riesgos Sanitarios de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-DE-LA-COMISIÓN-ESTATAL-PARA-LA-PROTECCIÓN-CONTRA-RIESGOS-SANITARIOS-REF-30-DE-MARZO-DE-2023.pdf' },
+
+        { nombre: 'Ley de la Defensoría Pública del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-DE-LA-DEFENSORÍA-PÚBLICA-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley de la Función Registral y Catastral del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DE-LA-FUNCIÓN-REGISTRAL-Y-CATASTRAL-DEL-ESTADO-DE-MICHOACÁN-DE-OCAMPO-26-ENERO-DE-2021.pdf' },
+
+        { nombre: 'Ley de los Derechos de Niñas, Niños y Adolescentes del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO674.pdf' },
+
+        { nombre: 'Ley de los Jóvenes del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO451.pdf' },
+
+        { nombre: 'Ley de los Trabajadores al Servicio del Estado de Michoacán de Ocampo y de sus Municipios.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO676.pdf' },
+
+        { nombre: 'Ley del Agua y Gestión de Cuencas para el Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO610.pdf' },
+
+        { nombre: 'Ley del Consejo Económico y Social del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO192.pdf' },
+
+        { nombre: 'Ley del Escudo del Estado Libre y Soberano de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DEL-ESCUDO-DEL-ESTADO-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley del Fondo Auxiliar para la Administración de Justicia del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/Ley-del-Fondo-Auxiliar-para-la-Administración-de-Justicia-del-Estado-de-Michoacán-de-Ocampo.pdf' },
+
+        { nombre: 'Ley del Mezcal para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-DEL-MEZCAL-PARA-EL-ESTADO-30-marzo-2018.pdf' },
+
+        { nombre: 'Ley del Notariado del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-DEL-NOTARIADO-REF-28-DE-MARZO-DE-2022.pdf' },
+
+        { nombre: 'Ley del Patrimonio Estatal', url: 'http://congresomich.gob.mx/file/LEY-DEL-PATRIMONIO-ESTATAL-REF-25-ENERO-2017.pdf' },
+
+        { nombre: 'Ley del Periódico Oficial del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/Ley-del-Periódico-Oficial-del-Estado-de-Michoacán-de-Ocampo.pdf' },
+
+        { nombre: 'Ley del Registro Público de la Propiedad del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/Ley-del-Registro-Público-de-la-Propiedad-del-Estado-de-Michoacán-de-Ocampo.pdf' },
+
+        { nombre: 'Ley del Servicio de Administración Tributaria del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVIDECRETOLEGISLATIVO-110.pdf' },
+
+        { nombre: 'Ley del Sistema Estatal Anticorrupción para el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-DEL-SISTEMA-ESTATAL-ANTICORRUPCIÓN-REF-28-DE-AGOSTO-DE-2019.pdf' },
+
+        { nombre: 'Ley del Sistema Estatal de Seguridad Pública de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO437.pdf' },
+
+        { nombre: 'Ley para Prevenir y Eliminar la Discriminación y la Violencia en el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO673.pdf' },
+
+        { nombre: 'Ley para Prevenir y Erradicar el Feminicidio del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-PARA-PREVENIR-Y-ERRADICAR-EL-FEMINICIDIO-.pdf' },
+
+        { nombre: 'Ley para Prevenir, Atender y Erradicar la Trata de Personas y para la Protección y Asistencia de las Víctimas en el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-PARA-PREVENIR-ATENDER-Y-ERRADICAR-LA-TRATA-DE-PERSONAS-Y-PARA-LA-PROTECCIÓN-Y-ASISTENCIA-DE-LAS-VÍCTIMAS-REF-28-AGOSTO-2019.pdf' },
+
+        { nombre: 'Ley para el Desarrollo de la Competitividad de la Micro, Pequeña y Mediana Empresa del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-PARA-EL-DESARROLLO-DE-LA-COMPETITIVIDAD-DE-LA-MICRO-REF.-01-DE-AGOSTO-DE-2019.pdf' },
+
+        { nombre: 'Ley para el Desarrollo y Protección de las Madres Jefas de Familia del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/Decreto-Legislativo-366_04-12-20.pdf' },
+
+        { nombre: 'Ley para la Administración de Bienes Asegurados y Decomisados del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-ADMINISTRACIÓN-DE-BIENES-ASEGURADOS-Y-DECOMISADOS-REF-28-AGOSTO-201940835.pdf' },
+
+        { nombre: 'Ley para la Atención de la Violencia Escolar en el Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO673.pdf' },
+
+        { nombre: 'Ley para la Atención y Prevención de la Violencia Familiar en el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-ATENCIÓN-Y-PREVENCIÓN-DE-LA-VIOLENCIA-FAMILIAR-ref-5-de-abril-de-2021.pdf' },
+
+        { nombre: 'Ley para la Atención y Protección de los Migrantes y sus Familias del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO653.pdf' },
+
+        { nombre: 'Ley para la Conservación y Restauración de Tierras del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-CONSERVACION-Y-RESTAURACION-DE-TIERRAS-DEL-ESTADO-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley para la Conservación y Sustentabilidad Ambiental del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-CONSERVACIÓN-Y-SUSTENTABILIDAD-AMBIENTAL-REF-5-DE-JULIO-DE-2023.pdf' },
+
+        { nombre: 'Ley para la Igualdad entre Mujeres y Hombres del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-IGUALDAD-ENTRE-MUJERES-Y-HOMBRES-REF-22-DE-AGISTO-DE-2019.pdf' },
+
+        { nombre: 'Ley para la Inclusión de las Personas con Discapacidad en el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO691.pdf' },
+
+        { nombre: 'Ley para la Prestación de Servicios Inmobiliarios en el Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-PRESTACIÓN-DE-SERVICIOS-INMOBILIARIOS-REF-29-DIC-2016.pdf' },
+
+        { nombre: 'Ley para la Prestación de servicios de Atención, Cuidado y Desarrollo Integral Infantil en el Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-PRESTACIÓN-DE-SERVICIOS-DE-ATENCIÓN-CUIDADO-Y-DESARROLLO-INTEGRAL-INFANTIL-EN-EL-ESTADO-REF-25-ENERO-2021.pdf' },
+
+        { nombre: 'Ley para la Prevención y Gestión Integral de Residuos en el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-PREVENCIÓN-Y-GESTIÓN-INTEGRAL-DE-RESIDUOS-REF-18-DE-FEB-2022.pdf' },
+
+        { nombre: 'Ley para la Prevención, Atención y Tratamiento Integral del Sobrepeso, Obesidad y Trastornos de la Conducta Alimentaria para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-PREVENCIÓN-ATENCIÓN-Y-TRATAMIENTO-REF-4-DE-DIC-2020.pdf' },
+
+        { nombre: 'Ley para la Prevención, Tratamiento y Control de la Diabetes Mellitus en el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/Ley-para-la-Prevención-Tratamiento-y-Control-de-la-Diabetes-Mellitus-en-el-Estado-de-Michoacán-de-Ocampo.pdf' },
+
+        { nombre: 'Ley para la Protección de Personas Defensoras de Derechos Humanos y Periodistas del Estado de Michoacán.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO568.pdf' },
+
+        { nombre: 'Ley para la Protección de Personas Intervinientes en el Proceso Penal del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY-PARA-LA-PROTECCIÓN-DE-PERSONAS-INTERVINIENTES-EN-EL-PROCESO-PENAL-REF-28-DE-AGOSTO-DE-2019.pdf' },
+
+        { nombre: 'Ley para una Cultura de Paz y Prevención de la Violencia y la Delincuencia en Michoacán', url: 'http://congresomich.gob.mx/file/LEY-PARA-UNA-CULTURA-DE-PAZ-Y-PREVENCIÓN-DE-LA-VIOLENCIA-Y-LA-DELINCUENCIA-REF-28-DE-AGOSTO-DE-2019.pdf' },
+
+        { nombre: 'Ley por una Vida Libre de Violencia para las Mujeres en el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO677.pdf' },
+
+        { nombre: 'Ley que Cataloga y Prevee la Conservación, Uso de Monumentos, Zonas Históricas, Turísticas y Arqueológicas del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/LEY_QUE_CATALOGA_Y_PREVEE_LA_CONSERVACION_USO_DE.pdf' },
+
+        { nombre: 'Ley que Reglamenta la Aparcería Agrícola y Pecuaria en el Estado de Michoacán', url: 'http://congresomich.gob.mx/file/Ley-que-Reglamenta-la-Aparcería-Agrícola-y-Pecuaria-en-el-Estado-de-Michoacán.pdf' },
+
+        { nombre: 'Presupuesto de Egresos del Gobierno del Estado de Michoacán de Ocampo, para el Ejercicio Fiscal del Año 2025', url: 'http://congresomich.gob.mx/file/LXXVIDECRETOLEGISLTIVO114-Fe-de-erratas-2024-12-30.pdf' },
+
+    ],
+
+    codigos: [
+
+        { nombre: 'Código Civil para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO462.pdf' },
+
+        { nombre: 'Código Electoral del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO409.pdf' },
+
+        { nombre: 'Código Familiar para el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO697.pdf' },
+
+        { nombre: 'Código Fiscal Municipal del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/CODIGO-FISCAL-MUNICIPAL-DEL-ESTADO-REF-26-de-Octubre-de-2020.pdf' },
+
+        { nombre: 'Código Fiscal del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVIDECRETOLEGISLATIVO-112.pdf' },
+
+        { nombre: 'Código Penal para el Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO702.pdf' },
+
+        { nombre: 'Código de Desarrollo Urbano del Estado de Michoacán de Ocampo', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO687.pdf' },
+
+        { nombre: 'Código de Justicia Administrativa del Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/LXXVDECRETOLEGISLATIVO428.pdf' },
+
+        { nombre: 'Código de Justicia Especializada para Adolescentes del Estado de Michoacán', url: 'http://congresomich.gob.mx/file/CÓDIGO-DE-JUSTICIA-ESPECIALIZADA-PARA-ADOLESCENTES-REF-28-AGOSTO-2019.pdf' },
+
+        { nombre: 'Código de Procedimientos Civiles para el Estado de Michoacán de Ocampo.', url: 'http://congresomich.gob.mx/file/CÓDIGO-DE-PROCEDIMIENTOS-CIVILES-REF-30-DE-JUNIO-DE-2020.pdf' },
+
+        { nombre: 'Código de Ética de la Auditoría Superior de Michoacán', url: 'http://congresomich.gob.mx/file/CÓDIGO-DE-ÉTICA-DE-LA-AUDITORÍA-SUPERIOR.pdf' },
+
+        { nombre: 'Declaratoria de Incorporación del Sistema Penal Acusatorio y de Inicio de Vigencia del Código Nacional de Procedimientos Penales en el Estado de Michoacán.', url: 'http://congresomich.gob.mx/file/DECLARATORIA-DE-INCORPORACIÓN-DEL-SISTEMA-PENAL-ACUSATORIO-Y-DE-INICIO-DE-VIGENCIA-DEL-CÓDIGO-NACIONAL-DE-PROCEDIMIENTOS-PENALES-REF-31-JULIO-DE-2015.pdf' },
+
+    ],
+
+    reglamentos: [],
+
+    otros: [],
+
+};
+
 // ─── All 32 States ────────────────────────────────────────────
 export const FEDERAL_LEYES: CategoriaLeyes = {
     constitucion: [
@@ -2101,7 +2429,7 @@ export const ESTADOS: Estado[] = [
     { slug: 'hidalgo', nombre: 'Hidalgo', nombreCorto: 'Hidalgo', abreviatura: 'HGO', region: 'centro', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'jalisco', nombre: 'Jalisco', nombreCorto: 'Jalisco', abreviatura: 'JAL', region: 'occidente', leyesCount: 185, ultimaActualizacion: '2026-03-10', leyes: JALISCO_LEYES },
     { slug: 'estado-de-mexico', nombre: 'Estado de México', nombreCorto: 'Estado de México', abreviatura: 'MEX', region: 'centro', leyesCount: 252, ultimaActualizacion: '2026-03-10', leyes: EDOMEX_LEYES },
-    { slug: 'michoacan', nombre: 'Michoacán', nombreCorto: 'Michoacán', abreviatura: 'MICH', region: 'occidente', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
+    { slug: 'michoacan', nombre: 'Michoacán', nombreCorto: 'Michoacán', abreviatura: 'MICH', region: 'occidente', leyesCount: 152, ultimaActualizacion: '2026-03-11', leyes: MICHOACAN_LEYES },
     { slug: 'morelos', nombre: 'Morelos', nombreCorto: 'Morelos', abreviatura: 'MOR', region: 'centro', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'nayarit', nombre: 'Nayarit', nombreCorto: 'Nayarit', abreviatura: 'NAY', region: 'occidente', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'nuevo-leon', nombre: 'Nuevo León', nombreCorto: 'Nuevo León', abreviatura: 'NL', region: 'norte', leyesCount: 233, ultimaActualizacion: '2026-03-10', leyes: NL_LEYES },
