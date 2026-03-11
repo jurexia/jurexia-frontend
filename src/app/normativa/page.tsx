@@ -731,9 +731,7 @@ export default function NormativaNacionalPage() {
                             <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-emerald-500/5 to-transparent rounded-full translate-y-32 -translate-x-32 blur-2xl" />
 
                             <div className="relative text-center z-10">
-                                <div className="inline-flex justify-center items-center w-12 h-12 rounded-xl bg-charcoal-800 border border-charcoal-700 text-accent-gold mb-6 shadow-inner">
-                                    <Scale className="w-6 h-6 stroke-[1.5]" />
-                                </div>
+
                                 <h3 className="font-serif text-3xl sm:text-4xl font-semibold text-white mb-6">
                                     Repositorio indexado con <span className="text-accent-gold">Inteligencia Artificial</span>
                                 </h3>
