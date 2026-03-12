@@ -47,6 +47,7 @@ export default function ChatPage() {
     const [showPromptGuideModal, setShowPromptGuideModal] = useState(false); // PromptGuide (¿Cómo hacer mejores consultas?)
     const [showVisualGuide, setShowVisualGuide] = useState(false);
     const [selectedFuero, setSelectedFuero] = useState<string>('');
+    const [selectedMateria, setSelectedMateria] = useState<string>('');
     const [activePdfSource, setActivePdfSource] = useState<{
         docId: string; origen: string; ref: string; texto: string;
         pdf_url?: string | null; silo?: string;
@@ -164,6 +165,7 @@ export default function ChatPage() {
         estado: selectedEstado || undefined,
         topK: 30,
         fuero: selectedFuero || undefined,
+        materia: selectedMateria || undefined,
         onQuotaExceeded: handleQuotaExceeded,
         genioIds: activeGenios,
         onCacheActive: handleCacheActive,
@@ -403,6 +405,8 @@ export default function ChatPage() {
                                     isPro={isPro}
                                     selectedFuero={selectedFuero}
                                     onFueroChange={setSelectedFuero}
+                                    selectedMateria={selectedMateria}
+                                    onMateriaChange={setSelectedMateria}
                                 />
 
                                 <div className="mt-4 text-center">
@@ -475,6 +479,8 @@ export default function ChatPage() {
                             isPro={isPro}
                             selectedFuero={selectedFuero}
                             onFueroChange={setSelectedFuero}
+                            selectedMateria={selectedMateria}
+                            onMateriaChange={setSelectedMateria}
                         />
                     </div>
                 )}

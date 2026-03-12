@@ -10,6 +10,7 @@ interface UseChatOptions {
     estado?: string;
     topK?: number;
     fuero?: string;  // Filtro por fuero: constitucional, federal, estatal
+    materia?: string; // Filtro por materia: civil, penal, familiar, administrativo
     onQuotaExceeded?: (remaining: number) => void;
     genioIds?: string[];  // IDs de los genios activos: ['amparo', 'mercantil'], etc.
     onCacheActive?: () => void;  // Fired when backend confirms cache is serving
@@ -251,6 +252,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 userId,
                 options.fuero,
                 options.genioIds,
+                options.materia,
             )) {
                 // Filter keepalive heartbeat from backend (<!--PING-->)
                 // This is sent immediately to prevent mobile carriers from
@@ -363,7 +365,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [messages, isLoading, options.estado, options.topK, options.fuero, options.onQuotaExceeded, options.genioIds, options.onCacheActive]);
+    }, [messages, isLoading, options.estado, options.topK, options.fuero, options.materia, options.onQuotaExceeded, options.genioIds, options.onCacheActive]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

@@ -15,7 +15,8 @@ import {
     Scale,
     PenTool,
     Lock,
-    Mic
+    Mic,
+    BookOpen
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -39,6 +40,8 @@ interface ChatInputProps {
     isPro?: boolean;
     selectedFuero?: string;
     onFueroChange?: (fuero: string) => void;
+    selectedMateria?: string;
+    onMateriaChange?: (materia: string) => void;
 }
 
 export default function ChatInput({
@@ -54,6 +57,8 @@ export default function ChatInput({
     isPro = false,
     selectedFuero = '',
     onFueroChange,
+    selectedMateria = '',
+    onMateriaChange,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -352,30 +357,68 @@ ${draftRequest.descripcion}`;
 
                 {/* Main Input Container - Harvey Style */}
                 <div className="chat-input-container p-4">
-                    {/* Fuero Toggle — Compact pill row above textarea */}
-                    {onFueroChange && (
-                        <div data-guide="fuero-filter" className="flex items-center gap-1.5 mb-3 pb-2 border-b border-gray-100/60">
-                            <Scale className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-1">Fuero</span>
-                            <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-0.5">
-                                {[
-                                    { key: '', label: 'Auto' },
-                                    { key: 'constitucional', label: 'Const.' },
-                                    { key: 'federal', label: 'Federal' },
-                                    { key: 'estatal', label: 'Estatal' },
-                                ].map((f) => (
-                                    <button
-                                        key={f.key}
-                                        onClick={() => onFueroChange(f.key)}
-                                        className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 ${selectedFuero === f.key
-                                                ? 'bg-charcoal-900 text-white shadow-sm'
-                                                : 'text-gray-500 hover:text-charcoal-700 hover:bg-white/60'
-                                            }`}
-                                    >
-                                        {f.label}
-                                    </button>
-                                ))}
-                            </div>
+                    {/* Fuero + Materia Toggle — Same row, compact pills above textarea */}
+                    {(onFueroChange || onMateriaChange) && (
+                        <div data-guide="fuero-materia-filter" className="flex items-center gap-1.5 mb-3 pb-2 border-b border-gray-100/60 flex-wrap">
+                            {/* Fuero section */}
+                            {onFueroChange && (
+                                <>
+                                    <Scale className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Fuero</span>
+                                    <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-0.5">
+                                        {[
+                                            { key: '', label: 'Auto' },
+                                            { key: 'constitucional', label: 'Const.' },
+                                            { key: 'federal', label: 'Federal' },
+                                            { key: 'estatal', label: 'Estatal' },
+                                        ].map((f) => (
+                                            <button
+                                                key={f.key}
+                                                onClick={() => onFueroChange(f.key)}
+                                                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 ${selectedFuero === f.key
+                                                    ? 'bg-charcoal-900 text-white shadow-sm'
+                                                    : 'text-gray-500 hover:text-charcoal-700 hover:bg-white/60'
+                                                    }`}
+                                            >
+                                                {f.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Divider */}
+                            {onFueroChange && onMateriaChange && (
+                                <div className="w-px h-5 bg-gray-200 mx-1 flex-shrink-0" />
+                            )}
+
+                            {/* Materia section */}
+                            {onMateriaChange && (
+                                <>
+                                    <BookOpen className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Materia</span>
+                                    <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-0.5">
+                                        {[
+                                            { key: '', label: 'Auto' },
+                                            { key: 'civil', label: 'Civil' },
+                                            { key: 'penal', label: 'Penal' },
+                                            { key: 'familiar', label: 'Familiar' },
+                                            { key: 'administrativo', label: 'Admin' },
+                                        ].map((m) => (
+                                            <button
+                                                key={m.key}
+                                                onClick={() => onMateriaChange(m.key)}
+                                                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 ${selectedMateria === m.key
+                                                    ? 'bg-charcoal-900 text-white shadow-sm'
+                                                    : 'text-gray-500 hover:text-charcoal-700 hover:bg-white/60'
+                                                    }`}
+                                            >
+                                                {m.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
 
