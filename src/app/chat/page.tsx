@@ -154,12 +154,6 @@ export default function ChatPage() {
         };
     }, []);
 
-    const FUEROS = [
-        { key: '', label: 'Todos' },
-        { key: 'constitucional', label: 'Constitucional' },
-        { key: 'federal', label: 'Federal' },
-        { key: 'estatal', label: 'Estatal' },
-    ];
 
     const handleQuotaExceeded = useCallback(() => {
         setQuotaExceeded(true);
@@ -396,13 +390,6 @@ export default function ChatPage() {
                                     </div>
                                 </div>
 
-                                <div className="mb-8 flex justify-center gap-4">
-                                    <div data-guide="fuero-filter" className="flex bg-charcoal-800/50 p-1 rounded-xl">
-                                        {FUEROS.map((f) => (
-                                            <button key={f.key} onClick={() => setSelectedFuero(f.key)} className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedFuero === f.key ? 'bg-accent-brown text-white' : 'text-charcoal-500 hover:text-charcoal-300'}`}>{f.label}</button>
-                                        ))}
-                                    </div>
-                                </div>
 
                                 <ChatInput
                                     onSubmit={handleSendMessage}
@@ -414,6 +401,8 @@ export default function ChatPage() {
                                     isCacheLoading={isCacheLoading}
                                     genioError={genioError}
                                     isPro={isPro}
+                                    selectedFuero={selectedFuero}
+                                    onFueroChange={setSelectedFuero}
                                 />
 
                                 <div className="mt-4 text-center">
@@ -484,6 +473,8 @@ export default function ChatPage() {
                             isCacheLoading={isCacheLoading}
                             genioError={genioError}
                             isPro={isPro}
+                            selectedFuero={selectedFuero}
+                            onFueroChange={setSelectedFuero}
                         />
                     </div>
                 )}

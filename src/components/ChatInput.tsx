@@ -37,6 +37,8 @@ interface ChatInputProps {
     isCacheLoading?: boolean;
     genioError?: string | null;
     isPro?: boolean;
+    selectedFuero?: string;
+    onFueroChange?: (fuero: string) => void;
 }
 
 export default function ChatInput({
@@ -50,6 +52,8 @@ export default function ChatInput({
     isCacheLoading = false,
     genioError = null,
     isPro = false,
+    selectedFuero = '',
+    onFueroChange,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -348,6 +352,33 @@ ${draftRequest.descripcion}`;
 
                 {/* Main Input Container - Harvey Style */}
                 <div className="chat-input-container p-4">
+                    {/* Fuero Toggle — Compact pill row above textarea */}
+                    {onFueroChange && (
+                        <div data-guide="fuero-filter" className="flex items-center gap-1.5 mb-3 pb-2 border-b border-gray-100/60">
+                            <Scale className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-1">Fuero</span>
+                            <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-0.5">
+                                {[
+                                    { key: '', label: 'Auto' },
+                                    { key: 'constitucional', label: 'Const.' },
+                                    { key: 'federal', label: 'Federal' },
+                                    { key: 'estatal', label: 'Estatal' },
+                                ].map((f) => (
+                                    <button
+                                        key={f.key}
+                                        onClick={() => onFueroChange(f.key)}
+                                        className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 ${selectedFuero === f.key
+                                                ? 'bg-charcoal-900 text-white shadow-sm'
+                                                : 'text-gray-500 hover:text-charcoal-700 hover:bg-white/60'
+                                            }`}
+                                    >
+                                        {f.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Attached Document Chip (Legacy location - removing this as it's handled in the input now) */}
 
                     {/* Text Input */}
