@@ -213,7 +213,7 @@ const STEP_LABELS = [
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════
 export default function SalvamePage() {
-    const { loading: authLoading, isAuthenticated, user } = useAuth();
+    const { loading: authLoading, isAuthenticated, user, session } = useAuth();
     const router = useRouter();
 
     // ─── Form State ─────────────────────────────────────────────
@@ -355,7 +355,10 @@ export default function SalvamePage() {
         try {
             const res = await fetch(`${API_URL}/generate-amparo-salud`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+                },
                 body: JSON.stringify({
                     ...form,
                     user_email: user?.email || '',
@@ -412,7 +415,10 @@ export default function SalvamePage() {
         try {
             const res = await fetch(`${API_URL}/export-amparo-salud-docx`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+                },
                 body: JSON.stringify({
                     amparo_text: generatedText,
                     promovente_nombre: form.promovente_nombre,
