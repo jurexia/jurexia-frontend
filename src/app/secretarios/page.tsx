@@ -395,7 +395,7 @@ export default function SecretariosPage() {
                                             Próximamente
                                         </button>
                                         <p className="text-center text-xs text-gray-500 mt-3">
-                                            14 días de garantía de devolución
+                                            Cancela cuando quieras · Sin compromiso
                                         </p>
                                     </div>
 
@@ -462,7 +462,7 @@ export default function SecretariosPage() {
                             },
                             {
                                 q: '¿Puedo cancelar en cualquier momento?',
-                                a: 'Sí. No hay compromiso de permanencia. Puedes cancelar tu suscripción en cualquier momento y seguirás teniendo acceso hasta el final de tu periodo de facturación. Además, ofrecemos 14 días de garantía de devolución.'
+                                a: 'Sí. No hay compromiso de permanencia. Puedes cancelar tu suscripción en cualquier momento y seguirás teniendo acceso hasta el final de tu periodo de facturación. No se realizan reembolsos, pero conservas el servicio hasta que termine el ciclo pagado.'
                             },
                         ].map((faq, i) => (
                             <AnimateOnScroll key={i} delay={i * 0.06}>

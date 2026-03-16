@@ -34,7 +34,7 @@ export default function CheckoutCancelPage() {
                         <li>• Análisis inteligente de documentos legales</li>
                         <li>• Búsqueda en más de 100,000 documentos</li>
                         <li>• Soporte prioritario por email</li>
-                        <li>• 14 días de garantía de devolución</li>
+                        <li>• 5 consultas gratuitas para probar antes de suscribirte</li>
                     </ul>
                 </div>
 

@@ -154,12 +154,22 @@ export default function TerminosPage() {
 
                         <section className="mb-8">
                             <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">
-                                7. Política de Reembolso
+                                7. Política de No Reembolso
                             </h2>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Iurexia no ofrece reembolsos una vez procesado el pago de cualquier plan de
+                                suscripción. Esta política se fundamenta en que todos los usuarios disponen de
+                                un plan gratuito con 5 consultas mensuales que les permite evaluar la
+                                plataforma antes de adquirir un plan de pago.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Al suscribirse a cualquier plan de pago, el usuario reconoce que ha tenido la
+                                oportunidad de probar el servicio de forma gratuita y que acepta esta política
+                                de no reembolso.
+                            </p>
                             <p className="text-charcoal-700 leading-relaxed">
-                                Ofrecemos una garantía de satisfacción de 14 días para planes mensuales. Si no está
-                                satisfecho con el servicio, puede solicitar un reembolso completo dentro de este
-                                período contactando a nuestro equipo de soporte.
+                                El usuario podrá cancelar su suscripción en cualquier momento y conservará el
+                                acceso al servicio hasta el final del período de facturación en curso.
                             </p>
                         </section>
 
