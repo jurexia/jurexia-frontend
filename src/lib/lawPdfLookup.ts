@@ -6,7 +6,7 @@
  * The `entidad` field (e.g. "QUERETARO") maps to a state in the ESTADOS array.
  */
 
-import { ESTADOS, type CategoriaLeyes } from '@/app/leyesestatales/estadosData';
+import { ESTADOS, getEstadoBySlug, type CategoriaLeyes } from '@/app/leyesestatales/estadosData';
 
 // Map from uppercase entidad names to estado slugs
 const ENTIDAD_TO_SLUG: Record<string, string> = {
@@ -74,7 +74,7 @@ export function findLawPdfUrl(origen: string | null | undefined, entidad: string
     const slug = ENTIDAD_TO_SLUG[entidad.toUpperCase().trim()];
     if (!slug) return null;
 
-    const estado = ESTADOS.find(e => e.slug === slug);
+    const estado = getEstadoBySlug(slug);
     if (!estado || estado.leyesCount === 0) return null;
 
     // Search across all categories

@@ -2667,8 +2667,6 @@ const MORELOS_LEYES: CategoriaLeyes = {
         { nombre: 'CONSTITUCION POLITICA DEL ESTADO LIBRE Y SOBERANO DE MORELOS, QUE REFORMA LA DEL AÑO DE 1888', url: `${MORELOS_BASE}/CONSTMOR.pdf` },
     ],
     leyes: [
-        { nombre: 'DECRETO DE LA ERECCIÓN DEL ESTADO DE MORELOS', url: `${MORELOS_BASE}/DECERECCIONMORELOS.pdf` },
-        { nombre: 'DECRETO SETECIENTOS CUARENTA Y NUEVE POR EL QUE SE EXPIDE LA LEY PARA LA CONSERVACIÓN Y PROTECCIÓN DEL ARBOLADO URBANO PARA EL ESTADO LIBRE Y SOBERANO DE MORELOS', url: `${MORELOS_BASE}/LCONSPROTARBOLADOMO.pdf` },
         { nombre: 'LEY DE ACCESO DE LAS MUJERES A UNA VIDA LIBRE DE VIOLENCIA PARA EL ESTADO DE MORELOS', url: `${MORELOS_BASE}/LMUJERVVEM.pdf` },
         { nombre: 'LEY DE AGRICULTURA FAMILIAR DEL ESTADO DE MORELOS', url: `${MORELOS_BASE}/LAGRAFAMI2023.pdf` },
         { nombre: 'LEY DE AMNISTÍA PARA EL ESTADO LIBRE Y SOBERANO DE MORELOS', url: `${MORELOS_BASE}/LEYAMNISTIAMO.pdf` },
@@ -3092,7 +3090,7 @@ export const ESTADOS: Estado[] = [
     { slug: 'jalisco', nombre: 'Jalisco', nombreCorto: 'Jalisco', abreviatura: 'JAL', region: 'occidente', leyesCount: 185, ultimaActualizacion: '2026-03-10', leyes: JALISCO_LEYES },
     { slug: 'estado-de-mexico', nombre: 'Estado de México', nombreCorto: 'Estado de México', abreviatura: 'MEX', region: 'centro', leyesCount: 252, ultimaActualizacion: '2026-03-10', leyes: EDOMEX_LEYES },
     { slug: 'michoacan', nombre: 'Michoacán', nombreCorto: 'Michoacán', abreviatura: 'MICH', region: 'occidente', leyesCount: 152, ultimaActualizacion: '2026-03-11', leyes: MICHOACAN_LEYES },
-    { slug: 'morelos', nombre: 'Morelos', nombreCorto: 'Morelos', abreviatura: 'MOR', region: 'centro', leyesCount: 149, ultimaActualizacion: '2026-03-16', leyes: MORELOS_LEYES },
+    { slug: 'morelos', nombre: 'Morelos', nombreCorto: 'Morelos', abreviatura: 'MOR', region: 'centro', leyesCount: 147, ultimaActualizacion: '2026-03-16', leyes: MORELOS_LEYES },
     { slug: 'nayarit', nombre: 'Nayarit', nombreCorto: 'Nayarit', abreviatura: 'NAY', region: 'occidente', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'nuevo-leon', nombre: 'Nuevo León', nombreCorto: 'Nuevo León', abreviatura: 'NL', region: 'norte', leyesCount: 233, ultimaActualizacion: '2026-03-10', leyes: NL_LEYES },
     { slug: 'oaxaca', nombre: 'Oaxaca', nombreCorto: 'Oaxaca', abreviatura: 'OAX', region: 'sur', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
