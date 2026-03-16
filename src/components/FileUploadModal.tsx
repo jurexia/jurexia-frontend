@@ -6,7 +6,7 @@ import { X, Upload, FileText, File, Loader2, AlertCircle } from 'lucide-react';
 interface FileUploadModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onTextExtracted: (text: string, fileName: string) => void;
+    onTextExtracted: (file: File, fileName: string) => void;
 }
 
 export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: FileUploadModalProps) {
@@ -30,8 +30,8 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
             setError(`Formato no soportado. Usa: ${allowedExtensions.join(', ')}`);
             return false;
         }
-        if (file.size > 10 * 1024 * 1024) { // 10MB limit
-            setError('El archivo es muy grande. Máximo 10MB.');
+        if (file.size > 25 * 1024 * 1024) { // 25MB limit (backend handles analysis)
+            setError('El archivo es muy grande. Máximo 25MB.');
             return false;
         }
         return true;
@@ -136,23 +136,8 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
         setError(null);
 
         try {
-            let extractedText = '';
-            const extension = selectedFile.name.split('.').pop()?.toLowerCase();
-
-            if (extension === 'pdf') {
-                extractedText = await extractTextFromPDF(selectedFile);
-            } else if (extension === 'docx') {
-                extractedText = await extractTextFromDOCX(selectedFile);
-            } else if (extension === 'doc') {
-                // Use backend API for .doc (old Word format) - can't be processed in browser
-                extractedText = await extractTextFromDOCServer(selectedFile);
-            }
-
-            if (!extractedText.trim()) {
-                throw new Error('No se pudo extraer texto del documento');
-            }
-
-            onTextExtracted(extractedText, selectedFile.name);
+            // Pass the raw file to parent — backend handles text extraction + analysis
+            onTextExtracted(selectedFile, selectedFile.name);
             handleClose();
         } catch (err) {
             console.error('Error processing file:', err);

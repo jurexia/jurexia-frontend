@@ -29,6 +29,7 @@ import { isAdmin } from '@/app/leyesestatales/adminGuard';
 
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
+    onDocumentSubmit?: (file: File, prompt: string, displayMessage: string) => void;
     isLoading?: boolean;
     placeholder?: string;
     estado?: string;
@@ -46,6 +47,7 @@ interface ChatInputProps {
 
 export default function ChatInput({
     onSubmit,
+    onDocumentSubmit,
     isLoading = false,
     placeholder = "Escribe tu consulta legal o sube tu documento para análisis",
     estado,
@@ -68,7 +70,7 @@ export default function ChatInput({
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
     const [showSentenciaModal, setShowSentenciaModal] = useState(false);
-    const [attachedDocument, setAttachedDocument] = useState<{ text: string; fileName: string } | null>(null);
+    const [attachedDocument, setAttachedDocument] = useState<{ file: File; fileName: string } | null>(null);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const recognitionRef = useRef<any>(null);
@@ -216,27 +218,30 @@ export default function ChatInput({
         }
         if (!isLoading && (message.trim() || attachedDocument)) {
             let finalMessage = message.trim();
-            let displayMessage = message.trim(); // What user sees in chat
 
-            // If there's an attached document, format differently for display vs AI
+            // If there's an attached document, use dedicated document analysis endpoint
             if (attachedDocument) {
-                const userPrompt = finalMessage || 'Analiza este documento';
-                displayMessage = `📄 **Documento adjunto:** ${attachedDocument.fileName}\n\n${userPrompt}`;
+                const userPrompt = finalMessage || 'Analiza este documento y genera un resumen ejecutivo completo';
+                const displayMessage = `📄 **Documento adjunto:** ${attachedDocument.fileName}\n\n${userPrompt}`;
 
-                // Full message for AI includes document content (hidden from user)
-                // Limit: 120,000 chars (~30 pages full text, ~20K words)
-                // For longer documents, only the first portion is analyzed
-                const docContent = attachedDocument.text.slice(0, 120000);
-                const truncationNote = attachedDocument.text.length > 120000
-                    ? `\n\n[NOTA: Documento truncado. Mostrando ${Math.round(120000 / attachedDocument.text.length * 100)}% del contenido original (${attachedDocument.text.length.toLocaleString()} caracteres totales)]`
-                    : '';
-                finalMessage = `[DOCUMENTO ADJUNTO: "${attachedDocument.fileName}"]${truncationNote}\n\n${userPrompt}\n\n<!-- DOCUMENTO_INICIO -->\n${docContent}\n<!-- DOCUMENTO_FIN -->`;
+                if (onDocumentSubmit) {
+                    // New flow: send raw file to /analyze-document for full analysis
+                    onDocumentSubmit(attachedDocument.file, userPrompt, displayMessage);
+                } else {
+                    // Fallback: send as text message (legacy)
+                    onSubmit(displayMessage, true);
+                }
 
-                setAttachedDocument(null); // Clear after sending
+                setAttachedDocument(null);
+                setMessage('');
+                if (textareaRef.current) {
+                    textareaRef.current.style.height = 'auto';
+                }
+                return;
             }
 
             // Prepend [MODO_REDACCION] marker when in Redactar mode
-            if (chatMode === 'redactar' && !attachedDocument) {
+            if (chatMode === 'redactar') {
                 finalMessage = `[MODO_REDACCION] ${finalMessage}`;
             }
 
@@ -264,9 +269,9 @@ export default function ChatInput({
         }
     };
 
-    const handleFileExtracted = (text: string, fileName: string) => {
-        // Attach document instead of sending immediately
-        setAttachedDocument({ text, fileName });
+    const handleFileExtracted = (file: File, fileName: string) => {
+        // Attach raw file for backend-side analysis (Gemini Flash 1M context)
+        setAttachedDocument({ file, fileName });
         setActiveMode('search');
     };
 

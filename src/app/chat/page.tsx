@@ -322,6 +322,115 @@ export default function ChatPage() {
         await sendPromise;
     }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
 
+    // Document analysis via Gemini Flash (streaming from /analyze-document)
+    const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
+        if (!user) return;
+        const isAdminUser = isAdmin(user?.email);
+        const remaining = queriesLimit - queriesUsed;
+        if (remaining <= 0 && !isAdminUser) {
+            setShowLimitModal(true);
+            return;
+        }
+        if (!isAdminUser) {
+            setQueriesUsed(prev => prev + 1);
+        }
+
+        // Add user message to chat
+        const userMsg = { role: 'user' as const, content: displayMessage };
+        setMessages(prev => [...prev, userMsg]);
+
+        // Add empty assistant message for streaming
+        const assistantMsg = { role: 'assistant' as const, content: '' };
+        setMessages(prev => [...prev, assistantMsg]);
+
+        // Ensure conversation exists
+        if (!activeConversationId) {
+            const newConv = await createConversation(selectedEstado || undefined);
+            if (newConv) {
+                setActiveConvId(newConv.id);
+                setActiveConversationId(newConv.id);
+            }
+        }
+
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('prompt', prompt);
+        if (user.id) formData.append('user_id', user.id);
+
+        try {
+            const response = await fetch(`${API_URL}/analyze-document`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Error al analizar documento' }));
+                throw new Error(errorData.detail || `Error ${response.status}`);
+            }
+
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error('No se pudo iniciar la lectura del análisis');
+
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (data.token) {
+                                setMessages(prev => {
+                                    const updated = [...prev];
+                                    const last = updated[updated.length - 1];
+                                    if (last && last.role === 'assistant') {
+                                        updated[updated.length - 1] = {
+                                            ...last,
+                                            content: last.content + data.token
+                                        };
+                                    }
+                                    return updated;
+                                });
+                            } else if (data.error) {
+                                setMessages(prev => {
+                                    const updated = [...prev];
+                                    const last = updated[updated.length - 1];
+                                    if (last && last.role === 'assistant') {
+                                        updated[updated.length - 1] = {
+                                            ...last,
+                                            content: `❌ Error al analizar documento: ${data.error}`
+                                        };
+                                    }
+                                    return updated;
+                                });
+                            }
+                        } catch {}
+                    }
+                }
+            }
+        } catch (err: any) {
+            setMessages(prev => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.role === 'assistant') {
+                    updated[updated.length - 1] = {
+                        ...last,
+                        content: `❌ Error: ${err.message || 'Error inesperado al analizar documento'}`
+                    };
+                }
+                return updated;
+            });
+        }
+    }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages]);
+
     const hasMessages = messages.length > 0;
     const selectedEstadoLabel = getEstadoLabel(selectedEstado);
     const queriesRemaining = Math.max(0, queriesLimit - queriesUsed);
@@ -395,6 +504,7 @@ export default function ChatPage() {
 
                                 <ChatInput
                                     onSubmit={handleSendMessage}
+                                    onDocumentSubmit={handleDocumentSubmit}
                                     placeholder="Escribe tu consulta legal..."
                                     estado={selectedEstado}
                                     activeGenios={activeGenios}
@@ -469,6 +579,7 @@ export default function ChatPage() {
                     <div className="fixed bottom-0 left-0 right-0 md:left-72 bg-gradient-to-t from-cream-300 via-cream-300 pt-8 pb-6 px-4 z-20">
                         <ChatInput
                             onSubmit={handleSendMessage}
+                            onDocumentSubmit={handleDocumentSubmit}
                             isLoading={isLoading}
                             estado={selectedEstado}
                             activeGenios={activeGenios}
