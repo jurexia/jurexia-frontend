@@ -425,7 +425,6 @@ export default function ChatPage() {
                 }
             }
         } catch (err: any) {
-            setIsDocumentAnalyzing(false);
             setMessages(prev => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
@@ -439,6 +438,9 @@ export default function ChatPage() {
                 }
                 return updated;
             });
+        } finally {
+            // ALWAYS reset — guarantees export bar (PDF/DOCX/Print) appears after response
+            setIsDocumentAnalyzing(false);
         }
     }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages]);
 
