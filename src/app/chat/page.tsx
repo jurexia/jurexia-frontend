@@ -297,6 +297,8 @@ export default function ChatPage() {
 
     const handleSendMessage = useCallback(async (content: string, enableReasoning = false) => {
         if (!user) return;
+        // Reset document analyzing state in case it was stuck from a previous analysis
+        setIsDocumentAnalyzing(false);
         const isAdminUser = isAdmin(user?.email);
         const remaining = queriesLimit - queriesUsed;
         if (remaining <= 0 && !isAdminUser) {
@@ -386,10 +388,8 @@ export default function ChatPage() {
                         try {
                             const data = JSON.parse(line.slice(6));
                             if (data.token) {
-                                // On first token, hide typing indicator and add assistant message
-                                if (isDocumentAnalyzing) {
-                                    setIsDocumentAnalyzing(false);
-                                }
+                                // On first token, hide typing indicator
+                                setIsDocumentAnalyzing(false);
                                 setMessages(prev => {
                                     const updated = [...prev];
                                     const last = updated[updated.length - 1];
@@ -579,8 +579,7 @@ export default function ChatPage() {
                             {messages.map((message, index) => (
                                 <ChatMessage key={index} message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} />
                             ))}
-                            {(isLoading && messages[messages.length - 1]?.role === 'user') && <TypingIndicator retryMessage={retryMessage || undefined} />}
-                            {isDocumentAnalyzing && messages[messages.length - 1]?.role === 'user' && <TypingIndicator />}
+                            {(isLoading || isDocumentAnalyzing) && messages[messages.length - 1]?.role === 'user' && <TypingIndicator retryMessage={retryMessage || undefined} />}
                             {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
                             <div ref={messagesEndRef} />
                         </div>
