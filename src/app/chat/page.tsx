@@ -60,6 +60,7 @@ export default function ChatPage() {
     const [genioError, setGenioError] = useState<string | null>(null);
     const cacheTimerRef = useRef<NodeJS.Timeout | null>(null);
     const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [isDocumentAnalyzing, setIsDocumentAnalyzing] = useState(false);
 
     // Suggestion rotation state
     const SUGGESTIONS = [
@@ -338,10 +339,7 @@ export default function ChatPage() {
         // Add user message to chat
         const userMsg = { role: 'user' as const, content: displayMessage };
         setMessages(prev => [...prev, userMsg]);
-
-        // Add empty assistant message for streaming
-        const assistantMsg = { role: 'assistant' as const, content: '' };
-        setMessages(prev => [...prev, assistantMsg]);
+        setIsDocumentAnalyzing(true);
 
         // Ensure conversation exists
         if (!activeConversationId) {
@@ -388,6 +386,10 @@ export default function ChatPage() {
                         try {
                             const data = JSON.parse(line.slice(6));
                             if (data.token) {
+                                // On first token, hide typing indicator and add assistant message
+                                if (isDocumentAnalyzing) {
+                                    setIsDocumentAnalyzing(false);
+                                }
                                 setMessages(prev => {
                                     const updated = [...prev];
                                     const last = updated[updated.length - 1];
@@ -396,6 +398,9 @@ export default function ChatPage() {
                                             ...last,
                                             content: last.content + data.token
                                         };
+                                    } else {
+                                        // First token — create assistant message
+                                        updated.push({ role: 'assistant' as const, content: data.token });
                                     }
                                     return updated;
                                 });
@@ -408,15 +413,19 @@ export default function ChatPage() {
                                             ...last,
                                             content: `❌ Error al analizar documento: ${data.error}`
                                         };
+                                    } else {
+                                        updated.push({ role: 'assistant' as const, content: `❌ Error al analizar documento: ${data.error}` });
                                     }
                                     return updated;
                                 });
+                                setIsDocumentAnalyzing(false);
                             }
                         } catch {}
                     }
                 }
             }
         } catch (err: any) {
+            setIsDocumentAnalyzing(false);
             setMessages(prev => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
@@ -425,6 +434,8 @@ export default function ChatPage() {
                         ...last,
                         content: `❌ Error: ${err.message || 'Error inesperado al analizar documento'}`
                     };
+                } else {
+                    updated.push({ role: 'assistant' as const, content: `❌ Error: ${err.message || 'Error inesperado al analizar documento'}` });
                 }
                 return updated;
             });
@@ -566,9 +577,10 @@ export default function ChatPage() {
                     ) : (
                         <div className="max-w-3xl mx-auto px-4 py-6 pb-[500px] space-y-4">
                             {messages.map((message, index) => (
-                                <ChatMessage key={index} message={message} isStreaming={isLoading && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} />
+                                <ChatMessage key={index} message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} />
                             ))}
-                            {isLoading && messages[messages.length - 1]?.role === 'user' && <TypingIndicator retryMessage={retryMessage || undefined} />}
+                            {(isLoading && messages[messages.length - 1]?.role === 'user') && <TypingIndicator retryMessage={retryMessage || undefined} />}
+                            {isDocumentAnalyzing && messages[messages.length - 1]?.role === 'user' && <TypingIndicator />}
                             {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
                             <div ref={messagesEndRef} />
                         </div>
