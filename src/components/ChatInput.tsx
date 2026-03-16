@@ -362,7 +362,7 @@ ${draftRequest.descripcion}`;
                         <div data-guide="fuero-materia-filter" className="flex items-center gap-1.5 mb-3 pb-2 border-b border-gray-100/60 flex-wrap">
                             {/* Fuero section */}
                             {onFueroChange && (
-                                <>
+                                <div data-guide="fuero-filter" className="flex items-center gap-1.5 flex-shrink-0">
                                     <Scale className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                                     <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Fuero</span>
                                     <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-0.5">
@@ -384,7 +384,7 @@ ${draftRequest.descripcion}`;
                                             </button>
                                         ))}
                                     </div>
-                                </>
+                                </div>
                             )}
 
                             {/* Divider */}
@@ -394,7 +394,7 @@ ${draftRequest.descripcion}`;
 
                             {/* Materia section */}
                             {onMateriaChange && (
-                                <>
+                                <div data-guide="materia-filter" className="flex items-center gap-1.5 flex-shrink-0">
                                     <BookOpen className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                                     <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Materia</span>
                                     <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-0.5">
@@ -417,7 +417,7 @@ ${draftRequest.descripcion}`;
                                             </button>
                                         ))}
                                     </div>
-                                </>
+                                </div>
                             )}
                         </div>
                     )}
