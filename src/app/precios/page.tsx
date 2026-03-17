@@ -97,6 +97,7 @@ export default function PreciosPage() {
                                     "Registra tu cédula para conectar clientes",
                                     "Búsqueda con IA verificada en constante actualización",
                                     "Filtros por entidad federativa + marco federal",
+                                    <span className="text-green-300 font-medium">📧 Mensaje de bienvenida con instrucciones para sacar el máximo provecho</span>,
                                     "Soporte prioritario"
                                 ]}
                                 buttonText="Elegir Plan Pro"
@@ -119,6 +120,7 @@ export default function PreciosPage() {
                                     <span className="text-charcoal-700 font-medium">Todo lo del Plan Pro incluido:</span>,
                                     <span className="text-accent-gold font-medium ml-2">— Arquitectura Multi-Genio</span>,
                                     <span className="text-accent-gold font-medium ml-2">— Análisis de Documentos</span>,
+                                    <span className="text-green-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
                                     "Ahorro de $910 MXN al año",
                                     "Precio fijo garantizado",
                                 ]}
@@ -146,6 +148,7 @@ export default function PreciosPage() {
                                     <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Consulta personalizada con equipo legal de Iurexia (vía correo)",
+                                    <span className="text-amber-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
                                     "Soporte VIP dedicado"
                                 ]}
                                 buttonText="Elegir Platinum"
@@ -169,6 +172,7 @@ export default function PreciosPage() {
                                     <span className="text-charcoal-700 font-medium">Todo lo del Plan Platinum incluido:</span>,
                                     <span className="text-accent-gold font-medium ml-2">— Arquitectura Multi-Genio</span>,
                                     <span className="text-accent-gold font-medium ml-2">— Análisis de Documentos</span>,
+                                    <span className="text-amber-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
                                     "Ahorro de $4,810 MXN al año",
                                     "Precio fijo garantizado",
                                 ]}
@@ -264,11 +268,11 @@ export default function PreciosPage() {
                         {[
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
                             { question: '¿Qué son los Genios Especializados y por qué son exclusivos PRO?', answer: 'Los Genios son una capa de inteligencia artificial avanzada especializada en materias específicas (Amparo, CIDH, Civil, Penal, etc.). Se activan con un clic dentro del chat (pudiendo usar hasta 2 al mismo tiempo) y utilizan un modelo de IA más potente para generar razonamientos jurídicos interdisciplinarios con fundamento verificado. Debido al alto costo computacional de este procesamiento complejo simultáneo, los Genios están disponibles exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },
-                            { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro más 700 consultas al mes y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan un volumen alto de consultas. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal.' },
+                            { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro más 560 consultas al mes y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan un volumen alto de consultas. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal.' },
                             { question: '¿Puedo cambiar de plan en cualquier momento?', answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación.' },
                             { question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo.' },
                             { question: '¿Ofrecen reembolsos?', answer: 'Iurexia no ofrece reembolsos. Por eso ofrecemos 5 consultas gratuitas mensuales para que pruebes la plataforma antes de suscribirte. Si decides cancelar, conservas el acceso hasta el final de tu periodo de facturación.' },
-                            { question: '¿Qué pasa si se acaban mis consultas?', answer: 'Te notificaremos cuando te queden pocas consultas. Puedes esperar al siguiente mes o actualizar a un plan con más consultas en cualquier momento. El Plan Platinum incluye 560 consultas al mes, ideal para despachos y corporativos.' },
+                            { question: '¿Qué pasa si se acaban mis consultas?', answer: 'Te notificaremos cuando te queden pocas consultas. Puedes esperar al siguiente mes o actualizar a un plan con más consultas en cualquier momento. Al hacer upgrade, tu plan anterior se cancela automáticamente sin cobros dobles. El Plan Platinum incluye 560 consultas al mes, ideal para despachos y corporativos.' },
                         ].map((faq, i) => (
                             <AnimateOnScroll key={i} delay={i * 0.08}>
                                 <FAQItem question={faq.question} answer={faq.answer} />

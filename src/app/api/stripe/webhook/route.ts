@@ -316,6 +316,44 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         true
     );
 
+    // ── AUTO-CANCEL previous subscriptions on upgrade ────────────────
+    // When a user upgrades (e.g., Básico→Pro, Pro→Platinum), they go through
+    // a new checkout which creates a NEW subscription. The old one stays active,
+    // causing double billing. Here we cancel all other active subscriptions
+    // for this customer except the one just created.
+    try {
+        const customerId = session.customer as string;
+        const newSubscriptionId = session.subscription as string;
+
+        const customerSubscriptions = await stripe.subscriptions.list({
+            customer: customerId,
+            status: 'active',
+            limit: 10,
+        });
+
+        const oldSubscriptions = customerSubscriptions.data.filter(
+            (sub) => sub.id !== newSubscriptionId
+        );
+
+        if (oldSubscriptions.length > 0) {
+            console.log(`🔄 Found ${oldSubscriptions.length} old subscription(s) for ${email} — cancelling to prevent double billing`);
+
+            for (const oldSub of oldSubscriptions) {
+                try {
+                    await stripe.subscriptions.cancel(oldSub.id);
+                    console.log(`✅ Cancelled old subscription ${oldSub.id} (price: ${oldSub.items.data[0]?.price.id})`);
+                } catch (cancelErr) {
+                    console.error(`❌ Failed to cancel old subscription ${oldSub.id}:`, cancelErr);
+                }
+            }
+        } else {
+            console.log(`ℹ️ No old subscriptions to cancel for ${email} — this is a new subscription`);
+        }
+    } catch (err) {
+        // Don't fail the checkout completion if auto-cancel fails
+        console.error(`⚠️ Auto-cancel of old subscriptions failed for ${email}:`, err);
+    }
+
     console.log(`🎉 handleCheckoutCompleted finished successfully for ${email}`);
 }
 
