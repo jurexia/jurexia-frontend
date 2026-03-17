@@ -654,6 +654,92 @@
 
         .footer-link:hover { opacity: 0.7; }
 
+        /* ─── HIGHLIGHT GLOW OVERLAY ──────────────────────────────── */
+
+        .panel-highlight-container {
+            position: relative;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-img);
+            border: 1px solid var(--border-subtle);
+            transition: var(--transition);
+        }
+
+        .panel-highlight-container:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .panel-highlight-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .highlight-glow {
+            position: absolute;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 2;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .highlight-glow::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 10px;
+            border: 2px solid var(--gold);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .highlight-glow::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gold);
+            color: var(--bg-dark);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 20px;
+            white-space: nowrap;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        /* Fuero highlight: positioned over the FUERO selector area */
+        .highlight-fuero {
+            top: 2%;
+            left: 3%;
+            width: 45%;
+            height: 14%;
+            background: rgba(201, 169, 98, 0.08);
+        }
+
+        /* Materia highlight: positioned over the MATERIA selector area */
+        .highlight-materia {
+            top: 2%;
+            left: 50%;
+            width: 48%;
+            height: 14%;
+            background: rgba(201, 169, 98, 0.08);
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 8px rgba(201, 169, 98, 0.3), 0 0 20px rgba(201, 169, 98, 0.1);
+                opacity: 1;
+            }
+            50% {
+                box-shadow: 0 0 16px rgba(201, 169, 98, 0.6), 0 0 40px rgba(201, 169, 98, 0.25);
+                opacity: 0.85;
+            }
+        }
+
         /* ─── ANIMATIONS ─────────────────────────────────────────── */
 
         .reveal {
@@ -870,15 +956,17 @@
                     </li>
                 </ul>
             </div>
-            <div class="feature-visual">
-                <img src="images/panel_iurexia_v5_1.png" alt="Detalle del Filtro de Fuero">
+            <div class="panel-highlight-container">
+                <img src="images/panel_iurexia_v6.png" alt="Panel con Filtro de Fuero resaltado">
+                <div class="highlight-glow highlight-fuero" data-label="← Estos botones son el Fuero"></div>
             </div>
         </div>
 
         <!-- Dedicated Materia Deep-Dive -->
         <div class="feature-row reveal">
-            <div class="feature-visual">
-                <img src="images/panel_iurexia_v5_2.png" alt="Detalle del Filtro de Materia">
+            <div class="panel-highlight-container">
+                <img src="images/panel_iurexia_v6.png" alt="Panel con Filtro de Materia resaltado">
+                <div class="highlight-glow highlight-materia" data-label="← Estos botones son la Materia"></div>
             </div>
             <div class="feature-content">
                 <div class="feature-label">Enfoque por Rama Jurídica</div>
