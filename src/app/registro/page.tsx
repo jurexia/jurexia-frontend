@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Check } from 'lucide-react';
-import { useState } from 'react';
+import { Check, Mail, RefreshCw, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signUpWithEmail, signInWithGoogle } from '@/lib/supabase';
+import { signUpWithEmail, signInWithGoogle, resendConfirmationEmail } from '@/lib/supabase';
 
 export default function RegistroPage() {
     const router = useRouter();
@@ -14,8 +14,22 @@ export default function RegistroPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Confirmation screen state
+    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [confirmedEmail, setConfirmedEmail] = useState('');
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [resendSuccess, setResendSuccess] = useState(false);
+    const [resendError, setResendError] = useState('');
+
+    // Cooldown timer
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [resendCooldown]);
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,12 +54,8 @@ export default function RegistroPage() {
 
         try {
             await signUpWithEmail(email, password, name);
-            setSuccess('¡Cuenta creada! Revisa tu email para confirmar tu cuenta.');
-            // Clear form
-            setName('');
-            setEmail('');
-            setPassword('');
-            setConfirmPassword('');
+            setConfirmedEmail(email);
+            setShowConfirmation(true);
         } catch (err: any) {
             if (err.message?.includes('already registered')) {
                 setError('Este email ya está registrado. Intenta iniciar sesión.');
@@ -57,6 +67,20 @@ export default function RegistroPage() {
         }
     };
 
+    const handleResendEmail = async () => {
+        if (resendCooldown > 0) return;
+        setResendError('');
+        setResendSuccess(false);
+
+        try {
+            await resendConfirmationEmail(confirmedEmail);
+            setResendSuccess(true);
+            setResendCooldown(60);
+        } catch (err: any) {
+            setResendError(err.message || 'Error al reenviar. Intenta de nuevo.');
+        }
+    };
+
     const handleGoogleLogin = async () => {
         try {
             await signInWithGoogle();
@@ -65,6 +89,102 @@ export default function RegistroPage() {
         }
     };
 
+    // ── Confirmation Screen ──
+    if (showConfirmation) {
+        return (
+            <main className="min-h-screen bg-cream-300 flex items-center justify-center px-4 py-12">
+                <div className="w-full max-w-md">
+                    {/* Logo */}
+                    <Link href="/" className="flex items-center justify-center gap-2 mb-8">
+                        <span className="font-serif text-3xl font-semibold text-charcoal-900">
+                            Iurex<span className="text-accent-gold">ia</span>
+                        </span>
+                    </Link>
+
+                    <div className="bg-white rounded-3xl shadow-xl p-8 border border-black/5 text-center">
+                        {/* Animated email icon */}
+                        <div className="w-20 h-20 mx-auto mb-6 bg-green-50 rounded-full flex items-center justify-center">
+                            <Mail className="w-10 h-10 text-green-600 animate-bounce" style={{ animationDuration: '2s' }} />
+                        </div>
+
+                        <h1 className="font-serif text-2xl font-medium text-charcoal-900 mb-3">
+                            ¡Revisa tu correo!
+                        </h1>
+
+                        <p className="text-charcoal-600 mb-2">
+                            Enviamos un enlace de confirmación a:
+                        </p>
+                        <p className="text-accent-brown font-semibold text-lg mb-6">
+                            {confirmedEmail}
+                        </p>
+
+                        {/* Spam tips */}
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
+                            <div className="flex items-start gap-2 mb-2">
+                                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                <span className="text-sm font-medium text-amber-800">¿No lo encuentras?</span>
+                            </div>
+                            <ul className="text-sm text-amber-700 space-y-1 ml-7">
+                                <li>• Revisa tu carpeta de <strong>SPAM</strong> o <strong>No Deseados</strong></li>
+                                <li>• Busca un correo de <strong>noreply@mail.app.supabase.io</strong></li>
+                                <li>• Si usas Outlook/Hotmail, revisa la carpeta <strong>Otros</strong></li>
+                                <li>• El enlace expira en <strong>24 horas</strong></li>
+                            </ul>
+                        </div>
+
+                        {/* Resend button */}
+                        <button
+                            onClick={handleResendEmail}
+                            disabled={resendCooldown > 0}
+                            className="w-full py-3 px-4 bg-charcoal-900 text-white font-medium rounded-xl hover:bg-charcoal-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            <RefreshCw className={`w-4 h-4 ${resendCooldown > 0 ? '' : ''}`} />
+                            {resendCooldown > 0
+                                ? `Reenviar en ${resendCooldown}s`
+                                : 'Reenviar correo de confirmación'
+                            }
+                        </button>
+
+                        {resendSuccess && (
+                            <p className="text-green-600 text-sm mt-3">
+                                ✅ Correo reenviado. Revisa tu bandeja de entrada.
+                            </p>
+                        )}
+                        {resendError && (
+                            <p className="text-red-600 text-sm mt-3">
+                                ❌ {resendError}
+                            </p>
+                        )}
+
+                        {/* Change email / back to form */}
+                        <button
+                            onClick={() => {
+                                setShowConfirmation(false);
+                                setResendSuccess(false);
+                                setResendError('');
+                            }}
+                            className="mt-4 text-sm text-charcoal-500 hover:text-charcoal-700 transition-colors flex items-center justify-center gap-1 mx-auto"
+                        >
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                            Cambiar email o volver al formulario
+                        </button>
+
+                        {/* Login link */}
+                        <div className="mt-6 pt-6 border-t border-gray-100">
+                            <p className="text-sm text-charcoal-500">
+                                ¿Ya confirmaste tu correo?{' '}
+                                <Link href="/login" className="text-accent-brown font-medium hover:underline">
+                                    Inicia sesión
+                                </Link>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        );
+    }
+
+    // ── Registration Form ──
     return (
         <main className="min-h-screen bg-cream-300 flex items-center justify-center px-4 py-12">
             <div className="w-full max-w-md">
@@ -131,12 +251,6 @@ export default function RegistroPage() {
                         {error && (
                             <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl text-center">
                                 {error}
-                            </div>
-                        )}
-
-                        {success && (
-                            <div className="p-3 bg-green-50 text-green-600 text-sm rounded-xl text-center">
-                                {success}
                             </div>
                         )}
 

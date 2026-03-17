@@ -15,6 +15,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Auth helper functions
 export async function signUpWithEmail(email: string, password: string, name: string) {
+    const redirectUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : 'https://iurexia.com/auth/callback';
+
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -22,12 +26,27 @@ export async function signUpWithEmail(email: string, password: string, name: str
             data: {
                 full_name: name,
                 plan: 'gratuito',
-            }
+            },
+            emailRedirectTo: redirectUrl,
         }
     })
 
     if (error) throw error
     return data
+}
+
+export async function resendConfirmationEmail(email: string) {
+    const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+            emailRedirectTo: typeof window !== 'undefined'
+                ? `${window.location.origin}/auth/callback`
+                : 'https://iurexia.com/auth/callback',
+        }
+    })
+
+    if (error) throw error
 }
 
 export async function signInWithEmail(email: string, password: string) {

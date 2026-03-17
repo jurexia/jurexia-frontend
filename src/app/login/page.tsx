@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithEmail, signInWithGoogle } from '@/lib/supabase';
+import { signInWithEmail, signInWithGoogle, resendConfirmationEmail } from '@/lib/supabase';
+import { RefreshCw, Mail } from 'lucide-react';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -12,10 +13,24 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // Resend state
+    const [showResend, setShowResend] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [resendSuccess, setResendSuccess] = useState(false);
+
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [resendCooldown]);
+
     const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        setShowResend(false);
+        setResendSuccess(false);
 
         try {
             await signInWithEmail(email, password);
@@ -24,12 +39,26 @@ export default function LoginPage() {
             if (err.message?.includes('Invalid login')) {
                 setError('Email o contraseña incorrectos');
             } else if (err.message?.includes('Email not confirmed')) {
-                setError('Por favor confirma tu email antes de iniciar sesión');
+                setError('Tu email aún no está confirmado.');
+                setShowResend(true);
             } else {
                 setError(err.message || 'Error al iniciar sesión');
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResendEmail = async () => {
+        if (resendCooldown > 0) return;
+        setResendSuccess(false);
+
+        try {
+            await resendConfirmationEmail(email);
+            setResendSuccess(true);
+            setResendCooldown(60);
+        } catch (err: any) {
+            setError('Error al reenviar el correo. Intenta de nuevo.');
         }
     };
 
@@ -87,8 +116,35 @@ export default function LoginPage() {
                     {/* Email Form */}
                     <form onSubmit={handleEmailLogin} className="space-y-4">
                         {error && (
-                            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl text-center">
-                                {error}
+                            <div className={`p-3 ${showResend ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-red-50 text-red-600'} text-sm rounded-xl text-center`}>
+                                <div className="flex items-center justify-center gap-2 mb-1">
+                                    {showResend && <Mail className="w-4 h-4" />}
+                                    <span>{error}</span>
+                                </div>
+                                {showResend && (
+                                    <div className="mt-3">
+                                        <p className="text-xs text-amber-600 mb-2">
+                                            Revisa tu correo (incluye SPAM). ¿No lo recibes?
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={handleResendEmail}
+                                            disabled={resendCooldown > 0}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 text-white text-xs font-medium rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <RefreshCw className="w-3.5 h-3.5" />
+                                            {resendCooldown > 0
+                                                ? `Reenviar en ${resendCooldown}s`
+                                                : 'Reenviar correo de confirmación'
+                                            }
+                                        </button>
+                                        {resendSuccess && (
+                                            <p className="text-green-600 text-xs mt-2">
+                                                ✅ Correo reenviado exitosamente
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -150,3 +206,4 @@ export default function LoginPage() {
         </main>
     );
 }
+
