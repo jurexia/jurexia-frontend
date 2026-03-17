@@ -90,6 +90,7 @@ export interface UserProfile {
     stripe_subscription_id: string | null;
     is_active: boolean;
     can_access_sentencia: boolean;
+    has_seen_welcome_video: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -134,6 +135,14 @@ export async function updateUserEstado(userId: string, estado: string): Promise<
         throw error
     }
     return data
+}
+
+export async function markWelcomeVideoSeen(userId: string) {
+    const { error } = await supabase
+        .from('user_profiles')
+        .update({ has_seen_welcome_video: true })
+        .eq('id', userId)
+    if (error) console.error('Error marking welcome video seen:', error)
 }
 
 export async function incrementQueryCount(userId: string) {
