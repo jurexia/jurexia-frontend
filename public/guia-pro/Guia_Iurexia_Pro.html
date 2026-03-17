@@ -4,767 +4,1081 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual de Uso Completo - Iurexia</title>
-    <!-- Ya no cargamos Inter, usaremos Arial -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap"
-        rel="stylesheet">
+    <title>Guía Iurexia Pro — Domina la Inteligencia Jurídica</title>
+    <meta name="description" content="Guía completa para usuarios Pro y Platinum de Iurexia. Aprende a dominar el motor de IA jurídica más avanzado de México.">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* ═══════════════════════════════════════════════════════════
+           DESIGN SYSTEM — Inspired by Harvey AI's editorial premium
+           ═══════════════════════════════════════════════════════════ */
+
         :root {
-            --charcoal: #111111;
-            --charcoal-light: #2c2c2c;
+            --bg-primary: #fafaf8;
+            --bg-section-alt: #f2f1ee;
+            --bg-dark: #0f0e0d;
+            --bg-card: #ffffff;
+            --text-primary: #0f0e0d;
+            --text-secondary: #4a4a48;
+            --text-tertiary: #7a7a78;
             --gold: #c9a962;
-            --cream: #121212;
-            --white: #1a1a1a;
-            --gray-text: #b3b3b3;
-            --border: #333333;
+            --gold-soft: rgba(201, 169, 98, 0.12);
+            --gold-border: rgba(201, 169, 98, 0.25);
+            --border-light: #e5e4e0;
+            --border-subtle: #edece8;
+            --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+            --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+            --shadow-hover: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.1);
+            --shadow-img: 0 2px 8px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08);
+            --transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: var(--charcoal);
-            color: #efefef;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 50px 60px;
-            background: linear-gradient(135deg, #111111 0%, #1a1a1a 100%);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-            border-left: 1px solid rgba(201, 169, 98, 0.2);
-            border-right: 1px solid rgba(201, 169, 98, 0.2);
-        }
-
-        h1,
-        h2,
-        h3 {
-            font-family: 'Playfair Display', serif;
-            color: #ffffff;
-            margin-top: 0;
-        }
-
-        .gold-text {
-            color: var(--gold);
-        }
-
-        .black-text {
-            color: #ffffff;
-        }
-
-        h1 {
-            font-size: 2.8rem;
-            text-align: center;
-            border-bottom: 3px solid rgba(201, 169, 98, 0.3);
-            padding-bottom: 25px;
-            margin-bottom: 45px;
-            letter-spacing: -0.5px;
-        }
-
-        h2 {
-            font-size: 2rem;
-            margin-top: 60px;
-            border-bottom: 2px solid var(--gold);
-            padding-bottom: 12px;
-        }
-
-        h3 {
-            font-size: 1.4rem;
-            margin-top: 35px;
-            border-left: 4px solid var(--gold);
-            padding-left: 10px;
-        }
-
-        p {
-            color: var(--gray-text);
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-        }
-
-        .highlight {
-            color: #ffffff;
-            background-color: rgba(201, 169, 98, 0.2);
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .btn-sim {
-            background-color: transparent;
-            color: var(--gold);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border: 1px solid var(--gold);
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            align-items: start;
-            margin-bottom: 40px;
-        }
-
-        .grid-2-image-right {
-            display: grid;
-            grid-template-columns: 0.8fr 1.2fr;
-            gap: 40px;
-            align-items: center;
-            margin-bottom: 40px;
-        }
-
-        .img-container {
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-            background-color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.6s ease, border-color 0.6s ease;
-        }
-
-        .img-container img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            opacity: 0.95;
-            transition: opacity 0.5s;
-        }
-
-        .img-container:hover img {
-            opacity: 1;
-        }
-
-        .img-container:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
-            border-color: var(--gold);
-            z-index: 10;
-        }
-
-        .img-large {
-            max-width: 90%;
-            margin: 0 auto;
-        }
-
-        .info-box {
-            background: linear-gradient(135deg, #1f1f1f 0%, #2c2c2c 100%);
-            color: #ffffff;
-            border-left: 5px solid var(--gold);
-            padding: 25px 30px;
-            border-radius: 0 12px 12px 0;
-            margin: 35px 0;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-        }
-
-        .info-box strong {
-            display: block;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.4rem;
-            margin-bottom: 12px;
-            color: var(--gold);
-        }
-
-        .info-box p {
-            color: #f4f1ea;
-            font-size: 1.1rem;
-        }
-
-        .step-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .step-list li {
-            position: relative;
-            padding-left: 45px;
-            margin-bottom: 30px;
-            background-color: #1a1a1a;
-            padding: 20px 20px 20px 55px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            transition: all 0.5s ease;
-        }
-
-        .step-list li::before {
-            content: "✦";
-            position: absolute;
-            left: 20px;
-            top: 20px;
-            color: var(--gold);
-            font-size: 1.5rem;
-            line-height: 1;
-        }
-
-        .step-list h4 {
-            margin: 0 0 8px 0;
-            font-size: 1.15rem;
-            color: #ffffff;
-            font-weight: bold;
-        }
-
-        .step-list p {
-            margin: 0;
-            font-size: 1.05rem;
-            color: var(--gray-text);
-        }
-
-        .step-list li:hover {
-            background-color: #222;
-            border-color: var(--gold);
-            box-shadow: 0 10px 25px rgba(201, 169, 98, 0.15);
-            transform: translateX(10px);
-        }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .gallery-item {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            background-color: #1a1a1a;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            transition: transform 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
-        }
-
-        .gallery-item span {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #ffffff;
-            text-align: center;
-            font-family: 'Playfair Display', serif;
-        }
-
-        .gallery-item:hover {
-            transform: translateY(-5px) scale(1.03);
-            border-color: var(--gold);
-            box-shadow: 0 15px 35px rgba(201, 169, 98, 0.15);
-        }
-
-        .tips-container {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1f1f1f 100%);
-            padding: 35px;
-            border-radius: 12px;
-            color: white;
-            margin-top: 30px;
-            border: 1px solid var(--gold);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-        }
-
-        .tips-container h3 {
-            color: var(--gold);
-            border-left: none;
-            padding-left: 0;
-            margin-top: 0;
-        }
-
-        .tips-container p {
-            color: #ddd;
-        }
-
-        .tips-container ul {
-            padding-left: 20px;
-        }
-
-        .tips-container li {
-            margin-bottom: 15px;
-            color: #efefef;
-            font-size: 1.05rem;
-        }
-
-        .tips-container li strong {
-            color: var(--gold);
-        }
-
-        @media print {
-            body {
-                background: white;
-                color: black;
-            }
-
-            .container {
-                box-shadow: none;
-                border: none;
-                background: white;
-                padding: 0;
-                max-width: 100%;
-            }
-
-            .avoid-break {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
-
-            h1,
-            h2,
-            h3,
-            p,
-            .black-text,
-            .gold-text {
-                color: black !important;
-                text-shadow: none !important;
-            }
-
-            .info-box,
-            .tips-container,
-            .step-list li,
-            .gallery-item {
-                background: #f5f5f5 !important;
-                color: black !important;
-                border-color: black !important;
-                box-shadow: none !important;
-            }
-
-            .info-box strong,
-            .tips-container h3,
-            .tips-container li strong {
-                color: black !important;
-            }
-
-            .info-box p,
-            .tips-container p,
-            .tips-container li {
-                color: #333 !important;
-            }
-
-            .img-container {
-                background: white !important;
-                box-shadow: none !important;
-                border: 1px solid #ccc !important;
-                transform: none !important;
-                transition: none !important;
-            }
-        }
-
-        /* -------------------------------------
-           📱 MOBILE RESPONSIVENESS 📱
-        ------------------------------------- */
-        @media (max-width: 768px) {
-            .container {
-                padding: 30px 20px;
-            }
-
-            .grid-2,
-            .grid-2-image-right {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .gallery-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            h1 {
-                font-size: 2.2rem;
-            }
-
-            h2 {
-                font-size: 1.6rem;
-            }
-
-            .img-container:hover {
-                transform: translateY(-4px) scale(1.01);
-                box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-            }
-        }
-
-        /* -------------------------------------
-           ✨ ANIMACIONES DE ALTO IMPACTO ✨
-        ------------------------------------- */
         html {
             scroll-behavior: smooth;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        .reveal-left {
+        body {
+            font-family: var(--sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        /* ─── NAVIGATION ─────────────────────────────────────────── */
+
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(250, 250, 248, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: var(--transition);
+        }
+
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            font-family: var(--serif);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-logo span { color: var(--gold); }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-tertiary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--text-primary); }
+
+        .nav-badge {
+            background: var(--gold-soft);
+            color: var(--gold);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* ─── HERO ────────────────────────────────────────────────── */
+
+        .hero {
+            padding: 180px 40px 100px;
+            text-align: center;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .hero-eyebrow {
+            font-family: var(--sans);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 24px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hero-eyebrow::before,
+        .hero-eyebrow::after {
+            content: '';
+            width: 24px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+        .hero h1 {
+            font-family: var(--serif);
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 400;
+            line-height: 1.08;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+            margin-bottom: 32px;
+        }
+
+        .hero h1 em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin: 0 auto 40px;
+            font-weight: 300;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-dark);
+            color: #fff;
+            padding: 14px 32px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            letter-spacing: 0.01em;
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .hero-cta svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s;
+        }
+
+        .hero-cta:hover svg { transform: translateX(4px); }
+
+        /* ─── TRUST BAR ──────────────────────────────────────────── */
+
+        .trust-bar {
+            background: var(--bg-dark);
+            padding: 48px 40px;
+            text-align: center;
+        }
+
+        .trust-bar-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            justify-content: center;
+        }
+
+        .trust-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .trust-item .num {
+            font-family: var(--serif);
+            font-size: 2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .trust-item .label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+
+        .trust-divider {
+            width: 1px;
+            height: 40px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* ─── SECTIONS ───────────────────────────────────────────── */
+
+        .section {
+            padding: 120px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-alt {
+            background: var(--bg-section-alt);
+        }
+
+        .section-dark {
+            background: var(--bg-dark);
+            color: #fff;
+        }
+
+        .section-header {
+            max-width: 720px;
+            margin-bottom: 72px;
+        }
+
+        .section-header.centered {
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+        }
+
+        .section-number {
+            font-family: var(--sans);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .section-title {
+            font-family: var(--serif);
+            font-size: clamp(2.2rem, 4vw, 3.5rem);
+            font-weight: 400;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 20px;
+        }
+
+        .section-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+        .section-desc {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .section-dark .section-desc {
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* ─── FEATURE ROWS (Harvey-style alternating) ────────────── */
+
+        .feature-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            margin-bottom: 100px;
+        }
+
+        .feature-row:last-child { margin-bottom: 0; }
+
+        .feature-row.reverse .feature-visual { order: -1; }
+
+        .feature-content { max-width: 480px; }
+
+        .feature-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 16px;
+        }
+
+        .feature-heading {
+            font-family: var(--serif);
+            font-size: 2rem;
+            font-weight: 500;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+            margin-bottom: 20px;
+        }
+
+        .feature-text {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .feature-visual {
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-img);
+            border: 1px solid var(--border-subtle);
+            transition: var(--transition);
+        }
+
+        .feature-visual:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .feature-visual img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ─── CAPABILITY LIST (Harvey-style with lines) ──────────── */
+
+        .capability-list {
+            list-style: none;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .capability-item {
+            display: grid;
+            grid-template-columns: 48px 1fr;
+            gap: 20px;
+            padding: 28px 0;
+            border-bottom: 1px solid var(--border-light);
+            align-items: start;
+            transition: var(--transition);
+        }
+
+        .capability-item:hover {
+            padding-left: 12px;
+        }
+
+        .capability-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--gold-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .capability-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .capability-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .section-dark .capability-list {
+            border-top-color: rgba(255,255,255,0.1);
+        }
+
+        .section-dark .capability-item {
+            border-bottom-color: rgba(255,255,255,0.1);
+        }
+
+        .section-dark .capability-icon {
+            background: rgba(201, 169, 98, 0.15);
+        }
+
+        .section-dark .capability-title {
+            color: #fff;
+        }
+
+        .section-dark .capability-desc {
+            color: rgba(255,255,255,0.55);
+        }
+
+        /* ─── GALLERY GRID ───────────────────────────────────────── */
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .gallery-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-subtle);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .gallery-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--gold-border);
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .gallery-card-label {
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gallery-card-label span.dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--gold);
+            flex-shrink: 0;
+        }
+
+        /* ─── CALLOUT BOX ────────────────────────────────────────── */
+
+        .callout {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-left: 4px solid var(--gold);
+            border-radius: 4px var(--radius-sm) var(--radius-sm) 4px;
+            padding: 28px 32px;
+            margin: 40px 0;
+        }
+
+        .callout-title {
+            font-family: var(--serif);
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .callout-text {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .callout-text strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .section-dark .callout {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.08);
+            border-left-color: var(--gold);
+        }
+
+        .section-dark .callout-title { color: #fff; }
+        .section-dark .callout-text { color: rgba(255,255,255,0.6); }
+        .section-dark .callout-text strong { color: #fff; }
+
+        /* ─── PROMPT FORMULA ─────────────────────────────────────── */
+
+        .prompt-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin: 48px 0;
+        }
+
+        .prompt-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            transition: var(--transition);
+        }
+
+        .prompt-card:hover {
+            border-color: var(--gold-border);
+            transform: translateY(-4px);
+        }
+
+        .prompt-card-num {
+            font-family: var(--serif);
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: var(--gold);
+            margin-bottom: 16px;
+            line-height: 1;
+        }
+
+        .prompt-card-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .prompt-card-text {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.6;
+        }
+
+        .prompt-card-example {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(201, 169, 98, 0.08);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            font-style: italic;
+            line-height: 1.6;
+            border-left: 2px solid var(--gold);
+        }
+
+        /* ─── BEST PRACTICES ─────────────────────────────────────── */
+
+        .practices-list {
+            list-style: none;
+            margin-top: 48px;
+        }
+
+        .practices-item {
+            display: flex;
+            gap: 20px;
+            padding: 24px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            align-items: start;
+        }
+
+        .practices-num {
+            font-family: var(--serif);
+            font-size: 1.2rem;
+            color: var(--gold);
+            font-weight: 400;
+            flex-shrink: 0;
+            width: 28px;
+        }
+
+        .practices-content strong {
+            display: block;
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .practices-content p {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.6;
+        }
+
+        /* ─── FOOTER ─────────────────────────────────────────────── */
+
+        .guide-footer {
+            padding: 64px 40px;
+            text-align: center;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .footer-logo {
+            font-family: var(--serif);
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .footer-logo span { color: var(--gold); }
+
+        .footer-tagline {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            font-weight: 400;
+            max-width: 500px;
+            margin: 0 auto 24px;
+        }
+
+        .footer-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .footer-link:hover { opacity: 0.7; }
+
+        /* ─── ANIMATIONS ─────────────────────────────────────────── */
+
+        .reveal {
             opacity: 0;
-            transform: translateX(-100px) scale(0.95);
-            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-            will-change: opacity, transform;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+                        transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        .reveal-right {
-            opacity: 0;
-            transform: translateX(100px) scale(0.95);
-            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-            will-change: opacity, transform;
-        }
-
-        .reveal-bottom {
-            opacity: 0;
-            transform: translateY(100px) scale(0.95);
-            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-            will-change: opacity, transform;
-        }
-
-        .reveal-zoom {
-            opacity: 0;
-            transform: scale(0.85);
-            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-            will-change: opacity, transform;
-        }
-
-        .reveal-left.active,
-        .reveal-right.active,
-        .reveal-bottom.active,
-        .reveal-zoom.active {
+        .reveal.active {
             opacity: 1;
-            transform: translate(0) scale(1);
+            transform: translateY(0);
         }
 
-        .delay-100 {
-            transition-delay: 100ms;
+        .delay-1 { transition-delay: 100ms; }
+        .delay-2 { transition-delay: 200ms; }
+        .delay-3 { transition-delay: 300ms; }
+        .delay-4 { transition-delay: 400ms; }
+
+        /* ─── RESPONSIVE ─────────────────────────────────────────── */
+
+        @media (max-width: 900px) {
+            .feature-row {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .feature-row.reverse .feature-visual { order: 0; }
+            .gallery { grid-template-columns: repeat(2, 1fr); }
+            .prompt-grid { grid-template-columns: 1fr; }
+            .trust-bar-inner { flex-wrap: wrap; gap: 24px; }
+            .nav-links { display: none; }
+            .section { padding: 80px 24px; }
+            .hero { padding: 140px 24px 80px; }
         }
 
-        .delay-200 {
-            transition-delay: 200ms;
+        @media (max-width: 600px) {
+            .gallery { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2.5rem; }
         }
 
-        .delay-300 {
-            transition-delay: 300ms;
-        }
+        /* ─── PRINT ──────────────────────────────────────────────── */
 
-        .delay-400 {
-            transition-delay: 400ms;
+        @media print {
+            .nav { display: none; }
+            body { background: white; color: black; }
+            .section-dark { background: #f5f5f5; color: black; }
+            .section-dark .section-desc,
+            .section-dark .capability-desc,
+            .section-dark .callout-text,
+            .section-dark .prompt-card-text,
+            .section-dark .practices-content p { color: #333; }
+            .section-dark .capability-title,
+            .section-dark .callout-title,
+            .section-dark .prompt-card-title,
+            .section-dark .practices-content strong { color: black; }
+            .reveal { opacity: 1; transform: none; }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
-        <h1><span class="black-text">Manual de Uso</span> <span class="gold-text">Completo</span></h1>
-        <p
-            style="text-align: center; font-size: 1.4rem; font-family: 'Playfair Display', serif; margin-top: -25px; margin-bottom: 45px; color: var(--gold); font-weight: 600;">
-            (Planes Pro y superior)</p>
+    <!-- ═══════════ NAVIGATION ═══════════ -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="https://www.iurexia.com" class="nav-logo">Iurex<span>ia</span></a>
+            <ul class="nav-links">
+                <li><a href="#control">Tablero</a></li>
+                <li><a href="#redactar">Redactar</a></li>
+                <li><a href="#escrito">Generador</a></li>
+                <li><a href="#genios">Multi-Genio</a></li>
+                <li><a href="#analisis">Análisis</a></li>
+                <li><a href="#prompts">Prompts</a></li>
+                <li><span class="nav-badge">Guía Pro</span></li>
+            </ul>
+        </div>
+    </nav>
 
-        <div class="info-box">
-            <strong>Bienvenido a la Inteligencia Jurídica de Iurexia</strong>
-            <p>Este documento es tu guía visual para dominar el motor analítico de Iurexia y transformarlo en una
-                <span class="gold-text" style="font-weight: 600;">ventaja competitiva</span>. Más allá de ofrecer un
-                rigor técnico impecable, la plataforma está
-                diseñada para <span class="gold-text" style="font-weight: 600;">expandir radicalmente tu capacidad
-                    operativa</span>, automatizar flujos de
-                trabajo repetitivos y escalar la rentabilidad de tu firma.
+    <!-- ═══════════ HERO ═══════════ -->
+    <section class="hero">
+        <div class="reveal">
+            <p class="hero-eyebrow">Planes Pro y Superior</p>
+        </div>
+        <div class="reveal delay-1">
+            <h1>Domina la<br><em>Inteligencia Jurídica</em></h1>
+        </div>
+        <div class="reveal delay-2">
+            <p class="hero-subtitle">
+                Tu guía visual para transformar el motor analítico de Iurexia en una ventaja competitiva. 
+                Expande radicalmente tu capacidad operativa, automatiza flujos de trabajo y escala la rentabilidad de tu firma.
             </p>
-            <p style="margin-top: 15px;">Operamos bajo una estricta política de <span class="gold-text"
-                    style="font-weight: 600;">Security by Design (Blindaje de
-                    Datos)</span>: tus consultas y documentos jamás se utilizan para entrenar nuestros modelos
-                subyacentes. El secreto profesional de tus litigios está garantizado.</p>
         </div>
-
-        <!-- SECCIÓN 1 -->
-        <h2 class="avoid-break"><span class="black-text">1. El Tablero de </span><span class="gold-text">Control</span>
-        </h2>
-        <p>Desde la barra inferior de tu panel tienes el control total de la herramienta. Es la cabina de mando donde
-            diriges el tipo de análisis que Iurexia realizará por ti.</p>
-
-        <div class="img-container avoid-break img-large" style="margin-bottom: 30px;">
-            <img src="images/panel_iurexia_v6.png" alt="Panel Principal Actualizado">
+        <div class="reveal delay-3">
+            <a href="https://www.iurexia.com/chat" class="hero-cta">
+                Ir a la plataforma
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
         </div>
+    </section>
 
-        <ul class="step-list avoid-break">
-            <li>
-                <h4>🏛️ Filtro de Fuero</h4>
-                <p>El selector <strong>FUERO</strong> te permite dirigir la búsqueda al ámbito jurisdiccional correcto.
-                    En modo <span class="highlight">Auto</span>, Iurexia busca en todos los fueros simultáneamente.
-                    Selecciona <strong>Const.</strong> para enfocarte exclusivamente en normas constitucionales y tratados internacionales,
-                    <strong>Federal</strong> para legislación federal (códigos y leyes generales), o
-                    <strong>Estatal</strong> para las leyes del estado que tengas seleccionado como tu entidad activa.
-                    Este control es clave para obtener resultados precisos: si tu caso es de arrendamiento en Sinaloa, seleccionar
-                    <strong>Estatal</strong> te dará directamente el Código Civil de Sinaloa sin ruido de otras jurisdicciones.</p>
-            </li>
-            <li>
-                <h4>📋 Filtro de Materia</h4>
-                <p>El selector <strong>MATERIA</strong> enfoca la inteligencia artificial en la rama jurídica de tu caso.
-                    En modo <span class="highlight">Auto</span>, Iurexia detecta automáticamente la materia a partir de tu consulta.
-                    Para mayor precisión, selecciona manualmente entre <strong>Civil</strong>, <strong>Penal</strong>,
-                    <strong>Familiar</strong> o <strong>Admin</strong> (Administrativo). Cuando activas una materia específica,
-                    el sistema prioriza las leyes, códigos y jurisprudencia de esa rama, descartando resultados irrelevantes
-                    de otras materias. Esto es especialmente útil cuando tu consulta podría ser ambigua entre dos ramas del derecho.</p>
-            </li>
-            <li>
-                <h4>Modo "Buscar" (por defecto)</h4>
-                <p>Activado por defecto. Ideal para consultas abstractas, búsqueda de fundamentos y análisis
-                    jurisprudencial donde requieres que Iurexia traiga a la mesa la norma pura y la jurisprudencia
-                    aplicable.</p>
-            </li>
-            <li>
-                <h4>Botones de Acción: Escrito y Sentencia</h4>
-                <p>El botón <span class="highlight">Escrito</span> abre el generador de documentos formales (contratos, demandas, amparos, impugnaciones).
-                    El botón <span class="highlight">Sentencia</span> activa la auditoría inteligente de resoluciones judiciales,
-                    donde Iurexia analiza violaciones procedimentales y errores de aplicación normativa.</p>
-            </li>
-            <li>
-                <h4>Botón de Especialistas</h4>
-                <p>El botón azul <span class="highlight">Busca un abogado especializado en tu zona</span> te permite conectar con abogados
-                    de nuestra red de confianza en el Estado que hayas seleccionado.</p>
-            </li>
-        </ul>
-
-        <!-- SECCIÓN 2 -->
-        <h2 class="avoid-break"><span class="black-text">2. El Modo </span><span class="gold-text">Redactar</span></h2>
-
-        <p>Si cambias el switch a <span class="btn-sim">Redactar</span>, Iurexia deja de comportarse como un simple
-            motor de búsqueda y adopta la postura de un abogado proyectista.</p>
-
-        <div class="img-container avoid-break img-large" style="margin: 30px auto;">
-            <img src="images/panel_iurexia_v6_redactar.png" alt="Panel en Modo Redactar">
-        </div>
-
-        <p>Usa este modo cuando tu petición implique que la plataforma genere <strong>argumentos estructurados</strong>,
-            esbozos de querellas, contestaciones, cláusulas contractuales o estrategias argumentativas. Iurexia
-            procesará los hechos que le narres y arrojará un discurso jurídico hilado y con base legal firme.</p>
-
-        <div class="info-box avoid-break">
-            <strong>💡 Tip: Combina Filtros + Modo Redactar</strong>
-            <p>Para obtener los mejores resultados de redacción, primero configura el <strong>Fuero</strong> y la
-                <strong>Materia</strong> correctos, y después activa el modo <strong>Redactar</strong>.
-                Por ejemplo: si necesitas redactar agravios para una apelación penal en Morelos, selecciona
-                <strong>Fuero: Estatal</strong> + <strong>Materia: Penal</strong> + <strong>Modo: Redactar</strong>.
-                El motor usará exactamente las leyes penales de Morelos como fundamento para tu redacción.</p>
-        </div>
-
-
-        <!-- SECCIÓN 3 -->
-        <h2 class="avoid-break"><span class="black-text">3. Generador de Documentos: </span><span
-                class="gold-text">Escrito</span></h2>
-        <p>Al hacer clic en <span class="highlight">Escrito</span>, accedes al generador especializado. Esta herramienta
-            categoriza y parametriza la creación de documentos formales listos para litigar o celebrar.</p>
-
-        <div class="img-container avoid-break img-large" style="margin-bottom: 40px;">
-            <img src="images/Captura de pantalla 2026-03-07 014357.png" alt="Modal Escrito">
-        </div>
-
-        <p class="avoid-break">Iurexia te guía paso a paso automatizando los borradores iniciales con alta fidelidad
-            jurídica. Esto estandariza tus flujos de trabajo legales, disminuye dramáticamente las horas no facturables
-            y permite a tu equipo <strong>escalar el volumen de asuntos</strong> abordables. Selecciona la categoría y
-            el motor estructurará el documento:</p>
-
-        <div class="gallery-grid avoid-break">
-            <div class="gallery-item">
-                <span>Contratos Formales</span>
-                <div class="img-container">
-                    <img src="images/Captura de pantalla 2026-03-07 014419.png" alt="Contratos">
-                </div>
+    <!-- ═══════════ TRUST BAR ═══════════ -->
+    <div class="trust-bar">
+        <div class="trust-bar-inner">
+            <div class="trust-item">
+                <span class="num">Security by Design</span>
+                <span class="label">Blindaje de datos</span>
             </div>
-            <div class="gallery-item">
-                <span>Control de Demandas</span>
-                <div class="img-container">
-                    <img src="images/Captura de pantalla 2026-03-07 014440.png" alt="Demandas">
-                </div>
+            <div class="trust-divider"></div>
+            <div class="trust-item">
+                <span class="num">0%</span>
+                <span class="label">Datos usados para entrenar modelos</span>
             </div>
-            <div class="gallery-item">
-                <span>Amparo Especializado</span>
-                <div class="img-container">
-                    <img src="images/Captura de pantalla 2026-03-07 014501.png" alt="Amparo">
-                </div>
-            </div>
-            <div class="gallery-item">
-                <span>Medios de Impugnación</span>
-                <div class="img-container">
-                    <img src="images/Captura de pantalla 2026-03-07 014523.png" alt="Impugnacion">
-                </div>
-            </div>
-            <div class="gallery-item">
-                <span>Peticiones y Oficios</span>
-                <div class="img-container">
-                    <img src="images/Captura de pantalla 2026-03-07 014541.png" alt="Peticiones">
-                </div>
-            </div>
-            <div class="gallery-item">
-                <span>Denuncias Disciplinarias</span>
-                <div class="img-container">
-                    <img src="images/Captura de pantalla 2026-03-07 014604.png" alt="Denuncias">
-                </div>
+            <div class="trust-divider"></div>
+            <div class="trust-item">
+                <span class="num">100%</span>
+                <span class="label">Secreto profesional garantizado</span>
             </div>
         </div>
+    </div>
 
+    <!-- ═══════════ SECTION 1: TABLERO DE CONTROL ═══════════ -->
+    <section class="section" id="control">
+        <div class="section-header reveal">
+            <span class="section-number">01 — Tablero de Control</span>
+            <h2 class="section-title">La cabina de mando<br>de tu <em>análisis jurídico</em></h2>
+            <p class="section-desc">
+                Desde la barra inferior de tu panel controlas exactamente cómo Iurexia procesará cada consulta. 
+                Cada selector está diseñado para eliminar el ruido y entregar precisión quirúrgica.
+            </p>
+        </div>
 
-        <!-- SECCIÓN 4 -->
-        <h2 class="avoid-break"><span class="black-text">4. Arquitectura </span><span
-                class="gold-text">Multi-Genio</span>
-        </h2>
-        <p>Los Genios Jurídicos son tus "socios" hiper-especializados. Al activar un Genio, el sistema enfoca todos sus
-            motores analíticos en esa rama específica del derecho mexicano, <strong>multiplicando la capacidad técnica
-                de tu equipo</strong> sin requerir contrataciones adicionales.</p>
-
-        <div class="grid-2 avoid-break">
-            <div class="img-container">
-                <img src="images/panel_iurexia_v6.png" alt="Panel con Genios Activos">
+        <div class="feature-row reveal">
+            <div class="feature-visual">
+                <img src="images/panel_iurexia_v6.png" alt="Panel principal de Iurexia v6">
             </div>
-            <div>
-                <ul class="step-list" style="margin-top: 0;">
-                    <li>
-                        <h4>Activación Simultánea</h4>
-                        <p>Puedes activar hasta <strong>dos Genios de forma concurrente</strong> (por ejemplo: Amparo y
-                            Penal). Esta arquitectura cruza ambos acervos normativos ofreciendo en segundos
-                            <strong>análisis multidisciplinarios</strong> que a un despacho le tomaría horas consolidar.
-                        </p>
+            <div class="feature-content">
+                <ul class="capability-list">
+                    <li class="capability-item">
+                        <div class="capability-icon">🏛️</div>
+                        <div>
+                            <div class="capability-title">Filtro de Fuero</div>
+                            <div class="capability-desc">Dirige la búsqueda al ámbito jurisdiccional correcto. En modo <strong>Auto</strong>, busca en todos los fueros. Selecciona <strong>Const.</strong> para normas constitucionales y tratados, <strong>Federal</strong> para legislación federal, o <strong>Estatal</strong> para leyes del estado activo. Si tu caso es de arrendamiento en Sinaloa, seleccionar Estatal te dará directamente el Código Civil de Sinaloa sin ruido.</div>
+                        </div>
                     </li>
-                    <li>
-                        <h4>Modo Analítico Estricto</h4>
-                        <p><strong>Bloqueo de redacción:</strong> Para garantizar un análisis profundo y estricto,
-                            cuando activas más de un Genio a la vez, el modo "Redactar" se bloquea automáticamente. Los
-                            Genios cruzados están diseñados para investigar y razonar, no para pre-redactar.</p>
+                    <li class="capability-item">
+                        <div class="capability-icon">📋</div>
+                        <div>
+                            <div class="capability-title">Filtro de Materia</div>
+                            <div class="capability-desc">Enfoca la IA en la rama jurídica de tu caso. En <strong>Auto</strong>, la materia se detecta automáticamente. Para mayor precisión, selecciona manualmente entre <strong>Civil</strong>, <strong>Penal</strong>, <strong>Familiar</strong> o <strong>Administrativo</strong>. El sistema priorizará leyes, códigos y jurisprudencia de esa rama.</div>
+                        </div>
+                    </li>
+                    <li class="capability-item">
+                        <div class="capability-icon">🔍</div>
+                        <div>
+                            <div class="capability-title">Modo Buscar (por defecto)</div>
+                            <div class="capability-desc">Ideal para consultas abstractas, búsqueda de fundamentos y análisis jurisprudencial donde requieres la norma pura y la jurisprudencia aplicable.</div>
+                        </div>
+                    </li>
+                    <li class="capability-item">
+                        <div class="capability-icon">⚡</div>
+                        <div>
+                            <div class="capability-title">Botones de Acción</div>
+                            <div class="capability-desc"><strong>Escrito</strong> abre el generador de documentos formales. <strong>Sentencia</strong> activa la auditoría inteligente de resoluciones judiciales, analizando violaciones procedimentales y errores de aplicación normativa.</div>
+                        </div>
+                    </li>
+                    <li class="capability-item">
+                        <div class="capability-icon">👤</div>
+                        <div>
+                            <div class="capability-title">Botón de Especialistas</div>
+                            <div class="capability-desc">Conecta con abogados de nuestra red de confianza en el Estado que tengas seleccionado como tu entidad activa.</div>
+                        </div>
                     </li>
                 </ul>
             </div>
         </div>
+    </section>
 
-        <!-- SECCIÓN 5 -->
-        <h2 class="avoid-break"><span class="black-text">5. Análisis Documental y </span><span
-                class="gold-text">Resoluciones</span></h2>
-
-        <div class="grid-2 avoid-break">
-            <div>
-                <h3>Consultas de Archivos Propios</h3>
-                <p>El icono de <span class="btn-sim">Clip 📎</span> te permite cargar PDFs o documentos Word de tus
-                    expedientes, operando localmente bajo estricto <strong>Aislamiento de Datos</strong>.</p>
-                <div class="img-container" style="margin: 20px 0;">
-                    <img src="images/Captura de pantalla 2026-03-07 015131.png" alt="Subir Doc">
-                </div>
-                <p>Iurexia lee contenido procesal complejo al instante, <strong>recuperando horas de revisión
-                        manual</strong> y reduciendo el costo in-house. Audita resoluciones, rastrea contradicciones y
-                    extrae los puntos resolutivos de sentencias masivas con precisión quirúrgica.</p>
+    <!-- ═══════════ SECTION 2: MODO REDACTAR ═══════════ -->
+    <div class="section-alt">
+        <section class="section" id="redactar">
+            <div class="section-header reveal">
+                <span class="section-number">02 — Modo Redactar</span>
+                <h2 class="section-title">De motor de búsqueda<br>a <em>abogado proyectista</em></h2>
+                <p class="section-desc">
+                    Cuando activas el modo Redactar, Iurexia deja de presentar fichas jurisprudenciales y adopta la postura 
+                    de un litigante que estructura argumentos, esboza querellas y genera estrategias con base legal firme.
+                </p>
             </div>
-            <div>
-                <h3>Herramienta <span class="btn-sim">Sentencia</span></h3>
-                <p>Exclusiva para realizar una auditoría legal completa de resoluciones jurisdiccionales de amparo o de
-                    fondo.</p>
-                <div class="img-container" style="margin: 20px 0;">
-                    <img src="images/Captura de pantalla 2026-03-07 015651.png" alt="Revisor Sentencia">
+
+            <div class="feature-row reverse reveal">
+                <div class="feature-content">
+                    <div class="feature-label">Redacción inteligente</div>
+                    <h3 class="feature-heading">Genera argumentos estructurados en segundos</h3>
+                    <p class="feature-text">
+                        Usa este modo cuando necesites que Iurexia genere argumentos estructurados, esbozos de querellas, 
+                        contestaciones, cláusulas contractuales o estrategias argumentativas. La plataforma procesará los 
+                        hechos que le narres y arrojará un discurso jurídico hilado con base legal firme.
+                    </p>
+                    <div class="callout">
+                        <div class="callout-title">💡 Tip: Combina Filtros + Modo Redactar</div>
+                        <div class="callout-text">
+                            Primero configura el <strong>Fuero</strong> y la <strong>Materia</strong> correctos, después activa <strong>Redactar</strong>. 
+                            Por ejemplo: si necesitas redactar agravios para una apelación penal en Morelos, selecciona 
+                            <strong>Fuero: Estatal</strong> + <strong>Materia: Penal</strong> + <strong>Modo: Redactar</strong>. 
+                            El motor usará exactamente las leyes penales de Morelos como fundamento.
+                        </div>
+                    </div>
                 </div>
-                <p>El motor revisa minuciosamente violaciones procedimentales, aplicación indebida de la norma y
-                    suplencia de la queja. Entrega un nivel de escrutinio digno de un magistrado revisor.</p>
+                <div class="feature-visual">
+                    <img src="images/panel_iurexia_v6_redactar.png" alt="Panel en Modo Redactar">
+                </div>
             </div>
-        </div>
-
-        <!-- SECCIÓN 6 -->
-        <h2 class="avoid-break"><span class="black-text">6. El Arte de Preguntar: </span><span
-                class="gold-text">Ingeniería de Prompts</span></h2>
-
-        <p>Para obtener los resultados más contundentes y técnicos de Iurexia, la forma en la que formulas tu
-            instrucción (prompt) es vital. Iurexia responde al nivel de rigor que le exijas.</p>
-
-        <div class="tips-container avoid-break">
-            <h3>Fórmula del Prompt Jurídico Perfecto</h3>
-            <p>Los mejores resultados se obtienen estructurando tu petición en tres partes esenciales:</p>
-
-            <ul style="margin-top: 20px;">
-                <li>
-                    <strong>1. El Rol o Contexto:</strong> Define cómo quieres que Iurexia actúe. <br>
-                    <em>"Actúa como un magistrado penal de apelación..."</em> o <em>"Asume el rol de abogado litigante
-                        laboralista del lado patronal..."</em>
-                </li>
-                <li>
-                    <strong>2. Los Hechos Concretos (Premisa menor):</strong> Proporciona datos sin paja, directos a la
-                    controversia.<br>
-                    <em>"Mi cliente fue despedido verbalmente sin acta administrativa previa, alegando abandono de
-                        trabajo que no ocurrió..."</em>
-                </li>
-                <li>
-                    <strong>3. La Tarea Específica y el Tono:</strong> Qué necesitas exactamente y cómo lo quieres
-                    entregado.<br>
-                    <em>"Redacta un capítulo de conceptos de violación argumentando la ilegalidad del despido. Usa un
-                        tono persuasivo, incisivo, y cita jurisprudencia de la SCJN aplicable a la carga de la prueba
-                        sobre el abandono."</em>
-                </li>
-            </ul>
-
-            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 30px 0;">
-
-            <h3>Mejores Prácticas Generales</h3>
-            <ul>
-                <li><strong>Evita ambigüedades:</strong> No pidas "hablame de contratos". Pide "Redacta la cláusula
-                    penal de rescisión anticipada para un contrato de arrendamiento comercial".</li>
-                <li><strong>Inyecta la teoría procesal:</strong> Dile explícitamente qué excepciones procesales o
-                    agravios formales quieres que explore.</li>
-                <li><strong>Itera con el motor:</strong> Si la respuesta inicial es buena pero le falta profundidad en
-                    un punto, dile: <em>"Profundiza exclusivamente en el segundo concepto de violación, agregando
-                        estándares de convencionalidad de la CIDH."</em></li>
-                <li><strong>Usa el modo correcto:</strong> Si exiges redacción extensa estando en modo "Buscar", Iurexia
-                    tenderá a darte fichas jurisprudenciales. Asegúrate de estar en modo <strong>Redactar</strong>.</li>
-            </ul>
-        </div>
-
-        <div style="margin-top: 60px; text-align: center; border-top: 3px solid var(--charcoal); padding-top: 30px;">
-            <p
-                style="font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: bold; margin-bottom: 5px;">
-                <span class="black-text">Iurexia</span> <span class="gold-text">Pro</span>
-            </p>
-            <p style="font-size: 1rem; color: var(--gray-text); font-weight: bold;">El más alto nivel de infraestructura
-                tecnológica al servicio del abogado de excelencia.</p>
-        </div>
-
+        </section>
     </div>
 
-    <!-- -------------------------------------
-         🖋️ SCRIPT PARA ANIMACIONES DE ALTO IMPACTO 🖋️
-    ------------------------------------- -->
+    <!-- ═══════════ SECTION 3: GENERADOR DE DOCUMENTOS ═══════════ -->
+    <section class="section" id="escrito">
+        <div class="section-header centered reveal">
+            <span class="section-number">03 — Generador de Documentos</span>
+            <h2 class="section-title">Escritos legales<br><em>listos para litigar</em></h2>
+            <p class="section-desc">
+                Al hacer clic en Escrito, accedes al generador especializado que categoriza y parametriza la creación de documentos formales. 
+                Estandariza tus flujos de trabajo, disminuye las horas no facturables y escala el volumen de asuntos abordables.
+            </p>
+        </div>
+
+        <div class="feature-visual reveal" style="max-width: 800px; margin: 0 auto 48px;">
+            <img src="images/Captura de pantalla 2026-03-07 014357.png" alt="Modal del Generador Escrito">
+        </div>
+
+        <div class="gallery reveal">
+            <div class="gallery-card">
+                <img src="images/Captura de pantalla 2026-03-07 014419.png" alt="Contratos">
+                <div class="gallery-card-label"><span class="dot"></span> Contratos Formales</div>
+            </div>
+            <div class="gallery-card">
+                <img src="images/Captura de pantalla 2026-03-07 014440.png" alt="Demandas">
+                <div class="gallery-card-label"><span class="dot"></span> Control de Demandas</div>
+            </div>
+            <div class="gallery-card">
+                <img src="images/Captura de pantalla 2026-03-07 014501.png" alt="Amparo">
+                <div class="gallery-card-label"><span class="dot"></span> Amparo Especializado</div>
+            </div>
+            <div class="gallery-card">
+                <img src="images/Captura de pantalla 2026-03-07 014523.png" alt="Impugnación">
+                <div class="gallery-card-label"><span class="dot"></span> Medios de Impugnación</div>
+            </div>
+            <div class="gallery-card">
+                <img src="images/Captura de pantalla 2026-03-07 014541.png" alt="Peticiones">
+                <div class="gallery-card-label"><span class="dot"></span> Peticiones y Oficios</div>
+            </div>
+            <div class="gallery-card">
+                <img src="images/Captura de pantalla 2026-03-07 014604.png" alt="Denuncias">
+                <div class="gallery-card-label"><span class="dot"></span> Denuncias Disciplinarias</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ SECTION 4: ARQUITECTURA MULTI-GENIO ═══════════ -->
+    <div class="section-alt">
+        <section class="section" id="genios">
+            <div class="section-header reveal">
+                <span class="section-number">04 — Arquitectura Multi-Genio</span>
+                <h2 class="section-title">Tus socios <em>hiper-especializados</em><br>en cada rama del derecho</h2>
+                <p class="section-desc">
+                    Al activar un Genio Jurídico, el sistema enfoca todos sus motores analíticos en esa rama específica del derecho mexicano. 
+                    Multiplica la capacidad técnica de tu equipo sin requerir contrataciones adicionales.
+                </p>
+            </div>
+
+            <div class="feature-row reveal">
+                <div class="feature-visual">
+                    <img src="images/panel_iurexia_v6.png" alt="Panel con Genios Activos">
+                </div>
+                <div class="feature-content">
+                    <ul class="capability-list">
+                        <li class="capability-item">
+                            <div class="capability-icon">🔗</div>
+                            <div>
+                                <div class="capability-title">Activación Simultánea</div>
+                                <div class="capability-desc">Activa hasta <strong>dos Genios de forma concurrente</strong> — por ejemplo, Amparo y Penal. Esta arquitectura cruza ambos acervos normativos ofreciendo en segundos análisis multidisciplinarios que a un despacho le tomaría horas consolidar.</div>
+                            </div>
+                        </li>
+                        <li class="capability-item">
+                            <div class="capability-icon">🔒</div>
+                            <div>
+                                <div class="capability-title">Modo Analítico Estricto</div>
+                                <div class="capability-desc"><strong>Bloqueo de redacción:</strong> Cuando activas más de un Genio a la vez, el modo "Redactar" se bloquea automáticamente. Los Genios cruzados están diseñados para investigar y razonar con profundidad, no para pre-redactar.</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══════════ SECTION 5: ANÁLISIS DOCUMENTAL ═══════════ -->
+    <section class="section" id="analisis">
+        <div class="section-header reveal">
+            <span class="section-number">05 — Análisis Documental y Resoluciones</span>
+            <h2 class="section-title">Auditoría de <em>precisión quirúrgica</em><br>para tus expedientes</h2>
+        </div>
+
+        <div class="feature-row reveal">
+            <div class="feature-content">
+                <div class="feature-label">Consulta de archivos propios</div>
+                <h3 class="feature-heading">Carga tus expedientes y obtén análisis instantáneo</h3>
+                <p class="feature-text">
+                    El icono de Clip 📎 te permite cargar PDFs o documentos Word de tus expedientes, operando bajo estricto 
+                    <strong>Aislamiento de Datos</strong>. Iurexia lee contenido procesal complejo al instante, recuperando 
+                    horas de revisión manual. Audita resoluciones, rastrea contradicciones y extrae los puntos resolutivos 
+                    de sentencias masivas con precisión quirúrgica.
+                </p>
+            </div>
+            <div class="feature-visual">
+                <img src="images/Captura de pantalla 2026-03-07 015131.png" alt="Subir Documento">
+            </div>
+        </div>
+
+        <div class="feature-row reverse reveal">
+            <div class="feature-content">
+                <div class="feature-label">Herramienta Sentencia</div>
+                <h3 class="feature-heading">Auditoría legal de resoluciones jurisdiccionales</h3>
+                <p class="feature-text">
+                    Exclusiva para realizar una auditoría legal completa de resoluciones de amparo o de fondo. 
+                    El motor revisa minuciosamente violaciones procedimentales, aplicación indebida de la norma y suplencia 
+                    de la queja. Entrega un nivel de escrutinio digno de un magistrado revisor.
+                </p>
+            </div>
+            <div class="feature-visual">
+                <img src="images/Captura de pantalla 2026-03-07 015651.png" alt="Herramienta Sentencia">
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ SECTION 6: INGENIERÍA DE PROMPTS ═══════════ -->
+    <div class="section-dark">
+        <section class="section" id="prompts">
+            <div class="section-header centered reveal">
+                <span class="section-number" style="color: var(--gold);">06 — El Arte de Preguntar</span>
+                <h2 class="section-title" style="color: #fff;">Ingeniería de <em>Prompts</em><br>para resultados contundentes</h2>
+                <p class="section-desc">
+                    Iurexia responde al nivel de rigor que le exijas. La forma en la que formulas tu instrucción 
+                    determina la calidad técnica y la profundidad argumentativa de cada respuesta.
+                </p>
+            </div>
+
+            <!-- Prompt Formula Cards -->
+            <div class="prompt-grid reveal">
+                <div class="prompt-card">
+                    <div class="prompt-card-num">01</div>
+                    <div class="prompt-card-title">El Rol o Contexto</div>
+                    <div class="prompt-card-text">Define cómo quieres que Iurexia actúe. El contexto establece la perspectiva del análisis.</div>
+                    <div class="prompt-card-example">
+                        "Actúa como un magistrado penal de apelación..." o "Asume el rol de abogado litigante laboralista del lado patronal..."
+                    </div>
+                </div>
+                <div class="prompt-card">
+                    <div class="prompt-card-num">02</div>
+                    <div class="prompt-card-title">Los Hechos Concretos</div>
+                    <div class="prompt-card-text">Proporciona datos sin paja, directos a la controversia. La premisa menor de tu silogismo jurídico.</div>
+                    <div class="prompt-card-example">
+                        "Mi cliente fue despedido verbalmente sin acta administrativa previa, alegando abandono de trabajo que no ocurrió..."
+                    </div>
+                </div>
+                <div class="prompt-card">
+                    <div class="prompt-card-num">03</div>
+                    <div class="prompt-card-title">La Tarea y el Tono</div>
+                    <div class="prompt-card-text">Qué necesitas exactamente y cómo lo quieres entregado. Sé específico en formato y profundidad.</div>
+                    <div class="prompt-card-example">
+                        "Redacta un capítulo de conceptos de violación argumentando la ilegalidad del despido. Usa un tono persuasivo, incisivo, y cita jurisprudencia de la SCJN."
+                    </div>
+                </div>
+            </div>
+
+            <!-- Best Practices -->
+            <div class="callout reveal">
+                <div class="callout-title">Mejores Prácticas Generales</div>
+            </div>
+
+            <ul class="practices-list reveal">
+                <li class="practices-item">
+                    <span class="practices-num">01</span>
+                    <div class="practices-content">
+                        <strong>Evita ambigüedades</strong>
+                        <p>No pidas "háblame de contratos". Pide "Redacta la cláusula penal de rescisión anticipada para un contrato de arrendamiento comercial".</p>
+                    </div>
+                </li>
+                <li class="practices-item">
+                    <span class="practices-num">02</span>
+                    <div class="practices-content">
+                        <strong>Inyecta la teoría procesal</strong>
+                        <p>Dile explícitamente qué excepciones procesales o agravios formales quieres que explore.</p>
+                    </div>
+                </li>
+                <li class="practices-item">
+                    <span class="practices-num">03</span>
+                    <div class="practices-content">
+                        <strong>Itera con el motor</strong>
+                        <p>Si la respuesta inicial es buena pero le falta profundidad, dile: "Profundiza exclusivamente en el segundo concepto de violación, agregando estándares de convencionalidad de la CIDH."</p>
+                    </div>
+                </li>
+                <li class="practices-item">
+                    <span class="practices-num">04</span>
+                    <div class="practices-content">
+                        <strong>Usa el modo correcto</strong>
+                        <p>Si exiges redacción extensa estando en modo "Buscar", Iurexia tenderá a darte fichas jurisprudenciales. Asegúrate de estar en modo Redactar.</p>
+                    </div>
+                </li>
+            </ul>
+        </section>
+    </div>
+
+    <!-- ═══════════ FOOTER ═══════════ -->
+    <footer class="guide-footer">
+        <div class="footer-logo">Iurex<span>ia</span> Pro</div>
+        <p class="footer-tagline">El más alto nivel de infraestructura tecnológica al servicio del abogado de excelencia.</p>
+        <a href="https://www.iurexia.com/chat" class="footer-link">
+            Ir a la plataforma →
+        </a>
+    </footer>
+
+    <!-- ═══════════ SCROLL ANIMATIONS ═══════════ -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Títulos desde la izquierda
-            document.querySelectorAll("h1, h2").forEach(el => el.classList.add("reveal-left"));
-
-            // Subtítulos desde la derecha
-            document.querySelectorAll("h3").forEach(el => el.classList.add("reveal-right"));
-
-            // Textos y cajas info: Textos desde abajo, info-box un zoom dramático
-            document.querySelectorAll(".info-box, .tips-container").forEach(el => el.classList.add("reveal-zoom"));
-            document.querySelectorAll("p:not(.tips-container p):not(.step-list p):not(.info-box p)").forEach(el => el.classList.add("reveal-bottom"));
-
-            // Imágenes: Alternar izquierda y derecha
-            document.querySelectorAll(".img-container").forEach((el, index) => {
-                if (index % 2 === 0) {
-                    el.classList.add("reveal-right");
-                } else {
-                    el.classList.add("reveal-left");
-                }
-            });
-
-            // Listas en cascada desde la derecha
-            document.querySelectorAll(".step-list").forEach(list => {
-                const items = list.querySelectorAll("li");
-                items.forEach((item, index) => {
-                    item.classList.add("reveal-right");
-                    let delayClass = `delay-${Math.min((index + 1) * 100, 400)}`;
-                    item.classList.add(delayClass);
-                });
-            });
-
-            // Galería con zoom
-            document.querySelectorAll(".gallery-grid").forEach(grid => {
-                const items = grid.querySelectorAll(".gallery-item");
-                items.forEach((item, index) => {
-                    item.classList.add("reveal-zoom");
-                    let delayClass = `delay-${Math.min((index % 2 + 1) * 100, 300)}`;
-                    item.classList.add(delayClass);
-                });
-            });
-
-            // Observer
             const observerOptions = {
                 root: null,
                 rootMargin: "0px",
@@ -780,10 +1094,10 @@
                 });
             }, observerOptions);
 
-            const revealElements = document.querySelectorAll(".reveal-left, .reveal-right, .reveal-bottom, .reveal-zoom");
-            revealElements.forEach(el => revealOnScroll.observe(el));
+            document.querySelectorAll(".reveal").forEach(el => revealOnScroll.observe(el));
         });
     </script>
+
 </body>
 
 </html>
