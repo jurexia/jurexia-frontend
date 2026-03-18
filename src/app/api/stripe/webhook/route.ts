@@ -265,8 +265,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     // FIX #6: Validar que el pago fue exitoso antes de actualizar
-    if (session.payment_status !== 'paid') {
-        console.warn(`⚠️ Checkout completed but payment_status is "${session.payment_status}" (not "paid") for ${email} — deferring until payment confirms`);
+    // Accept both 'paid' (normal checkout) and 'no_payment_required' (100% coupon/trial)
+    const validPaymentStatuses = ['paid', 'no_payment_required'];
+    if (!validPaymentStatuses.includes(session.payment_status)) {
+        console.warn(`⚠️ Checkout completed but payment_status is "${session.payment_status}" (not paid/no_payment_required) for ${email} — deferring until payment confirms`);
         return;
     }
 
