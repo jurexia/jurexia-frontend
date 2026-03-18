@@ -1,8 +1,9 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown, BookOpen, FileText, Plus } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap } from 'lucide-react';
 import Link from 'next/link';
+import UpgradeNudge from '@/components/UpgradeNudge';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage, { TypingIndicator } from '@/components/ChatMessage';
 import DocumentModal from '@/components/DocumentModal';
@@ -41,6 +42,7 @@ export default function ChatPage() {
 
     // States
     const [quotaExceeded, setQuotaExceeded] = useState(false);
+    const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(false);
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showStateModal, setShowStateModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
@@ -509,6 +511,33 @@ export default function ChatPage() {
                     </div>
                 </header>
 
+                {/* Progressive Nudge Banner — shows when queries running low */}
+                {!isPro && !nudgeBannerDismissed && queriesRemaining > 0 && queriesRemaining <= 2 && hasMessages && (
+                    <div className="fixed top-14 left-0 right-0 md:left-72 z-25 animate-in slide-in-from-top duration-500">
+                        <div className="bg-gradient-to-r from-amber-50 via-amber-100/80 to-yellow-50 border-b border-accent-gold/20 px-4 py-2.5">
+                            <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <div className="w-6 h-6 rounded-full bg-accent-gold/15 flex items-center justify-center flex-shrink-0">
+                                        <Zap className="w-3.5 h-3.5 text-accent-gold" />
+                                    </div>
+                                    <p className="text-sm text-charcoal-700 truncate">
+                                        {queriesRemaining === 1
+                                            ? <><strong>Última consulta</strong> — no pierdas el impulso de tu investigación</>
+                                            : <>Te quedan <strong>{queriesRemaining} consultas</strong> este mes · Activa Pro para no quedarte sin respuestas</>
+                                        }
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <Link href="/precios" className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent-gold text-white text-xs font-bold hover:bg-accent-gold/90 transition-colors">
+                                        Conocer planes <ArrowRight className="w-3 h-3" />
+                                    </Link>
+                                    <button onClick={() => setNudgeBannerDismissed(true)} className="text-charcoal-400 hover:text-charcoal-600 transition-colors text-lg leading-none">×</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <main className="flex-1 pt-14 overflow-y-auto">
                     {!hasMessages ? (
                         <div className="h-full flex flex-col items-center justify-center px-4 -mt-8">
@@ -598,9 +627,17 @@ export default function ChatPage() {
                         </div>
                     ) : (
                         <div className="max-w-3xl mx-auto px-4 py-6 pb-[500px] space-y-4">
-                            {messages.map((message, index) => (
-                                <ChatMessage key={index} message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} />
-                            ))}
+                            {messages.map((message, index) => {
+                                // Count assistant messages up to this point
+                                const assistantCount = messages.slice(0, index + 1).filter(m => m.role === 'assistant').length;
+                                const showNudge = !isPro && message.role === 'assistant' && assistantCount > 0 && assistantCount % 3 === 0 && index !== messages.length - 1;
+                                return (
+                                    <div key={index}>
+                                        <ChatMessage message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} />
+                                        {showNudge && <UpgradeNudge messageIndex={assistantCount} />}
+                                    </div>
+                                );
+                            })}
                             {(isLoading || isDocumentAnalyzing) && messages[messages.length - 1]?.role === 'user' && <TypingIndicator retryMessage={retryMessage || undefined} />}
                             {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
                             <div ref={messagesEndRef} />
@@ -634,26 +671,69 @@ export default function ChatPage() {
             {showConfigModal && user && <StateSelectorModal userId={user.id} isConfig={true} currentEstado={selectedEstado} onClose={() => setShowConfigModal(false)} onSelectEstado={(e) => { setSelectedEstado(e); setShowConfigModal(false); }} />}
 
             {showLimitModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl p-8 max-w-sm mx-auto text-center shadow-2xl">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><Scale className="w-8 h-8 text-red-600" /></div>
-                        <h3 className="text-xl font-bold mb-2">Límite alcanzado</h3>
-                        <p className="text-charcoal-600 mb-6">Suscripción requerida para continuar.</p>
-                        <div className="flex gap-3 justify-center">
-                            <button onClick={() => setShowLimitModal(false)} className="px-6 py-2 rounded-xl bg-gray-100 font-medium">Cerrar</button>
-                            <Link href="/precios" className="px-6 py-2 rounded-xl bg-accent-brown text-white font-medium">Ver planes</Link>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="bg-charcoal-800 border border-charcoal-600 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center">
+                        <div className="w-16 h-16 bg-gradient-to-br from-accent-gold/20 to-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                            <Crown className="w-8 h-8 text-accent-gold" />
+                        </div>
+                        <h3 className="font-serif text-2xl font-medium text-white mb-2">Tu investigación legal no debería detenerse aquí</h3>
+                        <p className="text-charcoal-300 mb-4 text-sm leading-relaxed">
+                            Con el <span className="text-accent-gold font-semibold">Plan Pro</span> obtienes 140 consultas/mes + Genios Especializados de IA avanzada que generan análisis que solo un profesional podría hacer en 3+ horas.
+                        </p>
+                        <p className="text-charcoal-400 text-xs mb-6">
+                            Continúa donde te quedaste — tu historial de consultas se conserva.
+                        </p>
+                        <Link
+                            href="/precios"
+                            className="block w-full py-3.5 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-base transition-colors mb-3"
+                        >
+                            Activar Plan Pro — $149/mes
+                        </Link>
+                        <button onClick={() => setShowLimitModal(false)} className="text-charcoal-400 hover:text-charcoal-200 text-sm transition-colors">
+                            Cerrar
+                        </button>
+                        <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-charcoal-700">
+                            <div className="flex items-center gap-1.5 text-charcoal-500 text-xs">
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                <span>Pago seguro con Stripe</span>
+                            </div>
+                            <span className="text-charcoal-700">·</span>
+                            <span className="text-charcoal-500 text-xs">Cancela cuando quieras</span>
                         </div>
                     </div>
                 </div>
             )}
 
             {quotaExceeded && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-charcoal-800 border border-charcoal-600 rounded-2xl p-8 max-w-md mx-4 shadow-2xl text-center">
-                        <Scale className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-white mb-2">Consultas agotadas</h3>
-                        <p className="text-charcoal-300 mb-6">Cuota mensual completada. Actualiza para acceso ilimitado.</p>
-                        <Link href="/precios" className="inline-block w-full py-3 bg-accent-brown text-white rounded-xl font-bold">Mejorar Plan</Link>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="bg-charcoal-800 border border-charcoal-600 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center">
+                        <div className="w-16 h-16 bg-gradient-to-br from-accent-gold/20 to-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                            <Crown className="w-8 h-8 text-accent-gold" />
+                        </div>
+                        <h3 className="font-serif text-2xl font-medium text-white mb-2">Tu investigación legal no debería detenerse aquí</h3>
+                        <p className="text-charcoal-300 mb-4 text-sm leading-relaxed">
+                            Has completado tus consultas gratuitas este mes. Con el <span className="text-accent-gold font-semibold">Plan Pro</span> obtienes 140 consultas/mes + Genios Especializados que potencian tu análisis jurídico.
+                        </p>
+                        <p className="text-charcoal-400 text-xs mb-6">
+                            Más de 600 abogados ya confían en Iurexia para sus investigaciones.
+                        </p>
+                        <Link
+                            href="/precios"
+                            className="block w-full py-3.5 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-base transition-colors mb-3"
+                        >
+                            Activar Plan Pro — $149/mes
+                        </Link>
+                        <Link href="/precios" className="text-charcoal-400 hover:text-charcoal-200 text-sm transition-colors">
+                            Ver todos los planes →
+                        </Link>
+                        <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-charcoal-700">
+                            <div className="flex items-center gap-1.5 text-charcoal-500 text-xs">
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                <span>Pago seguro con Stripe</span>
+                            </div>
+                            <span className="text-charcoal-700">·</span>
+                            <span className="text-charcoal-500 text-xs">Cancela cuando quieras</span>
+                        </div>
                     </div>
                 </div>
             )}

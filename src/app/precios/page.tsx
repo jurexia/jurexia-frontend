@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Check, Zap, Crown, Star, Calendar, Loader2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Scale, ArrowRight, Check, Zap, Crown, Star, Calendar, Loader2, AlertTriangle, ShieldCheck, Lock, CreditCard } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
@@ -187,6 +187,32 @@ export default function PreciosPage() {
                 </div>
             </section>
 
+            {/* Trust Signal Strip */}
+            <section className="py-6 px-4">
+                <div className="max-w-5xl mx-auto">
+                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-charcoal-500 text-xs">
+                        <div className="flex items-center gap-1.5">
+                            <ShieldCheck className="w-4 h-4 text-green-500" />
+                            <span>Pago seguro con <strong className="text-charcoal-700">Stripe</strong></span>
+                        </div>
+                        <span className="hidden sm:inline text-charcoal-300">·</span>
+                        <div className="flex items-center gap-1.5">
+                            <Lock className="w-3.5 h-3.5 text-green-500" />
+                            <span>Cifrado SSL de extremo a extremo</span>
+                        </div>
+                        <span className="hidden sm:inline text-charcoal-300">·</span>
+                        <div className="flex items-center gap-1.5">
+                            <CreditCard className="w-3.5 h-3.5 text-charcoal-400" />
+                            <span>Visa · Mastercard · AMEX</span>
+                        </div>
+                        <span className="hidden sm:inline text-charcoal-300">·</span>
+                        <span>Cancela cuando quieras · Sin cargos ocultos</span>
+                        <span className="hidden sm:inline text-charcoal-300">·</span>
+                        <span>Tus datos y consultas son 100% confidenciales</span>
+                    </div>
+                </div>
+            </section>
+
             {/* Secretarios PJF CTA */}
             <section className="py-6 px-4">
                 <div className="max-w-4xl mx-auto">
@@ -273,6 +299,7 @@ export default function PreciosPage() {
                             { question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo.' },
                             { question: '¿Ofrecen reembolsos?', answer: 'Iurexia no ofrece reembolsos. Por eso ofrecemos 5 consultas gratuitas mensuales para que pruebes la plataforma antes de suscribirte. Si decides cancelar, conservas el acceso hasta el final de tu periodo de facturación.' },
                             { question: '¿Qué pasa si se acaban mis consultas?', answer: 'Te notificaremos cuando te queden pocas consultas. Puedes esperar al siguiente mes o actualizar a un plan con más consultas en cualquier momento. Al hacer upgrade, tu plan anterior se cancela automáticamente sin cobros dobles. El Plan Platinum incluye 560 consultas al mes, ideal para despachos y corporativos.' },
+                            { question: '¿Mis datos y consultas son confidenciales?', answer: 'Absolutamente. Iurexia utiliza cifrado SSL de extremo a extremo y no comparte, almacena ni utiliza el contenido de tus consultas para entrenar modelos de IA. Tus pagos son procesados por Stripe, la plataforma certificada PCI DSS Nivel 1 utilizada por empresas como Amazon, Shopify y BMW. Tu información nunca se expone.' },
                         ].map((faq, i) => (
                             <AnimateOnScroll key={i} delay={i * 0.08}>
                                 <FAQItem question={faq.question} answer={faq.answer} />
@@ -286,23 +313,46 @@ export default function PreciosPage() {
             <section className="py-20 bg-charcoal-900 text-white overflow-hidden">
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <AnimateOnScroll>
-                        <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                            Comienza gratis <span className="text-accent-gold">hoy</span>
+                        <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">
+                            Potencia tu práctica legal <span className="text-accent-gold">hoy</span>
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.15}>
-                        <p className="text-gray-300 mb-8 max-w-2xl mx-auto text-lg">
-                            Prueba Iurexia con 5 consultas gratuitas. Sin tarjeta de crédito.
+                        <p className="text-gray-300 mb-3 max-w-2xl mx-auto text-lg">
+                            Más de 600 abogados ya confían en Iurexia para sus investigaciones jurídicas.
+                        </p>
+                        <p className="text-gray-500 mb-8 max-w-2xl mx-auto text-sm">
+                            Comienza gratis o activa el Plan Pro para acceder a la Arquitectura Multi-Genio.
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.3} direction="scale">
-                        <Link
-                            href="/chat"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-full hover:bg-gray-100 transition-colors"
-                        >
-                            Probar Gratis
-                            <ArrowRight className="w-5 h-5" />
-                        </Link>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <Link
+                                href="/precios#pro"
+                                className="inline-flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full transition-colors shadow-lg shadow-green-500/20"
+                            >
+                                Activar Plan Pro — $149/mes
+                                <ArrowRight className="w-5 h-5" />
+                            </Link>
+                            <Link
+                                href="/chat"
+                                className="inline-flex items-center gap-2 px-8 py-4 border border-white/20 text-white font-medium rounded-full hover:bg-white/5 transition-colors"
+                            >
+                                Comenzar Gratis
+                            </Link>
+                        </div>
+                    </AnimateOnScroll>
+                    <AnimateOnScroll delay={0.5}>
+                        <div className="flex items-center justify-center gap-4 mt-8 text-gray-500 text-xs">
+                            <div className="flex items-center gap-1.5">
+                                <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                                <span>Pago seguro con Stripe</span>
+                            </div>
+                            <span className="text-gray-700">·</span>
+                            <span>Sin tarjeta para plan gratuito</span>
+                            <span className="text-gray-700">·</span>
+                            <span>Cancela cuando quieras</span>
+                        </div>
                     </AnimateOnScroll>
                 </div>
             </section>
@@ -536,22 +586,22 @@ function PricingCard({
 
                         <div className="flex flex-col gap-3">
                             <button
+                                onClick={() => {
+                                    setShowWarning(false);
+                                }}
+                                disabled={loading}
+                                className="w-full px-4 py-3 bg-charcoal-900 text-white rounded-xl hover:bg-black transition-colors font-bold disabled:opacity-70"
+                            >
+                                Cambiar a Plan Pro — El favorito
+                            </button>
+                            <button
                                 onClick={handleSubscribe}
                                 disabled={loading}
-                                className="w-full px-4 py-2 border border-charcoal-200 text-charcoal-700 rounded-xl hover:bg-gray-50 transition-colors font-medium disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-2 border border-charcoal-200 text-charcoal-500 rounded-xl hover:bg-gray-50 transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Procesando...' : 'Continuar con Plan Básico'}
                             </button>
-                            <button
-                                onClick={() => {
-                                    setShowWarning(false);
-                                    // Could theoretically scroll or click PRO button here
-                                }}
-                                disabled={loading}
-                                className="w-full px-4 py-2 bg-charcoal-900 text-white rounded-xl hover:bg-charcoal-800 transition-colors font-medium"
-                            >
-                                Cambiar a Plan Pro
-                            </button>
+                            <p className="text-xs text-charcoal-400 mt-1">Más del 80% de nuestros suscriptores eligen el Plan Pro.</p>
                         </div>
                     </div>
                 </div>
