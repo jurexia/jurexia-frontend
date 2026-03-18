@@ -677,10 +677,10 @@ export default function ChatPage() {
                             <Crown className="w-8 h-8 text-accent-gold" />
                         </div>
                         <h3 className="font-serif text-2xl font-medium text-white mb-2">Tu investigación legal no debería detenerse aquí</h3>
-                        <p className="text-charcoal-300 mb-4 text-sm leading-relaxed">
+                        <p className="text-gray-200 mb-4 text-sm leading-relaxed">
                             Con el <span className="text-accent-gold font-semibold">Plan Pro</span> obtienes 140 consultas/mes + Genios Especializados de IA avanzada que generan análisis que solo un profesional podría hacer en 3+ horas.
                         </p>
-                        <p className="text-charcoal-400 text-xs mb-6">
+                        <p className="text-gray-300 text-xs mb-6">
                             Continúa donde te quedaste — tu historial de consultas se conserva.
                         </p>
                         <Link
@@ -689,16 +689,16 @@ export default function ChatPage() {
                         >
                             Activar Plan Pro — $149/mes
                         </Link>
-                        <button onClick={() => setShowLimitModal(false)} className="text-charcoal-400 hover:text-charcoal-200 text-sm transition-colors">
+                        <button onClick={() => setShowLimitModal(false)} className="text-gray-300 hover:text-white text-sm transition-colors">
                             Cerrar
                         </button>
-                        <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-charcoal-700">
-                            <div className="flex items-center gap-1.5 text-charcoal-500 text-xs">
+                        <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-gray-600">
+                            <div className="flex items-center gap-1.5 text-gray-400 text-xs">
                                 <ShieldCheck className="w-3.5 h-3.5" />
                                 <span>Pago seguro con Stripe</span>
                             </div>
-                            <span className="text-charcoal-700">·</span>
-                            <span className="text-charcoal-500 text-xs">Cancela cuando quieras</span>
+                            <span className="text-gray-600">·</span>
+                            <span className="text-gray-400 text-xs">Cancela cuando quieras</span>
                         </div>
                     </div>
                 </div>
@@ -711,10 +711,10 @@ export default function ChatPage() {
                             <Crown className="w-8 h-8 text-accent-gold" />
                         </div>
                         <h3 className="font-serif text-2xl font-medium text-white mb-2">Tu investigación legal no debería detenerse aquí</h3>
-                        <p className="text-charcoal-300 mb-4 text-sm leading-relaxed">
+                        <p className="text-gray-200 mb-4 text-sm leading-relaxed">
                             Has completado tus consultas gratuitas este mes. Con el <span className="text-accent-gold font-semibold">Plan Pro</span> obtienes 140 consultas/mes + Genios Especializados que potencian tu análisis jurídico.
                         </p>
-                        <p className="text-charcoal-400 text-xs mb-6">
+                        <p className="text-gray-300 text-xs mb-6">
                             Más de 600 abogados ya confían en Iurexia para sus investigaciones.
                         </p>
                         <Link
@@ -723,16 +723,16 @@ export default function ChatPage() {
                         >
                             Activar Plan Pro — $149/mes
                         </Link>
-                        <Link href="/precios" className="text-charcoal-400 hover:text-charcoal-200 text-sm transition-colors">
+                        <Link href="/precios" className="text-gray-300 hover:text-white text-sm transition-colors">
                             Ver todos los planes →
                         </Link>
-                        <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-charcoal-700">
-                            <div className="flex items-center gap-1.5 text-charcoal-500 text-xs">
+                        <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-gray-600">
+                            <div className="flex items-center gap-1.5 text-gray-400 text-xs">
                                 <ShieldCheck className="w-3.5 h-3.5" />
                                 <span>Pago seguro con Stripe</span>
                             </div>
-                            <span className="text-charcoal-700">·</span>
-                            <span className="text-charcoal-500 text-xs">Cancela cuando quieras</span>
+                            <span className="text-gray-600">·</span>
+                            <span className="text-gray-400 text-xs">Cancela cuando quieras</span>
                         </div>
                     </div>
                 </div>
