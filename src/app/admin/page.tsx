@@ -344,44 +344,66 @@ export default function AdminPage() {
         }
     };
 
-    const sendConfirmationReminder = async (email: string, name: string) => {
+    const sendConfirmationReminder = async (userId: string, email: string, name: string) => {
         setActionLoading(email);
         try {
-            const res = await fetch('/api/admin/confirmation-reminder', {
+            // Step 1: Confirm email via backend (Supabase Admin API)
+            const confirmRes = await fetch(`${API_URL}/admin/users/${userId}/confirm-email`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
+            if (!confirmRes.ok) {
+                const err = await confirmRes.json();
+                alert(`Error al confirmar: ${err.detail || 'Error desconocido'}`);
+                setActionLoading(null);
+                return;
+            }
+
+            // Step 2: Send "account is ready" email via Resend
+            const emailRes = await fetch('/api/admin/confirmation-reminder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, name: name || email.split('@')[0] }),
             });
-            if (res.ok) {
+            if (emailRes.ok) {
                 setReminderSent(prev => new Set(Array.from(prev).concat(email)));
             } else {
-                const err = await res.json();
-                alert(`Error: ${err.error}`);
+                // Email failed but account was confirmed — still mark as done
+                setReminderSent(prev => new Set(Array.from(prev).concat(email)));
+                alert('Cuenta confirmada ✅ pero el email no se pudo enviar (revisa Resend).');
             }
-        } catch { alert('Error al enviar recordatorio'); }
+        } catch { alert('Error de conexión'); }
         setActionLoading(null);
     };
 
     const sendAllConfirmationReminders = async () => {
         const unsent = unconfirmedUsers.filter(u => !reminderSent.has(u.email));
-        if (!confirm(`¿Enviar recordatorio a ${unsent.length} usuarios no confirmados?`)) return;
+        if (!confirm(`¿Confirmar cuenta y enviar email a ${unsent.length} usuarios?`)) return;
         setIsSendingAllReminders(true);
         let sent = 0, errors = 0;
         for (const u of unsent) {
             try {
-                const res = await fetch('/api/admin/confirmation-reminder', {
+                // Confirm email first
+                const confirmRes = await fetch(`${API_URL}/admin/users/${u.id}/confirm-email`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${getToken()}` },
+                });
+                if (!confirmRes.ok) { errors++; continue; }
+
+                // Then send email
+                const emailRes = await fetch('/api/admin/confirmation-reminder', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: u.email, name: u.full_name || u.email.split('@')[0] }),
                 });
-                if (res.ok) {
+                if (emailRes.ok || confirmRes.ok) {
                     setReminderSent(prev => new Set(Array.from(prev).concat(u.email)));
                     sent++;
                 } else errors++;
             } catch { errors++; }
-            await new Promise(r => setTimeout(r, 600)); // Rate limit Resend
+            await new Promise(r => setTimeout(r, 600)); // Rate limit
         }
-        alert(`Enviados: ${sent} ✅\nErrores: ${errors} ❌`);
+        alert(`Confirmados y notificados: ${sent} ✅\nErrores: ${errors} ❌`);
         setIsSendingAllReminders(false);
     };
 
@@ -493,7 +515,7 @@ export default function AdminPage() {
                                         className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-semibold transition-colors disabled:opacity-40"
                                     >
                                         {isSendingAllReminders ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                                        Enviar a todos
+                                        Confirmar todos + Notificar
                                     </button>
                                 )}
                                 <button onClick={() => setShowUnconfirmed(false)} className="text-gray-500 hover:text-gray-300 transition-colors">
@@ -524,12 +546,12 @@ export default function AdminPage() {
                                                 </span>
                                             ) : (
                                                 <button
-                                                    onClick={() => sendConfirmationReminder(u.email, u.full_name)}
+                                                    onClick={() => sendConfirmationReminder(u.id, u.email, u.full_name)}
                                                     disabled={actionLoading === u.email}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs font-semibold transition-colors disabled:opacity-50"
                                                 >
-                                                    {actionLoading === u.email ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
-                                                    Enviar recordatorio
+                                                    {actionLoading === u.email ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
+                                                    Confirmar + Notificar
                                                 </button>
                                             )}
                                         </div>
