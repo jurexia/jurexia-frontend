@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     Users, Shield, BarChart3, AlertTriangle, Ban, CheckCircle,
     Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail, Bell,
-    MoreVertical, ChevronLeft, ChevronRight, Filter, Scale, Send
+    MoreVertical, ChevronLeft, ChevronRight, Filter, Scale, Send, UserCheck, AlertCircle
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
@@ -124,6 +124,11 @@ export default function AdminPage() {
     const [welcomeSent, setWelcomeSent] = useState<Set<string>>(new Set());
     const [updateSent, setUpdateSent] = useState<Set<string>>(new Set());
     const [isSendingMails, setIsSendingMails] = useState(false);
+    const [unconfirmedUsers, setUnconfirmedUsers] = useState<{id: string; email: string; created_at: string | null; full_name: string}[]>([]);
+    const [showUnconfirmed, setShowUnconfirmed] = useState(false);
+    const [loadingUnconfirmed, setLoadingUnconfirmed] = useState(false);
+    const [reminderSent, setReminderSent] = useState<Set<string>>(new Set());
+    const [isSendingAllReminders, setIsSendingAllReminders] = useState(false);
 
     const getToken = useCallback(() => {
         return session?.access_token || '';
@@ -321,6 +326,65 @@ export default function AdminPage() {
         }
     };
 
+    const fetchUnconfirmedUsers = async () => {
+        setLoadingUnconfirmed(true);
+        setError('');
+        try {
+            const res = await fetch(`${API_URL}/admin/unconfirmed-users`, {
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
+            if (!res.ok) throw new Error(`Error ${res.status}`);
+            const data = await res.json();
+            setUnconfirmedUsers(data.unconfirmed || []);
+            setShowUnconfirmed(true);
+        } catch (e: any) {
+            setError(e.message || 'Error al cargar usuarios no confirmados');
+        } finally {
+            setLoadingUnconfirmed(false);
+        }
+    };
+
+    const sendConfirmationReminder = async (email: string, name: string) => {
+        setActionLoading(email);
+        try {
+            const res = await fetch('/api/admin/confirmation-reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, name: name || email.split('@')[0] }),
+            });
+            if (res.ok) {
+                setReminderSent(prev => new Set(Array.from(prev).concat(email)));
+            } else {
+                const err = await res.json();
+                alert(`Error: ${err.error}`);
+            }
+        } catch { alert('Error al enviar recordatorio'); }
+        setActionLoading(null);
+    };
+
+    const sendAllConfirmationReminders = async () => {
+        const unsent = unconfirmedUsers.filter(u => !reminderSent.has(u.email));
+        if (!confirm(`¿Enviar recordatorio a ${unsent.length} usuarios no confirmados?`)) return;
+        setIsSendingAllReminders(true);
+        let sent = 0, errors = 0;
+        for (const u of unsent) {
+            try {
+                const res = await fetch('/api/admin/confirmation-reminder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: u.email, name: u.full_name || u.email.split('@')[0] }),
+                });
+                if (res.ok) {
+                    setReminderSent(prev => new Set(Array.from(prev).concat(u.email)));
+                    sent++;
+                } else errors++;
+            } catch { errors++; }
+            await new Promise(r => setTimeout(r, 600)); // Rate limit Resend
+        }
+        alert(`Enviados: ${sent} ✅\nErrores: ${errors} ❌`);
+        setIsSendingAllReminders(false);
+    };
+
     if (loading || !user || user.email !== ADMIN_EMAIL) {
         return (
             <div className="flex bg-[#0a0a0a] min-h-screen items-center justify-center">
@@ -349,7 +413,24 @@ export default function AdminPage() {
                         </div>
                         <p className="text-gray-500 text-sm font-medium">Iurexia Technologies — Gestión de usuarios y seguridad</p>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
+                        <button
+                            onClick={fetchUnconfirmedUsers}
+                            disabled={loadingUnconfirmed}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl shadow-sm text-emerald-400 font-medium transition-colors disabled:opacity-50"
+                        >
+                            {loadingUnconfirmed ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <UserCheck className="w-4 h-4" />
+                            )}
+                            Recuperar No Confirmados
+                            {unconfirmedUsers.length > 0 && (
+                                <span className="ml-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                                    {unconfirmedUsers.length}
+                                </span>
+                            )}
+                        </button>
                         <button
                             onClick={triggerRetroactiveMails}
                             disabled={isSendingMails}
@@ -390,6 +471,72 @@ export default function AdminPage() {
                         <button onClick={() => setError('')} className="text-red-400 hover:text-red-300 transition-colors focus:outline-none">
                             <X className="w-5 h-5" />
                         </button>
+                    </div>
+                )}
+
+                {/* Unconfirmed Users Section */}
+                {showUnconfirmed && (
+                    <div className="mb-8 bg-[#0d0d0d] border border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl">
+                        <div className="flex items-center justify-between px-6 py-4 bg-emerald-500/5 border-b border-emerald-500/10">
+                            <div className="flex items-center gap-3">
+                                <AlertCircle className="w-5 h-5 text-emerald-400" />
+                                <h3 className="text-white font-semibold">Usuarios sin confirmar email</h3>
+                                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-bold">
+                                    {unconfirmedUsers.length} usuario{unconfirmedUsers.length !== 1 ? 's' : ''}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {unconfirmedUsers.length > 0 && (
+                                    <button
+                                        onClick={sendAllConfirmationReminders}
+                                        disabled={isSendingAllReminders || unconfirmedUsers.every(u => reminderSent.has(u.email))}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-semibold transition-colors disabled:opacity-40"
+                                    >
+                                        {isSendingAllReminders ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                                        Enviar a todos
+                                    </button>
+                                )}
+                                <button onClick={() => setShowUnconfirmed(false)} className="text-gray-500 hover:text-gray-300 transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                        {unconfirmedUsers.length === 0 ? (
+                            <div className="text-center py-12 text-gray-500">
+                                <CheckCircle className="w-8 h-8 mx-auto mb-3 text-emerald-500/30" />
+                                <p className="font-medium text-sm">¡Todos los usuarios han confirmado su email!</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-[#1a1a1a]">
+                                {unconfirmedUsers.map(u => (
+                                    <div key={u.id} className="flex items-center justify-between px-6 py-3 hover:bg-[#151515] transition-colors">
+                                        <div className="flex flex-col">
+                                            <span className="text-gray-200 font-medium text-sm">{u.email}</span>
+                                            <div className="flex items-center gap-3 mt-0.5">
+                                                {u.full_name && <span className="text-xs text-gray-500">{u.full_name}</span>}
+                                                <span className="text-xs text-gray-600">Registrado {u.created_at ? formatDate(u.created_at) : '—'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {reminderSent.has(u.email) ? (
+                                                <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
+                                                    <CheckCircle className="w-4 h-4" /> Enviado
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => sendConfirmationReminder(u.email, u.full_name)}
+                                                    disabled={actionLoading === u.email}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs font-semibold transition-colors disabled:opacity-50"
+                                                >
+                                                    {actionLoading === u.email ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                                                    Enviar recordatorio
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
