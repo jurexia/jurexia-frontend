@@ -364,13 +364,13 @@ ${draftRequest.descripcion}`;
                 <div className="chat-input-container p-4">
                     {/* Fuero + Materia Toggle — Same row, compact pills above textarea */}
                     {(onFueroChange || onMateriaChange) && (
-                        <div data-guide="fuero-materia-filter" className="flex items-center gap-1.5 mb-3 pb-2 border-b border-gray-100/60 flex-wrap">
+                        <div data-guide="fuero-materia-filter" className="flex items-center gap-1 sm:gap-1.5 mb-3 pb-2 border-b border-gray-100/60 flex-nowrap overflow-x-auto">
                             {/* Fuero section */}
                             {onFueroChange && (
                                 <div data-guide="fuero-filter" className="flex items-center gap-1.5 flex-shrink-0">
-                                    <Scale className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Fuero</span>
-                                    <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-0.5">
+                                    <Scale className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0" />
+                                    <span className="hidden sm:inline text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Fuero</span>
+                                    <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-px sm:gap-0.5">
                                         {[
                                             { key: '', label: 'Auto' },
                                             { key: 'constitucional', label: 'Const.' },
@@ -380,7 +380,7 @@ ${draftRequest.descripcion}`;
                                             <button
                                                 key={f.key}
                                                 onClick={() => onFueroChange(f.key)}
-                                                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 ${selectedFuero === f.key
+                                                className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-medium transition-all duration-200 whitespace-nowrap ${selectedFuero === f.key
                                                     ? 'bg-charcoal-900 text-white shadow-sm'
                                                     : 'text-gray-500 hover:text-charcoal-700 hover:bg-white/60'
                                                     }`}
@@ -394,15 +394,15 @@ ${draftRequest.descripcion}`;
 
                             {/* Divider */}
                             {onFueroChange && onMateriaChange && (
-                                <div className="w-px h-5 bg-gray-200 mx-1 flex-shrink-0" />
+                                <div className="w-px h-4 sm:h-5 bg-gray-200 mx-0.5 sm:mx-1 flex-shrink-0" />
                             )}
 
                             {/* Materia section */}
                             {onMateriaChange && (
                                 <div data-guide="materia-filter" className="flex items-center gap-1.5 flex-shrink-0">
-                                    <BookOpen className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Materia</span>
-                                    <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-0.5">
+                                    <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0" />
+                                    <span className="hidden sm:inline text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Materia</span>
+                                    <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-px sm:gap-0.5">
                                         {[
                                             { key: '', label: 'Auto' },
                                             { key: 'civil', label: 'Civil' },
@@ -413,7 +413,7 @@ ${draftRequest.descripcion}`;
                                             <button
                                                 key={m.key}
                                                 onClick={() => onMateriaChange(m.key)}
-                                                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 ${selectedMateria === m.key
+                                                className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-medium transition-all duration-200 whitespace-nowrap ${selectedMateria === m.key
                                                     ? 'bg-charcoal-900 text-white shadow-sm'
                                                     : 'text-gray-500 hover:text-charcoal-700 hover:bg-white/60'
                                                     }`}
@@ -599,7 +599,7 @@ ${draftRequest.descripcion}`;
                             className="flex items-center flex-shrink-0 gap-0.5 pr-1 sm:pr-1.5 border-r border-gray-200/40"
                         >
                             <Brain className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ animation: 'iconMirror 3s ease-in-out infinite alternate' }} />
-                            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider mirror-genios-text">
+                            <span className="hidden sm:inline text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider mirror-genios-text">
                                 Genios
                             </span>
                             {(isGenioLocked && !isPro) && (
