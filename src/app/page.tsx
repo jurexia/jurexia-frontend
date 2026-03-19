@@ -356,46 +356,97 @@ export default function HomePage() {
             {/* TESTIMONIO — DANIEL VECKER */}
             {/* ═══════════════════════════════════════════════════════════════ */}
             <section className="py-16 sm:py-20 bg-white">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6">
-                    <AnimatedSection animation="scale-in">
-                        <div className="relative">
-                            {/* Decorative quotes */}
-                            <div className="absolute -top-6 -left-2 sm:-left-6 text-accent-gold/20 font-serif text-[120px] leading-none select-none pointer-events-none">"</div>
-
-                            <div className="relative bg-gradient-to-br from-cream-100 via-cream-50 to-white rounded-3xl border border-cream-400 p-8 sm:p-12 shadow-sm">
-                                {/* Stars */}
-                                <div className="flex gap-1 mb-6 justify-center">
-                                    {[1, 2, 3, 4, 5].map(i => (
-                                        <svg key={i} className="w-5 h-5 text-accent-gold" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                        </svg>
-                                    ))}
-                                </div>
-
-                                {/* Quote */}
-                                <blockquote className="font-serif text-xl sm:text-2xl md:text-3xl text-charcoal-900 text-center leading-relaxed mb-8 italic">
-                                    &ldquo;Antes de Iurexia, pasaba horas buscando tesis jurisprudenciales en bases de datos obsoletas. La primera vez que activé un Genio de Amparo y me citó el artículo exacto con la tesis aplicable en segundos, supe que mi forma de litigar había cambiado para siempre. Es como tener un asociado senior disponible las 24 horas.&rdquo;
-                                </blockquote>
-
-                                {/* Author */}
-                                <div className="flex flex-col items-center gap-3">
-                                    <div className="w-14 h-14 rounded-full bg-charcoal-900 flex items-center justify-center">
-                                        <span className="text-white font-serif text-xl font-bold">DV</span>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="font-semibold text-charcoal-900 text-lg">Lic. Daniel Vecker</p>
-                                        <p className="text-charcoal-500 text-sm">Abogado Litigante</p>
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-medium">
-                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                                            Usuario verificado Pro
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                <div className="max-w-6xl mx-auto px-4 sm:px-6">
+                    <AnimatedSection animation="slide-up">
+                        <div className="text-center mb-12">
+                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold tracking-widest uppercase mb-4">
+                                ★ Testimonios reales
+                            </span>
+                            <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-charcoal-900">
+                                Lo que dicen <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">nuestros usuarios</span>
+                            </h2>
                         </div>
                     </AnimatedSection>
+
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {/* Testimonial 1: Daniel Vecker */}
+                        <AnimatedSection animation="slide-up" delay={100}>
+                            <div className="relative bg-gradient-to-br from-cream-100 via-cream-50 to-white rounded-3xl border border-cream-400 p-6 sm:p-8 shadow-sm h-full flex flex-col">
+                                <div className="absolute -top-3 -left-1 text-accent-gold/15 font-serif text-[80px] leading-none select-none pointer-events-none">&ldquo;</div>
+                                <div className="flex gap-0.5 mb-4">
+                                    {[1,2,3,4,5].map(i => <svg key={i} className="w-4 h-4 text-accent-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
+                                </div>
+                                <blockquote className="font-serif text-base sm:text-lg text-charcoal-900 leading-relaxed mb-6 italic flex-grow">
+                                    &ldquo;Antes de Iurexia, pasaba horas buscando tesis en bases de datos obsoletas. La primera vez que activé un Genio de Amparo y me citó el artículo exacto con la tesis aplicable en segundos, supe que mi forma de litigar había cambiado para siempre. Es como tener un asociado senior disponible las 24 horas.&rdquo;
+                                </blockquote>
+                                <div className="flex items-center gap-3 mt-auto pt-4 border-t border-cream-300">
+                                    <div className="w-11 h-11 rounded-full bg-charcoal-900 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-white font-serif text-sm font-bold">DV</span>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-charcoal-900 text-sm">Lic. Daniel Vecker</p>
+                                        <p className="text-charcoal-500 text-xs">Abogado Litigante</p>
+                                    </div>
+                                    <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">
+                                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                        Pro
+                                    </span>
+                                </div>
+                            </div>
+                        </AnimatedSection>
+
+                        {/* Testimonial 2: Ulises Alegando */}
+                        <AnimatedSection animation="slide-up" delay={200}>
+                            <div className="relative bg-gradient-to-br from-cream-100 via-cream-50 to-white rounded-3xl border border-cream-400 p-6 sm:p-8 shadow-sm h-full flex flex-col">
+                                <div className="absolute -top-3 -left-1 text-accent-gold/15 font-serif text-[80px] leading-none select-none pointer-events-none">&ldquo;</div>
+                                <div className="flex gap-0.5 mb-4">
+                                    {[1,2,3,4,5].map(i => <svg key={i} className="w-4 h-4 text-accent-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
+                                </div>
+                                <blockquote className="font-serif text-base sm:text-lg text-charcoal-900 leading-relaxed mb-6 italic flex-grow">
+                                    &ldquo;En un amparo contra una autoridad fiscal, necesitaba jurisprudencia de la Décima Época sobre competencia territorial. Iurexia me encontró tres tesis aplicables que ni mi equipo había localizado en dos días de búsqueda manual. Ganamos el caso. Esa sola consulta pagó un año de suscripción.&rdquo;
+                                </blockquote>
+                                <div className="flex items-center gap-3 mt-auto pt-4 border-t border-cream-300">
+                                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-accent-gold to-accent-brown flex items-center justify-center flex-shrink-0">
+                                        <span className="text-white font-serif text-sm font-bold">UA</span>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-charcoal-900 text-sm">Lic. Ulises Alegando</p>
+                                        <p className="text-charcoal-500 text-xs">Abogado Litigante</p>
+                                    </div>
+                                    <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">
+                                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                        Pro
+                                    </span>
+                                </div>
+                            </div>
+                        </AnimatedSection>
+
+                        {/* Testimonial 3: Jorge Adrián Morales */}
+                        <AnimatedSection animation="slide-up" delay={300}>
+                            <div className="relative bg-gradient-to-br from-cream-100 via-cream-50 to-white rounded-3xl border border-cream-400 p-6 sm:p-8 shadow-sm h-full flex flex-col">
+                                <div className="absolute -top-3 -left-1 text-accent-gold/15 font-serif text-[80px] leading-none select-none pointer-events-none">&ldquo;</div>
+                                <div className="flex gap-0.5 mb-4">
+                                    {[1,2,3,4,5].map(i => <svg key={i} className="w-4 h-4 text-accent-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
+                                </div>
+                                <blockquote className="font-serif text-base sm:text-lg text-charcoal-900 leading-relaxed mb-6 italic flex-grow">
+                                    &ldquo;Lo que más me impresionó fue la precisión del filtro jurisdiccional. Trabajo en materia penal en Querétaro y cada respuesta viene fundamentada con legislación de mi estado, no con artículos de otros códigos. Esa seguridad jurídica no la encuentras en ninguna otra herramienta de IA. Iurexia es el futuro de la abogacía en México.&rdquo;
+                                </blockquote>
+                                <div className="flex items-center gap-3 mt-auto pt-4 border-t border-cream-300">
+                                    <div className="w-11 h-11 rounded-full bg-charcoal-800 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-white font-serif text-sm font-bold">JM</span>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-charcoal-900 text-sm">Lic. Jorge Adrián Morales</p>
+                                        <p className="text-charcoal-500 text-xs">Abogado Penalista</p>
+                                    </div>
+                                    <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">
+                                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                        Pro
+                                    </span>
+                                </div>
+                            </div>
+                        </AnimatedSection>
+                    </div>
                 </div>
             </section>
             <section className="relative py-16 sm:py-20 overflow-hidden">
