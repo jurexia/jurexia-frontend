@@ -294,7 +294,7 @@ export default function HomePage() {
                                                 <th className="text-center py-5 px-4 font-semibold w-[32.5%] bg-accent-gold/20">
                                                     <span className="inline-flex items-center gap-2">
                                                         <img src="/logo-iurexia.png" alt="Iurexia" className="w-6 h-6 rounded" />
-                                                        <span className="text-base text-accent-gold">Iurexia</span>
+                                                        <span className="text-base"><span className="text-white">Iurex</span><span className="text-accent-gold">ia</span></span>
                                                     </span>
                                                 </th>
                                             </tr>
@@ -890,8 +890,18 @@ function ComparisonChatRow({
     return (
         <tr className={!isLast ? 'border-b border-gray-100' : ''}>
             <td className="py-4 px-5 font-medium text-charcoal-900 text-sm">{feature}</td>
-            <td className="py-4 px-4 text-center text-red-500 text-sm">{chatgpt}</td>
-            <td className="py-4 px-4 text-center text-green-700 font-semibold text-sm bg-green-50/50">{iurexia}</td>
+            <td className="py-4 px-4 text-center text-red-500 text-sm">
+                <span className="inline-flex items-center justify-center gap-1.5">
+                    <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                    <span>{chatgpt}</span>
+                </span>
+            </td>
+            <td className="py-4 px-4 text-center text-green-700 font-semibold text-sm bg-green-50/50">
+                <span className="inline-flex items-center justify-center gap-1.5">
+                    <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                    <span>{iurexia}</span>
+                </span>
+            </td>
         </tr>
     );
 }
