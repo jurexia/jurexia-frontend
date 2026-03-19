@@ -43,7 +43,8 @@ const TOUR_STEPS: TourStep[] = [
         selector: '[data-guide="genios-container"]',
         title: '🧠 Genios — Especialistas por materia',
         description: '¿Cuándo activar un Genio? Cuando tu consulta requiere máxima especialización. Cada Genio tiene en su memoria el corpus completo de leyes de su materia (códigos, leyes orgánicas, reglamentos), lo que le permite citar artículos textuales y conectar normas como un especialista.\n\nEjemplos ideales para Genio:\n• "¿Se puede revocar un aval en un pagaré?" → Genio Mercantil\n• "Prescripción en delitos culposos" → Genio Penal\n• "Competencia en amparo indirecto contra actos de tribunales" → Genio Amparo\n\n¿Y si no necesitas tanta especialización? Usa los filtros de Fuero y Materia. Te darán respuestas muy completas, con jurisprudencia y capacidad de redacción, sin consumir una sesión de Genio.\n\nReglas de uso:\n• Exclusivo plan Pro. Hasta 2 Genios simultáneos.\n• La sesión dura 3 minutos tras activarse.',
-        padding: 8,
+        padding: 6,
+        preferBelow: false,
     },
     {
         selector: '[data-guide="escrito"]',
@@ -92,14 +93,18 @@ export default function ChatTour({ isOpen, onClose }: ChatTourProps) {
     const measureElement = useCallback((selector: string, padding = 4) => {
         const el = document.querySelector(selector) as HTMLElement | null;
         if (!el) { setRect(null); return; }
-        const r = el.getBoundingClientRect();
-        setRect({
-            top: r.top - padding,
-            left: r.left - padding,
-            width: r.width + padding * 2,
-            height: r.height + padding * 2,
-        });
+        // First scroll element into view
         el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        // Then measure AFTER scroll finishes (300ms delay for smooth scroll)
+        setTimeout(() => {
+            const r = el.getBoundingClientRect();
+            setRect({
+                top: r.top - padding,
+                left: r.left - padding,
+                width: r.width + padding * 2,
+                height: r.height + padding * 2,
+            });
+        }, 300);
     }, []);
 
     useEffect(() => {
