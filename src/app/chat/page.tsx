@@ -14,6 +14,7 @@ import ChatTour from '@/components/ChatTour';
 import StateSelectorModal from '@/components/StateSelectorModal';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
 import WelcomeVideoModal from '@/components/WelcomeVideoModal';
+import FreeUserOnboardingModal, { hasSeenOnboarding, markOnboardingSeen } from '@/components/FreeUserOnboardingModal';
 import { markWelcomeVideoSeen } from '@/lib/supabase';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -66,6 +67,7 @@ export default function ChatPage() {
     const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [isDocumentAnalyzing, setIsDocumentAnalyzing] = useState(false);
     const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
+    const [showFreeOnboarding, setShowFreeOnboarding] = useState(false);
 
     // Suggestion rotation state
     const SUGGESTIONS = [
@@ -209,6 +211,16 @@ export default function ChatPage() {
         const isAdminUser = isAdmin(user.email);
         if (isProUser && !isAdminUser && !profile.has_seen_welcome_video) {
             setShowWelcomeVideo(true);
+        }
+    }, [profile, user]);
+
+    // Free user onboarding — show once for non-Pro users who haven't seen it
+    useEffect(() => {
+        if (!profile || !user) return;
+        const isProUser = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'basico_monthly'].includes(profile.subscription_type || '');
+        const isAdminUser = isAdmin(user.email);
+        if (!isProUser && !isAdminUser && !hasSeenOnboarding()) {
+            setShowFreeOnboarding(true);
         }
     }, [profile, user]);
 
@@ -744,6 +756,16 @@ export default function ChatPage() {
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 
             <WelcomeVideoModal isOpen={showWelcomeVideo} onClose={handleWelcomeVideoClose} />
+
+            <FreeUserOnboardingModal
+                isOpen={showFreeOnboarding}
+                onComplete={() => setShowFreeOnboarding(false)}
+                onStartTour={() => {
+                    setShowFreeOnboarding(false);
+                    setShowPromptGuide(true);
+                }}
+                userName={profile?.full_name || undefined}
+            />
         </div>
     );
 }
