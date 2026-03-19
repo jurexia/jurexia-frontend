@@ -78,7 +78,7 @@ export default function ChatInput({
     const { user, profile } = useAuth();
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || profile?.can_access_sentencia === true;
     const canAccessSentencia = profile?.subscription_type && !['gratuito', 'basico_monthly'].includes(profile.subscription_type);
-    const isFreeUser = !profile?.subscription_type || profile?.subscription_type === 'gratuito';
+    const isFreeUser = !profile?.subscription_type || ['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const isGenioLocked = isFreeUser && !isAdmin(user?.email);
 
     const geniosList = [
