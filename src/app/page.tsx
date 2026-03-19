@@ -254,8 +254,150 @@ export default function HomePage() {
             </section>
 
             {/* ═══════════════════════════════════════════════════════════════ */}
-            {/* ARQUITECTURA MULTI-GENIO PRO — SECCIÓN EXCLUSIVA */}
+            {/* COMPARATIVA: ¿POR QUÉ IUREXIA Y NO CHATGPT? */}
             {/* ═══════════════════════════════════════════════════════════════ */}
+            <section className="py-16 sm:py-20 bg-cream-300">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6">
+                    <AnimatedSection animation="slide-up">
+                        <div className="text-center mb-4">
+                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs font-bold tracking-widest uppercase mb-6">
+                                ⚠️ Dato importante
+                            </span>
+                        </div>
+                        <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-center text-charcoal-900 mb-4">
+                            ¿Por qué <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">no</span> usar ChatGPT para derecho mexicano?
+                        </h2>
+                    </AnimatedSection>
+                    <AnimatedSection animation="fade-in" delay={100}>
+                        <p className="text-center text-charcoal-600 mb-12 max-w-3xl mx-auto text-base sm:text-lg">
+                            ChatGPT es una herramienta general increíble, pero <strong className="text-charcoal-900">no fue diseñada para el sistema jurídico mexicano</strong>. Aquí está la diferencia:
+                        </p>
+                    </AnimatedSection>
+
+                    <AnimatedSection animation="slide-up" delay={200}>
+                        <div className="bg-white rounded-3xl border border-cream-400 shadow-lg overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b-2 border-cream-300">
+                                            <th className="text-left py-4 px-5 font-semibold text-charcoal-900 w-1/3">Capacidad</th>
+                                            <th className="text-center py-4 px-4 font-semibold text-charcoal-500 w-1/3">
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <span className="text-lg">🤖</span> ChatGPT
+                                                </span>
+                                            </th>
+                                            <th className="text-center py-4 px-4 font-semibold text-accent-gold w-1/3 bg-accent-gold/5">
+                                                <span className="inline-flex items-center gap-1.5">
+                                                    <span className="text-lg">⚖️</span> Iurexia
+                                                </span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <ComparisonChatRow
+                                            feature="Jurisprudencia mexicana real y verificada"
+                                            chatgpt="❌ Inventa tesis y registros que no existen"
+                                            iurexia="✅ Base de datos verificada con 50,000+ fuentes reales"
+                                        />
+                                        <ComparisonChatRow
+                                            feature="Cita artículos exactos de leyes vigentes"
+                                            chatgpt="❌ Cita artículos incorrectos o derogados"
+                                            iurexia="✅ Artículos textuales de códigos y leyes actualizadas"
+                                        />
+                                        <ComparisonChatRow
+                                            feature="Filtro por estado y fuero"
+                                            chatgpt="❌ Mezcla leyes de diferentes estados"
+                                            iurexia="✅ Seguridad jurisdiccional: solo legislación de tu estado"
+                                        />
+                                        <ComparisonChatRow
+                                            feature="Redacción de escritos con fundamento"
+                                            chatgpt="⚠️ Redacta sin fundamento legal real"
+                                            iurexia="✅ Escritos con artículos y tesis verificadas"
+                                        />
+                                        <ComparisonChatRow
+                                            feature="Análisis de sentencias y demandas"
+                                            chatgpt="⚠️ Análisis genérico sin contexto legal mexicano"
+                                            iurexia="✅ Auditoría con fortalezas, debilidades y mejoras"
+                                        />
+                                        <ComparisonChatRow
+                                            feature="Genios especializados por materia"
+                                            chatgpt="❌ No tiene"
+                                            iurexia="✅ Expertos en Amparo, CIDH, Civil, Penal, etc."
+                                        />
+                                        <ComparisonChatRow
+                                            feature="Precio"
+                                            chatgpt="~$400 MXN/mes (Plus)"
+                                            iurexia="Desde $149 MXN/mes con todo incluido"
+                                            isLast
+                                        />
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </AnimatedSection>
+
+                    <AnimatedSection animation="fade-in" delay={300}>
+                        <div className="mt-8 text-center">
+                            <p className="text-charcoal-500 text-sm mb-4">
+                                En derecho, un artículo incorrecto puede llevar a perder un caso. <strong className="text-charcoal-900">No arriesgues tu práctica con herramientas genéricas.</strong>
+                            </p>
+                            <Link
+                                href="/login"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-charcoal-900 text-white font-semibold rounded-full hover:bg-charcoal-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                            >
+                                Probar Iurexia Gratis →
+                            </Link>
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* TESTIMONIO — DANIEL VECKER */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            <section className="py-16 sm:py-20 bg-white">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6">
+                    <AnimatedSection animation="scale-in">
+                        <div className="relative">
+                            {/* Decorative quotes */}
+                            <div className="absolute -top-6 -left-2 sm:-left-6 text-accent-gold/20 font-serif text-[120px] leading-none select-none pointer-events-none">"</div>
+
+                            <div className="relative bg-gradient-to-br from-cream-100 via-cream-50 to-white rounded-3xl border border-cream-400 p-8 sm:p-12 shadow-sm">
+                                {/* Stars */}
+                                <div className="flex gap-1 mb-6 justify-center">
+                                    {[1, 2, 3, 4, 5].map(i => (
+                                        <svg key={i} className="w-5 h-5 text-accent-gold" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                        </svg>
+                                    ))}
+                                </div>
+
+                                {/* Quote */}
+                                <blockquote className="font-serif text-xl sm:text-2xl md:text-3xl text-charcoal-900 text-center leading-relaxed mb-8 italic">
+                                    &ldquo;Antes de Iurexia, pasaba horas buscando tesis jurisprudenciales en bases de datos obsoletas. La primera vez que activé un Genio de Amparo y me citó el artículo exacto con la tesis aplicable en segundos, supe que mi forma de litigar había cambiado para siempre. Es como tener un asociado senior disponible las 24 horas.&rdquo;
+                                </blockquote>
+
+                                {/* Author */}
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="w-14 h-14 rounded-full bg-charcoal-900 flex items-center justify-center">
+                                        <span className="text-white font-serif text-xl font-bold">DV</span>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="font-semibold text-charcoal-900 text-lg">Lic. Daniel Vecker</p>
+                                        <p className="text-charcoal-500 text-sm">Abogado Litigante</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-medium">
+                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                            Usuario verificado Pro
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
             <section className="relative py-16 sm:py-20 overflow-hidden">
                 {/* Background */}
                 <div className="absolute inset-0 bg-charcoal-900" />
@@ -673,5 +815,25 @@ function ConnectStep({
             <h4 className="font-serif text-lg font-medium text-charcoal-900 mb-2">{title}</h4>
             <p className="text-sm text-charcoal-600 leading-relaxed">{description}</p>
         </div>
+    );
+}
+
+function ComparisonChatRow({
+    feature,
+    chatgpt,
+    iurexia,
+    isLast = false
+}: {
+    feature: string;
+    chatgpt: string;
+    iurexia: string;
+    isLast?: boolean;
+}) {
+    return (
+        <tr className={!isLast ? 'border-b border-cream-200' : ''}>
+            <td className="py-4 px-5 font-medium text-charcoal-900 text-sm">{feature}</td>
+            <td className="py-4 px-4 text-center text-charcoal-500 text-sm">{chatgpt}</td>
+            <td className="py-4 px-4 text-center text-charcoal-900 font-medium text-sm bg-accent-gold/5">{iurexia}</td>
+        </tr>
     );
 }

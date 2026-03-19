@@ -37,7 +37,7 @@ export default function PreciosPage() {
             {/* Pricing Cards - Row 1: Gratuito, Pro Mensual, Pro Anual */}
             <section className="py-8 px-4 overflow-hidden">
                 <div className="max-w-7xl mx-auto">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 items-stretch">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
                         <AnimateOnScroll delay={0} className="h-full">
                             <PricingCard
                                 icon={<Zap className="w-6 h-6" />}
@@ -109,33 +109,6 @@ export default function PreciosPage() {
 
                         <AnimateOnScroll delay={0.3} className="h-full">
                             <PricingCard
-                                icon={<Calendar className="w-6 h-6" />}
-                                name="Plan Pro Anual"
-                                price="$1,490"
-                                originalPrice="$2,400"
-                                period="MXN/año"
-                                description="Máximo ahorro por pago adelantado"
-                                features={[
-                                    "140 consultas/mes (1,680/año)",
-                                    <span className="text-charcoal-700 font-medium">Todo lo del Plan Pro incluido:</span>,
-                                    <span className="text-accent-gold font-medium ml-2">— Arquitectura Multi-Genio</span>,
-                                    <span className="text-accent-gold font-medium ml-2">— Análisis de Documentos</span>,
-                                    <span className="text-green-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
-                                    "Ahorro de $910 MXN al año",
-                                    "Precio fijo garantizado",
-                                ]}
-                                buttonText="Ahorrar con Plan Anual"
-                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL}
-                                highlighted={false}
-                                badge="MEJOR VALOR"
-                            />
-                        </AnimateOnScroll>
-                    </div>
-
-                    {/* Row 2: Platinum Plans */}
-                    <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto items-stretch">
-                        <AnimateOnScroll delay={0.1} className="h-full">
-                            <PricingCard
                                 icon={<Star className="w-6 h-6" />}
                                 name="Plan Platinum"
                                 price="$599"
@@ -156,31 +129,6 @@ export default function PreciosPage() {
                                 highlighted={false}
                                 isPlatinum={true}
                                 badge="PREMIUM"
-                            />
-                        </AnimateOnScroll>
-
-                        <AnimateOnScroll delay={0.25} className="h-full">
-                            <PricingCard
-                                icon={<Star className="w-6 h-6" />}
-                                name="Plan Platinum Anual"
-                                price="$5,990"
-                                originalPrice="$10,800"
-                                period="MXN/año"
-                                description="Máximo ahorro para despachos y corporativos"
-                                features={[
-                                    "560 consultas/mes (6,720/año)",
-                                    <span className="text-charcoal-700 font-medium">Todo lo del Plan Platinum incluido:</span>,
-                                    <span className="text-accent-gold font-medium ml-2">— Arquitectura Multi-Genio</span>,
-                                    <span className="text-accent-gold font-medium ml-2">— Análisis de Documentos</span>,
-                                    <span className="text-amber-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
-                                    "Ahorro de $4,810 MXN al año",
-                                    "Precio fijo garantizado",
-                                ]}
-                                buttonText="Ahorrar con Platinum Anual"
-                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_ANNUAL}
-                                highlighted={false}
-                                isPlatinum={true}
-                                badge="MÁXIMO AHORRO"
                             />
                         </AnimateOnScroll>
                     </div>
@@ -256,22 +204,21 @@ export default function PreciosPage() {
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900">Gratuito</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900">Básico</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-accent-brown/5">Pro</th>
-                                        <th className="text-center py-4 px-3 font-medium text-charcoal-900">Pro Anual</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-gradient-to-r from-amber-50 to-yellow-50">Platinum</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <ComparisonRow feature="Consultas/mes" free="5" basico="70" pro="140" proAnual="140" platinum="560" />
-                                    <ComparisonRow feature="Búsqueda con IA verificada" free="✓" basico="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Filtros jurisdiccionales" free="✓" basico="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Base documental completa" free="✓" basico="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Directorio de abogados (Connect)" free="✓" basico="✓" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Registro connect para captar clientes" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" />
-                                    <ComparisonRow feature="Análisis y auditoría de documentos" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
-                                    <ComparisonRow feature="Genios Especializados (IA avanzada)" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
-                                    <ComparisonRow feature="Sugerencias con fundamento" free="—" basico="—" pro="✓" proAnual="✓" platinum="✓" goldFeature={true} />
-                                    <ComparisonRow feature="Soporte prioritario" free="—" basico="Estándar" pro="✓" proAnual="✓" platinum="VIP" />
-                                    <ComparisonRow feature="Consulta legal estratégica (vía correo)" free="—" basico="—" pro="—" proAnual="—" platinum="✓" />
+                                    <ComparisonRow feature="Consultas/mes" free="5" basico="70" pro="140" platinum="560" />
+                                    <ComparisonRow feature="Búsqueda con IA verificada" free="✓" basico="✓" pro="✓" platinum="✓" />
+                                    <ComparisonRow feature="Filtros jurisdiccionales" free="✓" basico="✓" pro="✓" platinum="✓" />
+                                    <ComparisonRow feature="Base documental completa" free="✓" basico="✓" pro="✓" platinum="✓" />
+                                    <ComparisonRow feature="Directorio de abogados (Connect)" free="✓" basico="✓" pro="✓" platinum="✓" />
+                                    <ComparisonRow feature="Registro connect para captar clientes" free="—" basico="—" pro="✓" platinum="✓" />
+                                    <ComparisonRow feature="Análisis y auditoría de documentos" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
+                                    <ComparisonRow feature="Genios Especializados (IA avanzada)" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
+                                    <ComparisonRow feature="Sugerencias con fundamento" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
+                                    <ComparisonRow feature="Soporte prioritario" free="—" basico="Estándar" pro="✓" platinum="VIP" />
+                                    <ComparisonRow feature="Consulta legal estratégica (vía correo)" free="—" basico="—" pro="—" platinum="✓" />
                                 </tbody>
                             </table>
                         </div>
@@ -610,14 +557,13 @@ function PricingCard({
     );
 }
 
-function ComparisonRow({ feature, free, basico, pro, proAnual, platinum, goldFeature = false }: { feature: string; free: string; basico: string; pro: string; proAnual: string; platinum: string; goldFeature?: boolean }) {
+function ComparisonRow({ feature, free, basico, pro, platinum, goldFeature = false }: { feature: string; free: string; basico: string; pro: string; platinum: string; goldFeature?: boolean }) {
     return (
         <tr className="border-b border-gray-100">
             <td className={`py-4 px-3 ${goldFeature ? 'text-accent-gold font-medium' : 'text-charcoal-700'}`}>{feature}</td>
             <td className="py-4 px-3 text-center text-charcoal-600">{free}</td>
             <td className="py-4 px-3 text-center text-charcoal-600 font-medium bg-stone-50/50">{basico}</td>
             <td className="py-4 px-3 text-center text-charcoal-900 bg-accent-brown/5 font-medium">{pro}</td>
-            <td className="py-4 px-3 text-center text-charcoal-600">{proAnual}</td>
             <td className="py-4 px-3 text-center text-charcoal-900 bg-gradient-to-r from-amber-50 to-yellow-50 font-medium">{platinum}</td>
         </tr>
     );
