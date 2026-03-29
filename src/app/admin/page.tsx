@@ -84,7 +84,7 @@ const PLAN_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 // Estados con legislación ya ingestada en Qdrant
-const INGESTED_STATES = ['QUERETARO', 'CDMX', 'CIUDAD_DE_MEXICO', 'GUANAJUATO'];
+const INGESTED_STATES = ['QUERETARO', 'CDMX', 'CIUDAD_DE_MEXICO', 'GUANAJUATO', 'JALISCO', 'MICHOACAN', 'VERACRUZ', 'MORELOS', 'PUEBLA', 'SINALOA', 'COAHUILA'];
 
 function formatDate(d: string | null): string {
     if (!d) return '—';
@@ -724,6 +724,7 @@ export default function AdminPage() {
                                                                                 email: u.email,
                                                                                 name: u.full_name || u.email.split('@')[0],
                                                                                 estado: u.estado || 'tu entidad',
+                                                                                planType: u.subscription_type,
                                                                                 planLabel: plan.label,
                                                                                 isIngested: u.estado ? INGESTED_STATES.includes(u.estado) : false,
                                                                             }),

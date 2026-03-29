@@ -356,6 +356,58 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         console.error(`⚠️ Auto-cancel of old subscriptions failed for ${email}:`, err);
     }
 
+    // ── AUTO-SEND Welcome Email ─────────────────────────────────
+    try {
+        const INGESTED_STATES = ['QUERETARO', 'CDMX', 'CIUDAD_DE_MEXICO', 'GUANAJUATO', 'JALISCO', 'MICHOACAN', 'VERACRUZ', 'MORELOS', 'PUEBLA', 'SINALOA', 'COAHUILA'];
+
+        const supabase = getSupabaseAdmin();
+        const { data: userProfile } = await supabase
+            .from('user_profiles')
+            .select('full_name, estado')
+            .eq('email', email)
+            .single();
+
+        const userName = userProfile?.full_name || email.split('@')[0];
+        const userEstado = userProfile?.estado || 'tu entidad';
+        const isIngested = userEstado ? INGESTED_STATES.includes(userEstado) : false;
+
+        // Plan label mapping
+        const PLAN_LABELS: Record<string, string> = {
+            basico_monthly: 'Básico',
+            pro_monthly: 'Pro',
+            pro_annual: 'Pro Anual',
+            platinum_monthly: 'Platinum',
+            platinum_annual: 'Platinum Anual',
+            ultra_secretarios: 'Ultra Secretarios',
+        };
+
+        const apiKey = process.env.RESEND_API_KEY;
+        if (apiKey) {
+            const { buildWelcomeEmail } = await import('@/lib/welcome-email');
+            const resend = new Resend(apiKey);
+            const fromEmail = process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>';
+
+            await resend.emails.send({
+                from: fromEmail,
+                to: email,
+                subject: `¡Bienvenido/a a Iurexia, ${userName.split(' ')[0]}! 🎉`,
+                html: buildWelcomeEmail({
+                    name: userName,
+                    estado: userEstado,
+                    planType: subscriptionType,
+                    planLabel: PLAN_LABELS[subscriptionType] || 'Pro',
+                    isIngested,
+                }),
+            });
+            console.log(`📧 Welcome email auto-sent to ${email} (plan: ${subscriptionType})`);
+        } else {
+            console.warn('⚠️ RESEND_API_KEY not set — skipping welcome email');
+        }
+    } catch (emailErr) {
+        // Don't fail the checkout if email sending fails
+        console.error(`⚠️ Welcome email failed for ${email} (non-blocking):`, emailErr);
+    }
+
     console.log(`🎉 handleCheckoutCompleted finished successfully for ${email}`);
 }
 
