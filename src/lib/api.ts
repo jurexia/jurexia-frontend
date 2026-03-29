@@ -168,6 +168,35 @@ export async function* streamChat(
             attempt++;
             console.error(`[API] Attempt ${attempt}/${maxRetries} failed:`, err);
 
+            // Classify the error type
+            const errMsg = err instanceof Error ? err.message : String(err);
+            const status = (err as any)?.status ?? (err as any)?.response?.status ?? 0;
+
+            // Cold start: connection refused, DNS failure, 503 Service Unavailable
+            const isColdStart = (
+                status === 503 ||
+                errMsg.includes('Failed to fetch') ||
+                errMsg.includes('NetworkError') ||
+                errMsg.includes('ECONNREFUSED') ||
+                errMsg.includes('ERR_CONNECTION_REFUSED')
+            );
+            // Busy/overloaded: 504 Gateway Timeout, 502 Bad Gateway, AbortError
+            const isBusy = (
+                status === 504 ||
+                status === 502 ||
+                errMsg.includes('AbortError') ||
+                errMsg.includes('timeout') ||
+                errMsg.includes('Timeout')
+            );
+
+            const retryType = isColdStart ? 'cold' : isBusy ? 'busy' : 'busy';
+
+            // If it's a client error (4xx), don't retry
+            if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
+                console.error('[API] Client error, not retrying:', status);
+                throw err;
+            }
+
             // If we've exhausted retries, throw the error
             if (attempt >= maxRetries) {
                 console.error('[API] All retry attempts exhausted');
@@ -176,10 +205,10 @@ export async function* streamChat(
 
             // Exponential backoff: 2s, 4s, 8s
             const delay = Math.pow(2, attempt) * 1000;
-            console.log(`[API] Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`);
+            console.log(`[API] Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries}), type: ${retryType}...`);
 
-            // Yield a special marker for UI to show retry status
-            yield `<!--RETRY:${attempt}:${delay}-->`;
+            // Yield a special marker for UI to show retry status with error type
+            yield `<!--RETRY:${attempt}:${delay}:${retryType}-->`;
 
             // Wait before retrying
             await sleep(delay);

@@ -1250,13 +1250,12 @@ function formatMarkdown(text: string): string {
 
 // Typing indicator component with informative message
 // Typing indicator component with animated progressive text
-export function TypingIndicator({ retryMessage }: { retryMessage?: string } = {}) {
+export function TypingIndicator({ retryMessage, retryType }: { retryMessage?: string; retryType?: string } = {}) {
     const [textIndex, setTextIndex] = useState(0);
     const loadingTexts = [
         "Analizando tu consulta...",
-        "Construyendo respuesta con datos verificados...",
-        "Consultando legislación federal y estatal...",
-        "Revisando jurisprudencia relevante...",
+        "Buscando en la legislación...",
+        "Consultando jurisprudencia...",
         "Preparando análisis legal..."
     ];
 
@@ -1267,8 +1266,9 @@ export function TypingIndicator({ retryMessage }: { retryMessage?: string } = {}
         return () => clearInterval(interval);
     }, []);
 
-    // If retry message is provided, show cold start indicator
+    // If retry message is provided, show appropriate indicator based on type
     if (retryMessage) {
+        const isColdStart = retryType === 'cold';
         return (
             <div className="flex gap-4 justify-start animate-slide-up">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center">
@@ -1277,13 +1277,17 @@ export function TypingIndicator({ retryMessage }: { retryMessage?: string } = {}
                 <div className="message-assistant px-4 py-4 border-l-4 border-amber-500">
                     <div className="flex flex-col gap-1.5">
                         <span className="text-amber-900 font-semibold text-sm">
-                            ⏳ Despertando el servidor...
+                            {isColdStart
+                                ? '⏳ Despertando el servidor...'
+                                : '⏳ Servidor procesando solicitudes, reintentando...'}
                         </span>
                         <span className="text-amber-700 text-xs">
                             {retryMessage}
                         </span>
                         <span className="text-amber-600 text-xs mt-0.5 italic">
-                            Esto sucede cuando el servidor ha estado inactivo. Solo llevará unos segundos.
+                            {isColdStart
+                                ? 'Esto sucede cuando el servidor ha estado inactivo. Solo llevará unos segundos.'
+                                : 'El servidor está atendiendo varias solicitudes. Tu consulta se procesará en breve.'}
                         </span>
                     </div>
                 </div>

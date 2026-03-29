@@ -169,7 +169,7 @@ export default function ChatPage() {
     }, []);
 
     // Chat Hook
-    const { messages, isLoading, error, sendMessage, clearMessages, setMessages, retryMessage } = useChat({
+    const { messages, isLoading, error, sendMessage, clearMessages, setMessages, retryMessage, retryType } = useChat({
         estado: selectedEstado || undefined,
         topK: 30,
         fuero: selectedFuero || undefined,
@@ -650,7 +650,7 @@ export default function ChatPage() {
                                     </div>
                                 );
                             })}
-                            {(isLoading || isDocumentAnalyzing) && messages[messages.length - 1]?.role === 'user' && <TypingIndicator retryMessage={retryMessage || undefined} />}
+                            {(isLoading || isDocumentAnalyzing) && messages[messages.length - 1]?.role === 'user' && <TypingIndicator retryMessage={retryMessage || undefined} retryType={retryType || undefined} />}
                             {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
                             <div ref={messagesEndRef} />
                         </div>

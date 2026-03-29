@@ -24,6 +24,7 @@ interface UseChatReturn {
     clearMessages: () => void;
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
     retryMessage: string | null;  // New field for retry status
+    retryType: string | null;     // 'cold' | 'busy' | null
 }
 
 // Thinking marker used by the backend to separate reasoning from content.
@@ -206,6 +207,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [retryMessage, setRetryMessage] = useState<string | null>(null);
+    const [retryType, setRetryType] = useState<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const sendMessage = useCallback(async (content: string, _enableReasoning = true) => {
@@ -215,6 +217,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setError(null);
         setIsLoading(true);
         setRetryMessage(null);  // Reset retry message
+        setRetryType(null);
 
         // Add user message
         const userMessage: Message = { role: 'user', content };
@@ -269,12 +272,14 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     // If there's content after the marker, process it below
                 }
 
-                // Check if this is a retry marker: <!--RETRY:1:2000-->
-                const retryMatch = chunk.match(/<!--RETRY:(\d+):(\d+)-->/);
+                // Check if this is a retry marker: <!--RETRY:1:2000:cold--> or <!--RETRY:1:2000-->
+                const retryMatch = chunk.match(/<!--RETRY:(\d+):(\d+)(?::(\w+))?-->/);
                 if (retryMatch) {
                     const attempt = parseInt(retryMatch[1]);
                     const delay = parseInt(retryMatch[2]);
+                    const retryType = retryMatch[3] || 'cold'; // backward compat
                     setRetryMessage(`Intento ${attempt + 1}/3 — esperando ${delay / 1000} segundos...`);
+                    setRetryType(retryType);
                     continue;  // Don't feed retry markers to the parser
                 }
 
@@ -371,6 +376,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setMessages([]);
         setError(null);
         setRetryMessage(null);
+        setRetryType(null);
     }, []);
 
     return {
@@ -381,5 +387,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         clearMessages,
         setMessages,
         retryMessage,
+        retryType,
     };
 }
