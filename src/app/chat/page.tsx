@@ -215,14 +215,16 @@ export default function ChatPage() {
     }, [profile, user]);
 
     // Free user onboarding — show once for non-Pro users who haven't seen it
+    // Wait until state selector is dismissed so audio doesn't play behind it
     useEffect(() => {
         if (!profile || !user) return;
+        if (showStateModal) return;
         const isProUser = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'basico_monthly'].includes(profile.subscription_type || '');
         const isAdminUser = isAdmin(user.email);
         if (!isProUser && !isAdminUser && !hasSeenOnboarding()) {
             setShowFreeOnboarding(true);
         }
-    }, [profile, user]);
+    }, [profile, user, showStateModal]);
 
     const handleWelcomeVideoClose = useCallback(async () => {
         setShowWelcomeVideo(false);
