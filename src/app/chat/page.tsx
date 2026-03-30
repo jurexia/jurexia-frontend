@@ -214,17 +214,17 @@ export default function ChatPage() {
         }
     }, [profile, user]);
 
-    // Free user onboarding — show once for non-Pro users who haven't seen it
-    // Wait until state selector is dismissed so audio doesn't play behind it
+    // Free user onboarding — for RETURNING users who already have a state selected
+    // New users get onboarding triggered from the StateSelectorModal callback below
     useEffect(() => {
         if (!profile || !user) return;
-        if (showStateModal) return;
+        if (!profile.estado) return; // New user — will be handled by state selector callback
         const isProUser = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'basico_monthly'].includes(profile.subscription_type || '');
         const isAdminUser = isAdmin(user.email);
         if (!isProUser && !isAdminUser && !hasSeenOnboarding(user.id)) {
             setShowFreeOnboarding(true);
         }
-    }, [profile, user, showStateModal]);
+    }, [profile, user]);
 
     const handleWelcomeVideoClose = useCallback(async () => {
         setShowWelcomeVideo(false);
@@ -681,7 +681,16 @@ export default function ChatPage() {
                 )}
             </div>
 
-            {showStateModal && user && <StateSelectorModal userId={user.id} onSelectEstado={(e) => { setSelectedEstado(e); setShowStateModal(false); }} />}
+            {showStateModal && user && <StateSelectorModal userId={user.id} onSelectEstado={(e) => {
+                setSelectedEstado(e);
+                setShowStateModal(false);
+                // Trigger onboarding AFTER state selection for new free users
+                const isProUser = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'basico_monthly'].includes(profile?.subscription_type || '');
+                const isAdminUser = isAdmin(user.email);
+                if (!isProUser && !isAdminUser && !hasSeenOnboarding(user.id)) {
+                    setTimeout(() => setShowFreeOnboarding(true), 300);
+                }
+            }} />}
             {showConfigModal && user && <StateSelectorModal userId={user.id} isConfig={true} currentEstado={selectedEstado} onClose={() => setShowConfigModal(false)} onSelectEstado={(e) => { setSelectedEstado(e); setShowConfigModal(false); }} />}
 
             {showLimitModal && (
