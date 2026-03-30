@@ -14,7 +14,7 @@ import ChatTour from '@/components/ChatTour';
 import StateSelectorModal from '@/components/StateSelectorModal';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
 import WelcomeVideoModal from '@/components/WelcomeVideoModal';
-import FreeUserOnboardingModal, { hasSeenOnboarding, markOnboardingSeen } from '@/components/FreeUserOnboardingModal';
+import FreeUserOnboardingModal, { hasSeenOnboarding } from '@/components/FreeUserOnboardingModal';
 import { markWelcomeVideoSeen } from '@/lib/supabase';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -221,7 +221,7 @@ export default function ChatPage() {
         if (showStateModal) return;
         const isProUser = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'basico_monthly'].includes(profile.subscription_type || '');
         const isAdminUser = isAdmin(user.email);
-        if (!isProUser && !isAdminUser && !hasSeenOnboarding()) {
+        if (!isProUser && !isAdminUser && !hasSeenOnboarding(user.id)) {
             setShowFreeOnboarding(true);
         }
     }, [profile, user, showStateModal]);
@@ -762,11 +762,8 @@ export default function ChatPage() {
             <FreeUserOnboardingModal
                 isOpen={showFreeOnboarding}
                 onComplete={() => setShowFreeOnboarding(false)}
-                onStartTour={() => {
-                    setShowFreeOnboarding(false);
-                    setShowPromptGuide(true);
-                }}
                 userName={profile?.full_name || undefined}
+                userId={user?.id}
             />
         </div>
     );
