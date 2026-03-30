@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Volume2, VolumeX, BookOpen, ChevronRight, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, Play, Pause, BookOpen, ChevronRight, Sparkles, Scale } from 'lucide-react';
 
 interface FreeUserOnboardingModalProps {
     isOpen: boolean;
@@ -32,14 +32,13 @@ export default function FreeUserOnboardingModal({
     const [isMuted, setIsMuted] = useState(false);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [showGuidePrompt, setShowGuidePrompt] = useState(false);
-    const [guidePromptVisible, setGuidePromptVisible] = useState(false);
+    const [audioReady, setAudioReady] = useState(false);
     const [audioEnded, setAudioEnded] = useState(false);
+    const [isClosing, setIsClosing] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const animationRef = useRef<number>(0);
-    const guideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Initialize audio — auto-play in background
+    // Initialize audio element — do NOT auto-play
     useEffect(() => {
         if (!isOpen) return;
         const audio = new Audio('/audio-bienvenida.mp3');
@@ -48,6 +47,7 @@ export default function FreeUserOnboardingModal({
 
         audio.addEventListener('loadedmetadata', () => {
             setDuration(audio.duration);
+            setAudioReady(true);
         });
 
         audio.addEventListener('ended', () => {
@@ -56,44 +56,18 @@ export default function FreeUserOnboardingModal({
             cancelAnimationFrame(animationRef.current);
         });
 
-        // Auto-play after a short delay
-        const autoPlayTimer = setTimeout(() => {
-            audio.play().then(() => {
-                setIsPlaying(true);
-                updateProgress();
-            }).catch(() => {
-                // Autoplay blocked — mark as ended so guide shows
-                setAudioEnded(true);
-            });
-        }, 500);
-
-        // Show the guide prompt after a delay (similar to audio duration, ~30s or when audio ends)
-        guideTimerRef.current = setTimeout(() => {
-            setShowGuidePrompt(true);
-            // Trigger fade-in after a tick
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => setGuidePromptVisible(true));
-            });
-        }, 25000); // 25 seconds — gives audio time to finish
+        // Fallback: if metadata loads fast, mark ready
+        if (audio.readyState >= 1) {
+            setDuration(audio.duration);
+            setAudioReady(true);
+        }
 
         return () => {
-            clearTimeout(autoPlayTimer);
-            if (guideTimerRef.current) clearTimeout(guideTimerRef.current);
             cancelAnimationFrame(animationRef.current);
             audio.pause();
             audio.src = '';
         };
     }, [isOpen]);
-
-    // When audio ends, show guide prompt immediately if not already shown
-    useEffect(() => {
-        if (audioEnded && !showGuidePrompt) {
-            setShowGuidePrompt(true);
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => setGuidePromptVisible(true));
-            });
-        }
-    }, [audioEnded, showGuidePrompt]);
 
     const updateProgress = useCallback(() => {
         if (audioRef.current) {
@@ -104,6 +78,23 @@ export default function FreeUserOnboardingModal({
         }
     }, []);
 
+    // Play audio — triggered by user click (bypasses autoplay restrictions)
+    const handlePlayAudio = useCallback(() => {
+        if (!audioRef.current) return;
+        if (isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+            cancelAnimationFrame(animationRef.current);
+        } else {
+            audioRef.current.play().then(() => {
+                setIsPlaying(true);
+                updateProgress();
+            }).catch((err) => {
+                console.error('Audio play failed:', err);
+            });
+        }
+    }, [isPlaying, updateProgress]);
+
     const toggleMute = () => {
         if (!audioRef.current) return;
         audioRef.current.muted = !isMuted;
@@ -111,7 +102,6 @@ export default function FreeUserOnboardingModal({
     };
 
     const handleStartTour = () => {
-        // Pause audio when starting tour
         if (audioRef.current) {
             audioRef.current.pause();
             cancelAnimationFrame(animationRef.current);
@@ -125,8 +115,12 @@ export default function FreeUserOnboardingModal({
             audioRef.current.pause();
             cancelAnimationFrame(animationRef.current);
         }
-        markOnboardingSeen();
-        onComplete();
+        setIsClosing(true);
+        setTimeout(() => {
+            markOnboardingSeen();
+            setIsClosing(false);
+            onComplete();
+        }, 400);
     };
 
     const formatTime = (seconds: number) => {
@@ -140,185 +134,182 @@ export default function FreeUserOnboardingModal({
     const firstName = userName?.split(' ')[0] || '';
 
     return (
-        <>
-            {/* Subtle floating audio indicator — bottom-right corner, NON-blocking */}
-            {isPlaying && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        bottom: 100,
-                        right: 20,
-                        zIndex: 90,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        background: 'linear-gradient(135deg, #1e1e20 0%, #121214 100%)',
-                        border: '1px solid rgba(201,169,98,0.25)',
-                        borderRadius: 16,
-                        padding: '10px 16px',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-                        animation: 'audioFloatIn 0.6s ease-out',
-                    }}
-                >
-                    {/* Waveform bars */}
-                    <div style={{ display: 'flex', alignItems: 'end', gap: 2, height: 18 }}>
-                        {Array.from({ length: 5 }).map((_, i) => (
-                            <div
-                                key={i}
-                                style={{
-                                    width: 3,
-                                    borderRadius: 99,
-                                    background: '#c9a84c',
-                                    animation: `waveBar 0.8s ease-in-out ${i * 0.1}s infinite alternate`,
-                                }}
-                            />
-                        ))}
-                    </div>
+        <div
+            className={`fixed inset-0 z-[100] flex items-center justify-center transition-all duration-500 ${
+                isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+            }`}
+            style={{ animation: isClosing ? undefined : 'onboardFadeIn 0.6s ease-out' }}
+        >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/85 backdrop-blur-md" />
 
-                    <div style={{ minWidth: 0 }}>
-                        <p style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: '#e8e8e8',
-                            margin: 0,
-                            lineHeight: 1.2,
-                            whiteSpace: 'nowrap',
-                        }}>
-                            {firstName ? `${firstName}, escucha...` : 'Audio de bienvenida'}
-                        </p>
-                        <p style={{
-                            fontSize: 10,
-                            color: 'rgba(255,255,255,0.35)',
-                            margin: '1px 0 0',
-                        }}>
-                            {formatTime(progress)} / {formatTime(duration)}
-                        </p>
-                    </div>
+            {/* Content Card */}
+            <div
+                className={`relative z-10 w-full max-w-lg mx-4 rounded-2xl overflow-hidden transition-all duration-500 ${
+                    isClosing ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'
+                }`}
+                style={{
+                    background: 'linear-gradient(165deg, #0f0f0f 0%, #1a1714 50%, #0f0f0f 100%)',
+                    border: '1px solid rgba(201, 169, 98, 0.25)',
+                    boxShadow: '0 0 60px rgba(201, 169, 98, 0.1), 0 25px 50px rgba(0,0,0,0.5)',
+                    animation: isClosing ? undefined : 'onboardSlideUp 0.7s ease-out 0.1s both',
+                }}
+            >
+                {/* Gold accent line */}
+                <div style={{
+                    position: 'absolute', top: 0, left: 20, right: 20, height: 2,
+                    background: 'linear-gradient(90deg, transparent 0%, #c9a84c 50%, transparent 100%)',
+                    borderRadius: 2,
+                }} />
 
-                    {/* Mute toggle */}
-                    <button onClick={toggleMute} style={{
-                        background: 'none', border: 'none',
-                        color: isMuted ? 'rgba(255,255,255,0.2)' : '#c9a84c',
-                        cursor: 'pointer', padding: 2, lineHeight: 0,
-                    }}>
-                        {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                    </button>
-                </div>
-            )}
-
-            {/* Guide prompt — appears after audio delay, as a non-blocking floating card */}
-            {showGuidePrompt && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        bottom: 100,
-                        right: 20,
-                        zIndex: 91,
-                        width: 320,
-                        background: 'linear-gradient(165deg, #1e1e20 0%, #121214 50%, #0d0d0f 100%)',
-                        border: '1px solid rgba(201,169,98,0.3)',
-                        borderRadius: 20,
-                        padding: '22px 20px 18px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 80px rgba(201,169,98,0.05)',
-                        opacity: guidePromptVisible ? 1 : 0,
-                        transform: guidePromptVisible ? 'translateY(0)' : 'translateY(20px)',
-                        transition: 'opacity 0.5s ease, transform 0.5s ease',
-                    }}
-                >
-                    {/* Gold accent line */}
-                    <div style={{
-                        position: 'absolute', top: 0, left: 20, right: 20, height: 2,
-                        background: 'linear-gradient(90deg, transparent 0%, #c9a84c 50%, transparent 100%)',
-                        borderRadius: 2,
-                    }} />
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                        <div style={{
-                            width: 32, height: 32, borderRadius: 10,
-                            background: 'linear-gradient(135deg, rgba(201,168,76,0.15) 0%, rgba(201,168,76,0.05) 100%)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            border: '1px solid rgba(201,168,76,0.2)',
-                        }}>
-                            <Sparkles className="w-4 h-4" style={{ color: '#c9a84c' }} />
-                        </div>
-                        <div>
-                            <p style={{
-                                fontSize: 14, fontWeight: 700, color: '#f0f0f0',
-                                margin: 0, fontFamily: 'Georgia, "Times New Roman", serif',
-                            }}>
-                                ¿Quieres un recorrido?
-                            </p>
-                            <p style={{
-                                fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '2px 0 0',
-                            }}>
-                                Conoce todas las herramientas
-                            </p>
-                        </div>
-                    </div>
-
-                    <p style={{
-                        fontSize: 12, color: 'rgba(255,255,255,0.5)',
-                        lineHeight: 1.55, margin: '0 0 14px',
-                    }}>
-                        Te mostramos cada función para que le saques el máximo provecho a Iurexia desde tu primera consulta.
-                    </p>
-
-                    {/* CTA: Start Guide */}
-                    <button
-                        onClick={handleStartTour}
+                {/* Header */}
+                <div className="px-6 pt-6 pb-2 text-center">
+                    <div
+                        className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
                         style={{
-                            width: '100%',
-                            padding: '11px 20px',
-                            borderRadius: 12,
-                            background: 'linear-gradient(135deg, #c9a84c 0%, #a07830 100%)',
-                            border: 'none',
-                            color: '#fff',
-                            fontSize: 13,
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 6,
-                            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                            boxShadow: '0 4px 16px rgba(201,168,76,0.25)',
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                            e.currentTarget.style.boxShadow = '0 8px 24px rgba(201,168,76,0.35)';
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 4px 16px rgba(201,168,76,0.25)';
+                            background: 'linear-gradient(135deg, rgba(201,169,98,0.2), rgba(201,169,98,0.05))',
+                            border: '1px solid rgba(201,169,98,0.35)',
                         }}
                     >
-                        <BookOpen className="w-3.5 h-3.5" />
+                        <Scale className="w-7 h-7 text-[#c9a962]" />
+                    </div>
+                    <h2
+                        className="text-2xl font-semibold tracking-tight mb-1"
+                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
+                        <span className="text-white">
+                            {firstName ? `¡Bienvenido, ${firstName}!` : '¡Bienvenido a Iurexia!'}
+                        </span>
+                    </h2>
+                    <p className="text-white/40 text-sm">
+                        Tu asistente jurídico con inteligencia artificial
+                    </p>
+                </div>
+
+                {/* Audio Player Section */}
+                <div className="px-6 py-5">
+                    <div
+                        className="rounded-xl p-4"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(201,169,98,0.08) 0%, rgba(201,169,98,0.02) 100%)',
+                            border: '1px solid rgba(201,169,98,0.15)',
+                        }}
+                    >
+                        <p className="text-white/60 text-xs font-medium mb-3 text-center tracking-wide uppercase">
+                            Audio de Bienvenida
+                        </p>
+
+                        <div className="flex items-center gap-3">
+                            {/* Play/Pause button */}
+                            <button
+                                onClick={handlePlayAudio}
+                                className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200"
+                                style={{
+                                    background: isPlaying
+                                        ? 'linear-gradient(135deg, #a07830 0%, #8a6828 100%)'
+                                        : 'linear-gradient(135deg, #c9a84c 0%, #a07830 100%)',
+                                    boxShadow: isPlaying
+                                        ? '0 2px 8px rgba(201,168,76,0.2)'
+                                        : '0 4px 16px rgba(201,168,76,0.35)',
+                                    transform: isPlaying ? 'scale(0.95)' : 'scale(1)',
+                                }}
+                            >
+                                {isPlaying ? (
+                                    <Pause className="w-5 h-5 text-white" />
+                                ) : (
+                                    <Play className="w-5 h-5 text-white ml-0.5" />
+                                )}
+                            </button>
+
+                            {/* Progress bar + time */}
+                            <div className="flex-1 min-w-0">
+                                {/* Progress bar */}
+                                <div
+                                    className="h-1.5 rounded-full overflow-hidden mb-1.5"
+                                    style={{ background: 'rgba(255,255,255,0.08)' }}
+                                >
+                                    <div
+                                        className="h-full rounded-full transition-all duration-100"
+                                        style={{
+                                            width: duration > 0 ? `${(progress / duration) * 100}%` : '0%',
+                                            background: 'linear-gradient(90deg, #c9a84c, #e0c070)',
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-white/30 text-[10px]">
+                                        {formatTime(progress)}
+                                    </span>
+                                    <span className="text-white/30 text-[10px]">
+                                        {duration > 0 ? formatTime(duration) : '--:--'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Mute toggle */}
+                            <button
+                                onClick={toggleMute}
+                                className="flex-shrink-0 p-2 rounded-lg transition-colors"
+                                style={{
+                                    color: isMuted ? 'rgba(255,255,255,0.2)' : '#c9a84c',
+                                    background: 'rgba(255,255,255,0.03)',
+                                }}
+                            >
+                                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                            </button>
+                        </div>
+
+                        {/* Waveform animation when playing */}
+                        {isPlaying && (
+                            <div className="flex items-end justify-center gap-[3px] h-5 mt-3">
+                                {Array.from({ length: 12 }).map((_, i) => (
+                                    <div
+                                        key={i}
+                                        style={{
+                                            width: 3,
+                                            borderRadius: 99,
+                                            background: '#c9a84c',
+                                            animation: `waveBar 0.8s ease-in-out ${i * 0.08}s infinite alternate`,
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        {!isPlaying && !audioEnded && (
+                            <p className="text-white/25 text-[11px] text-center mt-2">
+                                Presiona ▶ para escuchar una breve introducción
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="px-6 pb-6 space-y-2.5">
+                    {/* Start Guide button */}
+                    <button
+                        onClick={handleStartTour}
+                        className="w-full py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2"
+                        style={{
+                            background: 'linear-gradient(135deg, #c9a962 0%, #a8883e 100%)',
+                            color: '#0f0f0f',
+                            boxShadow: '0 4px 16px rgba(201, 169, 98, 0.3)',
+                        }}
+                    >
+                        <BookOpen className="w-4 h-4" />
                         Iniciar Guía Rápida
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ChevronRight className="w-4 h-4" />
                     </button>
 
                     {/* Skip */}
                     <button
                         onClick={handleDismiss}
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            marginTop: 8,
-                            borderRadius: 10,
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'rgba(255,255,255,0.3)',
-                            fontSize: 11,
-                            cursor: 'pointer',
-                            transition: 'color 0.15s ease',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}
+                        className="w-full py-2.5 text-center text-white/30 text-xs hover:text-white/50 transition-colors"
                     >
-                        Omitir
+                        Omitir y comenzar
                     </button>
                 </div>
-            )}
+            </div>
 
             {/* Keyframes */}
             <style>{`
@@ -326,11 +317,21 @@ export default function FreeUserOnboardingModal({
                     0% { height: 4px; }
                     100% { height: 16px; }
                 }
-                @keyframes audioFloatIn {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
+                @keyframes onboardFadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes onboardSlideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px) scale(0.96);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
                 }
             `}</style>
-        </>
+        </div>
     );
 }
