@@ -217,13 +217,12 @@ function DocumentDropZone({
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const PROGRESS_STEPS = [
-    { label: 'Extrayendo datos estructurados de los PDFs...', emoji: '🔬' },
-    { label: 'Búsqueda multi-silo por agravio (jurisprudencia + legislación + constitución)...', emoji: '🔍' },
-    { label: 'Gemini redacta análisis profundo de cada agravio...', emoji: '✍️' },
-    { label: 'Búsqueda de enriquecimiento (buscando citas adicionales)...', emoji: '📚' },
-    { label: 'Gemini enriquece las citas verificadas...', emoji: '✨' },
-    { label: 'Redactando efectos de la sentencia y puntos resolutivos...', emoji: '⚖️' },
-    { label: 'Verificando coherencia del estudio de fondo...', emoji: '✅' },
+    { label: 'Extrayendo datos de los PDFs...', emoji: '🔬' },
+    { label: 'Fase 1: Analizando acto reclamado...', emoji: '📋' },
+    { label: 'Fase 2: Analizando conceptos de violación...', emoji: '📋' },
+    { label: 'Fase 3: Identificando problemas jurídicos...', emoji: '🧠' },
+    { label: 'Fase 4: Redactando estudio de fondo con jurisprudencia...', emoji: '⚖️' },
+    { label: 'Finalizando sentencia y puntos resolutivos...', emoji: '✅' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -237,7 +236,7 @@ export default function RedactorSentenciaPage() {
     // Access gate: only admin or ultra_secretarios
     const canAccess = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
 
-    // State Machine: 'select' → 'upload' → 'analyzing' → 'estrategia' → 'solving' → 'prompt_review' → 'generating' → 'result'
+    // State Machine V4: 'select' → 'upload' → 'analyzing' → 'generating' → 'result'
     const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'estrategia' | 'solving' | 'prompt_review' | 'generating' | 'result'>('select');
 
     // New Navigation State
@@ -552,33 +551,19 @@ export default function RedactorSentenciaPage() {
             if (data.materia) setMetaMateria(data.materia.toUpperCase());
             if (data.expediente?.quejoso) setMetaQuejoso(data.expediente.quejoso);
 
-            // Set default genio from first problema's suggestion
-            if (data.problemas_juridicos?.[0]?.genio_sugerido) {
-                setSelectedGenio(data.problemas_juridicos[0].genio_sugerido);
-            }
-
-            // Build calificaciones from problemas
-            const califs: CalificacionEntry[] = (data.problemas_juridicos || []).map((p: any) => ({
-                numero: p.numero,
-                titulo: p.titulo,
-                resumen: p.descripcion,
-                calificacion: 'sin_calificar' as const,
-                notas: '',
-                expanded: false,
-                dispositivo: false,
-            }));
-            setCalificaciones(califs);
-
-            setPhase('estrategia');
+            // V4: Skip estrategia — go directly to generating
+            // The V4 backend auto-derives problems from the extracted text
+            handleGenerateV4(analysisCompat);
         } catch (err: any) {
             setError(err.message || 'Error al analizar el expediente');
             setPhase('upload');
         }
     };
 
-    // ── Generate (v3 — Comprehensive per-problem with IA and Gemini) ─────
-    const handleGenerate = async () => {
-        if (!selectedTipo || !user?.email || !allCalificadas) return;
+    // ── Generate V4 (Gemini 2.5 Pro 4-phase pipeline — auto-derives problems) ─────
+    const handleGenerateV4 = async (analysis?: AnalysisData) => {
+        const data = analysis || analysisData;
+        if (!selectedTipo || !user?.email) return;
 
         setPhase('generating');
         setError('');
@@ -590,12 +575,11 @@ export default function RedactorSentenciaPage() {
             const formData = new FormData();
             formData.append('tipo', selectedTipo.id);
             formData.append('user_email', user.email);
-            formData.append('resumen_caso', analysisData?.resumen_caso || '');
-            formData.append('resumen_acto_reclamado', analysisData?.resumen_acto_reclamado || '');
-
-            const problemasActivos = calificaciones.filter(c => c.calificacion !== 'sin_calificar' && c.calificacion !== 'innecesario');
-            formData.append('problemas_json', JSON.stringify(problemasActivos));
+            formData.append('resumen_caso', data?.resumen_caso || '');
+            formData.append('resumen_acto_reclamado', data?.resumen_acto_reclamado || '');
             formData.append('sentido_global', sentido || '');
+            // V4: Send empty problems — backend auto-derives from text
+            formData.append('problemas_json', '[]');
 
             const response = await fetch(`${API_URL}/redactor/v3/generate_comprehensive`, {
                 method: 'POST',
@@ -629,25 +613,25 @@ export default function RedactorSentenciaPage() {
                         eventType = line.slice(7).trim();
                     } else if (line.startsWith('data: ') && eventType) {
                         try {
-                            const data = JSON.parse(line.slice(6));
-                            if (eventType === 'text' && data.chunk) {
-                                fullText += data.chunk;
+                            const evtData = JSON.parse(line.slice(6));
+                            if (eventType === 'text' && evtData.chunk) {
+                                fullText += evtData.chunk;
                                 setStreamingText(fullText);
                             } else if (eventType === 'phase') {
                                 setStreamingPhase({
-                                    step: data.step,
-                                    progress: data.progress,
-                                    group: `${data.problema_actual}/${data.total_problemas}: ${data.titulo_problema}`,
-                                    totalGroups: data.total_problemas,
+                                    step: evtData.step,
+                                    progress: evtData.progress,
+                                    group: evtData.titulo_problema || '',
+                                    totalGroups: evtData.total_problemas,
                                 });
                             } else if (eventType === 'done') {
                                 setGenerationInfo({
-                                    phasesCompleted: data.total_problemas,
-                                    totalChars: data.total_chars || fullText.length,
-                                    generationTime: data.elapsed || 0,
+                                    phasesCompleted: evtData.total_problemas || 0,
+                                    totalChars: evtData.total_chars || fullText.length,
+                                    generationTime: evtData.elapsed || 0,
                                 });
                             } else if (eventType === 'error') {
-                                throw new Error(data.message);
+                                throw new Error(evtData.message);
                             }
                         } catch (parseErr: any) {
                             if (parseErr.message && !parseErr.message.includes('JSON')) {
@@ -662,7 +646,7 @@ export default function RedactorSentenciaPage() {
             setResult(fullText);
             if (!generationInfo) {
                 setGenerationInfo({
-                    phasesCompleted: problemasActivos.length,
+                    phasesCompleted: 4,
                     totalChars: fullText.length,
                     generationTime: 0,
                 });
@@ -670,9 +654,12 @@ export default function RedactorSentenciaPage() {
             setPhase('result');
         } catch (err: any) {
             setError(err.message || 'Error al generar la sentencia');
-            setPhase('estrategia');
+            setPhase('upload');
         }
     };
+
+    // Legacy alias for backward compatibility
+    const handleGenerate = handleGenerateV4;
 
     // ── Update calificacion for a single agravio ────────────────────────
     const updateCalificacion = (index: number, field: keyof CalificacionEntry, value: any) => {
@@ -1364,7 +1351,7 @@ export default function RedactorSentenciaPage() {
 
                         {/* Generate Button */}
                         <button
-                            onClick={handleGenerate}
+                            onClick={() => handleGenerateV4()}
                             disabled={!allCalificadas}
                             className={`w-full py-4 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${allCalificadas
                                 ? 'bg-gradient-to-r from-[#c9a962] to-[#b8943f] text-[#0f0f0f] hover:from-[#d4b470] hover:to-[#c9a962] shadow-lg shadow-[#c9a962]/20 hover:shadow-xl hover:shadow-[#c9a962]/30'
