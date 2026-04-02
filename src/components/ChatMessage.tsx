@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, Loader2 } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check } from 'lucide-react';
 import type { Message } from '@/lib/api';
 
 interface ChatMessageProps {
@@ -773,6 +773,25 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         setTimeout(() => printWindow.print(), 250);
     }, []);
 
+    // Handle copy to clipboard
+    const [copied, setCopied] = useState(false);
+    const handleCopy = useCallback(() => {
+        // Clean up internal tags/metadata before copying
+        let cleanContent = message.content
+            .replace(/<!-- DOCUMENTO_INICIO -->[\s\S]*?<!-- DOCUMENTO_FIN -->/g, '')
+            .replace(/<!-- SENTENCIA_INICIO -->[\s\S]*?<!-- SENTENCIA_FIN -->/g, '')
+            .replace(/---CONTENIDO DEL DOCUMENTO---[\s\S]*/g, '')
+            .replace(/\[AUDITAR_SENTENCIA\]/g, '')
+            .replace(/\[Doc\s*ID:\s*[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\]/gi, '')
+            .replace(/(?<!")([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?!")/gi, '')
+            .replace(/\[SCJN_BUSCAR:\s*[^\]]*\]/g, '')
+            .trim();
+
+        navigator.clipboard.writeText(cleanContent);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }, [message.content]);
+
     return (
         <div className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'} animate-slide-up`}>
             {/* Avatar - Assistant */}
@@ -922,6 +941,18 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 >
                                     <Printer className="w-3.5 h-3.5" />
                                     Imprimir
+                                </button>
+                                <button
+                                    onClick={handleCopy}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
+                                        copied 
+                                        ? 'bg-green-100 text-green-700 border border-green-200' 
+                                        : 'bg-cream-200 text-charcoal-700 hover:bg-cream-300'
+                                    }`}
+                                    title="Copiar texto de la respuesta"
+                                >
+                                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                                    {copied ? '¡Copiado!' : 'Copiar'}
                                 </button>
                             </div>
                         )}
