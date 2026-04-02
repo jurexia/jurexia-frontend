@@ -3072,22 +3072,22 @@ export const FEDERAL_LEYES: CategoriaLeyes = {
     ]
 };
 
-// --- Chihuahua: FULL DATA --- PDFs hosted on GCS -----
+// --- Chihuahua: FULL DATA --- PDFs hosted on GCS (iurexia-v) -----
 const CHIH_BASE = 'https://storage.googleapis.com/iurexia-leyes/Chihuahua';
 
 const CHIHUAHUA_LEYES: CategoriaLeyes = {
     constitucion: [
-        { nombre: 'CONSTITUCIÓN POLÍTICA DEL ESTADO LIBRE Y SOBERANO DE CHIHUAHUA', url: `${CHIH_BASE}/CONSTITUCION_CHIH.pdf` },
+        { nombre: 'CONSTITUCIÓN POLÍTICA DEL ESTADO LIBRE Y SOBERANO DE CHIHUAHUA', url: `${CHIH_BASE}/Constitucion_Chihuahua.pdf` },
     ],
     leyes: [],
     codigos: [
-        { nombre: 'CÓDIGO ADMINISTRATIVO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_ADMINISTRATIVO.pdf` },
-        { nombre: 'CÓDIGO CIVIL DEL ESTADO LIBRE Y SOBERANO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_CIVIL.pdf` },
-        { nombre: 'CÓDIGO DE PROCEDIMIENTOS CIVILES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/COD_PROC_CIVILES.pdf` },
-        { nombre: 'CÓDIGO DE PROCEDIMIENTOS FAMILIARES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/COD_PROC_FAMILIARES.pdf` },
-        { nombre: 'CÓDIGO FISCAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_FISCAL.pdf` },
-        { nombre: 'CÓDIGO MUNICIPAL PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_MUNICIPAL.pdf` },
-        { nombre: 'CÓDIGO PENAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_PENAL.pdf` },
+        { nombre: 'CÓDIGO ADMINISTRATIVO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Administrativo_Chihuahua.pdf` },
+        { nombre: 'CÓDIGO CIVIL DEL ESTADO LIBRE Y SOBERANO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Civil_Chihuahua.pdf` },
+        { nombre: 'CÓDIGO DE PROCEDIMIENTOS CIVILES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Proc_Civiles_Chihuahua.pdf` },
+        { nombre: 'CÓDIGO DE PROCEDIMIENTOS FAMILIARES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Proc_Familiares_Chihuahua.pdf` },
+        { nombre: 'CÓDIGO FISCAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Fiscal_Chihuahua.pdf` },
+        { nombre: 'CÓDIGO MUNICIPAL PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Municipal_Chihuahua.pdf` },
+        { nombre: 'CÓDIGO PENAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Penal_Chihuahua.pdf` },
     ],
     reglamentos: [],
     otros: [],
