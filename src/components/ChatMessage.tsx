@@ -776,10 +776,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     // Handle copy to clipboard
     const [copied, setCopied] = useState(false);
     const handleCopy = useCallback(() => {
-        // Clean up internal tags/metadata before copying
+        // Clean up internal tags, metadata, and HTML comments before copying
         let cleanContent = message.content
-            .replace(/<!-- DOCUMENTO_INICIO -->[\s\S]*?<!-- DOCUMENTO_FIN -->/g, '')
-            .replace(/<!-- SENTENCIA_INICIO -->[\s\S]*?<!-- SENTENCIA_FIN -->/g, '')
+            .replace(/<!--[\s\S]*?-->/g, '') // Remove ALL HTML comments (including CITATION_META)
             .replace(/---CONTENIDO DEL DOCUMENTO---[\s\S]*/g, '')
             .replace(/\[AUDITAR_SENTENCIA\]/g, '')
             .replace(/\[Doc\s*ID:\s*[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\]/gi, '')
