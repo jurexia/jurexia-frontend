@@ -409,7 +409,7 @@ const CDMX_LEYES: CategoriaLeyes = {
 
 
 // ─── Veracruz: FULL DATA — PDFs hosted on Supabase ────────────────
-const VER_BASE = 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/Veracruz';
+const VER_BASE = 'https://storage.googleapis.com/iurexia-leyes/Veracruz';
 const VER_LEYES: CategoriaLeyes = {
     constitucion: [
         { nombre: 'Constitución Política del Estado de Veracruz de Ignacio de la Llave', url: `${VER_BASE}/CONSTITUCION28012026.pdf` },
@@ -3072,6 +3072,26 @@ export const FEDERAL_LEYES: CategoriaLeyes = {
     ]
 };
 
+// --- Chihuahua: FULL DATA --- PDFs hosted on GCS -----
+const CHIH_BASE = 'https://storage.googleapis.com/iurexia-leyes/Chihuahua';
+
+const CHIHUAHUA_LEYES: CategoriaLeyes = {
+    constitucion: [
+        { nombre: 'CONSTITUCIÓN POLÍTICA DEL ESTADO LIBRE Y SOBERANO DE CHIHUAHUA', url: `${CHIH_BASE}/CONSTITUCION_CHIH.pdf` },
+    ],
+    leyes: [],
+    codigos: [
+        { nombre: 'CÓDIGO ADMINISTRATIVO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_ADMINISTRATIVO.pdf` },
+        { nombre: 'CÓDIGO CIVIL DEL ESTADO LIBRE Y SOBERANO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_CIVIL.pdf` },
+        { nombre: 'CÓDIGO DE PROCEDIMIENTOS CIVILES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/COD_PROC_CIVILES.pdf` },
+        { nombre: 'CÓDIGO DE PROCEDIMIENTOS FAMILIARES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/COD_PROC_FAMILIARES.pdf` },
+        { nombre: 'CÓDIGO FISCAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_FISCAL.pdf` },
+        { nombre: 'CÓDIGO MUNICIPAL PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_MUNICIPAL.pdf` },
+        { nombre: 'CÓDIGO PENAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/CODIGO_PENAL.pdf` },
+    ],
+    reglamentos: [],
+    otros: [],
+};
 
 export const ESTADOS: Estado[] = [
     { slug: 'aguascalientes', nombre: 'Aguascalientes', nombreCorto: 'Aguascalientes', abreviatura: 'AGS', region: 'centro', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
@@ -3079,7 +3099,7 @@ export const ESTADOS: Estado[] = [
     { slug: 'baja-california-sur', nombre: 'Baja California Sur', nombreCorto: 'Baja California Sur', abreviatura: 'BCS', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'campeche', nombre: 'Campeche', nombreCorto: 'Campeche', abreviatura: 'CAMP', region: 'sur', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'chiapas', nombre: 'Chiapas', nombreCorto: 'Chiapas', abreviatura: 'CHIS', region: 'sur', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
-    { slug: 'chihuahua', nombre: 'Chihuahua', nombreCorto: 'Chihuahua', abreviatura: 'CHIH', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
+    { slug: 'chihuahua', nombre: 'Chihuahua', nombreCorto: 'Chihuahua', abreviatura: 'CHIH', region: 'norte', leyesCount: 8, ultimaActualizacion: '2026-04-02', leyes: CHIHUAHUA_LEYES },
     { slug: 'cdmx', nombre: 'Ciudad de México', nombreCorto: 'CDMX', abreviatura: 'CDMX', region: 'centro', leyesCount: 139, ultimaActualizacion: '2026-02-15', leyes: CDMX_LEYES },
     { slug: 'coahuila', nombre: 'Coahuila', nombreCorto: 'Coahuila', abreviatura: 'COAH', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'colima', nombre: 'Colima', nombreCorto: 'Colima', abreviatura: 'COL', region: 'occidente', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
