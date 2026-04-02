@@ -3072,26 +3072,72 @@ export const FEDERAL_LEYES: CategoriaLeyes = {
     ]
 };
 
-// --- Chihuahua: FULL DATA --- PDFs hosted on GCS (iurexia-v) -----
-const CHIH_BASE = 'https://storage.googleapis.com/iurexia-leyes/Chihuahua';
+// --- Chihuahua: FULL DATA --- PDFs del Congreso del Estado de Chihuahua -----
+const CHIH_LEY = 'https://www.congresochihuahua2.gob.mx/biblioteca/leyes/archivosLeyes';
+const CHIH_COD = 'https://www.congresochihuahua2.gob.mx/biblioteca/codigos/archivosCodigos';
+const CHIH_REG = 'https://www.congresochihuahua2.gob.mx/biblioteca/reglamentos/archivosReglamentos';
 
 const CHIHUAHUA_LEYES: CategoriaLeyes = {
     constitucion: [
-        { nombre: 'CONSTITUCIÓN POLÍTICA DEL ESTADO LIBRE Y SOBERANO DE CHIHUAHUA', url: `${CHIH_BASE}/Constitucion_Chihuahua.pdf` },
+        { nombre: 'CONSTITUCIÓN POLÍTICA DEL ESTADO LIBRE Y SOBERANO DE CHIHUAHUA', url: 'https://www.congresochihuahua.gob.mx/biblioteca/constitucion/archivosConstitucion/actual.pdf' },
     ],
-    leyes: [],
     codigos: [
-        { nombre: 'CÓDIGO ADMINISTRATIVO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Administrativo_Chihuahua.pdf` },
-        { nombre: 'CÓDIGO CIVIL DEL ESTADO LIBRE Y SOBERANO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Civil_Chihuahua.pdf` },
-        { nombre: 'CÓDIGO DE PROCEDIMIENTOS CIVILES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Proc_Civiles_Chihuahua.pdf` },
-        { nombre: 'CÓDIGO DE PROCEDIMIENTOS FAMILIARES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Proc_Familiares_Chihuahua.pdf` },
-        { nombre: 'CÓDIGO FISCAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Fiscal_Chihuahua.pdf` },
-        { nombre: 'CÓDIGO MUNICIPAL PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Municipal_Chihuahua.pdf` },
-        { nombre: 'CÓDIGO PENAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_BASE}/Codigo_Penal_Chihuahua.pdf` },
+        { nombre: 'CÓDIGO CIVIL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_COD}/13.pdf` },
+        { nombre: 'CÓDIGO PENAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_COD}/64.pdf` },
+        { nombre: 'CÓDIGO DE PROCEDIMIENTOS CIVILES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_COD}/61.pdf` },
+        { nombre: 'CÓDIGO DE PROCEDIMIENTOS PENALES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_COD}/62.pdf` },
+        { nombre: 'CÓDIGO DE PROCEDIMIENTOS FAMILIARES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_COD}/63.pdf` },
+        { nombre: 'CÓDIGO ADMINISTRATIVO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_COD}/9.pdf` },
+        { nombre: 'CÓDIGO FISCAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_COD}/65.pdf` },
+        { nombre: 'CÓDIGO MUNICIPAL PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_COD}/10.pdf` },
     ],
-    reglamentos: [],
+    leyes: [
+        { nombre: 'LEY DEL NOTARIADO PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1523.pdf` },
+        { nombre: 'LEY DEL REGISTRO PÚBLICO DE LA PROPIEDAD DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/606.pdf` },
+        { nombre: 'LEY DE CATASTRO PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/72.pdf` },
+        { nombre: 'LEY DE ADOPCIONES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1524.pdf` },
+        { nombre: 'LEY DE ASENTAMIENTOS HUMANOS, ORDENAMIENTO TERRITORIAL Y DESARROLLO URBANO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1536.pdf` },
+        { nombre: 'LEY DE VÍCTIMAS PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1248.pdf` },
+        { nombre: 'LEY DE JUSTICIA ALTERNATIVA DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1164.pdf` },
+        { nombre: 'LEY DE JUSTICIA ESPECIAL PARA ADOLESCENTES INFRACTORES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1546.pdf` },
+        { nombre: 'LEY DEL SISTEMA ESTATAL DE SEGURIDAD PÚBLICA DE CHIHUAHUA', url: `${CHIH_LEY}/1007.pdf` },
+        { nombre: 'LEY DE EXTINCIÓN DE DOMINIO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/602.pdf` },
+        { nombre: 'LEY DE RESPONSABILIDADES DE LOS SERVIDORES PÚBLICOS DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1519.pdf` },
+        { nombre: 'LEY DE TRANSPARENCIA Y ACCESO A LA INFORMACIÓN PÚBLICA DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1175.pdf` },
+        { nombre: 'LEY DE PROTECCIÓN DE DATOS PERSONALES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1342.pdf` },
+        { nombre: 'LEY DE FISCALIZACIÓN SUPERIOR DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1441.pdf` },
+        { nombre: 'LEY DE ADQUISICIONES, ARRENDAMIENTOS Y CONTRATACIÓN DE SERVICIOS DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1420.pdf` },
+        { nombre: 'LEY DE OBRAS PÚBLICAS Y SERVICIOS RELACIONADOS DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1436.pdf` },
+        { nombre: 'LEY DE BIENES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/305.pdf` },
+        { nombre: 'LEY DE HACIENDA DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1442.pdf` },
+        { nombre: 'LEY DE COORDINACIÓN FISCAL DEL ESTADO DE CHIHUAHUA Y SUS MUNICIPIOS', url: `${CHIH_LEY}/1439.pdf` },
+        { nombre: 'LEY ORGÁNICA DEL PODER JUDICIAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/161.pdf` },
+        { nombre: 'LEY ORGÁNICA DEL PODER EJECUTIVO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/144.pdf` },
+        { nombre: 'LEY ORGÁNICA DEL PODER LEGISLATIVO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1243.pdf` },
+        { nombre: 'LEY ORGÁNICA DE LA FISCALÍA GENERAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1261.pdf` },
+        { nombre: 'LEY ORGÁNICA DEL TRIBUNAL ESTATAL DE JUSTICIA ADMINISTRATIVA DE CHIHUAHUA', url: `${CHIH_LEY}/1512.pdf` },
+        { nombre: 'LEY DE LA COMISIÓN ESTATAL DE LOS DERECHOS HUMANOS DE CHIHUAHUA', url: `${CHIH_LEY}/93.pdf` },
+        { nombre: 'LEY DE DERECHOS DE LOS PUEBLOS INDÍGENAS DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1003.pdf` },
+        { nombre: 'LEY DE CONSULTA A LOS PUEBLOS Y COMUNIDADES INDÍGENAS EN EL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1423.pdf` },
+        { nombre: 'LEY DE DERECHOS DE LAS PERSONAS MAYORES EN EL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1432.pdf` },
+        { nombre: 'LEY DE VIALIDAD Y TRÁNSITO DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/117.pdf` },
+        { nombre: 'LEY DE TRANSPORTE DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1526.pdf` },
+        { nombre: 'LEY DE ALCOHOLES DEL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/1347.pdf` },
+        { nombre: 'LEY DE CULTURA DE LA LEGALIDAD PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_LEY}/773.pdf` },
+    ],
+    reglamentos: [
+        { nombre: 'REGLAMENTO DE VIALIDAD Y TRÁNSITO PARA EL ESTADO DE CHIHUAHUA', url: `${CHIH_REG}/9.pdf` },
+        { nombre: 'REGLAMENTO DE LA LEY DE TRANSPORTE DEL ESTADO DE CHIHUAHUA', url: `${CHIH_REG}/262.pdf` },
+        { nombre: 'REGLAMENTO DEL CÓDIGO FISCAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_REG}/243.pdf` },
+        { nombre: 'REGLAMENTO INTERIOR DE LA FISCALÍA GENERAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_REG}/198.pdf` },
+        { nombre: 'ARANCEL DE NOTARIOS DEL ESTADO DE CHIHUAHUA', url: `${CHIH_REG}/104.pdf` },
+        { nombre: 'REGLAMENTO DE LA LEY DE PARTICIPACIÓN CIUDADANA DEL ESTADO DE CHIHUAHUA', url: `${CHIH_REG}/206.pdf` },
+        { nombre: 'REGLAMENTO INTERIOR Y DE PRÁCTICAS PARLAMENTARIAS DEL PODER LEGISLATIVO DE CHIHUAHUA', url: `${CHIH_REG}/183.pdf` },
+        { nombre: 'REGLAMENTO DE LA LEY ORGÁNICA DEL PODER JUDICIAL DEL ESTADO DE CHIHUAHUA', url: `${CHIH_REG}/196.pdf` },
+    ],
     otros: [],
 };
+
 
 export const ESTADOS: Estado[] = [
     { slug: 'aguascalientes', nombre: 'Aguascalientes', nombreCorto: 'Aguascalientes', abreviatura: 'AGS', region: 'centro', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
@@ -3099,7 +3145,7 @@ export const ESTADOS: Estado[] = [
     { slug: 'baja-california-sur', nombre: 'Baja California Sur', nombreCorto: 'Baja California Sur', abreviatura: 'BCS', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'campeche', nombre: 'Campeche', nombreCorto: 'Campeche', abreviatura: 'CAMP', region: 'sur', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'chiapas', nombre: 'Chiapas', nombreCorto: 'Chiapas', abreviatura: 'CHIS', region: 'sur', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
-    { slug: 'chihuahua', nombre: 'Chihuahua', nombreCorto: 'Chihuahua', abreviatura: 'CHIH', region: 'norte', leyesCount: 8, ultimaActualizacion: '2026-04-02', leyes: CHIHUAHUA_LEYES },
+    { slug: 'chihuahua', nombre: 'Chihuahua', nombreCorto: 'Chihuahua', abreviatura: 'CHIH', region: 'norte', leyesCount: 49, ultimaActualizacion: '2026-04-02', leyes: CHIHUAHUA_LEYES },
     { slug: 'cdmx', nombre: 'Ciudad de México', nombreCorto: 'CDMX', abreviatura: 'CDMX', region: 'centro', leyesCount: 139, ultimaActualizacion: '2026-02-15', leyes: CDMX_LEYES },
     { slug: 'coahuila', nombre: 'Coahuila', nombreCorto: 'Coahuila', abreviatura: 'COAH', region: 'norte', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
     { slug: 'colima', nombre: 'Colima', nombreCorto: 'Colima', abreviatura: 'COL', region: 'occidente', leyesCount: 0, leyes: LEYES_PLACEHOLDER },
