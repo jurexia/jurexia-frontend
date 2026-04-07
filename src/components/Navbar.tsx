@@ -71,9 +71,9 @@ export default function Navbar() {
                     <div className="hidden lg:flex items-center gap-3 shrink-0">
                         <Link
                             href="/chat"
-                            className="flex items-center gap-2 px-4 py-2 bg-charcoal-900 text-white text-sm font-semibold rounded-lg hover:bg-charcoal-800 transition-colors shadow-sm"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-charcoal-900 text-white text-sm font-semibold rounded-full hover:bg-charcoal-800 transition-all duration-200 shadow-sm active:scale-95"
                         >
-                            <MessageSquare className="w-4 h-4" />
+                            <MessageSquare className="w-4 h-4 text-accent-gold" />
                             Ir al Chat
                         </Link>
                         {isLoading ? (
@@ -84,13 +84,13 @@ export default function Navbar() {
                             <div className="flex items-center gap-2">
                                 <Link
                                     href="/login"
-                                    className="text-sm font-medium text-charcoal-700 hover:text-charcoal-900 transition-colors px-2"
+                                    className="text-sm font-semibold text-charcoal-700 hover:text-charcoal-900 transition-colors px-4 py-2.5 rounded-full hover:bg-black/5"
                                 >
                                     Acceder
                                 </Link>
                                 <Link
                                     href="/registro"
-                                    className="btn-primary text-sm py-1.5 px-4"
+                                    className="btn-primary text-sm py-2.5 px-6 shadow-md hover:shadow-lg active:scale-95"
                                 >
                                     Probar Gratis
                                 </Link>
@@ -201,9 +201,9 @@ export default function Navbar() {
                             <Link
                                 href="/chat"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="flex items-center justify-center gap-2 px-4 py-3 bg-charcoal-900 text-white text-base font-semibold rounded-lg hover:bg-charcoal-800 transition-colors"
+                                className="flex items-center justify-center gap-2 px-4 py-3.5 bg-charcoal-900 text-white text-base font-semibold rounded-full hover:bg-charcoal-800 transition-all active:scale-95 shadow-lg shadow-charcoal-900/20"
                             >
-                                <MessageSquare className="w-5 h-5" />
+                                <MessageSquare className="w-5 h-5 text-accent-gold" />
                                 Ir al Chat
                             </Link>
 
