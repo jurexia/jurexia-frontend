@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStripe } from '@/lib/stripe';
+import { getStripe, isUpgrade, getPlanIdFromPriceId } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
@@ -80,11 +80,30 @@ export async function POST(request: NextRequest) {
                         { status: 409 }
                     );
                 } else {
-                    // DIFFERENT plan → upgrade/change → cancel old, proceed with new
-                    console.log(`🔄 PLAN CHANGE: ${customerEmail} switching from ${currentPriceId} to ${priceId} — canceling old sub ${activeSub.id}`);
-                    await stripe.subscriptions.cancel(activeSub.id, {
-                        prorate: true,
-                    });
+                    // DIFFERENT plan → check if upgrade or downgrade
+                    const currentPlanId = getPlanIdFromPriceId(currentPriceId);
+                    const newPlanId = getPlanIdFromPriceId(priceId);
+
+                    if (isUpgrade(currentPlanId, newPlanId)) {
+                        // UPGRADE → cancel old, proceed with new checkout
+                        console.log(`🔄 UPGRADE: ${customerEmail} from ${currentPlanId} to ${newPlanId} — canceling old sub ${activeSub.id}`);
+                        await stripe.subscriptions.cancel(activeSub.id, {
+                            prorate: true,
+                        });
+                    } else {
+                        // DOWNGRADE → block checkout, redirect to billing portal
+                        console.log(`⚠️ DOWNGRADE BLOCKED: ${customerEmail} trying to go from ${currentPlanId} to ${newPlanId} — redirecting to portal`);
+                        const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'https://iurexia.com';
+                        const portalSession = await stripe.billingPortal.sessions.create({
+                            customer: customerId!,
+                            return_url: `${origin}/chat`,
+                        });
+                        return NextResponse.json({
+                            url: portalSession.url,
+                            code: 'DOWNGRADE_REDIRECT',
+                            message: 'Para cambiar a un plan inferior, administra tu suscripción desde el portal de facturación.',
+                        });
+                    }
                 }
             }
 

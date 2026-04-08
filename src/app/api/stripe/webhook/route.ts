@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { getStripe, getPlanFromSubscription, PLANS, PlanId } from '@/lib/stripe';
+import { getStripe, getPlanFromSubscription, PLANS, PlanId, isUpgrade, getPlanIdFromPriceId } from '@/lib/stripe';
 import {
     updateUserSubscription,
     downgradeToFree,
@@ -321,8 +321,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // ── AUTO-CANCEL previous subscriptions on upgrade ────────────────
     // When a user upgrades (e.g., Básico→Pro, Pro→Platinum), they go through
     // a new checkout which creates a NEW subscription. The old one stays active,
-    // causing double billing. Here we cancel all other active subscriptions
-    // for this customer except the one just created.
+    // causing double billing. Here we cancel the LOWER-tier subscription.
+    // CRITICAL: Only cancel old subs if the new plan is actually HIGHER tier.
     try {
         const customerId = session.customer as string;
         const newSubscriptionId = session.subscription as string;
@@ -333,19 +333,47 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             limit: 10,
         });
 
-        const oldSubscriptions = customerSubscriptions.data.filter(
+        const otherSubscriptions = customerSubscriptions.data.filter(
             (sub) => sub.id !== newSubscriptionId
         );
 
-        if (oldSubscriptions.length > 0) {
-            console.log(`🔄 Found ${oldSubscriptions.length} old subscription(s) for ${email} — cancelling to prevent double billing`);
+        if (otherSubscriptions.length > 0) {
+            // Determine new plan tier
+            const newPriceId = subscription.items.data[0]?.price.id;
+            const newPlanId = getPlanIdFromPriceId(newPriceId || '');
 
-            for (const oldSub of oldSubscriptions) {
-                try {
-                    await stripe.subscriptions.cancel(oldSub.id);
-                    console.log(`✅ Cancelled old subscription ${oldSub.id} (price: ${oldSub.items.data[0]?.price.id})`);
-                } catch (cancelErr) {
-                    console.error(`❌ Failed to cancel old subscription ${oldSub.id}:`, cancelErr);
+            for (const oldSub of otherSubscriptions) {
+                const oldPriceId = oldSub.items.data[0]?.price.id;
+                const oldPlanId = getPlanIdFromPriceId(oldPriceId || '');
+
+                if (isUpgrade(oldPlanId, newPlanId)) {
+                    // New plan is higher → cancel old (lower) subscription ✅
+                    try {
+                        await stripe.subscriptions.cancel(oldSub.id);
+                        console.log(`✅ Cancelled old subscription ${oldSub.id} (${oldPlanId} → ${newPlanId})`);
+                    } catch (cancelErr) {
+                        console.error(`❌ Failed to cancel old subscription ${oldSub.id}:`, cancelErr);
+                    }
+                } else {
+                    // New plan is LOWER → cancel the NEW subscription instead 🛡️
+                    console.warn(`🛡️ DOWNGRADE PREVENTED: ${email} tried ${oldPlanId} → ${newPlanId}`);
+                    console.warn(`   Keeping higher-tier sub ${oldSub.id} (${oldPlanId}), cancelling new sub ${newSubscriptionId} (${newPlanId})`);
+                    try {
+                        await stripe.subscriptions.cancel(newSubscriptionId);
+                        // Re-update profile to the HIGHER plan
+                        const higherPlanType = mapPlanIdToSubscriptionType(oldPlanId);
+                        const higherConfig = PLAN_CONFIG[higherPlanType];
+                        await updateUserSubscription(
+                            email,
+                            higherPlanType,
+                            customerId,
+                            oldSub.id,
+                        );
+                        console.log(`✅ Restored user ${email} to ${higherPlanType} (${higherConfig.queriesLimit} queries)`);
+                    } catch (revertErr) {
+                        console.error(`❌ Failed to revert downgrade for ${email}:`, revertErr);
+                    }
+                    return; // Stop processing — we've reverted
                 }
             }
         } else {

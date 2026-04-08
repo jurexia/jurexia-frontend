@@ -141,6 +141,32 @@ export const PLANS = {
 
 export type PlanId = keyof typeof PLANS;
 
+// ─── Plan Hierarchy (higher rank = higher tier) ───────────────────
+export const PLAN_RANK: Record<PlanId, number> = {
+    gratuito: 0,
+    basico_monthly: 1,
+    pro_monthly: 2,
+    pro_annual: 3,
+    platinum_monthly: 4,
+    platinum_annual: 5,
+    ultra_secretarios: 6,
+};
+
+/** Returns true if newPlan is strictly higher tier than currentPlan */
+export function isUpgrade(currentPlan: PlanId, newPlan: PlanId): boolean {
+    return PLAN_RANK[newPlan] > PLAN_RANK[currentPlan];
+}
+
+/** Get the PlanId from a Stripe priceId (env var lookup) */
+export function getPlanIdFromPriceId(priceId: string): PlanId {
+    for (const [planId, plan] of Object.entries(PLANS)) {
+        if (plan.priceId && plan.priceId === priceId) {
+            return planId as PlanId;
+        }
+    }
+    return 'gratuito';
+}
+
 // Get plan type from Stripe subscription
 export function getPlanFromSubscription(subscription: Stripe.Subscription | null): PlanId {
     if (!subscription) {
