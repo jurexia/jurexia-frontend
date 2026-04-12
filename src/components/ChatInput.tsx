@@ -66,7 +66,8 @@ export default function ChatInput({
     const [isListening, setIsListening] = useState(false);
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
-    const [tribunalFilter, setTribunalFilter] = useState<'1TCC' | '2TCC' | '3TCC' | null>(null);
+    const [selectedCircuit, setSelectedCircuit] = useState<number | null>(null);
+    const [tribunalFilter, setTribunalFilter] = useState<string | null>(null);
     const [showFileModal, setShowFileModal] = useState(false);
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
@@ -77,6 +78,26 @@ export default function ChatInput({
     const recognitionRef = useRef<any>(null);
     const baseMessageRef = useRef('');
     const { user, profile } = useAuth();
+
+    // ── Datos de circuitos y tribunales ──────────────────────────────────
+    const AVAILABLE_CIRCUITS = [22];
+
+    const CIRCUIT_TRIBUNALS: Record<number, { id: string; label: string; available: boolean }[]> = {
+        22: [
+            { id: '1TCC',   label: '1° ADM/CIV', available: true },
+            { id: '2TCC',   label: '2° ADM/CIV', available: true },
+            { id: '3TCC',   label: '3° ADM/CIV', available: true },
+            { id: 'TCCPA',  label: 'PEN·ADM',    available: false },
+            { id: 'TCCAT',  label: 'ADM·TRAB',   available: false },
+        ],
+    };
+
+    const ORDINAL_ES = [
+        '', '1°','2°','3°','4°','5°','6°','7°','8°','9°','10°',
+        '11°','12°','13°','14°','15°','16°','17°','18°','19°','20°',
+        '21°','22°','23°','24°','25°','26°','27°','28°','29°','30°',
+        '31°','32°',
+    ];
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || profile?.can_access_sentencia === true;
     const canAccessSentencia = profile?.subscription_type && !['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const isFreeUser = !profile?.subscription_type || ['gratuito', 'basico_monthly'].includes(profile.subscription_type);
@@ -248,8 +269,9 @@ export default function ChatInput({
 
             // Prepend [MODO_PRECEDENTES] marker when in Precedentes mode
             if (activeMode === 'precedentes') {
-                const tribunalTag = tribunalFilter ? ` [TRIBUNAL:${tribunalFilter}]` : '';
-                finalMessage = `[MODO_PRECEDENTES]${tribunalTag} ${finalMessage}`;
+                const circuitTag  = selectedCircuit  ? ` [CIRCUITO:${selectedCircuit}]`  : ' [CIRCUITO:22]';
+                const tribunalTag = tribunalFilter    ? ` [TRIBUNAL:${tribunalFilter}]`   : '';
+                finalMessage = `[MODO_PRECEDENTES]${circuitTag}${tribunalTag} ${finalMessage}`;
             }
 
             // Always use reasoning for maximum quality
@@ -582,8 +604,9 @@ ${draftRequest.descripcion}`;
                                     label="Precedentes"
                                     active={activeMode === 'precedentes'}
                                     onClick={() => {
-                                        setActiveMode(activeMode === 'precedentes' ? 'search' : 'precedentes');
-                                        if (activeMode === 'precedentes') setTribunalFilter(null);
+                                        const next = activeMode !== 'precedentes';
+                                        setActiveMode(next ? 'precedentes' : 'search');
+                                        if (!next) { setSelectedCircuit(null); setTribunalFilter(null); }
                                     }}
                                     guideId="precedentes"
                                 />
@@ -605,23 +628,86 @@ ${draftRequest.descripcion}`;
                         </div>
                     </div>
 
-                    {/* ── Filtro de tribunal (solo en modo Precedentes) ─────────────── */}
+                    {/* ── MODO PRECEDENTES: selector circuito → tribunal ────────── */}
                     {activeMode === 'precedentes' && (
-                        <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
-                            <span className="text-[10px] text-gray-400 font-medium shrink-0">Tribunal:</span>
-                            {([null, '1TCC', '2TCC', '3TCC'] as const).map((t) => (
-                                <button
-                                    key={t ?? 'todos'}
-                                    onClick={() => setTribunalFilter(t)}
-                                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all duration-150 border ${
-                                        tribunalFilter === t
-                                            ? 'bg-charcoal-900 text-white border-charcoal-900'
-                                            : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
-                                    }`}
-                                >
-                                    {t ?? 'Todos'}
-                                </button>
-                            ))}
+                        <div className="mt-2 pt-2 border-t border-[#c9a962]/20 space-y-2">
+
+                            {/* Fila 1: Circuito */}
+                            <div className="flex items-start gap-2">
+                                <span className="text-[9px] font-bold text-[#c9a962] uppercase tracking-widest shrink-0 mt-0.5">Circ.</span>
+                                <div className="flex flex-wrap gap-[3px]">
+                                    {Array.from({ length: 32 }, (_, i) => i + 1).map((n) => {
+                                        const avail   = AVAILABLE_CIRCUITS.includes(n);
+                                        const active  = selectedCircuit === n;
+                                        return (
+                                            <button
+                                                key={n}
+                                                onClick={() => {
+                                                    if (!avail) return;
+                                                    setSelectedCircuit(active ? null : n);
+                                                    setTribunalFilter(null);
+                                                }}
+                                                title={avail ? `${ORDINAL_ES[n]} Circuito` : `${ORDINAL_ES[n]} Circuito — próximamente`}
+                                                className={`w-[18px] h-[18px] rounded text-[9px] font-bold transition-all duration-150 border leading-none ${
+                                                    active
+                                                        ? 'bg-[#c9a962] text-white border-[#c9a962] shadow-sm'
+                                                        : avail
+                                                            ? 'bg-white text-gray-600 border-gray-300 hover:border-[#c9a962] hover:text-[#c9a962]'
+                                                            : 'bg-gray-50 text-gray-200 border-gray-100 cursor-not-allowed'
+                                                }`}
+                                            >
+                                                {n}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Fila 2: Tribunal (visible cuando hay circuito seleccionado) */}
+                            {selectedCircuit && CIRCUIT_TRIBUNALS[selectedCircuit] ? (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest shrink-0">Trib.</span>
+                                    <button
+                                        onClick={() => setTribunalFilter(null)}
+                                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all duration-150 border ${
+                                            tribunalFilter === null
+                                                ? 'bg-charcoal-900 text-white border-charcoal-900'
+                                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                                        }`}
+                                    >
+                                        Todos
+                                    </button>
+                                    {CIRCUIT_TRIBUNALS[selectedCircuit].map((t) => (
+                                        <button
+                                            key={t.id}
+                                            onClick={() => t.available && setTribunalFilter(tribunalFilter === t.id ? null : t.id)}
+                                            title={t.available ? t.label : `${t.label} — próximamente`}
+                                            className={`relative px-2 py-0.5 rounded text-[10px] font-medium transition-all duration-150 border ${
+                                                !t.available
+                                                    ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                                                    : tribunalFilter === t.id
+                                                        ? 'bg-charcoal-900 text-white border-charcoal-900'
+                                                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                                            }`}
+                                        >
+                                            {t.label}
+                                            {!t.available && (
+                                                <span className="absolute -top-[5px] -right-[3px] text-[6px] bg-[#c9a962] text-white px-[3px] py-px rounded-sm leading-tight font-bold tracking-tight">
+                                                    pronto
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : selectedCircuit ? (
+                                <p className="text-[9px] text-[#c9a962] italic pl-1">
+                                    {ORDINAL_ES[selectedCircuit]} Circuito — próximamente disponible
+                                </p>
+                            ) : (
+                                <p className="text-[9px] text-gray-400 italic pl-1">
+                                    Selecciona un circuito para filtrar por tribunal
+                                </p>
+                            )}
                         </div>
                     )}
 
