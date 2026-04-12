@@ -64,8 +64,9 @@ export default function ChatInput({
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
-    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia'>('search');
+    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
+    const [tribunalFilter, setTribunalFilter] = useState<'1TCC' | '2TCC' | '3TCC' | null>(null);
     const [showFileModal, setShowFileModal] = useState(false);
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
@@ -243,6 +244,12 @@ export default function ChatInput({
             // Prepend [MODO_REDACCION] marker when in Redactar mode
             if (chatMode === 'redactar') {
                 finalMessage = `[MODO_REDACCION] ${finalMessage}`;
+            }
+
+            // Prepend [MODO_PRECEDENTES] marker when in Precedentes mode
+            if (activeMode === 'precedentes') {
+                const tribunalTag = tribunalFilter ? ` [TRIBUNAL:${tribunalFilter}]` : '';
+                finalMessage = `[MODO_PRECEDENTES]${tribunalTag} ${finalMessage}`;
             }
 
             // Always use reasoning for maximum quality
@@ -569,6 +576,18 @@ ${draftRequest.descripcion}`;
                                     guideId="sentencia"
                                 />
                             )}
+                            {isAdmin(user?.email) && (
+                                <ActionButton
+                                    icon={BookOpen}
+                                    label="Precedentes"
+                                    active={activeMode === 'precedentes'}
+                                    onClick={() => {
+                                        setActiveMode(activeMode === 'precedentes' ? 'search' : 'precedentes');
+                                        if (activeMode === 'precedentes') setTribunalFilter(null);
+                                    }}
+                                    guideId="precedentes"
+                                />
+                            )}
                             {canAccessRedactor && (
                                 <Link
                                     href="/redactor-sentencia"
@@ -585,6 +604,26 @@ ${draftRequest.descripcion}`;
                             )}
                         </div>
                     </div>
+
+                    {/* ── Filtro de tribunal (solo en modo Precedentes) ─────────────── */}
+                    {activeMode === 'precedentes' && (
+                        <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
+                            <span className="text-[10px] text-gray-400 font-medium shrink-0">Tribunal:</span>
+                            {([null, '1TCC', '2TCC', '3TCC'] as const).map((t) => (
+                                <button
+                                    key={t ?? 'todos'}
+                                    onClick={() => setTribunalFilter(t)}
+                                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all duration-150 border ${
+                                        tribunalFilter === t
+                                            ? 'bg-charcoal-900 text-white border-charcoal-900'
+                                            : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                                    }`}
+                                >
+                                    {t ?? 'Todos'}
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
                     {/* ── Genio Premium Horizontal Row ───────────────────────────── */}
                     <div
