@@ -297,9 +297,17 @@ export default function FreeUserOnboardingModal({
                         />
                     </button>
 
-                    <p className="text-white/30 text-sm mt-6 tracking-wide">
+                    <p className="text-white/30 text-sm mt-6 tracking-wide mb-8">
                         Presiona para iniciar la guía
                     </p>
+
+                    {/* Skip button phase 1 */}
+                    <button
+                        onClick={handleFinish}
+                        className="bg-transparent border-none text-white/40 hover:text-white/80 text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors"
+                    >
+                        Omitir y empezar a usar iurexia
+                    </button>
                 </div>
 
                 <style>{`
@@ -369,6 +377,14 @@ export default function FreeUserOnboardingModal({
                     />
                 )}
             </svg>
+
+            {/* Skip Button Phase 2 */}
+            <button
+                onClick={handleFinish}
+                className="absolute top-6 right-6 z-[220] px-4 py-2 bg-[rgba(20,20,20,0.6)] hover:bg-[rgba(40,40,40,0.8)] border border-white/10 rounded-full text-white/60 hover:text-white text-sm font-medium cursor-pointer backdrop-blur transition-all"
+            >
+                Omitir tutorial
+            </button>
 
             {/* Tooltip Card */}
             {current && (
