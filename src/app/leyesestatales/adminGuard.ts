@@ -5,7 +5,7 @@ const ADMIN_DOMAIN = '@iurexia.com';
 
 // Specific admin emails (fallback if domain check isn't enough)
 const ADMIN_EMAILS: string[] = [
-    // Add specific admin emails here if needed
+    'jenycampos@hotmail.com',
 ];
 
 export function isAdmin(email: string | undefined | null): boolean {
