@@ -557,33 +557,46 @@ export default function ChatPage() {
                     </div>
                 )}
 
-                {/* Acceso Anticipado Precedentes — visible solo a usuarios Pro con jurisdicción en Querétaro */}
+                {/* Acceso Anticipado Precedentes — modal full-screen para usuarios Pro Querétaro */}
                 {isProQueretaro && !precedentesQroBannerDismissed && (
-                    <div className="fixed top-14 left-0 right-0 md:left-72 z-25 animate-in slide-in-from-top duration-500">
-                        <div className="bg-gradient-to-r from-slate-50 via-indigo-50/60 to-slate-50 border-b border-indigo-200/40 px-4 py-3">
-                            <div className="max-w-4xl mx-auto flex items-start justify-between gap-3">
-                                <div className="flex items-start gap-3 min-w-0">
-                                    <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Crown className="w-4 h-4 text-indigo-500" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-semibold text-indigo-800 uppercase tracking-wide mb-1">
-                                            Acceso Anticipado · Precedentes del 22° Circuito
-                                        </p>
-                                        <p className="text-xs text-charcoal-600 leading-relaxed">
-                                            Por su condición de usuario <strong>Pro</strong> con jurisdicción en Querétaro, cuenta usted con acceso temporal a la consulta de precedentes del Vigésimo Segundo Circuito a través del módulo de <strong>Redacción</strong>. Esta función, junto con un redactor de mayor potencia, estará disponible de manera exclusiva para los usuarios del plan <strong>Platinum</strong>.
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        localStorage.setItem('precedentes-qro-beta-dismissed', '1');
-                                        setPrecedentesQroBannerDismissed(true);
-                                    }}
-                                    className="text-charcoal-400 hover:text-charcoal-600 transition-colors text-lg leading-none flex-shrink-0 mt-0.5"
-                                    aria-label="Cerrar aviso"
-                                >×</button>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-400">
+                        {/* Backdrop */}
+                        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+                        {/* Card */}
+                        <div className="relative max-w-lg w-full bg-[#0f0f0f]/95 border border-white/10 rounded-2xl shadow-2xl px-8 py-10 text-center animate-in zoom-in-95 duration-300">
+                            {/* Ícono decorativo */}
+                            <div className="mx-auto mb-5 w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                                <Crown className="w-7 h-7 text-accent-gold" />
                             </div>
+                            {/* Eyebrow */}
+                            <p className="text-[10px] font-semibold tracking-[0.18em] text-accent-gold uppercase mb-3">
+                                Acceso Anticipado
+                            </p>
+                            {/* Título */}
+                            <h2 className="font-serif text-xl font-semibold text-white mb-5 leading-snug">
+                                Precedentes del 22° Circuito
+                            </h2>
+                            {/* Divider */}
+                            <div className="w-10 h-px bg-white/15 mx-auto mb-5" />
+                            {/* Cuerpo */}
+                            <p className="text-sm text-white/70 leading-relaxed mb-8">
+                                Por su condición de usuario <span className="text-white font-medium">Pro</span> con jurisdicción en Querétaro, cuenta usted con acceso temporal a la consulta de precedentes del Vigésimo Segundo Circuito a través del botón{' '}
+                                <span className="text-white font-medium">"Precedentes"</span> en la barra de herramientas del chat. Esta función, junto con un redactor de mayor potencia, estará disponible de manera exclusiva para los usuarios del plan{' '}
+                                <span className="text-accent-gold font-semibold">Platinum</span>. Lo invitamos a probarlo.
+                                <br /><br />
+                                Muchas gracias por ser parte de los usuarios de{' '}
+                                <span className="font-serif text-white">Iurex<span className="text-accent-gold">ia</span></span> Pro.
+                            </p>
+                            {/* Botón */}
+                            <button
+                                onClick={() => {
+                                    localStorage.setItem('precedentes-qro-beta-dismissed', '1');
+                                    setPrecedentesQroBannerDismissed(true);
+                                }}
+                                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent-gold text-white text-sm font-semibold hover:bg-accent-gold/90 active:scale-95 transition-all duration-150 shadow-lg shadow-accent-gold/20"
+                            >
+                                Entendido, continuar
+                            </button>
                         </div>
                     </div>
                 )}
