@@ -84,11 +84,11 @@ export default function ChatInput({
 
     const CIRCUIT_TRIBUNALS: Record<number, { id: string; label: string; available: boolean }[]> = {
         22: [
-            { id: '1TCC',   label: '1° ADM/CIV', available: true },
-            { id: '2TCC',   label: '2° ADM/CIV', available: true },
-            { id: '3TCC',   label: '3° ADM/CIV', available: true },
-            { id: 'TCCPA',  label: 'PEN·ADM',    available: false },
-            { id: 'TCCAT',  label: 'ADM·TRAB',   available: false },
+            { id: '1TCC',      label: '1° ADM/CIV', available: true },
+            { id: '2TCC',      label: '2° ADM/CIV', available: true },
+            { id: '3TCC',      label: '3° ADM/CIV', available: true },
+            { id: 'TCC_PENAL', label: 'PEN·ADM',    available: true },
+            { id: 'TCC_ADM',   label: 'ADM·TRAB',   available: true },
         ],
     };
 

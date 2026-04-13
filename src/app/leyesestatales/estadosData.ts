@@ -408,7 +408,7 @@ const CDMX_LEYES: CategoriaLeyes = {
 
 
 
-// ─── Veracruz: FULL DATA — PDFs hosted on Supabase ────────────────
+// ─── Veracruz: FULL DATA — PDFs hosted on GCS (iurexia-leyes/Veracruz) ─────
 const VER_BASE = 'https://storage.googleapis.com/iurexia-leyes/Veracruz';
 const VER_LEYES: CategoriaLeyes = {
     constitucion: [
