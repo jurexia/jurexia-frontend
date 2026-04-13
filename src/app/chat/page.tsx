@@ -40,10 +40,15 @@ export default function ChatPage() {
 
     const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type || '');
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com' || profile?.can_access_sentencia === true;
+    const isProQueretaro = (profile?.subscription_type === 'pro_monthly' || profile?.subscription_type === 'pro_annual') && profile?.estado === 'QUERETARO';
 
     // States
     const [quotaExceeded, setQuotaExceeded] = useState(false);
     const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(false);
+    const [precedentesQroBannerDismissed, setPrecedentesQroBannerDismissed] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('precedentes-qro-beta-dismissed') === '1';
+    });
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showStateModal, setShowStateModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
@@ -547,6 +552,37 @@ export default function ChatPage() {
                                     </Link>
                                     <button onClick={() => setNudgeBannerDismissed(true)} className="text-charcoal-400 hover:text-charcoal-600 transition-colors text-lg leading-none">×</button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Acceso Anticipado Precedentes — visible solo a usuarios Pro con jurisdicción en Querétaro */}
+                {isProQueretaro && !precedentesQroBannerDismissed && (
+                    <div className="fixed top-14 left-0 right-0 md:left-72 z-25 animate-in slide-in-from-top duration-500">
+                        <div className="bg-gradient-to-r from-slate-50 via-indigo-50/60 to-slate-50 border-b border-indigo-200/40 px-4 py-3">
+                            <div className="max-w-4xl mx-auto flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3 min-w-0">
+                                    <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <Crown className="w-4 h-4 text-indigo-500" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold text-indigo-800 uppercase tracking-wide mb-1">
+                                            Acceso Anticipado · Precedentes del 22° Circuito
+                                        </p>
+                                        <p className="text-xs text-charcoal-600 leading-relaxed">
+                                            Por su condición de usuario <strong>Pro</strong> con jurisdicción en Querétaro, cuenta usted con acceso temporal a la consulta de precedentes del Vigésimo Segundo Circuito a través del módulo de <strong>Redacción</strong>. Esta función, junto con un redactor de mayor potencia, estará disponible de manera exclusiva para los usuarios del plan <strong>Platinum</strong>.
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        localStorage.setItem('precedentes-qro-beta-dismissed', '1');
+                                        setPrecedentesQroBannerDismissed(true);
+                                    }}
+                                    className="text-charcoal-400 hover:text-charcoal-600 transition-colors text-lg leading-none flex-shrink-0 mt-0.5"
+                                    aria-label="Cerrar aviso"
+                                >×</button>
                             </div>
                         </div>
                     </div>
