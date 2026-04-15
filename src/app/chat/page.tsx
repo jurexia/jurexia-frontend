@@ -783,68 +783,176 @@ export default function ChatPage() {
             {showConfigModal && user && <StateSelectorModal userId={user.id} isConfig={true} currentEstado={selectedEstado} onClose={() => setShowConfigModal(false)} onSelectEstado={(e) => { setSelectedEstado(e); setShowConfigModal(false); }} />}
 
             {showLimitModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-                    <div className="bg-charcoal-800 border border-charcoal-600 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-accent-gold/20 to-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                            <Crown className="w-8 h-8 text-accent-gold" />
-                        </div>
-                        <h3 className="font-serif text-2xl font-medium text-white mb-2">Tu investigación legal no debería detenerse aquí</h3>
-                        <p className="text-gray-200 mb-4 text-sm leading-relaxed">
-                            Con el <span className="text-accent-gold font-semibold">Plan Pro</span> obtienes 140 consultas/mes + Genios Especializados de IA avanzada que generan análisis que solo un profesional podría hacer en 3+ horas.
-                        </p>
-                        <p className="text-gray-300 text-xs mb-6">
-                            Continúa donde te quedaste — tu historial de consultas se conserva.
-                        </p>
-                        <Link
-                            href="/precios"
-                            className="block w-full py-3.5 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-base transition-colors mb-3"
-                        >
-                            Activar Plan Pro — $149/mes
-                        </Link>
-                        <button onClick={() => setShowLimitModal(false)} className="text-gray-300 hover:text-white text-sm transition-colors">
-                            Cerrar
-                        </button>
-                        <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-gray-600">
-                            <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                                <span>Pago seguro con Stripe</span>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
+                    <div className="bg-[#0f0f0f] border border-white/10 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+                        {/* Header gradient */}
+                        <div className="relative px-8 pt-8 pb-6" style={{ background: 'linear-gradient(135deg, #1a1510 0%, #0f0f0f 100%)' }}>
+                            <div className="absolute top-0 left-0 right-0 h-1" style={{ background: 'linear-gradient(90deg, #c9a84c, #e8c56d, #c9a84c)' }} />
+                            <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Crown className="w-7 h-7 text-accent-gold" />
                             </div>
-                            <span className="text-gray-600">·</span>
-                            <span className="text-gray-400 text-xs">Cancela cuando quieras</span>
+                            <h3 className="font-serif text-2xl font-semibold text-white text-center mb-2">Tu talento jurídico merece herramientas a su altura</h3>
+                            <p className="text-white/50 text-xs text-center">Has agotado tus consultas gratuitas este mes</p>
+                        </div>
+
+                        {/* Plan comparison */}
+                        <div className="px-8 py-5">
+                            <div className="grid grid-cols-2 gap-3 mb-5">
+                                {/* Current */}
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                    <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-2">Tu plan actual</p>
+                                    <p className="text-white font-bold text-sm">Gratuito</p>
+                                    <p className="text-white/40 text-xs mt-1">5 consultas/mes</p>
+                                    <p className="text-red-400/80 text-xs mt-2 font-medium">0 restantes</p>
+                                </div>
+                                {/* Pro - highlighted */}
+                                <div className="bg-accent-gold/10 border border-accent-gold/30 rounded-xl p-4 relative">
+                                    <div className="absolute -top-2 right-3 px-2 py-0.5 bg-accent-gold rounded-full text-[9px] font-bold text-black uppercase">Popular</div>
+                                    <p className="text-[10px] font-semibold text-accent-gold uppercase tracking-wider mb-2">Recomendado</p>
+                                    <p className="text-white font-bold text-sm">Pro</p>
+                                    <p className="text-accent-gold/80 text-xs mt-1">140 consultas/mes</p>
+                                    <p className="text-accent-gold text-sm mt-2 font-bold">$149/mes</p>
+                                </div>
+                            </div>
+
+                            {/* New features */}
+                            <div className="space-y-2 mb-5">
+                                <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
+                                    <span className="text-accent-gold text-sm mt-0.5">⚡</span>
+                                    <div>
+                                        <p className="text-white text-xs font-semibold">Genios Especializados de IA</p>
+                                        <p className="text-white/40 text-[11px]">Amparo, Civil, Penal, CIDH — análisis que tomaría 3+ horas</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
+                                    <span className="text-accent-gold text-sm mt-0.5">🏛️</span>
+                                    <div>
+                                        <p className="text-white text-xs font-semibold">Nuevo: Consulta de Sentencias por Circuito</p>
+                                        <p className="text-white/40 text-[11px]">Accede a precedentes judiciales de tribunales colegiados</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
+                                    <span className="text-accent-gold text-sm mt-0.5">🔍</span>
+                                    <div>
+                                        <p className="text-white text-xs font-semibold">Análisis y Auditoría de Documentos</p>
+                                        <p className="text-white/40 text-[11px]">Sube contratos o sentencias para revisión con IA</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Social proof */}
+                            <p className="text-center text-white/40 text-xs mb-5">
+                                Únete a la comunidad de <span className="text-white font-semibold">más de 1,500 profesionales del derecho</span> con suscripción activa
+                            </p>
+
+                            {/* CTA */}
+                            <Link
+                                href="/precios"
+                                className="block w-full py-3.5 rounded-xl text-center font-bold text-base transition-all duration-200 hover:scale-[1.02] active:scale-95 mb-3"
+                                style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
+                            >
+                                Activar Plan Pro — $149/mes
+                            </Link>
+                            <div className="flex items-center justify-center gap-2 mb-4">
+                                <Link href="/precios" className="text-white/40 hover:text-white/70 text-xs transition-colors">Ver todos los planes →</Link>
+                                <span className="text-white/20">·</span>
+                                <button onClick={() => setShowLimitModal(false)} className="text-white/40 hover:text-white/70 text-xs transition-colors">Cerrar</button>
+                            </div>
+                            <div className="flex items-center justify-center gap-3 pt-4 border-t border-white/10">
+                                <div className="flex items-center gap-1.5 text-white/30 text-xs">
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                    <span>Pago seguro con Stripe</span>
+                                </div>
+                                <span className="text-white/15">·</span>
+                                <span className="text-white/30 text-xs">Cancela cuando quieras</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
 
             {quotaExceeded && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-                    <div className="bg-charcoal-800 border border-charcoal-600 rounded-2xl p-8 max-w-md w-full shadow-2xl text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-accent-gold/20 to-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                            <Crown className="w-8 h-8 text-accent-gold" />
-                        </div>
-                        <h3 className="font-serif text-2xl font-medium text-white mb-2">Tu investigación legal no debería detenerse aquí</h3>
-                        <p className="text-gray-200 mb-4 text-sm leading-relaxed">
-                            Has completado tus consultas gratuitas este mes. Con el <span className="text-accent-gold font-semibold">Plan Pro</span> obtienes 140 consultas/mes + Genios Especializados que potencian tu análisis jurídico.
-                        </p>
-                        <p className="text-gray-300 text-xs mb-6">
-                            Más de 600 abogados ya confían en Iurexia para sus investigaciones.
-                        </p>
-                        <Link
-                            href="/precios"
-                            className="block w-full py-3.5 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-base transition-colors mb-3"
-                        >
-                            Activar Plan Pro — $149/mes
-                        </Link>
-                        <Link href="/precios" className="text-gray-300 hover:text-white text-sm transition-colors">
-                            Ver todos los planes →
-                        </Link>
-                        <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-gray-600">
-                            <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                                <span>Pago seguro con Stripe</span>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
+                    <div className="bg-[#0f0f0f] border border-white/10 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+                        {/* Header gradient */}
+                        <div className="relative px-8 pt-8 pb-6" style={{ background: 'linear-gradient(135deg, #1a1510 0%, #0f0f0f 100%)' }}>
+                            <div className="absolute top-0 left-0 right-0 h-1" style={{ background: 'linear-gradient(90deg, #c9a84c, #e8c56d, #c9a84c)' }} />
+                            <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Crown className="w-7 h-7 text-accent-gold" />
                             </div>
-                            <span className="text-gray-600">·</span>
-                            <span className="text-gray-400 text-xs">Cancela cuando quieras</span>
+                            <h3 className="font-serif text-2xl font-semibold text-white text-center mb-2">Tu talento jurídico merece herramientas a su altura</h3>
+                            <p className="text-white/50 text-xs text-center">La consulta no pudo completarse — límite de plan alcanzado</p>
+                        </div>
+
+                        {/* Plan comparison */}
+                        <div className="px-8 py-5">
+                            <div className="grid grid-cols-2 gap-3 mb-5">
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                    <p className="text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-2">Tu plan actual</p>
+                                    <p className="text-white font-bold text-sm">{profile?.subscription_type === 'gratuito' ? 'Gratuito' : 'Plan actual'}</p>
+                                    <p className="text-white/40 text-xs mt-1">{queriesLimit} consultas/mes</p>
+                                    <p className="text-red-400/80 text-xs mt-2 font-medium">0 restantes</p>
+                                </div>
+                                <div className="bg-accent-gold/10 border border-accent-gold/30 rounded-xl p-4 relative">
+                                    <div className="absolute -top-2 right-3 px-2 py-0.5 bg-accent-gold rounded-full text-[9px] font-bold text-black uppercase">Popular</div>
+                                    <p className="text-[10px] font-semibold text-accent-gold uppercase tracking-wider mb-2">Recomendado</p>
+                                    <p className="text-white font-bold text-sm">Pro</p>
+                                    <p className="text-accent-gold/80 text-xs mt-1">140 consultas/mes</p>
+                                    <p className="text-accent-gold text-sm mt-2 font-bold">$149/mes</p>
+                                </div>
+                            </div>
+
+                            {/* New features */}
+                            <div className="space-y-2 mb-5">
+                                <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
+                                    <span className="text-accent-gold text-sm mt-0.5">⚡</span>
+                                    <div>
+                                        <p className="text-white text-xs font-semibold">Genios Especializados de IA</p>
+                                        <p className="text-white/40 text-[11px]">Amparo, Civil, Penal, CIDH — análisis multi-genio avanzado</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
+                                    <span className="text-accent-gold text-sm mt-0.5">🏛️</span>
+                                    <div>
+                                        <p className="text-white text-xs font-semibold">Nuevo: Consulta de Sentencias por Circuito</p>
+                                        <p className="text-white/40 text-[11px]">Precedentes judiciales de tribunales colegiados</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
+                                    <span className="text-accent-gold text-sm mt-0.5">🔍</span>
+                                    <div>
+                                        <p className="text-white text-xs font-semibold">Auditoría Inteligente de Documentos</p>
+                                        <p className="text-white/40 text-[11px]">Sube documentos para revisión automatizada con IA</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Social proof */}
+                            <p className="text-center text-white/40 text-xs mb-5">
+                                Únete a <span className="text-white font-semibold">más de 1,500 profesionales del derecho</span> con suscripción activa — no te quedes atrás
+                            </p>
+
+                            {/* CTA */}
+                            <Link
+                                href="/precios"
+                                className="block w-full py-3.5 rounded-xl text-center font-bold text-base transition-all duration-200 hover:scale-[1.02] active:scale-95 mb-3"
+                                style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
+                            >
+                                Activar Plan Pro — $149/mes
+                            </Link>
+                            <div className="flex items-center justify-center gap-2 mb-4">
+                                <Link href="/precios" className="text-white/40 hover:text-white/70 text-xs transition-colors">Ver todos los planes →</Link>
+                                <span className="text-white/20">·</span>
+                                <button onClick={() => setQuotaExceeded(false)} className="text-white/40 hover:text-white/70 text-xs transition-colors">Cerrar</button>
+                            </div>
+                            <div className="flex items-center justify-center gap-3 pt-4 border-t border-white/10">
+                                <div className="flex items-center gap-1.5 text-white/30 text-xs">
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                    <span>Pago seguro con Stripe</span>
+                                </div>
+                                <span className="text-white/15">·</span>
+                                <span className="text-white/30 text-xs">Cancela cuando quieras</span>
+                            </div>
                         </div>
                     </div>
                 </div>
