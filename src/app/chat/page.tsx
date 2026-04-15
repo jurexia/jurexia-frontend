@@ -41,6 +41,7 @@ export default function ChatPage() {
     const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type || '');
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com' || profile?.can_access_sentencia === true;
     const isProQueretaro = (profile?.subscription_type === 'pro_monthly' || profile?.subscription_type === 'pro_annual') && profile?.estado === 'QUERETARO';
+    const isPlatinum = profile?.subscription_type === 'platinum_monthly' || profile?.subscription_type === 'platinum_annual';
 
     // States
     const [quotaExceeded, setQuotaExceeded] = useState(false);
@@ -48,6 +49,10 @@ export default function ChatPage() {
     const [precedentesQroBannerDismissed, setPrecedentesQroBannerDismissed] = useState(() => {
         if (typeof window === 'undefined') return false;
         return localStorage.getItem('precedentes-qro-beta-dismissed') === '1';
+    });
+    const [precedentesPlatinoModalDismissed, setPrecedentesPlatinoModalDismissed] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('precedentes-platino-dismissed') === '1';
     });
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showStateModal, setShowStateModal] = useState(false);
@@ -592,6 +597,41 @@ export default function ChatPage() {
                                 onClick={() => {
                                     localStorage.setItem('precedentes-qro-beta-dismissed', '1');
                                     setPrecedentesQroBannerDismissed(true);
+                                }}
+                                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent-gold text-white text-sm font-semibold hover:bg-accent-gold/90 active:scale-95 transition-all duration-150 shadow-lg shadow-accent-gold/20"
+                            >
+                                Entendido, continuar
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Precedentes Platinum — modal full-screen para todos los usuarios Platinum */}
+                {isPlatinum && !precedentesPlatinoModalDismissed && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-400">
+                        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+                        <div className="relative max-w-lg w-full bg-[#0f0f0f]/95 border border-white/10 rounded-2xl shadow-2xl px-8 py-10 text-center animate-in zoom-in-95 duration-300">
+                            <div className="mx-auto mb-5 w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                                <Crown className="w-7 h-7 text-accent-gold" />
+                            </div>
+                            <p className="text-[10px] font-semibold tracking-[0.18em] text-accent-gold uppercase mb-3">
+                                Función Exclusiva Platinum
+                            </p>
+                            <h2 className="font-serif text-xl font-semibold text-white mb-5 leading-snug">
+                                Precedentes del 22° Circuito
+                            </h2>
+                            <div className="w-10 h-px bg-white/15 mx-auto mb-5" />
+                            <p className="text-sm text-white/70 leading-relaxed mb-8">
+                                Como usuario <span className="text-accent-gold font-semibold">Platinum</span>, cuenta usted con acceso completo a la consulta de precedentes del Vigésimo Segundo Circuito (Querétaro) a través del botón{' '}
+                                <span className="text-white font-medium">"Precedentes"</span> en la barra de herramientas del chat. Esta función es exclusiva de su plan e incluye acceso a un redactor de mayor potencia. Lo invitamos a explorarla.
+                                <br /><br />
+                                Muchas gracias por ser parte de los usuarios de{' '}
+                                <span className="font-serif text-white">Iurex<span className="text-accent-gold">ia</span></span> Platinum.
+                            </p>
+                            <button
+                                onClick={() => {
+                                    localStorage.setItem('precedentes-platino-dismissed', '1');
+                                    setPrecedentesPlatinoModalDismissed(true);
                                 }}
                                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent-gold text-white text-sm font-semibold hover:bg-accent-gold/90 active:scale-95 transition-all duration-150 shadow-lg shadow-accent-gold/20"
                             >

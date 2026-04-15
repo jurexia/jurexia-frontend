@@ -102,10 +102,11 @@ export default function ChatInput({
     const canAccessSentencia = profile?.subscription_type && !['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const isFreeUser = !profile?.subscription_type || ['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const isGenioLocked = isFreeUser && !isAdmin(user?.email);
-    const canAccessPrecedentes = isAdmin(user?.email) || (
-        (profile?.subscription_type === 'pro_monthly' || profile?.subscription_type === 'pro_annual') &&
-        profile?.estado === 'QUERETARO'
-    );
+    const canAccessPrecedentes = isAdmin(user?.email) ||
+        profile?.subscription_type === 'platinum_monthly' ||
+        profile?.subscription_type === 'platinum_annual' ||
+        ((profile?.subscription_type === 'pro_monthly' || profile?.subscription_type === 'pro_annual') &&
+        profile?.estado === 'QUERETARO');
 
     const geniosList = [
         {
