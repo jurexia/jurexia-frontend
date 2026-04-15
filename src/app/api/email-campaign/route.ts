@@ -129,13 +129,30 @@ function buildConversionEmail(firstName: string): string {
                                 <p style="margin:4px 0 0;font-size:12px;color:#666;">Equivale a solo <strong style="color:#ccc;">$4.96 al d&iacute;a</strong> &mdash; menos que un caf&eacute;</p>
                             </div>
 
+                            <!-- EXCLUSIVE COUPON -->
+                            <div style="background-color:#0d1f0d;border:2px dashed #4ade80;border-radius:16px;padding:24px;margin-bottom:24px;text-align:center;">
+                                <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:2px;">&#127381; Oferta exclusiva por tiempo limitado</p>
+                                <p style="margin:0 0 4px;font-size:13px;color:#ddd;">Usa el c&oacute;digo al momento de suscribirte:</p>
+                                <div style="background-color:#000;border:2px solid #4ade80;border-radius:10px;padding:12px 24px;display:inline-block;margin:12px 0;">
+                                    <span style="font-size:28px;font-weight:900;color:#4ade80;letter-spacing:4px;">DESCUENTO30</span>
+                                </div>
+                                <p style="margin:10px 0 4px;font-size:15px;color:#fff;font-weight:700;">30% de descuento en tu primer mes</p>
+                                <p style="margin:0 0 4px;font-size:14px;color:#ccc;">
+                                    Paga solo <span style="text-decoration:line-through;color:#999;">$149</span> 
+                                    <strong style="color:#4ade80;font-size:18px;"> $104.30 MXN</strong> tu primer mes
+                                </p>
+                                <p style="margin:12px 0 0;font-size:12px;color:#f87171;font-weight:600;">
+                                    &#9888; Limitado a los primeros 30 usuarios que se suscriban &mdash; &iexcl;no dejes pasar esta oportunidad!
+                                </p>
+                            </div>
+
                             <!-- CTA -->
                             <table cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
                                     <td align="center" style="padding:8px 0 0;">
                                         <a href="https://www.iurexia.com/precios"
                                            style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8c56d);color:#1a1a1a;font-size:16px;font-weight:800;padding:16px 48px;border-radius:12px;text-decoration:none;letter-spacing:0.3px;">
-                                            Activar mi Plan Pro &rarr;
+                                            Activar mi Plan Pro con 30% OFF &rarr;
                                         </a>
                                     </td>
                                 </tr>
