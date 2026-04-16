@@ -66,7 +66,7 @@ export default function ChatInput({
     const [isListening, setIsListening] = useState(false);
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
-    const [selectedCircuit, setSelectedCircuit] = useState<number | null>(null);
+    const [selectedCircuit, setSelectedCircuit] = useState<number | 'ALL' | null>(null);
     const [tribunalFilter, setTribunalFilter] = useState<string | null>(null);
     const [showFileModal, setShowFileModal] = useState(false);
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
@@ -235,17 +235,15 @@ export default function ChatInput({
         };
     }, []);
 
-    // Auto-select circuit based on user's estado when entering Precedentes mode
+    // Default to global search when entering Precedentes mode; reset tribunal on exit
     useEffect(() => {
         if (activeMode === 'precedentes' && selectedCircuit === null) {
-            const defaultCircuit = profile?.estado === 'CIUDAD_DE_MEXICO' ? 1 : 22;
-            setSelectedCircuit(defaultCircuit);
+            setSelectedCircuit('ALL');
         }
-        // Reset tribunal filter when leaving Precedentes mode
         if (activeMode !== 'precedentes') {
             setTribunalFilter(null);
         }
-    }, [activeMode, profile?.estado]);
+    }, [activeMode]);
 
     const toggleListening = () => {
         if (!recognitionRef.current) {
@@ -301,9 +299,9 @@ export default function ChatInput({
 
             // Prepend [MODO_PRECEDENTES] marker when in Precedentes mode
             if (activeMode === 'precedentes') {
-                const defaultCircuit = profile?.estado === 'CIUDAD_DE_MEXICO' ? 1 : 22;
-                const circuitTag  = selectedCircuit  ? ` [CIRCUITO:${selectedCircuit}]`  : ` [CIRCUITO:${defaultCircuit}]`;
-                const tribunalTag = tribunalFilter    ? ` [TRIBUNAL:${tribunalFilter}]`   : '';
+                // No circuit tag → backend defaults to global (ALL circuits)
+                const circuitTag  = (selectedCircuit && selectedCircuit !== 'ALL') ? ` [CIRCUITO:${selectedCircuit}]` : '';
+                const tribunalTag = tribunalFilter ? ` [TRIBUNAL:${tribunalFilter}]` : '';
                 finalMessage = `[MODO_PRECEDENTES]${circuitTag}${tribunalTag} ${finalMessage}`;
             }
 
@@ -669,15 +667,27 @@ ${draftRequest.descripcion}`;
                             <div className="flex items-start gap-2">
                                 <span className="text-[9px] font-bold text-[#c9a962] uppercase tracking-widest shrink-0 mt-0.5">Circ.</span>
                                 <div className="flex flex-wrap gap-[3px]">
+                                    {/* Botón "Todos" — búsqueda global */}
+                                    <button
+                                        onClick={() => { setSelectedCircuit('ALL'); setTribunalFilter(null); }}
+                                        title="Buscar en todos los circuitos disponibles"
+                                        className={`h-[18px] px-1.5 rounded text-[9px] font-bold transition-all duration-150 border leading-none ${
+                                            selectedCircuit === 'ALL'
+                                                ? 'bg-[#c9a962] text-white border-[#c9a962] shadow-sm'
+                                                : 'bg-white text-gray-600 border-gray-300 hover:border-[#c9a962] hover:text-[#c9a962]'
+                                        }`}
+                                    >
+                                        All
+                                    </button>
                                     {Array.from({ length: 32 }, (_, i) => i + 1).map((n) => {
-                                        const avail   = AVAILABLE_CIRCUITS.includes(n);
-                                        const active  = selectedCircuit === n;
+                                        const avail  = AVAILABLE_CIRCUITS.includes(n);
+                                        const active = selectedCircuit === n;
                                         return (
                                             <button
                                                 key={n}
                                                 onClick={() => {
                                                     if (!avail) return;
-                                                    setSelectedCircuit(active ? null : n);
+                                                    setSelectedCircuit(active ? 'ALL' : n);
                                                     setTribunalFilter(null);
                                                 }}
                                                 title={avail ? `${ORDINAL_ES[n]} Circuito` : `${ORDINAL_ES[n]} Circuito — próximamente`}
@@ -696,10 +706,10 @@ ${draftRequest.descripcion}`;
                                 </div>
                             </div>
 
-                            {/* Fila 2: Tribunal (visible cuando hay circuito seleccionado) */}
-                            {selectedCircuit && CIRCUIT_TRIBUNALS[selectedCircuit] ? (
+                            {/* Fila 2: Tribunal — solo cuando hay circuito numérico seleccionado */}
+                            {typeof selectedCircuit === 'number' && CIRCUIT_TRIBUNALS[selectedCircuit] ? (
                                 <div className="space-y-1">
-                                    {/* "Todos" siempre visible */}
+                                    {/* "Todos" los tribunales del circuito */}
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest shrink-0 w-[22px]">Trib.</span>
                                         <button
@@ -741,7 +751,7 @@ ${draftRequest.descripcion}`;
                                     ) : (
                                         /* Otros circuitos: lista horizontal simple */
                                         <div className="flex items-center gap-1.5 flex-wrap pl-[26px]">
-                                            {CIRCUIT_TRIBUNALS[selectedCircuit].map((t) => (
+                                            {CIRCUIT_TRIBUNALS[selectedCircuit as number].map((t) => (
                                                 <button
                                                     key={t.id}
                                                     onClick={() => t.available && setTribunalFilter(tribunalFilter === t.id ? null : t.id)}
@@ -765,15 +775,15 @@ ${draftRequest.descripcion}`;
                                         </div>
                                     )}
                                 </div>
-                            ) : selectedCircuit ? (
+                            ) : typeof selectedCircuit === 'number' ? (
                                 <p className="text-[9px] text-[#c9a962] italic pl-1">
                                     {ORDINAL_ES[selectedCircuit]} Circuito — próximamente disponible
                                 </p>
-                            ) : (
+                            ) : selectedCircuit === 'ALL' ? (
                                 <p className="text-[9px] text-gray-400 italic pl-1">
-                                    Selecciona un circuito para filtrar por tribunal
+                                    Buscando en todos los circuitos disponibles
                                 </p>
-                            )}
+                            ) : null}
                         </div>
                     )}
 
