@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Message, streamChat, SearchResult } from '@/lib/api';
 import { getSession } from '@/lib/supabase';
-import { checkCanQuery, incrementQueryCount } from '@/lib/supabase';
+import { checkCanQuery, getSubscriptionInfo } from '@/lib/supabase';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 
 interface UseChatOptions {
@@ -12,6 +12,7 @@ interface UseChatOptions {
     fuero?: string;  // Filtro por fuero: constitucional, federal, estatal
     materia?: string; // Filtro por materia: civil, penal, familiar, administrativo
     onQuotaExceeded?: (remaining: number) => void;
+    onQueryCompleted?: (used: number, limit: number) => void;  // Sync counter with DB after each query
     genioIds?: string[];  // IDs de los genios activos: ['amparo', 'mercantil'], etc.
     onCacheActive?: () => void;  // Fired when backend confirms cache is serving
 }
@@ -336,12 +337,15 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             // Clear retry message after successful response
             setRetryMessage(null);
 
-            // ── Increment quota counter after successful response ──
+            // ── Sync UI counter with real DB values (backend already consumed the query) ──
             if (userId && !isAdminUser) {
                 try {
-                    await incrementQueryCount(userId);
+                    const info = await getSubscriptionInfo(userId);
+                    if (info) {
+                        options.onQueryCompleted?.(info.queriesUsed, info.queriesLimit);
+                    }
                 } catch (err) {
-                    console.error('Failed to increment query count:', err);
+                    console.error('Failed to sync query counter:', err);
                 }
             }
         } catch (err) {
@@ -370,7 +374,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [messages, isLoading, options.estado, options.topK, options.fuero, options.materia, options.onQuotaExceeded, options.genioIds, options.onCacheActive]);
+    }, [messages, isLoading, options.estado, options.topK, options.fuero, options.materia, options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

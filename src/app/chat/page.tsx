@@ -178,6 +178,18 @@ export default function ChatPage() {
         setQuotaExceeded(true);
     }, []);
 
+    // Counter pulse animation state
+    const [counterPulse, setCounterPulse] = useState(false);
+
+    // Sync counter with real DB values after each query
+    const handleQueryCompleted = useCallback((used: number, limit: number) => {
+        setQueriesUsed(used);
+        setQueriesLimit(limit);
+        // Trigger pulse animation
+        setCounterPulse(true);
+        setTimeout(() => setCounterPulse(false), 600);
+    }, []);
+
     // Chat Hook
     const { messages, isLoading, error, sendMessage, clearMessages, setMessages, retryMessage, retryType } = useChat({
         estado: selectedEstado || undefined,
@@ -185,6 +197,7 @@ export default function ChatPage() {
         fuero: selectedFuero || undefined,
         materia: selectedMateria || undefined,
         onQuotaExceeded: handleQuotaExceeded,
+        onQueryCompleted: handleQueryCompleted,
         genioIds: activeGenios,
         onCacheActive: handleCacheActive,
     });
@@ -525,11 +538,24 @@ export default function ChatPage() {
                             <span className="truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
                         </button>
 
-                        <div className="px-3 py-1.5 bg-cream-100 rounded-lg text-xs font-medium">
-                            <span className="hidden sm:inline text-charcoal-600">Consultas:</span>
-                            <span className={queriesRemaining <= 1 ? 'text-red-600' : 'text-accent-brown'}>
-                                {queriesRemaining}/{queriesLimit}
-                            </span>
+                        <div className={`px-3 py-1.5 bg-cream-100 rounded-lg text-xs font-medium transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40 scale-105' : ''}`}>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
+                                    <span className="hidden sm:inline text-charcoal-500">Consultas</span>
+                                    <span className={`font-bold tabular-nums ${queriesRemaining <= 1 ? 'text-red-600' : queriesRemaining <= 3 ? 'text-amber-600' : 'text-emerald-700'}`}>
+                                        {queriesUsed}<span className="text-charcoal-400 font-normal">/{queriesLimit}</span>
+                                    </span>
+                                </div>
+                                {/* Mini progress bar */}
+                                <div className="hidden sm:block w-12 h-1.5 bg-charcoal-200/50 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-500 ease-out ${
+                                            queriesRemaining <= 1 ? 'bg-red-500' : queriesRemaining <= 3 ? 'bg-amber-500' : 'bg-emerald-500'
+                                        }`}
+                                        style={{ width: `${Math.min(100, (queriesUsed / Math.max(1, queriesLimit)) * 100)}%` }}
+                                    />
+                                </div>
+                            </div>
                         </div>
                         <UserAvatar />
                     </div>
