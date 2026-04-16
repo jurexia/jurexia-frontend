@@ -172,6 +172,12 @@ export async function* streamChat(
             const errMsg = err instanceof Error ? err.message : String(err);
             const status = (err as any)?.status ?? (err as any)?.response?.status ?? 0;
 
+            // Network block: persistent fetch failures across all attempts (firewall/proxy)
+            const isNetworkBlock = (
+                (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('ERR_CONNECTION_REFUSED') || errMsg.includes('ECONNREFUSED')) &&
+                attempt >= maxRetries
+            );
+
             // Cold start: connection refused, DNS failure, 503 Service Unavailable
             const isColdStart = (
                 status === 503 ||
@@ -197,9 +203,16 @@ export async function* streamChat(
                 throw err;
             }
 
-            // If we've exhausted retries, throw the error
+            // If we've exhausted retries, throw with a user-friendly network message
             if (attempt >= maxRetries) {
                 console.error('[API] All retry attempts exhausted');
+                if (isNetworkBlock) {
+                    throw new Error(
+                        'No se pudo conectar con el servidor de Iurexia. ' +
+                        'Tu red puede estar bloqueando la conexión (firewall o proxy corporativo). ' +
+                        'Intenta con otra red (datos móviles o Wi-Fi personal).'
+                    );
+                }
                 throw err;
             }
 
