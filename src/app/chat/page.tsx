@@ -500,6 +500,19 @@ export default function ChatPage() {
         } finally {
             // ALWAYS reset — guarantees export bar (PDF/DOCX/Print) appears after response
             setIsDocumentAnalyzing(false);
+            // Sync counter with real DB values after document analysis
+            if (user?.id && !isAdmin(user?.email)) {
+                try {
+                    const { getSubscriptionInfo } = await import('@/lib/supabase');
+                    const info = await getSubscriptionInfo(user.id);
+                    if (info) {
+                        setQueriesUsed(info.queriesUsed);
+                        setQueriesLimit(info.queriesLimit);
+                        setCounterPulse(true);
+                        setTimeout(() => setCounterPulse(false), 600);
+                    }
+                } catch {}
+            }
         }
     }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages]);
 
