@@ -71,6 +71,13 @@ const TOUR_STEPS: TourStep[] = [
         padding: 8,
     },
     {
+        selector: '[data-guide="precedentes"]',
+        title: '⚖️ Precedentes Judiciales — Nuevo',
+        description: 'Consulta la jurisprudencia y tesis más relevantes de los Tribunales Colegiados de Circuito directamente desde el chat.\n\nCómo usarlo:\n1. Haz clic en este botón para activar el modo Precedentes.\n2. Selecciona el Circuito y, si lo deseas, el Tribunal específico.\n3. Escribe tu consulta y Iurexia buscará entre miles de sentencias reales.\n\nEsta función está en desarrollo y seguirá creciendo, priorizando las regiones con más usuarios.',
+        padding: 10,
+        preferBelow: true,
+    },
+    {
         selector: '[data-guide="lawyer"]',
         title: '👩‍⚖️ Buscar Abogado',
         description: 'Iurexia Connect te conecta con abogados verificados de tu estado. Si tu consulta requiere representación profesional, encuentra al especialista adecuado de forma gratuita.',
@@ -84,10 +91,11 @@ interface Rect { top: number; left: number; width: number; height: number; }
 interface ChatTourProps {
     isOpen: boolean;
     onClose: () => void;
+    startStep?: number;
 }
 
-export default function ChatTour({ isOpen, onClose }: ChatTourProps) {
-    const [step, setStep] = useState(0);
+export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourProps) {
+    const [step, setStep] = useState(startStep);
     const [rect, setRect] = useState<Rect | null>(null);
 
     const measureElement = useCallback((selector: string, padding = 4) => {
@@ -108,11 +116,11 @@ export default function ChatTour({ isOpen, onClose }: ChatTourProps) {
     }, []);
 
     useEffect(() => {
-        if (!isOpen) { setStep(0); return; }
+        if (!isOpen) { setStep(startStep); return; }
         const current = TOUR_STEPS[step];
         const t = setTimeout(() => measureElement(current.selector, current.padding ?? 4), 150);
         return () => clearTimeout(t);
-    }, [isOpen, step, measureElement]);
+    }, [isOpen, step, startStep, measureElement]);
 
     useEffect(() => {
         const handleResize = () => {

@@ -38,22 +38,21 @@ export default function ChatPage() {
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
     const router = useRouter();
 
-    const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type || '');
+    const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
+    const isPro = _PRO_PLUS.includes(profile?.subscription_type || '');
+    const isProPlus = isPro && !isAdmin(user?.email);
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com' || profile?.can_access_sentencia === true;
-    const isProQueretaro = (profile?.subscription_type === 'pro_monthly' || profile?.subscription_type === 'pro_annual') && profile?.estado === 'QUERETARO';
-    const isPlatinum = profile?.subscription_type === 'platinum_monthly' || profile?.subscription_type === 'platinum_annual';
 
     // States
     const [quotaExceeded, setQuotaExceeded] = useState(false);
     const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(false);
-    const [precedentesQroBannerDismissed, setPrecedentesQroBannerDismissed] = useState(() => {
+    const [precedentesAnnouncementDismissed, setPrecedentesAnnouncementDismissed] = useState(() => {
         if (typeof window === 'undefined') return false;
-        return localStorage.getItem('precedentes-qro-beta-dismissed') === '1';
+        return localStorage.getItem('precedentes-launch-dismissed') === '1';
     });
-    const [precedentesPlatinoModalDismissed, setPrecedentesPlatinoModalDismissed] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        return localStorage.getItem('precedentes-platino-dismissed') === '1';
-    });
+    const [showPrecedentesTour, setShowPrecedentesTour] = useState(false);
+    // Index of the Precedentes step in ChatTour (0-based; adjust if TOUR_STEPS order changes)
+    const PRECEDENTES_TOUR_STEP = 9;
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showStateModal, setShowStateModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
@@ -601,52 +600,8 @@ export default function ChatPage() {
                     </div>
                 )}
 
-                {/* Acceso Anticipado Precedentes — modal full-screen para usuarios Pro Querétaro */}
-                {isProQueretaro && !precedentesQroBannerDismissed && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-400">
-                        {/* Backdrop */}
-                        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
-                        {/* Card */}
-                        <div className="relative max-w-lg w-full bg-[#0f0f0f]/95 border border-white/10 rounded-2xl shadow-2xl px-8 py-10 text-center animate-in zoom-in-95 duration-300">
-                            {/* Ícono decorativo */}
-                            <div className="mx-auto mb-5 w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                                <Crown className="w-7 h-7 text-accent-gold" />
-                            </div>
-                            {/* Eyebrow */}
-                            <p className="text-[10px] font-semibold tracking-[0.18em] text-accent-gold uppercase mb-3">
-                                Acceso Anticipado
-                            </p>
-                            {/* Título */}
-                            <h2 className="font-serif text-xl font-semibold text-white mb-5 leading-snug">
-                                Precedentes del 22° Circuito
-                            </h2>
-                            {/* Divider */}
-                            <div className="w-10 h-px bg-white/15 mx-auto mb-5" />
-                            {/* Cuerpo */}
-                            <p className="text-sm text-white/70 leading-relaxed mb-8">
-                                Por su condición de usuario <span className="text-white font-medium">Pro</span> con jurisdicción en Querétaro, cuenta usted con acceso temporal a la consulta de precedentes del Vigésimo Segundo Circuito a través del botón{' '}
-                                <span className="text-white font-medium">"Precedentes"</span> en la barra de herramientas del chat. Esta función, junto con un redactor de mayor potencia, estará disponible de manera exclusiva para los usuarios del plan{' '}
-                                <span className="text-accent-gold font-semibold">Platinum</span>. Lo invitamos a probarlo.
-                                <br /><br />
-                                Muchas gracias por ser parte de los usuarios de{' '}
-                                <span className="font-serif text-white">Iurex<span className="text-accent-gold">ia</span></span> Pro.
-                            </p>
-                            {/* Botón */}
-                            <button
-                                onClick={() => {
-                                    localStorage.setItem('precedentes-qro-beta-dismissed', '1');
-                                    setPrecedentesQroBannerDismissed(true);
-                                }}
-                                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent-gold text-white text-sm font-semibold hover:bg-accent-gold/90 active:scale-95 transition-all duration-150 shadow-lg shadow-accent-gold/20"
-                            >
-                                Entendido, continuar
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Precedentes Platinum — modal full-screen para todos los usuarios Platinum */}
-                {isPlatinum && !precedentesPlatinoModalDismissed && (
+                {/* Precedentes Judiciales — anuncio de lanzamiento para todos los usuarios Pro+ */}
+                {isProPlus && !precedentesAnnouncementDismissed && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-400">
                         <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
                         <div className="relative max-w-lg w-full bg-[#0f0f0f]/95 border border-white/10 rounded-2xl shadow-2xl px-8 py-10 text-center animate-in zoom-in-95 duration-300">
@@ -654,28 +609,42 @@ export default function ChatPage() {
                                 <Crown className="w-7 h-7 text-accent-gold" />
                             </div>
                             <p className="text-[10px] font-semibold tracking-[0.18em] text-accent-gold uppercase mb-3">
-                                Función Exclusiva Platinum
+                                Nueva Función · Pro en adelante
                             </p>
                             <h2 className="font-serif text-xl font-semibold text-white mb-5 leading-snug">
-                                Precedentes del 22° Circuito
+                                Precedentes Judiciales
                             </h2>
                             <div className="w-10 h-px bg-white/15 mx-auto mb-5" />
                             <p className="text-sm text-white/70 leading-relaxed mb-8">
-                                Como usuario <span className="text-accent-gold font-semibold">Platinum</span>, cuenta usted con acceso completo a la consulta de precedentes del Vigésimo Segundo Circuito (Querétaro) a través del botón{' '}
-                                <span className="text-white font-medium">"Precedentes"</span> en la barra de herramientas del chat. Esta función es exclusiva de su plan e incluye acceso a un redactor de mayor potencia. Lo invitamos a explorarla.
+                                Ahora puede consultar la jurisprudencia y tesis de los{' '}
+                                <span className="text-white font-medium">Tribunales Colegiados de Circuito</span>{' '}
+                                directamente desde el chat, a través del botón{' '}
+                                <span className="text-white font-medium">"Precedentes"</span> en la barra de herramientas.
                                 <br /><br />
-                                Muchas gracias por ser parte de los usuarios de{' '}
-                                <span className="font-serif text-white">Iurex<span className="text-accent-gold">ia</span></span> Platinum.
+                                Esta función está <span className="text-accent-gold font-semibold">en desarrollo</span> y seguirá creciendo, priorizando las regiones con mayor número de usuarios de{' '}
+                                <span className="font-serif text-white">Iurex<span className="text-accent-gold">ia</span></span>.
                             </p>
-                            <button
-                                onClick={() => {
-                                    localStorage.setItem('precedentes-platino-dismissed', '1');
-                                    setPrecedentesPlatinoModalDismissed(true);
-                                }}
-                                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent-gold text-white text-sm font-semibold hover:bg-accent-gold/90 active:scale-95 transition-all duration-150 shadow-lg shadow-accent-gold/20"
-                            >
-                                Entendido, continuar
-                            </button>
+                            <div className="flex items-center justify-center gap-3 flex-wrap">
+                                <button
+                                    onClick={() => {
+                                        localStorage.setItem('precedentes-launch-dismissed', '1');
+                                        setPrecedentesAnnouncementDismissed(true);
+                                        setShowPrecedentesTour(true);
+                                    }}
+                                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent-gold text-white text-sm font-semibold hover:bg-accent-gold/90 active:scale-95 transition-all duration-150 shadow-lg shadow-accent-gold/20"
+                                >
+                                    Ver cómo funciona <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        localStorage.setItem('precedentes-launch-dismissed', '1');
+                                        setPrecedentesAnnouncementDismissed(true);
+                                    }}
+                                    className="text-white/40 hover:text-white/70 text-sm transition-colors"
+                                >
+                                    Entendido
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -998,7 +967,11 @@ export default function ChatPage() {
             )}
 
             <PromptGuide isOpen={showPromptGuideModal} onClose={() => setShowPromptGuideModal(false)} />
-            <ChatTour isOpen={showPromptGuide} onClose={() => setShowPromptGuide(false)} />
+            <ChatTour
+                isOpen={showPromptGuide || showPrecedentesTour}
+                onClose={() => { setShowPromptGuide(false); setShowPrecedentesTour(false); }}
+                startStep={showPrecedentesTour ? PRECEDENTES_TOUR_STEP : 0}
+            />
 
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 

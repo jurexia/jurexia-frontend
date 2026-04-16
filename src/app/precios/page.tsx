@@ -94,6 +94,7 @@ export default function PreciosPage() {
                                     "140 consultas/mes",
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
+                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito <span className="text-[10px] font-bold bg-accent-gold/20 text-accent-gold border border-accent-gold/30 px-1.5 py-0.5 rounded-full ml-1">en desarrollo</span></span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Búsqueda con IA verificada en constante actualización",
                                     "Filtros por entidad federativa + marco federal",
@@ -119,6 +120,7 @@ export default function PreciosPage() {
                                     "560 consultas/mes — ideal para despachos",
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
+                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito <span className="text-[10px] font-bold bg-accent-gold/20 text-accent-gold border border-accent-gold/30 px-1.5 py-0.5 rounded-full ml-1">en desarrollo</span></span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Consulta personalizada con equipo legal de Iurexia (vía correo)",
                                     <span className="text-amber-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
@@ -216,6 +218,13 @@ export default function PreciosPage() {
                                     <ComparisonRow feature="Registro connect para captar clientes" free="—" basico="—" pro="✓" platinum="✓" />
                                     <ComparisonRow feature="Análisis y auditoría de documentos" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
                                     <ComparisonRow feature="Genios Especializados (IA avanzada)" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
+                                    <ComparisonRow
+                                        feature="Precedentes Judiciales por Circuito"
+                                        free="—" basico="—"
+                                        pro={<span className="inline-flex items-center gap-1">✓ <span className="text-[9px] font-bold bg-accent-gold/15 text-accent-gold border border-accent-gold/30 px-1 py-0.5 rounded-full">en desa.</span></span>}
+                                        platinum={<span className="inline-flex items-center gap-1">✓ <span className="text-[9px] font-bold bg-accent-gold/15 text-accent-gold border border-accent-gold/30 px-1 py-0.5 rounded-full">en desa.</span></span>}
+                                        goldFeature={true}
+                                    />
                                     <ComparisonRow feature="Sugerencias con fundamento" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
                                     <ComparisonRow feature="Soporte prioritario" free="—" basico="Estándar" pro="✓" platinum="VIP" />
                                     <ComparisonRow feature="Consulta legal estratégica (vía correo)" free="—" basico="—" pro="—" platinum="✓" />
@@ -557,7 +566,7 @@ function PricingCard({
     );
 }
 
-function ComparisonRow({ feature, free, basico, pro, platinum, goldFeature = false }: { feature: string; free: string; basico: string; pro: string; platinum: string; goldFeature?: boolean }) {
+function ComparisonRow({ feature, free, basico, pro, platinum, goldFeature = false }: { feature: string; free: React.ReactNode; basico: React.ReactNode; pro: React.ReactNode; platinum: React.ReactNode; goldFeature?: boolean }) {
     return (
         <tr className="border-b border-gray-100">
             <td className={`py-4 px-3 ${goldFeature ? 'text-accent-gold font-medium' : 'text-charcoal-700'}`}>{feature}</td>

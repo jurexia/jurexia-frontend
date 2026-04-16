@@ -80,9 +80,27 @@ export default function ChatInput({
     const { user, profile } = useAuth();
 
     // ── Datos de circuitos y tribunales ──────────────────────────────────
-    const AVAILABLE_CIRCUITS = [22];
+    const AVAILABLE_CIRCUITS = [1, 22];
 
-    const CIRCUIT_TRIBUNALS: Record<number, { id: string; label: string; available: boolean }[]> = {
+    const CIRCUIT_TRIBUNALS: Record<number, { id: string; label: string; available: boolean; grupo?: string }[]> = {
+        1: [
+            // Materia Administrativa (1–24)
+            ...([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,18,20,21,22,23,24] as number[]).map(n => ({
+                id: `${n}TCC_ADM`, label: `${n}°`, available: true, grupo: 'ADM'
+            })),
+            // Materia Civil (1–15)
+            ...([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] as number[]).map(n => ({
+                id: `${n}TCC_CIV`, label: `${n}°`, available: true, grupo: 'CIV'
+            })),
+            // Materia Laboral (1–15)
+            ...([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] as number[]).map(n => ({
+                id: `${n}TCC_LAB`, label: `${n}°`, available: true, grupo: 'LAB'
+            })),
+            // Materia Penal (1–9)
+            ...([1,2,3,4,5,6,7,8,9] as number[]).map(n => ({
+                id: `${n}TCC_PEN`, label: `${n}°`, available: true, grupo: 'PEN'
+            })),
+        ],
         22: [
             { id: '1TCC',      label: '1° ADM/CIV', available: true },
             { id: '2TCC',      label: '2° ADM/CIV', available: true },
@@ -102,11 +120,8 @@ export default function ChatInput({
     const canAccessSentencia = profile?.subscription_type && !['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const isFreeUser = !profile?.subscription_type || ['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const isGenioLocked = isFreeUser && !isAdmin(user?.email);
-    const canAccessPrecedentes = isAdmin(user?.email) ||
-        profile?.subscription_type === 'platinum_monthly' ||
-        profile?.subscription_type === 'platinum_annual' ||
-        ((profile?.subscription_type === 'pro_monthly' || profile?.subscription_type === 'pro_annual') &&
-        profile?.estado === 'QUERETARO');
+    const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
+    const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
 
     const geniosList = [
         {
@@ -220,6 +235,18 @@ export default function ChatInput({
         };
     }, []);
 
+    // Auto-select circuit based on user's estado when entering Precedentes mode
+    useEffect(() => {
+        if (activeMode === 'precedentes' && selectedCircuit === null) {
+            const defaultCircuit = profile?.estado === 'CIUDAD_DE_MEXICO' ? 1 : 22;
+            setSelectedCircuit(defaultCircuit);
+        }
+        // Reset tribunal filter when leaving Precedentes mode
+        if (activeMode !== 'precedentes') {
+            setTribunalFilter(null);
+        }
+    }, [activeMode, profile?.estado]);
+
     const toggleListening = () => {
         if (!recognitionRef.current) {
             alert('El dictado por voz no es compatible con este navegador. Te recomendamos usar Google Chrome o Safari.');
@@ -274,7 +301,8 @@ export default function ChatInput({
 
             // Prepend [MODO_PRECEDENTES] marker when in Precedentes mode
             if (activeMode === 'precedentes') {
-                const circuitTag  = selectedCircuit  ? ` [CIRCUITO:${selectedCircuit}]`  : ' [CIRCUITO:22]';
+                const defaultCircuit = profile?.estado === 'CIUDAD_DE_MEXICO' ? 1 : 22;
+                const circuitTag  = selectedCircuit  ? ` [CIRCUITO:${selectedCircuit}]`  : ` [CIRCUITO:${defaultCircuit}]`;
                 const tribunalTag = tribunalFilter    ? ` [TRIBUNAL:${tribunalFilter}]`   : '';
                 finalMessage = `[MODO_PRECEDENTES]${circuitTag}${tribunalTag} ${finalMessage}`;
             }
@@ -670,39 +698,72 @@ ${draftRequest.descripcion}`;
 
                             {/* Fila 2: Tribunal (visible cuando hay circuito seleccionado) */}
                             {selectedCircuit && CIRCUIT_TRIBUNALS[selectedCircuit] ? (
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest shrink-0">Trib.</span>
-                                    <button
-                                        onClick={() => setTribunalFilter(null)}
-                                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all duration-150 border ${
-                                            tribunalFilter === null
-                                                ? 'bg-charcoal-900 text-white border-charcoal-900'
-                                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
-                                        }`}
-                                    >
-                                        Todos
-                                    </button>
-                                    {CIRCUIT_TRIBUNALS[selectedCircuit].map((t) => (
+                                <div className="space-y-1">
+                                    {/* "Todos" siempre visible */}
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest shrink-0 w-[22px]">Trib.</span>
                                         <button
-                                            key={t.id}
-                                            onClick={() => t.available && setTribunalFilter(tribunalFilter === t.id ? null : t.id)}
-                                            title={t.available ? t.label : `${t.label} — próximamente`}
-                                            className={`relative px-2 py-0.5 rounded text-[10px] font-medium transition-all duration-150 border ${
-                                                !t.available
-                                                    ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-                                                    : tribunalFilter === t.id
-                                                        ? 'bg-charcoal-900 text-white border-charcoal-900'
-                                                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                                            onClick={() => setTribunalFilter(null)}
+                                            className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all duration-150 border ${
+                                                tribunalFilter === null
+                                                    ? 'bg-charcoal-900 text-white border-charcoal-900'
+                                                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
                                             }`}
                                         >
-                                            {t.label}
-                                            {!t.available && (
-                                                <span className="absolute -top-[5px] -right-[3px] text-[6px] bg-[#c9a962] text-white px-[3px] py-px rounded-sm leading-tight font-bold tracking-tight">
-                                                    pronto
-                                                </span>
-                                            )}
+                                            Todos
                                         </button>
-                                    ))}
+                                    </div>
+                                    {/* Circuit 1: agrupar por materia (ADM / CIV / LAB / PEN) */}
+                                    {selectedCircuit === 1 ? (
+                                        (['ADM','CIV','LAB','PEN'] as const).map((grupo) => {
+                                            const tribunalesGrupo = CIRCUIT_TRIBUNALS[1].filter(t => t.grupo === grupo);
+                                            const GRUPO_LABEL: Record<string, string> = { ADM: 'Adm', CIV: 'Civ', LAB: 'Lab', PEN: 'Pen' };
+                                            return (
+                                                <div key={grupo} className="flex items-center gap-[3px] flex-wrap">
+                                                    <span className="text-[8px] font-bold text-[#c9a962] uppercase tracking-widest shrink-0 w-[22px]">{GRUPO_LABEL[grupo]}</span>
+                                                    {tribunalesGrupo.map((t) => (
+                                                        <button
+                                                            key={t.id}
+                                                            onClick={() => setTribunalFilter(tribunalFilter === t.id ? null : t.id)}
+                                                            title={`${t.label} TCC en Materia ${grupo} — ${t.id}`}
+                                                            className={`w-[18px] h-[18px] rounded text-[8px] font-bold transition-all duration-150 border leading-none ${
+                                                                tribunalFilter === t.id
+                                                                    ? 'bg-[#c9a962] text-white border-[#c9a962] shadow-sm'
+                                                                    : 'bg-white text-gray-600 border-gray-300 hover:border-[#c9a962] hover:text-[#c9a962]'
+                                                            }`}
+                                                        >
+                                                            {t.label.replace('°', '')}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        /* Otros circuitos: lista horizontal simple */
+                                        <div className="flex items-center gap-1.5 flex-wrap pl-[26px]">
+                                            {CIRCUIT_TRIBUNALS[selectedCircuit].map((t) => (
+                                                <button
+                                                    key={t.id}
+                                                    onClick={() => t.available && setTribunalFilter(tribunalFilter === t.id ? null : t.id)}
+                                                    title={t.available ? t.label : `${t.label} — próximamente`}
+                                                    className={`relative px-2 py-0.5 rounded text-[10px] font-medium transition-all duration-150 border ${
+                                                        !t.available
+                                                            ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                                                            : tribunalFilter === t.id
+                                                                ? 'bg-charcoal-900 text-white border-charcoal-900'
+                                                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                                                    }`}
+                                                >
+                                                    {t.label}
+                                                    {!t.available && (
+                                                        <span className="absolute -top-[5px] -right-[3px] text-[6px] bg-[#c9a962] text-white px-[3px] py-px rounded-sm leading-tight font-bold tracking-tight">
+                                                            pronto
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             ) : selectedCircuit ? (
                                 <p className="text-[9px] text-[#c9a962] italic pl-1">
