@@ -230,6 +230,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const dryRun = body.dryRun ?? true; // Default to dry run for safety
         const limit = body.limit ?? 10; // Send in batches
+        const offset = body.offset ?? 0; // Skip already-sent users
         const testEmails: string[] = body.testEmails || []; // Send preview to specific emails
 
         const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -266,7 +267,7 @@ export async function POST(request: NextRequest) {
             .gte('queries_used', 5) // Hit or exceeded limit
             .not('email', 'in', `(${ADMIN_EMAILS.join(',')})`)
             .order('queries_used', { ascending: false })
-            .limit(limit);
+            .range(offset, offset + limit - 1);
 
         if (dbError) {
             return NextResponse.json({ error: 'DB query failed', details: dbError.message }, { status: 500 });
