@@ -733,26 +733,35 @@ ${draftRequest.descripcion}`;
                                             Todos
                                         </button>
                                     </div>
-                                    {/* Circuit 1: agrupar por materia (ADM / CIV / LAB / PEN) */}
-                                    {selectedCircuit === 1 ? (
+                                    {/* Circuits 1 & 4: agrupar por materia (ADM / CIV / LAB / PEN) */}
+                                    {(selectedCircuit === 1 || selectedCircuit === 4) ? (
                                         (['ADM','CIV','LAB','PEN'] as const).map((grupo) => {
-                                            const tribunalesGrupo = CIRCUIT_TRIBUNALS[1].filter(t => t.grupo === grupo);
-                                            const GRUPO_LABEL: Record<string, string> = { ADM: 'Adm', CIV: 'Civ', LAB: 'Lab', PEN: 'Pen' };
+                                            const tribunalesGrupo = CIRCUIT_TRIBUNALS[selectedCircuit as number].filter(t => t.grupo === grupo);
+                                            if (tribunalesGrupo.length === 0) return null;
+                                            const GRUPO_FULL: Record<string, string> = { ADM: 'Administrativa', CIV: 'Civil', LAB: 'Laboral', PEN: 'Penal' };
+                                            const GRUPO_COLOR: Record<string, string> = {
+                                                ADM: 'text-teal-700 bg-teal-50 border-teal-200',
+                                                CIV: 'text-blue-700 bg-blue-50 border-blue-200',
+                                                LAB: 'text-amber-700 bg-amber-50 border-amber-200',
+                                                PEN: 'text-rose-700 bg-rose-50 border-rose-200',
+                                            };
                                             return (
-                                                <div key={grupo} className="flex items-center gap-[3px] flex-wrap">
-                                                    <span className="text-[8px] font-bold text-[#c9a962] uppercase tracking-widest shrink-0 w-[22px]">{GRUPO_LABEL[grupo]}</span>
+                                                <div key={grupo} className="flex items-center gap-1 flex-wrap">
+                                                    <span className={`text-[9px] font-bold uppercase tracking-wide shrink-0 px-1.5 py-0.5 rounded border ${GRUPO_COLOR[grupo]}`} style={{minWidth: '3.5rem', textAlign: 'center'}}>
+                                                        {GRUPO_FULL[grupo]}
+                                                    </span>
                                                     {tribunalesGrupo.map((t) => (
                                                         <button
                                                             key={t.id}
                                                             onClick={() => setTribunalFilter(tribunalFilter === t.id ? null : t.id)}
-                                                            title={`${t.label} TCC en Materia ${grupo} — ${t.id}`}
-                                                            className={`w-[18px] h-[18px] rounded text-[8px] font-bold transition-all duration-150 border leading-none ${
+                                                            title={`${t.label} TCC en Materia ${GRUPO_FULL[grupo]} — ${t.id}`}
+                                                            className={`h-[18px] px-1.5 rounded text-[9px] font-bold transition-all duration-150 border leading-none ${
                                                                 tribunalFilter === t.id
                                                                     ? 'bg-[#c9a962] text-white border-[#c9a962] shadow-sm'
                                                                     : 'bg-white text-gray-600 border-gray-300 hover:border-[#c9a962] hover:text-[#c9a962]'
                                                             }`}
                                                         >
-                                                            {t.label.replace('°', '')}
+                                                            {t.label.replace('°', '')}°
                                                         </button>
                                                     ))}
                                                 </div>
