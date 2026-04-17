@@ -80,7 +80,7 @@ export default function ChatInput({
     const { user, profile } = useAuth();
 
     // ── Datos de circuitos y tribunales ──────────────────────────────────
-    const AVAILABLE_CIRCUITS = [1, 22];
+    const AVAILABLE_CIRCUITS = [1, 4, 22];
 
     const CIRCUIT_TRIBUNALS: Record<number, { id: string; label: string; available: boolean; grupo?: string }[]> = {
         1: [
@@ -100,6 +100,16 @@ export default function ChatInput({
             ...([1,2,3,4,5,6,7,8,9] as number[]).map(n => ({
                 id: `${n}TCC_PEN`, label: `${n}°`, available: true, grupo: 'PEN'
             })),
+        ],
+        4: [
+            // Materia Administrativa (1–3)
+            ...([1,2,3] as number[]).map(n => ({ id: `${n}TCC_ADM`, label: `${n}°`, available: true, grupo: 'ADM' })),
+            // Materia Civil (1–3)
+            ...([1,2,3] as number[]).map(n => ({ id: `${n}TCC_CIV`, label: `${n}°`, available: true, grupo: 'CIV' })),
+            // Materia Laboral (1–5)
+            ...([1,2,3,4,5] as number[]).map(n => ({ id: `${n}TCC_LAB`, label: `${n}°`, available: true, grupo: 'LAB' })),
+            // Materia Penal (1–2)
+            ...([1,2] as number[]).map(n => ({ id: `${n}TCC_PEN`, label: `${n}°`, available: true, grupo: 'PEN' })),
         ],
         22: [
             { id: '1TCC',      label: '1° ADM/CIV', available: true },
