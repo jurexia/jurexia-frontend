@@ -460,9 +460,9 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, hasPdf }: LeyArticu
                             href={resolvedPdfUrl!}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-accent-gold hover:text-accent-brown transition-colors font-medium"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-charcoal-900 text-white rounded-lg text-xs font-semibold hover:bg-charcoal-700 transition-colors shadow-sm"
                         >
-                            <ExternalLink className="w-3 h-3" />
+                            <ExternalLink className="w-3.5 h-3.5" />
                             Abrir en nueva pestaña
                         </a>
                     </div>
