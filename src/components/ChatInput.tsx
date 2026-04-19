@@ -745,7 +745,7 @@ ${draftRequest.descripcion}`;
                                         </button>
                                     </div>
                                     {/* Circuits 1 & 4: agrupar por materia (ADM / CIV / LAB / PEN) */}
-                                    {(selectedCircuit === 1 || selectedCircuit === 4) ? (
+                                    {(selectedCircuit === 1 || selectedCircuit === 2 || selectedCircuit === 4) ? (
                                         (['ADM','CIV','LAB','PEN'] as const).map((grupo) => {
                                             const tribunalesGrupo = CIRCUIT_TRIBUNALS[selectedCircuit as number].filter(t => t.grupo === grupo);
                                             if (tribunalesGrupo.length === 0) return null;
