@@ -72,6 +72,7 @@ export default function ChatInput({
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
     const [showSentenciaModal, setShowSentenciaModal] = useState(false);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ file: File; fileName: string } | null>(null);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -80,7 +81,7 @@ export default function ChatInput({
     const { user, profile } = useAuth();
 
     // ── Datos de circuitos y tribunales ──────────────────────────────────
-    const AVAILABLE_CIRCUITS = [1, 4, 22];
+    const AVAILABLE_CIRCUITS = [1, 2, 4, 22];
 
     const CIRCUIT_TRIBUNALS: Record<number, { id: string; label: string; available: boolean; grupo?: string }[]> = {
         1: [
@@ -100,6 +101,16 @@ export default function ChatInput({
             ...([1,2,3,4,5,6,7,8,9] as number[]).map(n => ({
                 id: `${n}TCC_PEN`, label: `${n}°`, available: true, grupo: 'PEN'
             })),
+        ],
+        2: [
+            // Materia Administrativa (1–4)
+            ...([1,2,3,4] as number[]).map(n => ({ id: `${n}TCC_ADM`, label: `${n}°`, available: true, grupo: 'ADM' })),
+            // Materia Civil (1–4)
+            ...([1,2,3,4] as number[]).map(n => ({ id: `${n}TCC_CIV`, label: `${n}°`, available: true, grupo: 'CIV' })),
+            // Materia Laboral (1–3)
+            ...([1,2,3] as number[]).map(n => ({ id: `${n}TCC_LAB`, label: `${n}°`, available: true, grupo: 'LAB' })),
+            // Materia Penal (1–4)
+            ...([1,2,3,4] as number[]).map(n => ({ id: `${n}TCC_PEN`, label: `${n}°`, available: true, grupo: 'PEN' })),
         ],
         4: [
             // Materia Administrativa (1–3)
@@ -630,28 +641,28 @@ ${draftRequest.descripcion}`;
                                 onClick={() => handleModeClick('draft')}
                                 guideId="escrito"
                             />
-                            {canAccessSentencia && (
-                                <ActionButton
-                                    icon={Gavel}
-                                    label="Sentencia"
-                                    active={activeMode === 'sentencia'}
-                                    onClick={() => handleModeClick('sentencia')}
-                                    guideId="sentencia"
-                                />
-                            )}
-                            {canAccessPrecedentes && (
-                                <ActionButton
-                                    icon={BookOpen}
-                                    label="Precedentes"
-                                    active={activeMode === 'precedentes'}
-                                    onClick={() => {
-                                        const next = activeMode !== 'precedentes';
-                                        setActiveMode(next ? 'precedentes' : 'search');
-                                        if (!next) { setSelectedCircuit(null); setTribunalFilter(null); }
-                                    }}
-                                    guideId="precedentes"
-                                />
-                            )}
+                            <ActionButton
+                                icon={Gavel}
+                                label="Sentencia"
+                                active={activeMode === 'sentencia'}
+                                locked={!canAccessSentencia}
+                                onClick={() => canAccessSentencia ? handleModeClick('sentencia') : setShowUpgradeModal(true)}
+                                guideId="sentencia"
+                            />
+                            <ActionButton
+                                icon={BookOpen}
+                                label="Precedentes"
+                                active={activeMode === 'precedentes'}
+                                locked={!canAccessPrecedentes}
+                                onClick={() => {
+                                    if (!canAccessPrecedentes) { setShowUpgradeModal(true); return; }
+                                    const next = activeMode !== 'precedentes';
+                                    setActiveMode(next ? 'precedentes' : 'search');
+                                    if (!next) { setSelectedCircuit(null); setTribunalFilter(null); }
+                                }}
+                                guideId="precedentes"
+                                activeClassName="text-[#c9a962] bg-amber-50 hover:bg-amber-100 border border-[#c9a962]/30"
+                            />
                             {canAccessRedactor && (
                                 <Link
                                     href="/redactor-sentencia"
@@ -726,8 +737,8 @@ ${draftRequest.descripcion}`;
                                             onClick={() => setTribunalFilter(null)}
                                             className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all duration-150 border ${
                                                 tribunalFilter === null
-                                                    ? 'bg-charcoal-900 text-white border-charcoal-900'
-                                                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                                                    ? 'bg-[#c9a962] text-white border-[#c9a962] shadow-sm'
+                                                    : 'bg-white text-gray-500 border-gray-200 hover:border-[#c9a962] hover:text-[#c9a962]'
                                             }`}
                                         >
                                             Todos
@@ -831,7 +842,7 @@ ${draftRequest.descripcion}`;
                             <button
                                 key={g.id}
                                 onClick={() => {
-                                    if (isGenioLocked && !isPro) return;
+                                    if (isGenioLocked && !isPro) { setShowUpgradeModal(true); return; }
                                     if (!setActiveGenios) return;
 
                                     if (activeGenios.includes(g.id)) {
@@ -953,6 +964,46 @@ ${draftRequest.descripcion}`;
                 onSubmit={handleSentenciaSubmit}
                 estado={estado}
             />
+
+            {/* Modal de upgrade — aparece al tocar funciones Pro bloqueadas */}
+            {showUpgradeModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    onClick={() => setShowUpgradeModal(false)}
+                >
+                    <div
+                        className="relative w-full max-w-sm bg-[#0f0f0f] border border-white/10 rounded-2xl shadow-2xl px-7 py-8 text-center animate-in zoom-in-95 fade-in duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
+                            style={{ background: 'linear-gradient(90deg, #c9a84c, #e8c56d, #c9a84c)' }} />
+                        <div className="mx-auto mb-4 w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                            <Lock className="w-5 h-5 text-[#c9a962]" />
+                        </div>
+                        <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
+                            Función exclusiva Pro
+                        </p>
+                        <p className="text-white/80 text-sm leading-relaxed mb-6">
+                            Únete al plan <span className="text-white font-semibold">Pro o superior</span> de Iurexia para utilizar las mejores y más potentes funciones de la plataforma.
+                        </p>
+                        <div className="flex flex-col gap-2">
+                            <a
+                                href="/precios"
+                                className="block w-full py-2.5 rounded-xl text-center text-sm font-bold transition-all hover:scale-[1.02] active:scale-95"
+                                style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
+                            >
+                                Ver planes Pro
+                            </a>
+                            <button
+                                onClick={() => setShowUpgradeModal(false)}
+                                className="text-white/30 hover:text-white/60 text-xs transition-colors py-1"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
@@ -961,29 +1012,36 @@ function ActionButton({
     icon: Icon,
     label,
     active = false,
+    locked = false,
     onClick,
-    guideId
+    guideId,
+    activeClassName = 'text-blue-600 bg-blue-50 hover:bg-blue-100',
 }: {
     icon: React.ElementType;
     label: string;
     active?: boolean;
+    locked?: boolean;
     onClick?: () => void;
     guideId?: string;
+    activeClassName?: string;
 }) {
     return (
         <button
             onClick={onClick}
             data-guide={guideId}
+            title={locked ? `${label} — exclusivo Plan Pro` : label}
             className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-sm font-medium
                   transition-colors duration-200
-                  ${active
-                    ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ${locked
+                    ? 'text-gray-300 hover:text-gray-400 hover:bg-gray-50 cursor-pointer'
+                    : active
+                        ? activeClassName
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
-            title={label}
         >
             <Icon className="w-4 h-4" />
             <span className="hidden sm:inline">{label}</span>
+            {locked && <Lock className="w-3 h-3 text-gray-300 flex-shrink-0" />}
         </button>
     );
 }
