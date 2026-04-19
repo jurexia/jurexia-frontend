@@ -633,49 +633,57 @@ export default function ChatPage() {
 
                 <main className="flex-1 pt-14 overflow-y-auto">
                     {!hasMessages ? (
-                        <div className="h-full flex flex-col items-center justify-center px-4 -mt-8">
+                        <div className="h-full flex flex-col items-center justify-center px-3 sm:px-4 -mt-4 sm:-mt-8">
                             <div className="max-w-2xl w-full text-center">
-                                <div className="mb-4">
+                                <div className="mb-2 sm:mb-4">
                                     <Link href="/" className="cursor-pointer hover:opacity-90 transition-opacity">
-                                        <span className="font-serif text-5xl font-semibold text-charcoal-900">
+                                        <span className="font-serif text-3xl sm:text-5xl font-semibold text-charcoal-900">
                                             Iurex<span className="text-accent-gold">ia</span>
                                         </span>
                                     </Link>
                                 </div>
-                                <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">
+                                <h2 className="font-serif text-lg sm:text-2xl font-medium text-charcoal-900 mb-3 sm:mb-4">
                                     ¿En qué te puedo ayudar{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}?
                                 </h2>
 
-                                {/* Quick Start — elegant clickable suggestion cards */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8 max-w-xl mx-auto">
-                                    {[
-                                        { icon: Gavel, text: '¿Procede el amparo indirecto contra la negativa de acceso a un expediente judicial?', label: 'Amparo' },
-                                        { icon: Users, text: '¿Cuándo se actualiza la guarda y custodia compartida y qué criterios aplica el juez?', label: 'Familiar' },
-                                        { icon: Briefcase, text: '¿Qué consecuencias tiene el despido injustificado durante una incapacidad médica?', label: 'Laboral' },
-                                        { icon: Shield, text: '¿En qué casos es procedente la suspensión provisional en el juicio de amparo?', label: 'Constitucional' },
-                                    ].map((suggestion, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => handleSendMessage(suggestion.text, true)}
-                                            className="group relative flex items-start gap-3 px-4 py-4 rounded-xl
-                                                       bg-cream-100/80 hover:bg-white border border-charcoal-200/40
-                                                       hover:border-accent-gold/50 shadow-sm hover:shadow-lg
-                                                       transition-all duration-300 text-left
-                                                       hover:-translate-y-0.5 active:translate-y-0"
-                                        >
-                                            <div className="w-8 h-8 rounded-lg bg-charcoal-900/5 group-hover:bg-accent-gold/10 border border-charcoal-200/30 group-hover:border-accent-gold/30 flex items-center justify-center flex-shrink-0 transition-all duration-300">
-                                                <suggestion.icon className="w-4 h-4 text-charcoal-500 group-hover:text-accent-gold transition-colors duration-300" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <span className="text-[10px] font-semibold uppercase tracking-wider text-charcoal-400 group-hover:text-accent-gold/70 transition-colors">{suggestion.label}</span>
-                                                <p className="text-charcoal-700 text-[13px] leading-snug mt-0.5 group-hover:text-charcoal-900 transition-colors">
-                                                    {suggestion.text}
-                                                </p>
-                                            </div>
-                                            <ArrowRight className="w-3.5 h-3.5 text-charcoal-300 group-hover:text-accent-gold opacity-0 group-hover:opacity-100 absolute right-3 top-1/2 -translate-y-1/2 transition-all duration-300" />
-                                        </button>
-                                    ))}
-                                </div>
+                                {/* Quick Start — responsive suggestion cards */}
+                                {(() => {
+                                    const suggestions = [
+                                        { icon: Gavel, text: '¿Procede el amparo indirecto contra la negativa de acceso a un expediente judicial?', mobileText: 'Amparo contra acceso a expediente', label: 'Amparo' },
+                                        { icon: Users, text: '¿Cuándo se actualiza la guarda y custodia compartida y qué criterios aplica el juez?', mobileText: 'Guarda y custodia compartida', label: 'Familiar' },
+                                        { icon: Briefcase, text: '¿Qué consecuencias tiene el despido injustificado durante una incapacidad médica?', mobileText: 'Despido durante incapacidad', label: 'Laboral' },
+                                        { icon: Shield, text: '¿En qué casos es procedente la suspensión provisional en el juicio de amparo?', mobileText: 'Suspensión provisional', label: 'Constitucional' },
+                                    ];
+                                    return (
+                                        <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-8 max-w-xl mx-auto">
+                                            {suggestions.map((suggestion, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => handleSendMessage(suggestion.text, true)}
+                                                    className="group relative flex items-center sm:items-start gap-2 sm:gap-3
+                                                               px-2.5 py-2.5 sm:px-4 sm:py-4 rounded-lg sm:rounded-xl
+                                                               bg-cream-100/80 hover:bg-white border border-charcoal-200/40
+                                                               hover:border-accent-gold/50 shadow-sm hover:shadow-lg
+                                                               transition-all duration-300 text-left
+                                                               hover:-translate-y-0.5 active:translate-y-0"
+                                                >
+                                                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-charcoal-900/5 group-hover:bg-accent-gold/10 border border-charcoal-200/30 group-hover:border-accent-gold/30 flex items-center justify-center flex-shrink-0 transition-all duration-300">
+                                                        <suggestion.icon className="w-3 h-3 sm:w-4 sm:h-4 text-charcoal-500 group-hover:text-accent-gold transition-colors duration-300" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-charcoal-400 group-hover:text-accent-gold/70 transition-colors">{suggestion.label}</span>
+                                                        {/* Short text on mobile, full on desktop */}
+                                                        <p className="text-charcoal-700 text-[11px] sm:text-[13px] leading-snug mt-0.5 group-hover:text-charcoal-900 transition-colors">
+                                                            <span className="hidden sm:inline">{suggestion.text}</span>
+                                                            <span className="sm:hidden">{suggestion.mobileText}</span>
+                                                        </p>
+                                                    </div>
+                                                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-charcoal-300 group-hover:text-accent-gold opacity-0 group-hover:opacity-100 absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 transition-all duration-300 hidden sm:block" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
 
 
                                 <ChatInput
