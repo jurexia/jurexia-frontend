@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, HelpCircle, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Gavel, Users, Briefcase, Shield } from 'lucide-react';
 import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import ChatInput from '@/components/ChatInput';
@@ -78,6 +78,7 @@ export default function ChatPage() {
     const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
     // showFreeOnboarding removed — onboarding now inline via Quick Start buttons
     const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
+    const [showWelcomeGuidePrompt, setShowWelcomeGuidePrompt] = useState(false);
 
     // Suggestion rotation state
     const SUGGESTIONS = [
@@ -645,26 +646,33 @@ export default function ChatPage() {
                                     ¿En qué te puedo ayudar{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}?
                                 </h2>
 
-                                {/* Quick Start — clickable suggestion buttons */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8 max-w-xl mx-auto">
+                                {/* Quick Start — elegant clickable suggestion cards */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8 max-w-xl mx-auto">
                                     {[
-                                        { icon: '⚖️', text: '¿Qué pasa si me despiden injustificadamente?', short: 'Despido injustificado' },
-                                        { icon: '👨‍👩‍👧', text: '¿Cómo tramito una pensión alimenticia?', short: 'Pensión alimenticia' },
-                                        { icon: '🏠', text: '¿Cómo registro mi marca ante el IMPI?', short: 'Registro de marca' },
-                                        { icon: '🛡️', text: '¿Qué es el amparo y cuándo procede?', short: 'Amparo indirecto' },
+                                        { icon: Gavel, text: '¿Procede el amparo indirecto contra la negativa de acceso a un expediente judicial?', label: 'Amparo' },
+                                        { icon: Users, text: '¿Cuándo se actualiza la guarda y custodia compartida y qué criterios aplica el juez?', label: 'Familiar' },
+                                        { icon: Briefcase, text: '¿Qué consecuencias tiene el despido injustificado durante una incapacidad médica?', label: 'Laboral' },
+                                        { icon: Shield, text: '¿En qué casos es procedente la suspensión provisional en el juicio de amparo?', label: 'Constitucional' },
                                     ].map((suggestion, idx) => (
                                         <button
                                             key={idx}
                                             onClick={() => handleSendMessage(suggestion.text, true)}
-                                            className="group flex items-start gap-3 px-4 py-3.5 rounded-xl
-                                                       bg-white/80 hover:bg-white border border-charcoal-200/50 hover:border-accent-gold/40
-                                                       shadow-sm hover:shadow-md transition-all duration-200
-                                                       text-left hover:scale-[1.02] active:scale-[0.98]"
+                                            className="group relative flex items-start gap-3 px-4 py-4 rounded-xl
+                                                       bg-cream-100/80 hover:bg-white border border-charcoal-200/40
+                                                       hover:border-accent-gold/50 shadow-sm hover:shadow-lg
+                                                       transition-all duration-300 text-left
+                                                       hover:-translate-y-0.5 active:translate-y-0"
                                         >
-                                            <span className="text-lg flex-shrink-0 mt-0.5">{suggestion.icon}</span>
-                                            <span className="text-charcoal-700 text-sm leading-snug group-hover:text-charcoal-900 transition-colors">
-                                                {suggestion.text}
-                                            </span>
+                                            <div className="w-8 h-8 rounded-lg bg-charcoal-900/5 group-hover:bg-accent-gold/10 border border-charcoal-200/30 group-hover:border-accent-gold/30 flex items-center justify-center flex-shrink-0 transition-all duration-300">
+                                                <suggestion.icon className="w-4 h-4 text-charcoal-500 group-hover:text-accent-gold transition-colors duration-300" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <span className="text-[10px] font-semibold uppercase tracking-wider text-charcoal-400 group-hover:text-accent-gold/70 transition-colors">{suggestion.label}</span>
+                                                <p className="text-charcoal-700 text-[13px] leading-snug mt-0.5 group-hover:text-charcoal-900 transition-colors">
+                                                    {suggestion.text}
+                                                </p>
+                                            </div>
+                                            <ArrowRight className="w-3.5 h-3.5 text-charcoal-300 group-hover:text-accent-gold opacity-0 group-hover:opacity-100 absolute right-3 top-1/2 -translate-y-1/2 transition-all duration-300" />
                                         </button>
                                     ))}
                                 </div>
@@ -776,7 +784,11 @@ export default function ChatPage() {
             {showStateModal && user && <StateSelectorModal userId={user.id} onSelectEstado={(e) => {
                 setSelectedEstado(e);
                 setShowStateModal(false);
-                // Onboarding now handled inline via Quick Start buttons — no blocking modal
+                // Show welcome guide prompt for first-time users after state selection
+                const hasSeenGuide = typeof window !== 'undefined' && localStorage.getItem(`iurexia_welcome_guide_${user.id}`) === 'true';
+                if (!hasSeenGuide) {
+                    setTimeout(() => setShowWelcomeGuidePrompt(true), 400);
+                }
             }} />}
             {showConfigModal && user && <StateSelectorModal userId={user.id} isConfig={true} currentEstado={selectedEstado} onClose={() => setShowConfigModal(false)} onSelectEstado={(e) => { setSelectedEstado(e); setShowConfigModal(false); }} />}
 
@@ -968,6 +980,79 @@ export default function ChatPage() {
             <WelcomeVideoModal isOpen={showWelcomeVideo} onClose={handleWelcomeVideoClose} />
 
             {/* FreeUserOnboardingModal REMOVED — was causing 43% user abandonment */}
+
+            {/* Welcome Guide Prompt — elegant overlay for first-time users */}
+            {showWelcomeGuidePrompt && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ animation: 'welcomeFadeIn 0.5s ease-out' }}>
+                    <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" onClick={() => {
+                        if (user?.id) localStorage.setItem(`iurexia_welcome_guide_${user.id}`, 'true');
+                        setShowWelcomeGuidePrompt(false);
+                    }} />
+                    <div className="relative z-10 text-center px-6 max-w-md" style={{ animation: 'welcomeSlideUp 0.6s ease-out 0.1s both' }}>
+                        <div className="mb-6">
+                            <span className="font-serif text-4xl font-semibold">
+                                <span className="text-white">Iurex</span>
+                                <span style={{ color: '#c9a962' }}>ia</span>
+                            </span>
+                        </div>
+                        <h2 className="font-serif text-2xl font-semibold text-white mb-3">
+                            {profile?.full_name ? `Bienvenido, ${profile.full_name.split(' ')[0]}` : 'Bienvenido'}
+                        </h2>
+                        <p className="text-white/50 text-sm mb-8 leading-relaxed max-w-sm mx-auto">
+                            Antes de comenzar, te recomendamos una guía rápida de 30 segundos para que conozcas todas las herramientas disponibles.
+                        </p>
+
+                        <div className="flex flex-col items-center gap-3">
+                            <button
+                                onClick={() => {
+                                    if (user?.id) localStorage.setItem(`iurexia_welcome_guide_${user.id}`, 'true');
+                                    setShowWelcomeGuidePrompt(false);
+                                    setTimeout(() => setShowPromptGuide(true), 300);
+                                }}
+                                className="px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 inline-flex items-center gap-2"
+                                style={{
+                                    background: 'linear-gradient(135deg, #c9a962 0%, #a8883e 100%)',
+                                    color: '#0f0f0f',
+                                    boxShadow: '0 4px 24px rgba(201,169,98,0.35)',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(201,169,98,0.45)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(201,169,98,0.35)'; }}
+                            >
+                                <HelpCircle className="w-4 h-4" />
+                                Ver Guía Rápida
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    if (user?.id) localStorage.setItem(`iurexia_welcome_guide_${user.id}`, 'true');
+                                    setShowWelcomeGuidePrompt(false);
+                                }}
+                                className="text-white/35 hover:text-white/60 text-xs font-medium tracking-wide transition-colors cursor-pointer"
+                                style={{ background: 'none', border: 'none' }}
+                            >
+                                Omitir — ya sé cómo funciona
+                            </button>
+                        </div>
+
+                        <div className="mt-10 flex items-center justify-center gap-4 text-white/20 text-[10px]">
+                            <span>Asistente jurídico con IA</span>
+                            <span>·</span>
+                            <span>Legislación mexicana</span>
+                        </div>
+                    </div>
+
+                    <style>{`
+                        @keyframes welcomeFadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                        @keyframes welcomeSlideUp {
+                            from { opacity: 0; transform: translateY(24px) scale(0.97); }
+                            to { opacity: 1; transform: translateY(0) scale(1); }
+                        }
+                    `}</style>
+                </div>
+            )}
         </div>
     );
 }
