@@ -14,7 +14,7 @@ import ChatTour from '@/components/ChatTour';
 import StateSelectorModal from '@/components/StateSelectorModal';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
 import WelcomeVideoModal from '@/components/WelcomeVideoModal';
-import FreeUserOnboardingModal, { hasSeenOnboarding } from '@/components/FreeUserOnboardingModal';
+// FreeUserOnboardingModal removed — was causing 43% user abandonment (audio-modal blocker)
 import { markWelcomeVideoSeen } from '@/lib/supabase';
 import { useChat } from '@/hooks/useChat';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -76,7 +76,8 @@ export default function ChatPage() {
     const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [isDocumentAnalyzing, setIsDocumentAnalyzing] = useState(false);
     const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
-    const [showFreeOnboarding, setShowFreeOnboarding] = useState(false);
+    // showFreeOnboarding removed — onboarding now inline via Quick Start buttons
+    const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
 
     // Suggestion rotation state
     const SUGGESTIONS = [
@@ -236,17 +237,8 @@ export default function ChatPage() {
         }
     }, [profile, user]);
 
-    // Free user onboarding — for RETURNING users who already have a state selected
-    // New users get onboarding triggered from the StateSelectorModal callback below
-    useEffect(() => {
-        if (!profile || !user) return;
-        if (!profile.estado) return; // New user — will be handled by state selector callback
-        const isProUser = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'basico_monthly'].includes(profile.subscription_type || '');
-        const isAdminUser = isAdmin(user.email);
-        if (!isProUser && !isAdminUser && !hasSeenOnboarding(user.id)) {
-            setShowFreeOnboarding(true);
-        }
-    }, [profile, user]);
+    // Free user onboarding removed — was causing 43% user abandonment
+    // Now handled inline via Quick Start suggestion buttons in empty state
 
     const handleWelcomeVideoClose = useCallback(async () => {
         setShowWelcomeVideo(false);
@@ -274,20 +266,8 @@ export default function ChatPage() {
         loadConversations();
     }, [authLoading, isAuthenticated]);
 
-    // Ensure conversation exists
-    useEffect(() => {
-        const ensureConversation = async () => {
-            if (messages.length > 0 && !activeConversationId) {
-                const newConv = await createConversation(selectedEstado || undefined);
-                if (newConv) {
-                    setActiveConvId(newConv.id);
-                    const updatedConvs = await getConversations();
-                    setConversations(updatedConvs);
-                }
-            }
-        };
-        ensureConversation();
-    }, [messages.length, activeConversationId, selectedEstado]);
+    // "Ensure conversation exists" useEffect REMOVED — was a race condition source
+    // Conversations are now created lazily in handleSendMessage/handleDocumentSubmit only
 
     // Auto-scroll
     const prevMessagesLengthRef = useRef(messages.length);
@@ -319,14 +299,12 @@ export default function ChatPage() {
     }, [isLoading, activeConversationId, messages]);
 
     const handleNewConversation = useCallback(async () => {
-        const newConv = await createConversation(selectedEstado || undefined);
-        if (newConv) {
-            setActiveConvId(newConv.id);
-            clearMessages();
-            const updatedConvs = await getConversations();
-            setConversations(updatedConvs);
-        }
-    }, [selectedEstado, clearMessages]);
+        // Lazy creation: just reset the UI. The conversation row in DB
+        // will be created when the user sends their first message.
+        setActiveConvId(null);
+        setActiveConversationId(null);
+        clearMessages();
+    }, [clearMessages]);
 
     const handleSelectConversation = useCallback(async (id: string) => {
         const conv = await getConversation(id);
@@ -363,24 +341,27 @@ export default function ChatPage() {
             setShowLimitModal(true);
             return;
         }
-        const sendPromise = sendMessage(content, enableReasoning);
+
+        // Ensure conversation exists BEFORE sending (sequential, no race condition)
+        let convId = activeConversationId;
+        if (!convId && !creatingConvRef.current) {
+            creatingConvRef.current = true;
+            try {
+                const newConv = await createConversation(selectedEstado || undefined);
+                if (newConv) {
+                    convId = newConv.id;
+                    setActiveConvId(newConv.id);
+                    setActiveConversationId(newConv.id);
+                }
+            } finally {
+                creatingConvRef.current = false;
+            }
+        }
+
         if (!isAdminUser) {
             setQueriesUsed(prev => prev + 1);
         }
-
-        (async () => {
-            try {
-                if (!activeConversationId) {
-                    const newConv = await createConversation(selectedEstado || undefined);
-                    if (newConv) {
-                        setActiveConvId(newConv.id);
-                        setActiveConversationId(newConv.id);
-                    }
-                }
-            } catch (err) { }
-        })();
-
-        await sendPromise;
+        await sendMessage(content, enableReasoning);
     }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
 
     // Document analysis via Gemini Flash (streaming from /analyze-document)
@@ -664,14 +645,28 @@ export default function ChatPage() {
                                     ¿En qué te puedo ayudar{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}?
                                 </h2>
 
-                                {/* Elegant Rotating Suggestions */}
-                                <div className="h-16 mb-8 flex items-center justify-center overflow-hidden">
-                                    <div
-                                        key={suggestionIndex}
-                                        className="font-serif italic text-charcoal-900/40 text-sm md:text-base text-center max-w-lg leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-1000 ease-out"
-                                    >
-                                        {SUGGESTIONS[suggestionIndex]}
-                                    </div>
+                                {/* Quick Start — clickable suggestion buttons */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8 max-w-xl mx-auto">
+                                    {[
+                                        { icon: '⚖️', text: '¿Qué pasa si me despiden injustificadamente?', short: 'Despido injustificado' },
+                                        { icon: '👨‍👩‍👧', text: '¿Cómo tramito una pensión alimenticia?', short: 'Pensión alimenticia' },
+                                        { icon: '🏠', text: '¿Cómo registro mi marca ante el IMPI?', short: 'Registro de marca' },
+                                        { icon: '🛡️', text: '¿Qué es el amparo y cuándo procede?', short: 'Amparo indirecto' },
+                                    ].map((suggestion, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleSendMessage(suggestion.text, true)}
+                                            className="group flex items-start gap-3 px-4 py-3.5 rounded-xl
+                                                       bg-white/80 hover:bg-white border border-charcoal-200/50 hover:border-accent-gold/40
+                                                       shadow-sm hover:shadow-md transition-all duration-200
+                                                       text-left hover:scale-[1.02] active:scale-[0.98]"
+                                        >
+                                            <span className="text-lg flex-shrink-0 mt-0.5">{suggestion.icon}</span>
+                                            <span className="text-charcoal-700 text-sm leading-snug group-hover:text-charcoal-900 transition-colors">
+                                                {suggestion.text}
+                                            </span>
+                                        </button>
+                                    ))}
                                 </div>
 
 
@@ -781,12 +776,7 @@ export default function ChatPage() {
             {showStateModal && user && <StateSelectorModal userId={user.id} onSelectEstado={(e) => {
                 setSelectedEstado(e);
                 setShowStateModal(false);
-                // Trigger onboarding AFTER state selection for new free users
-                const isProUser = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios', 'basico_monthly'].includes(profile?.subscription_type || '');
-                const isAdminUser = isAdmin(user.email);
-                if (!isProUser && !isAdminUser && !hasSeenOnboarding(user.id)) {
-                    setTimeout(() => setShowFreeOnboarding(true), 300);
-                }
+                // Onboarding now handled inline via Quick Start buttons — no blocking modal
             }} />}
             {showConfigModal && user && <StateSelectorModal userId={user.id} isConfig={true} currentEstado={selectedEstado} onClose={() => setShowConfigModal(false)} onSelectEstado={(e) => { setSelectedEstado(e); setShowConfigModal(false); }} />}
 
@@ -977,12 +967,7 @@ export default function ChatPage() {
 
             <WelcomeVideoModal isOpen={showWelcomeVideo} onClose={handleWelcomeVideoClose} />
 
-            <FreeUserOnboardingModal
-                isOpen={showFreeOnboarding}
-                onComplete={() => setShowFreeOnboarding(false)}
-                userName={profile?.full_name || undefined}
-                userId={user?.id}
-            />
+            {/* FreeUserOnboardingModal REMOVED — was causing 43% user abandonment */}
         </div>
     );
 }
