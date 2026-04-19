@@ -54,6 +54,16 @@ export default function RegistroPage() {
 
         try {
             await signUpWithEmail(email, password, name);
+            
+            // Google Ads Conversion tracking: Registro
+            if (typeof (window as any).gtag === 'function') {
+                (window as any).gtag('event', 'conversion', {
+                    'send_to': 'AW-18019843576/jCevCMPy4Z4cEPj7w5BD',
+                    'value': 1.0,
+                    'currency': 'MXN'
+                });
+            }
+
             setConfirmedEmail(email);
             setShowConfirmation(true);
         } catch (err: any) {

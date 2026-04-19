@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
 import { WakeUpProvider } from '@/components/WakeUpProvider'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://iurexia.com'),
@@ -88,6 +89,7 @@ export default function RootLayout({
                 />
             </head>
             <body className="min-h-screen bg-cream-300">
+                <GoogleAnalytics />
                 <AuthProvider>
                     <WakeUpProvider>
                         {children}
