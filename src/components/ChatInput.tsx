@@ -16,13 +16,15 @@ import {
     PenTool,
     Lock,
     Mic,
-    BookOpen
+    BookOpen,
+    BarChart2
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
 import TextEnhanceModal from './TextEnhanceModal';
 import DraftModal, { DraftRequest } from './DraftModal';
 import SentenciaModal from './SentenciaModal';
+import JurimetriaModal from './JurimetriaModal';
 import { enhanceText } from '@/lib/api';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
@@ -73,6 +75,7 @@ export default function ChatInput({
     const [showDraftModal, setShowDraftModal] = useState(false);
     const [showSentenciaModal, setShowSentenciaModal] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [showJurimetriaModal, setShowJurimetriaModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ file: File; fileName: string } | null>(null);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -143,6 +146,7 @@ export default function ChatInput({
     const isGenioLocked = isFreeUser && !isAdmin(user?.email);
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
+    const canAccessJurimetria  = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
 
     const geniosList = [
         {
@@ -663,6 +667,17 @@ ${draftRequest.descripcion}`;
                                 guideId="precedentes"
                                 activeClassName="text-[#c9a962] bg-amber-50 hover:bg-amber-100 border border-[#c9a962]/30"
                             />
+                            <ActionButton
+                                icon={BarChart2}
+                                label="Jurimetría"
+                                active={false}
+                                locked={!canAccessJurimetria}
+                                onClick={() => {
+                                    if (!canAccessJurimetria) { setShowUpgradeModal(true); return; }
+                                    setShowJurimetriaModal(true);
+                                }}
+                                guideId="jurimetria"
+                            />
                             {canAccessRedactor && (
                                 <Link
                                     href="/redactor-sentencia"
@@ -963,6 +978,12 @@ ${draftRequest.descripcion}`;
                 }}
                 onSubmit={handleSentenciaSubmit}
                 estado={estado}
+            />
+
+            <JurimetriaModal
+                isOpen={showJurimetriaModal}
+                onClose={() => setShowJurimetriaModal(false)}
+                userEmail={user?.email ?? ''}
             />
 
             {/* Modal de upgrade — aparece al tocar funciones Pro bloqueadas */}
