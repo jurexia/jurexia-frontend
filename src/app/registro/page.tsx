@@ -62,6 +62,12 @@ export default function RegistroPage() {
                     'value': 1.0,
                     'currency': 'MXN'
                 });
+                // Second conversion action for promotional credit activation
+                (window as any).gtag('event', 'conversion', {
+                    'send_to': 'AW-18019843576/TidqCP3ZhaMaEMj0xOQo',
+                    'value': 1.0,
+                    'currency': 'MXN'
+                });
             }
 
             setConfirmedEmail(email);
