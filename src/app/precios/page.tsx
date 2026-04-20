@@ -121,6 +121,11 @@ export default function PreciosPage() {
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">4 circuitos activos, creciendo</span></span>,
+                                    <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-accent-gold text-base leading-none">✦</span>
+                                        <span className="text-accent-gold">Jurimetría — Predicción de sentido</span>
+                                        <span className="ml-auto text-[9px] bg-accent-gold text-charcoal-900 px-1.5 py-0.5 rounded-full font-bold shrink-0">NUEVO</span>
+                                    </span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Consulta personalizada con equipo legal de Iurexia (vía correo)",
                                     <span className="text-amber-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
@@ -191,13 +196,12 @@ export default function PreciosPage() {
                                     </ul>
                                 </div>
                                 <div className="shrink-0">
-                                    <Link
-                                        href="/secretarios"
-                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent-gold text-charcoal-900 font-bold text-sm hover:bg-accent-gold/90 transition-all shadow-lg shadow-accent-gold/20 whitespace-nowrap"
+                                    <button
+                                        disabled
+                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/8 text-white/35 font-bold text-sm cursor-not-allowed border border-white/10 whitespace-nowrap"
                                     >
-                                        Ver Plan Ultra
-                                        <ArrowRight className="w-4 h-4" />
-                                    </Link>
+                                        Próximamente
+                                    </button>
                                 </div>
                             </div>
                         </div>

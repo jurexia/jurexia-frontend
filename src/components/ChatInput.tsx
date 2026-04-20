@@ -672,6 +672,7 @@ ${draftRequest.descripcion}`;
                                 label="Jurimetría"
                                 active={false}
                                 locked={!canAccessJurimetria}
+                                lockedTitle="Jurimetría — función exclusiva planes Platinum"
                                 onClick={() => {
                                     if (!canAccessJurimetria) { setShowUpgradeModal(true); return; }
                                     setShowJurimetriaModal(true);
@@ -1037,6 +1038,7 @@ function ActionButton({
     onClick,
     guideId,
     activeClassName = 'text-blue-600 bg-blue-50 hover:bg-blue-100',
+    lockedTitle,
 }: {
     icon: React.ElementType;
     label: string;
@@ -1045,12 +1047,13 @@ function ActionButton({
     onClick?: () => void;
     guideId?: string;
     activeClassName?: string;
+    lockedTitle?: string;
 }) {
     return (
         <button
             onClick={onClick}
             data-guide={guideId}
-            title={locked ? `${label} — exclusivo Plan Pro` : label}
+            title={locked ? (lockedTitle ?? `${label} — exclusivo Plan Pro`) : label}
             className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-sm font-medium
                   transition-colors duration-200
                   ${locked

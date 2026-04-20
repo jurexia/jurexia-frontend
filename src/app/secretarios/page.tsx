@@ -1,41 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
 import {
     Scale, ArrowRight, Check, Shield, FileText, Brain,
     Clock, Gavel, BookOpen, Sparkles, ChevronDown,
     Building2, Users, Zap, Award, Lock, TrendingUp
 } from 'lucide-react';
-import { useAuth } from '@/lib/useAuth';
-import { redirectToCheckout } from '@/lib/stripe-client';
 import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
 export default function SecretariosPage() {
-    const [loading, setLoading] = useState(false);
-    const { user } = useAuth();
-
-    const handleSubscribe = async () => {
-        const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ULTRA_SECRETARIOS;
-        if (!priceId) {
-            alert('El plan estará disponible próximamente. Contáctanos para más información.');
-            return;
-        }
-        if (!user?.email) {
-            window.location.href = '/login?redirect=/secretarios';
-            return;
-        }
-        setLoading(true);
-        try {
-            await redirectToCheckout(priceId, user.email);
-        } catch (error: any) {
-            alert(`Error al procesar: ${error?.message || 'Intenta de nuevo.'}`);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <main className="min-h-screen bg-[#0a0f1a] text-white overflow-hidden">
@@ -76,11 +52,10 @@ export default function SecretariosPage() {
                             <AnimateOnScroll delay={0.3}>
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <button
-                                        onClick={handleSubscribe}
-                                        disabled={loading}
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#c9a962] text-[#0a0f1a] font-bold rounded-full hover:bg-[#b8935a] transition-all shadow-lg shadow-[#c9a962]/20 disabled:opacity-70"
+                                        disabled
+                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/8 text-white/35 font-bold rounded-full cursor-not-allowed border border-white/10"
                                     >
-                                        {loading ? 'Procesando...' : 'Suscribirme — $999/mes'}
+                                        Próximamente
                                     </button>
                                     <a
                                         href="#features"
