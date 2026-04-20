@@ -244,7 +244,7 @@ export default function PlataformaPage() {
             {/* Feature 6: Jurimetría */}
             <FeatureSection
                 id="jurimetria"
-                badge="✦ EXCLUSIVO ULTRA SECRETARIOS"
+                badge="✦ EXCLUSIVO PLATINUM"
                 title={<>Jurimetría <span className="text-accent-gold">Judicial</span></>}
                 subtitle="Predice el sentido de tu amparo antes de presentarlo"
                 description="Herramienta de inteligencia predictiva exclusiva para secretarios de tribunal. Sube el acto reclamado y los conceptos de violación en PDF — la IA los analiza, los compara con 111,000+ precedentes reales y genera una predicción estadística fundamentada argumento por argumento."
@@ -253,7 +253,7 @@ export default function PlataformaPage() {
                     "Análisis argumento por argumento con precedentes aplicables de cada concepto",
                     "Estadísticas históricas por circuito, tribunal y magistrado",
                     "Adjunta PDFs del acto reclamado y agravios para análisis avanzado en modo Secretario",
-                    "Exclusivo para el plan Ultra Secretarios"
+                    "Exclusivo para el plan Platinum"
                 ]}
                 visual={<JurimetriaVisual />}
                 bgColor="bg-white"
@@ -746,7 +746,7 @@ function JurimetriaVisual() {
                     <TrendingUp className="w-4 h-4 text-[#c9a962]" />
                     <span className="text-white/60 text-xs font-medium uppercase tracking-wider">Jurimetría Predictiva</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-full font-bold">ULTRA</span>
+                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-full font-bold">PLATINUM</span>
             </div>
 
             <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 mb-4">

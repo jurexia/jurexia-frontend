@@ -379,7 +379,7 @@ export default function JurimetriaModal({ isOpen, onClose, userEmail }: Jurimetr
                             </button>
 
                             <p className="text-center text-[10px] text-gray-400">
-                                Análisis global sobre {circuito ? `${circuito}° Circuito` : 'todos los circuitos disponibles'} · Solo ultra secretarios
+                                Análisis global sobre {circuito ? `${circuito}° Circuito` : 'todos los circuitos disponibles'} · Exclusivo plan Platinum
                             </p>
                         </div>
                     ) : (

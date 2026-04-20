@@ -146,7 +146,7 @@ export default function ChatInput({
     const isGenioLocked = isFreeUser && !isAdmin(user?.email);
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
-    const canAccessJurimetria  = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
+    const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
 
     const geniosList = [
         {

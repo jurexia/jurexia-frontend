@@ -179,9 +179,7 @@ export default function PreciosPage() {
                                     </h3>
                                     <ul className="space-y-2 mb-4">
                                         {[
-                                            { label: 'Precedentes Judiciales', detail: '111,000+ sentencias reales — 4 circuitos activos, creciendo cada mes' },
-                                            { label: 'Jurimetría', detail: 'Sube el acto reclamado y los agravios — Iurexia predice el sentido probable con base en precedentes reales' },
-                                            { label: 'Redactor de Sentencias', detail: 'Borradores con estudio de fondo, jurisprudencia inyectada y estructura TCC profesional' },
+                                            { label: 'Redactor de Sentencias PJF', detail: 'Borradores con estudio de fondo, jurisprudencia inyectada y estructura TCC profesional' },
                                         ].map((item, i) => (
                                             <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
                                                 <span className="w-4 h-4 rounded-full bg-accent-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -253,9 +251,9 @@ export default function PreciosPage() {
                                     <ComparisonRow feature="Soporte prioritario" free="—" basico="Estándar" pro="✓" platinum="VIP" />
                                     <ComparisonRow feature="Consulta legal estratégica (vía correo)" free="—" basico="—" pro="—" platinum="✓" />
                                     <ComparisonRow
-                                        feature={<span className="flex items-center gap-1.5 font-semibold text-[#c9a962]">Jurimetría — Predicción de sentido <span className="text-[9px] bg-[#c9a962] text-white px-1.5 py-0.5 rounded-full font-bold">ULTRA</span></span>}
+                                        feature={<span className="flex items-center gap-1.5 font-semibold text-accent-gold">Jurimetría — Predicción de sentido <span className="text-[9px] bg-accent-brown text-white px-1.5 py-0.5 rounded-full font-bold">NUEVO</span></span>}
                                         free="—" basico="—" pro="—"
-                                        platinum={<Link href="/secretarios" className="text-[#c9a962] font-bold hover:underline text-xs whitespace-nowrap">Ver plan Ultra →</Link>}
+                                        platinum="✓"
                                         goldFeature={true}
                                     />
                                     <ComparisonRow
@@ -285,7 +283,7 @@ export default function PreciosPage() {
                     <div className="space-y-4">
                         {[
                             { question: '¿Qué son los Precedentes Judiciales y en qué planes están disponibles?', answer: 'Precedentes es una función de búsqueda semántica directa sobre sentencias reales de Tribunales Colegiados de Circuito. Actualmente cubre más de 111,000 sentencias de 4 circuitos (1° Ciudad de México, 2° Estado de México, 4° Nuevo León y 22° Querétaro). El corpus crece continuamente: cada mes se ingresan nuevas sentencias y se incorporan más circuitos. Está disponible en los planes Pro y Platinum.' },
-                            { question: '¿Qué es Jurimetría y por qué es exclusiva del plan Ultra?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Es exclusiva del plan Ultra Secretarios por el alto costo de procesamiento y porque está diseñada específicamente para la práctica cotidiana del secretario del PJF.' },
+                            { question: '¿Qué es Jurimetría y en qué plan está disponible?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Está disponible exclusivamente en el plan Platinum.' },
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
                             { question: '¿Qué son los Genios Especializados y por qué son exclusivos PRO?', answer: 'Los Genios son una capa de inteligencia artificial avanzada especializada en materias específicas (Amparo, CIDH, Civil, Penal, etc.). Se activan con un clic dentro del chat (pudiendo usar hasta 2 al mismo tiempo) y utilizan un modelo de IA más potente para generar razonamientos jurídicos interdisciplinarios con fundamento verificado. Debido al alto costo computacional de este procesamiento complejo simultáneo, los Genios están disponibles exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },
                             { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro más 560 consultas al mes y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan un volumen alto de consultas. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal.' },
