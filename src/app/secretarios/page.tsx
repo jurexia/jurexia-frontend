@@ -61,14 +61,14 @@ export default function SecretariosPage() {
 
                             <AnimateOnScroll delay={0.1}>
                                 <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-medium leading-tight mb-6">
-                                    Redacción inteligente de{' '}
-                                    <span className="text-[#c9a962]">sentencias federales</span>
+                                    El arsenal legal del<br />
+                                    <span className="text-[#c9a962]">secretario moderno</span>
                                 </h1>
                             </AnimateOnScroll>
 
                             <AnimateOnScroll delay={0.2}>
                                 <p className="text-lg text-gray-400 leading-relaxed mb-8 max-w-xl">
-                                    Un borrador de sentencia <strong className="text-white">fundado y motivado</strong> con normativa real extraída de nuestra base de datos verificada.
+                                    Redacción de sentencias con fundamento real, búsqueda en <strong className="text-white">111,000+ precedentes</strong> de Tribunales Colegiados y la primera herramienta de <strong className="text-[#c9a962]">jurimetría judicial</strong> en México.
                                     Tú decides, tú corriges, tú firmas — nosotros aceleramos tu trabajo.
                                 </p>
                             </AnimateOnScroll>
@@ -76,10 +76,11 @@ export default function SecretariosPage() {
                             <AnimateOnScroll delay={0.3}>
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <button
-                                        disabled={true}
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gray-700 text-gray-400 font-bold rounded-full cursor-not-allowed opacity-80"
+                                        onClick={handleSubscribe}
+                                        disabled={loading}
+                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#c9a962] text-[#0a0f1a] font-bold rounded-full hover:bg-[#b8935a] transition-all shadow-lg shadow-[#c9a962]/20 disabled:opacity-70"
                                     >
-                                        Próximamente
+                                        {loading ? 'Procesando...' : 'Suscribirme — $999/mes'}
                                     </button>
                                     <a
                                         href="#features"
@@ -106,6 +107,11 @@ export default function SecretariosPage() {
                                     <div className="text-center">
                                         <div className="text-2xl font-bold text-[#c9a962]">20</div>
                                         <div className="text-xs text-gray-500">sentencias/mes</div>
+                                    </div>
+                                    <div className="w-px h-10 bg-white/10" />
+                                    <div className="text-center">
+                                        <div className="text-2xl font-bold text-[#c9a962]">111K+</div>
+                                        <div className="text-xs text-gray-500">precedentes</div>
                                     </div>
                                     <div className="w-px h-10 bg-white/10" />
                                     <div className="text-center">
@@ -229,6 +235,8 @@ export default function SecretariosPage() {
                                         'Jurisprudencia relevante inyectada automáticamente',
                                         'Estructura profesional: resultandos, considerandos, estudio de fondo',
                                         'Cada agravio analizado individualmente con fundamento',
+                                        '111,000+ precedentes reales consultables en segundos',
+                                        'Jurimetría: predice el sentido antes de redactar',
                                         'Más tiempo para tu criterio, menos para la mecánica',
                                     ].map((item, i) => (
                                         <li key={i} className="flex items-start gap-3 text-gray-300">
@@ -304,9 +312,26 @@ export default function SecretariosPage() {
                                 title: 'Instrucciones del Secretario',
                                 desc: 'Escribe tus instrucciones: sentido del fallo, calificación de agravios, normativa preferente. La IA sigue tus indicaciones como un auxiliar.'
                             },
+                            {
+                                icon: <BookOpen className="w-6 h-6" />,
+                                title: 'Precedentes Judiciales',
+                                desc: 'Búsqueda semántica en 111,000+ sentencias reales de Tribunales Colegiados. 4 circuitos activos hoy — el corpus crece cada mes con nuevas sentencias y nuevos circuitos.',
+                                badge: 'NUEVO'
+                            },
+                            {
+                                icon: <TrendingUp className="w-6 h-6" />,
+                                title: 'Jurimetría',
+                                desc: 'Sube el acto reclamado y los agravios: la IA predice el sentido probable (Concede / Niega / Sobresee) con estadísticas reales de precedentes, análisis argumento por argumento y narrativa predictiva.',
+                                badge: 'NUEVO'
+                            },
                         ].map((feature, i) => (
                             <AnimateOnScroll key={i} delay={i * 0.08}>
-                                <div className="group p-6 rounded-2xl bg-[#0a0f1a] border border-white/5 hover:border-[#c9a962]/30 transition-all duration-300 hover:-translate-y-1">
+                                <div className="group relative p-6 rounded-2xl bg-[#0a0f1a] border border-white/5 hover:border-[#c9a962]/30 transition-all duration-300 hover:-translate-y-1">
+                                    {'badge' in feature && feature.badge && (
+                                        <span className="absolute -top-2.5 -right-2.5 px-2 py-0.5 bg-[#c9a962] text-[#0a0f1a] text-[9px] font-bold rounded-full shadow-lg">
+                                            {feature.badge}
+                                        </span>
+                                    )}
                                     <div className="w-12 h-12 rounded-xl bg-[#c9a962]/10 flex items-center justify-center text-[#c9a962] mb-4 group-hover:bg-[#c9a962]/20 transition-colors">
                                         {feature.icon}
                                     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare, Brain, Paperclip } from 'lucide-react';
+import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare, Brain, Paperclip, TrendingUp } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { useEffect, useRef, useState } from 'react';
 
@@ -219,6 +219,43 @@ export default function PlataformaPage() {
                     "Exclusivo para usuarios Pro y Platinum — no disponible en plan gratuito"
                 ]}
                 visual={<GenioAmparoVisual />}
+                bgColor="bg-white"
+                reverse
+            />
+
+            {/* Feature 5: Precedentes Judiciales */}
+            <FeatureSection
+                id="precedentes"
+                badge="CORPUS JUDICIAL"
+                title={<>Precedentes <span className="text-accent-gold">Judiciales</span></>}
+                subtitle="111,000+ sentencias reales de Tribunales Colegiados"
+                description="El primer corpus de precedentes judiciales indexado semánticamente para el derecho mexicano. Encuentra sentencias reales por materia, acto reclamado, tribunal y sentido del fallo — con comprensión profunda del razonamiento judicial, no solo palabras clave."
+                features={[
+                    "111,000+ holdings de sentencias reales de Tribunales Colegiados",
+                    "4 circuitos activos hoy: 1, 2, 4 y 22 — el corpus crece cada mes con nuevas sentencias",
+                    "Búsqueda semántica por materia, acto reclamado, tribunal y sentido del resolutivo",
+                    "Acceso a PDFs de las sentencias originales para consulta directa",
+                    "Disponible en planes Pro y Platinum"
+                ]}
+                visual={<PrecedentesVisual />}
+                bgColor="bg-cream-300"
+            />
+
+            {/* Feature 6: Jurimetría */}
+            <FeatureSection
+                id="jurimetria"
+                badge="✦ EXCLUSIVO ULTRA SECRETARIOS"
+                title={<>Jurimetría <span className="text-accent-gold">Judicial</span></>}
+                subtitle="Predice el sentido de tu amparo antes de presentarlo"
+                description="Herramienta de inteligencia predictiva exclusiva para secretarios de tribunal. Sube el acto reclamado y los conceptos de violación en PDF — la IA los analiza, los compara con 111,000+ precedentes reales y genera una predicción estadística fundamentada argumento por argumento."
+                features={[
+                    "Predicción del sentido probable: Concede, Niega o Sobresee con porcentajes reales",
+                    "Análisis argumento por argumento con precedentes aplicables de cada concepto",
+                    "Estadísticas históricas por circuito, tribunal y magistrado",
+                    "Adjunta PDFs del acto reclamado y agravios para análisis avanzado en modo Secretario",
+                    "Exclusivo para el plan Ultra Secretarios"
+                ]}
+                visual={<JurimetriaVisual />}
                 bgColor="bg-white"
                 reverse
             />
@@ -649,6 +686,93 @@ function DataSourceCard({
             </div>
             <h3 className="text-xl font-medium text-white mb-2">{title}</h3>
             <p className="text-gray-400">{description}</p>
+        </div>
+    );
+}
+
+function PrecedentesVisual() {
+    const results = [
+        { circuito: '22', tribunal: '3TCC', sentido: 'NIEGA', match: 94, tema: 'Amparo directo — Litis cerrada' },
+        { circuito: '1', tribunal: '7TCC', sentido: 'CONCEDE', match: 91, tema: 'Falta de fundamentación y motivación' },
+        { circuito: '4', tribunal: '2TCC', sentido: 'SOBRESEE', match: 87, tema: 'Falta de interés jurídico' },
+    ] as const;
+
+    const sentidoStyle: Record<string, string> = {
+        CONCEDE: 'bg-green-100 text-green-700',
+        NIEGA: 'bg-red-100 text-red-700',
+        SOBRESEE: 'bg-amber-100 text-amber-700',
+    };
+
+    return (
+        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl p-8 shadow-lg">
+            <div className="bg-white rounded-2xl p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                    <BookOpen className="w-6 h-6 text-slate-600" />
+                    <span className="font-medium text-charcoal-900">Precedentes</span>
+                    <span className="ml-auto text-xs text-charcoal-500">111,248 sentencias</span>
+                </div>
+
+                <div className="space-y-3">
+                    {results.map((item, i) => (
+                        <div key={i} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-mono text-charcoal-500">Circ. {item.circuito} · {item.tribunal}</span>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${sentidoStyle[item.sentido]}`}>
+                                        {item.sentido}
+                                    </span>
+                                </div>
+                                <span className="text-sm font-semibold text-charcoal-900">{item.match}%</span>
+                            </div>
+                            <p className="text-xs text-charcoal-600">{item.tema}</p>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
+                    <span>4 circuitos activos</span>
+                    <span className="text-accent-brown font-medium">corpus creciente →</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function JurimetriaVisual() {
+    return (
+        <div className="bg-gradient-to-br from-[#0f1626] to-[#1a2540] rounded-3xl p-8 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-[#c9a962]" />
+                    <span className="text-white/60 text-xs font-medium uppercase tracking-wider">Jurimetría Predictiva</span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-full font-bold">ULTRA</span>
+            </div>
+
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 mb-4">
+                <p className="text-red-300 text-xs font-medium mb-1">Sentido probable</p>
+                <p className="text-3xl font-serif font-medium text-red-400">NIEGA</p>
+                <p className="text-xs text-red-300/70 mt-1">Basado en 6,379 precedentes análogos</p>
+            </div>
+
+            <div className="space-y-3 mb-4">
+                {[
+                    { label: 'NIEGA', pct: 71, color: 'bg-red-500' },
+                    { label: 'CONCEDE', pct: 19, color: 'bg-green-500' },
+                    { label: 'SOBRESEE', pct: 10, color: 'bg-amber-500' },
+                ].map(bar => (
+                    <div key={bar.label}>
+                        <div className="flex justify-between text-xs text-white/60 mb-1">
+                            <span>{bar.label}</span><span>{bar.pct}%</span>
+                        </div>
+                        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div className={`h-full ${bar.color} rounded-full`} style={{ width: `${bar.pct}%` }} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <p className="text-xs text-white/40 text-center">n = 6,379 · confianza alta</p>
         </div>
     );
 }

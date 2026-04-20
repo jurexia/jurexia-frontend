@@ -94,7 +94,7 @@ export default function PreciosPage() {
                                     "140 consultas/mes",
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
-                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito <span className="text-[10px] font-bold bg-accent-gold/20 text-accent-gold border border-accent-gold/30 px-1.5 py-0.5 rounded-full ml-1">en desarrollo</span></span>,
+                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">4 circuitos activos, creciendo</span></span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Búsqueda con IA verificada en constante actualización",
                                     "Filtros por entidad federativa + marco federal",
@@ -120,7 +120,7 @@ export default function PreciosPage() {
                                     "560 consultas/mes — ideal para despachos",
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
-                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito <span className="text-[10px] font-bold bg-accent-gold/20 text-accent-gold border border-accent-gold/30 px-1.5 py-0.5 rounded-full ml-1">en desarrollo</span></span>,
+                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">4 circuitos activos, creciendo</span></span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Consulta personalizada con equipo legal de Iurexia (vía correo)",
                                     <span className="text-amber-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
@@ -163,22 +163,46 @@ export default function PreciosPage() {
                 </div>
             </section>
 
-            {/* Secretarios PJF CTA */}
-            <section className="py-6 px-4">
-                <div className="max-w-4xl mx-auto">
-                    <AnimateOnScroll delay={0.1}>
-                        <Link
-                            href="/secretarios"
-                            className="group block text-center py-6 px-8 rounded-2xl bg-charcoal-900 hover:bg-charcoal-800 transition-all duration-300 border border-accent-gold/20 hover:border-accent-gold/40 hover:shadow-lg hover:shadow-accent-gold/5"
-                        >
-                            <p className="text-white font-serif text-lg md:text-xl">
-                                ¿Eres Secretario del <span className="text-accent-gold font-medium">Poder Judicial de la Federación</span>?
-                            </p>
-                            <p className="text-gray-400 text-sm mt-1 flex items-center justify-center gap-2">
-                                Descubre los servicios especiales diseñados para ti
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-accent-gold" />
-                            </p>
-                        </Link>
+            {/* Ultra Secretarios — Jurimetría + Redactor */}
+            <section className="py-10 px-4">
+                <div className="max-w-4xl mx-auto space-y-4">
+                    <AnimateOnScroll delay={0.05}>
+                        <div className="rounded-2xl bg-gradient-to-br from-[#0d1525] to-[#1a1a2e] border border-accent-gold/30 p-8">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div>
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-gold/15 border border-accent-gold/30 mb-4">
+                                        <span className="text-[10px] font-bold text-accent-gold tracking-widest">PLAN ULTRA SECRETARIOS · $999 MXN/mes</span>
+                                    </div>
+                                    <h3 className="font-serif text-xl md:text-2xl font-medium text-white mb-3">
+                                        Herramientas exclusivas para el<br />
+                                        <span className="text-accent-gold">Poder Judicial de la Federación</span>
+                                    </h3>
+                                    <ul className="space-y-2 mb-4">
+                                        {[
+                                            { label: 'Precedentes Judiciales', detail: '111,000+ sentencias reales — 4 circuitos activos, creciendo cada mes' },
+                                            { label: 'Jurimetría', detail: 'Sube el acto reclamado y los agravios — Iurexia predice el sentido probable con base en precedentes reales' },
+                                            { label: 'Redactor de Sentencias', detail: 'Borradores con estudio de fondo, jurisprudencia inyectada y estructura TCC profesional' },
+                                        ].map((item, i) => (
+                                            <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
+                                                <span className="w-4 h-4 rounded-full bg-accent-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                    <Check className="w-2.5 h-2.5 text-accent-gold" />
+                                                </span>
+                                                <span><strong className="text-white">{item.label}</strong> — {item.detail}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="shrink-0">
+                                    <Link
+                                        href="/secretarios"
+                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent-gold text-charcoal-900 font-bold text-sm hover:bg-accent-gold/90 transition-all shadow-lg shadow-accent-gold/20 whitespace-nowrap"
+                                    >
+                                        Ver Plan Ultra
+                                        <ArrowRight className="w-4 h-4" />
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
                     </AnimateOnScroll>
                 </div>
             </section>
@@ -221,13 +245,25 @@ export default function PreciosPage() {
                                     <ComparisonRow
                                         feature="Precedentes Judiciales por Circuito"
                                         free="—" basico="—"
-                                        pro={<span className="inline-flex items-center gap-1">✓ <span className="text-[9px] font-bold bg-accent-gold/15 text-accent-gold border border-accent-gold/30 px-1 py-0.5 rounded-full">en desa.</span></span>}
-                                        platinum={<span className="inline-flex items-center gap-1">✓ <span className="text-[9px] font-bold bg-accent-gold/15 text-accent-gold border border-accent-gold/30 px-1 py-0.5 rounded-full">en desa.</span></span>}
+                                        pro={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">4 circuitos</span></span>}
+                                        platinum={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">4 circuitos</span></span>}
                                         goldFeature={true}
                                     />
                                     <ComparisonRow feature="Sugerencias con fundamento" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
                                     <ComparisonRow feature="Soporte prioritario" free="—" basico="Estándar" pro="✓" platinum="VIP" />
                                     <ComparisonRow feature="Consulta legal estratégica (vía correo)" free="—" basico="—" pro="—" platinum="✓" />
+                                    <ComparisonRow
+                                        feature={<span className="flex items-center gap-1.5 font-semibold text-[#c9a962]">Jurimetría — Predicción de sentido <span className="text-[9px] bg-[#c9a962] text-white px-1.5 py-0.5 rounded-full font-bold">ULTRA</span></span>}
+                                        free="—" basico="—" pro="—"
+                                        platinum={<Link href="/secretarios" className="text-[#c9a962] font-bold hover:underline text-xs whitespace-nowrap">Ver plan Ultra →</Link>}
+                                        goldFeature={true}
+                                    />
+                                    <ComparisonRow
+                                        feature={<span className="flex items-center gap-1.5 font-semibold text-[#c9a962]">Redactor de Sentencias PJF <span className="text-[9px] bg-[#c9a962] text-white px-1.5 py-0.5 rounded-full font-bold">ULTRA</span></span>}
+                                        free="—" basico="—" pro="—"
+                                        platinum={<Link href="/secretarios" className="text-[#c9a962] font-bold hover:underline text-xs whitespace-nowrap">Ver plan Ultra →</Link>}
+                                        goldFeature={true}
+                                    />
                                 </tbody>
                             </table>
                         </div>
@@ -248,6 +284,8 @@ export default function PreciosPage() {
 
                     <div className="space-y-4">
                         {[
+                            { question: '¿Qué son los Precedentes Judiciales y en qué planes están disponibles?', answer: 'Precedentes es una función de búsqueda semántica directa sobre sentencias reales de Tribunales Colegiados de Circuito. Actualmente cubre más de 111,000 sentencias de 4 circuitos (1° Ciudad de México, 2° Estado de México, 4° Nuevo León y 22° Querétaro). El corpus crece continuamente: cada mes se ingresan nuevas sentencias y se incorporan más circuitos. Está disponible en los planes Pro y Platinum.' },
+                            { question: '¿Qué es Jurimetría y por qué es exclusiva del plan Ultra?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Es exclusiva del plan Ultra Secretarios por el alto costo de procesamiento y porque está diseñada específicamente para la práctica cotidiana del secretario del PJF.' },
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
                             { question: '¿Qué son los Genios Especializados y por qué son exclusivos PRO?', answer: 'Los Genios son una capa de inteligencia artificial avanzada especializada en materias específicas (Amparo, CIDH, Civil, Penal, etc.). Se activan con un clic dentro del chat (pudiendo usar hasta 2 al mismo tiempo) y utilizan un modelo de IA más potente para generar razonamientos jurídicos interdisciplinarios con fundamento verificado. Debido al alto costo computacional de este procesamiento complejo simultáneo, los Genios están disponibles exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },
                             { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro más 560 consultas al mes y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan un volumen alto de consultas. Un abogado de nuestro equipo te contestará a la brevedad para orientarte sobre tu estrategia legal.' },
@@ -566,7 +604,7 @@ function PricingCard({
     );
 }
 
-function ComparisonRow({ feature, free, basico, pro, platinum, goldFeature = false }: { feature: string; free: React.ReactNode; basico: React.ReactNode; pro: React.ReactNode; platinum: React.ReactNode; goldFeature?: boolean }) {
+function ComparisonRow({ feature, free, basico, pro, platinum, goldFeature = false }: { feature: React.ReactNode; free: React.ReactNode; basico: React.ReactNode; pro: React.ReactNode; platinum: React.ReactNode; goldFeature?: boolean }) {
     return (
         <tr className="border-b border-gray-100">
             <td className={`py-4 px-3 ${goldFeature ? 'text-accent-gold font-medium' : 'text-charcoal-700'}`}>{feature}</td>
