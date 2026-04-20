@@ -44,8 +44,8 @@ export default function SecretariosPage() {
 
                             <AnimateOnScroll delay={0.2}>
                                 <p className="text-lg text-gray-400 leading-relaxed mb-8 max-w-xl">
-                                    Redacción de sentencias con fundamento real, búsqueda en <strong className="text-white">111,000+ precedentes</strong> de Tribunales Colegiados y la primera herramienta de <strong className="text-[#c9a962]">jurimetría judicial</strong> en México.
-                                    Tú decides, tú corriges, tú firmas — nosotros aceleramos tu trabajo.
+                                    Herramientas de IA avanzada diseñadas para <strong className="text-white">ampliar la capacidad intelectual del secretario</strong>: proyección estadística con jurimetría, búsqueda en 111,000+ precedentes reales y redacción de proyectos de sentencia con modelos de razonamiento profundo.
+                                    Todo bajo tu <strong className="text-[#c9a962]">gestión estricta y criterio en cada paso</strong> — tú defines el rumbo, tú validas, tú firmas.
                                 </p>
                             </AnimateOnScroll>
 
@@ -167,7 +167,7 @@ export default function SecretariosPage() {
                             </h2>
                             <p className="text-gray-400 max-w-2xl mx-auto text-lg">
                                 Revisar actas, identificar agravios, buscar jurisprudencia aplicable, fundar y motivar cada concepto de violación...
-                                Iurexia te entrega un borrador estructurado para que te concentres en lo que importa: <strong className="text-white">tu criterio jurídico</strong>.
+                                Iurexia genera el andamiaje para que exprimias tu capacidad intelectual en lo que importa: <strong className="text-white">tu criterio jurídico y la calidad del fallo</strong>.
                             </p>
                         </div>
                     </AnimateOnScroll>
@@ -206,13 +206,13 @@ export default function SecretariosPage() {
                                 </div>
                                 <ul className="space-y-4 mt-4">
                                     {[
-                                        'Borrador con fundamento legal verificado en minutos',
-                                        'Jurisprudencia relevante inyectada automáticamente',
-                                        'Estructura profesional: resultandos, considerandos, estudio de fondo',
-                                        'Cada agravio analizado individualmente con fundamento',
-                                        '111,000+ precedentes reales consultables en segundos',
-                                        'Jurimetría: predice el sentido antes de redactar',
-                                        'Más tiempo para tu criterio, menos para la mecánica',
+                                        'Proyecto de sentencia con fundamento verificado — tú defines el criterio',
+                                        'Jurisprudencia relevante sugerida para tu validación',
+                                        'Estructura generada por IA: resultandos, considerandos, estudio de fondo — tú la perfeccionas',
+                                        'Cada agravio analizado individualmente — el secretario valida y ajusta cada uno',
+                                        '111,000+ precedentes reales para fortalecer tu argumentación',
+                                        'Jurimetría: proyección estadística del sentido para orientar tu estrategia',
+                                        'Más tiempo para razonar, menos para la mecánica',
                                     ].map((item, i) => (
                                         <li key={i} className="flex items-start gap-3 text-gray-300">
                                             <span className="w-5 h-5 rounded-full bg-[#c9a962]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -255,7 +255,7 @@ export default function SecretariosPage() {
                             {
                                 icon: <Brain className="w-6 h-6" />,
                                 title: 'IA con Razonamiento Legal',
-                                desc: 'Modelo de inteligencia artificial con modo de razonamiento avanzado que analiza la estructura lógica de cada agravio antes de redactar.'
+                                desc: 'Modelo de razonamiento avanzado que analiza la estructura lógica de cada agravio y propone fundamentos — siempre bajo las instrucciones del secretario. La IA propone; el secretario decide.'
                             },
                             {
                                 icon: <Gavel className="w-6 h-6" />,
@@ -270,7 +270,7 @@ export default function SecretariosPage() {
                             {
                                 icon: <Clock className="w-6 h-6" />,
                                 title: 'De Horas a Minutos',
-                                desc: 'Lo que antes tardaba una jornada completa, ahora se obtiene en minutos. Tú revisas, ajustas y aplicas tu criterio — nosotros hacemos la mecánica.'
+                                desc: 'La mecánica —buscar, estructurar, citar— en minutos. El tiempo liberado lo inviertes en lo que ninguna IA puede hacer: el razonamiento jurídico profundo y la calidad del fallo.'
                             },
                             {
                                 icon: <Shield className="w-6 h-6" />,
@@ -284,8 +284,8 @@ export default function SecretariosPage() {
                             },
                             {
                                 icon: <Sparkles className="w-6 h-6" />,
-                                title: 'Instrucciones del Secretario',
-                                desc: 'Escribe tus instrucciones: sentido del fallo, calificación de agravios, normativa preferente. La IA sigue tus indicaciones como un auxiliar.'
+                                title: 'El Secretario dirige cada paso',
+                                desc: 'Define el sentido del fallo, califica cada agravio, señala la normativa preferente. La IA actúa como auxiliar técnico bajo tu mando — no como tomador de decisiones.'
                             },
                             {
                                 icon: <BookOpen className="w-6 h-6" />,
@@ -333,10 +333,10 @@ export default function SecretariosPage() {
 
                     <div className="grid md:grid-cols-4 gap-8">
                         {[
-                            { step: '01', title: 'Sube el expediente', desc: 'Carga los archivos PDF del toca o expediente del asunto.' },
-                            { step: '02', title: 'Dicta instrucciones', desc: 'Indica el sentido del fallo, califica los agravios, da tu directriz jurídica.' },
-                            { step: '03', title: 'La IA redacta', desc: 'Nuestro motor genera el borrador con normativa y jurisprudencia real.' },
-                            { step: '04', title: 'Tú revisas y firmas', desc: 'Descarga el DOCX, ajusta lo que necesites y preséntalo al ponente.' },
+                            { step: '01', title: 'Sube el expediente', desc: 'Carga los archivos PDF del toca o expediente. Los documentos se procesan cifrados y se eliminan automáticamente — nunca se almacenan.' },
+                            { step: '02', title: 'Tú defines el criterio', desc: 'Estableces el sentido del fallo, calificas los agravios, señalas la normativa preferente. Cada instrucción es tuya.' },
+                            { step: '03', title: 'La IA proyecta el borrador', desc: 'El motor genera un proyecto de sentencia con normativa y jurisprudencia real, siguiendo estrictamente tus instrucciones.' },
+                            { step: '04', title: 'Tú revisas, enriqueces y firmas', desc: 'El borrador es tu punto de partida. Lo ajustas con tu criterio jurídico, lo perfeccionas y lo presentas al ponente.' },
                         ].map((item, i) => (
                             <AnimateOnScroll key={i} delay={i * 0.1}>
                                 <div className="relative text-center">
@@ -350,6 +350,38 @@ export default function SecretariosPage() {
                             </AnimateOnScroll>
                         ))}
                     </div>
+                </div>
+            </section>
+
+            {/* ═══ RESPONSIBLE USE ═══ */}
+            <section className="py-16 px-4 bg-[#111827]">
+                <div className="max-w-4xl mx-auto">
+                    <AnimateOnScroll>
+                        <div className="relative rounded-2xl border border-[#c9a962]/30 p-8 md:p-12 bg-gradient-to-br from-[#0d1525] to-[#111827]">
+                            <div className="absolute -top-3 left-8 px-4 py-1 bg-[#c9a962]/15 border border-[#c9a962]/30 rounded-full">
+                                <span className="text-[11px] font-bold text-[#c9a962] tracking-widest">USO RESPONSABLE</span>
+                            </div>
+                            <h3 className="font-serif text-2xl md:text-3xl font-medium text-white mb-3 mt-2">
+                                El criterio es tuyo. <span className="text-[#c9a962]">Siempre.</span>
+                            </h3>
+                            <p className="text-gray-400 mb-8 max-w-2xl leading-relaxed">
+                                Iurexia no resuelve asuntos ni sustituye el juicio jurisdiccional. Es una herramienta que amplía la capacidad técnica del secretario — la responsabilidad del fallo permanece íntegramente en el operador jurídico.
+                            </p>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                {[
+                                    { icon: '⚖️', text: 'Tu criterio define el sentido del fallo — la IA lo proyecta, no lo determina' },
+                                    { icon: '✍️', text: 'Tú calificas y validas cada agravio en cada etapa del proceso' },
+                                    { icon: '📋', text: 'El borrador es un punto de partida técnico — tú lo enriqueces con tu razonamiento' },
+                                    { icon: '🔒', text: 'La responsabilidad jurisdiccional es y siempre será del secretario y del magistrado ponente' },
+                                ].map((item, i) => (
+                                    <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                                        <span className="text-lg leading-none mt-0.5 flex-shrink-0">{item.icon}</span>
+                                        <p className="text-sm text-gray-300 leading-relaxed">{item.text}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </AnimateOnScroll>
                 </div>
             </section>
 
@@ -484,13 +516,13 @@ export default function SecretariosPage() {
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.1}>
                         <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">
-                            Haz más con menos esfuerzo
+                            Tu capacidad intelectual,<br />
+                            <span className="text-[#c9a962]">multiplicada</span>
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
                         <p className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto">
-                            Únete a los Secretarios que ya usan Iurexia para optimizar la redacción de sentencias federales.
-                            Tu criterio jurídico, potenciado por inteligencia artificial.
+                            Iurexia no pretende reemplazar el juicio del secretario — lo potencia. Tú defines el criterio, la IA hace la mecánica. El resultado es tuyo.
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.3} direction="scale">
