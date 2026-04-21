@@ -74,7 +74,7 @@ export default function ChatInput({
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
     const [showSentenciaModal, setShowSentenciaModal] = useState(false);
-    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [showUpgradeModal, setShowUpgradeModal] = useState<'pro' | 'platinum' | null>(null);
     const [showJurimetriaModal, setShowJurimetriaModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ file: File; fileName: string } | null>(null);
 
@@ -650,7 +650,7 @@ ${draftRequest.descripcion}`;
                                 label="Sentencia"
                                 active={activeMode === 'sentencia'}
                                 locked={!canAccessSentencia}
-                                onClick={() => canAccessSentencia ? handleModeClick('sentencia') : setShowUpgradeModal(true)}
+                                onClick={() => canAccessSentencia ? handleModeClick('sentencia') : setShowUpgradeModal('pro')}
                                 guideId="sentencia"
                             />
                             <ActionButton
@@ -659,7 +659,7 @@ ${draftRequest.descripcion}`;
                                 active={activeMode === 'precedentes'}
                                 locked={!canAccessPrecedentes}
                                 onClick={() => {
-                                    if (!canAccessPrecedentes) { setShowUpgradeModal(true); return; }
+                                    if (!canAccessPrecedentes) { setShowUpgradeModal('pro'); return; }
                                     const next = activeMode !== 'precedentes';
                                     setActiveMode(next ? 'precedentes' : 'search');
                                     if (!next) { setSelectedCircuit(null); setTribunalFilter(null); }
@@ -674,7 +674,7 @@ ${draftRequest.descripcion}`;
                                 locked={!canAccessJurimetria}
                                 lockedTitle="Jurimetría — función exclusiva planes Platinum"
                                 onClick={() => {
-                                    if (!canAccessJurimetria) { setShowUpgradeModal(true); return; }
+                                    if (!canAccessJurimetria) { setShowUpgradeModal('platinum'); return; }
                                     setShowJurimetriaModal(true);
                                 }}
                                 guideId="jurimetria"
@@ -858,7 +858,7 @@ ${draftRequest.descripcion}`;
                             <button
                                 key={g.id}
                                 onClick={() => {
-                                    if (isGenioLocked && !isPro) { setShowUpgradeModal(true); return; }
+                                    if (isGenioLocked && !isPro) { setShowUpgradeModal('pro'); return; }
                                     if (!setActiveGenios) return;
 
                                     if (activeGenios.includes(g.id)) {
@@ -987,11 +987,11 @@ ${draftRequest.descripcion}`;
                 userEmail={user?.email ?? ''}
             />
 
-            {/* Modal de upgrade — aparece al tocar funciones Pro bloqueadas */}
-            {showUpgradeModal && (
+            {/* Modal de upgrade — aparece al tocar funciones bloqueadas */}
+            {showUpgradeModal !== null && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                    onClick={() => setShowUpgradeModal(false)}
+                    onClick={() => setShowUpgradeModal(null)}
                 >
                     <div
                         className="relative w-full max-w-sm bg-[#0f0f0f] border border-white/10 rounded-2xl shadow-2xl px-7 py-8 text-center animate-in zoom-in-95 fade-in duration-200"
@@ -1002,22 +1002,35 @@ ${draftRequest.descripcion}`;
                         <div className="mx-auto mb-4 w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
                             <Lock className="w-5 h-5 text-[#c9a962]" />
                         </div>
-                        <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
-                            Función exclusiva Pro
-                        </p>
-                        <p className="text-white/80 text-sm leading-relaxed mb-6">
-                            Únete al plan <span className="text-white font-semibold">Pro o superior</span> de Iurexia para utilizar las mejores y más potentes funciones de la plataforma.
-                        </p>
+                        {showUpgradeModal === 'platinum' ? (
+                            <>
+                                <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
+                                    Función exclusiva Platinum
+                                </p>
+                                <p className="text-white/80 text-sm leading-relaxed mb-6">
+                                    Jurimetría está disponible en el plan <span className="text-white font-semibold">Platinum</span> de Iurexia — predicción de sentido basada en el corpus de sentencias del circuito.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
+                                    Función exclusiva Pro
+                                </p>
+                                <p className="text-white/80 text-sm leading-relaxed mb-6">
+                                    Únete al plan <span className="text-white font-semibold">Pro o superior</span> de Iurexia para utilizar las mejores y más potentes funciones de la plataforma.
+                                </p>
+                            </>
+                        )}
                         <div className="flex flex-col gap-2">
                             <a
                                 href="/precios"
                                 className="block w-full py-2.5 rounded-xl text-center text-sm font-bold transition-all hover:scale-[1.02] active:scale-95"
                                 style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
                             >
-                                Ver planes Pro
+                                {showUpgradeModal === 'platinum' ? 'Ver plan Platinum' : 'Ver planes Pro'}
                             </a>
                             <button
-                                onClick={() => setShowUpgradeModal(false)}
+                                onClick={() => setShowUpgradeModal(null)}
                                 className="text-white/30 hover:text-white/60 text-xs transition-colors py-1"
                             >
                                 Cerrar
