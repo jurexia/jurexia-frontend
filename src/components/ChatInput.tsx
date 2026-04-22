@@ -4,6 +4,7 @@ import { useState, useRef, KeyboardEvent, useEffect } from 'react';
 import Link from 'next/link';
 import {
     ArrowRight,
+    Square,
     Paperclip,
     Search,
     Sparkles,
@@ -32,6 +33,7 @@ import { isAdmin } from '@/app/leyesestatales/adminGuard';
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
     onDocumentSubmit?: (file: File, prompt: string, displayMessage: string) => void;
+    onStop?: () => void;
     isLoading?: boolean;
     placeholder?: string;
     estado?: string;
@@ -50,6 +52,7 @@ interface ChatInputProps {
 export default function ChatInput({
     onSubmit,
     onDocumentSubmit,
+    onStop,
     isLoading = false,
     placeholder = "Escribe tu consulta legal o sube tu documento para análisis",
     estado,
@@ -340,7 +343,8 @@ export default function ChatInput({
     };
 
     const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        // Enter inserts a newline — only the send button submits
+        if (e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault();
             handleSubmit();
         }
@@ -583,19 +587,25 @@ ${draftRequest.descripcion}`;
                                 <Paperclip className="w-5 h-5" />
                             </button>
 
-                            {/* Submit Button */}
-                            <button
-                                onClick={handleSubmit}
-                                disabled={!message.trim() || isLoading}
-                                className="btn-submit flex-shrink-0"
-                                aria-label="Enviar mensaje"
-                            >
-                                {isLoading ? (
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
+                            {/* Submit / Stop Button */}
+                            {isLoading ? (
+                                <button
+                                    onMouseDown={(e) => { e.preventDefault(); onStop?.(); }}
+                                    className="btn-submit flex-shrink-0 bg-red-500 hover:bg-red-600"
+                                    aria-label="Detener respuesta"
+                                >
+                                    <Square className="w-4 h-4 fill-white" />
+                                </button>
+                            ) : (
+                                <button
+                                    onMouseDown={(e) => { e.preventDefault(); handleSubmit(); }}
+                                    disabled={!message.trim() && !attachedDocument}
+                                    className="btn-submit flex-shrink-0"
+                                    aria-label="Enviar mensaje"
+                                >
                                     <ArrowRight className="w-5 h-5" />
-                                )}
-                            </button>
+                                </button>
+                            )}
                         </div>
                     </div>
 

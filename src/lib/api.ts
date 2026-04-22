@@ -90,6 +90,7 @@ async function* streamChatInternal(
     fuero?: string,
     genioIds?: string[],
     materia?: string,
+    signal?: AbortSignal,
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);
@@ -107,6 +108,7 @@ async function* streamChatInternal(
     const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers,
+        signal,
         body: JSON.stringify({
             messages,
             estado,
@@ -155,6 +157,7 @@ export async function* streamChat(
     fuero?: string,
     genioIds?: string[],
     materia?: string,
+    signal?: AbortSignal,
 ): AsyncGenerator<string, void, unknown> {
     const maxRetries = 3;
     let attempt = 0;
@@ -162,9 +165,12 @@ export async function* streamChat(
     while (attempt < maxRetries) {
         try {
             // Attempt to stream chat
-            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, materia);
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, materia, signal);
             return; // Success - exit
         } catch (err) {
+            // User-initiated stop — exit silently without retry
+            if ((err as Error)?.name === 'AbortError') throw err;
+
             attempt++;
             console.error(`[API] Attempt ${attempt}/${maxRetries} failed:`, err);
 

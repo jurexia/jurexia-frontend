@@ -192,7 +192,7 @@ export default function ChatPage() {
     }, []);
 
     // Chat Hook
-    const { messages, isLoading, error, sendMessage, clearMessages, setMessages, retryMessage, retryType } = useChat({
+    const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType } = useChat({
         estado: selectedEstado || undefined,
         topK: 30,
         fuero: selectedFuero || undefined,
@@ -689,6 +689,8 @@ export default function ChatPage() {
                                 <ChatInput
                                     onSubmit={handleSendMessage}
                                     onDocumentSubmit={handleDocumentSubmit}
+                                    onStop={stopGeneration}
+                                    isLoading={isLoading}
                                     placeholder="Escribe tu consulta legal..."
                                     estado={selectedEstado}
                                     activeGenios={activeGenios}
@@ -772,6 +774,7 @@ export default function ChatPage() {
                         <ChatInput
                             onSubmit={handleSendMessage}
                             onDocumentSubmit={handleDocumentSubmit}
+                            onStop={stopGeneration}
                             isLoading={isLoading}
                             estado={selectedEstado}
                             activeGenios={activeGenios}

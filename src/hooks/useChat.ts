@@ -22,6 +22,7 @@ interface UseChatReturn {
     isLoading: boolean;
     error: string | null;
     sendMessage: (content: string, enableReasoning?: boolean) => Promise<void>;
+    stopGeneration: () => void;
     clearMessages: () => void;
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
     retryMessage: string | null;  // New field for retry status
@@ -211,9 +212,18 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [retryType, setRetryType] = useState<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
+    const stopGeneration = useCallback(() => {
+        abortControllerRef.current?.abort();
+    }, []);
+
     const sendMessage = useCallback(async (content: string, _enableReasoning = true) => {
         const enableReasoning = false; // Disabled: Query Expansion was diluting BM25 precision
         if (!content.trim() || isLoading) return;
+
+        // Cancel any in-flight request before starting a new one
+        abortControllerRef.current?.abort();
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
 
         setError(null);
         setIsLoading(true);
@@ -257,6 +267,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 options.fuero,
                 options.genioIds,
                 options.materia,
+                signal,
             )) {
                 // Filter keepalive heartbeat from backend (<!--PING-->)
                 // This is sent immediately to prevent mobile carriers from
@@ -349,6 +360,11 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 }
             }
         } catch (err) {
+            // User stopped the generation — clean exit, no error shown
+            if ((err as Error)?.name === 'AbortError') {
+                setRetryMessage(null);
+                return;
+            }
             const errMsg = err instanceof Error ? err.message : 'Error desconocido';
             setError(errMsg);
             setRetryMessage(null);
@@ -388,6 +404,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         isLoading,
         error,
         sendMessage,
+        stopGeneration,
         clearMessages,
         setMessages,
         retryMessage,
