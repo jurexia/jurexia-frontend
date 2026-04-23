@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Gavel, Users, Briefcase, Shield } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield } from 'lucide-react';
 import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import ChatInput from '@/components/ChatInput';
@@ -66,6 +66,9 @@ export default function ChatPage() {
     const [activePdfSource, setActivePdfSource] = useState<{
         docId: string; origen: string; ref: string; texto: string;
         pdf_url?: string | null; silo?: string;
+        registro?: string | null; tesis_num?: string | null;
+        tipo_criterio?: string | null; instancia?: string | null;
+        materia?: string | null;
     } | null>(null);
 
     // Genio Multi-Domain states
@@ -83,13 +86,25 @@ export default function ChatPage() {
 
     // Suggestion rotation state
     const SUGGESTIONS = [
-        "¿Cómo registro mi marca?",
-        "¿Qué pasa si me despiden injustificadamente sin liquidación?",
-        "¿Qué hago si mi esposo se llevó a mi hija?",
-        "¿Cómo entablo una defensa adecuada en materia penal sobre un delito determinado?",
-        "¿Qué es el derecho a la libertad de expresión y cuál es su fundamento?"
+        { text: '¿Procede el amparo indirecto contra la negativa de acceso a un expediente judicial?', label: 'AMPARO' },
+        { text: '¿Cuándo se actualiza la guarda y custodia compartida y qué criterios aplica el juez?', label: 'FAMILIAR' },
+        { text: '¿Qué consecuencias tiene el despido injustificado durante una incapacidad médica?', label: 'LABORAL' },
+        { text: '¿En qué casos es procedente la suspensión provisional en el juicio de amparo?', label: 'CONSTITUCIONAL' },
+        { text: '¿Cómo se tramita un divorcio incausado y qué documentos necesito?', label: 'FAMILIAR' },
+        { text: '¿Qué requisitos debe cumplir una pensión alimenticia y cómo se calcula?', label: 'FAMILIAR' },
+        { text: '¿Cuál es el procedimiento para el reconocimiento de paternidad?', label: 'FAMILIAR' },
+        { text: '¿Qué derechos tiene el padre no custodio respecto al régimen de convivencia?', label: 'FAMILIAR' },
+        { text: '¿Cómo se impugna una resolución que niega la guarda y custodia?', label: 'FAMILIAR' },
+        { text: '¿Qué pasa si me despiden sin liquidación estando embarazada?', label: 'LABORAL' },
+        { text: '¿Qué es el derecho a la libertad de expresión y cuál es su fundamento constitucional?', label: 'CONSTITUCIONAL' },
+        { text: '¿Cómo registro una marca en México y qué protección otorga?', label: 'MERCANTIL' },
+        { text: '¿Qué recursos existen contra una sentencia de amparo directo?', label: 'AMPARO' },
+        { text: '¿En qué consiste la adopción plena y cuáles son sus efectos jurídicos?', label: 'FAMILIAR' },
     ];
     const [suggestionIndex, setSuggestionIndex] = useState(0);
+    const [displayedText, setDisplayedText] = useState('');
+    const [suggestionPhase, setSuggestionPhase] = useState<'typing' | 'visible' | 'fading'>('typing');
+    const suggestionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Auto-deactivate cache after 3 minutes of inactivity (safety: evita costos excesivos)
     const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
@@ -159,13 +174,39 @@ export default function ChatPage() {
         }
     }, [resetCacheTimer]);
 
-    // suggestion rotation timer
+    // Typewriter animation engine
     useEffect(() => {
-        const timer = setInterval(() => {
-            setSuggestionIndex((prev) => (prev + 1) % SUGGESTIONS.length);
-        }, 4500); // 4.5 seconds per suggestion (includes fade time)
-        return () => clearInterval(timer);
-    }, [SUGGESTIONS.length]);
+        const fullText = SUGGESTIONS[suggestionIndex].text;
+        let charIndex = 0;
+
+        if (suggestionPhase === 'typing') {
+            setDisplayedText('');
+            const typeChar = () => {
+                charIndex++;
+                setDisplayedText(fullText.slice(0, charIndex));
+                if (charIndex < fullText.length) {
+                    // Variable speed: fast start, slight pause on punctuation
+                    const char = fullText[charIndex - 1];
+                    const delay = char === '?' || char === ',' || char === '.' ? 80 : 28;
+                    suggestionTimerRef.current = setTimeout(typeChar, delay);
+                } else {
+                    // Typing complete → hold visible
+                    suggestionTimerRef.current = setTimeout(() => setSuggestionPhase('fading'), 2500);
+                }
+            };
+            suggestionTimerRef.current = setTimeout(typeChar, 400);
+        } else if (suggestionPhase === 'fading') {
+            // After fade-out animation completes, move to next
+            suggestionTimerRef.current = setTimeout(() => {
+                setSuggestionIndex((prev) => (prev + 1) % SUGGESTIONS.length);
+                setSuggestionPhase('typing');
+            }, 700);
+        }
+
+        return () => {
+            if (suggestionTimerRef.current) clearTimeout(suggestionTimerRef.current);
+        };
+    }, [suggestionIndex, suggestionPhase, SUGGESTIONS]);
 
     // Cleanup timers on unmount
     useEffect(() => {
@@ -648,44 +689,41 @@ export default function ChatPage() {
                                     ¿En qué te puedo ayudar{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}?
                                 </h2>
 
-                                {/* Quick Start — responsive suggestion cards */}
-                                {(() => {
-                                    const suggestions = [
-                                        { icon: Gavel, text: '¿Procede el amparo indirecto contra la negativa de acceso a un expediente judicial?', mobileText: 'Amparo contra acceso a expediente', label: 'Amparo' },
-                                        { icon: Users, text: '¿Cuándo se actualiza la guarda y custodia compartida y qué criterios aplica el juez?', mobileText: 'Guarda y custodia compartida', label: 'Familiar' },
-                                        { icon: Briefcase, text: '¿Qué consecuencias tiene el despido injustificado durante una incapacidad médica?', mobileText: 'Despido durante incapacidad', label: 'Laboral' },
-                                        { icon: Shield, text: '¿En qué casos es procedente la suspensión provisional en el juicio de amparo?', mobileText: 'Suspensión provisional', label: 'Constitucional' },
-                                    ];
-                                    return (
-                                        <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-8 max-w-xl mx-auto">
-                                            {suggestions.map((suggestion, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => handleSendMessage(suggestion.text, true)}
-                                                    className="group relative flex items-center sm:items-start gap-2 sm:gap-3
-                                                               px-2.5 py-2.5 sm:px-4 sm:py-4 rounded-lg sm:rounded-xl
-                                                               bg-cream-100/80 hover:bg-white border border-charcoal-200/40
-                                                               hover:border-accent-gold/50 shadow-sm hover:shadow-lg
-                                                               transition-all duration-300 text-left
-                                                               hover:-translate-y-0.5 active:translate-y-0"
-                                                >
-                                                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-charcoal-900/5 group-hover:bg-accent-gold/10 border border-charcoal-200/30 group-hover:border-accent-gold/30 flex items-center justify-center flex-shrink-0 transition-all duration-300">
-                                                        <suggestion.icon className="w-3 h-3 sm:w-4 sm:h-4 text-charcoal-500 group-hover:text-accent-gold transition-colors duration-300" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-charcoal-400 group-hover:text-accent-gold/70 transition-colors">{suggestion.label}</span>
-                                                        {/* Short text on mobile, full on desktop */}
-                                                        <p className="text-charcoal-700 text-[11px] sm:text-[13px] leading-snug mt-0.5 group-hover:text-charcoal-900 transition-colors">
-                                                            <span className="hidden sm:inline">{suggestion.text}</span>
-                                                            <span className="sm:hidden">{suggestion.mobileText}</span>
-                                                        </p>
-                                                    </div>
-                                                    <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-charcoal-300 group-hover:text-accent-gold opacity-0 group-hover:opacity-100 absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 transition-all duration-300 hidden sm:block" />
-                                                </button>
-                                            ))}
-                                        </div>
-                                    );
-                                })()}
+                                {/* Typewriter suggestion — fades in/out progressively */}
+                                <div className="mb-6 sm:mb-10 max-w-lg mx-auto min-h-[3rem] flex items-center justify-center">
+                                    <button
+                                        onClick={() => handleSendMessage(SUGGESTIONS[suggestionIndex].text, true)}
+                                        className="group cursor-pointer text-center px-4 py-2 rounded-xl hover:bg-white/50 transition-all duration-300"
+                                    >
+                                        <span
+                                            className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] transition-all duration-500 block mb-1 ${
+                                                suggestionPhase === 'fading' ? 'opacity-0' : 'opacity-60'
+                                            } text-accent-gold`}
+                                        >
+                                            {SUGGESTIONS[suggestionIndex].label}
+                                        </span>
+                                        <span
+                                            className={`font-serif italic text-charcoal-900/50 group-hover:text-charcoal-900/80 text-sm sm:text-base leading-relaxed transition-opacity duration-700 ${
+                                                suggestionPhase === 'fading' ? 'opacity-0' : 'opacity-100'
+                                            }`}
+                                        >
+                                            &ldquo;{displayedText}
+                                            {suggestionPhase === 'typing' && (
+                                                <span className="inline-block w-[2px] h-[1em] bg-accent-gold/60 ml-[1px] align-text-bottom" style={{ animation: 'blink 0.8s step-end infinite' }} />
+                                            )}
+                                            {suggestionPhase !== 'typing' && '\u201D'}
+                                        </span>
+                                        <span className="block mt-1.5 text-[10px] text-charcoal-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            Haz clic para consultar →
+                                        </span>
+                                    </button>
+                                    <style>{`
+                                        @keyframes blink {
+                                            0%, 100% { opacity: 1; }
+                                            50% { opacity: 0; }
+                                        }
+                                    `}</style>
+                                </div>
 
 
                                 <ChatInput

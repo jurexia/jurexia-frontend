@@ -11,6 +11,11 @@ interface PdfSource {
     pdf_url?: string | null;
     silo?: string;
     entidad?: string | null;
+    registro?: string | null;
+    tesis_num?: string | null;
+    tipo_criterio?: string | null;
+    instancia?: string | null;
+    materia?: string | null;
 }
 
 interface PdfViewerPanelProps {
@@ -133,15 +138,24 @@ function parseTesisTexto(texto: string, source?: PdfSource | null): TesisMetadat
         meta.rubro = rubro || undefined;
         meta.textoBody = body;
 
-        // Infer metadata from origen and ref
+        // Infer metadata from payload fields first, then from origen/ref
         if (source) {
-            // Extract registro and tesis ID from origen like "2027232_I.3o.C.67 C (11a.)"
-            const origenParsed = parseOrigenFallback(source.origen || '');
-            if (origenParsed.registro) meta.registro = origenParsed.registro;
-            if (origenParsed.tesisId) {
-                meta.tesis = origenParsed.tesisId;
-                meta.tipo = inferTipoFromIdentifier(origenParsed.tesisId);
-                meta.instancia = inferInstancia(origenParsed.tesisId);
+            // Direct payload fields (new tesis have these)
+            if (source.registro) meta.registro = source.registro;
+            if (source.tipo_criterio) meta.tipo = source.tipo_criterio;
+            if (source.tesis_num) meta.tesis = source.tesis_num;
+            if (source.instancia) meta.instancia = source.instancia;
+            if (source.materia) meta.materia = source.materia;
+
+            // Fallback: extract registro and tesis ID from origen like "2027232_I.3o.C.67 C (11a.)"
+            if (!meta.registro || !meta.tesis) {
+                const origenParsed = parseOrigenFallback(source.origen || '');
+                if (!meta.registro && origenParsed.registro) meta.registro = origenParsed.registro;
+                if (!meta.tesis && origenParsed.tesisId) {
+                    meta.tesis = origenParsed.tesisId;
+                    if (!meta.tipo) meta.tipo = inferTipoFromIdentifier(origenParsed.tesisId);
+                    if (!meta.instancia) meta.instancia = inferInstancia(origenParsed.tesisId);
+                }
             }
 
             // Also try ref like "Tesis I.3o.C.67 C (11a.)" or "P./J. 81/2011 (9a.) | Registro 160596"
