@@ -16,7 +16,7 @@ const FEATURES = [
     {
         icon: Search,
         title: 'Consulta Inteligente',
-        desc: 'Busca en toda la legislaci\u00f3n mexicana, jurisprudencia y tratados internacionales con IA de \u00faltima generaci\u00f3n.',
+        desc: 'Busca en toda la legislación mexicana, jurisprudencia y tratados internacionales con IA de última generación.',
         color: '#c9a962',
     },
     {
@@ -28,7 +28,7 @@ const FEATURES = [
     {
         icon: Brain,
         title: 'Genios Especializados',
-        desc: 'IA entrenada por materia con el corpus completo de leyes en memoria. Amparo, Mercantil, Penal, Civil y m\u00e1s.',
+        desc: 'IA entrenada por materia con el corpus completo de leyes en memoria. Amparo, Mercantil, Penal, Civil y más.',
         color: '#9B7EDE',
     },
 ];
@@ -145,9 +145,9 @@ export default function WelcomeExperience({ userId, userName, onComplete, onStar
                             marginLeft: 'auto',
                             marginRight: 'auto',
                         }}>
-                            Acabas de acceder a la herramienta de inteligencia jur\u00eddica
-                            m\u00e1s avanzada de M\u00e9xico. Prep\u00e1rate para transformar
-                            tu pr\u00e1ctica legal.
+                            Acabas de acceder a la herramienta de inteligencia jurídica
+                            más avanzada de México. Prepárate para transformar
+                            tu práctica legal.
                         </p>
 
                         {/* Social proof stats */}
@@ -219,7 +219,7 @@ export default function WelcomeExperience({ userId, userName, onComplete, onStar
                                 <Shield size={10} /> Cifrado extremo a extremo
                             </span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <Scale size={10} /> Legislaci\u00f3n verificada
+                                <Scale size={10} /> Legislación verificada
                             </span>
                         </div>
                     </div>
@@ -253,10 +253,10 @@ export default function WelcomeExperience({ userId, userName, onComplete, onStar
                                     fontSize: 22, fontWeight: 600, color: '#fff',
                                     marginBottom: 8,
                                 }}>
-                                    \u00bfDesde qu\u00e9 estado ejerces?
+                                    ¿Desde qué estado ejerces?
                                 </h2>
                                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>
-                                    Personalizaremos toda tu experiencia jur\u00eddica
+                                    Personalizaremos toda tu experiencia jurídica
                                 </p>
                             </div>
 
@@ -357,7 +357,7 @@ export default function WelcomeExperience({ userId, userName, onComplete, onStar
                                 textAlign: 'center', color: 'rgba(255,255,255,0.25)',
                                 fontSize: 11, marginTop: 12,
                             }}>
-                                Podr\u00e1s cambiar o consultar otras legislaciones en cualquier momento
+                                Podrás cambiar o consultar otras legislaciones en cualquier momento
                             </p>
                         </div>
                     </div>
@@ -376,7 +376,7 @@ export default function WelcomeExperience({ userId, userName, onComplete, onStar
                             }}>
                                 <Sparkles size={12} style={{ color: '#c9a962' }} />
                                 <span style={{ fontSize: 11, fontWeight: 600, color: '#c9a962', letterSpacing: '0.05em' }}>
-                                    TU ARSENAL JUR\u00cdDICO
+                                    TU ARSENAL JURÍDICO
                                 </span>
                             </div>
                             <h2 style={{
@@ -387,7 +387,7 @@ export default function WelcomeExperience({ userId, userName, onComplete, onStar
                                 Todo lo que necesitas
                             </h2>
                             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, maxWidth: 340, margin: '0 auto' }}>
-                                Herramientas dise\u00f1adas por abogados, potenciadas por IA
+                                Herramientas diseñadas por abogados, potenciadas por IA
                             </p>
                         </div>
 
@@ -452,7 +452,7 @@ export default function WelcomeExperience({ userId, userName, onComplete, onStar
                                     letterSpacing: '0.02em',
                                 }}
                             >
-                                Ver gu\u00eda r\u00e1pida (30 seg)
+                                Ver guía rápida (30 seg)
                                 <ArrowRight size={16} />
                             </button>
 
