@@ -230,7 +230,7 @@ export default function DocumentModal({ docId, onClose }: DocumentModalProps) {
 
     if (!docId) return null;
 
-    const isJurisprudencia = document?.silo === 'jurisprudencia_nacional';
+    const isJurisprudencia = document?.silo?.startsWith('jurisprudencia_nacional') ?? false;
     const jurisprudenciaData = document && isJurisprudencia ? parseJurisprudenciaMetadata(document.texto, document) : null;
 
     const handleDownloadPDF = () => {

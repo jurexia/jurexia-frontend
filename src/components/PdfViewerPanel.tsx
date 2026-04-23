@@ -560,6 +560,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
         if (!source) return null;
         // Match actual backend silo values + fallback text detection
         const isTesisSilo = source.silo === 'jurisprudencia_nacional'
+            || source.silo === 'jurisprudencia_nacional_v2'
             || source.silo === 'jurisprudencia'
             || source.silo === 'tesis_aisladas'
             || source.silo === 'jurisprudencia_tcc';
