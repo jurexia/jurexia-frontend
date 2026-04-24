@@ -34,6 +34,24 @@ import {
     generateTitle
 } from '@/lib/conversations';
 
+// Suggestion questions — defined outside component for referential stability
+const SUGGESTIONS = [
+    { text: '¿Procede el amparo indirecto contra la negativa de acceso a un expediente judicial?', label: 'AMPARO' },
+    { text: '¿Cuándo se actualiza la guarda y custodia compartida y qué criterios aplica el juez?', label: 'FAMILIAR' },
+    { text: '¿Qué consecuencias tiene el despido injustificado durante una incapacidad médica?', label: 'LABORAL' },
+    { text: '¿En qué casos es procedente la suspensión provisional en el juicio de amparo?', label: 'CONSTITUCIONAL' },
+    { text: '¿Cómo se tramita un divorcio incausado y qué documentos necesito?', label: 'FAMILIAR' },
+    { text: '¿Qué requisitos debe cumplir una pensión alimenticia y cómo se calcula?', label: 'FAMILIAR' },
+    { text: '¿Cuál es el procedimiento para el reconocimiento de paternidad?', label: 'FAMILIAR' },
+    { text: '¿Qué derechos tiene el padre no custodio respecto al régimen de convivencia?', label: 'FAMILIAR' },
+    { text: '¿Cómo se impugna una resolución que niega la guarda y custodia?', label: 'FAMILIAR' },
+    { text: '¿Qué pasa si me despiden sin liquidación estando embarazada?', label: 'LABORAL' },
+    { text: '¿Qué es el derecho a la libertad de expresión y cuál es su fundamento constitucional?', label: 'CONSTITUCIONAL' },
+    { text: '¿Cómo registro una marca en México y qué protección otorga?', label: 'MERCANTIL' },
+    { text: '¿Qué recursos existen contra una sentencia de amparo directo?', label: 'AMPARO' },
+    { text: '¿En qué consiste la adopción plena y cuáles son sus efectos jurídicos?', label: 'FAMILIAR' },
+];
+
 export default function ChatPage() {
     // Auth protection - redirects to login if not authenticated
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
@@ -84,23 +102,7 @@ export default function ChatPage() {
     const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
     const [showWelcomeExperience, setShowWelcomeExperience] = useState(false);
 
-    // Suggestion rotation state
-    const SUGGESTIONS = [
-        { text: '¿Procede el amparo indirecto contra la negativa de acceso a un expediente judicial?', label: 'AMPARO' },
-        { text: '¿Cuándo se actualiza la guarda y custodia compartida y qué criterios aplica el juez?', label: 'FAMILIAR' },
-        { text: '¿Qué consecuencias tiene el despido injustificado durante una incapacidad médica?', label: 'LABORAL' },
-        { text: '¿En qué casos es procedente la suspensión provisional en el juicio de amparo?', label: 'CONSTITUCIONAL' },
-        { text: '¿Cómo se tramita un divorcio incausado y qué documentos necesito?', label: 'FAMILIAR' },
-        { text: '¿Qué requisitos debe cumplir una pensión alimenticia y cómo se calcula?', label: 'FAMILIAR' },
-        { text: '¿Cuál es el procedimiento para el reconocimiento de paternidad?', label: 'FAMILIAR' },
-        { text: '¿Qué derechos tiene el padre no custodio respecto al régimen de convivencia?', label: 'FAMILIAR' },
-        { text: '¿Cómo se impugna una resolución que niega la guarda y custodia?', label: 'FAMILIAR' },
-        { text: '¿Qué pasa si me despiden sin liquidación estando embarazada?', label: 'LABORAL' },
-        { text: '¿Qué es el derecho a la libertad de expresión y cuál es su fundamento constitucional?', label: 'CONSTITUCIONAL' },
-        { text: '¿Cómo registro una marca en México y qué protección otorga?', label: 'MERCANTIL' },
-        { text: '¿Qué recursos existen contra una sentencia de amparo directo?', label: 'AMPARO' },
-        { text: '¿En qué consiste la adopción plena y cuáles son sus efectos jurídicos?', label: 'FAMILIAR' },
-    ];
+    // Suggestion rotation state (SUGGESTIONS defined outside component for referential stability)
     const [suggestionIndex, setSuggestionIndex] = useState(0);
     const [displayedText, setDisplayedText] = useState('');
     const [suggestionPhase, setSuggestionPhase] = useState<'typing' | 'visible' | 'fading'>('typing');
@@ -206,7 +208,7 @@ export default function ChatPage() {
         return () => {
             if (suggestionTimerRef.current) clearTimeout(suggestionTimerRef.current);
         };
-    }, [suggestionIndex, suggestionPhase, SUGGESTIONS]);
+    }, [suggestionIndex, suggestionPhase]);
 
     // Cleanup timers on unmount
     useEffect(() => {
