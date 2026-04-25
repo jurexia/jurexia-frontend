@@ -202,6 +202,41 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             content = content.replace(/\n*<!-- PRECEDENTES_META:\[[\s\S]*?\] -->/g, '').trim();
         }
 
+        // ── Inject precedentes into response content (before CONCLUSIÓN) ──
+        // This makes precedentes feel like a natural section of the analysis,
+        // appearing between the legal argumentation and the conclusion.
+        if (precedentesMeta && precedentesMeta.length > 0) {
+            const precLines: string[] = [];
+            precLines.push('\n---\n');
+            precLines.push('### ⚖️ Precedentes Judiciales Relacionados\n');
+            precLines.push('Los siguientes precedentes de Tribunales Colegiados de Circuito están relacionados con su consulta:\n');
+            for (const prec of precedentesMeta) {
+                // Parse materia from origen: "3TCC — 22° Circuito — CIVIL"
+                const materiaMatch = prec.origen?.match(/—\s*([A-ZÁÉÍÓÚ]+)\s*$/);
+                const materia = materiaMatch?.[1] || '';
+                const materiaBadge = materia ? ` · ${materia}` : '';
+                precLines.push(`> **🏛 ${prec.ref || 'Sentencia'}${materiaBadge}**`);
+                const holdingPreview = prec.holding 
+                    ? (prec.holding.length > 300 ? prec.holding.slice(0, 300) + '...' : prec.holding)
+                    : '';
+                if (holdingPreview) {
+                    precLines.push(`> *"${holdingPreview}"*\n`);
+                }
+            }
+            precLines.push('');
+
+            // Try to insert before ### CONCLUSIÓN (case-insensitive)
+            const conclusionRegex = /\n(#{1,3}\s*(CONCLUSI[ÓO]N|Conclusi[óo]n))/i;
+            const conclusionMatch = content.match(conclusionRegex);
+            if (conclusionMatch && conclusionMatch.index !== undefined) {
+                const insertAt = conclusionMatch.index;
+                content = content.slice(0, insertAt) + precLines.join('\n') + content.slice(insertAt);
+            } else {
+                // No conclusion heading found — append at the end
+                content = content + precLines.join('\n');
+            }
+        }
+
         return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing, precedentesMeta };
     }, [message.content, isUser]);
 
@@ -942,63 +977,6 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     })}
                                 </div>
                             </details>
-                        )}
-                        {/* ⚖️ Precedentes Relacionados — Related judicial precedents cards */}
-                        {!isStreaming && precedentesMeta && precedentesMeta.length > 0 && (
-                            <div className="mx-4 mb-2 mt-1 rounded-lg border border-amber-200/60 bg-gradient-to-br from-amber-50/40 to-orange-50/30 overflow-hidden">
-                                <div className="px-3 py-2.5 flex items-center gap-2 border-b border-amber-200/40">
-                                    <span className="text-sm">⚖️</span>
-                                    <span className="text-xs font-semibold text-amber-800">Precedentes Relacionados</span>
-                                    <span className="text-[10px] text-amber-600/70 bg-amber-100/60 px-1.5 py-0.5 rounded-full ml-auto">{precedentesMeta.length}</span>
-                                </div>
-                                <div className="divide-y divide-amber-100/60">
-                                    {precedentesMeta.map((prec, idx) => {
-                                        // Parse materia from origen: "3TCC — 22° Circuito — CIVIL"
-                                        const materiaMatch = prec.origen?.match(/—\s*([A-ZÁÉÍÓÚ]+)\s*$/);
-                                        const materia = materiaMatch?.[1] || '';
-                                        const materiaColors: Record<string, string> = {
-                                            'CIVIL': 'bg-blue-100 text-blue-700',
-                                            'PENAL': 'bg-red-100 text-red-700',
-                                            'ADMINISTRATIVA': 'bg-purple-100 text-purple-700',
-                                            'TRABAJO': 'bg-green-100 text-green-700',
-                                            'LABORAL': 'bg-green-100 text-green-700',
-                                        };
-                                        const materiaStyle = materiaColors[materia] || 'bg-gray-100 text-gray-700';
-                                        
-                                        return (
-                                            <button
-                                                key={prec.id || idx}
-                                                onClick={() => {
-                                                    onCitationClick?.({
-                                                        docId: prec.id,
-                                                        origen: prec.origen || 'Sentencia Judicial',
-                                                        ref: prec.ref || '',
-                                                        texto: prec.holding || '',
-                                                        silo: prec.silo,
-                                                    });
-                                                }}
-                                                className="w-full text-left px-3 py-2.5 hover:bg-amber-50/80 transition-all duration-200 group/prec cursor-pointer"
-                                            >
-                                                <div className="flex items-start gap-2">
-                                                    <span className="text-amber-600/80 text-sm mt-0.5 flex-shrink-0">🏛</span>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                                            <span className="text-[11px] font-semibold text-charcoal-800 truncate">{prec.ref || 'Sentencia'}</span>
-                                                            {materia && (
-                                                                <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${materiaStyle}`}>{materia}</span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-[11px] text-charcoal-600 leading-relaxed mt-1 line-clamp-3 group-hover/prec:text-charcoal-800 transition-colors">
-                                                            {prec.holding?.length > 200 ? prec.holding.slice(0, 200) + '...' : prec.holding}
-                                                        </p>
-                                                    </div>
-                                                    <span className="text-charcoal-300 group-hover/prec:text-amber-500 transition-colors flex-shrink-0 mt-1 text-xs">▸</span>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
                         )}
                         {/* Export Buttons - Only show when not streaming and has content */}
                         {!isStreaming && message.content.length > 50 && (
