@@ -16,6 +16,7 @@ import WelcomeExperience from '@/components/WelcomeExperience';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
 import WelcomeVideoModal from '@/components/WelcomeVideoModal';
 import NewFeaturesAnnouncementModal from '@/components/NewFeaturesAnnouncementModal';
+import FeedbackWidget from '@/components/FeedbackWidget';
 // FreeUserOnboardingModal removed — was causing 43% user abandonment (audio-modal blocker)
 import { markWelcomeVideoSeen } from '@/lib/supabase';
 import { useChat } from '@/hooks/useChat';
@@ -1022,6 +1023,15 @@ export default function ChatPage() {
             />
 
             {/* FreeUserOnboardingModal + old WelcomeGuidePrompt REMOVED — replaced by WelcomeExperience */}
+
+            {/* ═══ FEEDBACK WIDGET — Botón flotante inferior derecho ═══ */}
+            {user && (
+                <FeedbackWidget
+                    userId={user.id}
+                    userEmail={user.email ?? undefined}
+                    userName={profile?.full_name ?? undefined}
+                />
+            )}
         </div>
     );
 }
