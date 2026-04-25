@@ -202,38 +202,43 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             content = content.replace(/\n*<!-- PRECEDENTES_META:\[[\s\S]*?\] -->/g, '').trim();
         }
 
-        // ── Inject precedentes into response content (before CONCLUSIÓN) ──
-        // This makes precedentes feel like a natural section of the analysis,
-        // appearing between the legal argumentation and the conclusion.
+        // ── Inject precedentes as clickable HTML into response content (before CONCLUSIÓN) ──
         if (precedentesMeta && precedentesMeta.length > 0) {
-            const precLines: string[] = [];
-            precLines.push('\n---\n');
-            precLines.push('### ⚖️ Precedentes Judiciales Relacionados\n');
-            precLines.push('Los siguientes precedentes de Tribunales Colegiados de Circuito están relacionados con su consulta:\n');
-            for (const prec of precedentesMeta) {
-                // Parse materia from origen: "3TCC — 22° Circuito — CIVIL"
+            const cards: string[] = [];
+            for (let pi = 0; pi < precedentesMeta.length; pi++) {
+                const prec = precedentesMeta[pi];
+                // Clean ref: filter out "Null" parts from "3TCC · AD-892/2022 · Null · 2022"
+                const cleanRef = (prec.ref || 'Sentencia').split(' · ').filter(p => p && p !== 'Null' && p !== 'null').join(' · ');
+                // Parse materia from origen
                 const materiaMatch = prec.origen?.match(/—\s*([A-ZÁÉÍÓÚ]+)\s*$/);
                 const materia = materiaMatch?.[1] || '';
-                const materiaBadge = materia ? ` · ${materia}` : '';
-                precLines.push(`> **🏛 ${prec.ref || 'Sentencia'}${materiaBadge}**`);
-                const holdingPreview = prec.holding 
-                    ? (prec.holding.length > 300 ? prec.holding.slice(0, 300) + '...' : prec.holding)
+                const holdingPreview = prec.holding
+                    ? (prec.holding.length > 250 ? prec.holding.slice(0, 250) + '...' : prec.holding)
                     : '';
-                if (holdingPreview) {
-                    precLines.push(`> *"${holdingPreview}"*\n`);
-                }
+                cards.push(
+                    '<div class="precedente-card" data-prec-idx="' + pi + '" style="cursor:pointer;margin:8px 0;padding:12px 16px;border-left:3px solid #b8860b;background:linear-gradient(135deg,#faf6ee 0%,#fdf8f0 100%);border-radius:6px;transition:all 0.2s">' +
+                    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+                    '<strong style="font-size:13px;color:#1a1a1a">' + cleanRef + '</strong>' +
+                    (materia ? '<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#e8e0d0;color:#5a4a2a;font-weight:600">' + materia + '</span>' : '') +
+                    '</div>' +
+                    (holdingPreview ? '<p style="font-size:12px;color:#4a4a4a;line-height:1.5;margin:0;font-style:italic">"' + holdingPreview.replace(/"/g, '&quot;').replace(/</g, '&lt;') + '"</p>' : '') +
+                    '<span style="display:block;text-align:right;font-size:10px;color:#b8860b;margin-top:4px;font-weight:600">Ver sentencia completa →</span>' +
+                    '</div>'
+                );
             }
-            precLines.push('');
+
+            const section = '\n\n<hr style="border:none;border-top:1px solid #e0d8c8;margin:24px 0 16px"/>\n' +
+                '<h3 style="color:#1a1a1a;font-size:16px;font-weight:700;margin-bottom:4px">Precedentes Judiciales Relacionados</h3>\n' +
+                '<p style="font-size:13px;color:#666;margin-bottom:12px">Los siguientes precedentes de Tribunales Colegiados de Circuito están relacionados con su consulta:</p>\n' +
+                cards.join('\n') + '\n';
 
             // Try to insert before ### CONCLUSIÓN (case-insensitive)
             const conclusionRegex = /\n(#{1,3}\s*(CONCLUSI[ÓO]N|Conclusi[óo]n))/i;
             const conclusionMatch = content.match(conclusionRegex);
             if (conclusionMatch && conclusionMatch.index !== undefined) {
-                const insertAt = conclusionMatch.index;
-                content = content.slice(0, insertAt) + precLines.join('\n') + content.slice(insertAt);
+                content = content.slice(0, conclusionMatch.index) + section + content.slice(conclusionMatch.index);
             } else {
-                // No conclusion heading found — append at the end
-                content = content + precLines.join('\n');
+                content = content + section;
             }
         }
 
@@ -913,6 +918,22 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         instancia: src?.instancia,
                                         materia: src?.materia,
                                     });
+                                }
+                                // Handle precedente card clicks
+                                const precCard = target.closest('.precedente-card') as HTMLElement;
+                                if (precCard?.dataset.precIdx && precedentesMeta) {
+                                    e.preventDefault();
+                                    const idx = parseInt(precCard.dataset.precIdx, 10);
+                                    const prec = precedentesMeta[idx];
+                                    if (prec) {
+                                        onCitationClick?.({
+                                            docId: prec.id,
+                                            origen: prec.origen || 'Sentencia Judicial',
+                                            ref: prec.ref || '',
+                                            texto: prec.holding || '',
+                                            silo: prec.silo,
+                                        });
+                                    }
                                 }
                             }}
                         />
