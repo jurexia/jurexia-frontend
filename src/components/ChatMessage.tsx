@@ -1089,7 +1089,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 if (target.classList.contains('citation-badge') && target.dataset.docId) {
                                     e.preventDefault();
                                     const docId = target.dataset.docId;
-                                    const src = citationMeta?.sources?.[docId];
+                                    // 🔒 Case-insensitive lookup: data-doc-id is always lowercase,
+                                    // but sources_map may have mixed case from UUID repair aliases
+                                    const src = citationMeta?.sources?.[docId] 
+                                        || citationMeta?.sources?.[docId.toLowerCase()]
+                                        || (citationMeta?.sources ? Object.entries(citationMeta.sources).find(([k]) => k.toLowerCase() === docId.toLowerCase())?.[1] : undefined);
                                     onCitationClick?.({
                                         docId,
                                         origen: src?.origen || 'Fuente legal',
@@ -1148,7 +1152,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                             >
                                                 <button
                                                     onClick={() => {
-                                                        const src = citationMeta?.sources?.[uuid];
+                                                        const src = citationMeta?.sources?.[uuid]
+                                                            || citationMeta?.sources?.[uuid.toLowerCase()]
+                                                            || (citationMeta?.sources ? Object.entries(citationMeta.sources).find(([k]) => k.toLowerCase() === uuid.toLowerCase())?.[1] : undefined);
                                                         onCitationClick?.({
                                                             docId: uuid,
                                                             origen: src?.origen || 'Fuente legal',
