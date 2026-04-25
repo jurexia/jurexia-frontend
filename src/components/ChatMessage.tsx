@@ -256,13 +256,21 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // 1b. Remove <!-- PRECEDENTES_META:[...] --> blocks
         clean = clean.replace(/\n*<!--\s*PRECEDENTES_META:\[[\s\S]*?\]\s*-->/g, '');
 
-        // 2. Remove [Doc ID: uuid] in all variants
+        // 2. Replace [Doc ID: uuid] with bracketed citation number ⟦N⟧ using docIdMap.
+        // Using ⟦⟧ as sentinel so downstream cleanup doesn't strip them.
+        const replaceWithCitNum = (uuid: string): string => {
+            const num = docIdMap.get(uuid.toLowerCase());
+            return num ? `⟦${num}⟧` : '';
+        };
+        clean = clean.replace(/\[Doc ID:\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\]/gi, (_, u) => replaceWithCitNum(u));
+        clean = clean.replace(/\[\s*,?\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\s*\]/gi, (_, u) => replaceWithCitNum(u));
+        clean = clean.replace(/\[[^\]]*,\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\s*\]/gi, (_, u) => replaceWithCitNum(u));
+        clean = clean.replace(/Doc\s+([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/gi, (_, u) => replaceWithCitNum(u));
+        clean = clean.replace(/\(Doc ID:\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)/gi, (_, u) => replaceWithCitNum(u));
+
+        // 2b. Remove any remaining Doc ID variants that didn't match a known UUID
         clean = clean.replace(/\[Doc ID:\s*[a-f0-9-]+\]/gi, '');
         clean = clean.replace(/\[Doc IDs?:[^\]]*\]/gi, '');
-
-        // 3. Remove [, uuid] and [text, uuid] patterns
-        clean = clean.replace(/\[\s*,?\s*[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\s*\]/gi, '');
-        clean = clean.replace(/\[[^\]]*,\s*[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\s*\]/gi, '');
 
         // 4. Remove standalone Doc uuid references
         clean = clean.replace(/Doc\s+[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, '');
@@ -296,17 +304,19 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         clean = clean.replace(/\[\s*\]/g, '');  // empty brackets
 
         return clean.trim();
-    }, []);
+    }, [docIdMap]);
 
-    // Clean HTML content for PDF export (strips citation badge elements)
+    // Clean HTML content for PDF export. Preserves citation numbers as
+    // superscripts so they correlate with the APA references list at the end.
     const cleanHtmlForExport = useCallback((html: string): string => {
         let clean = html;
 
-        // Remove <sup class="citation-badge" ...>[N]</sup> elements
-        clean = clean.replace(/<sup class="citation-badge"[^>]*>\[?\d+\]?<\/sup>/gi, '');
-
-        // Remove any remaining citation-badge elements
-        clean = clean.replace(/<[^>]*citation-badge[^>]*>[^<]*<\/[^>]*>/gi, '');
+        // Convert <sup class="citation-badge" ...>[N]</sup> → plain superscript [N]
+        // (strips data-doc-id and event handlers but keeps the visible number)
+        clean = clean.replace(
+            /<sup class="citation-badge"[^>]*>\[?(\d+)\]?<\/sup>/gi,
+            '<sup style="font-size:0.75em;color:#666;">[$1]</sup>'
+        );
 
         // Remove <!-- CITATION_META --> that might be in rendered HTML
         clean = clean.replace(/<!--\s*CITATION_META:\{[\s\S]*?\}\s*-->/g, '');
@@ -319,6 +329,116 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         return clean;
     }, []);
+
+
+    // ── APA-style reference builder ──────────────────────────────────────────
+    // Constructs a properly formatted APA reference from CitationMeta source.
+    // Returns plain-text reference suitable for both PDF (HTML) and DOCX (text).
+    type CitSource = {
+        origen: string;
+        ref: string;
+        texto: string;
+        pdf_url?: string | null;
+        silo?: string;
+        entidad?: string | null;
+        registro?: string | null;
+        tesis_num?: string | null;
+        tipo_criterio?: string | null;
+        instancia?: string | null;
+        materia?: string | null;
+    };
+
+    const buildAPAReference = useCallback((src: CitSource): string => {
+        const origen = (src.origen || '').trim();
+        const ref = (src.ref || '').trim();
+        const silo = (src.silo || '').toLowerCase();
+        const entidad = (src.entidad || '').trim();
+        const instancia = (src.instancia || '').trim();
+        const registro = (src.registro || '').trim();
+        const tesisNum = (src.tesis_num || '').trim();
+        const year = new Date().getFullYear();
+
+        // Jurisprudencia / Tesis (SCJN, TCC, plenos)
+        if (silo.includes('jurisprudencia') || tesisNum || registro) {
+            const corte = instancia || 'Suprema Corte de Justicia de la Nación';
+            const titulo = origen || ref || 'Tesis sin rubro';
+            const tesisLabel = tesisNum ? ` Tesis ${tesisNum}.` : '';
+            const regLabel = registro ? ` Registro digital: ${registro}.` : '';
+            return `${corte}. (s.f.). ${titulo}.${tesisLabel}${regLabel} Semanario Judicial de la Federación.`;
+        }
+
+        // Sentencias de TCC (precedentes)
+        if (silo.includes('sentencia') || silo.includes('precedente') || silo.includes('holding')) {
+            const tribunal = origen || 'Tribunal Colegiado de Circuito';
+            const expediente = ref ? `, Expediente ${ref}` : '';
+            return `${tribunal}${expediente}. Poder Judicial de la Federación.`;
+        }
+
+        // Constitución
+        if (silo.includes('constitu') || /CPEUM|Constituci[oó]n/i.test(origen)) {
+            const articulo = ref ? `, art. ${ref}` : '';
+            return `Constitución Política de los Estados Unidos Mexicanos${articulo}. (${year}). Cámara de Diputados del H. Congreso de la Unión.`;
+        }
+
+        // Tratados internacionales / DDHH
+        if (silo.includes('bloque') || /tratado|convenci[oó]n|pacto|protocolo|declaraci[oó]n/i.test(origen)) {
+            const articulo = ref ? `, art. ${ref}` : '';
+            return `${origen}${articulo}. Tratado internacional ratificado por México.`;
+        }
+
+        // Leyes federales / código nacional
+        if (silo.includes('federal') || silo.includes('codigo_nacional')) {
+            const articulo = ref ? `, art. ${ref}` : '';
+            return `${origen}${articulo}. (${year}). Cámara de Diputados del H. Congreso de la Unión.`;
+        }
+
+        // Leyes estatales
+        if (silo.includes('estatal') || silo.startsWith('leyes_')) {
+            const articulo = ref ? `, art. ${ref}` : '';
+            const lugar = entidad ? ` Congreso del Estado de ${entidad}.` : '';
+            return `${origen}${articulo}. (${year}).${lugar}`;
+        }
+
+        // Fallback genérico
+        const articulo = ref ? `, art. ${ref}` : '';
+        return `${origen || 'Fuente legal'}${articulo}. (${year}).`;
+    }, []);
+
+    // Build ordered list of APA references from citationMeta + docIdMap.
+    // Returns array of { num, reference, pdfUrl } sorted by citation number.
+    const buildAPAReferenceList = useCallback((): Array<{ num: number; reference: string; pdfUrl?: string | null }> => {
+        if (!citationMeta?.sources || docIdMap.size === 0) return [];
+        const list: Array<{ num: number; reference: string; pdfUrl?: string | null }> = [];
+        const sortedEntries = Array.from(docIdMap.entries()).sort((a, b) => a[1] - b[1]);
+        for (const [uuid, num] of sortedEntries) {
+            const src = citationMeta.sources[uuid] || citationMeta.sources[uuid.toLowerCase()];
+            if (!src) continue;
+            list.push({
+                num,
+                reference: buildAPAReference(src),
+                pdfUrl: src.pdf_url || null,
+            });
+        }
+        return list;
+    }, [citationMeta, docIdMap, buildAPAReference]);
+
+    // Build HTML block for the APA references section (used in PDF export)
+    const buildReferencesHtml = useCallback((): string => {
+        const refs = buildAPAReferenceList();
+        if (refs.length === 0) return '';
+        const items = refs.map(r => {
+            const link = r.pdfUrl
+                ? ` <a href="${r.pdfUrl}" style="color:#8a6d2e;text-decoration:none;font-size:11px;">[Fuente]</a>`
+                : '';
+            return `<p style="margin:0 0 10px 0;padding-left:24px;text-indent:-24px;font-size:12px;line-height:1.5;color:#333;">[${r.num}] ${r.reference}${link}</p>`;
+        }).join('');
+        return `
+            <div style="margin-top:36px;padding-top:18px;border-top:1.5px solid #C9A227;page-break-inside:avoid;">
+                <h2 style="margin:0 0 14px 0;font-size:16px;font-weight:600;font-family:'Georgia',serif;color:#1a1a1a;">Referencias</h2>
+                ${items}
+            </div>
+        `;
+    }, [buildAPAReferenceList]);
 
     // Generate document header with logo (text-based for reliable export)
     const generateHeader = () => {
@@ -348,12 +468,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         const rawHtml = contentRef.current.innerHTML;
         const content = cleanHtmlForExport(rawHtml);
+        const referencesHtml = buildReferencesHtml();
         const fullHtml = `
             <div style="font-family: 'Times New Roman', serif; padding: 40px; max-width: 800px;">
                 ${generateHeader()}
                 <div style="line-height: 1.6; color: #333; text-align: justify;">
                     ${content}
                 </div>
+                ${referencesHtml}
                 <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 10px; color: #999; text-align: center;">
                     Documento generado por Iurexia - IA Jurídica Mexicana | Iurexia.com
                 </div>
@@ -373,7 +495,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             })
             .from(element)
             .save();
-    }, []);
+    }, [cleanHtmlForExport, buildReferencesHtml]);
 
     // Export to DOCX with proper formatting
     const handleExportDOCX = useCallback(async () => {
@@ -625,6 +747,55 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Flush remaining paragraph
         flushParagraph();
 
+        // ── APA References Section ──────────────────────────────────────────
+        const apaRefs = buildAPAReferenceList();
+        if (apaRefs.length > 0) {
+            docChildren.push(
+                new Paragraph({
+                    border: {
+                        top: { color: "C9A227", size: 8, style: BorderStyle.SINGLE }
+                    },
+                    spacing: { before: 600, after: 300 }
+                }),
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Referencias",
+                            bold: true,
+                            size: 28,
+                            font: "Georgia",
+                            color: "1a1a1a"
+                        })
+                    ],
+                    spacing: { before: 100, after: 200 }
+                })
+            );
+            for (const r of apaRefs) {
+                docChildren.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: `[${r.num}] `,
+                                bold: true,
+                                size: 22,
+                                font: "Times New Roman",
+                                color: "8a6d2e"
+                            }),
+                            new TextRun({
+                                text: r.reference,
+                                size: 22,
+                                font: "Times New Roman",
+                                color: "333333"
+                            })
+                        ],
+                        indent: { left: 360, hanging: 360 },
+                        alignment: AlignmentType.JUSTIFIED,
+                        spacing: { before: 60, after: 100 }
+                    })
+                );
+            }
+        }
+
         // Footer
         docChildren.push(
             new Paragraph({
@@ -713,38 +884,53 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Helper function to create formatted paragraphs with bold text support
     function createFormattedParagraph(text: string, Paragraph: any, TextRun: any, AlignmentType: any) {
-        // Parse **bold** patterns
-        const parts: { text: string; bold: boolean }[] = [];
+        // Step 1: split by **bold** markers
+        const boldParts: { text: string; bold: boolean }[] = [];
         const boldRegex = /\*\*([^*]+)\*\*/g;
         let lastIndex = 0;
         let match;
-
         while ((match = boldRegex.exec(text)) !== null) {
-            // Add text before bold
             if (match.index > lastIndex) {
-                parts.push({ text: text.slice(lastIndex, match.index), bold: false });
+                boldParts.push({ text: text.slice(lastIndex, match.index), bold: false });
             }
-            // Add bold text
-            parts.push({ text: match[1], bold: true });
+            boldParts.push({ text: match[1], bold: true });
             lastIndex = match.index + match[0].length;
         }
-
-        // Add remaining text
         if (lastIndex < text.length) {
-            parts.push({ text: text.slice(lastIndex), bold: false });
+            boldParts.push({ text: text.slice(lastIndex), bold: false });
+        }
+        if (boldParts.length === 0) {
+            boldParts.push({ text, bold: false });
         }
 
-        // If no bold patterns found, just use the whole text
-        if (parts.length === 0) {
-            parts.push({ text, bold: false });
+        // Step 2: within each part, split out ⟦N⟧ citation tokens as superscript runs
+        type Run = { text: string; bold: boolean; superscript?: boolean };
+        const runs: Run[] = [];
+        const citRegex = /⟦(\d+)⟧/g;
+        for (const p of boldParts) {
+            let li = 0;
+            let m;
+            while ((m = citRegex.exec(p.text)) !== null) {
+                if (m.index > li) {
+                    runs.push({ text: p.text.slice(li, m.index), bold: p.bold });
+                }
+                runs.push({ text: `[${m[1]}]`, bold: false, superscript: true });
+                li = m.index + m[0].length;
+            }
+            if (li < p.text.length) {
+                runs.push({ text: p.text.slice(li), bold: p.bold });
+            }
+            citRegex.lastIndex = 0;
         }
 
         return new Paragraph({
-            children: parts.map(part => new TextRun({
-                text: part.text,
-                bold: part.bold,
-                size: 24,
-                font: "Times New Roman"
+            children: runs.map(r => new TextRun({
+                text: r.text,
+                bold: r.bold,
+                superScript: r.superscript || false,
+                size: r.superscript ? 18 : 24,
+                font: "Times New Roman",
+                color: r.superscript ? "666666" : undefined,
             })),
             alignment: AlignmentType.JUSTIFIED,
             spacing: { after: 200, line: 360 }  // 1.5 line spacing
