@@ -15,6 +15,7 @@ import StateSelectorModal from '@/components/StateSelectorModal';
 import WelcomeExperience from '@/components/WelcomeExperience';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
 import WelcomeVideoModal from '@/components/WelcomeVideoModal';
+import NewFeaturesAnnouncementModal from '@/components/NewFeaturesAnnouncementModal';
 // FreeUserOnboardingModal removed — was causing 43% user abandonment (audio-modal blocker)
 import { markWelcomeVideoSeen } from '@/lib/supabase';
 import { useChat } from '@/hooks/useChat';
@@ -98,6 +99,7 @@ export default function ChatPage() {
     const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [isDocumentAnalyzing, setIsDocumentAnalyzing] = useState(false);
     const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
+    const [showNewFeaturesAnnouncement, setShowNewFeaturesAnnouncement] = useState(false);
     // showFreeOnboarding removed — onboarding now inline via Quick Start buttons
     const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
     const [showWelcomeExperience, setShowWelcomeExperience] = useState(false);
@@ -282,6 +284,31 @@ export default function ChatPage() {
             setShowWelcomeVideo(true);
         }
     }, [profile, user]);
+
+    // New features announcement (Redacción Pro + Precedentes) — show once for Pro/Platinum
+    // Triggered after Welcome video to avoid stacking modals
+    useEffect(() => {
+        if (!profile || !user) return;
+        const isProOrPlatinum = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile.subscription_type || '');
+        if (!isProOrPlatinum) return;
+
+        const dismissed = typeof window !== 'undefined'
+            ? localStorage.getItem(`iurexia_pro_features_announcement_v1_${user.id}`) === '1'
+            : true;
+        if (dismissed) return;
+        if (showWelcomeVideo) return; // wait until welcome video is closed
+
+        // Small delay so it doesn't appear instantly on load
+        const t = setTimeout(() => setShowNewFeaturesAnnouncement(true), 600);
+        return () => clearTimeout(t);
+    }, [profile, user, showWelcomeVideo]);
+
+    const handleNewFeaturesAnnouncementClose = useCallback(() => {
+        setShowNewFeaturesAnnouncement(false);
+        if (user?.id && typeof window !== 'undefined') {
+            localStorage.setItem(`iurexia_pro_features_announcement_v1_${user.id}`, '1');
+        }
+    }, [user]);
 
     // Free user onboarding removed — was causing 43% user abandonment
     // Now handled inline via Quick Start suggestion buttons in empty state
@@ -1038,6 +1065,11 @@ export default function ChatPage() {
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 
             <WelcomeVideoModal isOpen={showWelcomeVideo} onClose={handleWelcomeVideoClose} />
+
+            <NewFeaturesAnnouncementModal
+                isOpen={showNewFeaturesAnnouncement}
+                onClose={handleNewFeaturesAnnouncementClose}
+            />
 
             {/* FreeUserOnboardingModal + old WelcomeGuidePrompt REMOVED — replaced by WelcomeExperience */}
         </div>
