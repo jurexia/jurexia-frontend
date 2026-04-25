@@ -66,10 +66,6 @@ export default function ChatPage() {
     // States
     const [quotaExceeded, setQuotaExceeded] = useState(false);
     const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(false);
-    const [precedentesAnnouncementDismissed, setPrecedentesAnnouncementDismissed] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        return localStorage.getItem('precedentes-launch-dismissed') === '1';
-    });
     const [showPrecedentesTour, setShowPrecedentesTour] = useState(false);
     // Index of the Precedentes step in ChatTour (0-based; adjust if TOUR_STEPS order changes)
     const PRECEDENTES_TOUR_STEP = 9;
@@ -654,54 +650,8 @@ export default function ChatPage() {
                     </div>
                 )}
 
-                {/* Precedentes Judiciales — anuncio de lanzamiento para todos los usuarios Pro+ */}
-                {isProPlus && !precedentesAnnouncementDismissed && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-400">
-                        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
-                        <div className="relative max-w-lg w-full bg-[#0f0f0f]/95 border border-white/10 rounded-2xl shadow-2xl px-8 py-10 text-center animate-in zoom-in-95 duration-300">
-                            <div className="mx-auto mb-5 w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                                <Crown className="w-7 h-7 text-accent-gold" />
-                            </div>
-                            <p className="text-[10px] font-semibold tracking-[0.18em] text-accent-gold uppercase mb-3">
-                                Nueva Función · Pro en adelante
-                            </p>
-                            <h2 className="font-serif text-xl font-semibold text-white mb-5 leading-snug">
-                                Precedentes Judiciales
-                            </h2>
-                            <div className="w-10 h-px bg-white/15 mx-auto mb-5" />
-                            <p className="text-sm text-white/70 leading-relaxed mb-8">
-                                Ahora puede consultar la jurisprudencia y tesis de los{' '}
-                                <span className="text-white font-medium">Tribunales Colegiados de Circuito</span>{' '}
-                                directamente desde el chat, a través del botón{' '}
-                                <span className="text-white font-medium">"Precedentes"</span> en la barra de herramientas.
-                                <br /><br />
-                                Esta función está <span className="text-accent-gold font-semibold">en desarrollo</span> y seguirá creciendo, priorizando las regiones con mayor número de usuarios de{' '}
-                                <span className="font-serif text-white">Iurex<span className="text-accent-gold">ia</span></span>.
-                            </p>
-                            <div className="flex items-center justify-center gap-3 flex-wrap">
-                                <button
-                                    onClick={() => {
-                                        localStorage.setItem('precedentes-launch-dismissed', '1');
-                                        setPrecedentesAnnouncementDismissed(true);
-                                        setShowPrecedentesTour(true);
-                                    }}
-                                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent-gold text-white text-sm font-semibold hover:bg-accent-gold/90 active:scale-95 transition-all duration-150 shadow-lg shadow-accent-gold/20"
-                                >
-                                    Ver cómo funciona <ArrowRight className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        localStorage.setItem('precedentes-launch-dismissed', '1');
-                                        setPrecedentesAnnouncementDismissed(true);
-                                    }}
-                                    className="text-white/40 hover:text-white/70 text-sm transition-colors"
-                                >
-                                    Entendido
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {/* Anuncio de Precedentes Judiciales removido — sustituido por NewFeaturesAnnouncementModal
+                    que cubre Redacción Pro + Precedentes en un solo walkthrough. */}
 
                 <main className="flex-1 pt-14 overflow-y-auto">
                     {!hasMessages ? (
