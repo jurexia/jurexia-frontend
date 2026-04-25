@@ -4,16 +4,18 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     Users, Shield, BarChart3, AlertTriangle, Ban, CheckCircle,
     Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail, Bell,
-    MoreVertical, ChevronLeft, ChevronRight, Filter, Scale, Send, UserCheck, AlertCircle
+    MoreVertical, ChevronLeft, ChevronRight, Filter, Scale, Send, UserCheck, AlertCircle,
+    MessageCircle, Bug, Lightbulb, MessageSquare, Clock, CheckCircle2, XCircle, Archive
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
+import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.iurexia.com';
 const ADMIN_EMAIL = 'administracion@iurexia.com';
 
-type Tab = 'usuarios' | 'alertas' | 'estadisticas';
+type Tab = 'usuarios' | 'alertas' | 'estadisticas' | 'feedback';
 
 interface UserProfile {
     id: string;
@@ -66,6 +68,33 @@ interface Stats {
     pending_alerts: number;
     plans: Record<string, number>;
 }
+
+interface FeedbackItem {
+    id: string;
+    user_id: string;
+    user_email: string | null;
+    user_name: string | null;
+    category: string;
+    message: string;
+    status: string;
+    admin_notes: string | null;
+    created_at: string;
+    resolved_at: string | null;
+}
+
+const CATEGORY_ICONS: Record<string, { icon: any; color: string; label: string }> = {
+    error: { icon: Bug, color: '#ef4444', label: 'Error' },
+    mejora: { icon: Lightbulb, color: '#f59e0b', label: 'Mejora' },
+    otro: { icon: MessageSquare, color: '#3b82f6', label: 'Otro' },
+    general: { icon: MessageSquare, color: '#6b7280', label: 'General' },
+};
+
+const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
+    pendiente: { icon: Clock, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', label: 'Pendiente' },
+    en_revision: { icon: Eye, color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', label: 'En revisión' },
+    resuelto: { icon: CheckCircle2, color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)', label: 'Resuelto' },
+    descartado: { icon: XCircle, color: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)', label: 'Descartado' },
+};
 
 const SEVERITY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
     critical: { bg: 'rgba(220, 38, 38, 0.15)', text: '#fca5a5', border: '#dc2626' },
@@ -129,6 +158,12 @@ export default function AdminPage() {
     const [loadingUnconfirmed, setLoadingUnconfirmed] = useState(false);
     const [reminderSent, setReminderSent] = useState<Set<string>>(new Set());
     const [isSendingAllReminders, setIsSendingAllReminders] = useState(false);
+    // Feedback inbox state
+    const [feedbackItems, setFeedbackItems] = useState<FeedbackItem[]>([]);
+    const [feedbackFilter, setFeedbackFilter] = useState<'all' | 'pendiente' | 'en_revision' | 'resuelto' | 'descartado'>('pendiente');
+    const [feedbackCategoryFilter, setFeedbackCategoryFilter] = useState<'all' | 'error' | 'mejora' | 'otro'>('all');
+    const [expandedFeedback, setExpandedFeedback] = useState<string | null>(null);
+    const [feedbackCount, setFeedbackCount] = useState(0);
 
     const getToken = useCallback(() => {
         return session?.access_token || '';
@@ -189,6 +224,28 @@ export default function AdminPage() {
                     if (!res.ok) throw new Error(`Error ${res.status}`);
                     const data = await res.json();
                     setStats(data);
+                } else if (tab === 'feedback') {
+                    // Fetch feedback directly from Supabase
+                    let query = supabase
+                        .from('user_feedback')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                    if (feedbackFilter !== 'all') {
+                        query = query.eq('status', feedbackFilter);
+                    }
+                    if (feedbackCategoryFilter !== 'all') {
+                        query = query.eq('category', feedbackCategoryFilter);
+                    }
+                    const { data, error: fbErr } = await query.limit(100);
+                    if (fbErr) throw new Error(fbErr.message);
+                    setFeedbackItems(data || []);
+
+                    // Get pending count for badge
+                    const { count } = await supabase
+                        .from('user_feedback')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'pendiente');
+                    setFeedbackCount(count || 0);
                 }
             } catch (e: any) {
                 setError(e.message || 'Error al cargar datos');
@@ -198,7 +255,7 @@ export default function AdminPage() {
         };
 
         fetchData();
-    }, [tab, showReviewed, user, session, getToken]);
+    }, [tab, showReviewed, feedbackFilter, feedbackCategoryFilter, user, session, getToken]);
 
     const blockUser = async (userId: string) => {
         setActionLoading(userId);
@@ -258,6 +315,35 @@ export default function AdminPage() {
             });
             if (!res.ok) throw new Error('Error al revisar');
             setAlerts(prev => prev.filter(a => a.id !== alertId));
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const updateFeedbackStatus = async (feedbackId: string, newStatus: string) => {
+        setActionLoading(feedbackId);
+        try {
+            const { error: updateErr } = await supabase
+                .from('user_feedback')
+                .update({
+                    status: newStatus,
+                    ...(newStatus === 'resuelto' ? { resolved_at: new Date().toISOString() } : {}),
+                })
+                .eq('id', feedbackId);
+            if (updateErr) throw new Error(updateErr.message);
+            setFeedbackItems(prev => prev.map(f => f.id === feedbackId ? {
+                ...f,
+                status: newStatus,
+                ...(newStatus === 'resuelto' ? { resolved_at: new Date().toISOString() } : {})
+            } : f));
+            // Update count
+            const { count } = await supabase
+                .from('user_feedback')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'pendiente');
+            setFeedbackCount(count || 0);
         } catch (e: any) {
             setError(e.message);
         } finally {
@@ -415,9 +501,10 @@ export default function AdminPage() {
         );
     }
 
-    const tabs: { key: Tab; label: string; icon: any }[] = [
+    const tabs: { key: Tab; label: string; icon: any; badge?: number }[] = [
         { key: 'usuarios', label: 'Usuarios', icon: Users },
         { key: 'alertas', label: 'Alertas', icon: AlertTriangle },
+        { key: 'feedback', label: 'Feedback', icon: MessageCircle, badge: feedbackCount },
         { key: 'estadisticas', label: 'Estadísticas', icon: BarChart3 },
     ];
 
@@ -478,10 +565,15 @@ export default function AdminPage() {
                         <button
                             key={t.key}
                             onClick={() => setTab(t.key)}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm transition-all focus:outline-none ${tab === t.key ? 'bg-[#1a1a1a] text-white font-semibold shadow-md border border-[#333]' : 'text-gray-500 hover:text-gray-300 hover:bg-[#151515] font-medium border border-transparent'}`}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm transition-all focus:outline-none relative ${tab === t.key ? 'bg-[#1a1a1a] text-white font-semibold shadow-md border border-[#333]' : 'text-gray-500 hover:text-gray-300 hover:bg-[#151515] font-medium border border-transparent'}`}
                         >
                             <t.icon className="w-4 h-4" />
                             {t.label}
+                            {t.badge && t.badge > 0 && (
+                                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-bold min-w-[20px] text-center">
+                                    {t.badge}
+                                </span>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -935,6 +1027,213 @@ export default function AdminPage() {
                                     );
                                 })}
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ═══ TAB: FEEDBACK ═══ */}
+                {!loadingData && tab === 'feedback' && (
+                    <div>
+                        {/* Filters */}
+                        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                            <div className="flex gap-1 bg-[#111] rounded-xl p-1 border border-[#222]">
+                                {(['all', 'pendiente', 'en_revision', 'resuelto', 'descartado'] as const).map(s => {
+                                    const conf = s === 'all' ? { label: 'Todos', color: '#888' } : STATUS_CONFIG[s];
+                                    return (
+                                        <button
+                                            key={s}
+                                            onClick={() => setFeedbackFilter(s)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                                feedbackFilter === s
+                                                    ? 'bg-[#1a1a1a] text-white shadow-md border border-[#333]'
+                                                    : 'text-gray-500 hover:text-gray-300 border border-transparent'
+                                            }`}
+                                        >
+                                            {s === 'all' ? 'Todos' : conf?.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div className="flex gap-1 bg-[#111] rounded-xl p-1 border border-[#222]">
+                                {(['all', 'error', 'mejora', 'otro'] as const).map(c => {
+                                    const conf = c === 'all' ? { label: 'Todas', icon: Filter, color: '#888' } : CATEGORY_ICONS[c];
+                                    return (
+                                        <button
+                                            key={c}
+                                            onClick={() => setFeedbackCategoryFilter(c)}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                                feedbackCategoryFilter === c
+                                                    ? 'bg-[#1a1a1a] text-white shadow-md border border-[#333]'
+                                                    : 'text-gray-500 hover:text-gray-300 border border-transparent'
+                                            }`}
+                                        >
+                                            {conf && <conf.icon className="w-3.5 h-3.5" style={{ color: conf.color }} />}
+                                            {c === 'all' ? 'Todas' : conf?.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div className="ml-auto text-xs text-gray-500 flex items-center gap-2">
+                                <span>{feedbackItems.length} mensaje{feedbackItems.length !== 1 ? 's' : ''}</span>
+                            </div>
+                        </div>
+
+                        {/* Feedback list */}
+                        <div className="space-y-3">
+                            {feedbackItems.map(fb => {
+                                const cat = CATEGORY_ICONS[fb.category] || CATEGORY_ICONS.general;
+                                const st = STATUS_CONFIG[fb.status] || STATUS_CONFIG.pendiente;
+                                const isExpanded = expandedFeedback === fb.id;
+                                return (
+                                    <div
+                                        key={fb.id}
+                                        className="bg-[#0d0d0d] border border-[#222] rounded-2xl overflow-hidden transition-all hover:border-[#333] shadow-lg"
+                                        style={{ borderLeft: `3px solid ${cat.color}` }}
+                                    >
+                                        {/* Header row */}
+                                        <div
+                                            className="flex items-center gap-4 px-5 py-4 cursor-pointer"
+                                            onClick={() => setExpandedFeedback(isExpanded ? null : fb.id)}
+                                        >
+                                            {/* Category icon */}
+                                            <div
+                                                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                                                style={{ background: `${cat.color}15` }}
+                                            >
+                                                <cat.icon className="w-4.5 h-4.5" style={{ color: cat.color }} />
+                                            </div>
+
+                                            {/* User info + preview */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-0.5">
+                                                    <span className="text-sm font-semibold text-gray-200 truncate">
+                                                        {fb.user_name || fb.user_email || 'Usuario'}
+                                                    </span>
+                                                    {fb.user_name && fb.user_email && (
+                                                        <span className="text-xs text-gray-600 truncate hidden sm:inline">
+                                                            {fb.user_email}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-gray-400 truncate">
+                                                    {fb.message.slice(0, 120)}{fb.message.length > 120 ? '...' : ''}
+                                                </p>
+                                            </div>
+
+                                            {/* Status + time */}
+                                            <div className="flex items-center gap-3 shrink-0">
+                                                <span
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                                    style={{ background: st.bg, color: st.color, border: `1px solid ${st.color}25` }}
+                                                >
+                                                    <st.icon className="w-3 h-3" />
+                                                    {st.label}
+                                                </span>
+                                                <span className="text-xs text-gray-600 whitespace-nowrap hidden sm:block">
+                                                    {timeAgo(fb.created_at)}
+                                                </span>
+                                                <ChevronDown
+                                                    className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+                                                        isExpanded ? 'rotate-180' : ''
+                                                    }`}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Expanded content */}
+                                        {isExpanded && (
+                                            <div className="px-5 pb-5 pt-1 border-t border-[#1a1a1a]">
+                                                {/* Full message */}
+                                                <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-4 mb-4">
+                                                    <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                                        {fb.message}
+                                                    </p>
+                                                </div>
+
+                                                {/* Meta info */}
+                                                <div className="flex flex-wrap gap-4 mb-4 text-xs text-gray-500">
+                                                    <span>📅 {formatDate(fb.created_at)}</span>
+                                                    <span>📧 {fb.user_email || '—'}</span>
+                                                    <span>🏷️ {cat.label}</span>
+                                                    {fb.resolved_at && <span>✅ Resuelto: {formatDate(fb.resolved_at)}</span>}
+                                                </div>
+
+                                                {/* Actions */}
+                                                <div className="flex flex-wrap gap-2">
+                                                    {fb.status === 'pendiente' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => updateFeedbackStatus(fb.id, 'en_revision')}
+                                                                disabled={actionLoading === fb.id}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5" />
+                                                                Marcar en revisión
+                                                            </button>
+                                                            <button
+                                                                onClick={() => updateFeedbackStatus(fb.id, 'resuelto')}
+                                                                disabled={actionLoading === fb.id}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+                                                            >
+                                                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                Resolver
+                                                            </button>
+                                                            <button
+                                                                onClick={() => updateFeedbackStatus(fb.id, 'descartado')}
+                                                                disabled={actionLoading === fb.id}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-500/10 border border-gray-500/20 text-gray-400 text-xs font-semibold hover:bg-gray-500/20 transition-colors disabled:opacity-50"
+                                                            >
+                                                                <Archive className="w-3.5 h-3.5" />
+                                                                Descartar
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {fb.status === 'en_revision' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => updateFeedbackStatus(fb.id, 'resuelto')}
+                                                                disabled={actionLoading === fb.id}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+                                                            >
+                                                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                Marcar resuelto
+                                                            </button>
+                                                            <button
+                                                                onClick={() => updateFeedbackStatus(fb.id, 'pendiente')}
+                                                                disabled={actionLoading === fb.id}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+                                                            >
+                                                                <Clock className="w-3.5 h-3.5" />
+                                                                Volver a pendiente
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {(fb.status === 'resuelto' || fb.status === 'descartado') && (
+                                                        <button
+                                                            onClick={() => updateFeedbackStatus(fb.id, 'pendiente')}
+                                                            disabled={actionLoading === fb.id}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+                                                        >
+                                                            <RefreshCw className="w-3.5 h-3.5" />
+                                                            Reabrir
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+
+                            {feedbackItems.length === 0 && (
+                                <div className="text-center py-20">
+                                    <MessageCircle className="w-10 h-10 mx-auto mb-4 text-gray-700" />
+                                    <p className="text-gray-500 font-medium">No hay mensajes de feedback</p>
+                                    <p className="text-gray-600 text-xs mt-1">
+                                        {feedbackFilter !== 'all' ? 'Prueba cambiando el filtro de estado' : 'Los usuarios aún no han enviado comentarios'}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
