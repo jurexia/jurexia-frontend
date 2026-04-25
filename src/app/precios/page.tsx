@@ -95,6 +95,11 @@ export default function PreciosPage() {
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">4 circuitos activos, creciendo</span></span>,
+                                    <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-accent-gold text-base leading-none">✦</span>
+                                        <span className="text-accent-gold">Redacción Pro — Motor de razonamiento profundo</span>
+                                        <span className="ml-auto text-[9px] bg-accent-gold text-charcoal-900 px-1.5 py-0.5 rounded-full font-bold shrink-0">NUEVO</span>
+                                    </span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Búsqueda con IA verificada en constante actualización",
                                     "Filtros por entidad federativa + marco federal",
@@ -123,8 +128,11 @@ export default function PreciosPage() {
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">4 circuitos activos, creciendo</span></span>,
                                     <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
                                         <span className="text-accent-gold text-base leading-none">✦</span>
+                                        <span className="text-accent-gold">Redacción Pro — Motor de razonamiento profundo</span>
+                                    </span>,
+                                    <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-accent-gold text-base leading-none">✦</span>
                                         <span className="text-accent-gold">Jurimetría — Predicción de sentido</span>
-                                        <span className="ml-auto text-[9px] bg-accent-gold text-charcoal-900 px-1.5 py-0.5 rounded-full font-bold shrink-0">NUEVO</span>
                                     </span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Consulta personalizada con equipo legal de Iurexia (vía correo)",
@@ -255,7 +263,13 @@ export default function PreciosPage() {
                                     <ComparisonRow feature="Soporte prioritario" free="—" basico="Estándar" pro="✓" platinum="VIP" />
                                     <ComparisonRow feature="Consulta legal estratégica (vía correo)" free="—" basico="—" pro="—" platinum="✓" />
                                     <ComparisonRow
-                                        feature={<span className="flex items-center gap-1.5 font-semibold text-accent-gold">Jurimetría — Predicción de sentido <span className="text-[9px] bg-accent-brown text-white px-1.5 py-0.5 rounded-full font-bold">NUEVO</span></span>}
+                                        feature={<span className="flex items-center gap-1.5 font-semibold text-accent-gold">Redacción Pro — Razonamiento profundo <span className="text-[9px] bg-accent-brown text-white px-1.5 py-0.5 rounded-full font-bold">NUEVO</span></span>}
+                                        free="—" basico="—" pro="✓"
+                                        platinum="✓"
+                                        goldFeature={true}
+                                    />
+                                    <ComparisonRow
+                                        feature={<span className="flex items-center gap-1.5 font-semibold text-accent-gold">Jurimetría — Predicción de sentido</span>}
                                         free="—" basico="—" pro="—"
                                         platinum="✓"
                                         goldFeature={true}
@@ -287,6 +301,7 @@ export default function PreciosPage() {
                     <div className="space-y-4">
                         {[
                             { question: '¿Qué son los Precedentes Judiciales y en qué planes están disponibles?', answer: 'Precedentes es una función de búsqueda semántica directa sobre sentencias reales de Tribunales Colegiados de Circuito. Actualmente cubre más de 111,000 sentencias de 4 circuitos (1° Ciudad de México, 2° Estado de México, 4° Nuevo León y 22° Querétaro). El corpus crece continuamente: cada mes se ingresan nuevas sentencias y se incorporan más circuitos. Está disponible en los planes Pro y Platinum.' },
+                            { question: '¿Qué es Redacción Pro y en qué planes está disponible?', answer: 'Redacción Pro es el modo de redacción más avanzado de Iurexia. Utiliza un motor de razonamiento profundo de última generación que produce textos legales de calidad significativamente superior al modo de redacción normal: argumentación más coherente, subsunción jurídica completa y prosa de nivel SCJN. Está disponible exclusivamente en los planes Pro y Platinum.' },
                             { question: '¿Qué es Jurimetría y en qué plan está disponible?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Está disponible exclusivamente en el plan Platinum.' },
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
                             { question: '¿Qué son los Genios Especializados y por qué son exclusivos PRO?', answer: 'Los Genios son una capa de inteligencia artificial avanzada especializada en materias específicas (Amparo, CIDH, Civil, Penal, etc.). Se activan con un clic dentro del chat (pudiendo usar hasta 2 al mismo tiempo) y utilizan un modelo de IA más potente para generar razonamientos jurídicos interdisciplinarios con fundamento verificado. Debido al alto costo computacional de este procesamiento complejo simultáneo, los Genios están disponibles exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },

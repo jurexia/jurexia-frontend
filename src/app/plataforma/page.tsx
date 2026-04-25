@@ -241,7 +241,26 @@ export default function PlataformaPage() {
                 bgColor="bg-cream-300"
             />
 
-            {/* Feature 6: Jurimetría */}
+            {/* Feature 6: Redacción Pro */}
+            <FeatureSection
+                id="redaccion-pro"
+                badge="✦ EXCLUSIVO PRO Y PLATINUM"
+                title={<>Redacción <span className="text-accent-gold">Pro</span></>}
+                subtitle="Calidad significativamente superior en cada documento"
+                description="Redacción Pro utiliza un motor de razonamiento profundo de última generación. La calidad del texto es considerablemente superior al modo de redacción normal: argumentación más coherente, subsunción jurídica completa y prosa de nivel SCJN."
+                features={[
+                    "Motor de razonamiento profundo de última generación",
+                    "Argumentación estructurada con subsunción jurídica completa",
+                    "Prosa de nivel SCJN — calidad significativamente superior al modo normal",
+                    "Fundamentación automatizada con artículos y tesis verificadas",
+                    "Disponible en planes Pro y Platinum"
+                ]}
+                visual={<RedaccionProVisual />}
+                bgColor="bg-white"
+                reverse
+            />
+
+            {/* Feature 7: Jurimetría */}
             <FeatureSection
                 id="jurimetria"
                 badge="✦ EXCLUSIVO PLATINUM"
@@ -256,8 +275,7 @@ export default function PlataformaPage() {
                     "Exclusivo para el plan Platinum"
                 ]}
                 visual={<JurimetriaVisual />}
-                bgColor="bg-white"
-                reverse
+                bgColor="bg-cream-300"
             />
 
             {/* Data Sources Section */}
@@ -814,3 +832,47 @@ function GenioAmparoVisual() {
         </div>
     );
 }
+
+function RedaccionProVisual() {
+    return (
+        <div className="bg-gradient-to-br from-[#0f1626] to-[#1a2540] rounded-3xl p-8 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-[#c9a962]" />
+                    <span className="text-white/60 text-xs font-medium uppercase tracking-wider">Redacción Pro</span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-full font-bold">PRO</span>
+            </div>
+
+            {/* Comparison */}
+            <div className="space-y-4">
+                {/* Normal mode */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] px-2 py-0.5 bg-white/10 text-white/50 rounded-full font-medium">NORMAL</span>
+                    </div>
+                    <p className="text-sm text-white/40 leading-relaxed">
+                        El acto reclamado viola el artículo 14 constitucional porque no se respetó el debido proceso...
+                    </p>
+                </div>
+
+                {/* Pro mode */}
+                <div className="bg-[#c9a962]/10 border border-[#c9a962]/30 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-full font-bold">REDACCIÓN PRO</span>
+                        <span className="text-[9px] bg-[#c9a962] text-charcoal-900 px-1.5 py-0.5 rounded-full font-bold">NUEVO</span>
+                    </div>
+                    <p className="text-sm text-white/80 leading-relaxed">
+                        El acto de autoridad impugnado transgrede la garantía de audiencia prevista en el artículo 14 de la Constitución Política de los Estados Unidos Mexicanos, al haberse emitido sin agotar el procedimiento que exige la subsunción del supuesto normativo en el caso concreto...
+                    </p>
+                </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                <span className="text-xs text-white/30">Motor de razonamiento profundo</span>
+                <span className="text-xs text-[#c9a962] font-medium">Calidad SCJN</span>
+            </div>
+        </div>
+    );
+}
+

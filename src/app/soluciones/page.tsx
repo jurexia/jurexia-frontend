@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Zap, Users, Shield, FileSearch, Gavel, FileCheck, Compass, BookOpen, MapPin, CheckCircle, Lock, Eye, Server, TrendingUp } from 'lucide-react';
+import { Scale, ArrowRight, Zap, Users, Shield, FileSearch, Gavel, FileCheck, Compass, BookOpen, MapPin, CheckCircle, Lock, Eye, Server, TrendingUp, PenTool } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
@@ -73,6 +73,7 @@ export default function SolucionesPage() {
                             { icon: <MapPin className="w-6 h-6" />, title: 'Investigación jurisprudencial', description: 'Encuentra tesis y jurisprudencia aplicable con precisión milimétrica, filtrada por jurisdicción y materia.' },
                             { icon: <Compass className="w-6 h-6" />, title: 'Orientación para no-abogados', description: 'Ubica situaciones jurídicas, explica rutas posibles y organiza información para que un abogado ejecute con claridad.' },
                             { icon: <BookOpen className="w-6 h-6" />, title: 'Precedentes Judiciales', description: 'Busca entre 111,000+ sentencias reales de Tribunales Colegiados. Encuentra el precedente exacto por materia, acto reclamado o sentido del fallo — el corpus crece cada mes.' },
+                            { icon: <PenTool className="w-6 h-6" />, title: 'Redacción Pro', description: 'Motor de razonamiento profundo que genera textos legales de calidad significativamente superior: argumentación coherente, subsunción jurídica completa y prosa de nivel SCJN. Exclusivo Pro y Platinum.' },
                             { icon: <TrendingUp className="w-6 h-6" />, title: 'Jurimetría predictiva', description: 'Sube el acto reclamado y los agravios: la IA predice el sentido probable (Concede / Niega / Sobresee) con estadísticas reales de precedentes, análisis argumento por argumento y narrativa judicial. Exclusivo Platinum.' },
                         ].map((card, i) => (
                             <AnimateOnScroll key={card.title} delay={i * 0.1}>
@@ -104,6 +105,7 @@ export default function SolucionesPage() {
                             { title: 'Agente de Análisis', description: 'Analiza demandas y documentos automáticamente, identificando fortalezas, debilidades y oportunidades.', href: '/plataforma#agente-analisis' },
                             { title: 'Filtros Jurisdiccionales', description: 'Resultados precisos por estado. Solo la normativa aplicable a tu jurisdicción, más la federal.', href: '/plataforma#filtros-jurisdiccionales' },
                             { title: 'Precedentes Judiciales', description: 'Corpus vivo de 111K+ sentencias reales con búsqueda semántica. Encuentra el precedente exacto para fundamentar tu estrategia.', href: '/plataforma#precedentes' },
+                            { title: 'Redacción Pro', description: 'Motor de razonamiento profundo que genera argumentaciones de nivel SCJN. Calidad significativamente superior al modo normal. Exclusivo Pro y Platinum.', href: '/plataforma#redaccion-pro' },
                             { title: 'Jurimetría', description: 'Predicción estadística del sentido probable de un amparo basada en precedentes reales. Exclusivo Platinum.', href: '/plataforma#jurimetria' },
                         ].map((card, i) => (
                             <AnimateOnScroll key={card.title} delay={i * 0.15}>
