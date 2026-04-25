@@ -184,12 +184,12 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         // Parse and strip <!-- CITATION_META:{...} --> from content
         let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }> } | null = null;
-        const metaMatch = content.match(/<!-- CITATION_META:(\{.*?\}) -->/);
+        const metaMatch = content.match(/<!-- CITATION_META:(\{[\s\S]*?\}) -->/);
         if (metaMatch) {
             try {
                 citationMeta = JSON.parse(metaMatch[1]);
             } catch { /* ignore parse errors */ }
-            content = content.replace(/\n*<!-- CITATION_META:\{.*?\} -->/g, '').trim();
+            content = content.replace(/\n*<!-- CITATION_META:\{[\s\S]*?\} -->/g, '').trim();
         }
 
         return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing };
