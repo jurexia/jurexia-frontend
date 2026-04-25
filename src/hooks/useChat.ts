@@ -256,6 +256,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             }
 
             const parser = new ThinkingParser();
+            let isProMode = false;
 
             for await (const chunk of streamChat(
                 updatedMessages,
@@ -284,6 +285,13 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     // If there's content after the marker, process it below
                 }
 
+                // Check for Pro mode marker: <!--MODE:PRO-->
+                if (chunk.includes('<!--MODE:PRO-->')) {
+                    isProMode = true;
+                    const remaining = chunk.replace('<!--MODE:PRO-->', '');
+                    if (!remaining.trim()) continue;
+                }
+
                 // Check if this is a retry marker: <!--RETRY:1:2000:cold--> or <!--RETRY:1:2000-->
                 const retryMatch = chunk.match(/<!--RETRY:(\d+):(\d+)(?::(\w+))?-->/);
                 if (retryMatch) {
@@ -302,7 +310,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
                 // Add assistant message on first chunk
                 if (!assistantMessageAdded) {
-                    setMessages(prev => [...prev, { role: 'assistant', content: displayContent }]);
+                    setMessages(prev => [...prev, { role: 'assistant', content: displayContent, isPro: isProMode }]);
                     assistantMessageAdded = true;
                 } else {
                     // Update existing assistant message
@@ -311,6 +319,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                         newMessages[newMessages.length - 1] = {
                             role: 'assistant',
                             content: displayContent,
+                            isPro: isProMode,
                         };
                         return newMessages;
                     });

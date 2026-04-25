@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles } from 'lucide-react';
 import type { Message } from '@/lib/api';
 
 interface ChatMessageProps {
@@ -813,6 +813,13 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     </p>
                 ) : (
                     <>
+                        {/* Pro mode badge — displayed at top of assistant bubble when the response was generated in Redacción Pro */}
+                        {message.isPro && (
+                            <div className="mx-4 mt-3 mb-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold tracking-wide rounded-full bg-gradient-to-r from-amber-50 via-white to-amber-50 text-[#8a6d2e] border border-[#c9a962] shadow-[0_0_6px_rgba(201,169,98,0.3)]">
+                                <Sparkles className="w-3 h-3 text-[#c9a962]" />
+                                <span>REDACCIÓN PRO</span>
+                            </div>
+                        )}
                         {/* Thinking/Reasoning section (collapsible) */}
                         {thinkingContent && (
                             <details className="mx-4 mt-3 mb-1 rounded-lg border border-cream-400/60 bg-cream-50/50 overflow-hidden">

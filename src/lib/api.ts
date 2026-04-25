@@ -7,6 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 export interface Message {
     role: 'user' | 'assistant' | 'system';
     content: string;
+    isPro?: boolean;  // True when the assistant message was generated in Redacción Pro mode
 }
 
 export interface SearchResult {

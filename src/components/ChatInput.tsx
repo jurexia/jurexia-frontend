@@ -71,6 +71,7 @@ export default function ChatInput({
     const [isListening, setIsListening] = useState(false);
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
+    const [redactarPro, setRedactarPro] = useState(false);
     const [selectedCircuit, setSelectedCircuit] = useState<number | 'ALL' | null>(null);
     const [tribunalFilter, setTribunalFilter] = useState<string | null>(null);
     const [showFileModal, setShowFileModal] = useState(false);
@@ -150,6 +151,7 @@ export default function ChatInput({
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
     const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
+    const canAccessRedactarPro = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
 
     const geniosList = [
         {
@@ -320,9 +322,11 @@ export default function ChatInput({
                 return;
             }
 
-            // Prepend [MODO_REDACCION] marker when in Redactar mode
+            // Prepend [MODO_REDACCION] or [MODO_REDACCION_PRO] marker when in Redactar mode
             if (chatMode === 'redactar') {
-                finalMessage = `[MODO_REDACCION] ${finalMessage}`;
+                finalMessage = redactarPro
+                    ? `[MODO_REDACCION_PRO] ${finalMessage}`
+                    : `[MODO_REDACCION] ${finalMessage}`;
             }
 
             // Prepend [MODO_PRECEDENTES] marker when in Precedentes mode
@@ -617,7 +621,7 @@ ${draftRequest.descripcion}`;
                                 className="inline-flex items-center rounded-md border border-gray-200 overflow-hidden flex-shrink-0 mr-1"
                             >
                                 <button
-                                    onClick={() => setChatMode('buscar')}
+                                    onClick={() => { setChatMode('buscar'); setRedactarPro(false); }}
                                     className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${chatMode === 'buscar'
                                         ? 'bg-charcoal-900 text-white'
                                         : 'bg-white text-gray-500 hover:text-gray-700'
@@ -645,6 +649,37 @@ ${draftRequest.descripcion}`;
                                     Redactar
                                 </button>
                             </div>
+
+                            {/* Pro toggle — contextual, only visible when Redactar mode is active */}
+                            {chatMode === 'redactar' && (
+                                <button
+                                    onClick={() => {
+                                        if (!canAccessRedactarPro) {
+                                            setShowUpgradeModal('pro');
+                                            return;
+                                        }
+                                        setRedactarPro(prev => !prev);
+                                    }}
+                                    className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-full border transition-all duration-300 flex-shrink-0 mr-1 ${redactarPro
+                                        ? 'bg-gradient-to-r from-amber-50 via-white to-amber-50 text-[#8a6d2e] border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.35)]'
+                                        : 'bg-white text-gray-500 border-gray-200 hover:border-[#c9a962]/50 hover:text-[#8a6d2e]'
+                                        }`}
+                                    title={canAccessRedactarPro
+                                        ? (redactarPro
+                                            ? "Redacción Pro activa — razonamiento profundo con motor avanzado"
+                                            : "Activar Redacción Pro — mayor calidad jurídica (más lento)")
+                                        : "Redacción Pro disponible en plan Pro"}
+                                >
+                                    <Sparkles className={`w-3 h-3 ${redactarPro ? 'text-[#c9a962]' : ''}`} />
+                                    <span>Pro</span>
+                                    {redactarPro && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#c9a962] animate-pulse" />
+                                    )}
+                                    {!canAccessRedactarPro && (
+                                        <Lock className="w-2.5 h-2.5 ml-0.5" />
+                                    )}
+                                </button>
+                            )}
 
                             <div className="h-4 w-[1px] bg-gray-200 mx-1 hidden sm:block" />
 
