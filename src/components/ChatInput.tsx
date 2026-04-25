@@ -74,6 +74,9 @@ export default function ChatInput({
     const [redactarPro, setRedactarPro] = useState(false);
     const [selectedCircuit, setSelectedCircuit] = useState<number | 'ALL' | null>(null);
     const [tribunalFilter, setTribunalFilter] = useState<string | null>(null);
+    // Precedentes: corte (SCJN | TCC | ALL) y sala SCJN (PLENO | PRIMERA_SALA | SEGUNDA_SALA | null=todas)
+    const [selectedCorte, setSelectedCorte] = useState<'SCJN' | 'TCC' | 'ALL'>('SCJN');
+    const [selectedSala, setSelectedSala] = useState<'PLENO' | 'PRIMERA_SALA' | 'SEGUNDA_SALA' | null>(null);
     const [showFileModal, setShowFileModal] = useState(false);
     const [showEnhanceModal, setShowEnhanceModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
@@ -331,10 +334,15 @@ export default function ChatInput({
 
             // Prepend [MODO_PRECEDENTES] marker when in Precedentes mode
             if (activeMode === 'precedentes') {
-                // No circuit tag → backend defaults to global (ALL circuits)
-                const circuitTag  = (selectedCircuit && selectedCircuit !== 'ALL') ? ` [CIRCUITO:${selectedCircuit}]` : '';
-                const tribunalTag = tribunalFilter ? ` [TRIBUNAL:${tribunalFilter}]` : '';
-                finalMessage = `[MODO_PRECEDENTES]${circuitTag}${tribunalTag} ${finalMessage}`;
+                const corteTag = ` [CORTE:${selectedCorte}]`;
+                let extraTags = '';
+                if (selectedCorte === 'SCJN') {
+                    if (selectedSala) extraTags += ` [SALA:${selectedSala}]`;
+                } else if (selectedCorte === 'TCC') {
+                    if (selectedCircuit && selectedCircuit !== 'ALL') extraTags += ` [CIRCUITO:${selectedCircuit}]`;
+                    if (tribunalFilter) extraTags += ` [TRIBUNAL:${tribunalFilter}]`;
+                }
+                finalMessage = `[MODO_PRECEDENTES]${corteTag}${extraTags} ${finalMessage}`;
             }
 
             // Always use reasoning for maximum quality
@@ -741,9 +749,84 @@ ${draftRequest.descripcion}`;
                         </div>
                     </div>
 
-                    {/* ── MODO PRECEDENTES: selector circuito → tribunal ────────── */}
+                    {/* ── MODO PRECEDENTES: corte (SCJN/TCC/Ambas) → filtros ────────── */}
                     {activeMode === 'precedentes' && (
                         <div className="mt-2 pt-2 border-t border-[#c9a962]/20 space-y-2">
+
+                            {/* Fila 0: Selector de Corte (SCJN | TCC | Ambas) */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-bold text-[#c9a962] uppercase tracking-widest shrink-0">Corte</span>
+                                <div className="inline-flex items-center rounded-md border border-[#c9a962]/40 overflow-hidden bg-white">
+                                    <button
+                                        onClick={() => { setSelectedCorte('SCJN'); setSelectedSala(null); setSelectedCircuit(null); setTribunalFilter(null); }}
+                                        title="Suprema Corte de Justicia de la Nación"
+                                        className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold transition-all duration-150 ${
+                                            selectedCorte === 'SCJN'
+                                                ? 'bg-[#c9a962] text-white'
+                                                : 'bg-white text-gray-600 hover:text-[#c9a962]'
+                                        }`}
+                                    >
+                                        <Scale className="w-3 h-3" />
+                                        SCJN
+                                    </button>
+                                    <button
+                                        onClick={() => { setSelectedCorte('TCC'); setSelectedSala(null); setSelectedCircuit('ALL'); setTribunalFilter(null); }}
+                                        title="Tribunales Colegiados de Circuito"
+                                        className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold transition-all duration-150 border-l border-[#c9a962]/30 ${
+                                            selectedCorte === 'TCC'
+                                                ? 'bg-[#c9a962] text-white'
+                                                : 'bg-white text-gray-600 hover:text-[#c9a962]'
+                                        }`}
+                                    >
+                                        <Gavel className="w-3 h-3" />
+                                        TCC
+                                    </button>
+                                    <button
+                                        onClick={() => { setSelectedCorte('ALL'); setSelectedSala(null); setSelectedCircuit(null); setTribunalFilter(null); }}
+                                        title="Búsqueda unificada (SCJN + TCC)"
+                                        className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold transition-all duration-150 border-l border-[#c9a962]/30 ${
+                                            selectedCorte === 'ALL'
+                                                ? 'bg-[#c9a962] text-white'
+                                                : 'bg-white text-gray-600 hover:text-[#c9a962]'
+                                        }`}
+                                    >
+                                        <BookOpen className="w-3 h-3" />
+                                        Ambas
+                                    </button>
+                                </div>
+                                {selectedCorte === 'ALL' && (
+                                    <span className="text-[9px] text-gray-400 italic">SCJN al frente + TCC</span>
+                                )}
+                            </div>
+
+                            {/* Selector de Sala — solo cuando Corte = SCJN */}
+                            {selectedCorte === 'SCJN' && (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[9px] font-bold text-[#c9a962] uppercase tracking-widest shrink-0">Sala</span>
+                                    {([
+                                        { id: null, label: 'Todas' },
+                                        { id: 'PLENO', label: 'Pleno' },
+                                        { id: 'PRIMERA_SALA', label: '1ª Sala' },
+                                        { id: 'SEGUNDA_SALA', label: '2ª Sala' },
+                                    ] as const).map(s => (
+                                        <button
+                                            key={s.label}
+                                            onClick={() => setSelectedSala(s.id)}
+                                            className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-all duration-150 border ${
+                                                selectedSala === s.id
+                                                    ? 'bg-[#c9a962] text-white border-[#c9a962] shadow-sm'
+                                                    : 'bg-white text-gray-500 border-gray-200 hover:border-[#c9a962] hover:text-[#c9a962]'
+                                            }`}
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Selector de Circuito + Tribunal — solo cuando Corte = TCC */}
+                            {selectedCorte === 'TCC' && (
+                            <>
 
                             {/* Fila 1: Circuito */}
                             <div className="flex items-start gap-2">
@@ -875,6 +958,8 @@ ${draftRequest.descripcion}`;
                                     Buscando en todos los circuitos disponibles
                                 </p>
                             ) : null}
+                            </>
+                            )}
                         </div>
                     )}
 
