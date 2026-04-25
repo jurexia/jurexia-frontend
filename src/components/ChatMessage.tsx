@@ -59,8 +59,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Extract unique document IDs, thinking content, and create numbered references
-    const { processedContent, docIdMap, thinkingContent, citationMeta, isSynthesizing } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }> } | null, isSynthesizing: false };
+    const { processedContent, docIdMap, thinkingContent, citationMeta, isSynthesizing, precedentesMeta } = useMemo(() => {
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }> } | null, isSynthesizing: false, precedentesMeta: null as Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string}> | null };
 
         let content = message.content || '';
 
@@ -192,7 +192,17 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             content = content.replace(/\n*<!-- CITATION_META:\{[\s\S]*?\} -->/g, '').trim();
         }
 
-        return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing };
+        // Parse and strip <!-- PRECEDENTES_META:[...] --> from content
+        let precedentesMeta: Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string}> | null = null;
+        const precMatch = content.match(/<!-- PRECEDENTES_META:(\[[\s\S]*?\]) -->/);
+        if (precMatch) {
+            try {
+                precedentesMeta = JSON.parse(precMatch[1]);
+            } catch { /* ignore parse errors */ }
+            content = content.replace(/\n*<!-- PRECEDENTES_META:\[[\s\S]*?\] -->/g, '').trim();
+        }
+
+        return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing, precedentesMeta };
     }, [message.content, isUser]);
 
     // ── CLEAN CONTENT FOR EXPORT ──────────────────────────────────────
@@ -202,6 +212,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         // 1. Remove <!-- CITATION_META:{...} --> blocks (including multiline)
         clean = clean.replace(/\n*<!--\s*CITATION_META:\{[\s\S]*?\}\s*-->/g, '');
+
+        // 1b. Remove <!-- PRECEDENTES_META:[...] --> blocks
+        clean = clean.replace(/\n*<!--\s*PRECEDENTES_META:\[[\s\S]*?\]\s*-->/g, '');
 
         // 2. Remove [Doc ID: uuid] in all variants
         clean = clean.replace(/\[Doc ID:\s*[a-f0-9-]+\]/gi, '');
@@ -929,6 +942,63 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     })}
                                 </div>
                             </details>
+                        )}
+                        {/* ⚖️ Precedentes Relacionados — Related judicial precedents cards */}
+                        {!isStreaming && precedentesMeta && precedentesMeta.length > 0 && (
+                            <div className="mx-4 mb-2 mt-1 rounded-lg border border-amber-200/60 bg-gradient-to-br from-amber-50/40 to-orange-50/30 overflow-hidden">
+                                <div className="px-3 py-2.5 flex items-center gap-2 border-b border-amber-200/40">
+                                    <span className="text-sm">⚖️</span>
+                                    <span className="text-xs font-semibold text-amber-800">Precedentes Relacionados</span>
+                                    <span className="text-[10px] text-amber-600/70 bg-amber-100/60 px-1.5 py-0.5 rounded-full ml-auto">{precedentesMeta.length}</span>
+                                </div>
+                                <div className="divide-y divide-amber-100/60">
+                                    {precedentesMeta.map((prec, idx) => {
+                                        // Parse materia from origen: "3TCC — 22° Circuito — CIVIL"
+                                        const materiaMatch = prec.origen?.match(/—\s*([A-ZÁÉÍÓÚ]+)\s*$/);
+                                        const materia = materiaMatch?.[1] || '';
+                                        const materiaColors: Record<string, string> = {
+                                            'CIVIL': 'bg-blue-100 text-blue-700',
+                                            'PENAL': 'bg-red-100 text-red-700',
+                                            'ADMINISTRATIVA': 'bg-purple-100 text-purple-700',
+                                            'TRABAJO': 'bg-green-100 text-green-700',
+                                            'LABORAL': 'bg-green-100 text-green-700',
+                                        };
+                                        const materiaStyle = materiaColors[materia] || 'bg-gray-100 text-gray-700';
+                                        
+                                        return (
+                                            <button
+                                                key={prec.id || idx}
+                                                onClick={() => {
+                                                    onCitationClick?.({
+                                                        docId: prec.id,
+                                                        origen: prec.origen || 'Sentencia Judicial',
+                                                        ref: prec.ref || '',
+                                                        texto: prec.holding || '',
+                                                        silo: prec.silo,
+                                                    });
+                                                }}
+                                                className="w-full text-left px-3 py-2.5 hover:bg-amber-50/80 transition-all duration-200 group/prec cursor-pointer"
+                                            >
+                                                <div className="flex items-start gap-2">
+                                                    <span className="text-amber-600/80 text-sm mt-0.5 flex-shrink-0">🏛</span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <span className="text-[11px] font-semibold text-charcoal-800 truncate">{prec.ref || 'Sentencia'}</span>
+                                                            {materia && (
+                                                                <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${materiaStyle}`}>{materia}</span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[11px] text-charcoal-600 leading-relaxed mt-1 line-clamp-3 group-hover/prec:text-charcoal-800 transition-colors">
+                                                            {prec.holding?.length > 200 ? prec.holding.slice(0, 200) + '...' : prec.holding}
+                                                        </p>
+                                                    </div>
+                                                    <span className="text-charcoal-300 group-hover/prec:text-amber-500 transition-colors flex-shrink-0 mt-1 text-xs">▸</span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         )}
                         {/* Export Buttons - Only show when not streaming and has content */}
                         {!isStreaming && message.content.length > 50 && (
