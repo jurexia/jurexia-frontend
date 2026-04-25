@@ -60,7 +60,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Extract unique document IDs, thinking content, and create numbered references
     const { processedContent, docIdMap, thinkingContent, citationMeta, isSynthesizing, precedentesMeta } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }> } | null, isSynthesizing: false, precedentesMeta: null as Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string}> | null };
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }> } | null, isSynthesizing: false, precedentesMeta: null as Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string; pdf_url?:string|null}> | null };
 
         let content = message.content || '';
 
@@ -193,7 +193,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         }
 
         // Parse and strip <!-- PRECEDENTES_META:[...] --> from content
-        let precedentesMeta: Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string}> | null = null;
+        let precedentesMeta: Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string; pdf_url?:string|null}> | null = null;
         const precMatch = content.match(/<!-- PRECEDENTES_META:(\[[\s\S]*?\]) -->/);
         if (precMatch) {
             try {
@@ -932,6 +932,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                             ref: prec.ref || '',
                                             texto: prec.holding || '',
                                             silo: prec.silo,
+                                            pdf_url: prec.pdf_url,
                                         });
                                     }
                                 }
