@@ -599,7 +599,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             if (currentParagraphLines.length > 0) {
                 const text = currentParagraphLines.join(' ').trim();
                 if (text) {
-                    docChildren.push(createFormattedParagraph(text, Paragraph, TextRun, AlignmentType));
+                    docChildren.push(createFormattedParagraph(text, Paragraph, TextRun, AlignmentType, FootnoteReferenceRun, footnotesConfig));
                 }
                 currentParagraphLines = [];
             }
@@ -861,7 +861,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     }, [message.content, buildAPAReferenceList]);
 
     // Helper function to create formatted paragraphs with bold text support
-    function createFormattedParagraph(text: string, Paragraph: any, TextRun: any, AlignmentType: any) {
+    function createFormattedParagraph(text: string, Paragraph: any, TextRun: any, AlignmentType: any, FootnoteReferenceRun: any, footnotesConfig: Record<number, any>) {
         // Step 1: split by **bold** markers
         const boldParts: { text: string; bold: boolean }[] = [];
         const boldRegex = /\*\*([^*]+)\*\*/g;
