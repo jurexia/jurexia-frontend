@@ -87,7 +87,7 @@ function buildReengagementEmail(firstName: string): string {
                                     </table>
                                 </div>
                                 <p style="margin:16px 0 0;font-size:13px;color:#ddd;line-height:1.5;">
-                                    <strong>As&iacute; de simple:</strong> agota tus 5 consultas gratuitas antes del <strong style="color:#4ade80;">28 de abril</strong> y autom&aacute;ticamente agregaremos <strong style="color:#4ade80;">15 consultas adicionales</strong> a tu cuenta. Sin costo. Sin trucos.
+                                    <strong>As&iacute; de simple:</strong> agota tus 5 consultas gratuitas antes del <strong style="color:#4ade80;">2 de mayo</strong> y autom&aacute;ticamente agregaremos <strong style="color:#4ade80;">15 consultas adicionales</strong> a tu cuenta. Sin costo. Sin trucos.
                                 </p>
                             </div>
 
@@ -138,7 +138,7 @@ function buildReengagementEmail(firstName: string): string {
                             </table>
 
                             <p style="margin:20px 0 0;font-size:12px;color:#f87171;text-align:center;font-weight:600;">
-                                &#9888; Promoci&oacute;n v&aacute;lida solo para cuentas gratuitas &middot; Expira el 28 de abril 2026
+                                &#9888; Promoci&oacute;n v&aacute;lida solo para cuentas gratuitas &middot; Expira el 2 de mayo 2026
                             </p>
 
                             <p style="margin:12px 0 0;font-size:12px;color:#666;text-align:center;line-height:1.5;">
