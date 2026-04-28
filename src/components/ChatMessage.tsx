@@ -501,7 +501,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const handleExportDOCX = useCallback(async () => {
         if (!contentRef.current) return;
 
-        const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } = await import('docx');
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, FootnoteReferenceRun } = await import('docx');
 
         const date = new Date().toLocaleDateString('es-MX', {
             year: 'numeric',
@@ -511,6 +511,27 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         // Get the raw message content and strip ALL citation artifacts
         const rawContent = cleanContentForExport(message.content);
+
+        // ── Build footnotes map from APA references ──
+        const apaRefs = buildAPAReferenceList();
+        const footnotesConfig: Record<number, { children: any[] }> = {};
+        for (const r of apaRefs) {
+            footnotesConfig[r.num] = {
+                children: [
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: r.reference,
+                                size: 20,
+                                font: "Arial",
+                                color: "333333"
+                            })
+                        ],
+                        spacing: { after: 60 }
+                    })
+                ]
+            };
+        }
 
         // Parse markdown content into structured paragraphs
         const lines = rawContent.split('\n');
@@ -544,7 +565,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                         text: "Plataforma de IA Legal para México",
                         size: 22,
                         color: "666666",
-                        italics: true
+                        italics: true,
+                        font: "Arial"
                     })
                 ],
                 alignment: AlignmentType.CENTER,
@@ -555,7 +577,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     new TextRun({
                         text: `Documento generado el ${date}`,
                         size: 20,
-                        color: "888888"
+                        color: "888888",
+                        font: "Arial"
                     })
                 ],
                 alignment: AlignmentType.CENTER,
@@ -612,12 +635,12 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             new TextRun({
                                 text: headerText,
                                 bold: true,
-                                size: 26,
+                                size: 28,
                                 font: "Arial"
                             })
                         ],
                         alignment: AlignmentType.CENTER,
-                        spacing: { before: 400, after: 200 }
+                        spacing: { before: 480, after: 240, line: 360 }
                     })
                 );
                 continue;
@@ -633,12 +656,12 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             new TextRun({
                                 text: headerText,
                                 bold: true,
-                                size: 28,
+                                size: 30,
                                 font: "Arial"
                             })
                         ],
                         alignment: AlignmentType.CENTER,
-                        spacing: { before: 400, after: 300 }
+                        spacing: { before: 480, after: 300, line: 360 }
                     })
                 );
                 continue;
@@ -654,11 +677,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             new TextRun({
                                 text: headerText,
                                 bold: true,
-                                size: 24,
+                                size: 26,
                                 font: "Arial"
                             })
                         ],
-                        spacing: { before: 300, after: 150 }
+                        spacing: { before: 360, after: 200, line: 360 }
                     })
                 );
                 continue;
@@ -674,12 +697,12 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             new TextRun({
                                 text: cleanText,
                                 bold: true,
-                                size: 24,
-                                font: "Times New Roman"
+                                size: 26,
+                                font: "Arial"
                             })
                         ],
                         alignment: AlignmentType.JUSTIFIED,
-                        spacing: { before: 200, after: 100 }
+                        spacing: { before: 240, after: 120, line: 360 }
                     })
                 );
                 continue;
@@ -700,17 +723,17 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 new TextRun({
                                     text: clauseNumber,
                                     bold: true,
-                                    size: 24,
-                                    font: "Times New Roman"
+                                    size: 26,
+                                    font: "Arial"
                                 }),
                                 new TextRun({
                                     text: restOfText,
-                                    size: 24,
-                                    font: "Times New Roman"
+                                    size: 26,
+                                    font: "Arial"
                                 })
                             ],
                             alignment: AlignmentType.JUSTIFIED,
-                            spacing: { before: 150, after: 100 }
+                            spacing: { before: 200, after: 120, line: 360 }
                         })
                     );
                     continue;
@@ -727,14 +750,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             new TextRun({
                                 text: quoteText.replace(/\*\*/g, ''),
                                 italics: true,
-                                size: 22,
-                                font: "Times New Roman",
+                                size: 24,
+                                font: "Arial",
                                 color: "333333"
                             })
                         ],
-                        indent: { left: 480 },  // Slight left indent
+                        indent: { left: 480 },
                         alignment: AlignmentType.JUSTIFIED,
-                        spacing: { before: 100, after: 100 }
+                        spacing: { before: 120, after: 120, line: 360 }
                     })
                 );
                 continue;
@@ -747,54 +770,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Flush remaining paragraph
         flushParagraph();
 
-        // ── APA References Section ──────────────────────────────────────────
-        const apaRefs = buildAPAReferenceList();
-        if (apaRefs.length > 0) {
-            docChildren.push(
-                new Paragraph({
-                    border: {
-                        top: { color: "C9A227", size: 8, style: BorderStyle.SINGLE }
-                    },
-                    spacing: { before: 600, after: 300 }
-                }),
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: "Referencias",
-                            bold: true,
-                            size: 28,
-                            font: "Georgia",
-                            color: "1a1a1a"
-                        })
-                    ],
-                    spacing: { before: 100, after: 200 }
-                })
-            );
-            for (const r of apaRefs) {
-                docChildren.push(
-                    new Paragraph({
-                        children: [
-                            new TextRun({
-                                text: `[${r.num}] `,
-                                bold: true,
-                                size: 22,
-                                font: "Times New Roman",
-                                color: "8a6d2e"
-                            }),
-                            new TextRun({
-                                text: r.reference,
-                                size: 22,
-                                font: "Times New Roman",
-                                color: "333333"
-                            })
-                        ],
-                        indent: { left: 360, hanging: 360 },
-                        alignment: AlignmentType.JUSTIFIED,
-                        spacing: { before: 60, after: 100 }
-                    })
-                );
-            }
-        }
+        // ── Footnotes are now rendered inline via FootnoteReferenceRun ──
+        // The references appear at the bottom of each page automatically
 
         // Footer
         docChildren.push(
@@ -854,6 +831,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         );
 
         const doc = new Document({
+            footnotes: footnotesConfig,
             sections: [{
                 properties: {
                     page: {
@@ -880,7 +858,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    }, [message.content]);
+    }, [message.content, buildAPAReferenceList]);
 
     // Helper function to create formatted paragraphs with bold text support
     function createFormattedParagraph(text: string, Paragraph: any, TextRun: any, AlignmentType: any) {
@@ -923,17 +901,40 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             citRegex.lastIndex = 0;
         }
 
+        // Build final children: replace ⟦N⟧ with FootnoteReferenceRun
+        const children: any[] = [];
+        for (const r of runs) {
+            if (r.superscript) {
+                // Extract the citation number from [N]
+                const citNumMatch = r.text.match(/\[(\d+)\]/);
+                const citNum = citNumMatch ? parseInt(citNumMatch[1]) : 0;
+                if (citNum > 0 && footnotesConfig[citNum]) {
+                    children.push(new FootnoteReferenceRun(citNum));
+                } else {
+                    // Fallback: keep as superscript text
+                    children.push(new TextRun({
+                        text: r.text,
+                        bold: false,
+                        superScript: true,
+                        size: 20,
+                        font: "Arial",
+                        color: "666666",
+                    }));
+                }
+            } else {
+                children.push(new TextRun({
+                    text: r.text,
+                    bold: r.bold,
+                    size: 26,   // 13pt
+                    font: "Arial",
+                }));
+            }
+        }
+
         return new Paragraph({
-            children: runs.map(r => new TextRun({
-                text: r.text,
-                bold: r.bold,
-                superScript: r.superscript || false,
-                size: r.superscript ? 18 : 24,
-                font: "Times New Roman",
-                color: r.superscript ? "666666" : undefined,
-            })),
+            children,
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { after: 200, line: 360 }  // 1.5 line spacing
+            spacing: { after: 240, line: 360 }  // 1.5 line spacing + paragraph spacing
         });
     }
 
