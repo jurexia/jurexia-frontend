@@ -266,12 +266,12 @@ export default function FreeUserOnboardingModal({
 
                     {/* Welcome text */}
                     <h1
-                        className="text-3xl font-semibold text-white mb-2"
+                        className="text-2xl sm:text-3xl font-semibold text-white mb-2"
                         style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                     >
                         {firstName ? `¡Bienvenido, ${firstName}!` : '¡Bienvenido!'}
                     </h1>
-                    <p className="text-white/40 text-base mb-10 max-w-sm mx-auto">
+                    <p className="text-white/40 text-sm sm:text-base mb-8 sm:mb-10 max-w-sm mx-auto">
                         Antes de comenzar, escucha esta breve guía para conocer tus herramientas
                     </p>
 
@@ -297,16 +297,29 @@ export default function FreeUserOnboardingModal({
                         />
                     </button>
 
-                    <p className="text-white/30 text-sm mt-6 tracking-wide mb-8">
+                    <p className="text-white/30 text-sm mt-6 tracking-wide mb-6 sm:mb-8">
                         Presiona para iniciar la guía
                     </p>
 
-                    {/* Skip button phase 1 */}
+                    {/* Skip button phase 1 — large and visible on mobile */}
                     <button
                         onClick={handleFinish}
-                        className="bg-transparent border-none text-white/40 hover:text-white/80 text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors"
+                        style={{
+                            background: 'rgba(255,255,255,0.08)',
+                            border: '1px solid rgba(255,255,255,0.15)',
+                            borderRadius: '12px',
+                            padding: '14px 28px',
+                            color: 'rgba(255,255,255,0.7)',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            WebkitTapHighlightColor: 'transparent',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = 'rgba(255,255,255,0.95)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
                     >
-                        Omitir y empezar a usar iurexia
+                        Omitir y empezar a usar Iurexia →
                     </button>
                 </div>
 
@@ -331,20 +344,30 @@ export default function FreeUserOnboardingModal({
 
     // ===== PHASE 2: AUDIO-SYNCED TOUR =====
     const current = TOUR_STEPS[tourStep];
-    const tooltipW = 340;
-    const GAP = 20;
+    const isMobile = WH.w < 480;
+    const tooltipW = isMobile ? Math.min(WH.w - 32, 340) : 340;
+    const GAP = isMobile ? 12 : 20;
+    const EDGE_PAD = isMobile ? 12 : 16;
 
     let tooltipStyle: React.CSSProperties = {};
-    if (rect) {
-        const centerX = Math.min(Math.max(rect.left + rect.width / 2 - tooltipW / 2, 16), WH.w - tooltipW - 16);
+    if (isMobile) {
+        // On mobile: always position tooltip at bottom of screen, above audio bar
+        tooltipStyle = {
+            bottom: 110,
+            left: EDGE_PAD,
+            right: EDGE_PAD,
+            width: 'auto',
+        };
+    } else if (rect) {
+        const centerX = Math.min(Math.max(rect.left + rect.width / 2 - tooltipW / 2, EDGE_PAD), WH.w - tooltipW - EDGE_PAD);
         const spaceAbove = rect.top - GAP;
         if (current?.preferBelow || spaceAbove < 180) {
-            tooltipStyle = { top: rect.top + rect.height + GAP, left: centerX };
+            tooltipStyle = { top: rect.top + rect.height + GAP, left: centerX, width: tooltipW };
         } else {
-            tooltipStyle = { bottom: WH.h - rect.top + GAP, left: centerX };
+            tooltipStyle = { bottom: WH.h - rect.top + GAP, left: centerX, width: tooltipW };
         }
     } else {
-        tooltipStyle = { top: WH.h / 2 - 80, left: WH.w / 2 - tooltipW / 2 };
+        tooltipStyle = { top: WH.h / 2 - 80, left: WH.w / 2 - tooltipW / 2, width: tooltipW };
     }
 
     const descParts = current?.description.split('\n\n') || [''];
@@ -378,12 +401,31 @@ export default function FreeUserOnboardingModal({
                 )}
             </svg>
 
-            {/* Skip Button Phase 2 */}
+            {/* Skip Button Phase 2 — safe area + larger touch target on mobile */}
             <button
                 onClick={handleFinish}
-                className="absolute top-6 right-6 z-[220] px-4 py-2 bg-[rgba(20,20,20,0.6)] hover:bg-[rgba(40,40,40,0.8)] border border-white/10 rounded-full text-white/60 hover:text-white text-sm font-medium cursor-pointer backdrop-blur transition-all"
+                style={{
+                    position: 'absolute',
+                    top: 'max(12px, env(safe-area-inset-top, 12px))',
+                    right: '12px',
+                    zIndex: 220,
+                    padding: '10px 18px',
+                    background: 'rgba(20,20,20,0.75)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '12px',
+                    color: 'rgba(255,255,255,0.8)',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    transition: 'all 0.2s ease',
+                    WebkitTapHighlightColor: 'transparent',
+                    minHeight: '44px',
+                    minWidth: '44px',
+                }}
             >
-                Omitir tutorial
+                Omitir ✕
             </button>
 
             {/* Tooltip Card */}
@@ -392,7 +434,7 @@ export default function FreeUserOnboardingModal({
                     className="absolute shadow-2xl"
                     key={tourStep}
                     style={{
-                        ...tooltipStyle, width: tooltipW,
+                        ...tooltipStyle,
                         pointerEvents: 'auto', zIndex: 210,
                         animation: 'tooltipFadeIn 0.4s ease-out',
                     }}
