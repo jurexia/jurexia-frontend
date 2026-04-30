@@ -355,8 +355,8 @@ export default function ChatInput({
     };
 
     const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-        // Enter inserts a newline — only the send button submits
-        if (e.key === 'Enter' && e.ctrlKey) {
+        // Enter sends — Shift+Enter inserts newline
+        if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSubmit();
         }
