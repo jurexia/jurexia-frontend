@@ -5,7 +5,8 @@ import {
     Users, Shield, BarChart3, AlertTriangle, Ban, CheckCircle,
     Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail, Bell,
     MoreVertical, ChevronLeft, ChevronRight, Filter, Scale, Send, UserCheck, AlertCircle,
-    MessageCircle, Bug, Lightbulb, MessageSquare, Clock, CheckCircle2, XCircle, Archive
+    MessageCircle, Bug, Lightbulb, MessageSquare, Clock, CheckCircle2, XCircle, Archive,
+    DollarSign, TrendingUp, TrendingDown, Minus, Server, Database, Cloud, Brain, Megaphone, Scissors, Cpu, Globe, Wallet
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
@@ -15,7 +16,7 @@ import Navbar from '@/components/Navbar';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.iurexia.com';
 const ADMIN_EMAIL = 'administracion@iurexia.com';
 
-type Tab = 'usuarios' | 'alertas' | 'estadisticas' | 'feedback';
+type Tab = 'usuarios' | 'alertas' | 'estadisticas' | 'feedback' | 'finanzas';
 
 interface UserProfile {
     id: string;
@@ -96,6 +97,48 @@ const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; labe
     descartado: { icon: XCircle, color: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)', label: 'Descartado' },
 };
 
+interface FinancesData {
+    totalSubscribers: number;
+    totalMRR: number; // centavos MXN
+    planBreakdown: { name: string; count: number; mrr: number }[];
+    balance: { available: number; pending: number; currency: string };
+    timestamp: string;
+}
+
+interface CostItem {
+    name: string;
+    amount: number; // MXN
+    icon: any;
+    type: 'fijo' | 'variable' | 'dev' | 'marketing';
+    color: string;
+    note?: string;
+}
+
+// ═══ COSTOS OPERATIVOS MENSUALES ═══
+// Actualizar estos valores cuando cambien los precios
+const OPERATIONAL_COSTS: CostItem[] = [
+    // Infraestructura
+    { name: 'Render (API Backend)', amount: 500, icon: Server, type: 'fijo', color: '#6366f1', note: 'Pro Plan $25 USD' },
+    { name: 'Supabase (DB + Auth)', amount: 500, icon: Database, type: 'fijo', color: '#3ecf8e', note: 'Pro Plan $25 USD' },
+    { name: 'Qdrant Cloud (Vectores)', amount: 760, icon: Database, type: 'fijo', color: '#dc2626', note: '$37.95 USD' },
+    { name: 'Google Workspace (2 lic)', amount: 437, icon: Globe, type: 'fijo', color: '#4285f4', note: 'Business Standard × 2' },
+    { name: 'Google AI Ultra Access', amount: 640, icon: Brain, type: 'fijo', color: '#fbbc04', note: '⚠️ Sube a $2,010 el 19 jun' },
+    { name: 'Google Workspace Archivado', amount: 50, icon: Globe, type: 'fijo', color: '#34a853', note: '1 usuario archivado' },
+    { name: 'Dominio iurexia.com', amount: 12, icon: Globe, type: 'fijo', color: '#ea4335', note: 'Prorrateo mensual' },
+    // APIs variables
+    { name: 'Google Cloud (Gemini API)', amount: 535, icon: Cloud, type: 'variable', color: '#4285f4', note: 'Genio Jurídico + procesamiento' },
+    { name: 'OpenRouter API', amount: 200, icon: Cpu, type: 'variable', color: '#8b5cf6', note: 'DeepSeek + modelos auxiliares' },
+    { name: 'DeepSeek API', amount: 100, icon: Brain, type: 'variable', color: '#0ea5e9', note: 'Thinking mode directo' },
+    // Desarrollo
+    { name: 'Claude (Desarrollo)', amount: 4000, icon: Cpu, type: 'dev', color: '#d97706', note: '$200 USD/mes' },
+    // Marketing
+    { name: 'CapCut Pro', amount: 400, icon: Scissors, type: 'marketing', color: '#ec4899', note: 'Edición de video publicitario' },
+    { name: 'Publicidad Digital', amount: 3000, icon: Megaphone, type: 'marketing', color: '#f97316', note: 'Meta Ads, Google Ads, etc.' },
+];
+
+const STRIPE_FEE_RATE = 0.036; // 3.6%
+const STRIPE_FEE_FIXED = 300; // $3 MXN por transacción (en centavos)
+
 const SEVERITY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
     critical: { bg: 'rgba(220, 38, 38, 0.15)', text: '#fca5a5', border: '#dc2626' },
     high: { bg: 'rgba(245, 158, 11, 0.15)', text: '#fcd34d', border: '#f59e0b' },
@@ -164,6 +207,10 @@ export default function AdminPage() {
     const [feedbackCategoryFilter, setFeedbackCategoryFilter] = useState<'all' | 'error' | 'mejora' | 'otro'>('all');
     const [expandedFeedback, setExpandedFeedback] = useState<string | null>(null);
     const [feedbackCount, setFeedbackCount] = useState(0);
+    // Finanzas state
+    const [financesData, setFinancesData] = useState<FinancesData | null>(null);
+    const [editingCosts, setEditingCosts] = useState<Record<string, number>>({});
+    const [showCostEditor, setShowCostEditor] = useState(false);
 
     const getToken = useCallback(() => {
         return session?.access_token || '';
@@ -246,6 +293,16 @@ export default function AdminPage() {
                         .select('*', { count: 'exact', head: true })
                         .eq('status', 'pendiente');
                     setFeedbackCount(count || 0);
+                } else if (tab === 'finanzas') {
+                    const res = await fetch('/api/admin/finances');
+                    if (!res.ok) throw new Error(`Error ${res.status}`);
+                    const data = await res.json();
+                    setFinancesData(data);
+                    // Load saved cost overrides from localStorage
+                    try {
+                        const saved = localStorage.getItem('iurexia_cost_overrides');
+                        if (saved) setEditingCosts(JSON.parse(saved));
+                    } catch {}
                 }
             } catch (e: any) {
                 setError(e.message || 'Error al cargar datos');
@@ -501,10 +558,39 @@ export default function AdminPage() {
         );
     }
 
+    // Helper: get cost amount (with user overrides from localStorage)
+    const getCostAmount = (costName: string, defaultAmount: number) => {
+        return editingCosts[costName] ?? defaultAmount;
+    };
+
+    const saveCostOverrides = (overrides: Record<string, number>) => {
+        setEditingCosts(overrides);
+        localStorage.setItem('iurexia_cost_overrides', JSON.stringify(overrides));
+    };
+
+    // Calculate finances
+    const totalCosts = OPERATIONAL_COSTS.reduce((sum, c) => sum + getCostAmount(c.name, c.amount), 0);
+    const costsByType = {
+        fijo: OPERATIONAL_COSTS.filter(c => c.type === 'fijo').reduce((s, c) => s + getCostAmount(c.name, c.amount), 0),
+        variable: OPERATIONAL_COSTS.filter(c => c.type === 'variable').reduce((s, c) => s + getCostAmount(c.name, c.amount), 0),
+        dev: OPERATIONAL_COSTS.filter(c => c.type === 'dev').reduce((s, c) => s + getCostAmount(c.name, c.amount), 0),
+        marketing: OPERATIONAL_COSTS.filter(c => c.type === 'marketing').reduce((s, c) => s + getCostAmount(c.name, c.amount), 0),
+    };
+
+    const mrrCentavos = financesData?.totalMRR || 0;
+    const mrrPesos = mrrCentavos / 100;
+    const totalSubs = financesData?.totalSubscribers || 0;
+    const stripeFees = totalSubs > 0 ? (mrrPesos * STRIPE_FEE_RATE) + (totalSubs * (STRIPE_FEE_FIXED / 100)) : 0;
+    const netRevenue = mrrPesos - stripeFees;
+    const grossProfit = netRevenue - totalCosts;
+    const margin = mrrPesos > 0 ? (grossProfit / mrrPesos) * 100 : 0;
+    const breakEvenSubs = Math.ceil((totalCosts * 100) / (14900 * (1 - STRIPE_FEE_RATE) - STRIPE_FEE_FIXED));
+
     const tabs: { key: Tab; label: string; icon: any; badge?: number }[] = [
         { key: 'usuarios', label: 'Usuarios', icon: Users },
         { key: 'alertas', label: 'Alertas', icon: AlertTriangle },
         { key: 'feedback', label: 'Feedback', icon: MessageCircle, badge: feedbackCount },
+        { key: 'finanzas', label: 'Finanzas', icon: DollarSign },
         { key: 'estadisticas', label: 'Estadísticas', icon: BarChart3 },
     ];
 
@@ -1234,6 +1320,368 @@ export default function AdminPage() {
                                     </p>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* ═══ TAB: FINANZAS ═══ */}
+                {!loadingData && tab === 'finanzas' && (
+                    <div>
+                        {/* ── Top KPI Cards ── */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+                            {[
+                                {
+                                    label: 'Ingresos MRR',
+                                    value: `$${mrrPesos.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`,
+                                    sub: `${totalSubs} suscriptores`,
+                                    icon: TrendingUp,
+                                    color: '#22c55e',
+                                    borderColor: '#22c55e',
+                                },
+                                {
+                                    label: 'Costos Totales',
+                                    value: `$${totalCosts.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`,
+                                    sub: `${OPERATIONAL_COSTS.length} servicios`,
+                                    icon: TrendingDown,
+                                    color: '#ef4444',
+                                    borderColor: '#ef4444',
+                                },
+                                {
+                                    label: grossProfit >= 0 ? 'Utilidad Bruta' : 'Pérdida Neta',
+                                    value: `${grossProfit >= 0 ? '+' : '-'}$${Math.abs(grossProfit).toLocaleString('es-MX', { minimumFractionDigits: 0 })}`,
+                                    sub: `Margen: ${margin.toFixed(1)}%`,
+                                    icon: grossProfit >= 0 ? TrendingUp : TrendingDown,
+                                    color: grossProfit >= 0 ? '#d4af37' : '#ef4444',
+                                    borderColor: grossProfit >= 0 ? '#d4af37' : '#ef4444',
+                                },
+                                {
+                                    label: 'Balance Stripe',
+                                    value: `$${((financesData?.balance?.pending || 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 0 })}`,
+                                    sub: `Disponible: $${((financesData?.balance?.available || 0) / 100).toLocaleString('es-MX')}`,
+                                    icon: Wallet,
+                                    color: '#3b82f6',
+                                    borderColor: '#3b82f6',
+                                },
+                            ].map((kpi, i) => (
+                                <div key={i} style={{
+                                    background: '#0d0d0d',
+                                    border: `1px solid #222`,
+                                    borderLeft: `3px solid ${kpi.borderColor}`,
+                                    borderRadius: '16px',
+                                    padding: '24px',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                }}>
+                                    <div style={{ position: 'absolute', top: '16px', right: '16px', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${kpi.color}12` }}>
+                                        <kpi.icon style={{ width: '20px', height: '20px', color: kpi.color }} />
+                                    </div>
+                                    <p style={{ color: '#888', fontSize: '0.78rem', fontWeight: 500, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{kpi.label}</p>
+                                    <p style={{ fontSize: '1.8rem', fontWeight: 800, color: kpi.color, lineHeight: 1.1, fontFeatureSettings: '"tnum"' }}>
+                                        {kpi.value}
+                                    </p>
+                                    <p style={{ color: '#666', fontSize: '0.75rem', marginTop: '6px' }}>{kpi.sub}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* ── Viability Banner ── */}
+                        <div style={{
+                            padding: '16px 24px',
+                            borderRadius: '14px',
+                            marginBottom: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '16px',
+                            background: grossProfit >= 0
+                                ? 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(212,175,55,0.06))'
+                                : 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(245,158,11,0.06))',
+                            border: grossProfit >= 0 ? '1px solid rgba(34,197,94,0.2)' : '1px solid rgba(239,68,68,0.25)',
+                        }}>
+                            <div style={{
+                                width: '48px', height: '48px', borderRadius: '14px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: grossProfit >= 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                                fontSize: '1.5rem',
+                            }}>
+                                {grossProfit >= 0 ? '🟢' : '🔴'}
+                            </div>
+                            <div>
+                                <p style={{ fontWeight: 700, fontSize: '1rem', color: grossProfit >= 0 ? '#86efac' : '#fca5a5' }}>
+                                    {grossProfit >= 0 ? 'Iurexia es rentable operativamente' : 'Iurexia está en números rojos'}
+                                </p>
+                                <p style={{ color: '#999', fontSize: '0.82rem', marginTop: '2px' }}>
+                                    {grossProfit >= 0
+                                        ? `Utilidad de $${grossProfit.toLocaleString('es-MX')} MXN/mes. Para cubrir sueldo (~$25,000) necesitas ${Math.ceil(((25000 + totalCosts) * 100) / (14900 * (1 - STRIPE_FEE_RATE) - STRIPE_FEE_FIXED))} suscriptores Pro.`
+                                        : `Pérdida de $${Math.abs(grossProfit).toLocaleString('es-MX')} MXN/mes. Necesitas ${breakEvenSubs} suscriptores Pro para break-even (tienes ${totalSubs}).`
+                                    }
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* ── Two-column layout ── */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
+
+                            {/* LEFT: P&L Statement */}
+                            <div style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: '16px', padding: '24px' }}>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <BarChart3 style={{ width: '18px', height: '18px', color: '#d4af37' }} />
+                                    Estado de Resultados (Mensual)
+                                </h3>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                    {/* Revenue */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
+                                        <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Ingresos Brutos (MRR)</span>
+                                        <span style={{ color: '#22c55e', fontWeight: 700, fontSize: '0.9rem', fontFeatureSettings: '"tnum"' }}>${mrrPesos.toLocaleString('es-MX')}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #1a1a1a' }}>
+                                        <span style={{ color: '#777', fontSize: '0.82rem', paddingLeft: '12px' }}>(-) Comisiones Stripe (3.6% + $3)</span>
+                                        <span style={{ color: '#ef4444', fontSize: '0.82rem', fontFeatureSettings: '"tnum"' }}>-${stripeFees.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '2px solid #333', fontWeight: 700 }}>
+                                        <span style={{ color: '#ccc', fontSize: '0.88rem' }}>= Ingreso Neto</span>
+                                        <span style={{ color: '#22c55e', fontSize: '0.95rem', fontFeatureSettings: '"tnum"' }}>${netRevenue.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+                                    </div>
+
+                                    {/* Cost categories */}
+                                    {[
+                                        { label: 'Infraestructura', amount: costsByType.fijo, color: '#6366f1' },
+                                        { label: 'APIs Variables', amount: costsByType.variable, color: '#0ea5e9' },
+                                        { label: 'Desarrollo (Claude)', amount: costsByType.dev, color: '#d97706' },
+                                        { label: 'Marketing', amount: costsByType.marketing, color: '#f97316' },
+                                    ].map(cat => (
+                                        <div key={cat.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #151515' }}>
+                                            <span style={{ color: '#777', fontSize: '0.82rem', paddingLeft: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: cat.color, display: 'inline-block' }} />
+                                                (-) {cat.label}
+                                            </span>
+                                            <span style={{ color: '#ef4444', fontSize: '0.82rem', fontFeatureSettings: '"tnum"' }}>-${cat.amount.toLocaleString('es-MX')}</span>
+                                        </div>
+                                    ))}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #1a1a1a' }}>
+                                        <span style={{ color: '#888', fontSize: '0.82rem', paddingLeft: '12px' }}>(-) Total Costos</span>
+                                        <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.85rem', fontFeatureSettings: '"tnum"' }}>-${totalCosts.toLocaleString('es-MX')}</span>
+                                    </div>
+
+                                    {/* Bottom line */}
+                                    <div style={{
+                                        display: 'flex', justifyContent: 'space-between', padding: '14px 0', marginTop: '4px',
+                                        borderTop: '2px solid #444',
+                                        background: grossProfit >= 0 ? 'rgba(34,197,94,0.05)' : 'rgba(239,68,68,0.05)',
+                                        borderRadius: '0 0 8px 8px',
+                                        paddingLeft: '8px', paddingRight: '4px',
+                                    }}>
+                                        <span style={{ color: '#e5e5e5', fontWeight: 800, fontSize: '1rem' }}>
+                                            {grossProfit >= 0 ? '✅ UTILIDAD' : '🔴 PÉRDIDA NETA'}
+                                        </span>
+                                        <span style={{ color: grossProfit >= 0 ? '#22c55e' : '#ef4444', fontWeight: 800, fontSize: '1.1rem', fontFeatureSettings: '"tnum"' }}>
+                                            {grossProfit >= 0 ? '+' : '-'}${Math.abs(grossProfit).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                                            <span style={{ color: '#666', fontWeight: 400, fontSize: '0.7rem', marginLeft: '6px' }}>MXN/mes</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* RIGHT: Revenue Breakdown from Stripe */}
+                            <div style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: '16px', padding: '24px' }}>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <CreditCard style={{ width: '18px', height: '18px', color: '#3b82f6' }} />
+                                    Ingresos por Plan (Live Stripe)
+                                </h3>
+                                {financesData?.planBreakdown && financesData.planBreakdown.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        {financesData.planBreakdown.map((plan, i) => {
+                                            const planMRR = plan.mrr / 100;
+                                            const pctOfTotal = mrrPesos > 0 ? (planMRR / mrrPesos) * 100 : 0;
+                                            const planColors = ['#3b82f6', '#8b5cf6', '#d4af37', '#22c55e', '#ef4444'];
+                                            const color = planColors[i % planColors.length];
+                                            return (
+                                                <div key={plan.name}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'baseline' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: color, display: 'inline-block' }} />
+                                                            <span style={{ color: '#ccc', fontWeight: 600, fontSize: '0.88rem' }}>{plan.name}</span>
+                                                            <span style={{ color: '#555', fontSize: '0.75rem', background: '#1a1a1a', padding: '2px 8px', borderRadius: '6px' }}>{plan.count} subs</span>
+                                                        </div>
+                                                        <span style={{ color: color, fontWeight: 700, fontSize: '0.9rem', fontFeatureSettings: '"tnum"' }}>
+                                                            ${planMRR.toLocaleString('es-MX')}/mes
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ width: '100%', height: '8px', background: '#1a1a1a', borderRadius: '4px', overflow: 'hidden' }}>
+                                                        <div style={{ width: `${pctOfTotal}%`, height: '100%', background: `linear-gradient(90deg, ${color}, ${color}88)`, borderRadius: '4px', transition: 'width 0.6s ease' }} />
+                                                    </div>
+                                                    <p style={{ color: '#555', fontSize: '0.72rem', marginTop: '3px', textAlign: 'right' }}>{pctOfTotal.toFixed(1)}% del ingreso</p>
+                                                </div>
+                                            );
+                                        })}
+
+                                        {/* Subscriber growth target */}
+                                        <div style={{ marginTop: '8px', padding: '14px', background: '#111', border: '1px solid #222', borderRadius: '12px' }}>
+                                            <p style={{ color: '#888', fontSize: '0.78rem', fontWeight: 600, marginBottom: '8px' }}>🎯 Meta para break-even completo</p>
+                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                                                <span style={{ fontSize: '2rem', fontWeight: 800, color: '#d4af37' }}>{breakEvenSubs}</span>
+                                                <span style={{ color: '#888', fontSize: '0.82rem' }}>suscriptores Pro</span>
+                                            </div>
+                                            <div style={{ width: '100%', height: '6px', background: '#1a1a1a', borderRadius: '3px', overflow: 'hidden', marginTop: '8px' }}>
+                                                <div style={{
+                                                    width: `${Math.min(100, (totalSubs / breakEvenSubs) * 100)}%`,
+                                                    height: '100%',
+                                                    background: totalSubs >= breakEvenSubs ? '#22c55e' : 'linear-gradient(90deg, #ef4444, #f59e0b)',
+                                                    borderRadius: '3px',
+                                                    transition: 'width 0.6s ease',
+                                                }} />
+                                            </div>
+                                            <p style={{ color: '#666', fontSize: '0.72rem', marginTop: '4px' }}>
+                                                Progreso: {totalSubs}/{breakEvenSubs} ({((totalSubs / breakEvenSubs) * 100).toFixed(0)}%)
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: '40px', color: '#555' }}>
+                                        <RefreshCw style={{ width: '24px', height: '24px', margin: '0 auto 12px' }} className="animate-spin" />
+                                        <p>Cargando datos de Stripe...</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* ── Detailed Cost Breakdown ── */}
+                        <div style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Server style={{ width: '18px', height: '18px', color: '#ef4444' }} />
+                                    Desglose de Costos Mensuales
+                                </h3>
+                                <button
+                                    onClick={() => setShowCostEditor(!showCostEditor)}
+                                    style={{
+                                        padding: '6px 14px', borderRadius: '8px', border: '1px solid #333',
+                                        background: showCostEditor ? '#1a1a1a' : 'transparent',
+                                        color: showCostEditor ? '#fff' : '#888', cursor: 'pointer',
+                                        fontSize: '0.75rem', fontWeight: 600, transition: 'all 0.2s',
+                                    }}
+                                >
+                                    {showCostEditor ? '✓ Guardar cambios' : '✏️ Editar montos'}
+                                </button>
+                            </div>
+
+                            {/* Category headers */}
+                            {[
+                                { label: '🏗️ Infraestructura Fija', type: 'fijo' as const, color: '#6366f1' },
+                                { label: '⚡ APIs Variables', type: 'variable' as const, color: '#0ea5e9' },
+                                { label: '🛠️ Desarrollo', type: 'dev' as const, color: '#d97706' },
+                                { label: '📢 Marketing', type: 'marketing' as const, color: '#f97316' },
+                            ].map(cat => (
+                                <div key={cat.type} style={{ marginBottom: '20px' }}>
+                                    <p style={{
+                                        color: cat.color, fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase',
+                                        letterSpacing: '0.06em', marginBottom: '10px', paddingLeft: '4px',
+                                    }}>{cat.label}</p>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        {OPERATIONAL_COSTS.filter(c => c.type === cat.type).map(cost => {
+                                            const currentAmount = getCostAmount(cost.name, cost.amount);
+                                            return (
+                                                <div key={cost.name} style={{
+                                                    display: 'flex', alignItems: 'center', padding: '10px 14px',
+                                                    borderRadius: '10px', transition: 'background 0.15s',
+                                                    background: 'transparent',
+                                                }}
+                                                onMouseEnter={e => (e.currentTarget.style.background = '#111')}
+                                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                                >
+                                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${cost.color}15`, marginRight: '12px', flexShrink: 0 }}>
+                                                        <cost.icon style={{ width: '16px', height: '16px', color: cost.color }} />
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <p style={{ color: '#ccc', fontSize: '0.85rem', fontWeight: 600 }}>{cost.name}</p>
+                                                        {cost.note && <p style={{ color: '#555', fontSize: '0.72rem', marginTop: '1px' }}>{cost.note}</p>}
+                                                    </div>
+                                                    {showCostEditor ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            <span style={{ color: '#666', fontSize: '0.82rem' }}>$</span>
+                                                            <input
+                                                                type="number"
+                                                                value={currentAmount}
+                                                                onChange={e => {
+                                                                    const val = parseFloat(e.target.value) || 0;
+                                                                    const updated = { ...editingCosts, [cost.name]: val };
+                                                                    saveCostOverrides(updated);
+                                                                }}
+                                                                style={{
+                                                                    width: '90px', padding: '4px 8px', borderRadius: '6px',
+                                                                    border: '1px solid #333', background: '#111', color: '#fff',
+                                                                    fontSize: '0.85rem', textAlign: 'right', fontFeatureSettings: '"tnum"',
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.9rem', fontFeatureSettings: '"tnum"', minWidth: '80px', textAlign: 'right' }}>
+                                                            ${currentAmount.toLocaleString('es-MX')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 14px 2px', borderTop: '1px solid #1a1a1a' }}>
+                                            <span style={{ color: '#777', fontSize: '0.78rem', fontWeight: 600, fontFeatureSettings: '"tnum"' }}>
+                                                Subtotal: ${costsByType[cat.type].toLocaleString('es-MX')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Grand total bar */}
+                            <div style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '14px 18px', background: 'rgba(239,68,68,0.08)',
+                                border: '1px solid rgba(239,68,68,0.15)', borderRadius: '12px', marginTop: '8px',
+                            }}>
+                                <span style={{ color: '#fca5a5', fontWeight: 700, fontSize: '0.95rem' }}>COSTO TOTAL MENSUAL</span>
+                                <span style={{ color: '#ef4444', fontWeight: 800, fontSize: '1.2rem', fontFeatureSettings: '"tnum"' }}>
+                                    ${totalCosts.toLocaleString('es-MX')} MXN
+                                    <span style={{ color: '#777', fontWeight: 400, fontSize: '0.72rem', marginLeft: '8px' }}>
+                                        (~${(totalCosts / 20).toLocaleString('es-MX', { maximumFractionDigits: 0 })} USD)
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* ── Cost Distribution Visual ── */}
+                        <div style={{ background: '#0d0d0d', border: '1px solid #222', borderRadius: '16px', padding: '24px' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#e5e5e5', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <BarChart3 style={{ width: '18px', height: '18px', color: '#8b5cf6' }} />
+                                Distribución del Gasto
+                            </h3>
+                            <div style={{ display: 'flex', height: '14px', borderRadius: '7px', overflow: 'hidden', gap: '2px', marginBottom: '16px' }}>
+                                {[
+                                    { label: 'Infra', amount: costsByType.fijo, color: '#6366f1' },
+                                    { label: 'APIs', amount: costsByType.variable, color: '#0ea5e9' },
+                                    { label: 'Dev', amount: costsByType.dev, color: '#d97706' },
+                                    { label: 'Marketing', amount: costsByType.marketing, color: '#f97316' },
+                                ].map(seg => (
+                                    <div key={seg.label} style={{
+                                        width: `${totalCosts > 0 ? (seg.amount / totalCosts) * 100 : 25}%`,
+                                        height: '100%', background: seg.color, transition: 'width 0.6s ease',
+                                        minWidth: '4px', borderRadius: '4px',
+                                    }} title={`${seg.label}: $${seg.amount.toLocaleString('es-MX')} (${totalCosts > 0 ? ((seg.amount / totalCosts) * 100).toFixed(1) : 25}%)`} />
+                                ))}
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                                {[
+                                    { label: 'Infraestructura', amount: costsByType.fijo, color: '#6366f1' },
+                                    { label: 'APIs Variables', amount: costsByType.variable, color: '#0ea5e9' },
+                                    { label: 'Desarrollo', amount: costsByType.dev, color: '#d97706' },
+                                    { label: 'Marketing', amount: costsByType.marketing, color: '#f97316' },
+                                ].map(seg => (
+                                    <div key={seg.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: seg.color }} />
+                                        <span style={{ color: '#999', fontSize: '0.78rem' }}>{seg.label}</span>
+                                        <span style={{ color: '#ccc', fontSize: '0.78rem', fontWeight: 700, fontFeatureSettings: '"tnum"' }}>
+                                            ${seg.amount.toLocaleString('es-MX')} ({totalCosts > 0 ? ((seg.amount / totalCosts) * 100).toFixed(0) : 0}%)
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
