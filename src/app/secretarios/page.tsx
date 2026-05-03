@@ -290,7 +290,7 @@ export default function SecretariosPage() {
                             {
                                 icon: <BookOpen className="w-6 h-6" />,
                                 title: 'Precedentes Judiciales',
-                                desc: 'Búsqueda semántica en 111,000+ sentencias reales de Tribunales Colegiados. 4 circuitos activos hoy — el corpus crece cada mes con nuevas sentencias y nuevos circuitos.',
+                                desc: 'Búsqueda semántica en 111,000+ sentencias reales de Tribunales Colegiados. 5 circuitos activos hoy — el corpus crece cada mes con nuevas sentencias y nuevos circuitos.',
                                 badge: 'NUEVO'
                             },
                             {

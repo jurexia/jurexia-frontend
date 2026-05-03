@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithEmail, signInWithGoogle, resendConfirmationEmail } from '@/lib/supabase';
-import { RefreshCw, Mail } from 'lucide-react';
+import { signInWithEmail, signInWithGoogle, signInWithApple } from '@/lib/supabase';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -13,24 +12,10 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Resend state
-    const [showResend, setShowResend] = useState(false);
-    const [resendCooldown, setResendCooldown] = useState(0);
-    const [resendSuccess, setResendSuccess] = useState(false);
-
-    useEffect(() => {
-        if (resendCooldown > 0) {
-            const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [resendCooldown]);
-
     const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
-        setShowResend(false);
-        setResendSuccess(false);
 
         try {
             await signInWithEmail(email, password);
@@ -38,9 +23,6 @@ export default function LoginPage() {
         } catch (err: any) {
             if (err.message?.includes('Invalid login')) {
                 setError('Email o contraseña incorrectos');
-            } else if (err.message?.includes('Email not confirmed')) {
-                setError('Tu email aún no está confirmado.');
-                setShowResend(true);
             } else {
                 setError(err.message || 'Error al iniciar sesión');
             }
@@ -49,24 +31,19 @@ export default function LoginPage() {
         }
     };
 
-    const handleResendEmail = async () => {
-        if (resendCooldown > 0) return;
-        setResendSuccess(false);
-
-        try {
-            await resendConfirmationEmail(email);
-            setResendSuccess(true);
-            setResendCooldown(60);
-        } catch (err: any) {
-            setError('Error al reenviar el correo. Intenta de nuevo.');
-        }
-    };
-
     const handleGoogleLogin = async () => {
         try {
             await signInWithGoogle();
         } catch (err: any) {
             setError('Error al conectar con Google');
+        }
+    };
+
+    const handleAppleLogin = async () => {
+        try {
+            await signInWithApple();
+        } catch (err: any) {
+            setError('Error al conectar con Apple');
         }
     };
 
@@ -103,6 +80,17 @@ export default function LoginPage() {
                         <span className="text-charcoal-700 font-medium">Continuar con Google</span>
                     </button>
 
+                    {/* Apple Login Button */}
+                    <button
+                        onClick={handleAppleLogin}
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-black bg-black text-white rounded-xl hover:bg-gray-900 transition-colors mb-6"
+                    >
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="white">
+                            <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                        </svg>
+                        <span className="font-medium">Continuar con Apple</span>
+                    </button>
+
                     {/* Divider */}
                     <div className="relative my-6">
                         <div className="absolute inset-0 flex items-center">
@@ -116,35 +104,8 @@ export default function LoginPage() {
                     {/* Email Form */}
                     <form onSubmit={handleEmailLogin} className="space-y-4">
                         {error && (
-                            <div className={`p-3 ${showResend ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-red-50 text-red-600'} text-sm rounded-xl text-center`}>
-                                <div className="flex items-center justify-center gap-2 mb-1">
-                                    {showResend && <Mail className="w-4 h-4" />}
-                                    <span>{error}</span>
-                                </div>
-                                {showResend && (
-                                    <div className="mt-3">
-                                        <p className="text-xs text-amber-600 mb-2">
-                                            Revisa tu correo (incluye SPAM). ¿No lo recibes?
-                                        </p>
-                                        <button
-                                            type="button"
-                                            onClick={handleResendEmail}
-                                            disabled={resendCooldown > 0}
-                                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 text-white text-xs font-medium rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            <RefreshCw className="w-3.5 h-3.5" />
-                                            {resendCooldown > 0
-                                                ? `Reenviar en ${resendCooldown}s`
-                                                : 'Reenviar correo de confirmación'
-                                            }
-                                        </button>
-                                        {resendSuccess && (
-                                            <p className="text-green-600 text-xs mt-2">
-                                                ✅ Correo reenviado exitosamente
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
+                            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl text-center">
+                                {error}
                             </div>
                         )}
 

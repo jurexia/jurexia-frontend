@@ -91,7 +91,7 @@ export default function ChatInput({
     const { user, profile } = useAuth();
 
     // ── Datos de circuitos y tribunales ──────────────────────────────────
-    const AVAILABLE_CIRCUITS = [1, 2, 4, 22];
+    const AVAILABLE_CIRCUITS = [1, 2, 3, 4, 22];
 
     const CIRCUIT_TRIBUNALS: Record<number, { id: string; label: string; available: boolean; grupo?: string }[]> = {
         1: [
@@ -131,6 +131,16 @@ export default function ChatInput({
             ...([1,2,3,4,5] as number[]).map(n => ({ id: `${n}TCC_LAB`, label: `${n}°`, available: true, grupo: 'LAB' })),
             // Materia Penal (1–2)
             ...([1,2] as number[]).map(n => ({ id: `${n}TCC_PEN`, label: `${n}°`, available: true, grupo: 'PEN' })),
+        ],
+        3: [
+            // Materia Administrativa (1–7)
+            ...([1,2,3,4,5,6,7] as number[]).map(n => ({ id: `${n}TCC_ADM`, label: `${n}°`, available: true, grupo: 'ADM' })),
+            // Materia Civil (1–6)
+            ...([1,2,3,4,5,6] as number[]).map(n => ({ id: `${n}TCC_CIV`, label: `${n}°`, available: true, grupo: 'CIV' })),
+            // Materia Laboral (1–6)
+            ...([1,2,3,4,5,6] as number[]).map(n => ({ id: `${n}TCC_LAB`, label: `${n}°`, available: true, grupo: 'LAB' })),
+            // Materia Penal (1–4)
+            ...([1,2,3,4] as number[]).map(n => ({ id: `${n}TCC_PEN`, label: `${n}°`, available: true, grupo: 'PEN' })),
         ],
         22: [
             { id: '1TCC',      label: '1° ADM/CIV', available: true },
@@ -889,7 +899,7 @@ ${draftRequest.descripcion}`;
                                         </button>
                                     </div>
                                     {/* Circuits 1 & 4: agrupar por materia (ADM / CIV / LAB / PEN) */}
-                                    {(selectedCircuit === 1 || selectedCircuit === 2 || selectedCircuit === 4) ? (
+                                    {(selectedCircuit === 1 || selectedCircuit === 2 || selectedCircuit === 3 || selectedCircuit === 4) ? (
                                         (['ADM','CIV','LAB','PEN'] as const).map((grupo) => {
                                             const tribunalesGrupo = CIRCUIT_TRIBUNALS[selectedCircuit as number].filter(t => t.grupo === grupo);
                                             if (tribunalesGrupo.length === 0) return null;

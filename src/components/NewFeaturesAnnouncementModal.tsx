@@ -170,7 +170,7 @@ export default function NewFeaturesAnnouncementModal({ isOpen, onClose }: NewFea
                                 <ul className="space-y-2.5">
                                     <li className="flex items-start gap-3 text-white/70 text-[13px] leading-snug">
                                         <Scale className="w-3.5 h-3.5 text-[#c9a962] flex-shrink-0 mt-0.5" />
-                                        Buscar sentencias de un circuito específico (1°, 2°, 4°, 22° y más en camino) o globalmente.
+                                        Buscar sentencias de un circuito específico (1°, 2°, 3°, 4°, 22° y más en camino) o globalmente.
                                     </li>
                                     <li className="flex items-start gap-3 text-white/70 text-[13px] leading-snug">
                                         <Scale className="w-3.5 h-3.5 text-[#c9a962] flex-shrink-0 mt-0.5" />

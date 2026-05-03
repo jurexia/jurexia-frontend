@@ -232,7 +232,7 @@ export default function PlataformaPage() {
                 description="El primer corpus de precedentes judiciales indexado semánticamente para el derecho mexicano. Encuentra sentencias reales por materia, acto reclamado, tribunal y sentido del fallo — con comprensión profunda del razonamiento judicial, no solo palabras clave."
                 features={[
                     "111,000+ holdings de sentencias reales de Tribunales Colegiados",
-                    "4 circuitos activos hoy: 1, 2, 4 y 22 — el corpus crece cada mes con nuevas sentencias",
+                    "5 circuitos activos hoy: 1, 2, 3, 4 y 22 — el corpus crece cada mes con nuevas sentencias",
                     "Búsqueda semántica por materia, acto reclamado, tribunal y sentido del resolutivo",
                     "Acceso a PDFs de las sentencias originales para consulta directa",
                     "Disponible en planes Pro y Platinum"
@@ -748,7 +748,7 @@ function PrecedentesVisual() {
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
-                    <span>4 circuitos activos</span>
+                    <span>5 circuitos activos</span>
                     <span className="text-accent-brown font-medium">corpus creciente →</span>
                 </div>
             </div>
