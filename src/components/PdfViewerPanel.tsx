@@ -629,7 +629,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
 
     // Header icon & label for tesis vs ley
     const headerIcon = isTesis
-        ? <img src="/logo-Iurexia.png" alt="Iurexia" className="w-5 h-5 object-contain" />
+        ? <span className="font-serif text-base font-semibold text-white">Iurex<span className="text-accent-gold">ia</span></span>
         : <FileText className="w-4.5 h-4.5 text-accent-gold" />;
 
     const headerSubLabel = isTesis
@@ -653,9 +653,13 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-cream-400 bg-charcoal-900">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-accent-gold/20 flex items-center justify-center shrink-0">
-                            {headerIcon}
-                        </div>
+                        {isTesis ? (
+                            <div className="shrink-0">{headerIcon}</div>
+                        ) : (
+                            <div className="w-9 h-9 rounded-xl bg-accent-gold/20 flex items-center justify-center shrink-0">
+                                {headerIcon}
+                            </div>
+                        )}
                         <div className="min-w-0">
                             {citationNumber !== undefined && (
                                 <span className="inline-block text-[10px] font-semibold uppercase tracking-widest text-accent-gold/70 mb-0.5">
