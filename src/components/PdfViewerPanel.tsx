@@ -629,7 +629,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
 
     // Header icon & label for tesis vs ley
     const headerIcon = isTesis
-        ? <Scale className="w-4.5 h-4.5 text-accent-gold" />
+        ? <img src="/logo-Iurexia.png" alt="Iurexia" className="w-5 h-5 object-contain" />
         : <FileText className="w-4.5 h-4.5 text-accent-gold" />;
 
     const headerSubLabel = isTesis
@@ -651,27 +651,38 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                 style={{ animation: 'slideInRight 0.25s ease-out', fontFamily: 'Arial, Helvetica, sans-serif' }}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between p-5 border-b border-cream-400 bg-charcoal-900">
-                    <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-accent-gold/20 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="flex items-center justify-between p-5 border-b border-cream-400 bg-charcoal-900">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-accent-gold/20 flex items-center justify-center shrink-0">
                             {headerIcon}
                         </div>
                         <div className="min-w-0">
                             {citationNumber !== undefined && (
-                                <span className="inline-block text-[10px] font-semibold uppercase tracking-widest text-accent-gold/70 mb-1">
+                                <span className="inline-block text-[10px] font-semibold uppercase tracking-widest text-accent-gold/70 mb-0.5">
                                     Cita [{citationNumber}]
                                 </span>
                             )}
                             {headerSubLabel && (
-                                <span className="inline-block text-[10px] font-semibold uppercase tracking-widest text-accent-gold/70 mb-1 ml-2">
+                                <span className="inline-block text-[10px] font-semibold uppercase tracking-widest text-accent-gold/70 mb-0.5 ml-2">
                                     · {headerSubLabel}
                                 </span>
                             )}
-                            <h2 className="text-sm font-semibold text-white leading-snug line-clamp-2">
-                                {leyLabel}
-                            </h2>
-                            {source.ref && (
-                                <p className="text-xs text-accent-gold mt-0.5 font-medium">{source.ref}</p>
+                            {isTesis && scjnUrl ? (
+                                <a
+                                    href={scjnUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 group"
+                                >
+                                    <span className="text-sm font-bold text-blue-400 group-hover:text-blue-300 transition-colors">
+                                        {registroNumber}
+                                    </span>
+                                    <ExternalLink className="w-3 h-3 text-blue-400/60 group-hover:text-blue-300 transition-colors" />
+                                </a>
+                            ) : (
+                                <h2 className="text-sm font-semibold text-white leading-snug line-clamp-2">
+                                    {leyLabel}
+                                </h2>
                             )}
                         </div>
                     </div>
