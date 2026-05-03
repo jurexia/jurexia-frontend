@@ -237,7 +237,7 @@ function TesisBodyText({ text }: { text: string }) {
     const hasSections = segments.some(s => s.header);
     if (!hasSections) {
         return (
-            <p className="text-sm text-charcoal-800 leading-relaxed text-justify">
+            <p className="text-sm text-charcoal-800 leading-relaxed text-justify" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
                 {text}
             </p>
         );
@@ -250,13 +250,13 @@ function TesisBodyText({ text }: { text: string }) {
                     {seg.header && (
                         <>
                             {i > 0 && <div className="border-t border-cream-300 mb-3" />}
-                            <p className="text-xs font-bold text-charcoal-900 uppercase tracking-wider mb-1.5">
+                            <p className="text-xs font-bold text-charcoal-900 uppercase tracking-wider mb-1.5" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
                                 {seg.header}:
                             </p>
                         </>
                     )}
                     {seg.content && (
-                        <p className="text-sm text-charcoal-800 leading-relaxed text-justify">
+                        <p className="text-sm text-charcoal-800 leading-relaxed text-justify" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
                             {seg.content}
                         </p>
                     )}
@@ -695,53 +695,57 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                 >
                     {/* ════════════════ TESIS VIEW ════════════════ */}
                     {isTesis && tesisMeta ? (
-                        <div className="p-5">
-                            {/* Metadata badges + tesis identifier row */}
-                            <div className="flex flex-wrap items-center gap-2 mb-4">
-                                {tesisMeta.tipo && (
-                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${tesisMeta.tipo === 'JURISPRUDENCIA'
-                                        ? 'bg-accent-gold/15 text-accent-gold border border-accent-gold/30'
-                                        : 'bg-blue-50 text-blue-700 border border-blue-200'
-                                        }`}>
-                                        <Gavel className="w-3 h-3" />
-                                        {tesisMeta.tipo}
-                                    </span>
-                                )}
-                                {tesisMeta.materia && (
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        {tesisMeta.materia}
-                                    </span>
-                                )}
-                                {tesisMeta.instancia && (
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                                        {tesisMeta.instancia}
-                                    </span>
-                                )}
-                                {tesisMeta.registro && (
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold bg-charcoal-100 text-charcoal-700 border border-charcoal-300">
-                                        Reg. {tesisMeta.registro}
-                                    </span>
-                                )}
-                                {/* Tesis identifier as badge */}
-                                {tesisMeta.tesis && (
-                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-accent-gold/10 text-accent-gold border border-accent-gold/25">
-                                        {tesisMeta.tesis}
-                                    </span>
-                                )}
+                        <div className="p-5" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+                            {/* ── Metadata table ── */}
+                            <div className="mb-5 border border-cream-400 rounded-xl overflow-hidden bg-white">
+                                <table className="w-full text-[11px]">
+                                    <tbody>
+                                        {tesisMeta.tipo && (
+                                            <tr className="border-b border-cream-300">
+                                                <td className="px-4 py-2.5 bg-charcoal-900 text-cream-300 font-semibold uppercase tracking-wider w-[120px] align-middle">Tipo</td>
+                                                <td className="px-4 py-2.5 text-charcoal-900 font-bold uppercase tracking-wide align-middle">{tesisMeta.tipo}</td>
+                                            </tr>
+                                        )}
+                                        {tesisMeta.materia && (
+                                            <tr className="border-b border-cream-300">
+                                                <td className="px-4 py-2.5 bg-charcoal-900 text-cream-300 font-semibold uppercase tracking-wider w-[120px] align-middle">Materia</td>
+                                                <td className="px-4 py-2.5 text-charcoal-800 font-medium align-middle">{tesisMeta.materia}</td>
+                                            </tr>
+                                        )}
+                                        {tesisMeta.instancia && (
+                                            <tr className="border-b border-cream-300">
+                                                <td className="px-4 py-2.5 bg-charcoal-900 text-cream-300 font-semibold uppercase tracking-wider w-[120px] align-middle">Instancia</td>
+                                                <td className="px-4 py-2.5 text-charcoal-800 font-medium align-middle">{tesisMeta.instancia}</td>
+                                            </tr>
+                                        )}
+                                        {tesisMeta.registro && (
+                                            <tr className="border-b border-cream-300">
+                                                <td className="px-4 py-2.5 bg-charcoal-900 text-cream-300 font-semibold uppercase tracking-wider w-[120px] align-middle">Registro</td>
+                                                <td className="px-4 py-2.5 text-charcoal-800 font-semibold font-mono align-middle">{tesisMeta.registro}</td>
+                                            </tr>
+                                        )}
+                                        {tesisMeta.tesis && (
+                                            <tr>
+                                                <td className="px-4 py-2.5 bg-charcoal-900 text-cream-300 font-semibold uppercase tracking-wider w-[120px] align-middle">Tesis</td>
+                                                <td className="px-4 py-2.5 text-charcoal-900 font-bold align-middle">{tesisMeta.tesis}</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
 
-                            {/* Rubro (title) directly above body */}
-                            <div className="bg-white border border-cream-400 rounded-2xl shadow-sm overflow-hidden">
+                            {/* ── Rubro + Body ── */}
+                            <div className="bg-white border border-cream-400 rounded-xl shadow-sm overflow-hidden">
                                 {tesisMeta.rubro && (
-                                    <div className="bg-charcoal-900 p-4">
-                                        <p className="text-xs font-bold text-white leading-relaxed tracking-wide text-justify">
+                                    <div className="bg-charcoal-900 px-5 py-4 border-b border-charcoal-700">
+                                        <p className="text-[12px] font-bold text-white leading-relaxed tracking-wide text-justify" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
                                             {tesisMeta.rubro}
                                         </p>
                                     </div>
                                 )}
 
                                 {/* Body text with formatted sections */}
-                                <div className="p-5">
+                                <div className="px-5 py-5">
                                     <TesisBodyText text={tesisMeta.textoBody || source.texto || 'Sin texto disponible.'} />
                                 </div>
                             </div>
