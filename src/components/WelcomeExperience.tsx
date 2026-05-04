@@ -67,16 +67,21 @@ export default function WelcomeExperience({ userId, userName, onComplete, onStar
         e.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const [saveError, setSaveError] = useState('');
+
     const handleSelectEstado = useCallback(async () => {
         if (!selectedEstado) return;
         setSaving(true);
+        setSaveError('');
         try {
             await updateUserEstado(userId, selectedEstado);
-            setStep(2);
-        } catch {
-            console.error('Error saving estado');
+        } catch (err) {
+            console.error('Error saving estado:', err);
+            setSaveError('No se pudo guardar tu estado, pero puedes continuar. Configúralo después desde el menú.');
         } finally {
             setSaving(false);
+            // ALWAYS advance — never leave user stuck on state selection
+            setStep(2);
         }
     }, [selectedEstado, userId]);
 
@@ -389,6 +394,16 @@ export default function WelcomeExperience({ userId, userName, onComplete, onStar
                             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, maxWidth: 340, margin: '0 auto' }}>
                                 Herramientas diseñadas por abogados, potenciadas por IA
                             </p>
+                            {saveError && (
+                                <p style={{
+                                    color: '#f59e0b', fontSize: 12, marginTop: 12,
+                                    padding: '8px 14px', borderRadius: 8,
+                                    background: 'rgba(245,158,11,0.1)',
+                                    border: '1px solid rgba(245,158,11,0.2)',
+                                }}>
+                                    ⚠️ {saveError}
+                                </p>
+                            )}
                         </div>
 
                         {/* Feature cards */}
