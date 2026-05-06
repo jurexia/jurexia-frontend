@@ -94,7 +94,7 @@ export default function PreciosPage() {
                                     "140 consultas/mes",
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
-                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">5 circuitos activos, creciendo</span></span>,
+                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
                                     <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
                                         <span className="text-accent-gold text-base leading-none">✦</span>
                                         <span className="text-accent-gold">Redacción Pro — Motor de razonamiento profundo</span>
@@ -125,7 +125,7 @@ export default function PreciosPage() {
                                     "560 consultas/mes — ideal para despachos",
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
-                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">5 circuitos activos, creciendo</span></span>,
+                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
                                     <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
                                         <span className="text-accent-gold text-base leading-none">✦</span>
                                         <span className="text-accent-gold">Redacción Pro — Motor de razonamiento profundo</span>
@@ -255,8 +255,8 @@ export default function PreciosPage() {
                                     <ComparisonRow
                                         feature="Precedentes Judiciales por Circuito"
                                         free="—" basico="—"
-                                        pro={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">5 circuitos</span></span>}
-                                        platinum={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">5 circuitos</span></span>}
+                                        pro={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">6 circuitos</span></span>}
+                                        platinum={<span className="inline-flex items-center gap-1 text-accent-gold font-semibold">✓ <span className="text-[9px]">6 circuitos</span></span>}
                                         goldFeature={true}
                                     />
                                     <ComparisonRow feature="Sugerencias con fundamento" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
@@ -300,7 +300,7 @@ export default function PreciosPage() {
 
                     <div className="space-y-4">
                         {[
-                            { question: '¿Qué son los Precedentes Judiciales y en qué planes están disponibles?', answer: 'Precedentes es una función de búsqueda semántica directa sobre sentencias reales de Tribunales Colegiados de Circuito. Actualmente cubre más de 111,000 sentencias de 5 circuitos (1° Ciudad de México, 2° Estado de México, 3° Jalisco, 4° Nuevo León y 22° Querétaro). El corpus crece continuamente: cada mes se ingresan nuevas sentencias y se incorporan más circuitos. Está disponible en los planes Pro y Platinum.' },
+                            { question: '¿Qué son los Precedentes Judiciales y en qué planes están disponibles?', answer: 'Precedentes es una función de búsqueda semántica directa sobre sentencias reales de Tribunales Colegiados de Circuito. Actualmente cubre más de 141,000 sentencias de 6 circuitos (1° Ciudad de México, 2° Estado de México, 3° Jalisco, 4° Nuevo León, 16° Guanajuato y 22° Querétaro). El corpus crece continuamente: cada mes se ingresan nuevas sentencias y se incorporan más circuitos. Está disponible en los planes Pro y Platinum.' },
                             { question: '¿Qué es Redacción Pro y en qué planes está disponible?', answer: 'Redacción Pro es el modo de redacción más avanzado de Iurexia. Utiliza un motor de razonamiento profundo de última generación que produce textos legales de calidad significativamente superior al modo de redacción normal: argumentación más coherente, subsunción jurídica completa y prosa de nivel SCJN. Está disponible exclusivamente en los planes Pro y Platinum.' },
                             { question: '¿Qué es Jurimetría y en qué plan está disponible?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Está disponible exclusivamente en el plan Platinum.' },
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
