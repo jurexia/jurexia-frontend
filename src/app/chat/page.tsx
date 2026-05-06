@@ -100,6 +100,7 @@ export default function ChatPage() {
     // showFreeOnboarding removed — onboarding now inline via Quick Start buttons
     const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
     const [showWelcomeExperience, setShowWelcomeExperience] = useState(false);
+    const pendingMessageRef = useRef<{ content: string; reasoning: boolean } | null>(null);
 
     // Suggestion rotation state (SUGGESTIONS defined outside component for referential stability)
     const [suggestionIndex, setSuggestionIndex] = useState(0);
@@ -264,10 +265,9 @@ export default function ChatPage() {
                 estadoInitializedRef.current = true;
                 if (profile.estado) {
                     setSelectedEstado(profile.estado);
-                } else {
-                    // First-time user → premium onboarding experience
-                    setShowWelcomeExperience(true);
                 }
+                // No more blocking welcome wizard on page load.
+                // State selector will appear on first message attempt if no estado.
             }
         }
     }, [profile]);
@@ -403,6 +403,14 @@ export default function ChatPage() {
 
     const handleSendMessage = useCallback(async (content: string, enableReasoning = false) => {
         if (!user) return;
+
+        // If no estado selected, show lightweight state selector before sending
+        if (!selectedEstado) {
+            pendingMessageRef.current = { content, reasoning: enableReasoning };
+            setShowWelcomeExperience(true);
+            return;
+        }
+
         // Reset document analyzing state in case it was stuck from a previous analysis
         setIsDocumentAnalyzing(false);
         const isAdminUser = isAdmin(user?.email);
@@ -819,7 +827,13 @@ export default function ChatPage() {
                     onComplete={(estado) => {
                         setSelectedEstado(estado);
                         setShowWelcomeExperience(false);
-                        if (user?.id) localStorage.setItem(`iurexia_welcome_guide_${user.id}`, 'true');
+                        // If there was a pending message, send it now
+                        if (pendingMessageRef.current) {
+                            const { content, reasoning } = pendingMessageRef.current;
+                            pendingMessageRef.current = null;
+                            // Small delay to let estado propagate
+                            setTimeout(() => handleSendMessage(content, reasoning), 200);
+                        }
                     }}
                     onStartTour={() => setShowPromptGuide(true)}
                 />
