@@ -273,11 +273,13 @@ export default function ChatPage() {
     }, [profile]);
 
     // Welcome video — show once for Pro+ users who haven't seen it
+    // Uses localStorage as fallback to prevent infinite loops if Supabase update fails
     useEffect(() => {
         if (!profile || !user) return;
         const isProUser = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile.subscription_type || '');
         const isAdminUser = isAdmin(user.email);
-        if (isProUser && !isAdminUser && !profile.has_seen_welcome_video) {
+        const localDismissed = typeof window !== 'undefined' && localStorage.getItem(`iurexia_welcome_video_seen_${user.id}`) === '1';
+        if (isProUser && !isAdminUser && !profile.has_seen_welcome_video && !localDismissed) {
             setShowWelcomeVideo(true);
         }
     }, [profile, user]);
@@ -312,6 +314,11 @@ export default function ChatPage() {
 
     const handleWelcomeVideoClose = useCallback(async () => {
         setShowWelcomeVideo(false);
+        // Always save to localStorage first (instant, never fails)
+        if (user?.id && typeof window !== 'undefined') {
+            localStorage.setItem(`iurexia_welcome_video_seen_${user.id}`, '1');
+        }
+        // Then try Supabase (may fail silently)
         if (user?.id) {
             await markWelcomeVideoSeen(user.id);
         }

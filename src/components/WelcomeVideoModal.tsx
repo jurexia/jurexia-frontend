@@ -12,38 +12,23 @@ const VIDEO_URL = 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/pu
 
 export default function WelcomeVideoModal({ isOpen, onClose }: WelcomeVideoModalProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [canDismiss, setCanDismiss] = useState(false);
-    const [countdown, setCountdown] = useState(8);
+    const [hasWatched, setHasWatched] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
 
-    // Countdown timer — allow dismiss after 8 seconds
+    // Mark as watched after 5 seconds (just for visual cue, not blocking)
     useEffect(() => {
         if (!isOpen) return;
-        setCanDismiss(false);
-        setCountdown(8);
-
-        const interval = setInterval(() => {
-            setCountdown(prev => {
-                if (prev <= 1) {
-                    clearInterval(interval);
-                    setCanDismiss(true);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(interval);
+        setHasWatched(false);
+        const t = setTimeout(() => setHasWatched(true), 5000);
+        return () => clearTimeout(t);
     }, [isOpen]);
 
-    // Also allow dismiss when video ends
+    // Also mark watched when video ends
     const handleVideoEnd = useCallback(() => {
-        setCanDismiss(true);
-        setCountdown(0);
+        setHasWatched(true);
     }, []);
 
     const handleClose = useCallback(() => {
-        if (!canDismiss) return;
         setIsClosing(true);
         // Pause video
         if (videoRef.current) videoRef.current.pause();
@@ -52,7 +37,7 @@ export default function WelcomeVideoModal({ isOpen, onClose }: WelcomeVideoModal
             setIsClosing(false);
             onClose();
         }, 400);
-    }, [canDismiss, onClose]);
+    }, [onClose]);
 
     if (!isOpen) return null;
 
@@ -104,14 +89,13 @@ export default function WelcomeVideoModal({ isOpen, onClose }: WelcomeVideoModal
                             </p>
                         </div>
                     </div>
-                    {canDismiss && (
-                        <button
-                            onClick={handleClose}
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
-                    )}
+                    <button
+                        onClick={handleClose}
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                        title="Cerrar"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
                 </div>
 
                 {/* Video */}
@@ -158,31 +142,15 @@ export default function WelcomeVideoModal({ isOpen, onClose }: WelcomeVideoModal
                 <div className="px-6 pb-6 pt-2">
                     <button
                         onClick={handleClose}
-                        disabled={!canDismiss}
                         className="w-full py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all duration-300 relative overflow-hidden"
                         style={{
-                            background: canDismiss
-                                ? 'linear-gradient(135deg, #c9a962 0%, #a8883e 100%)'
-                                : 'rgba(201, 169, 98, 0.15)',
-                            color: canDismiss ? '#0f0f0f' : 'rgba(201, 169, 98, 0.4)',
-                            cursor: canDismiss ? 'pointer' : 'not-allowed',
-                            boxShadow: canDismiss ? '0 4px 16px rgba(201, 169, 98, 0.3)' : 'none',
-                            transform: canDismiss ? 'scale(1)' : 'scale(0.98)',
+                            background: 'linear-gradient(135deg, #c9a962 0%, #a8883e 100%)',
+                            color: '#0f0f0f',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 16px rgba(201, 169, 98, 0.3)',
                         }}
                     >
-                        {canDismiss ? (
-                            'Entendido, comenzar a usar Iurexia'
-                        ) : (
-                            <span className="flex items-center justify-center gap-2">
-                                <span>Por favor revisa el video</span>
-                                <span
-                                    className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
-                                    style={{ background: 'rgba(201, 169, 98, 0.2)' }}
-                                >
-                                    {countdown}
-                                </span>
-                            </span>
-                        )}
+                        {hasWatched ? 'Entendido, comenzar a usar Iurexia' : 'Omitir y comenzar'}
                     </button>
                 </div>
             </div>
