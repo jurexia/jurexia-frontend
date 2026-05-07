@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { LogOut, User, CreditCard, Settings, AlertTriangle } from 'lucide-react';
+import { LogOut, User, CreditCard, Settings, AlertTriangle, CheckCircle, Heart, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
-import { signOut } from '@/lib/supabase';
+import { signOut, supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
 const planColors: Record<string, { bg: string; text: string; label: string }> = {
@@ -17,12 +17,16 @@ const planColors: Record<string, { bg: string; text: string; label: string }> = 
     ultra_secretarios: { bg: 'bg-gradient-to-r from-purple-100 to-indigo-100', text: 'text-purple-700', label: 'Ultra' },
 };
 
+type CancelState = 'confirm' | 'processing' | 'success' | 'error';
+
 export function UserAvatar() {
     const { user, profile, loading, isAuthenticated } = useAuth();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
-    const [showCancelWarning, setShowCancelWarning] = useState(false);
-    const [isCancelling, setIsCancelling] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelState, setCancelState] = useState<CancelState>('confirm');
+    const [cancelDate, setCancelDate] = useState<string>('');
+    const [cancelError, setCancelError] = useState<string>('');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Close dropdown when clicking outside
@@ -41,29 +45,64 @@ export function UserAvatar() {
         router.push('/');
     };
 
-    const handleManageSubscription = async () => {
-        if (!profile?.stripe_customer_id) return;
+    const handleCancelSubscription = async () => {
+        if (!profile?.stripe_subscription_id) {
+            setCancelError('No se encontró una suscripción activa');
+            setCancelState('error');
+            return;
+        }
 
-        setIsCancelling(true);
+        setCancelState('processing');
+
         try {
-            const response = await fetch('/api/stripe/portal', {
+            // Get auth token for the API call
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                setCancelError('Sesión expirada. Por favor, inicia sesión de nuevo.');
+                setCancelState('error');
+                return;
+            }
+
+            const response = await fetch('/api/stripe/cancel', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ customerId: profile.stripe_customer_id }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ subscriptionId: profile.stripe_subscription_id }),
             });
 
-            const { url } = await response.json();
-            if (url) {
-                window.open(url, '_blank');
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                setCancelError(data.error || 'Error al cancelar la suscripción');
+                setCancelState('error');
+                return;
             }
+
+            // Format the cancellation date
+            const endDate = new Date(data.cancelAt);
+            setCancelDate(endDate.toLocaleDateString('es-MX', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            }));
+            setCancelState('success');
         } catch (error) {
-            console.error('Error opening portal:', error);
-            alert('Error al abrir el portal de facturación');
-        } finally {
-            setIsCancelling(false);
-            setShowCancelWarning(false);
-            setIsOpen(false);
+            console.error('Error cancelling subscription:', error);
+            setCancelError('Error de conexión. Intenta de nuevo.');
+            setCancelState('error');
         }
+    };
+
+    const closeCancelModal = () => {
+        setShowCancelModal(false);
+        // Reset state after animation
+        setTimeout(() => {
+            setCancelState('confirm');
+            setCancelDate('');
+            setCancelError('');
+        }, 300);
     };
 
     if (loading) {
@@ -80,6 +119,7 @@ export function UserAvatar() {
     const planStyle = planColors[plan] || planColors.gratuito;
     const userName = profile?.full_name || user.user_metadata?.full_name || 'Usuario';
     const userEmail = user.email || '';
+    const firstName = userName.split(' ')[0] || 'Usuario';
 
     // Get initials from name or email
     const getInitials = () => {
@@ -176,7 +216,8 @@ export function UserAvatar() {
                             <button
                                 onClick={() => {
                                     setIsOpen(false);
-                                    setShowCancelWarning(true);
+                                    setShowCancelModal(true);
+                                    setCancelState('confirm');
                                 }}
                                 className="flex items-center gap-3 w-full px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
                             >
@@ -198,37 +239,186 @@ export function UserAvatar() {
                     </div>
                 </div>
             )}
-            {/* Modal de Advertencia de Cancelación */}
-            {showCancelWarning && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-in fade-in zoom-in duration-200">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertTriangle className="w-8 h-8 text-red-600" />
-                        </div>
-                        <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
-                            Cancelar Suscripción
-                        </h3>
-                        <p className="text-charcoal-600 mb-6 text-sm">
-                            Si cancelas, perderás tus beneficios del <strong>Plan {planStyle.label}</strong> y las consultas restantes una vez que termine tu periodo actual. ¿Estás seguro que deseas continuar?
-                        </p>
 
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={handleManageSubscription}
-                                disabled={isCancelling}
-                                className="w-full px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {isCancelling ? 'Redirigiendo...' : 'Sí, gestionar cancelación'}
-                            </button>
-                            <button
-                                onClick={() => setShowCancelWarning(false)}
-                                disabled={isCancelling}
-                                className="w-full px-4 py-2 border border-charcoal-200 text-charcoal-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
-                            >
-                                No, mantener mi plan
-                            </button>
-                        </div>
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* Modal de Cancelación — 3 estados: confirm | processing | success */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {showCancelModal && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+                        style={{ animation: 'cancelModalIn 0.3s ease-out' }}
+                    >
+                        {/* ── ESTADO: CONFIRMAR ── */}
+                        {cancelState === 'confirm' && (
+                            <div className="p-6 text-center">
+                                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AlertTriangle className="w-8 h-8 text-red-600" />
+                                </div>
+                                <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                                    Cancelar Suscripción
+                                </h3>
+                                <p className="text-charcoal-600 mb-6 text-sm leading-relaxed">
+                                    Si cancelas, perderás los beneficios de tu{' '}
+                                    <strong>Plan {planStyle.label}</strong> y las consultas restantes
+                                    una vez que termine tu periodo actual.
+                                    <br /><br />
+                                    ¿Estás seguro que deseas continuar?
+                                </p>
+
+                                <div className="flex flex-col gap-3">
+                                    <button
+                                        onClick={handleCancelSubscription}
+                                        className="w-full px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium"
+                                    >
+                                        Sí, cancelar mi suscripción
+                                    </button>
+                                    <button
+                                        onClick={closeCancelModal}
+                                        className="w-full px-4 py-3 border border-charcoal-200 text-charcoal-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                                    >
+                                        No, mantener mi plan
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── ESTADO: PROCESANDO ── */}
+                        {cancelState === 'processing' && (
+                            <div className="p-8 text-center">
+                                <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                    <div className="w-10 h-10 border-3 border-charcoal-200 border-t-charcoal-700 rounded-full"
+                                        style={{ animation: 'spin 0.8s linear infinite', borderWidth: 3 }}
+                                    />
+                                </div>
+                                <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-2">
+                                    Procesando cancelación...
+                                </h3>
+                                <p className="text-charcoal-500 text-sm">
+                                    Estamos gestionando tu solicitud con Stripe.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* ── ESTADO: ÉXITO ── */}
+                        {cancelState === 'success' && (
+                            <div className="text-center">
+                                {/* Banner dorado superior */}
+                                <div
+                                    className="px-6 py-4"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #c9a962 0%, #a8883e 100%)',
+                                    }}
+                                >
+                                    <div className="flex items-center justify-center gap-2 mb-1">
+                                        <CheckCircle className="w-5 h-5 text-white" />
+                                        <h3 className="text-lg font-semibold text-white">
+                                            Cancelación Exitosa
+                                        </h3>
+                                    </div>
+                                    <p className="text-white/80 text-xs">
+                                        Tu solicitud ha sido procesada correctamente
+                                    </p>
+                                </div>
+
+                                <div className="p-6">
+                                    {/* Confirmation details */}
+                                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-left">
+                                        <div className="flex items-start gap-3">
+                                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="text-green-900 font-medium text-sm">
+                                                    No se te realizarán más cobros
+                                                </p>
+                                                <p className="text-green-700 text-xs mt-1">
+                                                    Tu suscripción <strong>Plan {planStyle.label}</strong> permanecerá
+                                                    activa hasta el <strong>{cancelDate}</strong>.
+                                                    Después de esa fecha, tu cuenta pasará al plan gratuito.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Founder pricing guarantee */}
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 text-left">
+                                        <div className="flex items-start gap-3">
+                                            <Shield className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="text-amber-900 font-medium text-sm">
+                                                    Precio de suscriptor fundador garantizado
+                                                </p>
+                                                <p className="text-amber-700 text-xs mt-1">
+                                                    Si en un futuro decides regresar, por ser suscriptor fundador
+                                                    se te respetará el precio con el que contrataste originalmente,
+                                                    sin importar los ajustes de precio que pudieran existir.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Thank you message */}
+                                    <div className="flex items-center justify-center gap-2 mb-5">
+                                        <Heart className="w-4 h-4 text-red-400" />
+                                        <p className="text-charcoal-500 text-sm">
+                                            {firstName}, gracias por haber confiado en Iurexia.
+                                            Esperamos que tu experiencia haya sido valiosa y
+                                            que vuelvas pronto.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={closeCancelModal}
+                                        className="w-full px-4 py-3 rounded-xl font-medium text-sm transition-all"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #c9a962 0%, #a8883e 100%)',
+                                            color: '#0f0f0f',
+                                        }}
+                                    >
+                                        Entendido
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── ESTADO: ERROR ── */}
+                        {cancelState === 'error' && (
+                            <div className="p-6 text-center">
+                                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AlertTriangle className="w-8 h-8 text-red-600" />
+                                </div>
+                                <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-2">
+                                    Error al cancelar
+                                </h3>
+                                <p className="text-charcoal-600 mb-6 text-sm">
+                                    {cancelError}
+                                </p>
+                                <div className="flex flex-col gap-3">
+                                    <button
+                                        onClick={() => setCancelState('confirm')}
+                                        className="w-full px-4 py-3 bg-charcoal-900 text-white rounded-xl hover:bg-charcoal-800 transition-colors font-medium"
+                                    >
+                                        Intentar de nuevo
+                                    </button>
+                                    <button
+                                        onClick={closeCancelModal}
+                                        className="w-full px-4 py-3 border border-charcoal-200 text-charcoal-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Keyframes */}
+                    <style>{`
+                        @keyframes cancelModalIn {
+                            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+                            to { opacity: 1; transform: scale(1) translateY(0); }
+                        }
+                        @keyframes spin {
+                            to { transform: rotate(360deg); }
+                        }
+                    `}</style>
                 </div>
             )}
         </div>
