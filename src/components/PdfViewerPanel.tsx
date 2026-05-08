@@ -597,13 +597,30 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
         return null;
     }, [source, tesisMeta]);
 
-    // Resolve PDF URL: direct from backend, or lookup from estadosData for state laws
+    // Resolve PDF URL: direct from backend, or lookup from estadosData for state/federal laws
     const resolvedPdfUrl = useMemo(() => {
         if (!source) return null;
         if (source.pdf_url) return source.pdf_url;
         // Try lawPdfLookup for state laws (e.g. Querétaro codes)
         if (source.entidad && source.origen) {
-            return findLawPdfUrl(source.origen, source.entidad);
+            const found = findLawPdfUrl(source.origen, source.entidad);
+            if (found) return found;
+        }
+        // Federal laws: silo='leyes_federales' but no entidad/pdf_url in Qdrant.
+        // Try to extract ley name from the bracketed text header and look up in FEDERAL_LEYES.
+        if (source.silo === 'leyes_federales') {
+            // 1) Try ley name from bracketed header: [Código de Comercio | TITULO...]
+            const bracketMatch = (source.texto || '').match(/^\[([^|\]]+)/);
+            if (bracketMatch) {
+                const leyFromText = bracketMatch[1].trim();
+                const found = findLawPdfUrl(leyFromText, 'FEDERAL');
+                if (found) return found;
+            }
+            // 2) Try origen as ley name
+            if (source.origen) {
+                const found = findLawPdfUrl(source.origen, 'FEDERAL');
+                if (found) return found;
+            }
         }
         return null;
     }, [source]);
