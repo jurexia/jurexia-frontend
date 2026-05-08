@@ -77,7 +77,7 @@ export default function ChatPage() {
     const [showPromptGuide, setShowPromptGuide] = useState(false);     // ChatTour (Guía Rápida)
     const [showPromptGuideModal, setShowPromptGuideModal] = useState(false); // PromptGuide (¿Cómo hacer mejores consultas?)
     const [showVisualGuide, setShowVisualGuide] = useState(false);
-    const [selectedFuero, setSelectedFuero] = useState<string>('');
+    const [selectedFuero, setSelectedFuero] = useState<string[]>([]);
     const [selectedMateria, setSelectedMateria] = useState<string>('');
     const [activePdfSource, setActivePdfSource] = useState<{
         docId: string; origen: string; ref: string; texto: string;
@@ -239,7 +239,7 @@ export default function ChatPage() {
     const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType } = useChat({
         estado: selectedEstado || undefined,
         topK: 30,
-        fuero: selectedFuero || undefined,
+        fuero: selectedFuero.length ? selectedFuero : undefined,
         materia: selectedMateria || undefined,
         onQuotaExceeded: handleQuotaExceeded,
         onQueryCompleted: handleQueryCompleted,

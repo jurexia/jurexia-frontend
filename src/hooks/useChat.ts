@@ -9,7 +9,7 @@ import { isAdmin } from '@/app/leyesestatales/adminGuard';
 interface UseChatOptions {
     estado?: string;
     topK?: number;
-    fuero?: string;  // Filtro por fuero: constitucional, federal, estatal
+    fuero?: string[];  // Filtro por fuero: multi-select ['constitucional', 'federal', 'estatal']
     materia?: string; // Filtro por materia: civil, penal, familiar, administrativo
     onQuotaExceeded?: (remaining: number) => void;
     onQueryCompleted?: (used: number, limit: number) => void;  // Sync counter with DB after each query
@@ -265,7 +265,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 accessToken,
                 enableReasoning,
                 userId,
-                options.fuero,
+                options.fuero?.length ? options.fuero.join(',') : undefined,
                 options.genioIds,
                 options.materia,
                 signal,
@@ -399,7 +399,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         } finally {
             setIsLoading(false);
         }
-    }, [messages, isLoading, options.estado, options.topK, options.fuero, options.materia, options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive]);
+    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.materia, options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

@@ -43,8 +43,8 @@ interface ChatInputProps {
     isCacheLoading?: boolean;
     genioError?: string | null;
     isPro?: boolean;
-    selectedFuero?: string;
-    onFueroChange?: (fuero: string) => void;
+    selectedFuero?: string[];
+    onFueroChange?: (fueros: string[]) => void;
     selectedMateria?: string;
     onMateriaChange?: (materia: string) => void;
 }
@@ -62,7 +62,7 @@ export default function ChatInput({
     isCacheLoading = false,
     genioError = null,
     isPro = false,
-    selectedFuero = '',
+    selectedFuero = [],
     onFueroChange,
     selectedMateria = '',
     onMateriaChange,
@@ -503,22 +503,30 @@ ${draftRequest.descripcion}`;
                                     <span className="hidden sm:inline text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Fuero</span>
                                     <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-px sm:gap-0.5">
                                         {[
-                                            { key: '', label: 'Auto' },
                                             { key: 'constitucional', label: 'Const.' },
                                             { key: 'federal', label: 'Federal' },
                                             { key: 'estatal', label: 'Estatal' },
-                                        ].map((f) => (
+                                        ].map((f) => {
+                                            const isActive = selectedFuero.includes(f.key);
+                                            return (
                                             <button
                                                 key={f.key}
-                                                onClick={() => onFueroChange(f.key)}
-                                                className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-medium transition-all duration-200 whitespace-nowrap ${selectedFuero === f.key
+                                                onClick={() => {
+                                                    if (isActive) {
+                                                        onFueroChange(selectedFuero.filter(k => k !== f.key));
+                                                    } else {
+                                                        onFueroChange([...selectedFuero, f.key]);
+                                                    }
+                                                }}
+                                                className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-medium transition-all duration-200 whitespace-nowrap ${isActive
                                                     ? 'bg-charcoal-900 text-white shadow-sm'
                                                     : 'text-gray-500 hover:text-charcoal-700 hover:bg-white/60'
                                                     }`}
                                             >
                                                 {f.label}
                                             </button>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
