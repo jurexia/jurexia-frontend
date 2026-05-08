@@ -38,7 +38,7 @@ interface DbMessage {
 // CONSTANTS
 // ============================================================================
 
-const MAX_CONVERSATIONS = 10;  // FIFO: mantener solo las 10 más recientes
+const MAX_CONVERSATIONS = 20;  // FIFO: mantener solo las 20 más recientes
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -167,7 +167,7 @@ export async function getConversation(id: string): Promise<Conversation | null> 
     }
 }
 
-// Create a new conversation (with FIFO enforcement: max 10)
+// Create a new conversation (with FIFO enforcement: max 20)
 export async function createConversation(estado?: string): Promise<Conversation | null> {
     const userId = await getCurrentUserId();
     if (!userId) {
