@@ -28,6 +28,7 @@ export default function NewFeaturesAnnouncementModal({ isOpen, onClose }: NewFea
 
     return (
         <div
+            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
             className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-opacity duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}
             style={{ backgroundColor: 'rgba(10, 10, 12, 0.85)', backdropFilter: 'blur(8px)' }}
         >

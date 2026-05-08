@@ -286,16 +286,24 @@ export default function ChatPage() {
 
     // New features announcement (Redacción Pro + Precedentes) — show once for Pro/Platinum
     // Triggered after Welcome video to avoid stacking modals
+    // FIX: localStorage se setea al MOSTRAR (no al cerrar) para evitar que reaparezca
+    // si el usuario navega sin cerrar explícitamente.
     useEffect(() => {
         if (!profile || !user) return;
         const isProOrPlatinum = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile.subscription_type || '');
         if (!isProOrPlatinum) return;
 
+        const lsKey = `iurexia_pro_features_announcement_v1_${user.id}`;
         const dismissed = typeof window !== 'undefined'
-            ? localStorage.getItem(`iurexia_pro_features_announcement_v1_${user.id}`) === '1'
+            ? localStorage.getItem(lsKey) === '1'
             : true;
         if (dismissed) return;
         if (showWelcomeVideo) return; // wait until welcome video is closed
+
+        // Mark as seen IMMEDIATELY (before showing) so it never reappears
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(lsKey, '1');
+        }
 
         // Small delay so it doesn't appear instantly on load
         const t = setTimeout(() => setShowNewFeaturesAnnouncement(true), 600);
@@ -304,10 +312,7 @@ export default function ChatPage() {
 
     const handleNewFeaturesAnnouncementClose = useCallback(() => {
         setShowNewFeaturesAnnouncement(false);
-        if (user?.id && typeof window !== 'undefined') {
-            localStorage.setItem(`iurexia_pro_features_announcement_v1_${user.id}`, '1');
-        }
-    }, [user]);
+    }, []);
 
     // Free user onboarding removed — was causing 43% user abandonment
     // Now handled inline via Quick Start suggestion buttons in empty state
