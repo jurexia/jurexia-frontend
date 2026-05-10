@@ -228,8 +228,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             }
 
             const section = '\n\n<hr style="border:none;border-top:1px solid #e0d8c8;margin:24px 0 16px"/>\n' +
-                '<h3 style="color:#1a1a1a;font-size:16px;font-weight:700;margin-bottom:4px">Precedentes Judiciales Relacionados</h3>\n' +
-                '<p style="font-size:13px;color:#666;margin-bottom:12px">Los siguientes precedentes de la SCJN y Tribunales Colegiados de Circuito están relacionados con su consulta:</p>\n' +
+                '<h3 style="color:#1a1a1a;font-size:16px;font-weight:700;margin-bottom:4px">Precedentes SCJN y de Colegiados de Circuito</h3>\n' +
+                '<p style="font-size:13px;color:#666;margin-bottom:12px">Los siguientes precedentes de la Suprema Corte y Tribunales Colegiados de Circuito están relacionados con su consulta:</p>\n' +
                 cards.join('\n') + '\n';
 
             // Try to insert before ### CONCLUSIÓN (case-insensitive)

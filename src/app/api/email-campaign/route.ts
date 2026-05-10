@@ -82,8 +82,8 @@ function buildConversionEmail(firstName: string): string {
                                 </tr>
                                 <tr>
                                     <td style="padding:12px 16px;background-color:#1a1a1a;border:1px solid #2a2a2a;border-top:none;">
-                                        <p style="margin:0;font-size:14px;color:#c9a84c;font-weight:700;">&#127963;&#65039; NUEVO: Consulta de Sentencias por Circuito</p>
-                                        <p style="margin:4px 0 0;font-size:13px;color:#ccc;line-height:1.5;">Accede a precedentes judiciales de tribunales colegiados de circuito. B&uacute;squeda inteligente en miles de sentencias con filtros por materia y tribunal.</p>
+                                        <p style="margin:0;font-size:14px;color:#c9a84c;font-weight:700;">&#127963;&#65039; Precedentes SCJN y Colegiados de Circuito</p>
+                                        <p style="margin:4px 0 0;font-size:13px;color:#ccc;line-height:1.5;">Accede a precedentes de la Suprema Corte y tribunales colegiados de circuito. B&uacute;squeda inteligente en miles de sentencias con filtros por materia y tribunal.</p>
                                     </td>
                                 </tr>
                                 <tr>

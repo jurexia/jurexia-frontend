@@ -934,8 +934,8 @@ export default function ChatPage() {
                                 <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
                                     <span className="text-accent-gold text-sm mt-0.5">🏛️</span>
                                     <div>
-                                        <p className="text-white text-xs font-semibold">Nuevo: Consulta de Sentencias por Circuito</p>
-                                        <p className="text-white/40 text-[11px]">Accede a precedentes judiciales de tribunales colegiados</p>
+                                        <p className="text-white text-xs font-semibold">Precedentes SCJN y Colegiados de Circuito</p>
+                                        <p className="text-white/40 text-[11px]">Accede a precedentes de la Suprema Corte y tribunales colegiados</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
@@ -1021,8 +1021,8 @@ export default function ChatPage() {
                                 <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
                                     <span className="text-accent-gold text-sm mt-0.5">🏛️</span>
                                     <div>
-                                        <p className="text-white text-xs font-semibold">Nuevo: Consulta de Sentencias por Circuito</p>
-                                        <p className="text-white/40 text-[11px]">Precedentes judiciales de tribunales colegiados</p>
+                                        <p className="text-white text-xs font-semibold">Precedentes SCJN y Colegiados de Circuito</p>
+                                        <p className="text-white/40 text-[11px]">Precedentes de la Suprema Corte y tribunales colegiados</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
