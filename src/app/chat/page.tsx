@@ -481,6 +481,18 @@ export default function ChatPage() {
             }
         }
 
+        // ── Client-side validation ──
+        const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+        if (file.size > MAX_FILE_SIZE) {
+            const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+            setMessages(prev => [
+                ...prev,
+                { role: 'assistant' as const, content: `⚠️ **Archivo demasiado grande** (${sizeMB} MB)\n\nEl límite es de 25 MB. Por favor, reduce el tamaño del archivo o divide el documento en partes más pequeñas.` }
+            ]);
+            setIsDocumentAnalyzing(false);
+            return;
+        }
+
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
         const formData = new FormData();
         formData.append('file', file);
@@ -488,10 +500,16 @@ export default function ChatPage() {
         if (user.id) formData.append('user_id', user.id);
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
+
             const response = await fetch(`${API_URL}/analyze-document`, {
                 method: 'POST',
                 body: formData,
+                signal: controller.signal,
             });
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Error al analizar documento' }));
@@ -554,16 +572,31 @@ export default function ChatPage() {
                 }
             }
         } catch (err: any) {
+            // Map technical errors to user-friendly Spanish messages
+            let userMessage: string;
+            const errMsg = err?.message || '';
+
+            if (err?.name === 'AbortError' || errMsg.includes('abort')) {
+                userMessage = '⏱️ **El análisis tardó demasiado.**\n\nEl documento es muy extenso o complejo para procesarse en este momento. Intenta con un archivo más pequeño o con menos páginas.';
+            } else if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('ERR_CONNECTION')) {
+                userMessage = '📄 **No se pudo procesar el documento.**\n\nEsto puede ocurrir porque:\n- El archivo es demasiado grande o está corrupto\n- El documento escaneado tiene baja calidad y no se puede leer\n- Hubo un problema de conexión temporal\n\nIntenta con un archivo más ligero o en mejor calidad.';
+            } else if (errMsg.includes('Formato no soportado')) {
+                userMessage = `📋 **Formato no soportado.**\n\nSolo se aceptan archivos PDF, DOCX y DOC. Convierte tu documento a uno de estos formatos e intenta de nuevo.`;
+            } else if (errMsg.includes('muy grande') || errMsg.includes('too large') || errMsg.includes('25MB')) {
+                userMessage = `⚠️ **Archivo demasiado grande.**\n\nEl límite es de 25 MB. Reduce el tamaño del archivo o divide el documento en partes más pequeñas.`;
+            } else if (errMsg.includes('No se pudo extraer texto') || errMsg.includes('vacío')) {
+                userMessage = '📄 **No se pudo extraer el texto del documento.**\n\nEl archivo parece estar vacío, corrupto, o es una imagen sin texto reconocible. Intenta con un PDF que tenga texto seleccionable o con mejor calidad de escaneo.';
+            } else {
+                userMessage = `❌ **Error al analizar documento.**\n\n${errMsg || 'Ocurrió un error inesperado. Intenta de nuevo en unos momentos.'}`;
+            }
+
             setMessages(prev => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
                 if (last && last.role === 'assistant') {
-                    updated[updated.length - 1] = {
-                        ...last,
-                        content: `❌ Error: ${err.message || 'Error inesperado al analizar documento'}`
-                    };
+                    updated[updated.length - 1] = { ...last, content: userMessage };
                 } else {
-                    updated.push({ role: 'assistant' as const, content: `❌ Error: ${err.message || 'Error inesperado al analizar documento'}` });
+                    updated.push({ role: 'assistant' as const, content: userMessage });
                 }
                 return updated;
             });
