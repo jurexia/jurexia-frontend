@@ -39,7 +39,7 @@ const CIRCUITOS = Array.from({ length: 32 }, (_, i) => ({
 const CIRCUITOS_DISPONIBLES = [1, 2, 3, 4, 6, 16, 22];
 
 const PIPELINE_PHASES = [
-    { label: 'Lectura de documentos (OCR)', detail: 'Extrayendo texto de los PDFs con Gemini 3.1 Pro...' },
+    { label: 'Lectura de documentos (OCR)', detail: 'Extrayendo texto de los PDFs con IA de visión...' },
     { label: 'Análisis cognitivo', detail: 'Identificando problemas jurídicos...' },
     { label: 'Búsqueda RAG', detail: 'Recuperando precedentes y normas...' },
     { label: 'Plan de redacción', detail: 'Estructurando el estudio...' },
