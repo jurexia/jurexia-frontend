@@ -405,21 +405,53 @@ export default function TccBetaPage() {
                                         <strong className="text-charcoal-900"> es susceptible de cometer errores</strong>.
                                     </p>
 
-                                    <div className="bg-amber-50/60 border border-accent-gold/15 rounded-xl p-4">
+                                    <div className="bg-blue-50/60 border border-blue-200/30 rounded-xl p-4">
                                         <p className="font-semibold text-charcoal-900 mb-2">
-                                            🏛️ Responsabilidad del Secretario
+                                            📋 Versión Beta · No es la versión final
                                         </p>
                                         <p>
-                                            Como Secretario de Acuerdos, <strong className="text-charcoal-900">es su responsabilidad la revisión exhaustiva del expediente</strong>.
+                                            Esta herramienta es una <strong className="text-charcoal-900">versión beta</strong> disponible para usuarios Platinum.
+                                            No es la versión óptima que será ofrecida en el futuro bajo el plan <strong className="text-charcoal-900">Ultra Secretarios</strong> (anunciado en nuestra página de precios),
+                                            sino una versión de acceso anticipado para que los usuarios Platinum puedan evaluar su utilidad.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-amber-50/60 border border-accent-gold/15 rounded-xl p-4">
+                                        <p className="font-semibold text-charcoal-900 mb-2">
+                                            🏛️ Responsabilidad del Secretario del Poder Judicial de la Federación
+                                        </p>
+                                        <p>
+                                            Como Secretario del PJF, <strong className="text-charcoal-900">es su responsabilidad la revisión exhaustiva del expediente</strong>.
                                             El borrador generado deberá pasar por una <strong className="text-charcoal-900">revisión rigurosa</strong> antes
                                             de ser utilizado en cualquier función pública. Iurexia no se hace responsable del contenido
                                             final que se incorpore a una resolución judicial.
                                         </p>
                                     </div>
 
+                                    <div className="bg-purple-50/40 border border-purple-200/30 rounded-xl p-4">
+                                        <p className="font-semibold text-charcoal-900 mb-2">
+                                            📖 Alcance de la herramienta
+                                        </p>
+                                        <p>
+                                            El Redactor TCC Beta genera exclusivamente <strong className="text-charcoal-900">estudios de fondo</strong> (no improcedencias ni desechamientos).
+                                            Se anticipa que usted <strong className="text-charcoal-900">ya leyó el expediente</strong> y abordará el estudio
+                                            de los conceptos de violación o agravios con base en su conocimiento previo del caso.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-orange-50/40 border border-orange-200/30 rounded-xl p-4">
+                                        <p className="font-semibold text-charcoal-900 mb-2">
+                                            ⚡ Consumo de consultas
+                                        </p>
+                                        <p>
+                                            Cada generación de estudio de fondo <strong className="text-charcoal-900">consumirá 5 consultas</strong> de su contador,
+                                            dada la cantidad de recursos computacionales necesarios para el análisis multipass con IA de razonamiento profundo.
+                                        </p>
+                                    </div>
+
                                     <p>
                                         Iurexia apela al <strong className="text-charcoal-900">uso responsable de la inteligencia artificial</strong> y
-                                        cree firmemente que la IA <strong className="text-charcoal-900">no reemplazará la labor del secretario</strong>,
+                                        cree firmemente que la IA <strong className="text-charcoal-900">no reemplazará la labor de secretarios, jueces y magistrados</strong>,
                                         solo la hará más eficiente. El objetivo de esta herramienta es asistir en la
                                         estructuración del análisis jurídico, nunca sustituir el criterio profesional del juzgador.
                                     </p>
@@ -551,7 +583,7 @@ export default function TccBetaPage() {
                                 : 'bg-cream-300 text-charcoal-700 cursor-not-allowed'
                                 }`}
                         >
-                            Generar Estudio de Fondo
+                            Generar Estudio de Fondo (consume 5 consultas)
                         </button>
                     </div>
                 )}
