@@ -190,8 +190,9 @@ export default function TccBetaPage() {
                                         ...prev[displayPass],
                                         elapsed_s: data.elapsed_s,
                                         detail: data.n_problemas ? `${data.n_problemas} problemas` :
-                                            data.n_tesis ? `${data.n_tesis} tesis` :
-                                                data.n_palabras ? `${data.n_palabras} palabras` : '',
+                                            data.n_fuentes_total ? `${data.n_fuentes_total} fuentes` :
+                                                data.n_tesis_seleccionadas ? `${data.n_tesis_seleccionadas} tesis` :
+                                                    data.n_palabras ? `${data.n_palabras} palabras` : 'Completado',
                                     },
                                 }));
                             }
