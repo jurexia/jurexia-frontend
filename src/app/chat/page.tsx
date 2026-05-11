@@ -97,6 +97,7 @@ export default function ChatPage() {
     const [isDocumentAnalyzing, setIsDocumentAnalyzing] = useState(false);
     const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
     const [showNewFeaturesAnnouncement, setShowNewFeaturesAnnouncement] = useState(false);
+    const announcementInitiatedRef = useRef(false); // Guard against double-fire race condition
     // showFreeOnboarding removed — onboarding now inline via Quick Start buttons
     const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
     const [showWelcomeExperience, setShowWelcomeExperience] = useState(false);
@@ -284,31 +285,26 @@ export default function ChatPage() {
         }
     }, [profile, user]);
 
-    // New features announcement (Redacción Pro + Precedentes) — show once for Pro/Platinum
-    // Triggered after Welcome video to avoid stacking modals
-    // FIX: localStorage se setea al MOSTRAR (no al cerrar) para evitar que reaparezca
-    // si el usuario navega sin cerrar explícitamente.
+    // New features announcement (TCC Beta + Redacción Pro + Precedentes) — show once for Pro/Platinum/Admin
+    // FIX v3: ref-guarded, no setTimeout (was causing race condition where React cleanup
+    // cancelled the timer but localStorage was already marked, so modal never showed).
     useEffect(() => {
+        if (announcementInitiatedRef.current) return;
         if (!profile || !user) return;
         const isProOrPlatinum = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile.subscription_type || '');
         const isAdminUser = isAdmin(user.email);
         if (!isProOrPlatinum && !isAdminUser) return;
 
-        const lsKey = `iurexia_pro_features_announcement_v2_${user.id}`;
-        const dismissed = typeof window !== 'undefined'
-            ? localStorage.getItem(lsKey) === '1'
-            : true;
-        if (dismissed) return;
+        const lsKey = `iurexia_new_features_v3_${user.id}`;
+        if (typeof window !== 'undefined' && localStorage.getItem(lsKey) === '1') return;
         if (showWelcomeVideo) return; // wait until welcome video is closed
 
-        // Mark as seen IMMEDIATELY (before showing) so it never reappears
+        // Mark as initiated to prevent double-fire across re-renders
+        announcementInitiatedRef.current = true;
         if (typeof window !== 'undefined') {
             localStorage.setItem(lsKey, '1');
         }
-
-        // Small delay so it doesn't appear instantly on load
-        const t = setTimeout(() => setShowNewFeaturesAnnouncement(true), 600);
-        return () => clearTimeout(t);
+        setShowNewFeaturesAnnouncement(true);
     }, [profile, user, showWelcomeVideo]);
 
     const handleNewFeaturesAnnouncementClose = useCallback(() => {
