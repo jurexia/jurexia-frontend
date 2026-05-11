@@ -39,7 +39,7 @@ const CIRCUITOS = Array.from({ length: 32 }, (_, i) => ({
 const CIRCUITOS_DISPONIBLES = [1, 2, 3, 4, 6, 16, 22];
 
 const PIPELINE_PHASES = [
-    { label: 'Lectura de documentos (OCR)', detail: 'Extrayendo texto de los PDFs con IA de visión...' },
+    { label: 'Lectura de documentos (OCR)', detail: 'Extrayendo texto de los PDFs escaneados...' },
     { label: 'Análisis cognitivo', detail: 'Identificando problemas jurídicos...' },
     { label: 'Búsqueda RAG', detail: 'Recuperando precedentes y normas...' },
     { label: 'Plan de redacción', detail: 'Estructurando el estudio...' },
@@ -460,7 +460,7 @@ export default function TccBetaPage() {
                                             ⚡ Consumo de consultas
                                         </p>
                                         <p>
-                                            Cada generación de estudio de fondo <strong className="text-charcoal-900">consumirá 5 consultas</strong> de su contador,
+                                            Cada generación de estudio de fondo <strong className="text-charcoal-900">consumirá 10 consultas</strong> de su contador,
                                             dada la cantidad de recursos computacionales necesarios para el análisis multipass con IA de razonamiento profundo.
                                         </p>
                                     </div>
@@ -599,7 +599,7 @@ export default function TccBetaPage() {
                                 : 'bg-cream-300 text-charcoal-700 cursor-not-allowed'
                                 }`}
                         >
-                            Generar Estudio de Fondo (consume 5 consultas)
+                            Generar Estudio de Fondo (consume 10 consultas)
                         </button>
                     </div>
                 )}
