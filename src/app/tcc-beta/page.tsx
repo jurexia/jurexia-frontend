@@ -652,6 +652,9 @@ export default function TccBetaPage() {
                             <p className="text-charcoal-700 text-sm">
                                 Este proceso puede tardar entre 10 y 25 minutos dependiendo de la calidad de los documentos, su número de páginas y la complejidad del asunto. No cierres esta pestaña.
                             </p>
+                            <p className="text-charcoal-900 text-sm font-bold mt-3 leading-relaxed">
+                                Aprovecha este tiempo para dar una lectura de refuerzo al expediente y puedas cotejar tu borrador de proyecto de sentencia. De cualquier forma, ten en cuenta que al final del proceso te proporcionaremos algunos precedentes de tu órgano o de otros Tribunales que podrían servirte como referencia para estructurar tus argumentos o modificar el borrador conforme a tu criterio jurídico.
+                            </p>
                         </div>
 
                         <div className="bg-white rounded-2xl border border-cream-400 p-6 space-y-4">
