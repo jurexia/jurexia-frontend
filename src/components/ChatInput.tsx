@@ -184,6 +184,7 @@ export default function ChatInput({
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
     const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
+    const canAccessTccBeta     = isAdmin(user?.email); // BETA: solo admin para pruebas
     const canAccessRedactarPro = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
 
     const geniosList = [
@@ -770,6 +771,18 @@ ${draftRequest.descripcion}`;
                                 }}
                                 guideId="jurimetria"
                             />
+                            <ActionButton
+                                icon={FileEdit}
+                                label="TCC Beta"
+                                active={false}
+                                locked={!canAccessTccBeta}
+                                lockedTitle="Redactor TCC Beta — función exclusiva planes Platinum"
+                                onClick={() => {
+                                    if (!canAccessTccBeta) { setShowUpgradeModal('platinum'); return; }
+                                    window.location.href = '/tcc-beta';
+                                }}
+                                guideId="tcc-beta"
+                            />
                             {canAccessRedactor && (
                                 <Link
                                     href="/redactor-sentencia"
@@ -1176,7 +1189,7 @@ ${draftRequest.descripcion}`;
                                     Función exclusiva Platinum
                                 </p>
                                 <p className="text-white/80 text-sm leading-relaxed mb-6">
-                                    Jurimetría está disponible en el plan <span className="text-white font-semibold">Platinum</span> de Iurexia — predicción de sentido basada en el corpus de sentencias del circuito.
+                                    Esta función está disponible en el plan <span className="text-white font-semibold">Platinum</span> de Iurexia — incluye Jurimetría predictiva y Redactor TCC Beta con IA de razonamiento profundo.
                                 </p>
                             </>
                         ) : (
