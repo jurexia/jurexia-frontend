@@ -307,3 +307,44 @@ export async function checkCanSentenciaQuery(userId: string): Promise<{ canQuery
 
     return { canQuery, remaining }
 }
+
+// ── Redactor TCC Beta — Estudios storage ──────────────────────────────────
+
+export interface RedactorEstudio {
+    id: string;
+    user_id: string;
+    tipo_asunto: string;
+    materia: string;
+    circuito: number;
+    estudio_markdown: string;
+    n_palabras: number;
+    total_elapsed_s: number;
+    precedentes_utiles: any[];
+    created_at: string;
+}
+
+export async function getRedactorEstudios(): Promise<RedactorEstudio[]> {
+    const { data, error } = await supabase
+        .from('redactor_estudios')
+        .select('id, tipo_asunto, materia, circuito, n_palabras, total_elapsed_s, created_at')
+        .order('created_at', { ascending: false })
+        .limit(50);
+    if (error) {
+        console.error('Error loading estudios:', error);
+        return [];
+    }
+    return (data || []) as RedactorEstudio[];
+}
+
+export async function getRedactorEstudio(id: string): Promise<RedactorEstudio | null> {
+    const { data, error } = await supabase
+        .from('redactor_estudios')
+        .select('*')
+        .eq('id', id)
+        .single();
+    if (error) {
+        console.error('Error loading estudio:', error);
+        return null;
+    }
+    return data as RedactorEstudio;
+}

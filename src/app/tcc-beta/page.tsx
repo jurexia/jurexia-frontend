@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
-import { ArrowLeft, Upload, AlertTriangle, CheckCircle2, Loader2, Download, Copy, FileText, Shield } from 'lucide-react';
+import { ArrowLeft, Upload, AlertTriangle, CheckCircle2, Loader2, Download, Copy, FileText, Shield, Menu, X, Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { getRedactorEstudios, getRedactorEstudio, RedactorEstudio } from '@/lib/supabase';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Constants
@@ -80,6 +81,24 @@ export default function TccBetaPage() {
     const [queriesLimit, setQueriesLimit] = useState(profile?.queries_limit ?? 350);
 
     const resultRef = useRef<HTMLDivElement>(null);
+
+    // ── Sidebar state ──
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [estudios, setEstudios] = useState<RedactorEstudio[]>([]);
+    const [estudiosLoading, setEstudiosLoading] = useState(true);
+    const [activeEstudioId, setActiveEstudioId] = useState<string | null>(null);
+
+    // ── Load estudios on mount ──
+    useEffect(() => {
+        if (!user) return;
+        const load = async () => {
+            setEstudiosLoading(true);
+            const data = await getRedactorEstudios();
+            setEstudios(data);
+            setEstudiosLoading(false);
+        };
+        load();
+    }, [user]);
 
     // ── Sync query counter with profile ──
     useEffect(() => {
@@ -216,6 +235,9 @@ export default function TccBetaPage() {
                                 // Update query counter from backend response
                                 if (data.queries_used !== undefined) setQueriesUsed(data.queries_used);
                                 if (data.queries_limit !== undefined) setQueriesLimit(data.queries_limit);
+                                // Refresh sidebar
+                                getRedactorEstudios().then(setEstudios);
+                                if (data.study_id) setActiveEstudioId(data.study_id);
                                 setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
                             }
 
@@ -301,6 +323,29 @@ export default function TccBetaPage() {
         setError('');
         setCurrentStep(0);
         setStepStats({});
+        setActiveEstudioId(null);
+    };
+
+    // ── Load saved study ──
+    const handleLoadEstudio = async (id: string) => {
+        const estudio = await getRedactorEstudio(id);
+        if (estudio) {
+            setResultMarkdown(estudio.estudio_markdown);
+            setResultStats({
+                n_palabras: estudio.n_palabras,
+                total_elapsed_s: estudio.total_elapsed_s,
+                precedentes_utiles: typeof estudio.precedentes_utiles === 'string' 
+                    ? JSON.parse(estudio.precedentes_utiles) 
+                    : estudio.precedentes_utiles,
+            });
+            setTipoAsunto(estudio.tipo_asunto);
+            setMateria(estudio.materia);
+            setCircuito(estudio.circuito);
+            setActiveEstudioId(id);
+            setPhase('result');
+            setAcceptedDisclaimer(true);
+            setSidebarOpen(false);
+        }
     };
 
     // ── Render helpers ──
@@ -390,16 +435,93 @@ export default function TccBetaPage() {
 
     return (
         <div className="min-h-screen bg-cream-100">
+            {/* ════════ SIDEBAR ════════ */}
+            {/* Mobile overlay */}
+            {sidebarOpen && (
+                <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+            )}
+
+            <aside className={`fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-cream-300 z-50 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+                <div className="p-4 border-b border-cream-200 flex items-center justify-between">
+                    <h2 className="font-serif text-sm font-bold text-charcoal-900">Estudios generados</h2>
+                    <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1 text-charcoal-500 hover:text-charcoal-900"><X className="w-4 h-4" /></button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                    {estudiosLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <Loader2 className="w-5 h-5 animate-spin text-charcoal-400" />
+                        </div>
+                    ) : estudios.length === 0 ? (
+                        <div className="px-4 py-8 text-center">
+                            <FileText className="w-8 h-8 text-charcoal-300 mx-auto mb-2" />
+                            <p className="text-xs text-charcoal-500">Aún no has generado ningún estudio.</p>
+                            <p className="text-[10px] text-charcoal-400 mt-1">Los estudios aparecerán aquí después de generarse.</p>
+                        </div>
+                    ) : (
+                        <div className="py-2">
+                            {estudios.map(est => {
+                                const isActive = activeEstudioId === est.id;
+                                const date = new Date(est.created_at);
+                                const label = (est.tipo_asunto || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                                return (
+                                    <button
+                                        key={est.id}
+                                        onClick={() => handleLoadEstudio(est.id)}
+                                        className={`w-full text-left px-4 py-3 border-b border-cream-100 hover:bg-cream-50 transition-colors group ${
+                                            isActive ? 'bg-accent-gold/5 border-l-2 border-l-accent-gold' : ''
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <FileText className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-accent-gold' : 'text-charcoal-400'}`} />
+                                            <span className="text-xs font-semibold text-charcoal-900 truncate">{label}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1 ml-5.5">
+                                            <span className="text-[10px] text-charcoal-500">{est.materia}</span>
+                                            <span className="text-[10px] text-charcoal-400">·</span>
+                                            <span className="text-[10px] text-charcoal-500">{est.circuito}° Cir.</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 mt-1 ml-5.5">
+                                            <Clock className="w-2.5 h-2.5 text-charcoal-400" />
+                                            <span className="text-[10px] text-charcoal-400">
+                                                {date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </span>
+                                            {est.n_palabras > 0 && (
+                                                <span className="text-[10px] text-charcoal-400 ml-1">· {est.n_palabras.toLocaleString()} palabras</span>
+                                            )}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                <div className="p-3 border-t border-cream-200">
+                    <button
+                        onClick={() => { handleReset(); setSidebarOpen(false); }}
+                        className="w-full py-2 rounded-xl bg-charcoal-900 text-white text-xs font-bold hover:bg-black transition-all"
+                    >
+                        + Nuevo estudio
+                    </button>
+                </div>
+            </aside>
+
             {/* Header */}
-            <header className="bg-charcoal-900 border-b border-accent-gold/10">
+            <header className="bg-charcoal-900 border-b border-accent-gold/10 md:ml-72">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h1 className="font-serif text-xl font-bold text-white tracking-wide">
-                            Redactor <span className="text-accent-gold">TCC Beta</span>
-                        </h1>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                            Pipeline v3 · Estudio de Fondo con IA de razonamiento profundo
-                        </p>
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setSidebarOpen(true)} className="md:hidden p-1.5 text-gray-400 hover:text-white">
+                            <Menu className="w-5 h-5" />
+                        </button>
+                        <div>
+                            <h1 className="font-serif text-xl font-bold text-white tracking-wide">
+                                Redactor <span className="text-accent-gold">TCC Beta</span>
+                            </h1>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                                Pipeline v3 · Estudio de Fondo con IA de razonamiento profundo
+                            </p>
+                        </div>
                     </div>
                     <button
                         onClick={() => router.push('/chat')}
@@ -410,7 +532,7 @@ export default function TccBetaPage() {
                 </div>
             </header>
 
-            <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+            <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:ml-72">
 
                 {/* ═══════════ DISCLAIMER ═══════════ */}
                 {!acceptedDisclaimer && phase === 'form' && (
