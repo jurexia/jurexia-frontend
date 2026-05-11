@@ -293,7 +293,7 @@ export default function ChatPage() {
         const isProOrPlatinum = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile.subscription_type || '');
         if (!isProOrPlatinum) return;
 
-        const lsKey = `iurexia_pro_features_announcement_v1_${user.id}`;
+        const lsKey = `iurexia_pro_features_announcement_v2_${user.id}`;
         const dismissed = typeof window !== 'undefined'
             ? localStorage.getItem(lsKey) === '1'
             : true;
