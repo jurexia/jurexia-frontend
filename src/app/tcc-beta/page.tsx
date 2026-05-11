@@ -746,6 +746,62 @@ export default function TccBetaPage() {
                             {renderMarkdown(resultMarkdown)}
                         </div>
 
+                        {/* Precedentes útiles */}
+                        {resultStats?.precedentes_utiles && resultStats.precedentes_utiles.length > 0 && (
+                            <div className="mt-6 bg-white rounded-2xl border border-cream-400 p-6 shadow-sm">
+                                <h3 className="font-serif text-lg font-bold text-charcoal-900 mb-1">
+                                    📚 Precedentes que pueden servir para tu borrador de sentencia
+                                </h3>
+                                <p className="text-charcoal-600 text-xs mb-4">
+                                    Sentencias con alta similitud temática recuperadas de nuestra base de datos. Consulta los PDFs originales para hacer ajustes.
+                                </p>
+                                <div className="space-y-2">
+                                    {resultStats.precedentes_utiles.map((prec: any, i: number) => (
+                                        <div key={i} className="flex items-start gap-3 py-2 px-3 rounded-xl hover:bg-cream-100 transition-colors group">
+                                            <span className="text-xs font-mono text-charcoal-400 mt-0.5 shrink-0">
+                                                {Math.round(prec.score * 100)}%
+                                            </span>
+                                            <div className="flex-1 min-w-0">
+                                                {prec.pdf_url ? (
+                                                    <a
+                                                        href={prec.pdf_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                                    >
+                                                        {prec.expediente} · {prec.tribunal}
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-sm font-semibold text-charcoal-900">
+                                                        {prec.expediente} · {prec.tribunal}
+                                                    </span>
+                                                )}
+                                                {prec.tema && (
+                                                    <p className="text-xs text-charcoal-600 mt-0.5 truncate">{prec.tema}</p>
+                                                )}
+                                                {prec.sentido && (
+                                                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-charcoal-500 bg-cream-200 px-2 py-0.5 rounded-full mt-1">
+                                                        {prec.sentido}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {prec.pdf_url && (
+                                                <a
+                                                    href={prec.pdf_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                                    title="Abrir PDF"
+                                                >
+                                                    <FileText className="w-4 h-4" />
+                                                </a>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Bottom actions */}
                         <div className="mt-6 flex gap-3">
                             <button
