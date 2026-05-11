@@ -41,7 +41,7 @@ const CIRCUITOS_DISPONIBLES = [1, 2, 3, 4, 6, 16, 22];
 const PIPELINE_PHASES = [
     { label: 'Lectura de documentos (OCR)', detail: 'Extrayendo texto de los PDFs escaneados...' },
     { label: 'Análisis cognitivo', detail: 'Identificando problemas jurídicos...' },
-    { label: 'Búsqueda RAG', detail: 'Recuperando precedentes y normas...' },
+    { label: 'Consultando base de datos jurídica', detail: 'Recuperando precedentes y normas...' },
     { label: 'Plan de redacción', detail: 'Estructurando el estudio...' },
     { label: 'Redacción del estudio', detail: 'Generando el borrador de estudio de fondo...' },
 ];
@@ -75,7 +75,19 @@ export default function TccBetaPage() {
     const [copied, setCopied] = useState(false);
     const [downloading, setDownloading] = useState(false);
 
+    // ── Query counter ──
+    const [queriesUsed, setQueriesUsed] = useState(profile?.queries_used ?? 0);
+    const [queriesLimit, setQueriesLimit] = useState(profile?.queries_limit ?? 350);
+
     const resultRef = useRef<HTMLDivElement>(null);
+
+    // ── Sync query counter with profile ──
+    useEffect(() => {
+        if (profile) {
+            setQueriesUsed(profile.queries_used ?? 0);
+            setQueriesLimit(profile.queries_limit ?? 350);
+        }
+    }, [profile]);
 
     // ── Auth guard ──
     useEffect(() => {
@@ -201,6 +213,9 @@ export default function TccBetaPage() {
                                 setResultMarkdown(data.estudio_markdown);
                                 setResultStats(data);
                                 setPhase('result');
+                                // Update query counter from backend response
+                                if (data.queries_used !== undefined) setQueriesUsed(data.queries_used);
+                                if (data.queries_limit !== undefined) setQueriesLimit(data.queries_limit);
                                 setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
                             }
 
@@ -246,10 +261,15 @@ export default function TccBetaPage() {
             formData.append('materia', materia);
             formData.append('circuito', String(circuito));
 
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 120000); // 2 min timeout
+
             const res = await fetch(`${API_URL}/redactor/tcc-beta/export-docx`, {
                 method: 'POST',
                 body: formData,
+                signal: controller.signal,
             });
+            clearTimeout(timeout);
 
             if (!res.ok) throw new Error('Error al generar DOCX');
 
@@ -501,9 +521,23 @@ export default function TccBetaPage() {
                             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-charcoal-900 mb-2">
                                 Genera un <span className="text-accent-gold">Estudio de Fondo</span>
                             </h2>
-                            <p className="text-charcoal-700 text-base">
+                            <p className="text-charcoal-700 text-base mb-4">
                                 Sube los documentos del expediente y el pipeline generará un borrador estructurado.
                             </p>
+                            {/* Query counter */}
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cream-200/80 border border-cream-400">
+                                <span className="text-xs text-charcoal-600">Consultas</span>
+                                <span className={`font-bold text-sm tabular-nums ${(queriesLimit - queriesUsed) <= 10 ? 'text-red-600' : 'text-emerald-700'}`}>
+                                    {queriesUsed}<span className="text-charcoal-400 font-normal">/{queriesLimit}</span>
+                                </span>
+                                <div className="w-16 h-1.5 rounded-full bg-cream-300 overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all ${(queriesLimit - queriesUsed) <= 10 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                                        style={{ width: `${Math.min(100, (queriesUsed / Math.max(1, queriesLimit)) * 100)}%` }}
+                                    />
+                                </div>
+                                <span className="text-[10px] text-charcoal-500">Cada proyecto consume 10</span>
+                            </div>
                         </div>
 
                         {/* Config row */}
@@ -616,7 +650,7 @@ export default function TccBetaPage() {
                                 Generando estudio de fondo...
                             </h2>
                             <p className="text-charcoal-700 text-sm">
-                                Este proceso toma entre 3 y 15 minutos. No cierres esta pestaña.
+                                Este proceso puede tardar entre 10 y 25 minutos dependiendo de la calidad de los documentos, su número de páginas y la complejidad del asunto. No cierres esta pestaña.
                             </p>
                         </div>
 
