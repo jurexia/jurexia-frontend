@@ -291,7 +291,8 @@ export default function ChatPage() {
     useEffect(() => {
         if (!profile || !user) return;
         const isProOrPlatinum = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile.subscription_type || '');
-        if (!isProOrPlatinum) return;
+        const isAdminUser = isAdmin(user.email);
+        if (!isProOrPlatinum && !isAdminUser) return;
 
         const lsKey = `iurexia_pro_features_announcement_v2_${user.id}`;
         const dismissed = typeof window !== 'undefined'
