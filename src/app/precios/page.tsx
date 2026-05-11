@@ -134,6 +134,11 @@ export default function PreciosPage() {
                                         <span className="text-accent-gold text-base leading-none">✦</span>
                                         <span className="text-accent-gold">Jurimetría — Predicción de sentido</span>
                                     </span>,
+                                    <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-red-600/20 to-accent-gold/10 border border-red-500/30 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-red-400 text-base leading-none">⚡</span>
+                                        <span className="text-red-400">Redactor de Sentencias TCC</span>
+                                        <span className="ml-auto text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold shrink-0">BETA</span>
+                                    </span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Consulta personalizada con equipo legal de Iurexia (vía correo)",
                                     <span className="text-amber-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
@@ -203,13 +208,11 @@ export default function PreciosPage() {
                                         ))}
                                     </ul>
                                 </div>
-                                <div className="shrink-0">
-                                    <button
-                                        disabled
-                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/8 text-white/35 font-bold text-sm cursor-not-allowed border border-white/10 whitespace-nowrap"
-                                    >
-                                        Próximamente
-                                    </button>
+                                <div className="shrink-0 max-w-xs">
+                                    <p className="text-sm text-gray-400 leading-relaxed text-center md:text-left">
+                                        <span className="text-accent-gold font-semibold">Versión beta disponible</span> para usuarios Platinum.
+                                        La versión Ultra estará disponible próximamente.
+                                    </p>
                                 </div>
                             </div>
                         </div>
