@@ -39,6 +39,7 @@ const CIRCUITOS = Array.from({ length: 32 }, (_, i) => ({
 const CIRCUITOS_DISPONIBLES = [1, 2, 3, 4, 6, 16, 22];
 
 const PIPELINE_PHASES = [
+    { label: 'Lectura de documentos (OCR)', detail: 'Extrayendo texto de los PDFs con Gemini 3.1 Pro...' },
     { label: 'Análisis cognitivo', detail: 'Identificando problemas jurídicos...' },
     { label: 'Búsqueda RAG', detail: 'Recuperando precedentes y normas...' },
     { label: 'Plan de redacción', detail: 'Estructurando el estudio...' },
@@ -170,20 +171,23 @@ export default function TccBetaPage() {
                             const data = JSON.parse(line.slice(6));
 
                             if (data.step !== undefined && data.progress !== undefined) {
-                                // Phase update
-                                setCurrentStep(data.step);
+                                // Map backend step -1 (OCR) to frontend step 0,
+                                // and backend steps 0-3 to frontend steps 1-4
+                                const displayStep = data.step === -1 ? 0 : data.step + 1;
+                                setCurrentStep(displayStep);
                                 setStepStats(prev => ({
                                     ...prev,
-                                    [data.step]: { detail: data.detail || '' },
+                                    [displayStep]: { detail: data.detail || '' },
                                 }));
                             }
 
                             if (data.pass !== undefined && data.elapsed_s !== undefined) {
-                                // Pass complete
+                                // Pass complete — map backend pass 0-3 to frontend 1-4
+                                const displayPass = data.pass + 1;
                                 setStepStats(prev => ({
                                     ...prev,
-                                    [data.pass]: {
-                                        ...prev[data.pass],
+                                    [displayPass]: {
+                                        ...prev[displayPass],
                                         elapsed_s: data.elapsed_s,
                                         detail: data.n_problemas ? `${data.n_problemas} problemas` :
                                             data.n_tesis ? `${data.n_tesis} tesis` :
