@@ -130,10 +130,16 @@ export default function TccBetaPage() {
         formData.append('doc_conceptos', fileConceptos!);
 
         try {
+            // 10-minute timeout — OCR of scanned PDFs can take several minutes
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+
             const res = await fetch(`${API_URL}/redactor/tcc-beta/generate`, {
                 method: 'POST',
                 body: formData,
+                signal: controller.signal,
             });
+            clearTimeout(timeout);
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({ detail: 'Error desconocido' }));
@@ -212,7 +218,13 @@ export default function TccBetaPage() {
                 setPhase('result');
             }
         } catch (err: any) {
-            setError(err.message || 'Error al conectar con el servidor');
+            let msg = err.message || 'Error al conectar con el servidor';
+            if (err.name === 'AbortError') {
+                msg = 'La generación tomó demasiado tiempo. Intente con documentos más pequeños o con texto seleccionable.';
+            } else if (msg === 'Failed to fetch') {
+                msg = 'No se pudo conectar con el servidor. El procesamiento OCR de PDFs escaneados puede demorar — espere a que el servidor termine de reiniciar e intente de nuevo.';
+            }
+            setError(msg);
             setPhase('error');
         }
     };
