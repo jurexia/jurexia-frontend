@@ -303,21 +303,6 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         clean = clean.replace(/\(\s*\)/g, ''); // empty parentheses
         clean = clean.replace(/\[\s*\]/g, '');  // empty brackets
 
-        // 13. Convert long inline quotes followed by citation to blockquotes.
-        // Pattern: «...text 80+ chars...» ⟦N⟧  or  "...text 80+ chars..." ⟦N⟧
-        // This makes cited articles/theses render as indented italic paragraphs in DOCX.
-        clean = clean.replace(
-            /["\u201c\u00ab]([^"\u201d\u00bb]{80,}?)["\u201d\u00bb]\s*(\u27e6\d+\u27e7)/g,
-            '\n> "$1" $2\n'
-        );
-
-        // 13b. Also catch patterns: dispone: "long text" ⟦N⟧  (colon + quote)
-        // Move only the quoted portion to blockquote, keep the intro inline
-        // (Already handled by the regex above if the whole "..." is inline)
-
-        // 14. Clean excessive blank lines created by blockquote extraction
-        clean = clean.replace(/\n{3,}/g, '\n\n');
-
         return clean.trim();
     }, [docIdMap]);
 
@@ -421,51 +406,18 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Build ordered list of APA references from citationMeta + docIdMap.
     // Returns array of { num, reference, pdfUrl } sorted by citation number.
-    // For UUIDs not found in citationMeta.sources, generates a generic fallback
-    // so that every ⟦N⟧ in the content has a corresponding footnote entry.
     const buildAPAReferenceList = useCallback((): Array<{ num: number; reference: string; pdfUrl?: string | null }> => {
-        if (docIdMap.size === 0) return [];
+        if (!citationMeta?.sources || docIdMap.size === 0) return [];
         const list: Array<{ num: number; reference: string; pdfUrl?: string | null }> = [];
         const sortedEntries = Array.from(docIdMap.entries()).sort((a, b) => a[1] - b[1]);
-
-        // Helper: case-insensitive lookup in sources (docIdMap uses lowercase, backend may use original case)
-        const findSource = (uuid: string) => {
-            if (!citationMeta?.sources) return null;
-            // Direct match
-            if (citationMeta.sources[uuid]) return citationMeta.sources[uuid];
-            // Lowercase match
-            const lower = uuid.toLowerCase();
-            if (citationMeta.sources[lower]) return citationMeta.sources[lower];
-            // Full scan: compare lowercase keys (handles mixed-case UUIDs from backend)
-            for (const key of Object.keys(citationMeta.sources)) {
-                if (key.toLowerCase() === lower) return citationMeta.sources[key];
-            }
-            return null;
-        };
-
         for (const [uuid, num] of sortedEntries) {
-            const src = findSource(uuid);
-            if (src && src.origen && src.origen !== 'Fuente no verificada') {
-                list.push({
-                    num,
-                    reference: buildAPAReference(src),
-                    pdfUrl: src.pdf_url || null,
-                });
-            } else if (src && src.origen) {
-                // Backend sent "Fuente no verificada" - still use it but mark as unverified
-                list.push({
-                    num,
-                    reference: `${src.origen}${src.ref ? `, art. ${src.ref}` : ''}. (s.f.).`,
-                    pdfUrl: null,
-                });
-            } else {
-                // Absolute fallback: no source data at all
-                list.push({
-                    num,
-                    reference: 'Fuente legal (referencia no disponible).',
-                    pdfUrl: null,
-                });
-            }
+            const src = citationMeta.sources[uuid] || citationMeta.sources[uuid.toLowerCase()];
+            if (!src) continue;
+            list.push({
+                num,
+                reference: buildAPAReference(src),
+                pdfUrl: src.pdf_url || null,
+            });
         }
         return list;
     }, [citationMeta, docIdMap, buildAPAReference]);
@@ -546,12 +498,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     }, [cleanHtmlForExport, buildReferencesHtml]);
 
     // Export to DOCX with proper formatting
-    // Uses superscript [N] references + mandatory "Referencias" section at the end.
-    // Does NOT use FootnoteReferenceRun (causes "unreadable content" errors in Word).
     const handleExportDOCX = useCallback(async () => {
         if (!contentRef.current) return;
 
-        const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } = await import('docx');
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, FootnoteReferenceRun } = await import('docx');
 
         const date = new Date().toLocaleDateString('es-MX', {
             year: 'numeric',
@@ -562,83 +512,26 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Get the raw message content and strip ALL citation artifacts
         const rawContent = cleanContentForExport(message.content);
 
-        // Build APA references list (used for the References section at end)
+        // ── Build footnotes map from APA references ──
         const apaRefs = buildAPAReferenceList();
-
-        // ── Helper: create a paragraph with bold/citation support ──
-        const makeParagraph = (text: string, opts?: {
-            italics?: boolean; fontSize?: number; color?: string;
-            indent?: number; spacingBefore?: number; spacingAfter?: number;
-        }) => {
-            const fontSize = opts?.fontSize ?? 26;
-            const fontColor = opts?.color ?? undefined;
-            const isItalic = opts?.italics ?? false;
-
-            // Step 1: split by **bold** markers
-            const segments: { text: string; bold: boolean }[] = [];
-            const boldRx = /\*\*([^*]+)\*\*/g;
-            let lastIdx = 0;
-            let bm;
-            while ((bm = boldRx.exec(text)) !== null) {
-                if (bm.index > lastIdx) segments.push({ text: text.slice(lastIdx, bm.index), bold: false });
-                segments.push({ text: bm[1], bold: true });
-                lastIdx = bm.index + bm[0].length;
-            }
-            if (lastIdx < text.length) segments.push({ text: text.slice(lastIdx), bold: false });
-            if (segments.length === 0) segments.push({ text, bold: false });
-
-            // Step 2: split out ⟦N⟧ citation tokens → superscript [N]
-            type Run = { text: string; bold: boolean; isCite?: boolean };
-            const runs: Run[] = [];
-            const citRx = /⟦(\d+)⟧/g;
-            for (const seg of segments) {
-                let li = 0;
-                let cm;
-                while ((cm = citRx.exec(seg.text)) !== null) {
-                    if (cm.index > li) runs.push({ text: seg.text.slice(li, cm.index), bold: seg.bold });
-                    runs.push({ text: `[${cm[1]}]`, bold: false, isCite: true });
-                    li = cm.index + cm[0].length;
-                }
-                if (li < seg.text.length) runs.push({ text: seg.text.slice(li), bold: seg.bold });
-                citRx.lastIndex = 0;
-            }
-
-            // Step 3: build TextRun children
-            const children: any[] = [];
-            for (const r of runs) {
-                if (r.isCite) {
-                    // Superscript citation number — links to References section at end
-                    children.push(new TextRun({
-                        text: r.text,
-                        superScript: true,
-                        bold: true,
-                        size: 18,
-                        font: "Arial",
-                        color: "C9A227",
-                    }));
-                } else {
-                    children.push(new TextRun({
-                        text: r.text,
-                        bold: r.bold,
-                        italics: isItalic,
-                        size: fontSize,
-                        font: "Arial",
-                        ...(fontColor ? { color: fontColor } : {}),
-                    }));
-                }
-            }
-
-            return new Paragraph({
-                children,
-                alignment: AlignmentType.JUSTIFIED,
-                ...(opts?.indent ? { indent: { left: opts.indent } } : {}),
-                spacing: {
-                    before: opts?.spacingBefore ?? undefined,
-                    after: opts?.spacingAfter ?? 240,
-                    line: 360,
-                },
-            });
-        };
+        const footnotesConfig: Record<number, { children: any[] }> = {};
+        for (const r of apaRefs) {
+            footnotesConfig[r.num] = {
+                children: [
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: r.reference,
+                                size: 20,
+                                font: "Arial",
+                                color: "333333"
+                            })
+                        ],
+                        spacing: { after: 60 }
+                    })
+                ]
+            };
+        }
 
         // Parse markdown content into structured paragraphs
         const lines = rawContent.split('\n');
@@ -648,28 +541,53 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         docChildren.push(
             new Paragraph({
                 children: [
-                    new TextRun({ text: "Iurex", bold: true, size: 56, font: "Georgia", color: "1a1a1a" }),
-                    new TextRun({ text: "ia", bold: true, size: 56, font: "Georgia", color: "C9A227" })
+                    new TextRun({
+                        text: "Iurex",
+                        bold: true,
+                        size: 56,
+                        font: "Georgia",
+                        color: "1a1a1a"
+                    }),
+                    new TextRun({
+                        text: "ia",
+                        bold: true,
+                        size: 56,
+                        font: "Georgia",
+                        color: "C9A227"
+                    })
                 ],
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 100 }
             }),
             new Paragraph({
                 children: [
-                    new TextRun({ text: "Plataforma de IA Legal para México", size: 22, color: "666666", italics: true, font: "Arial" })
+                    new TextRun({
+                        text: "Plataforma de IA Legal para México",
+                        size: 22,
+                        color: "666666",
+                        italics: true,
+                        font: "Arial"
+                    })
                 ],
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 200 }
             }),
             new Paragraph({
                 children: [
-                    new TextRun({ text: `Documento generado el ${date}`, size: 20, color: "888888", font: "Arial" })
+                    new TextRun({
+                        text: `Documento generado el ${date}`,
+                        size: 20,
+                        color: "888888",
+                        font: "Arial"
+                    })
                 ],
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 400 }
             }),
             new Paragraph({
-                border: { bottom: { color: "C9A227", size: 12, style: BorderStyle.SINGLE } },
+                border: {
+                    bottom: { color: "C9A227", size: 12, style: BorderStyle.SINGLE }
+                },
                 spacing: { after: 400 }
             })
         );
@@ -681,7 +599,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             if (currentParagraphLines.length > 0) {
                 const text = currentParagraphLines.join(' ').trim();
                 if (text) {
-                    docChildren.push(makeParagraph(text));
+                    docChildren.push(createFormattedParagraph(text, Paragraph, TextRun, AlignmentType, FootnoteReferenceRun, footnotesConfig));
                 }
                 currentParagraphLines = [];
             }
@@ -697,32 +615,55 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             const trimmedLine = line.trim();
 
             // Skip empty lines - they mark paragraph breaks
-            if (!trimmedLine) { flushParagraph(); continue; }
+            if (!trimmedLine) {
+                flushParagraph();
+                continue;
+            }
 
             // Skip citation badges like [Doc ID: ...]
-            if (trimmedLine.match(/^\[Doc ID:/)) continue;
+            if (trimmedLine.match(/^\[Doc ID:/)) {
+                continue;
+            }
 
             // Main section headers like **PROEMIO**, **CLÁUSULAS**, etc.
             if (mainSectionPattern.test(trimmedLine)) {
                 flushParagraph();
                 const headerText = trimmedLine.replace(/\*\*/g, '').toUpperCase();
-                docChildren.push(new Paragraph({
-                    children: [new TextRun({ text: headerText, bold: true, size: 28, font: "Arial" })],
-                    alignment: AlignmentType.CENTER,
-                    spacing: { before: 480, after: 240, line: 360 }
-                }));
+                docChildren.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: headerText,
+                                bold: true,
+                                size: 28,
+                                font: "Arial"
+                            })
+                        ],
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 480, after: 240, line: 360 }
+                    })
+                );
                 continue;
             }
 
-            // H2 Headers (## Section)
+            // H2 Headers (## Section) - Main document title or sections
             if (trimmedLine.startsWith('## ')) {
                 flushParagraph();
                 const headerText = trimmedLine.replace(/^##\s*/, '').replace(/\*\*/g, '').toUpperCase();
-                docChildren.push(new Paragraph({
-                    children: [new TextRun({ text: headerText, bold: true, size: 30, font: "Arial" })],
-                    alignment: AlignmentType.CENTER,
-                    spacing: { before: 480, after: 300, line: 360 }
-                }));
+                docChildren.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: headerText,
+                                bold: true,
+                                size: 30,
+                                font: "Arial"
+                            })
+                        ],
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 480, after: 300, line: 360 }
+                    })
+                );
                 continue;
             }
 
@@ -730,10 +671,19 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             if (trimmedLine.startsWith('### ')) {
                 flushParagraph();
                 const headerText = trimmedLine.replace(/^###\s*/, '').replace(/\*\*/g, '');
-                docChildren.push(new Paragraph({
-                    children: [new TextRun({ text: headerText, bold: true, size: 26, font: "Arial" })],
-                    spacing: { before: 360, after: 200, line: 360 }
-                }));
+                docChildren.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: headerText,
+                                bold: true,
+                                size: 26,
+                                font: "Arial"
+                            })
+                        ],
+                        spacing: { before: 360, after: 200, line: 360 }
+                    })
+                );
                 continue;
             }
 
@@ -741,11 +691,20 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             if (romanNumeralDeclaration.test(trimmedLine)) {
                 flushParagraph();
                 const cleanText = trimmedLine.replace(/\*\*/g, '');
-                docChildren.push(new Paragraph({
-                    children: [new TextRun({ text: cleanText, bold: true, size: 26, font: "Arial" })],
-                    alignment: AlignmentType.JUSTIFIED,
-                    spacing: { before: 240, after: 120, line: 360 }
-                }));
+                docChildren.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: cleanText,
+                                bold: true,
+                                size: 26,
+                                font: "Arial"
+                            })
+                        ],
+                        alignment: AlignmentType.JUSTIFIED,
+                        spacing: { before: 240, after: 120, line: 360 }
+                    })
+                );
                 continue;
             }
 
@@ -753,30 +712,54 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             if (clausePattern.test(trimmedLine)) {
                 flushParagraph();
                 const cleanText = trimmedLine.replace(/\*\*/g, '');
+                // Find where the clause number ends
                 const match = cleanText.match(clausePattern);
                 if (match) {
                     const clauseNumber = match[0];
                     const restOfText = cleanText.slice(clauseNumber.length);
-                    docChildren.push(new Paragraph({
-                        children: [
-                            new TextRun({ text: clauseNumber, bold: true, size: 26, font: "Arial" }),
-                            new TextRun({ text: restOfText, size: 26, font: "Arial" })
-                        ],
-                        alignment: AlignmentType.JUSTIFIED,
-                        spacing: { before: 200, after: 120, line: 360 }
-                    }));
+                    docChildren.push(
+                        new Paragraph({
+                            children: [
+                                new TextRun({
+                                    text: clauseNumber,
+                                    bold: true,
+                                    size: 26,
+                                    font: "Arial"
+                                }),
+                                new TextRun({
+                                    text: restOfText,
+                                    size: 26,
+                                    font: "Arial"
+                                })
+                            ],
+                            alignment: AlignmentType.JUSTIFIED,
+                            spacing: { before: 200, after: 120, line: 360 }
+                        })
+                    );
                     continue;
                 }
             }
 
-            // Blockquotes (> "Artículo...") — italic indented paragraph
+            // Blockquotes (> "Artículo...") — italic indented paragraph with footnote support
             if (trimmedLine.startsWith('> ') || trimmedLine.startsWith('>')) {
                 flushParagraph();
                 const quoteText = trimmedLine.replace(/^>\s*/, '');
-                docChildren.push(makeParagraph(quoteText, {
-                    italics: true, fontSize: 24, color: "333333",
-                    indent: 480, spacingBefore: 120, spacingAfter: 120
-                }));
+                docChildren.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: quoteText,
+                                italics: true,
+                                size: 24,
+                                font: "Arial",
+                                color: "333333"
+                            })
+                        ],
+                        indent: { left: 480 },
+                        alignment: AlignmentType.JUSTIFIED,
+                        spacing: { before: 120, after: 120, line: 360 }
+                    })
+                );
                 continue;
             }
 
@@ -787,67 +770,77 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Flush remaining paragraph
         flushParagraph();
 
-        // ── APA References section at end of document ──
-        // This is the single, reliable citation system: superscript [N] in text
-        // points to this numbered list at the end.
-        if (apaRefs.length > 0) {
-            // Separator line
-            docChildren.push(new Paragraph({
-                border: { bottom: { color: "C9A227", size: 8, style: BorderStyle.SINGLE } },
-                spacing: { before: 600, after: 200 }
-            }));
-            // Section header
-            docChildren.push(new Paragraph({
-                children: [new TextRun({ text: "Referencias", bold: true, size: 28, font: "Georgia", color: "1a1a1a" })],
-                spacing: { after: 200 }
-            }));
-            // Each APA reference
-            for (const r of apaRefs) {
-                docChildren.push(new Paragraph({
-                    children: [
-                        new TextRun({ text: `[${r.num}] `, bold: true, size: 20, font: "Arial", color: "C9A227" }),
-                        new TextRun({ text: r.reference, size: 20, font: "Arial", color: "333333" })
-                    ],
-                    indent: { left: 360, hanging: 360 },
-                    spacing: { after: 80, line: 276 }
-                }));
-            }
-        }
+        // ── Footnotes are now rendered inline via FootnoteReferenceRun ──
+        // No separate "References" section needed — they appear at page bottom.
 
         // Footer
         docChildren.push(
             new Paragraph({
-                border: { top: { color: "C9A227", size: 12, style: BorderStyle.SINGLE } },
+                border: {
+                    top: { color: "C9A227", size: 12, style: BorderStyle.SINGLE }
+                },
                 spacing: { before: 400, after: 200 }
             }),
             new Paragraph({
                 children: [
-                    new TextRun({ text: "Iurex", bold: true, size: 18, font: "Georgia", color: "1a1a1a" }),
-                    new TextRun({ text: "ia", bold: true, size: 18, font: "Georgia", color: "C9A227" }),
-                    new TextRun({ text: " - Inteligencia Artificial Legal", size: 18, color: "666666" })
+                    new TextRun({
+                        text: "Iurex",
+                        bold: true,
+                        size: 18,
+                        font: "Georgia",
+                        color: "1a1a1a"
+                    }),
+                    new TextRun({
+                        text: "ia",
+                        bold: true,
+                        size: 18,
+                        font: "Georgia",
+                        color: "C9A227"
+                    }),
+                    new TextRun({
+                        text: " - Inteligencia Artificial Legal",
+                        size: 18,
+                        color: "666666"
+                    })
                 ],
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 100 }
             }),
             new Paragraph({
                 children: [
-                    new TextRun({ text: "Este documento fue generado con información de nuestra base jurídica verificada.", size: 16, color: "888888", italics: true })
+                    new TextRun({
+                        text: "Este documento fue generado con información de nuestra base jurídica verificada.",
+                        size: 16,
+                        color: "888888",
+                        italics: true
+                    })
                 ],
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 50 }
             }),
             new Paragraph({
-                children: [new TextRun({ text: "Iurexia.com", size: 16, color: "C9A227" })],
+                children: [
+                    new TextRun({
+                        text: "Iurexia.com",
+                        size: 16,
+                        color: "C9A227"
+                    })
+                ],
                 alignment: AlignmentType.CENTER
             })
         );
 
-        // Create document WITHOUT footnotes (FootnoteReferenceRun corrupts DOCX)
         const doc = new Document({
+            footnotes: footnotesConfig,
             sections: [{
                 properties: {
                     page: {
-                        margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 }
+                        margin: {
+                            top: 1440,    // 1 inch
+                            bottom: 1440,
+                            left: 1440,
+                            right: 1440
+                        }
                     }
                 },
                 children: docChildren
@@ -866,6 +859,84 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }, [message.content, buildAPAReferenceList]);
+
+    // Helper function to create formatted paragraphs with bold text support + footnotes.
+    function createFormattedParagraph(text: string, Paragraph: any, TextRun: any, AlignmentType: any, FootnoteReferenceRun: any, footnotesConfig: Record<number, any>) {
+        // Step 1: split by **bold** markers
+        const boldParts: { text: string; bold: boolean }[] = [];
+        const boldRegex = /\*\*([^*]+)\*\*/g;
+        let lastIndex = 0;
+        let match;
+        while ((match = boldRegex.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                boldParts.push({ text: text.slice(lastIndex, match.index), bold: false });
+            }
+            boldParts.push({ text: match[1], bold: true });
+            lastIndex = match.index + match[0].length;
+        }
+        if (lastIndex < text.length) {
+            boldParts.push({ text: text.slice(lastIndex), bold: false });
+        }
+        if (boldParts.length === 0) {
+            boldParts.push({ text, bold: false });
+        }
+
+        // Step 2: within each part, split out ⟦N⟧ citation tokens as superscript runs
+        type Run = { text: string; bold: boolean; superscript?: boolean };
+        const runs: Run[] = [];
+        const citRegex = /⟦(\d+)⟧/g;
+        for (const p of boldParts) {
+            let li = 0;
+            let m;
+            while ((m = citRegex.exec(p.text)) !== null) {
+                if (m.index > li) {
+                    runs.push({ text: p.text.slice(li, m.index), bold: p.bold });
+                }
+                runs.push({ text: `[${m[1]}]`, bold: false, superscript: true });
+                li = m.index + m[0].length;
+            }
+            if (li < p.text.length) {
+                runs.push({ text: p.text.slice(li), bold: p.bold });
+            }
+            citRegex.lastIndex = 0;
+        }
+
+        // Build final children: replace ⟦N⟧ with FootnoteReferenceRun
+        const children: any[] = [];
+        for (const r of runs) {
+            if (r.superscript) {
+                // Extract the citation number from [N]
+                const citNumMatch = r.text.match(/\[(\d+)\]/);
+                const citNum = citNumMatch ? parseInt(citNumMatch[1]) : 0;
+                if (citNum > 0 && footnotesConfig[citNum]) {
+                    children.push(new FootnoteReferenceRun(citNum));
+                } else {
+                    // Fallback: keep as superscript text
+                    children.push(new TextRun({
+                        text: r.text,
+                        bold: false,
+                        superScript: true,
+                        size: 20,
+                        font: "Arial",
+                        color: "666666",
+                    }));
+                }
+            } else {
+                children.push(new TextRun({
+                    text: r.text,
+                    bold: r.bold,
+                    size: 26,
+                    font: "Arial"
+                }));
+            }
+        }
+
+        return new Paragraph({
+            children,
+            alignment: AlignmentType.JUSTIFIED,
+            spacing: { after: 240, line: 360 }
+        });
+    }
 
     // Print with header
     const handlePrint = useCallback(() => {
