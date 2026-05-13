@@ -324,9 +324,16 @@ export interface RedactorEstudio {
 }
 
 export async function getRedactorEstudios(): Promise<RedactorEstudio[]> {
+    // Defensa en profundidad: filtramos explícitamente por user_id además de
+    // depender de RLS. Si la sesión no está lista o no hay usuario, devolvemos
+    // [] sin hacer la query.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
     const { data, error } = await supabase
         .from('redactor_estudios')
         .select('id, tipo_asunto, materia, circuito, n_palabras, total_elapsed_s, created_at')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
     if (error) {
@@ -337,10 +344,14 @@ export async function getRedactorEstudios(): Promise<RedactorEstudio[]> {
 }
 
 export async function getRedactorEstudio(id: string): Promise<RedactorEstudio | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
     const { data, error } = await supabase
         .from('redactor_estudios')
         .select('*')
         .eq('id', id)
+        .eq('user_id', user.id)
         .single();
     if (error) {
         console.error('Error loading estudio:', error);
