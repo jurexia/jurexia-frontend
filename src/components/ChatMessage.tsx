@@ -740,26 +740,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                 }
             }
 
-            // Blockquotes (> "Artículo...")
+            // Blockquotes (> "Artículo...") — route through createFormattedParagraph for footnote support
             if (trimmedLine.startsWith('> ') || trimmedLine.startsWith('>')) {
                 flushParagraph();
                 const quoteText = trimmedLine.replace(/^>\s*/, '');
-                docChildren.push(
-                    new Paragraph({
-                        children: [
-                            new TextRun({
-                                text: quoteText.replace(/\*\*/g, ''),
-                                italics: true,
-                                size: 24,
-                                font: "Arial",
-                                color: "333333"
-                            })
-                        ],
-                        indent: { left: 480 },
-                        alignment: AlignmentType.JUSTIFIED,
-                        spacing: { before: 120, after: 120, line: 360 }
-                    })
-                );
+                docChildren.push(createFormattedParagraph(
+                    quoteText, Paragraph, TextRun, AlignmentType, FootnoteReferenceRun, footnotesConfig,
+                    { italics: true, fontSize: 24, color: "333333", indent: 480, spacingBefore: 120, spacingAfter: 120 }
+                ));
                 continue;
             }
 
@@ -770,8 +758,59 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // Flush remaining paragraph
         flushParagraph();
 
-        // ── Footnotes are now rendered inline via FootnoteReferenceRun ──
-        // The references appear at the bottom of each page automatically
+        // ── APA References section at end of document (reliable fallback) ──
+        // Even if FootnoteReferenceRun renders correctly, this section
+        // guarantees the user always sees the full APA reference list.
+        if (apaRefs.length > 0) {
+            // Separator line
+            docChildren.push(
+                new Paragraph({
+                    border: {
+                        bottom: { color: "C9A227", size: 8, style: BorderStyle.SINGLE }
+                    },
+                    spacing: { before: 600, after: 200 }
+                })
+            );
+            // Section header
+            docChildren.push(
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Referencias",
+                            bold: true,
+                            size: 28,
+                            font: "Georgia",
+                            color: "1a1a1a"
+                        })
+                    ],
+                    spacing: { after: 200 }
+                })
+            );
+            // Each APA reference
+            for (const r of apaRefs) {
+                docChildren.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({
+                                text: `[${r.num}] `,
+                                bold: true,
+                                size: 20,
+                                font: "Arial",
+                                color: "C9A227"
+                            }),
+                            new TextRun({
+                                text: r.reference,
+                                size: 20,
+                                font: "Arial",
+                                color: "333333"
+                            })
+                        ],
+                        indent: { left: 360, hanging: 360 },
+                        spacing: { after: 80, line: 276 }
+                    })
+                );
+            }
+        }
 
         // Footer
         docChildren.push(
@@ -860,8 +899,29 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         URL.revokeObjectURL(url);
     }, [message.content, buildAPAReferenceList]);
 
-    // Helper function to create formatted paragraphs with bold text support
-    function createFormattedParagraph(text: string, Paragraph: any, TextRun: any, AlignmentType: any, FootnoteReferenceRun: any, footnotesConfig: Record<number, any>) {
+    // Helper function to create formatted paragraphs with bold text support + footnotes.
+    // Accepts optional `opts` for italic/blockquote styling so blockquotes also get footnotes.
+    interface ParagraphOpts {
+        italics?: boolean;
+        fontSize?: number;
+        color?: string;
+        indent?: number;
+        spacingBefore?: number;
+        spacingAfter?: number;
+    }
+    function createFormattedParagraph(
+        text: string,
+        Paragraph: any,
+        TextRun: any,
+        AlignmentType: any,
+        FootnoteReferenceRun: any,
+        footnotesConfig: Record<number, any>,
+        opts?: ParagraphOpts,
+    ) {
+        const fontSize = opts?.fontSize ?? 26; // 13pt default
+        const fontColor = opts?.color ?? undefined;
+        const isItalic = opts?.italics ?? false;
+
         // Step 1: split by **bold** markers
         const boldParts: { text: string; bold: boolean }[] = [];
         const boldRegex = /\*\*([^*]+)\*\*/g;
@@ -925,8 +985,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                 children.push(new TextRun({
                     text: r.text,
                     bold: r.bold,
-                    size: 26,   // 13pt
+                    italics: isItalic,
+                    size: fontSize,
                     font: "Arial",
+                    ...(fontColor ? { color: fontColor } : {}),
                 }));
             }
         }
@@ -934,7 +996,12 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         return new Paragraph({
             children,
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { after: 240, line: 360 }  // 1.5 line spacing + paragraph spacing
+            ...(opts?.indent ? { indent: { left: opts.indent } } : {}),
+            spacing: {
+                before: opts?.spacingBefore ?? undefined,
+                after: opts?.spacingAfter ?? 240,
+                line: 360,
+            },
         });
     }
 
