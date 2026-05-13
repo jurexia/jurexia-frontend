@@ -427,19 +427,42 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         if (docIdMap.size === 0) return [];
         const list: Array<{ num: number; reference: string; pdfUrl?: string | null }> = [];
         const sortedEntries = Array.from(docIdMap.entries()).sort((a, b) => a[1] - b[1]);
+
+        // Helper: case-insensitive lookup in sources (docIdMap uses lowercase, backend may use original case)
+        const findSource = (uuid: string) => {
+            if (!citationMeta?.sources) return null;
+            // Direct match
+            if (citationMeta.sources[uuid]) return citationMeta.sources[uuid];
+            // Lowercase match
+            const lower = uuid.toLowerCase();
+            if (citationMeta.sources[lower]) return citationMeta.sources[lower];
+            // Full scan: compare lowercase keys (handles mixed-case UUIDs from backend)
+            for (const key of Object.keys(citationMeta.sources)) {
+                if (key.toLowerCase() === lower) return citationMeta.sources[key];
+            }
+            return null;
+        };
+
         for (const [uuid, num] of sortedEntries) {
-            const src = citationMeta?.sources?.[uuid] || citationMeta?.sources?.[uuid.toLowerCase()];
-            if (src) {
+            const src = findSource(uuid);
+            if (src && src.origen && src.origen !== 'Fuente no verificada') {
                 list.push({
                     num,
                     reference: buildAPAReference(src),
                     pdfUrl: src.pdf_url || null,
                 });
-            } else {
-                // Fallback: generate generic reference so the footnote still renders
+            } else if (src && src.origen) {
+                // Backend sent "Fuente no verificada" - still use it but mark as unverified
                 list.push({
                     num,
-                    reference: 'Fuente legal citada en el texto.',
+                    reference: `${src.origen}${src.ref ? `, art. ${src.ref}` : ''}. (s.f.).`,
+                    pdfUrl: null,
+                });
+            } else {
+                // Absolute fallback: no source data at all
+                list.push({
+                    num,
+                    reference: 'Fuente legal (referencia no disponible).',
                     pdfUrl: null,
                 });
             }
