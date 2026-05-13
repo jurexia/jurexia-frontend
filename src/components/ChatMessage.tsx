@@ -303,6 +303,21 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         clean = clean.replace(/\(\s*\)/g, ''); // empty parentheses
         clean = clean.replace(/\[\s*\]/g, '');  // empty brackets
 
+        // 13. Convert long inline quotes followed by citation to blockquotes.
+        // Pattern: «...text 80+ chars...» ⟦N⟧  or  "...text 80+ chars..." ⟦N⟧
+        // This makes cited articles/theses render as indented italic paragraphs in DOCX.
+        clean = clean.replace(
+            /["\u201c\u00ab]([^"\u201d\u00bb]{80,}?)["\u201d\u00bb]\s*(\u27e6\d+\u27e7)/g,
+            '\n> "$1" $2\n'
+        );
+
+        // 13b. Also catch patterns: dispone: "long text" ⟦N⟧  (colon + quote)
+        // Move only the quoted portion to blockquote, keep the intro inline
+        // (Already handled by the regex above if the whole "..." is inline)
+
+        // 14. Clean excessive blank lines created by blockquote extraction
+        clean = clean.replace(/\n{3,}/g, '\n\n');
+
         return clean.trim();
     }, [docIdMap]);
 
@@ -406,18 +421,28 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Build ordered list of APA references from citationMeta + docIdMap.
     // Returns array of { num, reference, pdfUrl } sorted by citation number.
+    // For UUIDs not found in citationMeta.sources, generates a generic fallback
+    // so that every ⟦N⟧ in the content has a corresponding footnote entry.
     const buildAPAReferenceList = useCallback((): Array<{ num: number; reference: string; pdfUrl?: string | null }> => {
-        if (!citationMeta?.sources || docIdMap.size === 0) return [];
+        if (docIdMap.size === 0) return [];
         const list: Array<{ num: number; reference: string; pdfUrl?: string | null }> = [];
         const sortedEntries = Array.from(docIdMap.entries()).sort((a, b) => a[1] - b[1]);
         for (const [uuid, num] of sortedEntries) {
-            const src = citationMeta.sources[uuid] || citationMeta.sources[uuid.toLowerCase()];
-            if (!src) continue;
-            list.push({
-                num,
-                reference: buildAPAReference(src),
-                pdfUrl: src.pdf_url || null,
-            });
+            const src = citationMeta?.sources?.[uuid] || citationMeta?.sources?.[uuid.toLowerCase()];
+            if (src) {
+                list.push({
+                    num,
+                    reference: buildAPAReference(src),
+                    pdfUrl: src.pdf_url || null,
+                });
+            } else {
+                // Fallback: generate generic reference so the footnote still renders
+                list.push({
+                    num,
+                    reference: 'Fuente legal citada en el texto.',
+                    pdfUrl: null,
+                });
+            }
         }
         return list;
     }, [citationMeta, docIdMap, buildAPAReference]);
