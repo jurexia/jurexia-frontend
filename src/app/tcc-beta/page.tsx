@@ -162,9 +162,10 @@ export default function TccBetaPage() {
         formData.append('doc_conceptos', fileConceptos!);
 
         try {
-            // 10-minute timeout — OCR of scanned PDFs can take several minutes
+            // 30-minute timeout — OCR de PDFs escaneados + multipass DeepSeek
+            // pueden requerir hasta ~20 min; damos margen extra antes de abortar.
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+            const timeout = setTimeout(() => controller.abort(), 30 * 60 * 1000);
 
             const res = await fetch(`${API_URL}/redactor/tcc-beta/generate`, {
                 method: 'POST',
@@ -210,6 +211,14 @@ export default function TccBetaPage() {
                                     ...prev,
                                     [displayStep]: { detail: data.detail || '' },
                                 }));
+                            }
+
+                            // Streaming tokens del Pass 3 (redacción del estudio).
+                            // Acumulamos en resultMarkdown para que el usuario vea el texto fluir.
+                            if (data.text !== undefined && data.text !== null) {
+                                setResultMarkdown(prev => prev + data.text);
+                                // En el primer token, salta a la fase result para mostrar el viewer
+                                setPhase(prev => prev === 'generating' ? 'result' : prev);
                             }
 
                             if (data.pass !== undefined && data.elapsed_s !== undefined) {
@@ -772,7 +781,7 @@ export default function TccBetaPage() {
                                 Generando estudio de fondo...
                             </h2>
                             <p className="text-charcoal-700 text-sm">
-                                Este proceso puede tardar entre 10 y 25 minutos dependiendo de la calidad de los documentos, su número de páginas y la complejidad del asunto. No cierres esta pestaña.
+                                Este proceso puede tardar entre 8 y 20 minutos dependiendo de la calidad de los documentos, su número de páginas y la complejidad del asunto. No cierres esta pestaña.
                             </p>
                             <p className="text-charcoal-900 text-sm font-bold mt-3 leading-relaxed">
                                 Aprovecha este tiempo para dar una lectura de refuerzo al expediente y puedas cotejar tu borrador de proyecto de sentencia. De cualquier forma, ten en cuenta que al final del proceso te proporcionaremos algunos precedentes de tu órgano o de otros Tribunales que podrían servirte como referencia para estructurar tus argumentos o modificar el borrador conforme a tu criterio jurídico.
