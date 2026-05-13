@@ -406,12 +406,23 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Build ordered list of APA references from citationMeta + docIdMap.
     // Returns array of { num, reference, pdfUrl } sorted by citation number.
+    // NOTE: docIdMap stores UUIDs as lowercase, but backend sources_map keys
+    // preserve the original case from Qdrant. We must do case-insensitive lookup.
     const buildAPAReferenceList = useCallback((): Array<{ num: number; reference: string; pdfUrl?: string | null }> => {
         if (!citationMeta?.sources || docIdMap.size === 0) return [];
         const list: Array<{ num: number; reference: string; pdfUrl?: string | null }> = [];
         const sortedEntries = Array.from(docIdMap.entries()).sort((a, b) => a[1] - b[1]);
+
+        // Build a lowercase→original key map for case-insensitive lookup
+        const sourcesLowerMap: Record<string, string> = {};
+        for (const key of Object.keys(citationMeta.sources)) {
+            sourcesLowerMap[key.toLowerCase()] = key;
+        }
+
         for (const [uuid, num] of sortedEntries) {
-            const src = citationMeta.sources[uuid] || citationMeta.sources[uuid.toLowerCase()];
+            // Try direct match first, then case-insensitive via the lower map
+            const src = citationMeta.sources[uuid]
+                || citationMeta.sources[sourcesLowerMap[uuid.toLowerCase()] || ''];
             if (!src) continue;
             list.push({
                 num,
