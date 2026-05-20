@@ -444,9 +444,21 @@ export default function TccBetaPage() {
                 <div className="max-w-2xl mx-auto p-8 text-center">
                     <Loader2 className="w-10 h-10 animate-spin mx-auto text-blue-600 mb-4" />
                     <p className="text-gray-700">{progress || 'Analizando...'}</p>
-                    <p className="text-xs text-gray-500 mt-3">OCR (si aplica) + Pass 0 + Pass 1 (RAG) + Pass 2 — puede tomar 2-6 minutos.</p>
+                    <p className="text-xs text-gray-500 mt-3">OCR (si aplica) + Pass 0 (Gemini) + Pass 1 (RAG) + Pass 2 — debería tomar 1-3 minutos.</p>
+                    <button
+                        onClick={() => {
+                            abortRef.current?.abort();
+                            setPhase('form');
+                            setProgress('');
+                        }}
+                        className="mt-6 text-sm text-red-600 hover:text-red-700 underline"
+                    >
+                        Cancelar
+                    </button>
                 </div>
             )}
+
+            {/* FINALIZING/FINALIZE — cancel button shared via the cancel pattern below */}
 
             {/* REVIEW */}
             {phase === 'review' && plan && activeProb && activeEdit && (
