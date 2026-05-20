@@ -1,978 +1,655 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+/**
+ * Redactor TCC — Pipeline v4 con humano en el loop.
+ *
+ * Flujo:
+ *   1) Formulario: tipo + materia + circuito + PDFs (con OCR Mistral) o textos.
+ *   2) POST /redactor/tcc-v4/analyze (SSE multipart) → OCR + Pass 0/1/2 → plan + job_id.
+ *   3) UI del secretario: lista lateral de problemas + detalle a la derecha.
+ *      Atajos J/K navegar · Ctrl+Enter siguiente.
+ *      Auto-save de edits en localStorage por job_id.
+ *   4) POST /redactor/tcc-v4/finalize (JSON) → Pass 3 streaming del estudio.
+ *
+ * Reemplazó al v3 multipass full-auto que vivía en esta misma ruta.
+ */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
-import { ArrowLeft, Upload, AlertTriangle, CheckCircle2, Loader2, Download, Copy, FileText, Shield, Menu, X, Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { getRedactorEstudios, getRedactorEstudio, RedactorEstudio } from '@/lib/supabase';
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Constants
-// ═══════════════════════════════════════════════════════════════════════════════
+import {
+    ArrowLeft, Loader2, Check, X, Star, AlertTriangle, Copy, Upload, FileText, Shield,
+} from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
 
 const TIPOS_ASUNTO = [
-    { id: 'amparo_directo', label: 'Amparo Directo', docs: ['Acto Reclamado (sentencia impugnada)', 'Conceptos de Violación'] },
-    { id: 'amparo_revision', label: 'Amparo en Revisión', docs: ['Sentencia Recurrida', 'Agravios'] },
-    { id: 'revision_fiscal', label: 'Revisión Fiscal', docs: ['Sentencia del TFJA', 'Agravios'] },
-    { id: 'recurso_queja', label: 'Recurso de Queja', docs: ['Determinación Recurrida', 'Agravios'] },
+    { id: 'amparo_directo', label: 'Amparo Directo', actoLabel: 'Sentencia/laudo reclamado', cvLabel: 'Conceptos de violación' },
+    { id: 'amparo_revision', label: 'Amparo en Revisión', actoLabel: 'Sentencia recurrida', cvLabel: 'Agravios' },
+    { id: 'revision_fiscal', label: 'Revisión Fiscal', actoLabel: 'Sentencia del TFJA', cvLabel: 'Agravios' },
+    { id: 'recurso_queja', label: 'Recurso de Queja', actoLabel: 'Determinación recurrida', cvLabel: 'Agravios' },
 ];
+const MATERIAS = ['civil', 'penal', 'administrativa', 'laboral', 'familiar', 'mercantil'];
+const CIRCUITOS = Array.from({ length: 32 }, (_, i) => i + 1);
 
-const MATERIAS = [
-    { id: 'civil', label: 'Civil' },
-    { id: 'penal', label: 'Penal' },
-    { id: 'administrativa', label: 'Administrativa' },
-    { id: 'laboral', label: 'Laboral' },
-    { id: 'familiar', label: 'Familiar' },
-    { id: 'mercantil', label: 'Mercantil' },
+const CALIFICACIONES = [
+    'fundado', 'parcialmente_fundado', 'esencialmente_fundado',
+    'infundado', 'inoperante', 'inatendible',
 ];
+const ACCIONES = ['abordar_completo', 'abordar_complementario', 'omitir_por_innecesario'];
 
-// Circuitos 1–32
-const CIRCUITOS = Array.from({ length: 32 }, (_, i) => ({
-    id: i + 1,
-    label: `${i + 1}° Circuito`,
-}));
+type TesisDecision = 'rector' | 'apoyo' | 'descartar' | null;
 
-// Circuitos que tienen datos ingestados en Qdrant
-const CIRCUITOS_DISPONIBLES = [1, 2, 3, 4, 6, 16, 22];
+interface TesisItem {
+    registro?: string;
+    rubro_corto?: string; rubro_real?: string; rubro?: string;
+    instancia?: string;
+    como_se_aplica_al_caso?: string;
+    verificable?: boolean;
+    razon_no_verificable?: string;
+}
+interface ProblemaPlan {
+    problema_id: string;
+    pregunta_concreta: string;
+    thesis_central_a_demostrar?: string;
+    calificacion_propuesta_disidencia?: string;
+    accion_redaccion?: string;
+    tesis_clave_a_citar?: TesisItem[];
+}
+interface PlanData { plan_por_problema?: ProblemaPlan[]; }
 
-const PIPELINE_PHASES = [
-    { label: 'Lectura de documentos (OCR)', detail: 'Extrayendo texto de los PDFs escaneados...' },
-    { label: 'Análisis cognitivo', detail: 'Identificando problemas jurídicos...' },
-    { label: 'Consultando base de datos jurídica', detail: 'Recuperando precedentes y normas...' },
-    { label: 'Plan de redacción', detail: 'Estructurando el estudio...' },
-    { label: 'Redacción del estudio', detail: 'Generando el borrador de estudio de fondo...' },
-];
+interface EditState {
+    calificacion: string;
+    accion: string;
+    tesisDecisions: Record<string, TesisDecision>;
+    instruccion: string;
+    estado: 'pendiente' | 'resuelto' | 'diferido' | 'inoperante_manual';
+}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Main Component
-// ═══════════════════════════════════════════════════════════════════════════════
+type Phase = 'form' | 'analyzing' | 'review' | 'finalizing' | 'done' | 'error';
 
 export default function TccBetaPage() {
-    const { user, profile, loading: authLoading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
+    const canAccess = isAdmin(user?.email);
 
-    // ── Auth + access ──
-    const canAccess = isAdmin(user?.email); // BETA: solo admin para pruebas
-
-    // ── Form state ──
-    const [acceptedDisclaimer, setAcceptedDisclaimer] = useState(false);
+    // ─── Form ───
     const [tipoAsunto, setTipoAsunto] = useState(TIPOS_ASUNTO[0].id);
     const [materia, setMateria] = useState('civil');
-    const [circuito, setCircuito] = useState<number>(1);
+    const [circuito, setCircuito] = useState(1);
     const [fileActo, setFileActo] = useState<File | null>(null);
     const [fileConceptos, setFileConceptos] = useState<File | null>(null);
+    const [textoActo, setTextoActo] = useState('');
+    const [textoConceptos, setTextoConceptos] = useState('');
+    const [inputMode, setInputMode] = useState<'files' | 'text'>('files');
 
-    // ── Pipeline state ──
-    const [phase, setPhase] = useState<'form' | 'generating' | 'result' | 'error'>('form');
-    const [currentStep, setCurrentStep] = useState(0);
-    const [stepStats, setStepStats] = useState<Record<number, { elapsed_s?: number; detail?: string }>>({});
-    const [resultMarkdown, setResultMarkdown] = useState('');
-    const [resultStats, setResultStats] = useState<any>(null);
+    // ─── Pipeline ───
+    const [phase, setPhase] = useState<Phase>('form');
+    const [progress, setProgress] = useState<string>('');
     const [error, setError] = useState('');
+
+    // ─── Analyze result ───
+    const [jobId, setJobId] = useState<string | null>(null);
+    const [plan, setPlan] = useState<PlanData | null>(null);
+
+    // ─── Edits ───
+    const [edits, setEdits] = useState<Record<string, EditState>>({});
+    const [activeIdx, setActiveIdx] = useState(0);
+
+    // ─── Finalize ───
+    const [estudioMd, setEstudioMd] = useState('');
+    const [finalStats, setFinalStats] = useState<any>(null);
     const [copied, setCopied] = useState(false);
-    const [downloading, setDownloading] = useState(false);
 
-    // ── Query counter ──
-    const [queriesUsed, setQueriesUsed] = useState(profile?.queries_used ?? 0);
-    const [queriesLimit, setQueriesLimit] = useState(profile?.queries_limit ?? 350);
+    const abortRef = useRef<AbortController | null>(null);
 
-    const resultRef = useRef<HTMLDivElement>(null);
-
-    // ── Sidebar state ──
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [estudios, setEstudios] = useState<RedactorEstudio[]>([]);
-    const [estudiosLoading, setEstudiosLoading] = useState(true);
-    const [activeEstudioId, setActiveEstudioId] = useState<string | null>(null);
-
-    // ── Load estudios on mount ──
-    useEffect(() => {
-        if (!user) return;
-        const load = async () => {
-            setEstudiosLoading(true);
-            const data = await getRedactorEstudios();
-            setEstudios(data);
-            setEstudiosLoading(false);
-        };
-        load();
-    }, [user]);
-
-    // ── Sync query counter with profile ──
-    useEffect(() => {
-        if (profile) {
-            setQueriesUsed(profile.queries_used ?? 0);
-            setQueriesLimit(profile.queries_limit ?? 350);
-        }
-    }, [profile]);
-
-    // ── Auth guard ──
     useEffect(() => {
         if (!authLoading && !user) router.push('/login');
     }, [user, authLoading, router]);
 
-    if (authLoading) return null;
+    useEffect(() => {
+        if (!jobId) return;
+        try {
+            localStorage.setItem(`tcc-v4-edits-${jobId}`, JSON.stringify({ edits, activeIdx }));
+        } catch {}
+    }, [edits, activeIdx, jobId]);
 
+    useEffect(() => {
+        if (!plan || !jobId) return;
+        const initial: Record<string, EditState> = {};
+        for (const prob of plan.plan_por_problema || []) {
+            const decisions: Record<string, TesisDecision> = {};
+            for (const t of prob.tesis_clave_a_citar || []) {
+                if (t.registro) decisions[t.registro] = null;
+            }
+            initial[prob.problema_id] = {
+                calificacion: prob.calificacion_propuesta_disidencia || '',
+                accion: prob.accion_redaccion || 'abordar_completo',
+                tesisDecisions: decisions,
+                instruccion: '',
+                estado: 'pendiente',
+            };
+        }
+        try {
+            const raw = localStorage.getItem(`tcc-v4-edits-${jobId}`);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed.edits) {
+                    Object.assign(initial, parsed.edits);
+                    setActiveIdx(parsed.activeIdx ?? 0);
+                }
+            }
+        } catch {}
+        setEdits(initial);
+    }, [plan, jobId]);
+
+    const problemas = plan?.plan_por_problema || [];
+    const activeProb = problemas[activeIdx];
+    const activeEdit = activeProb ? edits[activeProb.problema_id] : null;
+
+    const setTesisDecision = useCallback((registro: string, decision: TesisDecision) => {
+        if (!activeProb) return;
+        setEdits((prev) => ({
+            ...prev,
+            [activeProb.problema_id]: {
+                ...prev[activeProb.problema_id],
+                tesisDecisions: { ...prev[activeProb.problema_id].tesisDecisions, [registro]: decision },
+            },
+        }));
+    }, [activeProb]);
+
+    // J/K + Ctrl+Enter
+    useEffect(() => {
+        if (phase !== 'review') return;
+        const handler = (e: KeyboardEvent) => {
+            const tag = (e.target as HTMLElement)?.tagName;
+            if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'SELECT') return;
+            if (e.key === 'j' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActiveIdx((i) => Math.min(i + 1, problemas.length - 1));
+            } else if (e.key === 'k' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActiveIdx((i) => Math.max(i - 1, 0));
+            } else if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                setActiveIdx((i) => Math.min(i + 1, problemas.length - 1));
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [phase, problemas.length]);
+
+    // ─── SSE parser helper ───
+    const parseSSE = (
+        buf: string,
+        onEvent: (evType: string, data: any) => void,
+    ): string => {
+        const events = buf.split('\n\n');
+        const rest = events.pop() || '';
+        for (const ev of events) {
+            const lines = ev.split('\n');
+            let evType = '';
+            let evData = '';
+            for (const ln of lines) {
+                if (ln.startsWith('event: ')) evType = ln.slice(7).trim();
+                else if (ln.startsWith('data: ')) evData = ln.slice(6);
+            }
+            if (!evData) continue;
+            try { onEvent(evType, JSON.parse(evData)); } catch {}
+        }
+        return rest;
+    };
+
+    // ─── Analyze ───
+    const startAnalyze = async () => {
+        const hasFiles = inputMode === 'files' && (fileActo || fileConceptos);
+        const hasText = inputMode === 'text' && (textoActo.trim() || textoConceptos.trim());
+        if (!hasFiles && !hasText) {
+            setError('Sube los PDFs o pega el texto de ambos documentos.');
+            return;
+        }
+        if (inputMode === 'files' && (!fileActo || !fileConceptos)) {
+            setError('Faltan ambos PDFs (acto reclamado y conceptos/agravios).');
+            return;
+        }
+        if (inputMode === 'text' && (!textoActo.trim() || !textoConceptos.trim())) {
+            setError('Faltan ambos textos.');
+            return;
+        }
+        setError('');
+        setPhase('analyzing');
+        setProgress('Iniciando análisis...');
+
+        const fd = new FormData();
+        fd.append('tipo_asunto', tipoAsunto);
+        fd.append('materia', materia);
+        fd.append('circuito', String(circuito));
+        fd.append('user_email', user?.email || '');
+        if (inputMode === 'files') {
+            if (fileActo) fd.append('doc_acto', fileActo);
+            if (fileConceptos) fd.append('doc_conceptos', fileConceptos);
+        } else {
+            fd.append('texto_acto_reclamado', textoActo);
+            fd.append('texto_conceptos_agravios', textoConceptos);
+        }
+
+        const ac = new AbortController();
+        abortRef.current = ac;
+        try {
+            const resp = await fetch(`${API_URL}/redactor/tcc-v4/analyze`, {
+                method: 'POST', body: fd, signal: ac.signal,
+            });
+            if (!resp.ok || !resp.body) {
+                setError(`HTTP ${resp.status}`); setPhase('error'); return;
+            }
+            const reader = resp.body.getReader();
+            const dec = new TextDecoder();
+            let buf = '';
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buf += dec.decode(value, { stream: true });
+                buf = parseSSE(buf, (evType, data) => {
+                    if (evType === 'phase') setProgress(data.detail || '');
+                    else if (evType === 'pass_complete') setProgress(`Pass ${data.pass} listo (${data.elapsed_s}s).`);
+                    else if (evType === 'plan_ready') {
+                        setJobId(data.job_id);
+                        setPlan(data.plan);
+                        setPhase('review');
+                    } else if (evType === 'error') {
+                        setError(data.message || 'Error');
+                        setPhase('error');
+                    }
+                });
+            }
+        } catch (e: any) {
+            if (e?.name !== 'AbortError') { setError(String(e?.message || e)); setPhase('error'); }
+        }
+    };
+
+    // ─── Finalize ───
+    const startFinalize = async () => {
+        if (!jobId || !plan) return;
+        const editsPayload = {
+            problemas: (plan.plan_por_problema || []).map((prob) => {
+                const e = edits[prob.problema_id];
+                if (!e) return { problema_id: prob.problema_id };
+                const aprobadas: string[] = [];
+                for (const [reg, dec] of Object.entries(e.tesisDecisions)) {
+                    if (dec === 'rector' || dec === 'apoyo') aprobadas.push(reg);
+                }
+                const accionFinal = e.estado === 'inoperante_manual' ? 'omitir_por_innecesario' : e.accion;
+                return {
+                    problema_id: prob.problema_id,
+                    calificacion_override: e.calificacion || undefined,
+                    accion_redaccion_override: accionFinal || undefined,
+                    tesis_aprobadas: aprobadas,
+                    instruccion_secretario: e.instruccion || '',
+                };
+            }),
+        };
+
+        setPhase('finalizing');
+        setProgress('Iniciando redacción...');
+        setEstudioMd('');
+
+        const ac = new AbortController();
+        abortRef.current = ac;
+        try {
+            const resp = await fetch(`${API_URL}/redactor/tcc-v4/finalize`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    job_id: jobId, user_email: user?.email,
+                    tipo_asunto: tipoAsunto, materia, circuito: String(circuito),
+                    edits: editsPayload,
+                }),
+                signal: ac.signal,
+            });
+            if (!resp.ok || !resp.body) { setError(`HTTP ${resp.status}`); setPhase('error'); return; }
+            const reader = resp.body.getReader();
+            const dec = new TextDecoder();
+            let buf = '';
+            let acc = '';
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buf += dec.decode(value, { stream: true });
+                buf = parseSSE(buf, (evType, data) => {
+                    if (evType === 'token') { acc += data.text || ''; setEstudioMd(acc); }
+                    else if (evType === 'phase') setProgress(data.detail || '');
+                    else if (evType === 'pass_complete') setProgress(`Pass ${data.pass} listo (${data.elapsed_s}s).`);
+                    else if (evType === 'complete') {
+                        setEstudioMd(data.estudio_markdown || acc);
+                        setFinalStats(data);
+                        setPhase('done');
+                        try { localStorage.removeItem(`tcc-v4-edits-${jobId}`); } catch {}
+                    } else if (evType === 'error') { setError(data.message || 'Error'); setPhase('error'); }
+                });
+            }
+        } catch (e: any) {
+            if (e?.name !== 'AbortError') { setError(String(e?.message || e)); setPhase('error'); }
+        }
+    };
+
+    if (authLoading) return null;
     if (!canAccess) {
         return (
             <div className="min-h-screen bg-cream-100 flex items-center justify-center p-4">
-                <div className="max-w-md text-center bg-white rounded-3xl p-10 shadow-xl border border-cream-400">
-                    <div className="w-16 h-16 rounded-2xl bg-charcoal-900 flex items-center justify-center mx-auto mb-6">
-                        <Shield className="w-8 h-8 text-accent-gold" />
-                    </div>
-                    <h2 className="font-serif text-2xl font-bold text-charcoal-900 mb-3">Función exclusiva Platinum</h2>
-                    <p className="text-charcoal-700 text-sm leading-relaxed mb-6">
-                        El Redactor TCC Beta está disponible exclusivamente para usuarios del plan <strong>Platinum</strong>.
-                        Genera borradores de estudio de fondo con IA de razonamiento profundo.
-                    </p>
-                    <div className="flex flex-col gap-3">
-                        <Link href="/precios" className="w-full py-3 rounded-xl text-center text-sm font-bold text-charcoal-900 hover:scale-[1.02] transition-all" style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)' }}>
-                            Ver plan Platinum
-                        </Link>
-                        <button onClick={() => router.push('/chat')} className="text-charcoal-700 text-sm hover:text-charcoal-900 transition-colors">
-                            ← Volver al chat
-                        </button>
-                    </div>
+                <div className="bg-white border border-amber-300 rounded-lg p-8 max-w-md text-center">
+                    <Shield className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold mb-2">Acceso restringido</h2>
+                    <p className="text-gray-600 mb-4">Redactor TCC está en pruebas internas (solo admin).</p>
+                    <Link href="/" className="text-blue-600 hover:underline">Volver al inicio</Link>
                 </div>
             </div>
         );
     }
 
-    const selectedTipo = TIPOS_ASUNTO.find(t => t.id === tipoAsunto) || TIPOS_ASUNTO[0];
-    const isCircuitoDisponible = CIRCUITOS_DISPONIBLES.includes(circuito);
-    const allReady = fileActo !== null && fileConceptos !== null && acceptedDisclaimer;
+    const tipoMeta = TIPOS_ASUNTO.find((t) => t.id === tipoAsunto)!;
+    const allResolved = problemas.length > 0 && problemas.every(
+        (p) => edits[p.problema_id]?.estado !== 'pendiente'
+    );
 
-    // ── Generate ──
-    const handleGenerate = async () => {
-        if (!allReady || !user?.email) return;
-        setPhase('generating');
-        setCurrentStep(0);
-        setStepStats({});
-        setResultMarkdown('');
-        setError('');
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <header className="bg-white border-b sticky top-0 z-10">
+                <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+                    <Link href="/" className="text-gray-600 hover:text-gray-900">
+                        <ArrowLeft className="w-5 h-5" />
+                    </Link>
+                    <h1 className="text-lg font-semibold">
+                        Redactor TCC <span className="text-xs font-normal text-gray-500">— humano en el loop</span>
+                    </h1>
+                    {phase === 'review' && (
+                        <span className="ml-auto text-sm text-gray-500">
+                            <kbd className="px-1 bg-gray-100 border rounded">J</kbd>/<kbd className="px-1 bg-gray-100 border rounded">K</kbd> navegar · <kbd className="px-1 bg-gray-100 border rounded">Ctrl+↵</kbd> siguiente
+                        </span>
+                    )}
+                </div>
+            </header>
 
-        const formData = new FormData();
-        formData.append('user_email', user.email);
-        formData.append('tipo_asunto', tipoAsunto);
-        formData.append('materia', materia);
-        formData.append('circuito', String(circuito));
-        formData.append('doc_acto', fileActo!);
-        formData.append('doc_conceptos', fileConceptos!);
+            {/* FORM */}
+            {phase === 'form' && (
+                <div className="max-w-3xl mx-auto p-6 space-y-4">
+                    <h2 className="text-xl font-semibold">Nuevo proyecto</h2>
 
-        try {
-            // 30-minute timeout — OCR de PDFs escaneados + multipass DeepSeek
-            // pueden requerir hasta ~20 min; damos margen extra antes de abortar.
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 30 * 60 * 1000);
-
-            const res = await fetch(`${API_URL}/redactor/tcc-beta/generate`, {
-                method: 'POST',
-                body: formData,
-                signal: controller.signal,
-            });
-            clearTimeout(timeout);
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({ detail: 'Error desconocido' }));
-                throw new Error(errData.detail || `Error ${res.status}`);
-            }
-
-            const reader = res.body?.getReader();
-            if (!reader) throw new Error('No se pudo iniciar el streaming');
-            const decoder = new TextDecoder();
-            let buffer = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                buffer += decoder.decode(value, { stream: true });
-
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (line.startsWith('event: ')) {
-                        // Parse SSE event
-                        const eventType = line.slice(7).trim();
-                        continue;
-                    }
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-
-                            if (data.step !== undefined && data.progress !== undefined) {
-                                // Map backend step -1 (OCR) to frontend step 0,
-                                // and backend steps 0-3 to frontend steps 1-4
-                                const displayStep = data.step === -1 ? 0 : data.step + 1;
-                                setCurrentStep(displayStep);
-                                setStepStats(prev => ({
-                                    ...prev,
-                                    [displayStep]: { detail: data.detail || '' },
-                                }));
-                            }
-
-                            // Streaming tokens del Pass 3 (redacción del estudio).
-                            // Acumulamos en resultMarkdown para que el usuario vea el texto fluir.
-                            if (data.text !== undefined && data.text !== null) {
-                                setResultMarkdown(prev => prev + data.text);
-                                // En el primer token, salta a la fase result para mostrar el viewer
-                                setPhase(prev => prev === 'generating' ? 'result' : prev);
-                            }
-
-                            if (data.pass !== undefined && data.elapsed_s !== undefined) {
-                                // Pass complete — map backend pass 0-3 to frontend 1-4
-                                const displayPass = data.pass + 1;
-                                setStepStats(prev => ({
-                                    ...prev,
-                                    [displayPass]: {
-                                        ...prev[displayPass],
-                                        elapsed_s: data.elapsed_s,
-                                        detail: data.n_problemas ? `${data.n_problemas} problemas` :
-                                            data.n_fuentes_total ? `${data.n_fuentes_total} fuentes` :
-                                                data.n_tesis_seleccionadas ? `${data.n_tesis_seleccionadas} tesis` :
-                                                    data.n_palabras ? `${data.n_palabras} palabras` : 'Completado',
-                                    },
-                                }));
-                            }
-
-                            if (data.estudio_markdown) {
-                                setResultMarkdown(data.estudio_markdown);
-                                setResultStats(data);
-                                setPhase('result');
-                                // Update query counter from backend response
-                                if (data.queries_used !== undefined) setQueriesUsed(data.queries_used);
-                                if (data.queries_limit !== undefined) setQueriesLimit(data.queries_limit);
-                                // Refresh sidebar
-                                getRedactorEstudios().then(setEstudios);
-                                if (data.study_id) setActiveEstudioId(data.study_id);
-                                setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth' }), 300);
-                            }
-
-                            if (data.message && !data.estudio_markdown) {
-                                // Error event
-                                throw new Error(data.message);
-                            }
-                        } catch (e: any) {
-                            if (e.message && !e.message.includes('JSON')) {
-                                setError(e.message);
-                                setPhase('error');
-                            }
-                        }
-                    }
-                }
-            }
-
-            // If we never got a result
-            if (phase === 'generating' && !resultMarkdown) {
-                setPhase('result');
-            }
-        } catch (err: any) {
-            let msg = err.message || 'Error al conectar con el servidor';
-            if (err.name === 'AbortError') {
-                msg = 'La generación tomó demasiado tiempo. Intente con documentos más pequeños o con texto seleccionable.';
-            } else if (msg === 'Failed to fetch') {
-                msg = 'No se pudo conectar con el servidor. El procesamiento OCR de PDFs escaneados puede demorar — espere a que el servidor termine de reiniciar e intente de nuevo.';
-            }
-            setError(msg);
-            setPhase('error');
-        }
-    };
-
-    // ── DOCX Export ──
-    const handleExportDocx = async () => {
-        if (!resultMarkdown || !user?.email) return;
-        setDownloading(true);
-        try {
-            const formData = new FormData();
-            formData.append('user_email', user.email);
-            formData.append('estudio_markdown', resultMarkdown);
-            formData.append('tipo_asunto', tipoAsunto);
-            formData.append('materia', materia);
-            formData.append('circuito', String(circuito));
-
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 120000); // 2 min timeout
-
-            const res = await fetch(`${API_URL}/redactor/tcc-beta/export-docx`, {
-                method: 'POST',
-                body: formData,
-                signal: controller.signal,
-            });
-            clearTimeout(timeout);
-
-            if (!res.ok) throw new Error('Error al generar DOCX');
-
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `estudio_fondo_${tipoAsunto}_${materia}.docx`;
-            a.click();
-            URL.revokeObjectURL(url);
-        } catch (err: any) {
-            alert(err.message || 'Error al descargar DOCX');
-        } finally {
-            setDownloading(false);
-        }
-    };
-
-    const handleCopy = async () => {
-        await navigator.clipboard.writeText(resultMarkdown);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    const handleReset = () => {
-        setPhase('form');
-        setFileActo(null);
-        setFileConceptos(null);
-        setResultMarkdown('');
-        setError('');
-        setCurrentStep(0);
-        setStepStats({});
-        setActiveEstudioId(null);
-    };
-
-    // ── Load saved study ──
-    const handleLoadEstudio = async (id: string) => {
-        const estudio = await getRedactorEstudio(id);
-        if (estudio) {
-            setResultMarkdown(estudio.estudio_markdown);
-            setResultStats({
-                n_palabras: estudio.n_palabras,
-                total_elapsed_s: estudio.total_elapsed_s,
-                precedentes_utiles: typeof estudio.precedentes_utiles === 'string' 
-                    ? JSON.parse(estudio.precedentes_utiles) 
-                    : estudio.precedentes_utiles,
-            });
-            setTipoAsunto(estudio.tipo_asunto);
-            setMateria(estudio.materia);
-            setCircuito(estudio.circuito);
-            setActiveEstudioId(id);
-            setPhase('result');
-            setAcceptedDisclaimer(true);
-            setSidebarOpen(false);
-        }
-    };
-
-    // ── Render helpers ──
-    const PdfUploadZone = ({ label, file, onSelect, onClear }: {
-        label: string; file: File | null;
-        onSelect: (f: File) => void; onClear: () => void;
-    }) => (
-        <div
-            className={`group relative rounded-2xl border-2 transition-all duration-300 cursor-pointer ${file
-                ? 'border-accent-gold/40 bg-cream-100'
-                : 'border-dashed border-cream-400 hover:border-accent-gold/50 hover:bg-cream-50'
-                }`}
-            style={{ padding: '1.25rem' }}
-            onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.pdf,.docx';
-                input.onchange = (e) => {
-                    const f = (e.target as HTMLInputElement).files?.[0];
-                    if (f) onSelect(f);
-                };
-                input.click();
-            }}
-            onDragOver={e => e.preventDefault()}
-            onDrop={e => {
-                e.preventDefault();
-                const f = e.dataTransfer.files[0];
-                if (f) onSelect(f);
-            }}
-        >
-            {file ? (
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-accent-gold/10 flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-accent-gold" />
+                    <div className="grid grid-cols-3 gap-4">
+                        <div>
+                            <label className="text-sm font-medium block mb-1">Tipo de asunto</label>
+                            <select className="w-full border rounded px-3 py-2" value={tipoAsunto} onChange={(e) => setTipoAsunto(e.target.value)}>
+                                {TIPOS_ASUNTO.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+                            </select>
                         </div>
                         <div>
-                            <p className="text-charcoal-900 text-sm font-semibold">{file.name}</p>
-                            <p className="text-charcoal-700 text-xs">{(file.size / (1024 * 1024)).toFixed(1)} MB</p>
+                            <label className="text-sm font-medium block mb-1">Materia</label>
+                            <select className="w-full border rounded px-3 py-2" value={materia} onChange={(e) => setMateria(e.target.value)}>
+                                {MATERIAS.map((m) => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium block mb-1">Circuito</label>
+                            <select className="w-full border rounded px-3 py-2" value={circuito} onChange={(e) => setCircuito(Number(e.target.value))}>
+                                {CIRCUITOS.map((c) => <option key={c} value={c}>{c}°</option>)}
+                            </select>
                         </div>
                     </div>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onClear(); }}
-                        className="w-8 h-8 rounded-full bg-cream-300 hover:bg-red-50 flex items-center justify-center text-charcoal-700 hover:text-red-500 transition-colors"
-                    >×</button>
-                </div>
-            ) : (
-                <div className="text-center py-3">
-                    <div className="w-12 h-12 rounded-xl bg-cream-200 flex items-center justify-center mx-auto mb-3 group-hover:bg-accent-gold/10 transition-colors">
-                        <Upload className="w-6 h-6 text-accent-brown group-hover:text-accent-gold transition-colors" />
+
+                    <div className="border-t pt-4">
+                        <div className="flex gap-2 mb-3">
+                            <button onClick={() => setInputMode('files')} className={`px-3 py-1.5 text-sm rounded ${inputMode === 'files' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>📎 Subir PDFs (con OCR)</button>
+                            <button onClick={() => setInputMode('text')} className={`px-3 py-1.5 text-sm rounded ${inputMode === 'text' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>📝 Pegar texto</button>
+                        </div>
+
+                        {inputMode === 'files' ? (
+                            <div className="grid grid-cols-2 gap-3">
+                                <FileDrop
+                                    label={tipoMeta.actoLabel}
+                                    file={fileActo}
+                                    onChange={setFileActo}
+                                />
+                                <FileDrop
+                                    label={tipoMeta.cvLabel}
+                                    file={fileConceptos}
+                                    onChange={setFileConceptos}
+                                />
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="text-sm font-medium block mb-1">{tipoMeta.actoLabel}</label>
+                                    <textarea className="w-full border rounded px-3 py-2 font-mono text-xs" rows={8} value={textoActo} onChange={(e) => setTextoActo(e.target.value)} placeholder="Pega el texto..." />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium block mb-1">{tipoMeta.cvLabel}</label>
+                                    <textarea className="w-full border rounded px-3 py-2 font-mono text-xs" rows={8} value={textoConceptos} onChange={(e) => setTextoConceptos(e.target.value)} placeholder="Pega el texto..." />
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    <p className="text-accent-gold font-semibold text-sm">{label}</p>
-                    <p className="text-charcoal-700 text-xs mt-1">Clic o arrastra un PDF/DOCX aquí</p>
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm">{error}</div>
+                    )}
+                    <button onClick={startAnalyze} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-medium">
+                        Analizar
+                    </button>
+                </div>
+            )}
+
+            {/* ANALYZING */}
+            {phase === 'analyzing' && (
+                <div className="max-w-2xl mx-auto p-8 text-center">
+                    <Loader2 className="w-10 h-10 animate-spin mx-auto text-blue-600 mb-4" />
+                    <p className="text-gray-700">{progress || 'Analizando...'}</p>
+                    <p className="text-xs text-gray-500 mt-3">OCR (si aplica) + Pass 0 + Pass 1 (RAG) + Pass 2 — puede tomar 2-6 minutos.</p>
+                </div>
+            )}
+
+            {/* REVIEW */}
+            {phase === 'review' && plan && activeProb && activeEdit && (
+                <div className="max-w-7xl mx-auto grid grid-cols-12 gap-4 p-4">
+                    <aside className="col-span-3 bg-white rounded border h-[calc(100vh-100px)] overflow-y-auto">
+                        <div className="p-3 border-b font-medium text-sm">Problemas ({problemas.length})</div>
+                        {problemas.map((p, i) => {
+                            const e = edits[p.problema_id];
+                            const isActive = i === activeIdx;
+                            const isResolved = e && e.estado !== 'pendiente';
+                            return (
+                                <button key={p.problema_id} onClick={() => setActiveIdx(i)}
+                                    className={`w-full text-left p-3 border-b text-sm hover:bg-gray-50 ${isActive ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}`}>
+                                    <div className="flex items-start justify-between gap-2">
+                                        <span className="font-medium">{p.problema_id}</span>
+                                        {isResolved ? <Check className="w-4 h-4 text-green-600 flex-shrink-0" /> : <span className="w-4 h-4 flex-shrink-0 text-gray-300">•</span>}
+                                    </div>
+                                    <div className="text-xs text-gray-600 mt-1 line-clamp-2">{p.pregunta_concreta}</div>
+                                    {e && (
+                                        <div className="text-xs mt-1">
+                                            <span className="text-gray-500">{e.calificacion || '(sin calificar)'}</span>
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                        <div className="p-3 border-t">
+                            <button onClick={startFinalize} disabled={!allResolved}
+                                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-4 py-2 rounded font-medium text-sm">
+                                {allResolved ? 'Generar estudio →' : `${problemas.filter((p) => edits[p.problema_id]?.estado === 'pendiente').length} pendientes`}
+                            </button>
+                        </div>
+                    </aside>
+
+                    <main className="col-span-9 bg-white rounded border p-5 h-[calc(100vh-100px)] overflow-y-auto">
+                        <div className="text-xs text-gray-500 mb-1">{activeProb.problema_id}</div>
+                        <h2 className="text-lg font-semibold mb-3">{activeProb.pregunta_concreta}</h2>
+
+                        {activeProb.thesis_central_a_demostrar && (
+                            <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4 text-sm">
+                                <span className="font-medium">Tesis central a demostrar: </span>
+                                {activeProb.thesis_central_a_demostrar}
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <label className="text-xs font-medium text-gray-600 block mb-1">Sentido propuesto (editable)</label>
+                                <select className="w-full border rounded px-3 py-2 text-sm"
+                                    value={activeEdit.calificacion}
+                                    onChange={(e) => setEdits((prev) => ({ ...prev, [activeProb.problema_id]: { ...prev[activeProb.problema_id], calificacion: e.target.value } }))}>
+                                    <option value="">— elige —</option>
+                                    {CALIFICACIONES.map((c) => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-gray-600 block mb-1">Acción de redacción</label>
+                                <select className="w-full border rounded px-3 py-2 text-sm"
+                                    value={activeEdit.accion}
+                                    onChange={(e) => setEdits((prev) => ({ ...prev, [activeProb.problema_id]: { ...prev[activeProb.problema_id], accion: e.target.value } }))}>
+                                    {ACCIONES.map((a) => <option key={a} value={a}>{a}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <div className="text-sm font-medium mb-2">Tesis recuperadas ({(activeProb.tesis_clave_a_citar || []).length})</div>
+                            <div className="space-y-2">
+                                {(activeProb.tesis_clave_a_citar || []).map((t, i) => {
+                                    const reg = t.registro || `_${i}`;
+                                    const dec = activeEdit.tesisDecisions[reg];
+                                    const rubro = t.rubro_real || t.rubro_corto || t.rubro || '(sin rubro)';
+                                    const isInvalid = t.verificable === false;
+                                    return (
+                                        <div key={reg}
+                                            className={`border rounded p-3 ${dec === 'rector' ? 'border-green-400 bg-green-50' : dec === 'apoyo' ? 'border-blue-300 bg-blue-50' : dec === 'descartar' ? 'border-gray-200 bg-gray-100 opacity-60' : 'border-gray-200'}`}>
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium text-sm uppercase">{rubro}</div>
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        {t.registro} · {t.instancia}
+                                                        {isInvalid && <span className="ml-2 text-red-600">⚠ {t.razon_no_verificable}</span>}
+                                                    </div>
+                                                    {t.como_se_aplica_al_caso && (
+                                                        <div className="text-xs text-gray-700 mt-2">{t.como_se_aplica_al_caso}</div>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-1 flex-shrink-0">
+                                                    <button onClick={() => setTesisDecision(reg, 'rector')} title="Rector" className={`p-1.5 rounded ${dec === 'rector' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}><Star className="w-4 h-4" /></button>
+                                                    <button onClick={() => setTesisDecision(reg, 'apoyo')} title="Apoyo" className={`p-1.5 rounded ${dec === 'apoyo' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}><Check className="w-4 h-4" /></button>
+                                                    <button onClick={() => setTesisDecision(reg, 'descartar')} title="Descartar" className={`p-1.5 rounded ${dec === 'descartar' ? 'bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}><X className="w-4 h-4" /></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="text-xs font-medium text-gray-600 block mb-1">Instrucción al redactor (texto libre)</label>
+                            <textarea className="w-full border rounded px-3 py-2 text-sm" rows={4}
+                                value={activeEdit.instruccion}
+                                onChange={(e) => setEdits((prev) => ({ ...prev, [activeProb.problema_id]: { ...prev[activeProb.problema_id], instruccion: e.target.value } }))}
+                                placeholder="Eje argumental, hechos clave, advertencias..." />
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-3 border-t">
+                            <span className="text-xs text-gray-500">Estado:</span>
+                            {(['resuelto', 'diferido', 'inoperante_manual'] as const).map((s) => (
+                                <button key={s}
+                                    onClick={() => setEdits((prev) => ({ ...prev, [activeProb.problema_id]: { ...prev[activeProb.problema_id], estado: s } }))}
+                                    className={`text-xs px-3 py-1 rounded border ${activeEdit.estado === s ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    </main>
+                </div>
+            )}
+
+            {/* FINALIZING / DONE */}
+            {(phase === 'finalizing' || phase === 'done') && (
+                <div className="max-w-4xl mx-auto p-6">
+                    {phase === 'finalizing' && (
+                        <div className="flex items-center gap-3 mb-4 text-sm text-gray-600">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>{progress || 'Redactando...'}</span>
+                        </div>
+                    )}
+                    {phase === 'done' && finalStats && (
+                        <div className="bg-green-50 border border-green-200 rounded p-3 mb-4 text-sm flex items-center gap-3">
+                            <Check className="w-5 h-5 text-green-600" />
+                            <span>{finalStats.n_palabras} palabras · {finalStats.total_elapsed_s}s</span>
+                            <button onClick={() => {
+                                navigator.clipboard.writeText(estudioMd);
+                                setCopied(true); setTimeout(() => setCopied(false), 1500);
+                            }} className="ml-auto inline-flex items-center gap-1 text-blue-600 hover:underline">
+                                <Copy className="w-4 h-4" /> {copied ? '¡Copiado!' : 'Copiar markdown'}
+                            </button>
+                        </div>
+                    )}
+                    <div className="bg-white border rounded p-6 prose prose-sm max-w-none whitespace-pre-wrap font-serif">
+                        {estudioMd || <span className="text-gray-400">Esperando texto…</span>}
+                    </div>
+                </div>
+            )}
+
+            {/* ERROR */}
+            {phase === 'error' && (
+                <div className="max-w-2xl mx-auto p-8">
+                    <div className="bg-red-50 border border-red-200 rounded p-4">
+                        <div className="flex items-center gap-2 text-red-700 font-medium mb-2">
+                            <AlertTriangle className="w-5 h-5" /> Error
+                        </div>
+                        <div className="text-sm text-red-600">{error}</div>
+                        <button onClick={() => { setPhase('form'); setError(''); }} className="mt-3 text-sm text-blue-600 hover:underline">
+                            Volver al formulario
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
     );
+}
 
-    const renderMarkdown = (text: string) => {
-        return text.split('\n').map((line, i) => {
-            const t = line.trim();
-            if (t.startsWith('## ') || t.startsWith('# '))
-                return <h3 key={i} className="font-serif text-lg font-bold text-accent-gold mt-6 mb-2 tracking-wide">{t.replace(/^#+\s*/, '')}</h3>;
-            if (t.startsWith('### '))
-                return <h4 key={i} className="font-serif text-base font-bold text-charcoal-900 mt-4 mb-1">{t.replace(/^#+\s*/, '')}</h4>;
-            if (t.startsWith('> '))
-                return <blockquote key={i} className="border-l-3 border-accent-gold/30 pl-4 italic text-charcoal-700 text-sm my-2 leading-relaxed">{t.slice(2)}</blockquote>;
-            if (t.startsWith('**') && t.endsWith('**'))
-                return <p key={i} className="font-semibold text-charcoal-900 mt-4 mb-1">{t.replace(/\*\*/g, '')}</p>;
-            if (!t) return <br key={i} />;
-            const parts = t.split(/(\*\*[^*]+\*\*)/g);
-            return (
-                <p key={i} className="text-charcoal-700 leading-relaxed mb-1 text-justify">
-                    {parts.map((part, j) => {
-                        if (part.startsWith('**') && part.endsWith('**'))
-                            return <strong key={j} className="text-charcoal-900">{part.slice(2, -2)}</strong>;
-                        return <span key={j}>{part}</span>;
-                    })}
-                </p>
-            );
-        });
-    };
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // RENDER
-    // ═══════════════════════════════════════════════════════════════════════════
+// ─── FileDrop subcomponent ───
+function FileDrop({ label, file, onChange }: { label: string; file: File | null; onChange: (f: File | null) => void }) {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [dragging, setDragging] = useState(false);
 
     return (
-        <div className="min-h-screen bg-cream-100">
-            {/* ════════ SIDEBAR ════════ */}
-            {/* Mobile overlay */}
-            {sidebarOpen && (
-                <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
-            )}
-
-            <aside className={`fixed top-0 left-0 bottom-0 w-72 bg-white border-r border-cream-300 z-50 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
-                <div className="p-4 border-b border-cream-200 flex items-center justify-between">
-                    <h2 className="font-serif text-sm font-bold text-charcoal-900">Estudios generados</h2>
-                    <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1 text-charcoal-500 hover:text-charcoal-900"><X className="w-4 h-4" /></button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto">
-                    {estudiosLoading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <Loader2 className="w-5 h-5 animate-spin text-charcoal-400" />
-                        </div>
-                    ) : estudios.length === 0 ? (
-                        <div className="px-4 py-8 text-center">
-                            <FileText className="w-8 h-8 text-charcoal-300 mx-auto mb-2" />
-                            <p className="text-xs text-charcoal-500">Aún no has generado ningún estudio.</p>
-                            <p className="text-[10px] text-charcoal-400 mt-1">Los estudios aparecerán aquí después de generarse.</p>
-                        </div>
-                    ) : (
-                        <div className="py-2">
-                            {estudios.map(est => {
-                                const isActive = activeEstudioId === est.id;
-                                const date = new Date(est.created_at);
-                                const label = (est.tipo_asunto || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                                return (
-                                    <button
-                                        key={est.id}
-                                        onClick={() => handleLoadEstudio(est.id)}
-                                        className={`w-full text-left px-4 py-3 border-b border-cream-100 hover:bg-cream-50 transition-colors group ${
-                                            isActive ? 'bg-accent-gold/5 border-l-2 border-l-accent-gold' : ''
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <FileText className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-accent-gold' : 'text-charcoal-400'}`} />
-                                            <span className="text-xs font-semibold text-charcoal-900 truncate">{label}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 mt-1 ml-5.5">
-                                            <span className="text-[10px] text-charcoal-500">{est.materia}</span>
-                                            <span className="text-[10px] text-charcoal-400">·</span>
-                                            <span className="text-[10px] text-charcoal-500">{est.circuito}° Cir.</span>
-                                        </div>
-                                        <div className="flex items-center gap-1 mt-1 ml-5.5">
-                                            <Clock className="w-2.5 h-2.5 text-charcoal-400" />
-                                            <span className="text-[10px] text-charcoal-400">
-                                                {date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                            </span>
-                                            {est.n_palabras > 0 && (
-                                                <span className="text-[10px] text-charcoal-400 ml-1">· {est.n_palabras.toLocaleString()} palabras</span>
-                                            )}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
-
-                <div className="p-3 border-t border-cream-200">
-                    <button
-                        onClick={() => { handleReset(); setSidebarOpen(false); }}
-                        className="w-full py-2 rounded-xl bg-charcoal-900 text-white text-xs font-bold hover:bg-black transition-all"
-                    >
-                        + Nuevo estudio
-                    </button>
-                </div>
-            </aside>
-
-            {/* Header */}
-            <header className="bg-charcoal-900 border-b border-accent-gold/10 md:ml-72">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => setSidebarOpen(true)} className="md:hidden p-1.5 text-gray-400 hover:text-white">
-                            <Menu className="w-5 h-5" />
-                        </button>
-                        <div>
-                            <h1 className="font-serif text-xl font-bold text-white tracking-wide">
-                                Redactor <span className="text-accent-gold">TCC Beta</span>
-                            </h1>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                                Pipeline v3 · Estudio de Fondo con IA de razonamiento profundo
-                            </p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => router.push('/chat')}
-                        className="px-4 py-2 rounded-full border border-accent-gold/30 text-accent-gold text-sm font-medium hover:bg-accent-gold/10 transition-all flex items-center gap-2"
-                    >
-                        <ArrowLeft className="w-4 h-4" /> Volver al chat
-                    </button>
-                </div>
-            </header>
-
-            <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:ml-72">
-
-                {/* ═══════════ DISCLAIMER ═══════════ */}
-                {!acceptedDisclaimer && phase === 'form' && (
-                    <div className="animate-fade-in">
-                        <div className="bg-white rounded-3xl border border-cream-400 shadow-lg overflow-hidden">
-                            {/* Gold top bar */}
-                            <div className="h-1" style={{ background: 'linear-gradient(90deg, #c9a84c, #e8c56d, #c9a84c)' }} />
-
-                            <div className="p-8 sm:p-10">
-                                <div className="flex items-start gap-4 mb-6">
-                                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-accent-gold/20 flex items-center justify-center flex-shrink-0">
-                                        <AlertTriangle className="w-6 h-6 text-accent-gold" />
-                                    </div>
-                                    <div>
-                                        <h2 className="font-serif text-2xl font-bold text-charcoal-900 mb-1">
-                                            Aviso importante
-                                        </h2>
-                                        <p className="text-xs font-bold tracking-[0.15em] text-accent-gold uppercase">
-                                            Versión Beta · Uso responsable de IA
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4 text-charcoal-700 text-sm leading-relaxed">
-                                    <p>
-                                        El <strong className="text-charcoal-900">Redactor TCC Beta</strong> es una herramienta de inteligencia artificial en fase de desarrollo que
-                                        genera un <strong className="text-charcoal-900">borrador de estudio de fondo</strong> a
-                                        partir de los documentos del expediente. Como toda herramienta en versión beta,
-                                        <strong className="text-charcoal-900"> es susceptible de cometer errores</strong>.
-                                    </p>
-
-                                    <div className="bg-blue-50/60 border border-blue-200/30 rounded-xl p-4">
-                                        <p className="font-semibold text-charcoal-900 mb-2">
-                                            📋 Versión Beta · No es la versión final
-                                        </p>
-                                        <p>
-                                            Esta herramienta es una <strong className="text-charcoal-900">versión beta</strong> disponible para usuarios Platinum.
-                                            No es la versión óptima que será ofrecida en el futuro bajo el plan <strong className="text-charcoal-900">Ultra Secretarios</strong> (anunciado en nuestra página de precios),
-                                            sino una versión de acceso anticipado para que los usuarios Platinum puedan evaluar su utilidad.
-                                        </p>
-                                    </div>
-
-                                    <div className="bg-amber-50/60 border border-accent-gold/15 rounded-xl p-4">
-                                        <p className="font-semibold text-charcoal-900 mb-2">
-                                            🏛️ Responsabilidad del Secretario del Poder Judicial de la Federación
-                                        </p>
-                                        <p>
-                                            Como Secretario del PJF, <strong className="text-charcoal-900">es su responsabilidad la revisión exhaustiva del expediente</strong>.
-                                            El borrador generado deberá pasar por una <strong className="text-charcoal-900">revisión rigurosa</strong> antes
-                                            de ser utilizado en cualquier función pública. Iurexia no se hace responsable del contenido
-                                            final que se incorpore a una resolución judicial.
-                                        </p>
-                                    </div>
-
-                                    <div className="bg-purple-50/40 border border-purple-200/30 rounded-xl p-4">
-                                        <p className="font-semibold text-charcoal-900 mb-2">
-                                            📖 Alcance de la herramienta
-                                        </p>
-                                        <p>
-                                            El Redactor TCC Beta genera exclusivamente <strong className="text-charcoal-900">estudios de fondo</strong> (no improcedencias ni desechamientos).
-                                            Se anticipa que usted <strong className="text-charcoal-900">ya leyó el expediente</strong> y abordará el estudio
-                                            de los conceptos de violación o agravios con base en su conocimiento previo del caso.
-                                        </p>
-                                    </div>
-
-                                    <div className="bg-orange-50/40 border border-orange-200/30 rounded-xl p-4">
-                                        <p className="font-semibold text-charcoal-900 mb-2">
-                                            ⚡ Consumo de consultas
-                                        </p>
-                                        <p>
-                                            Cada generación de estudio de fondo <strong className="text-charcoal-900">consumirá 10 consultas</strong> de su contador,
-                                            dada la cantidad de recursos computacionales necesarios para el análisis multipass con IA de razonamiento profundo.
-                                        </p>
-                                    </div>
-
-                                    <p>
-                                        Iurexia apela al <strong className="text-charcoal-900">uso responsable de la inteligencia artificial</strong> y
-                                        cree firmemente que la IA <strong className="text-charcoal-900">no reemplazará la labor de secretarios, jueces y magistrados</strong>,
-                                        solo la hará más eficiente. El objetivo de esta herramienta es asistir en la
-                                        estructuración del análisis jurídico, nunca sustituir el criterio profesional del juzgador.
-                                    </p>
-                                </div>
-
-                                <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                                    <button
-                                        onClick={() => setAcceptedDisclaimer(true)}
-                                        className="flex-[2] py-3.5 rounded-xl font-bold text-sm text-white bg-charcoal-900 hover:bg-black transition-all shadow-lg hover:shadow-xl hover:scale-[1.01]"
-                                    >
-                                        Acepto y comprendo · Continuar
-                                    </button>
-                                    <button
-                                        onClick={() => router.push('/chat')}
-                                        className="flex-1 py-3 rounded-xl border border-cream-400 text-charcoal-700 font-semibold text-sm hover:border-accent-gold/40 transition-all"
-                                    >
-                                        Volver al chat
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ═══════════ FORM ═══════════ */}
-                {acceptedDisclaimer && phase === 'form' && (
-                    <div className="animate-fade-in">
-                        <div className="text-center mb-8">
-                            <p className="text-xs font-bold tracking-[0.2em] uppercase text-accent-brown mb-2">Redactor TCC Beta</p>
-                            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-charcoal-900 mb-2">
-                                Genera un <span className="text-accent-gold">Estudio de Fondo</span>
-                            </h2>
-                            <p className="text-charcoal-700 text-base mb-4">
-                                Sube los documentos del expediente y el pipeline generará un borrador estructurado.
-                            </p>
-                            {/* Query counter */}
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cream-200/80 border border-cream-400">
-                                <span className="text-xs text-charcoal-600">Consultas</span>
-                                <span className={`font-bold text-sm tabular-nums ${(queriesLimit - queriesUsed) <= 10 ? 'text-red-600' : 'text-emerald-700'}`}>
-                                    {queriesUsed}<span className="text-charcoal-400 font-normal">/{queriesLimit}</span>
-                                </span>
-                                <div className="w-16 h-1.5 rounded-full bg-cream-300 overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full transition-all ${(queriesLimit - queriesUsed) <= 10 ? 'bg-red-500' : 'bg-emerald-500'}`}
-                                        style={{ width: `${Math.min(100, (queriesUsed / Math.max(1, queriesLimit)) * 100)}%` }}
-                                    />
-                                </div>
-                                <span className="text-[10px] text-charcoal-500">Cada proyecto consume 10</span>
-                            </div>
-                        </div>
-
-                        {/* Config row */}
-                        <div className="grid sm:grid-cols-3 gap-4 mb-6">
-                            <div>
-                                <label className="block text-xs font-bold text-charcoal-900 mb-1.5">Tipo de asunto</label>
-                                <select
-                                    value={tipoAsunto}
-                                    onChange={e => setTipoAsunto(e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-cream-400 text-charcoal-900 text-sm bg-white focus:border-accent-gold/50 focus:ring-2 focus:ring-accent-gold/10 outline-none transition-all"
-                                >
-                                    {TIPOS_ASUNTO.map(t => (
-                                        <option key={t.id} value={t.id}>{t.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-charcoal-900 mb-1.5">Materia</label>
-                                <select
-                                    value={materia}
-                                    onChange={e => setMateria(e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-cream-400 text-charcoal-900 text-sm bg-white focus:border-accent-gold/50 focus:ring-2 focus:ring-accent-gold/10 outline-none transition-all"
-                                >
-                                    {MATERIAS.map(m => (
-                                        <option key={m.id} value={m.id}>{m.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-charcoal-900 mb-1.5">Circuito</label>
-                                <select
-                                    value={circuito}
-                                    onChange={e => setCircuito(Number(e.target.value))}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-cream-400 text-charcoal-900 text-sm bg-white focus:border-accent-gold/50 focus:ring-2 focus:ring-accent-gold/10 outline-none transition-all"
-                                >
-                                    {CIRCUITOS.map(c => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.label}{!CIRCUITOS_DISPONIBLES.includes(c.id) ? ' ⚠️' : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Circuit warning */}
-                        {!isCircuitoDisponible && (
-                            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
-                                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                                <p className="text-amber-800 text-xs leading-relaxed">
-                                    <strong>Nota:</strong> El {circuito}° Circuito aún no tiene precedentes ingestados en Iurexia.
-                                    El borrador no estará respaldado con precedentes de su circuito, pero sí con tesis de la SCJN
-                                    y legislación federal. Se recomienda complementar manualmente las citas de TCC locales.
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Upload zones */}
-                        <div className="space-y-4 mb-6">
-                            <PdfUploadZone
-                                label={selectedTipo.docs[0]}
-                                file={fileActo}
-                                onSelect={setFileActo}
-                                onClear={() => setFileActo(null)}
-                            />
-                            <PdfUploadZone
-                                label={selectedTipo.docs[1]}
-                                file={fileConceptos}
-                                onSelect={setFileConceptos}
-                                onClear={() => setFileConceptos(null)}
-                            />
-                        </div>
-
-                        {/* Quality tip */}
-                        <div className="mb-6 p-3 bg-accent-gold/5 border border-accent-gold/20 rounded-xl flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-accent-gold/10 flex items-center justify-center shrink-0">
-                                <FileText className="w-4 h-4 text-accent-gold" />
-                            </div>
-                            <p className="text-xs text-accent-brown leading-tight">
-                                La calidad del resultado depende de la calidad de los PDFs. Asegúrate de que los documentos sean legibles y tengan texto seleccionable.
-                            </p>
-                        </div>
-
-                        {error && (
-                            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-red-600 text-sm">
-                                {error}
-                            </div>
-                        )}
-
-                        <button
-                            onClick={handleGenerate}
-                            disabled={!allReady}
-                            className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all ${allReady
-                                ? 'bg-charcoal-900 text-white hover:bg-black shadow-lg hover:shadow-xl'
-                                : 'bg-cream-300 text-charcoal-700 cursor-not-allowed'
-                                }`}
-                        >
-                            Generar Estudio de Fondo (consume 10 consultas)
+        <div>
+            <label className="text-sm font-medium block mb-1">{label}</label>
+            <div
+                onClick={() => inputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => {
+                    e.preventDefault();
+                    setDragging(false);
+                    const f = e.dataTransfer.files?.[0];
+                    if (f) onChange(f);
+                }}
+                className={`border-2 border-dashed rounded-lg p-4 cursor-pointer text-center transition-colors ${dragging ? 'border-blue-500 bg-blue-50' : file ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'}`}
+            >
+                {file ? (
+                    <div className="flex items-center gap-2 justify-center">
+                        <FileText className="w-5 h-5 text-green-600" />
+                        <span className="text-sm font-medium truncate">{file.name}</span>
+                        <button onClick={(e) => { e.stopPropagation(); onChange(null); }} className="text-gray-400 hover:text-red-600">
+                            <X className="w-4 h-4" />
                         </button>
                     </div>
+                ) : (
+                    <>
+                        <Upload className="w-6 h-6 mx-auto text-gray-400 mb-1" />
+                        <div className="text-xs text-gray-600">PDF o DOCX (OCR si está escaneado)</div>
+                    </>
                 )}
-
-                {/* ═══════════ GENERATING ═══════════ */}
-                {phase === 'generating' && (
-                    <div className="animate-fade-in">
-                        <div className="text-center mb-8">
-                            <p className="text-xs font-bold tracking-[0.2em] uppercase text-accent-gold mb-2">
-                                {selectedTipo.label} · {materia}
-                            </p>
-                            <h2 className="font-serif text-2xl font-bold text-charcoal-900 mb-1">
-                                Generando estudio de fondo...
-                            </h2>
-                            <p className="text-charcoal-700 text-sm">
-                                Este proceso puede tardar entre 8 y 20 minutos dependiendo de la calidad de los documentos, su número de páginas y la complejidad del asunto. No cierres esta pestaña.
-                            </p>
-                            <p className="text-charcoal-900 text-sm font-bold mt-3 leading-relaxed">
-                                Aprovecha este tiempo para dar una lectura de refuerzo al expediente y puedas cotejar tu borrador de proyecto de sentencia. De cualquier forma, ten en cuenta que al final del proceso te proporcionaremos algunos precedentes de tu órgano o de otros Tribunales que podrían servirte como referencia para estructurar tus argumentos o modificar el borrador conforme a tu criterio jurídico.
-                            </p>
-                        </div>
-
-                        <div className="bg-white rounded-2xl border border-cream-400 p-6 space-y-4">
-                            {PIPELINE_PHASES.map((p, i) => {
-                                const stats = stepStats[i];
-                                const isActive = i === currentStep;
-                                const isDone = stats?.elapsed_s !== undefined;
-                                const isPending = i > currentStep;
-
-                                return (
-                                    <div key={i} className={`flex items-center gap-4 py-3 px-4 rounded-xl transition-all duration-300 ${isActive ? 'bg-accent-gold/5 border border-accent-gold/20' : isDone ? 'bg-green-50/50' : 'opacity-40'}`}>
-                                        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
-                                            {isDone ? (
-                                                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                                            ) : isActive ? (
-                                                <Loader2 className="w-5 h-5 text-accent-gold animate-spin" />
-                                            ) : (
-                                                <span className="w-5 h-5 rounded-full border-2 border-cream-400" />
-                                            )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className={`text-sm font-semibold ${isDone ? 'text-green-800' : isActive ? 'text-charcoal-900' : 'text-charcoal-700'}`}>
-                                                {p.label}
-                                            </p>
-                                            <p className="text-xs text-charcoal-700 truncate">
-                                                {isDone ? (stats.detail || 'Completado') : isActive ? p.detail : ''}
-                                            </p>
-                                        </div>
-                                        {isDone && stats.elapsed_s !== undefined && (
-                                            <span className="text-xs text-green-700 font-medium flex-shrink-0 tabular-nums">
-                                                {Math.round(stats.elapsed_s)}s
-                                            </span>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* ═══════════ RESULT ═══════════ */}
-                {phase === 'result' && resultMarkdown && (
-                    <div className="animate-fade-in" ref={resultRef}>
-                        <div className="text-center mb-6">
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-full mb-3">
-                                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                <span className="text-xs font-bold text-green-800">
-                                    Estudio generado
-                                    {resultStats?.n_palabras && ` · ${resultStats.n_palabras.toLocaleString()} palabras`}
-                                    {resultStats?.total_elapsed_s && ` · ${Math.round(resultStats.total_elapsed_s / 60)} min`}
-                                </span>
-                            </div>
-                            <h2 className="font-serif text-2xl font-bold text-charcoal-900">
-                                Borrador de Estudio de Fondo
-                            </h2>
-                        </div>
-
-                        {/* Action bar */}
-                        <div className="flex gap-3 mb-6">
-                            <button
-                                onClick={handleExportDocx}
-                                disabled={downloading}
-                                className="flex-1 py-3 rounded-xl font-bold text-sm text-white bg-charcoal-900 hover:bg-black transition-all shadow-lg flex items-center justify-center gap-2"
-                            >
-                                {downloading ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                    <Download className="w-4 h-4" />
-                                )}
-                                Descargar DOCX (Formato PJF)
-                            </button>
-                            <button
-                                onClick={handleCopy}
-                                className="px-4 py-3 rounded-xl border border-cream-400 text-charcoal-900 font-semibold text-sm hover:border-accent-gold/40 transition-all flex items-center gap-2"
-                            >
-                                <Copy className="w-4 h-4" />
-                                {copied ? '¡Copiado!' : 'Copiar'}
-                            </button>
-                        </div>
-
-                        {/* Reminder bar */}
-                        <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
-                            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                            <p className="text-amber-800 text-xs leading-relaxed">
-                                <strong>Recuerde:</strong> Este es un borrador generado por IA. Debe ser revisado exhaustivamente
-                                antes de incorporarlo a cualquier resolución judicial.
-                            </p>
-                        </div>
-
-                        {/* Content viewer */}
-                        <div className="bg-white rounded-2xl border border-cream-400 p-6 sm:p-8 prose-sm max-w-none shadow-sm">
-                            {renderMarkdown(resultMarkdown)}
-                        </div>
-
-                        {/* Precedentes útiles */}
-                        {resultStats?.precedentes_utiles && resultStats.precedentes_utiles.length > 0 && (
-                            <div className="mt-6 bg-white rounded-2xl border border-cream-400 p-6 shadow-sm">
-                                <h3 className="font-serif text-lg font-bold text-charcoal-900 mb-1">
-                                    📚 Precedentes que pueden servir para tu borrador de sentencia
-                                </h3>
-                                <p className="text-charcoal-600 text-xs mb-4">
-                                    Sentencias con alta similitud temática recuperadas de nuestra base de datos. Consulta los PDFs originales para hacer ajustes.
-                                </p>
-                                <div className="space-y-2">
-                                    {resultStats.precedentes_utiles.map((prec: any, i: number) => (
-                                        <div key={i} className="flex items-start gap-3 py-2 px-3 rounded-xl hover:bg-cream-100 transition-colors group">
-                                            <span className="text-xs font-mono text-charcoal-400 mt-0.5 shrink-0">
-                                                {Math.round(prec.score * 100)}%
-                                            </span>
-                                            <div className="flex-1 min-w-0">
-                                                {prec.pdf_url ? (
-                                                    <a
-                                                        href={prec.pdf_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                                                    >
-                                                        {prec.expediente} · {prec.tribunal}
-                                                    </a>
-                                                ) : (
-                                                    <span className="text-sm font-semibold text-charcoal-900">
-                                                        {prec.expediente} · {prec.tribunal}
-                                                    </span>
-                                                )}
-                                                {prec.tema && (
-                                                    <p className="text-xs text-charcoal-600 mt-0.5 truncate">{prec.tema}</p>
-                                                )}
-                                                {prec.sentido && (
-                                                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-charcoal-500 bg-cream-200 px-2 py-0.5 rounded-full mt-1">
-                                                        {prec.sentido}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {prec.pdf_url && (
-                                                <a
-                                                    href={prec.pdf_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                                    title="Abrir PDF"
-                                                >
-                                                    <FileText className="w-4 h-4" />
-                                                </a>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Bottom actions */}
-                        <div className="mt-6 flex gap-3">
-                            <button
-                                onClick={handleReset}
-                                className="flex-1 py-3 rounded-xl border border-cream-400 text-charcoal-900 font-semibold text-sm hover:border-accent-gold/40 transition-all"
-                            >
-                                Nuevo estudio
-                            </button>
-                            <button
-                                onClick={() => router.push('/chat')}
-                                className="flex-1 py-3 rounded-xl bg-cream-200 text-charcoal-700 font-semibold text-sm hover:bg-cream-300 transition-all"
-                            >
-                                Volver al chat
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* ═══════════ ERROR ═══════════ */}
-                {phase === 'error' && (
-                    <div className="animate-fade-in text-center">
-                        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md mx-auto">
-                            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                                <AlertTriangle className="w-6 h-6 text-red-600" />
-                            </div>
-                            <h3 className="font-serif text-lg font-bold text-red-900 mb-2">Error en el pipeline</h3>
-                            <p className="text-red-700 text-sm leading-relaxed mb-6">{error}</p>
-                            <button
-                                onClick={handleReset}
-                                className="px-6 py-2.5 rounded-xl bg-charcoal-900 text-white font-bold text-sm hover:bg-black transition-all"
-                            >
-                                Intentar de nuevo
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </main>
+            </div>
+            <input ref={inputRef} type="file" accept=".pdf,.docx,.doc" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange(f); }} />
         </div>
     );
 }
