@@ -243,7 +243,7 @@ export default function PreciosPage() {
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900">Gratuito</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900">Básico</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-accent-brown/5">Pro</th>
-                                        <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-gradient-to-r from-amber-50 to-yellow-50">Platinum</th>
+                                        <th className="text-center py-4 px-3 font-bold text-accent-gold bg-[#111425] border-x-2 border-t-2 border-accent-gold/40 rounded-t-2xl shadow-lg">Platinum</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -278,10 +278,23 @@ export default function PreciosPage() {
                                         goldFeature={true}
                                     />
                                     <ComparisonRow
-                                        feature={<span className="flex items-center gap-1.5 font-semibold text-[#c9a962]">Redactor de Sentencias PJF <span className="text-[9px] bg-[#c9a962] text-white px-1.5 py-0.5 rounded-full font-bold">ULTRA</span></span>}
-                                        free="—" basico="—" pro="—"
-                                        platinum={<Link href="/secretarios" className="text-[#c9a962] font-bold hover:underline text-xs whitespace-nowrap">Ver plan Ultra →</Link>}
+                                        feature={
+                                            <span className="flex items-center gap-1.5 font-semibold text-red-400">
+                                                Redactor de Sentencias TCC
+                                                <span className="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold">BETA</span>
+                                            </span>
+                                        }
+                                        free="—"
+                                        basico="—"
+                                        pro="—"
+                                        platinum={
+                                            <span className="flex flex-col items-center">
+                                                <span className="text-red-400 font-bold">✓ (Beta)</span>
+                                                <span className="text-[9px] text-gray-400 leading-none mt-0.5 font-normal">10 cons/gen</span>
+                                            </span>
+                                        }
                                         goldFeature={true}
+                                        isLast={true}
                                     />
                                 </tbody>
                             </table>
@@ -624,14 +637,45 @@ function PricingCard({
     );
 }
 
-function ComparisonRow({ feature, free, basico, pro, platinum, goldFeature = false }: { feature: React.ReactNode; free: React.ReactNode; basico: React.ReactNode; pro: React.ReactNode; platinum: React.ReactNode; goldFeature?: boolean }) {
+function ComparisonRow({ 
+    feature, 
+    free, 
+    basico, 
+    pro, 
+    platinum, 
+    goldFeature = false,
+    isLast = false
+}: { 
+    feature: React.ReactNode; 
+    free: React.ReactNode; 
+    basico: React.ReactNode; 
+    pro: React.ReactNode; 
+    platinum: React.ReactNode; 
+    goldFeature?: boolean;
+    isLast?: boolean;
+}) {
+    // Detect exclusive Platinum features
+    const isExclusive = free === '—' && basico === '—' && pro === '—';
+
     return (
-        <tr className="border-b border-gray-100">
+        <tr className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
             <td className={`py-4 px-3 ${goldFeature ? 'text-accent-gold font-medium' : 'text-charcoal-700'}`}>{feature}</td>
             <td className="py-4 px-3 text-center text-charcoal-600">{free}</td>
             <td className="py-4 px-3 text-center text-charcoal-600 font-medium bg-stone-50/50">{basico}</td>
             <td className="py-4 px-3 text-center text-charcoal-900 bg-accent-brown/5 font-medium">{pro}</td>
-            <td className="py-4 px-3 text-center text-charcoal-900 bg-gradient-to-r from-amber-50 to-yellow-50 font-medium">{platinum}</td>
+            <td className={`py-4 px-3 text-center font-medium border-x-2 border-accent-gold/30 shadow-md transition-all ${
+                isExclusive 
+                    ? "bg-[#0b0c10] text-[#c9a962] font-bold border-accent-gold/45 shadow-accent-gold/5" 
+                    : "bg-[#111425] text-gray-200"
+            } ${
+                isLast ? "rounded-b-2xl border-b-2 border-accent-gold/45" : ""
+            }`}>
+                {platinum === "✓" ? (
+                    <span className="text-accent-gold font-extrabold text-lg">✓</span>
+                ) : (
+                    platinum
+                )}
+            </td>
         </tr>
     );
 }
