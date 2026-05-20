@@ -34,11 +34,108 @@ interface DbMessage {
     created_at: string;
 }
 
+// Pending messages stored in localStorage for crash recovery
+interface PendingMessage {
+    conversationId: string;
+    message: Message;
+    timestamp: number;
+}
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-const MAX_CONVERSATIONS = 20;  // FIFO: mantener solo las 20 más recientes
+const MAX_CONVERSATIONS = 50;  // FIFO: mantener solo las 50 más recientes
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 1000; // 1s, 2s, 4s exponential backoff
+const PENDING_MESSAGES_KEY = 'Iurexia_pending_messages';
+const PENDING_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours — discard stale pending messages
+
+// ============================================================================
+// RETRY HELPER
+// ============================================================================
+
+/**
+ * Retry an async operation with exponential backoff.
+ * Returns the result on success, throws on final failure.
+ */
+async function withRetry<T>(
+    operation: () => Promise<T>,
+    label: string,
+    maxAttempts = MAX_RETRY_ATTEMPTS
+): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+            return await operation();
+        } catch (err) {
+            lastError = err;
+            if (attempt < maxAttempts - 1) {
+                const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+                console.warn(`⚠️ ${label} failed (attempt ${attempt + 1}/${maxAttempts}), retrying in ${delay}ms...`, err);
+                await new Promise(r => setTimeout(r, delay));
+            }
+        }
+    }
+    console.error(`❌ ${label} failed after ${maxAttempts} attempts`, lastError);
+    throw lastError;
+}
+
+// ============================================================================
+// LOCALSTORAGE FALLBACK (for crash recovery)
+// ============================================================================
+
+function getPendingMessages(): PendingMessage[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        const raw = localStorage.getItem(PENDING_MESSAGES_KEY);
+        if (!raw) return [];
+        const pending: PendingMessage[] = JSON.parse(raw);
+        // Filter out stale messages (older than 24h)
+        const now = Date.now();
+        return pending.filter(p => now - p.timestamp < PENDING_MAX_AGE_MS);
+    } catch {
+        return [];
+    }
+}
+
+function savePendingMessage(conversationId: string, message: Message): void {
+    if (typeof window === 'undefined') return;
+    try {
+        const pending = getPendingMessages();
+        pending.push({ conversationId, message, timestamp: Date.now() });
+        localStorage.setItem(PENDING_MESSAGES_KEY, JSON.stringify(pending));
+        console.log(`💾 Message saved to localStorage fallback (conv: ${conversationId.slice(0, 8)}...)`);
+    } catch {
+        // localStorage full or unavailable — nothing we can do
+    }
+}
+
+function clearPendingMessages(): void {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.removeItem(PENDING_MESSAGES_KEY);
+    } catch {}
+}
+
+function removePendingMessage(conversationId: string, role: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+        const pending = getPendingMessages();
+        // Remove the first matching message (FIFO)
+        const idx = pending.findIndex(
+            p => p.conversationId === conversationId && p.message.role === role
+        );
+        if (idx !== -1) {
+            pending.splice(idx, 1);
+            if (pending.length === 0) {
+                localStorage.removeItem(PENDING_MESSAGES_KEY);
+            } else {
+                localStorage.setItem(PENDING_MESSAGES_KEY, JSON.stringify(pending));
+            }
+        }
+    } catch {}
+}
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -167,7 +264,7 @@ export async function getConversation(id: string): Promise<Conversation | null> 
     }
 }
 
-// Create a new conversation (with FIFO enforcement: max 20)
+// Create a new conversation (with FIFO enforcement: max 50)
 export async function createConversation(estado?: string): Promise<Conversation | null> {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -197,6 +294,27 @@ export async function createConversation(estado?: string): Promise<Conversation 
             if (deleteError) {
                 console.error('Error deleting old conversations:', deleteError);
                 // Don't block creation — just log
+            }
+        }
+
+        // Also clean up empty conversations (no messages) to prevent slot waste
+        if (!countError && existingConvs && existingConvs.length > 0) {
+            // Find conversations with 0 messages and delete them
+            const convIds = existingConvs.map(c => c.id);
+            const { data: msgsData } = await supabase
+                .from('messages')
+                .select('conversation_id')
+                .in('conversation_id', convIds);
+
+            const convsWithMessages = new Set((msgsData || []).map(m => m.conversation_id));
+            const emptyConvIds = convIds.filter(id => !convsWithMessages.has(id));
+
+            if (emptyConvIds.length > 0) {
+                console.log(`🧹 Cleaning ${emptyConvIds.length} empty conversation(s)`);
+                await supabase
+                    .from('conversations')
+                    .delete()
+                    .in('id', emptyConvIds);
             }
         }
 
@@ -262,28 +380,27 @@ export async function deleteConversation(id: string): Promise<boolean> {
 }
 
 // ============================================================================
-// MESSAGE OPERATIONS
+// MESSAGE OPERATIONS (with retry + fallback)
 // ============================================================================
 
-// Add a message to a conversation
+// Add a single message to a conversation — with retry and localStorage fallback
 export async function addMessageToConversation(
     conversationId: string,
     message: Message
 ): Promise<boolean> {
     try {
-        // Insert the message
-        const { error: msgError } = await supabase
-            .from('messages')
-            .insert({
-                conversation_id: conversationId,
-                role: message.role,
-                content: message.content,
-            });
+        await withRetry(async () => {
+            // Insert the message
+            const { error: msgError } = await supabase
+                .from('messages')
+                .insert({
+                    conversation_id: conversationId,
+                    role: message.role,
+                    content: message.content,
+                });
 
-        if (msgError) {
-            console.error('Error adding message:', msgError);
-            return false;
-        }
+            if (msgError) throw msgError;
+        }, `addMessage(${message.role})`);
 
         // Update conversation title if this is the first user message
         if (message.role === 'user') {
@@ -305,11 +422,158 @@ export async function addMessageToConversation(
             .update({ updated_at: new Date().toISOString() })
             .eq('id', conversationId);
 
+        // Clear this message from pending fallback if it was there
+        removePendingMessage(conversationId, message.role);
+
         return true;
     } catch (error) {
-        console.error('Error in addMessageToConversation:', error);
+        console.error('Error in addMessageToConversation (all retries exhausted):', error);
+        // ── FALLBACK: Save to localStorage for recovery ──
+        savePendingMessage(conversationId, message);
         return false;
     }
+}
+
+/**
+ * Save a user+assistant message pair atomically.
+ * This is the preferred method — called after the assistant finishes streaming.
+ * If the DB save fails after retries, messages are saved to localStorage for recovery.
+ */
+export async function addMessageBatch(
+    conversationId: string,
+    userMessage: Message,
+    assistantMessage: Message
+): Promise<boolean> {
+    try {
+        await withRetry(async () => {
+            const { error } = await supabase
+                .from('messages')
+                .insert([
+                    {
+                        conversation_id: conversationId,
+                        role: userMessage.role,
+                        content: userMessage.content,
+                    },
+                    {
+                        conversation_id: conversationId,
+                        role: assistantMessage.role,
+                        content: assistantMessage.content,
+                    },
+                ]);
+
+            if (error) throw error;
+        }, 'addMessageBatch');
+
+        // Auto-generate title from first user message
+        const { count } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', conversationId);
+
+        if (count && count <= 2) {
+            // This is the first pair — set title
+            const title = generateTitle(userMessage.content);
+            await updateConversationTitle(conversationId, title);
+        }
+
+        // Touch updated_at
+        await supabase
+            .from('conversations')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', conversationId);
+
+        // Clear from pending
+        removePendingMessage(conversationId, 'user');
+        removePendingMessage(conversationId, 'assistant');
+
+        console.log(`✅ Message pair saved to conversation ${conversationId.slice(0, 8)}...`);
+        return true;
+    } catch (error) {
+        console.error('Error in addMessageBatch (all retries exhausted):', error);
+        // ── FALLBACK: Save both to localStorage ──
+        savePendingMessage(conversationId, userMessage);
+        savePendingMessage(conversationId, assistantMessage);
+        return false;
+    }
+}
+
+// ============================================================================
+// CRASH RECOVERY
+// ============================================================================
+
+/**
+ * Recover messages that were saved to localStorage because Supabase was down.
+ * Call this on app initialization (after auth is confirmed).
+ * Returns the number of messages successfully recovered.
+ */
+export async function recoverPendingMessages(): Promise<number> {
+    const pending = getPendingMessages();
+    if (pending.length === 0) return 0;
+
+    console.log(`🔄 Recovering ${pending.length} pending message(s) from localStorage...`);
+    let recovered = 0;
+
+    for (const item of pending) {
+        try {
+            // Verify the conversation still exists
+            const { data: conv } = await supabase
+                .from('conversations')
+                .select('id')
+                .eq('id', item.conversationId)
+                .single();
+
+            if (!conv) {
+                // Conversation was deleted — discard the pending message
+                removePendingMessage(item.conversationId, item.message.role);
+                continue;
+            }
+
+            // Check if this message is already in the DB (avoid duplicates)
+            const { data: existing } = await supabase
+                .from('messages')
+                .select('id')
+                .eq('conversation_id', item.conversationId)
+                .eq('role', item.message.role)
+                .eq('content', item.message.content)
+                .limit(1);
+
+            if (existing && existing.length > 0) {
+                // Already saved — remove from pending
+                removePendingMessage(item.conversationId, item.message.role);
+                recovered++;
+                continue;
+            }
+
+            // Try to save
+            const { error } = await supabase
+                .from('messages')
+                .insert({
+                    conversation_id: item.conversationId,
+                    role: item.message.role,
+                    content: item.message.content,
+                });
+
+            if (!error) {
+                removePendingMessage(item.conversationId, item.message.role);
+                recovered++;
+            }
+        } catch (err) {
+            console.warn('Failed to recover message:', err);
+            // Leave in localStorage for next attempt
+        }
+    }
+
+    if (recovered > 0) {
+        console.log(`✅ Recovered ${recovered} message(s) from localStorage`);
+    }
+
+    // Clean up any remaining stale entries
+    const remaining = getPendingMessages();
+    if (remaining.length === 0) {
+        clearPendingMessages();
+    }
+
+    return recovered;
 }
 
 // ============================================================================
@@ -354,6 +618,7 @@ export async function clearAllConversations(): Promise<boolean> {
         }
 
         localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
+        clearPendingMessages();
         return true;
     } catch (error) {
         console.error('Error in clearAllConversations:', error);

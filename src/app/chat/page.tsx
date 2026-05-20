@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
+import { Message } from '@/lib/api';
 import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield } from 'lucide-react';
 import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
@@ -32,6 +33,8 @@ import {
     deleteConversation,
     createConversation,
     addMessageToConversation,
+    addMessageBatch,
+    recoverPendingMessages,
     setActiveConversationId,
     generateTitle
 } from '@/lib/conversations';
@@ -328,12 +331,14 @@ export default function ChatPage() {
 
 
 
-    // Load conversations
+    // Load conversations + recover any pending messages from localStorage
     useEffect(() => {
         if (authLoading || !isAuthenticated) return;
         const loadConversations = async () => {
             setConversationsLoading(true);
             try {
+                // Recover any messages that failed to save in a previous session
+                await recoverPendingMessages();
                 const loadedConversations = await getConversations();
                 setConversations(loadedConversations);
             } catch (err) {
@@ -357,25 +362,12 @@ export default function ChatPage() {
         prevMessagesLengthRef.current = messages.length;
     }, [messages]);
 
-    // Save messages
-    const wasLoadingRef = useRef(false);
-    useEffect(() => {
-        const saveMessagesAfterResponse = async () => {
-            if (wasLoadingRef.current && !isLoading && activeConversationId && messages.length >= 2) {
-                const lastMessages = messages.slice(-2);
-                const userMsg = lastMessages.find(m => m.role === 'user');
-                const assistantMsg = lastMessages.find(m => m.role === 'assistant');
-                if (userMsg && assistantMsg && assistantMsg.content.trim().length > 0) {
-                    await addMessageToConversation(activeConversationId, userMsg);
-                    await addMessageToConversation(activeConversationId, assistantMsg);
-                    const updatedConvs = await getConversations();
-                    setConversations(updatedConvs);
-                }
-            }
-            wasLoadingRef.current = isLoading;
-        };
-        saveMessagesAfterResponse();
-    }, [isLoading, activeConversationId, messages]);
+    // ── Save messages ref: stores the convId for post-streaming save ──
+    // (The old useEffect approach was removed — it caused race conditions
+    //  where messages were lost if the user closed the tab during streaming
+    //  or if isLoading toggled unexpectedly. Now we save DIRECTLY after
+    //  sendMessage() resolves. See handleSendMessage below.)
+    const lastSentUserMsgRef = useRef<Message | null>(null);
 
     const handleNewConversation = useCallback(async () => {
         // Lazy creation: just reset the UI. The conversation row in DB
@@ -448,8 +440,63 @@ export default function ChatPage() {
         if (!isAdminUser) {
             setQueriesUsed(prev => prev + 1);
         }
+
+        // Store the user message for post-streaming save
+        const userMsg: Message = { role: 'user', content };
+        lastSentUserMsgRef.current = userMsg;
+
+        // Send the message (streaming)
         await sendMessage(content, enableReasoning);
-    }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
+
+        // ── DIRECT SAVE: Save user+assistant pair AFTER streaming completes ──
+        // This replaces the old useEffect approach that caused lost messages.
+        if (convId) {
+            // Get the latest messages from state — we need to read them fresh
+            // Using a functional approach via setMessages to capture the latest state
+            let savedUserMsg: Message | null = null;
+            let savedAssistantMsg: Message | null = null;
+
+            setMessages(currentMessages => {
+                // Find the last user+assistant pair
+                if (currentMessages.length >= 2) {
+                    const lastTwo = currentMessages.slice(-2);
+                    const uMsg = lastTwo.find(m => m.role === 'user');
+                    const aMsg = lastTwo.find(m => m.role === 'assistant');
+                    if (uMsg && aMsg && aMsg.content.trim().length > 0) {
+                        savedUserMsg = uMsg;
+                        savedAssistantMsg = aMsg;
+                    }
+                }
+                return currentMessages; // Don't modify state, just read it
+            });
+
+            // Small delay to let the setMessages callback execute
+            await new Promise(r => setTimeout(r, 50));
+
+            // Use the ref as fallback if setMessages didn't capture
+            const finalUserMsg = savedUserMsg || lastSentUserMsgRef.current;
+
+            if (finalUserMsg) {
+                // Read current messages directly from the latest state
+                // We need a different approach — use the messages from the sendMessage result
+                const currentMsgs = messages;
+                const latestAssistant = currentMsgs.length > 0 ? currentMsgs[currentMsgs.length - 1] : null;
+
+                if (latestAssistant && latestAssistant.role === 'assistant' && latestAssistant.content.trim().length > 0) {
+                    await addMessageBatch(convId, finalUserMsg, latestAssistant);
+                } else {
+                    // Fallback: save just the user message to prevent total loss
+                    await addMessageToConversation(convId, finalUserMsg);
+                }
+
+                // Refresh sidebar
+                const updatedConvs = await getConversations();
+                setConversations(updatedConvs);
+            }
+        }
+
+        lastSentUserMsgRef.current = null;
+    }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed, messages]);
 
     // Document analysis via Gemini Flash (streaming from /analyze-document)
     const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
@@ -469,10 +516,12 @@ export default function ChatPage() {
         setMessages(prev => [...prev, userMsg]);
         setIsDocumentAnalyzing(true);
 
-        // Ensure conversation exists
-        if (!activeConversationId) {
+        // Ensure conversation exists — track convId for post-streaming save
+        let docConvId = activeConversationId;
+        if (!docConvId) {
             const newConv = await createConversation(selectedEstado || undefined);
             if (newConv) {
+                docConvId = newConv.id;
                 setActiveConvId(newConv.id);
                 setActiveConversationId(newConv.id);
             }
@@ -600,6 +649,37 @@ export default function ChatPage() {
         } finally {
             // ALWAYS reset — guarantees export bar (PDF/DOCX/Print) appears after response
             setIsDocumentAnalyzing(false);
+
+            // ── SAVE document analysis messages to conversation history ──
+            if (docConvId) {
+                try {
+                    // Read the latest messages to find the assistant response
+                    let docAssistantMsg: Message | null = null;
+                    setMessages(currentMsgs => {
+                        const lastMsg = currentMsgs[currentMsgs.length - 1];
+                        if (lastMsg && lastMsg.role === 'assistant' && lastMsg.content.trim().length > 0) {
+                            docAssistantMsg = lastMsg;
+                        }
+                        return currentMsgs; // Don't modify state
+                    });
+
+                    await new Promise(r => setTimeout(r, 50));
+
+                    if (docAssistantMsg) {
+                        await addMessageBatch(docConvId, userMsg, docAssistantMsg);
+                    } else {
+                        // At least save the user message
+                        await addMessageToConversation(docConvId, userMsg);
+                    }
+
+                    // Refresh sidebar
+                    const updatedConvs = await getConversations();
+                    setConversations(updatedConvs);
+                } catch (saveErr) {
+                    console.error('Error saving document analysis messages:', saveErr);
+                }
+            }
+
             // Sync counter with real DB values after document analysis
             if (user?.id && !isAdmin(user?.email)) {
                 try {
