@@ -449,54 +449,47 @@ export default function ChatPage() {
         await sendMessage(content, enableReasoning);
 
         // ── DIRECT SAVE: Save user+assistant pair AFTER streaming completes ──
-        // This replaces the old useEffect approach that caused lost messages.
+        // FIX 2026-05-22: Use Promise-based state reading to get the ACTUAL latest
+        // messages from React state. The old approach read `messages` from the closure
+        // which was stale (captured at useCallback creation time, not after streaming).
         if (convId) {
-            // Get the latest messages from state — we need to read them fresh
-            // Using a functional approach via setMessages to capture the latest state
-            let savedUserMsg: Message | null = null;
-            let savedAssistantMsg: Message | null = null;
+            try {
+                // Read the ACTUAL current state via a Promise that resolves inside
+                // React's setState callback — this guarantees we see the latest messages
+                // including the assistant's streaming response.
+                const latestMessages = await new Promise<Message[]>(resolve => {
+                    setMessages(current => {
+                        resolve([...current]);
+                        return current; // Don't modify state
+                    });
+                });
 
-            setMessages(currentMessages => {
-                // Find the last user+assistant pair
-                if (currentMessages.length >= 2) {
-                    const lastTwo = currentMessages.slice(-2);
-                    const uMsg = lastTwo.find(m => m.role === 'user');
-                    const aMsg = lastTwo.find(m => m.role === 'assistant');
-                    if (uMsg && aMsg && aMsg.content.trim().length > 0) {
-                        savedUserMsg = uMsg;
-                        savedAssistantMsg = aMsg;
+                if (latestMessages.length >= 2) {
+                    const lastMsg = latestMessages[latestMessages.length - 1];
+                    const secondLastMsg = latestMessages[latestMessages.length - 2];
+
+                    if (secondLastMsg.role === 'user' && lastMsg.role === 'assistant'
+                        && lastMsg.content.trim().length > 0) {
+                        await addMessageBatch(convId, secondLastMsg, lastMsg);
+                    } else {
+                        // Fallback: save at least the user message
+                        await addMessageToConversation(convId, userMsg);
                     }
-                }
-                return currentMessages; // Don't modify state, just read it
-            });
-
-            // Small delay to let the setMessages callback execute
-            await new Promise(r => setTimeout(r, 50));
-
-            // Use the ref as fallback if setMessages didn't capture
-            const finalUserMsg = savedUserMsg || lastSentUserMsgRef.current;
-
-            if (finalUserMsg) {
-                // Read current messages directly from the latest state
-                // We need a different approach — use the messages from the sendMessage result
-                const currentMsgs = messages;
-                const latestAssistant = currentMsgs.length > 0 ? currentMsgs[currentMsgs.length - 1] : null;
-
-                if (latestAssistant && latestAssistant.role === 'assistant' && latestAssistant.content.trim().length > 0) {
-                    await addMessageBatch(convId, finalUserMsg, latestAssistant);
-                } else {
-                    // Fallback: save just the user message to prevent total loss
-                    await addMessageToConversation(convId, finalUserMsg);
+                } else if (latestMessages.length >= 1) {
+                    // Only user message present (streaming produced no content)
+                    await addMessageToConversation(convId, userMsg);
                 }
 
                 // Refresh sidebar
                 const updatedConvs = await getConversations();
                 setConversations(updatedConvs);
+            } catch (saveErr) {
+                console.error('[Chat] Error saving messages after streaming:', saveErr);
             }
         }
 
         lastSentUserMsgRef.current = null;
-    }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed, messages]);
+    }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
 
     // Document analysis via Gemini Flash (streaming from /analyze-document)
     const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
@@ -651,32 +644,27 @@ export default function ChatPage() {
             setIsDocumentAnalyzing(false);
 
             // ── SAVE document analysis messages to conversation history ──
+            // FIX 2026-05-22: Same Promise-based state reading as handleSendMessage
             if (docConvId) {
                 try {
-                    // Read the latest messages to find the assistant response
-                    let docAssistantMsg: Message | null = null;
-                    setMessages(currentMsgs => {
-                        const lastMsg = currentMsgs[currentMsgs.length - 1];
-                        if (lastMsg && lastMsg.role === 'assistant' && lastMsg.content.trim().length > 0) {
-                            docAssistantMsg = lastMsg;
-                        }
-                        return currentMsgs; // Don't modify state
+                    const latestMessages = await new Promise<Message[]>(resolve => {
+                        setMessages(current => {
+                            resolve([...current]);
+                            return current;
+                        });
                     });
 
-                    await new Promise(r => setTimeout(r, 50));
-
-                    if (docAssistantMsg) {
-                        await addMessageBatch(docConvId, userMsg, docAssistantMsg);
+                    const lastMsg = latestMessages[latestMessages.length - 1];
+                    if (lastMsg && lastMsg.role === 'assistant' && lastMsg.content.trim().length > 0) {
+                        await addMessageBatch(docConvId, userMsg, lastMsg);
                     } else {
-                        // At least save the user message
                         await addMessageToConversation(docConvId, userMsg);
                     }
 
-                    // Refresh sidebar
                     const updatedConvs = await getConversations();
                     setConversations(updatedConvs);
                 } catch (saveErr) {
-                    console.error('Error saving document analysis messages:', saveErr);
+                    console.error('[Chat] Error saving document analysis messages:', saveErr);
                 }
             }
 

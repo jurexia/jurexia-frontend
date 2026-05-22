@@ -211,6 +211,10 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [retryMessage, setRetryMessage] = useState<string | null>(null);
     const [retryType, setRetryType] = useState<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    // FIX 2026-05-22: Ref-based mutex to prevent duplicate simultaneous sends.
+    // React batches state updates, so two rapid clicks can both see isLoading=false
+    // before the first setIsLoading(true) executes. A ref check is synchronous.
+    const sendingRef = useRef(false);
 
     const stopGeneration = useCallback(() => {
         abortControllerRef.current?.abort();
@@ -218,7 +222,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
     const sendMessage = useCallback(async (content: string, _enableReasoning = true) => {
         const enableReasoning = false; // Disabled: Query Expansion was diluting BM25 precision
-        if (!content.trim() || isLoading) return;
+        if (!content.trim() || isLoading || sendingRef.current) return;
+        sendingRef.current = true;
 
         // Cancel any in-flight request before starting a new one
         abortControllerRef.current?.abort();
@@ -398,6 +403,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             }
         } finally {
             setIsLoading(false);
+            sendingRef.current = false;
         }
     }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.materia, options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive]);
 
