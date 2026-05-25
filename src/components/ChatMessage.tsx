@@ -208,7 +208,13 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             for (let pi = 0; pi < precedentesMeta.length; pi++) {
                 const prec = precedentesMeta[pi];
                 // Clean ref: filter out "Null" parts from "3TCC · AD-892/2022 · Null · 2022"
-                const cleanRef = (prec.ref || 'Sentencia').split(' · ').filter(p => p && p !== 'Null' && p !== 'null').join(' · ');
+                // Fallback: if ref is empty, use origen for a readable label
+                let rawRef = prec.ref || '';
+                if (!rawRef || rawRef === prec.id) {
+                    // Use origen as fallback — e.g. "TCC_PENAL — 22° Circuito — Penal"
+                    rawRef = prec.origen || 'Sentencia';
+                }
+                const cleanRef = rawRef.split(' · ').filter(p => p && p !== 'Null' && p !== 'null').join(' · ');
                 // Parse materia from origen
                 const materiaMatch = prec.origen?.match(/—\s*([A-ZÁÉÍÓÚ]+)\s*$/);
                 const materia = materiaMatch?.[1] || '';
