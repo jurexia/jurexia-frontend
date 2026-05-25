@@ -115,18 +115,19 @@ interface CostItem {
 }
 
 // ═══ COSTOS OPERATIVOS MENSUALES ═══
-// Actualizar estos valores cuando cambien los precios
+// Última actualización: 24 mayo 2026 (datos reales de facturación)
+// TC referencia: $19.50 MXN/USD
 const OPERATIONAL_COSTS: CostItem[] = [
-    // Infraestructura
-    { name: 'Render (API Backend)', amount: 500, icon: Server, type: 'fijo', color: '#6366f1', note: 'Pro Plan $25 USD' },
-    { name: 'Supabase (DB + Auth)', amount: 500, icon: Database, type: 'fijo', color: '#3ecf8e', note: 'Pro Plan $25 USD' },
-    { name: 'Qdrant Cloud (Vectores)', amount: 760, icon: Database, type: 'fijo', color: '#dc2626', note: '$37.95 USD' },
+    // Infraestructura — servicios fijos con fecha de cobro
+    { name: 'Render (API Backend)', amount: 1482, icon: Server, type: 'fijo', color: '#6366f1', note: 'Proy. $76 USD · Factura: 30 de cada mes' },
+    { name: 'Supabase (DB + Auth)', amount: 488, icon: Database, type: 'fijo', color: '#3ecf8e', note: '$25 USD · Factura: ~14 de cada mes' },
+    { name: 'Qdrant Cloud (Vectores)', amount: 837, icon: Database, type: 'fijo', color: '#dc2626', note: '$42.90 USD · Factura: 1ero de cada mes' },
     { name: 'Google Workspace (2 lic)', amount: 437, icon: Globe, type: 'fijo', color: '#4285f4', note: 'Business Standard × 2' },
     { name: 'Google AI Ultra Access', amount: 640, icon: Brain, type: 'fijo', color: '#fbbc04', note: '⚠️ Sube a $2,010 el 19 jun' },
     { name: 'Google Workspace Archivado', amount: 50, icon: Globe, type: 'fijo', color: '#34a853', note: '1 usuario archivado' },
     { name: 'Dominio iurexia.com', amount: 12, icon: Globe, type: 'fijo', color: '#ea4335', note: 'Prorrateo mensual' },
-    // APIs variables
-    { name: 'Google Cloud (Gemini API)', amount: 535, icon: Cloud, type: 'variable', color: '#4285f4', note: 'Genio Jurídico + procesamiento' },
+    // APIs y Cloud — costos variables
+    { name: 'Google Cloud (Bucket + APIs)', amount: 18954, icon: Cloud, type: 'variable', color: '#4285f4', note: 'Proy. $972 USD mayo · ↑25% vs abril' },
     { name: 'OpenRouter API', amount: 200, icon: Cpu, type: 'variable', color: '#8b5cf6', note: 'DeepSeek + modelos auxiliares' },
     { name: 'DeepSeek API', amount: 100, icon: Brain, type: 'variable', color: '#0ea5e9', note: 'Thinking mode directo' },
     // Desarrollo
