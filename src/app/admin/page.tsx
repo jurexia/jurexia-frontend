@@ -127,7 +127,7 @@ const OPERATIONAL_COSTS: CostItem[] = [
     { name: 'Google Workspace Archivado', amount: 50, icon: Globe, type: 'fijo', color: '#34a853', note: '1 usuario archivado' },
     { name: 'Dominio iurexia.com', amount: 12, icon: Globe, type: 'fijo', color: '#ea4335', note: 'Prorrateo mensual' },
     // APIs y Cloud — costos variables
-    { name: 'Google Cloud (Bucket + APIs)', amount: 18954, icon: Cloud, type: 'variable', color: '#4285f4', note: 'Proy. $972 USD mayo · ↑25% vs abril' },
+    { name: 'Google Cloud (Bucket + APIs)', amount: 972, icon: Cloud, type: 'variable', color: '#4285f4', note: 'Proy. $972 MXN mayo · ↑25% vs abril' },
     { name: 'OpenRouter API', amount: 200, icon: Cpu, type: 'variable', color: '#8b5cf6', note: 'DeepSeek + modelos auxiliares' },
     { name: 'DeepSeek API', amount: 100, icon: Brain, type: 'variable', color: '#0ea5e9', note: 'Thinking mode directo' },
     // Desarrollo
