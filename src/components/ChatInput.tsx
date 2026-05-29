@@ -659,9 +659,10 @@ ${draftRequest.descripcion}`;
                         </div>
                     </div>
 
-                    {/* Action Buttons Row */}
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+                    {/* Action Cards Row — Blue Cards */}
+                    <div className="mt-4 pt-3 border-t border-gray-100">
+                        {/* Buscar / Redactar toggle + Pro — stays compact */}
+                        <div className="flex items-center gap-1 mb-3">
                             <div
                                 data-guide="buscar-redactar"
                                 className="inline-flex items-center rounded-md border border-gray-200 overflow-hidden flex-shrink-0 mr-1"
@@ -726,76 +727,107 @@ ${draftRequest.descripcion}`;
                                     )}
                                 </button>
                             )}
+                        </div>
 
-                            <div className="h-4 w-[1px] bg-gray-200 mx-1 hidden sm:block" />
-
-                            <ActionButton
-                                icon={FileEdit}
-                                label="Escrito"
-                                active={activeMode === 'draft'}
+                        {/* Blue Action Cards Grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {/* Escrito */}
+                            <button
+                                data-guide="escrito"
                                 onClick={() => handleModeClick('draft')}
-                                guideId="escrito"
-                            />
-                            <ActionButton
-                                icon={Gavel}
-                                label="Sentencia"
-                                active={activeMode === 'sentencia'}
-                                locked={!canAccessSentencia}
+                                className={`group relative flex flex-col items-start gap-1 px-3 py-2.5 rounded-xl border text-left
+                                    transition-all duration-250 overflow-hidden
+                                    ${activeMode === 'draft'
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
+                                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/60 hover:border-blue-300 hover:shadow-md hover:shadow-blue-100/50'
+                                    }`}
+                            >
+                                <div className={`flex items-center gap-1.5 ${activeMode === 'draft' ? 'text-white' : 'text-blue-600'}`}>
+                                    <FileEdit className="w-3.5 h-3.5" />
+                                    <span className="text-[11px] font-bold tracking-tight">Escrito</span>
+                                </div>
+                                <span className={`text-[10px] leading-tight ${activeMode === 'draft' ? 'text-blue-100' : 'text-blue-500/80'}`}>
+                                    Redacta escrito legal
+                                </span>
+                            </button>
+
+                            {/* Sentencia */}
+                            <button
+                                data-guide="sentencia"
                                 onClick={() => canAccessSentencia ? handleModeClick('sentencia') : setShowUpgradeModal('pro')}
-                                guideId="sentencia"
-                            />
-                            <ActionButton
-                                icon={BookOpen}
-                                label="Precedentes"
-                                active={activeMode === 'precedentes'}
-                                locked={!canAccessPrecedentes}
+                                className={`group relative flex flex-col items-start gap-1 px-3 py-2.5 rounded-xl border text-left
+                                    transition-all duration-250 overflow-hidden
+                                    ${!canAccessSentencia
+                                        ? 'bg-gray-50 border-gray-200 opacity-70 cursor-pointer'
+                                        : activeMode === 'sentencia'
+                                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
+                                            : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/60 hover:border-blue-300 hover:shadow-md hover:shadow-blue-100/50'
+                                    }`}
+                                title={!canAccessSentencia ? 'Revisar Sentencia — exclusivo Plan Pro' : 'Revisa una sentencia'}
+                            >
+                                <div className={`flex items-center gap-1.5 ${!canAccessSentencia ? 'text-gray-400' : activeMode === 'sentencia' ? 'text-white' : 'text-blue-600'}`}>
+                                    <Gavel className="w-3.5 h-3.5" />
+                                    <span className="text-[11px] font-bold tracking-tight">Sentencia</span>
+                                    {!canAccessSentencia && <Lock className="w-2.5 h-2.5 ml-auto" />}
+                                </div>
+                                <span className={`text-[10px] leading-tight ${!canAccessSentencia ? 'text-gray-400' : activeMode === 'sentencia' ? 'text-blue-100' : 'text-blue-500/80'}`}>
+                                    Revisa una sentencia
+                                </span>
+                            </button>
+
+                            {/* Precedentes */}
+                            <button
+                                data-guide="precedentes"
                                 onClick={() => {
                                     if (!canAccessPrecedentes) { setShowUpgradeModal('pro'); return; }
                                     const next = activeMode !== 'precedentes';
                                     setActiveMode(next ? 'precedentes' : 'search');
                                     if (!next) { setSelectedCircuit(null); setTribunalFilter(null); }
                                 }}
-                                guideId="precedentes"
-                                activeClassName="text-[#c9a962] bg-amber-50 hover:bg-amber-100 border border-[#c9a962]/30"
-                            />
-                            <ActionButton
-                                icon={BarChart2}
-                                label="Jurimetría"
-                                active={false}
-                                locked={!canAccessJurimetria}
-                                lockedTitle="Jurimetría — función exclusiva planes Platinum"
+                                className={`group relative flex flex-col items-start gap-1 px-3 py-2.5 rounded-xl border text-left
+                                    transition-all duration-250 overflow-hidden
+                                    ${!canAccessPrecedentes
+                                        ? 'bg-gray-50 border-gray-200 opacity-70 cursor-pointer'
+                                        : activeMode === 'precedentes'
+                                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
+                                            : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/60 hover:border-blue-300 hover:shadow-md hover:shadow-blue-100/50'
+                                    }`}
+                                title={!canAccessPrecedentes ? 'Precedentes — exclusivo Plan Pro' : 'Consulta precedentes federales'}
+                            >
+                                <div className={`flex items-center gap-1.5 ${!canAccessPrecedentes ? 'text-gray-400' : activeMode === 'precedentes' ? 'text-white' : 'text-blue-600'}`}>
+                                    <BookOpen className="w-3.5 h-3.5" />
+                                    <span className="text-[11px] font-bold tracking-tight">Precedentes</span>
+                                    {!canAccessPrecedentes && <Lock className="w-2.5 h-2.5 ml-auto" />}
+                                </div>
+                                <span className={`text-[10px] leading-tight ${!canAccessPrecedentes ? 'text-gray-400' : activeMode === 'precedentes' ? 'text-blue-100' : 'text-blue-500/80'}`}>
+                                    Consulta precedentes federales
+                                </span>
+                            </button>
+
+                            {/* Jurimetría */}
+                            <button
+                                data-guide="jurimetria"
                                 onClick={() => {
                                     if (!canAccessJurimetria) { setShowUpgradeModal('platinum'); return; }
                                     setShowJurimetriaModal(true);
                                 }}
-                                guideId="jurimetria"
-                            />
-                            <ActionButton
-                                icon={FileEdit}
-                                label="TCC Beta"
-                                active={false}
-                                locked={!canAccessTccBeta}
-                                lockedTitle="Redactor TCC Beta — función exclusiva planes Platinum"
-                                onClick={() => {
-                                    if (!canAccessTccBeta) { setShowUpgradeModal('platinum'); return; }
-                                    window.location.href = '/tcc-beta';
-                                }}
-                                guideId="tcc-beta"
-                            />
-                            {canAccessRedactor && (
-                                <Link
-                                    href="/redactor-sentencia"
-                                    className="shrink-0 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap
-                                              transition-all duration-200 hover:opacity-90"
-                                    style={{
-                                        background: '#1a1a1a',
-                                        color: '#c9a962',
-                                    }}
-                                    title="Acceder al Redactor de Sentencias TCC"
-                                >
-                                    Secretario PJF
-                                </Link>
-                            )}
+                                className={`group relative flex flex-col items-start gap-1 px-3 py-2.5 rounded-xl border text-left
+                                    transition-all duration-250 overflow-hidden
+                                    ${!canAccessJurimetria
+                                        ? 'bg-gray-50 border-gray-200 opacity-70 cursor-pointer'
+                                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/60 hover:border-blue-300 hover:shadow-md hover:shadow-blue-100/50'
+                                    }`}
+                                title={!canAccessJurimetria ? 'Jurimetría — función exclusiva planes Platinum' : 'Análisis jurimétrico'}
+                            >
+                                <div className={`flex items-center gap-1.5 ${!canAccessJurimetria ? 'text-gray-400' : 'text-blue-600'}`}>
+                                    <BarChart2 className="w-3.5 h-3.5" />
+                                    <span className="text-[11px] font-bold tracking-tight">Jurimetría</span>
+                                    {!canAccessJurimetria && <Lock className="w-2.5 h-2.5 ml-auto" />}
+                                </div>
+                                <span className={`text-[10px] leading-tight ${!canAccessJurimetria ? 'text-gray-400' : 'text-blue-500/80'}`}>
+                                    Analiza tendencias judiciales
+                                </span>
+                            </button>
                         </div>
                     </div>
 
@@ -1103,6 +1135,38 @@ ${draftRequest.descripcion}`;
                         )}
                     </div>
 
+                    {/* Secretario PJF — CTA Card */}
+                    <div className="mt-3 pt-3 border-t border-gray-50">
+                        <a
+                            href={canAccessTccBeta ? '/tcc-beta' : '#'}
+                            data-guide="tcc-beta"
+                            onClick={(e) => {
+                                if (!canAccessTccBeta) {
+                                    e.preventDefault();
+                                    setShowUpgradeModal('platinum');
+                                }
+                            }}
+                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#1a1a1a] to-[#2a2a2a] border border-[#c9a962]/30 hover:border-[#c9a962]/60 transition-all duration-300 group hover:shadow-lg hover:shadow-[#c9a962]/10"
+                        >
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#c9a962]/20 to-[#8a6d2e]/20 flex items-center justify-center flex-shrink-0 border border-[#c9a962]/20">
+                                <Gavel className="w-4 h-4 text-[#c9a962]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <span className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
+                                    ¿Eres Secretario del PJF?
+                                </span>
+                                <span className="block text-[10px] text-white/50 group-hover:text-white/65 transition-colors">
+                                    Prueba el redactor de sentencias
+                                </span>
+                            </div>
+                            {!canAccessTccBeta && (
+                                <Lock className="w-3.5 h-3.5 text-[#c9a962]/60 flex-shrink-0" />
+                            )}
+                            <span className="text-[9px] font-bold text-[#c9a962] bg-[#c9a962]/10 px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0 border border-[#c9a962]/20">
+                                Beta
+                            </span>
+                        </a>
+                    </div>
 
                 </div>
             </div>
