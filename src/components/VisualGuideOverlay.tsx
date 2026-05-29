@@ -7,7 +7,6 @@ import {
     Search,
     FileEdit,
     Gavel,
-    Users,
     X,
     ChevronLeft,
     ChevronRight,
@@ -56,13 +55,6 @@ const GUIDE_STEPS: GuideStep[] = [
         icon: Gavel,
         title: 'Revisar Sentencia',
         description: 'Analiza sentencias para encontrar fortalezas, debilidades y argumentos clave.',
-        position: 'top',
-    },
-    {
-        guideId: 'lawyer',
-        icon: Users,
-        title: 'Buscar Abogado',
-        description: 'Conecta con abogados especializados en tu zona y materia jurídica.',
         position: 'top',
     },
 ];

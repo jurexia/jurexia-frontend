@@ -77,13 +77,6 @@ const TOUR_STEPS: TourStep[] = [
         padding: 10,
         preferBelow: true,
     },
-    {
-        selector: '[data-guide="lawyer"]',
-        title: '👩‍⚖️ Buscar Abogado',
-        description: 'Iurexia Connect te conecta con abogados verificados de tu estado. Si tu consulta requiere representación profesional, encuentra al especialista adecuado de forma gratuita.',
-        padding: 12,
-        preferBelow: false,
-    },
 ];
 
 interface Rect { top: number; left: number; width: number; height: number; }
