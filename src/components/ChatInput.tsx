@@ -729,50 +729,40 @@ ${draftRequest.descripcion}`;
                             )}
                         </div>
 
-                        {/* Blue Action Cards Grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {/* Blue Action Cards — Compact Row */}
+                        <div className="flex items-stretch gap-1.5 overflow-x-auto scrollbar-hide">
                             {/* Escrito */}
                             <button
                                 data-guide="escrito"
                                 onClick={() => handleModeClick('draft')}
-                                className={`group relative flex flex-col items-start gap-1 px-3 py-2.5 rounded-xl border text-left
-                                    transition-all duration-250 overflow-hidden
+                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap
+                                    transition-all duration-200 flex-shrink-0
                                     ${activeMode === 'draft'
-                                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
-                                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/60 hover:border-blue-300 hover:shadow-md hover:shadow-blue-100/50'
+                                        ? 'bg-blue-600 border-blue-500 text-white shadow-sm'
+                                        : 'bg-blue-50/80 border-blue-100 hover:border-blue-200 hover:bg-blue-50'
                                     }`}
                             >
-                                <div className={`flex items-center gap-1.5 ${activeMode === 'draft' ? 'text-white' : 'text-blue-600'}`}>
-                                    <FileEdit className="w-3.5 h-3.5" />
-                                    <span className="text-[11px] font-bold tracking-tight">Escrito</span>
-                                </div>
-                                <span className={`text-[10px] leading-tight ${activeMode === 'draft' ? 'text-blue-100' : 'text-blue-500/80'}`}>
-                                    Redacta escrito legal
-                                </span>
+                                <FileEdit className={`w-3 h-3 flex-shrink-0 ${activeMode === 'draft' ? 'text-white' : 'text-blue-500'}`} />
+                                <span className={`text-[10px] font-semibold ${activeMode === 'draft' ? 'text-white' : 'text-blue-700'}`}>Redacta escrito legal</span>
                             </button>
 
                             {/* Sentencia */}
                             <button
                                 data-guide="sentencia"
                                 onClick={() => canAccessSentencia ? handleModeClick('sentencia') : setShowUpgradeModal('pro')}
-                                className={`group relative flex flex-col items-start gap-1 px-3 py-2.5 rounded-xl border text-left
-                                    transition-all duration-250 overflow-hidden
+                                title={!canAccessSentencia ? 'Revisar Sentencia — Plan Pro' : 'Revisa una sentencia'}
+                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap
+                                    transition-all duration-200 flex-shrink-0
                                     ${!canAccessSentencia
-                                        ? 'bg-gray-50 border-gray-200 opacity-70 cursor-pointer'
+                                        ? 'bg-gray-50 border-gray-100 cursor-pointer'
                                         : activeMode === 'sentencia'
-                                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
-                                            : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/60 hover:border-blue-300 hover:shadow-md hover:shadow-blue-100/50'
+                                            ? 'bg-blue-600 border-blue-500 text-white shadow-sm'
+                                            : 'bg-blue-50/80 border-blue-100 hover:border-blue-200 hover:bg-blue-50'
                                     }`}
-                                title={!canAccessSentencia ? 'Revisar Sentencia — exclusivo Plan Pro' : 'Revisa una sentencia'}
                             >
-                                <div className={`flex items-center gap-1.5 ${!canAccessSentencia ? 'text-gray-400' : activeMode === 'sentencia' ? 'text-white' : 'text-blue-600'}`}>
-                                    <Gavel className="w-3.5 h-3.5" />
-                                    <span className="text-[11px] font-bold tracking-tight">Sentencia</span>
-                                    {!canAccessSentencia && <Lock className="w-2.5 h-2.5 ml-auto" />}
-                                </div>
-                                <span className={`text-[10px] leading-tight ${!canAccessSentencia ? 'text-gray-400' : activeMode === 'sentencia' ? 'text-blue-100' : 'text-blue-500/80'}`}>
-                                    Revisa una sentencia
-                                </span>
+                                <Gavel className={`w-3 h-3 flex-shrink-0 ${!canAccessSentencia ? 'text-gray-300' : activeMode === 'sentencia' ? 'text-white' : 'text-blue-500'}`} />
+                                <span className={`text-[10px] font-semibold ${!canAccessSentencia ? 'text-gray-400' : activeMode === 'sentencia' ? 'text-white' : 'text-blue-700'}`}>Revisa una sentencia</span>
+                                {!canAccessSentencia && <Lock className="w-2.5 h-2.5 text-gray-300 flex-shrink-0" />}
                             </button>
 
                             {/* Precedentes */}
@@ -784,24 +774,19 @@ ${draftRequest.descripcion}`;
                                     setActiveMode(next ? 'precedentes' : 'search');
                                     if (!next) { setSelectedCircuit(null); setTribunalFilter(null); }
                                 }}
-                                className={`group relative flex flex-col items-start gap-1 px-3 py-2.5 rounded-xl border text-left
-                                    transition-all duration-250 overflow-hidden
+                                title={!canAccessPrecedentes ? 'Precedentes — Plan Pro' : 'Consulta precedentes federales'}
+                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap
+                                    transition-all duration-200 flex-shrink-0
                                     ${!canAccessPrecedentes
-                                        ? 'bg-gray-50 border-gray-200 opacity-70 cursor-pointer'
+                                        ? 'bg-gray-50 border-gray-100 cursor-pointer'
                                         : activeMode === 'precedentes'
-                                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
-                                            : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/60 hover:border-blue-300 hover:shadow-md hover:shadow-blue-100/50'
+                                            ? 'bg-blue-600 border-blue-500 text-white shadow-sm'
+                                            : 'bg-blue-50/80 border-blue-100 hover:border-blue-200 hover:bg-blue-50'
                                     }`}
-                                title={!canAccessPrecedentes ? 'Precedentes — exclusivo Plan Pro' : 'Consulta precedentes federales'}
                             >
-                                <div className={`flex items-center gap-1.5 ${!canAccessPrecedentes ? 'text-gray-400' : activeMode === 'precedentes' ? 'text-white' : 'text-blue-600'}`}>
-                                    <BookOpen className="w-3.5 h-3.5" />
-                                    <span className="text-[11px] font-bold tracking-tight">Precedentes</span>
-                                    {!canAccessPrecedentes && <Lock className="w-2.5 h-2.5 ml-auto" />}
-                                </div>
-                                <span className={`text-[10px] leading-tight ${!canAccessPrecedentes ? 'text-gray-400' : activeMode === 'precedentes' ? 'text-blue-100' : 'text-blue-500/80'}`}>
-                                    Consulta precedentes federales
-                                </span>
+                                <BookOpen className={`w-3 h-3 flex-shrink-0 ${!canAccessPrecedentes ? 'text-gray-300' : activeMode === 'precedentes' ? 'text-white' : 'text-blue-500'}`} />
+                                <span className={`text-[10px] font-semibold ${!canAccessPrecedentes ? 'text-gray-400' : activeMode === 'precedentes' ? 'text-white' : 'text-blue-700'}`}>Precedentes federales</span>
+                                {!canAccessPrecedentes && <Lock className="w-2.5 h-2.5 text-gray-300 flex-shrink-0" />}
                             </button>
 
                             {/* Jurimetría */}
@@ -811,22 +796,17 @@ ${draftRequest.descripcion}`;
                                     if (!canAccessJurimetria) { setShowUpgradeModal('platinum'); return; }
                                     setShowJurimetriaModal(true);
                                 }}
-                                className={`group relative flex flex-col items-start gap-1 px-3 py-2.5 rounded-xl border text-left
-                                    transition-all duration-250 overflow-hidden
+                                title={!canAccessJurimetria ? 'Jurimetría — Plan Platinum' : 'Análisis jurimétrico'}
+                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap
+                                    transition-all duration-200 flex-shrink-0
                                     ${!canAccessJurimetria
-                                        ? 'bg-gray-50 border-gray-200 opacity-70 cursor-pointer'
-                                        : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/60 hover:border-blue-300 hover:shadow-md hover:shadow-blue-100/50'
+                                        ? 'bg-gray-50 border-gray-100 cursor-pointer'
+                                        : 'bg-blue-50/80 border-blue-100 hover:border-blue-200 hover:bg-blue-50'
                                     }`}
-                                title={!canAccessJurimetria ? 'Jurimetría — función exclusiva planes Platinum' : 'Análisis jurimétrico'}
                             >
-                                <div className={`flex items-center gap-1.5 ${!canAccessJurimetria ? 'text-gray-400' : 'text-blue-600'}`}>
-                                    <BarChart2 className="w-3.5 h-3.5" />
-                                    <span className="text-[11px] font-bold tracking-tight">Jurimetría</span>
-                                    {!canAccessJurimetria && <Lock className="w-2.5 h-2.5 ml-auto" />}
-                                </div>
-                                <span className={`text-[10px] leading-tight ${!canAccessJurimetria ? 'text-gray-400' : 'text-blue-500/80'}`}>
-                                    Analiza tendencias judiciales
-                                </span>
+                                <BarChart2 className={`w-3 h-3 flex-shrink-0 ${!canAccessJurimetria ? 'text-gray-300' : 'text-blue-500'}`} />
+                                <span className={`text-[10px] font-semibold ${!canAccessJurimetria ? 'text-gray-400' : 'text-blue-700'}`}>Jurimetría</span>
+                                {!canAccessJurimetria && <Lock className="w-2.5 h-2.5 text-gray-300 flex-shrink-0" />}
                             </button>
                         </div>
                     </div>
