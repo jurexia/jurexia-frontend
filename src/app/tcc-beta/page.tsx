@@ -21,6 +21,7 @@ import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import Link from 'next/link';
 import {
     ArrowLeft, Loader2, Check, X, Star, AlertTriangle, Copy, Upload, FileText, Shield,
+    Sparkles, RefreshCw, ChevronRight,
 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
@@ -68,7 +69,7 @@ interface EditState {
     estado: 'pendiente' | 'resuelto' | 'diferido' | 'inoperante_manual';
 }
 
-type Phase = 'form' | 'analyzing' | 'review' | 'finalizing' | 'done' | 'error';
+type Phase = 'form' | 'summarizing' | 'editing-summaries' | 'analyzing' | 'review' | 'finalizing' | 'done' | 'error';
 
 export default function TccBetaPage() {
     const { user, loading: authLoading } = useAuth();
@@ -89,6 +90,18 @@ export default function TccBetaPage() {
     const [phase, setPhase] = useState<Phase>('form');
     const [progress, setProgress] = useState<string>('');
     const [error, setError] = useState('');
+
+    // ─── Stage -1 (resúmenes editables, método manual) ───
+    // textoRaw: el OCR original del PDF — se preserva para usarlo como "verdad"
+    // en regeneraciones. NO se muestra en la UI; solo viaja al backend.
+    const [textoActoRaw, setTextoActoRaw] = useState('');
+    const [textoCvRaw, setTextoCvRaw] = useState('');
+    const [resumenActo, setResumenActo] = useState('');
+    const [resumenCv, setResumenCv] = useState('');
+    // Modal "regenerar con instrucciones"
+    const [regenKind, setRegenKind] = useState<'acto' | 'cv' | null>(null);
+    const [regenInstruction, setRegenInstruction] = useState('');
+    const [regenLoading, setRegenLoading] = useState(false);
 
     // ─── Analyze result ───
     const [jobId, setJobId] = useState<string | null>(null);
@@ -202,22 +215,144 @@ export default function TccBetaPage() {
         return rest;
     };
 
-    // ─── Analyze ───
-    const startAnalyze = async () => {
+    // ─── Validación común del formulario ───
+    const validateForm = (): boolean => {
         const hasFiles = inputMode === 'files' && (fileActo || fileConceptos);
         const hasText = inputMode === 'text' && (textoActo.trim() || textoConceptos.trim());
         if (!hasFiles && !hasText) {
             setError('Sube los PDFs o pega el texto de ambos documentos.');
-            return;
+            return false;
         }
         if (inputMode === 'files' && (!fileActo || !fileConceptos)) {
             setError('Faltan ambos PDFs (acto reclamado y conceptos/agravios).');
-            return;
+            return false;
         }
         if (inputMode === 'text' && (!textoActo.trim() || !textoConceptos.trim())) {
             setError('Faltan ambos textos.');
-            return;
+            return false;
         }
+        return true;
+    };
+
+    // ─── Stage -1: SUMMARIZE (Gemini 3.1 Pro) ───
+    // Para modo files: el OCR crudo de un PDF escaneado no es presentable
+    // para edición humana, así que generamos primero un resumen jurídico
+    // pulido en prosa. El secretario lo edita a su estilo y solo entonces
+    // se alimenta el razonamiento posterior con esos resúmenes pulidos.
+    const startSummarize = async () => {
+        if (!validateForm()) return;
+        setError('');
+        setPhase('summarizing');
+        setProgress('Iniciando resumen jurídico...');
+        setResumenActo('');
+        setResumenCv('');
+        setTextoActoRaw('');
+        setTextoCvRaw('');
+
+        const fd = new FormData();
+        fd.append('user_email', user?.email || '');
+        if (inputMode === 'files') {
+            if (fileActo) fd.append('doc_acto', fileActo);
+            if (fileConceptos) fd.append('doc_conceptos', fileConceptos);
+        } else {
+            fd.append('texto_acto_reclamado', textoActo);
+            fd.append('texto_conceptos_agravios', textoConceptos);
+        }
+
+        const ac = new AbortController();
+        abortRef.current = ac;
+        try {
+            const resp = await fetch(`${API_URL}/redactor/tcc-v4/summarize`, {
+                method: 'POST', body: fd, signal: ac.signal,
+            });
+            if (!resp.ok || !resp.body) { setError(`HTTP ${resp.status}`); setPhase('error'); return; }
+            const reader = resp.body.getReader();
+            const dec = new TextDecoder();
+            let buf = '';
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buf += dec.decode(value, { stream: true });
+                buf = parseSSE(buf, (evType, data) => {
+                    if (evType === 'phase') setProgress(data.detail || '');
+                    else if (evType === 'pass_complete') setProgress(`Resúmenes generados (${data.elapsed_s}s · ${data.palabras_acto || 0} + ${data.palabras_cv || 0} palabras).`);
+                    else if (evType === 'source_text_ready') {
+                        // Guardamos el OCR para usarlo como verdad en regeneraciones.
+                        setTextoActoRaw(data.texto_acto || '');
+                        setTextoCvRaw(data.texto_cv || '');
+                    } else if (evType === 'summaries_ready') {
+                        setResumenActo(data.resumen_acto || '');
+                        setResumenCv(data.resumen_cv || '');
+                        setPhase('editing-summaries');
+                    } else if (evType === 'error') {
+                        setError(data.message || 'Error');
+                        setPhase('error');
+                    }
+                });
+            }
+        } catch (e: any) {
+            if (e?.name !== 'AbortError') { setError(String(e?.message || e)); setPhase('error'); }
+        }
+    };
+
+    // ─── Stage -1bis: REGENERATE summary ───
+    const regenerateSummary = async () => {
+        if (!regenKind || !regenInstruction.trim()) return;
+        const currentText = regenKind === 'acto' ? resumenActo : resumenCv;
+        const sourceText = regenKind === 'acto' ? textoActoRaw : textoCvRaw;
+        if (!currentText.trim()) return;
+
+        setRegenLoading(true);
+        try {
+            const resp = await fetch(`${API_URL}/redactor/tcc-v4/regenerate-summary`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_email: user?.email,
+                    kind: regenKind,
+                    resumen_actual: currentText,
+                    instruccion: regenInstruction,
+                    texto_original: sourceText,
+                }),
+            });
+            if (!resp.ok || !resp.body) {
+                setError(`HTTP ${resp.status}`);
+                setRegenLoading(false);
+                return;
+            }
+            const reader = resp.body.getReader();
+            const dec = new TextDecoder();
+            let buf = '';
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buf += dec.decode(value, { stream: true });
+                buf = parseSSE(buf, (evType, data) => {
+                    if (evType === 'summary_regenerated') {
+                        if (data.kind === 'acto') setResumenActo(data.resumen || '');
+                        else if (data.kind === 'cv') setResumenCv(data.resumen || '');
+                        // cerrar modal
+                        setRegenKind(null);
+                        setRegenInstruction('');
+                    } else if (evType === 'error') {
+                        setError(data.message || 'Error');
+                    }
+                });
+            }
+        } catch (e: any) {
+            setError(String(e?.message || e));
+        } finally {
+            setRegenLoading(false);
+        }
+    };
+
+    // ─── Analyze ───
+    // Si venimos del Stage -1 (editing-summaries), enviamos los resúmenes
+    // EDITADOS como texto al /analyze. Si venimos directo del form en modo
+    // texto, enviamos el texto original. En cualquier caso /analyze trabaja
+    // sobre texto plano — el OCR ya se hizo en /summarize o no aplica.
+    const startAnalyze = async (opts?: { fromSummaries?: boolean }) => {
+        if (!opts?.fromSummaries && !validateForm()) return;
         setError('');
         setPhase('analyzing');
         setProgress('Iniciando análisis...');
@@ -227,7 +362,12 @@ export default function TccBetaPage() {
         fd.append('materia', materia);
         fd.append('circuito', String(circuito));
         fd.append('user_email', user?.email || '');
-        if (inputMode === 'files') {
+
+        if (opts?.fromSummaries) {
+            // Resúmenes editados por el secretario — alimentan el razonamiento.
+            fd.append('texto_acto_reclamado', resumenActo);
+            fd.append('texto_conceptos_agravios', resumenCv);
+        } else if (inputMode === 'files') {
             if (fileActo) fd.append('doc_acto', fileActo);
             if (fileConceptos) fd.append('doc_conceptos', fileConceptos);
         } else {
@@ -433,9 +573,140 @@ export default function TccBetaPage() {
                     {error && (
                         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm">{error}</div>
                     )}
-                    <button onClick={startAnalyze} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-medium">
-                        Analizar
+
+                    {/* Stage -1: resumir primero (método manual) + opción de saltar */}
+                    <div className="flex items-center gap-3 pt-1">
+                        <button
+                            onClick={startSummarize}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-medium inline-flex items-center gap-2"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Generar resúmenes (editables)
+                        </button>
+                        <button
+                            onClick={() => startAnalyze()}
+                            className="text-sm text-gray-600 hover:text-gray-900 underline"
+                            title="Saltar el resumen jurídico y mandar el texto crudo directo al análisis"
+                        >
+                            Saltar al análisis directo
+                        </button>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                        El resumen jurídico se genera con Gemini 3.1 Pro. Lo editas tú con tu estilo
+                        antes de que el sistema razone sobre él (replica el método manual del secretario).
+                    </p>
+                </div>
+            )}
+
+            {/* SUMMARIZING — Stage -1 loader */}
+            {phase === 'summarizing' && (
+                <div className="max-w-2xl mx-auto p-8 text-center">
+                    <Sparkles className="w-10 h-10 mx-auto text-blue-600 mb-4 animate-pulse" />
+                    <p className="text-gray-700">{progress || 'Generando resúmenes jurídicos...'}</p>
+                    <p className="text-xs text-gray-500 mt-3">
+                        OCR (si aplica) + Gemini 3.1 Pro × 2 paralelas (acto reclamado + conceptos).
+                        Suele tomar 30-90 s.
+                    </p>
+                    <button
+                        onClick={() => { abortRef.current?.abort(); setPhase('form'); setProgress(''); }}
+                        className="mt-6 text-sm text-red-600 hover:text-red-700 underline"
+                    >
+                        Cancelar
                     </button>
+                </div>
+            )}
+
+            {/* EDITING-SUMMARIES — Stage -1 UI editable */}
+            {phase === 'editing-summaries' && (
+                <div className="max-w-5xl mx-auto p-6 space-y-5">
+                    <div>
+                        <h2 className="text-xl font-semibold mb-1">Resúmenes jurídicos — edita con tu estilo</h2>
+                        <p className="text-sm text-gray-600">
+                            Estos resúmenes alimentarán el análisis del caso. Ajústalos al lenguaje que usas tú;
+                            si necesitas un cambio sustantivo, usa <em>Regenerar con instrucciones</em>.
+                        </p>
+                    </div>
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm">{error}</div>
+                    )}
+
+                    <SummaryEditor
+                        title={`Resumen ${TIPOS_ASUNTO.find(t => t.id === tipoAsunto)?.actoLabel.toLowerCase() || 'del acto reclamado'}`}
+                        value={resumenActo}
+                        onChange={setResumenActo}
+                        onRegenerate={() => { setRegenKind('acto'); setRegenInstruction(''); }}
+                        wordCount={resumenActo.trim().split(/\s+/).filter(Boolean).length}
+                    />
+
+                    <SummaryEditor
+                        title={`Resumen ${TIPOS_ASUNTO.find(t => t.id === tipoAsunto)?.cvLabel.toLowerCase() || 'de los conceptos/agravios'}`}
+                        value={resumenCv}
+                        onChange={setResumenCv}
+                        onRegenerate={() => { setRegenKind('cv'); setRegenInstruction(''); }}
+                        wordCount={resumenCv.trim().split(/\s+/).filter(Boolean).length}
+                    />
+
+                    <div className="flex items-center gap-3 pt-3 border-t">
+                        <button
+                            onClick={() => startAnalyze({ fromSummaries: true })}
+                            disabled={!resumenActo.trim() || !resumenCv.trim()}
+                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-6 py-2 rounded font-medium inline-flex items-center gap-2"
+                        >
+                            Continuar al análisis
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => { setPhase('form'); setResumenActo(''); setResumenCv(''); }}
+                            className="text-sm text-gray-600 hover:text-gray-900 underline"
+                        >
+                            ← Volver al formulario
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL — Regenerar resumen con instrucción */}
+            {regenKind && (
+                <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-xl w-full p-6">
+                        <div className="flex items-center gap-2 mb-3">
+                            <RefreshCw className={`w-5 h-5 text-blue-600 ${regenLoading ? 'animate-spin' : ''}`} />
+                            <h3 className="text-lg font-semibold">
+                                Regenerar resumen {regenKind === 'acto' ? 'del acto reclamado' : 'de los conceptos/agravios'}
+                            </h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                            Describe el ajuste que quieres. El modelo tomará tu versión actual y aplicará tu
+                            instrucción usando el texto original como referencia de verdad.
+                        </p>
+                        <textarea
+                            className="w-full border rounded px-3 py-2 text-sm"
+                            rows={5}
+                            value={regenInstruction}
+                            onChange={(e) => setRegenInstruction(e.target.value)}
+                            placeholder='Ej: "Hazlo más extenso", "agrega el tratamiento de la jurisprudencia X", "enfatiza el aspecto procesal del plazo"...'
+                            autoFocus
+                            disabled={regenLoading}
+                        />
+                        <div className="flex items-center gap-3 mt-4 justify-end">
+                            <button
+                                onClick={() => { setRegenKind(null); setRegenInstruction(''); }}
+                                disabled={regenLoading}
+                                className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={regenerateSummary}
+                                disabled={regenLoading || !regenInstruction.trim()}
+                                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-4 py-2 rounded text-sm font-medium inline-flex items-center gap-2"
+                            >
+                                {regenLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                {regenLoading ? 'Regenerando…' : 'Regenerar'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -621,6 +892,42 @@ export default function TccBetaPage() {
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+// ─── SummaryEditor subcomponent (Stage -1) ───
+function SummaryEditor({
+    title, value, onChange, onRegenerate, wordCount,
+}: {
+    title: string;
+    value: string;
+    onChange: (v: string) => void;
+    onRegenerate: () => void;
+    wordCount: number;
+}) {
+    return (
+        <div className="bg-white border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold capitalize">{title}</h3>
+                <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-500">{wordCount.toLocaleString()} palabras</span>
+                    <button
+                        onClick={onRegenerate}
+                        className="text-xs text-blue-600 hover:text-blue-800 inline-flex items-center gap-1"
+                        title="Regenerar este resumen con una instrucción"
+                    >
+                        <RefreshCw className="w-3 h-3" /> Regenerar con instrucciones
+                    </button>
+                </div>
+            </div>
+            <textarea
+                className="w-full border rounded px-3 py-2 text-sm font-serif leading-relaxed"
+                rows={14}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="(El resumen se cargará aquí. Edítalo libremente.)"
+            />
         </div>
     );
 }
