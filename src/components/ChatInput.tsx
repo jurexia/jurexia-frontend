@@ -729,43 +729,40 @@ ${draftRequest.descripcion}`;
                             )}
                         </div>
 
-                        {/* Blue Action Cards — Compact Row */}
-                        <div className="flex items-stretch gap-1.5 overflow-x-auto scrollbar-hide">
-                            {/* Escrito */}
+                        {/* Action Buttons — Elegant Black Pills */}
+                        <div className="grid grid-cols-4 gap-1.5 w-full">
                             <button
                                 data-guide="escrito"
                                 onClick={() => handleModeClick('draft')}
-                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap
-                                    transition-all duration-200 flex-shrink-0
+                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                    transition-all duration-200
                                     ${activeMode === 'draft'
-                                        ? 'bg-blue-600 border-blue-500 text-white shadow-sm'
-                                        : 'bg-blue-50/80 border-blue-100 hover:border-blue-200 hover:bg-blue-50'
+                                        ? 'bg-charcoal-900 text-white shadow-sm ring-1 ring-charcoal-900'
+                                        : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
                                     }`}
                             >
-                                <FileEdit className={`w-3 h-3 flex-shrink-0 ${activeMode === 'draft' ? 'text-white' : 'text-blue-500'}`} />
-                                <span className={`text-[10px] font-semibold ${activeMode === 'draft' ? 'text-white' : 'text-blue-700'}`}>Redacta escrito legal</span>
+                                <FileEdit className="w-2.5 h-2.5 flex-shrink-0" />
+                                <span className="truncate">Escrito legal</span>
                             </button>
 
-                            {/* Sentencia */}
                             <button
                                 data-guide="sentencia"
                                 onClick={() => canAccessSentencia ? handleModeClick('sentencia') : setShowUpgradeModal('pro')}
-                                title={!canAccessSentencia ? 'Revisar Sentencia — Plan Pro' : 'Revisa una sentencia'}
-                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap
-                                    transition-all duration-200 flex-shrink-0
+                                title={!canAccessSentencia ? 'Plan Pro' : 'Revisa una sentencia'}
+                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                    transition-all duration-200
                                     ${!canAccessSentencia
-                                        ? 'bg-gray-50 border-gray-100 cursor-pointer'
+                                        ? 'bg-gray-200 text-gray-400 cursor-pointer'
                                         : activeMode === 'sentencia'
-                                            ? 'bg-blue-600 border-blue-500 text-white shadow-sm'
-                                            : 'bg-blue-50/80 border-blue-100 hover:border-blue-200 hover:bg-blue-50'
+                                            ? 'bg-charcoal-900 text-white shadow-sm ring-1 ring-charcoal-900'
+                                            : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
                                     }`}
                             >
-                                <Gavel className={`w-3 h-3 flex-shrink-0 ${!canAccessSentencia ? 'text-gray-300' : activeMode === 'sentencia' ? 'text-white' : 'text-blue-500'}`} />
-                                <span className={`text-[10px] font-semibold ${!canAccessSentencia ? 'text-gray-400' : activeMode === 'sentencia' ? 'text-white' : 'text-blue-700'}`}>Revisa una sentencia</span>
-                                {!canAccessSentencia && <Lock className="w-2.5 h-2.5 text-gray-300 flex-shrink-0" />}
+                                <Gavel className="w-2.5 h-2.5 flex-shrink-0" />
+                                <span className="truncate">Sentencia</span>
+                                {!canAccessSentencia && <Lock className="w-2 h-2 flex-shrink-0 opacity-60" />}
                             </button>
 
-                            {/* Precedentes */}
                             <button
                                 data-guide="precedentes"
                                 onClick={() => {
@@ -774,39 +771,38 @@ ${draftRequest.descripcion}`;
                                     setActiveMode(next ? 'precedentes' : 'search');
                                     if (!next) { setSelectedCircuit(null); setTribunalFilter(null); }
                                 }}
-                                title={!canAccessPrecedentes ? 'Precedentes — Plan Pro' : 'Consulta precedentes federales'}
-                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap
-                                    transition-all duration-200 flex-shrink-0
+                                title={!canAccessPrecedentes ? 'Plan Pro' : 'Precedentes federales'}
+                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                    transition-all duration-200
                                     ${!canAccessPrecedentes
-                                        ? 'bg-gray-50 border-gray-100 cursor-pointer'
+                                        ? 'bg-gray-200 text-gray-400 cursor-pointer'
                                         : activeMode === 'precedentes'
-                                            ? 'bg-blue-600 border-blue-500 text-white shadow-sm'
-                                            : 'bg-blue-50/80 border-blue-100 hover:border-blue-200 hover:bg-blue-50'
+                                            ? 'bg-charcoal-900 text-white shadow-sm ring-1 ring-charcoal-900'
+                                            : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
                                     }`}
                             >
-                                <BookOpen className={`w-3 h-3 flex-shrink-0 ${!canAccessPrecedentes ? 'text-gray-300' : activeMode === 'precedentes' ? 'text-white' : 'text-blue-500'}`} />
-                                <span className={`text-[10px] font-semibold ${!canAccessPrecedentes ? 'text-gray-400' : activeMode === 'precedentes' ? 'text-white' : 'text-blue-700'}`}>Precedentes federales</span>
-                                {!canAccessPrecedentes && <Lock className="w-2.5 h-2.5 text-gray-300 flex-shrink-0" />}
+                                <BookOpen className="w-2.5 h-2.5 flex-shrink-0" />
+                                <span className="truncate">Precedentes</span>
+                                {!canAccessPrecedentes && <Lock className="w-2 h-2 flex-shrink-0 opacity-60" />}
                             </button>
 
-                            {/* Jurimetría */}
                             <button
                                 data-guide="jurimetria"
                                 onClick={() => {
                                     if (!canAccessJurimetria) { setShowUpgradeModal('platinum'); return; }
                                     setShowJurimetriaModal(true);
                                 }}
-                                title={!canAccessJurimetria ? 'Jurimetría — Plan Platinum' : 'Análisis jurimétrico'}
-                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap
-                                    transition-all duration-200 flex-shrink-0
+                                title={!canAccessJurimetria ? 'Plan Platinum' : 'Jurimetría'}
+                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                    transition-all duration-200
                                     ${!canAccessJurimetria
-                                        ? 'bg-gray-50 border-gray-100 cursor-pointer'
-                                        : 'bg-blue-50/80 border-blue-100 hover:border-blue-200 hover:bg-blue-50'
+                                        ? 'bg-gray-200 text-gray-400 cursor-pointer'
+                                        : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
                                     }`}
                             >
-                                <BarChart2 className={`w-3 h-3 flex-shrink-0 ${!canAccessJurimetria ? 'text-gray-300' : 'text-blue-500'}`} />
-                                <span className={`text-[10px] font-semibold ${!canAccessJurimetria ? 'text-gray-400' : 'text-blue-700'}`}>Jurimetría</span>
-                                {!canAccessJurimetria && <Lock className="w-2.5 h-2.5 text-gray-300 flex-shrink-0" />}
+                                <BarChart2 className="w-2.5 h-2.5 flex-shrink-0" />
+                                <span className="truncate">Jurimetría</span>
+                                {!canAccessJurimetria && <Lock className="w-2 h-2 flex-shrink-0 opacity-60" />}
                             </button>
                         </div>
                     </div>
@@ -1115,38 +1111,25 @@ ${draftRequest.descripcion}`;
                         )}
                     </div>
 
-                    {/* Secretario PJF — CTA Card */}
-                    <div className="mt-3 pt-3 border-t border-gray-50">
-                        <a
-                            href={canAccessTccBeta ? '/tcc-beta' : '#'}
-                            data-guide="tcc-beta"
-                            onClick={(e) => {
-                                if (!canAccessTccBeta) {
-                                    e.preventDefault();
-                                    setShowUpgradeModal('platinum');
-                                }
-                            }}
-                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#1a1a1a] to-[#2a2a2a] border border-[#c9a962]/30 hover:border-[#c9a962]/60 transition-all duration-300 group hover:shadow-lg hover:shadow-[#c9a962]/10"
-                        >
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#c9a962]/20 to-[#8a6d2e]/20 flex items-center justify-center flex-shrink-0 border border-[#c9a962]/20">
-                                <Gavel className="w-4 h-4 text-[#c9a962]" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <span className="text-xs font-semibold text-white/90 group-hover:text-white transition-colors">
-                                    ¿Eres Secretario del PJF?
-                                </span>
-                                <span className="block text-[10px] text-white/50 group-hover:text-white/65 transition-colors">
-                                    Prueba el redactor de sentencias
-                                </span>
-                            </div>
-                            {!canAccessTccBeta && (
-                                <Lock className="w-3.5 h-3.5 text-[#c9a962]/60 flex-shrink-0" />
-                            )}
-                            <span className="text-[9px] font-bold text-[#c9a962] bg-[#c9a962]/10 px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0 border border-[#c9a962]/20">
-                                Beta
-                            </span>
-                        </a>
-                    </div>
+                    {/* Secretario PJF — Compact CTA */}
+                    <a
+                        href={canAccessTccBeta ? '/tcc-beta' : '#'}
+                        data-guide="tcc-beta"
+                        onClick={(e) => {
+                            if (!canAccessTccBeta) {
+                                e.preventDefault();
+                                setShowUpgradeModal('platinum');
+                            }
+                        }}
+                        className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-md bg-[#1a1a1a] border border-[#c9a962]/20 hover:border-[#c9a962]/40 transition-all duration-200 group"
+                    >
+                        <Gavel className="w-3 h-3 text-[#c9a962]/70 flex-shrink-0" />
+                        <span className="text-[10px] text-white/60 group-hover:text-white/80 transition-colors flex-1">
+                            Secretario del PJF — <span className="font-semibold text-[#c9a962]/80">Crea un borrador de sentencia</span>
+                        </span>
+                        {!canAccessTccBeta && <Lock className="w-2.5 h-2.5 text-[#c9a962]/40 flex-shrink-0" />}
+                        <span className="text-[7px] font-bold text-[#c9a962]/60 uppercase tracking-wider flex-shrink-0">Beta</span>
+                    </a>
 
                 </div>
             </div>
