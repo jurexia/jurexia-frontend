@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Message } from '@/lib/api';
-import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import ChatInput from '@/components/ChatInput';
@@ -771,6 +771,37 @@ export default function ChatPage() {
 
                 {/* Anuncio de Precedentes Judiciales removido — sustituido por NewFeaturesAnnouncementModal
                     que cubre Redacción Pro + Precedentes en un solo walkthrough. */}
+
+                {/* ═══ PATIENCE BANNER — Visible during entire response generation ═══ */}
+                {(isLoading || isDocumentAnalyzing) && hasMessages && (
+                    <div className="fixed top-14 left-0 right-0 md:left-72 z-25" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+                        <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a1510 0%, #22201c 50%, #1a1510 100%)' }}>
+                            {/* Animated progress shimmer */}
+                            <div className="absolute inset-0" style={{
+                                background: 'linear-gradient(90deg, transparent 0%, rgba(201,169,98,0.08) 30%, rgba(201,169,98,0.15) 50%, rgba(201,169,98,0.08) 70%, transparent 100%)',
+                                animation: 'patienceShimmer 2.5s ease-in-out infinite',
+                            }} />
+                            {/* Gold accent line at top */}
+                            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, #c9a962, transparent)' }} />
+                            <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-3 relative">
+                                <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(201,169,98,0.15)', border: '1px solid rgba(201,169,98,0.3)' }}>
+                                    <Loader2Icon className="w-3 h-3 animate-spin" style={{ color: '#c9a962' }} />
+                                </div>
+                                <p className="text-[11px] sm:text-xs font-medium" style={{ color: 'rgba(245,244,240,0.85)' }}>
+                                    Por favor sé paciente, tu respuesta está siendo generada.
+                                    <span className="hidden sm:inline" style={{ color: 'rgba(201,169,98,0.7)' }}> No abandones el chat hasta obtener tu respuesta completa.</span>
+                                    <span className="sm:hidden" style={{ color: 'rgba(201,169,98,0.7)' }}> No abandones el chat.</span>
+                                </p>
+                            </div>
+                        </div>
+                        <style>{`
+                            @keyframes patienceShimmer {
+                                0% { transform: translateX(-100%); }
+                                100% { transform: translateX(100%); }
+                            }
+                        `}</style>
+                    </div>
+                )}
 
                 <main className="flex-1 pt-14 overflow-y-auto">
                     {!hasMessages ? (
