@@ -183,7 +183,7 @@ export default function ChatInput({
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
     const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
-    const canAccessTccBeta     = isAdmin(user?.email); // BETA: solo admin para pruebas
+    const canAccessTccBeta     = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
     const canAccessRedactarPro = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
 
     const geniosList = [
