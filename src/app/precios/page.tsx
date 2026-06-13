@@ -9,6 +9,9 @@ import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
 export default function PreciosPage() {
+    const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+    const isAnnual = billingPeriod === 'annual';
+
     return (
         <main className="min-h-screen bg-cream-300">
             <Navbar />
@@ -27,9 +30,42 @@ export default function PreciosPage() {
                         </h1>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
-                        <p className="text-xl text-charcoal-600 max-w-3xl mx-auto">
+                        <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-10">
                             Elige el plan que se adapte a tu práctica. Comienza gratis y escala cuando lo necesites.
                         </p>
+                    </AnimateOnScroll>
+
+                    {/* Billing Period Toggle */}
+                    <AnimateOnScroll delay={0.3}>
+                        <div className="flex items-center justify-center gap-3">
+                            <div className="relative inline-flex items-center bg-charcoal-100 rounded-full p-1 shadow-inner">
+                                <button
+                                    onClick={() => setBillingPeriod('monthly')}
+                                    className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                        !isAnnual
+                                            ? 'bg-charcoal-900 text-white shadow-lg'
+                                            : 'text-charcoal-500 hover:text-charcoal-700'
+                                    }`}
+                                >
+                                    Mensual
+                                </button>
+                                <button
+                                    onClick={() => setBillingPeriod('annual')}
+                                    className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                        isAnnual
+                                            ? 'bg-charcoal-900 text-white shadow-lg'
+                                            : 'text-charcoal-500 hover:text-charcoal-700'
+                                    }`}
+                                >
+                                    Anual
+                                </button>
+                            </div>
+                            {isAnnual && (
+                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 border border-green-200 text-green-700 text-xs font-bold animate-in fade-in slide-in-from-left-2 duration-300">
+                                    <span>✨</span> Ahorra hasta 17%
+                                </span>
+                            )}
+                        </div>
                     </AnimateOnScroll>
                 </div>
             </section>
@@ -86,12 +122,13 @@ export default function PreciosPage() {
                             <PricingCard
                                 icon={<Crown className="w-6 h-6" />}
                                 name="Plan Pro"
-                                price="$149"
-                                originalPrice="$200"
-                                period="MXN/mes"
-                                description="Para profesionales que necesitan potencia"
+                                price={isAnnual ? '$1,490' : '$149'}
+                                originalPrice={isAnnual ? '$1,788' : '$200'}
+                                period={isAnnual ? 'MXN/año' : 'MXN/mes'}
+                                description={isAnnual ? 'Un solo pago, todo el año cubierto' : 'Para profesionales que necesitan potencia'}
+                                savingsBadge={isAnnual ? 'Ahorras $298 MXN' : undefined}
                                 features={[
-                                    "140 consultas/mes",
+                                    isAnnual ? '140 consultas/mes — 1,680 al año' : '140 consultas/mes',
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
@@ -106,8 +143,8 @@ export default function PreciosPage() {
                                     <span className="text-green-300 font-medium">📧 Mensaje de bienvenida con instrucciones para sacar el máximo provecho</span>,
                                     "Soporte prioritario"
                                 ]}
-                                buttonText="Elegir Plan Pro"
-                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY}
+                                buttonText={isAnnual ? 'Elegir Pro Anual' : 'Elegir Plan Pro'}
+                                priceId={isAnnual ? process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL : process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY}
                                 highlighted={true}
                                 badge="MÁS POPULAR"
                             />
@@ -117,12 +154,13 @@ export default function PreciosPage() {
                             <PricingCard
                                 icon={<Star className="w-6 h-6" />}
                                 name="Plan Platinum"
-                                price="$599"
-                                originalPrice="$900"
-                                period="MXN/mes"
-                                description="Ideal para despachos y corporativos"
+                                price={isAnnual ? '$5,990' : '$599'}
+                                originalPrice={isAnnual ? '$7,188' : '$900'}
+                                period={isAnnual ? 'MXN/año' : 'MXN/mes'}
+                                description={isAnnual ? 'Máximo poder para tu despacho, todo el año' : 'Ideal para despachos y corporativos'}
+                                savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
                                 features={[
-                                    "560 consultas/mes — ideal para despachos",
+                                    isAnnual ? '560 consultas/mes — 6,720 al año' : '560 consultas/mes — ideal para despachos',
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
@@ -144,8 +182,8 @@ export default function PreciosPage() {
                                     <span className="text-amber-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
                                     "Soporte VIP dedicado"
                                 ]}
-                                buttonText="Elegir Platinum"
-                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_MONTHLY}
+                                buttonText={isAnnual ? 'Elegir Platinum Anual' : 'Elegir Platinum'}
+                                priceId={isAnnual ? process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_ANNUAL : process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_MONTHLY}
                                 highlighted={false}
                                 isPlatinum={true}
                                 badge="PREMIUM"
@@ -425,7 +463,8 @@ function PricingCard({
     highlighted = false,
     isPlatinum = false,
     isBasic = false,
-    badge
+    badge,
+    savingsBadge
 }: {
     icon: React.ReactNode;
     name: string;
@@ -441,6 +480,7 @@ function PricingCard({
     isPlatinum?: boolean;
     isBasic?: boolean;
     badge?: string;
+    savingsBadge?: string;
 }) {
     const [loading, setLoading] = useState(false);
     const [showWarning, setShowWarning] = useState(false);
@@ -544,6 +584,11 @@ function PricingCard({
                         }`}>
                         {originalPrice} {period}
                     </p>
+                )}
+                {savingsBadge && (
+                    <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/15 border border-green-500/25">
+                        <span className="text-xs font-bold text-green-600">✨ {savingsBadge}</span>
+                    </div>
                 )}
             </div>
 

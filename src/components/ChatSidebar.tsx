@@ -52,6 +52,36 @@ export default function ChatSidebar({
         return date.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
     };
 
+    // Group conversations by date category for better navigation
+    const groupConversations = (convs: Conversation[]) => {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterdayStart = new Date(todayStart.getTime() - 86400000);
+        const weekStart = new Date(todayStart.getTime() - 7 * 86400000);
+        const monthStart = new Date(todayStart.getTime() - 30 * 86400000);
+
+        const groups: { label: string; convs: Conversation[] }[] = [
+            { label: 'Hoy', convs: [] },
+            { label: 'Ayer', convs: [] },
+            { label: 'Esta semana', convs: [] },
+            { label: 'Este mes', convs: [] },
+            { label: 'Anteriores', convs: [] },
+        ];
+
+        for (const conv of convs) {
+            const d = new Date(conv.updatedAt);
+            if (d >= todayStart) groups[0].convs.push(conv);
+            else if (d >= yesterdayStart) groups[1].convs.push(conv);
+            else if (d >= weekStart) groups[2].convs.push(conv);
+            else if (d >= monthStart) groups[3].convs.push(conv);
+            else groups[4].convs.push(conv);
+        }
+
+        return groups.filter(g => g.convs.length > 0);
+    };
+
+    const groupedConversations = groupConversations(conversations);
+
     const SidebarContent = () => (
         <div className="flex flex-col h-full">
             {/* ── Brand Header ── */}
@@ -84,7 +114,7 @@ export default function ChatSidebar({
                                 Historial
                             </span>
                             <p className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                                10 conversaciones anteriores
+                                {conversations.length} conversación{conversations.length !== 1 ? 'es' : ''}
                             </p>
                         </div>
                     )}
@@ -150,8 +180,20 @@ export default function ChatSidebar({
                         )}
                     </div>
                 ) : (
-                    <div className="space-y-0.5">
-                        {conversations.map((conv) => {
+                    <div className="space-y-1">
+                        {groupedConversations.map((group) => (
+                            <div key={group.label}>
+                                {/* Date group header */}
+                                {!isCollapsed && (
+                                    <p
+                                        className="text-[9px] font-semibold uppercase tracking-wider px-3 pt-3 pb-1"
+                                        style={{ color: 'rgba(201, 169, 98, 0.4)' }}
+                                    >
+                                        {group.label}
+                                    </p>
+                                )}
+                                <div className="space-y-0.5">
+                        {group.convs.map((conv) => {
                             const isActive = activeConversationId === conv.id;
                             return (
                                 <div
@@ -228,6 +270,9 @@ export default function ChatSidebar({
                                 </div>
                             );
                         })}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>

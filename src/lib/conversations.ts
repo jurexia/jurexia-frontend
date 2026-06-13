@@ -45,7 +45,8 @@ interface PendingMessage {
 // CONSTANTS
 // ============================================================================
 
-const MAX_CONVERSATIONS = 50;  // FIFO: mantener solo las 50 más recientes
+const MAX_CONVERSATIONS = 200; // Ampliado: mantener 200 conversaciones por usuario
+const CONVERSATION_WARNING_THRESHOLD = 0.9; // Advertir al usuario al 90% (180 convs)
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 1000; // 1s, 2s, 4s exponential backoff
 const PENDING_MESSAGES_KEY = 'Iurexia_pending_messages';
@@ -180,10 +181,10 @@ export async function getConversations(): Promise<Conversation[]> {
     }
 
     try {
-        // Get conversations for user, limited to MAX_CONVERSATIONS, ordered by most recent first
+        // Get conversations with message counts in a single query (avoids N+1)
         const { data: dbConversations, error } = await supabase
             .from('conversations')
-            .select('*')
+            .select('*, messages(count)')
             .eq('user_id', userId)
             .order('updated_at', { ascending: false })
             .limit(MAX_CONVERSATIONS);
@@ -197,21 +198,16 @@ export async function getConversations(): Promise<Conversation[]> {
             return [];
         }
 
-        // Get message counts for each conversation (for display purposes)
-        const conversations: Conversation[] = await Promise.all(
-            dbConversations.map(async (dbConv: DbConversation) => {
-                const { count } = await supabase
-                    .from('messages')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('conversation_id', dbConv.id);
-
-                return {
-                    ...dbToConversation(dbConv),
-                    messages: [], // Don't load all messages yet, just metadata
-                    messageCount: count || 0,  // Assign count for sidebar display
-                };
-            })
-        );
+        // Map to frontend format with message count from the joined query
+        const conversations: Conversation[] = dbConversations.map((dbConv: any) => {
+            // Supabase returns count as [{count: N}] when using select('*, relation(count)')
+            const msgCount = dbConv.messages?.[0]?.count ?? 0;
+            return {
+                ...dbToConversation(dbConv),
+                messages: [], // Don't load all messages yet, just metadata
+                messageCount: msgCount,
+            };
+        });
 
         // Filter out empty conversations (0 messages) to keep sidebar clean
         return conversations.filter(c => (c.messageCount ?? 0) > 0);
@@ -264,7 +260,7 @@ export async function getConversation(id: string): Promise<Conversation | null> 
     }
 }
 
-// Create a new conversation (with FIFO enforcement: max 50)
+// Create a new conversation (with soft enforcement: max 200)
 export async function createConversation(estado?: string): Promise<Conversation | null> {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -273,48 +269,62 @@ export async function createConversation(estado?: string): Promise<Conversation 
     }
 
     try {
-        // ── FIFO: Delete oldest conversations if at limit ──────────────
-        const { data: existingConvs, error: countError } = await supabase
+        // ── Count existing conversations ──────────────────────────────
+        const { count: existingCount, error: countError } = await supabase
             .from('conversations')
-            .select('id, updated_at')
-            .eq('user_id', userId)
-            .order('updated_at', { ascending: false });
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId);
 
-        if (!countError && existingConvs && existingConvs.length >= MAX_CONVERSATIONS) {
-            // Delete the oldest conversations beyond the limit (keep MAX-1 to make room for new)
-            const toDelete = existingConvs.slice(MAX_CONVERSATIONS - 1);
-            const idsToDelete = toDelete.map(c => c.id);
-            console.log(`🗑️ FIFO: Deleting ${idsToDelete.length} oldest conversation(s) for user ${userId}`);
+        const currentCount = existingCount ?? 0;
 
-            const { error: deleteError } = await supabase
+        // ── Clean up empty conversations first (no messages = wasted slots) ──
+        if (!countError && currentCount > 0) {
+            const { data: allConvs } = await supabase
                 .from('conversations')
-                .delete()
-                .in('id', idsToDelete);
+                .select('id, messages(count)')
+                .eq('user_id', userId);
 
-            if (deleteError) {
-                console.error('Error deleting old conversations:', deleteError);
-                // Don't block creation — just log
+            if (allConvs) {
+                const emptyConvIds = allConvs
+                    .filter((c: any) => (c.messages?.[0]?.count ?? 0) === 0)
+                    .map((c: any) => c.id);
+
+                if (emptyConvIds.length > 0) {
+                    console.log(`🧹 Cleaning ${emptyConvIds.length} empty conversation(s)`);
+                    await supabase
+                        .from('conversations')
+                        .delete()
+                        .in('id', emptyConvIds);
+                }
             }
         }
 
-        // Also clean up empty conversations (no messages) to prevent slot waste
-        if (!countError && existingConvs && existingConvs.length > 0) {
-            // Find conversations with 0 messages and delete them
-            const convIds = existingConvs.map(c => c.id);
-            const { data: msgsData } = await supabase
-                .from('messages')
-                .select('conversation_id')
-                .in('conversation_id', convIds);
+        // ── Warn if approaching limit (90%) but DON'T delete ──────────
+        const warningThreshold = Math.floor(MAX_CONVERSATIONS * CONVERSATION_WARNING_THRESHOLD);
+        if (currentCount >= warningThreshold) {
+            console.warn(
+                `⚠️ User ${userId} has ${currentCount}/${MAX_CONVERSATIONS} conversations ` +
+                `(${Math.round((currentCount / MAX_CONVERSATIONS) * 100)}% of limit)`
+            );
+        }
 
-            const convsWithMessages = new Set((msgsData || []).map(m => m.conversation_id));
-            const emptyConvIds = convIds.filter(id => !convsWithMessages.has(id));
+        // ── Only delete oldest if HARD limit is exceeded ───────────────
+        // Unlike before, we only trim 1 conversation (the oldest) to make room,
+        // instead of bulk-deleting everything beyond the limit
+        if (currentCount >= MAX_CONVERSATIONS) {
+            const { data: oldest } = await supabase
+                .from('conversations')
+                .select('id')
+                .eq('user_id', userId)
+                .order('updated_at', { ascending: true })
+                .limit(1);
 
-            if (emptyConvIds.length > 0) {
-                console.log(`🧹 Cleaning ${emptyConvIds.length} empty conversation(s)`);
+            if (oldest && oldest.length > 0) {
+                console.warn(`🗑️ Limit reached (${MAX_CONVERSATIONS}): removing 1 oldest conversation for user ${userId}`);
                 await supabase
                     .from('conversations')
                     .delete()
-                    .in('id', emptyConvIds);
+                    .eq('id', oldest[0].id);
             }
         }
 
