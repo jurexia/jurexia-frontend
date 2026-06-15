@@ -485,7 +485,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
             subscription.id,
         );
     } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
-        await downgradeToFree(email);
+        await downgradeToFree(email, subscription.id);
     } else if (subscription.status === 'past_due') {
         // Payment is past due but subscription hasn't been canceled yet
         // Keep current plan but log the warning
@@ -507,7 +507,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
     if (email) {
         console.log(`📧 User ${email} subscription canceled → downgrading to free`);
-        await downgradeToFree(email);
+        await downgradeToFree(email, subscription.id);
     } else {
         console.error('❌ No email on customer for subscription deletion:', subscription.customer);
     }
@@ -548,7 +548,8 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
         // After final failed attempts, proactively downgrade to prevent continued usage
         // Stripe will eventually cancel the subscription, but this is a safety net
         console.warn(`🚨 Payment failed ${attemptCount} times for ${email} — proactive downgrade`);
-        await downgradeToFree(email);
+        const failedSubId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+        await downgradeToFree(email, failedSubId || undefined);
     } else {
         console.log(`⚠️ Payment failed for ${email} (attempt ${attemptCount}) — awaiting retry and sending email`);
 

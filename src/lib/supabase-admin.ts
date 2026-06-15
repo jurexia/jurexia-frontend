@@ -142,10 +142,30 @@ export async function updateUserSubscription(
 }
 
 /**
- * Downgrade a user to the free plan
+ * Downgrade a user to the free plan.
+ * @param canceledSubscriptionId - If provided, only downgrade if this matches the
+ *   user's current stripe_subscription_id. This prevents incorrectly downgrading
+ *   users who upgraded (old sub canceled, but new sub is already active).
  */
-export async function downgradeToFree(email: string) {
+export async function downgradeToFree(email: string, canceledSubscriptionId?: string) {
     const normalizedEmail = email.toLowerCase().trim();
+
+    // ─── Guard: only downgrade if the canceled subscription is the CURRENT one ───
+    // When a user upgrades (e.g., Básico → Pro), Stripe cancels the old sub and
+    // creates a new one. The webhook fires customer.subscription.deleted for the
+    // OLD sub. If the user already has a NEW sub active, we must NOT downgrade.
+    if (canceledSubscriptionId) {
+        const { data: profile } = await getSupabaseAdmin()
+            .from('user_profiles')
+            .select('stripe_subscription_id, subscription_type')
+            .eq('email', normalizedEmail)
+            .single();
+
+        if (profile && profile.stripe_subscription_id && profile.stripe_subscription_id !== canceledSubscriptionId) {
+            console.log(`⏭️ SKIP downgrade for ${normalizedEmail}: webhook sub=${canceledSubscriptionId}, current sub=${profile.stripe_subscription_id} (user has a newer subscription — likely an upgrade)`);
+            return;
+        }
+    }
 
     const { data, error } = await getSupabaseAdmin()
         .from('user_profiles')
