@@ -378,6 +378,12 @@ export default function ChatInput({
             // Always use reasoning for maximum quality
             onSubmit(finalMessage, true);
             setMessage('');
+            
+            // Auto-reset Pro mode after submission to optimize API costs
+            if (redactarPro) {
+                setRedactarPro(false);
+            }
+
             if (textareaRef.current) {
                 textareaRef.current.style.height = 'auto';
             }
