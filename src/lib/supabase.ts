@@ -92,6 +92,26 @@ export async function signOut() {
     if (error) throw error
 }
 
+export async function resetPassword(email: string) {
+    const redirectUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/reset-password`
+        : 'https://iurexia.com/auth/reset-password';
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+    })
+
+    if (error) throw error
+}
+
+export async function updatePassword(newPassword: string) {
+    const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+    })
+
+    if (error) throw error
+}
+
 export async function getCurrentUser() {
     const { data: { user } } = await supabase.auth.getUser()
     return user
