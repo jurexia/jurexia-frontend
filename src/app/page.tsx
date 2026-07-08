@@ -331,7 +331,7 @@ export default function HomePage() {
                                             <ComparisonChatRow
                                                 feature="Precio"
                                                 chatgpt="~$400 MXN/mes (Plus)"
-                                                iurexia="Desde $149 MXN/mes con todo incluido"
+                                                iurexia="Desde $129 MXN/mes con todo incluido"
                                                 isLast
                                             />
                                         </tbody>
@@ -415,7 +415,7 @@ export default function HomePage() {
                                         <span className="text-white font-serif text-sm font-bold">UA</span>
                                     </div>
                                     <div>
-                                        <p className="font-semibold text-charcoal-900 text-sm">Lic. Ulises Alegando</p>
+                                        <p className="font-semibold text-charcoal-900 text-sm">Lic. Ulises Alejandro</p>
                                         <p className="text-charcoal-500 text-xs">Abogado Litigante</p>
                                     </div>
                                     <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">

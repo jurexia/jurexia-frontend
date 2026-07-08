@@ -1013,8 +1013,8 @@ export default function ChatPage() {
                                     <div className="absolute -top-2 right-3 px-2 py-0.5 bg-accent-gold rounded-full text-[9px] font-bold text-black uppercase">Popular</div>
                                     <p className="text-[10px] font-semibold text-accent-gold uppercase tracking-wider mb-2">Recomendado</p>
                                     <p className="text-white font-bold text-sm">Pro</p>
-                                    <p className="text-accent-gold/80 text-xs mt-1">140 consultas/mes</p>
-                                    <p className="text-accent-gold text-sm mt-2 font-bold">$149/mes</p>
+                                    <p className="text-accent-gold/80 text-xs mt-1">Uso Justo Avanzado</p>
+                                    <p className="text-accent-gold text-sm mt-2 font-bold">$249/mes</p>
                                 </div>
                             </div>
 
@@ -1054,7 +1054,7 @@ export default function ChatPage() {
                                 className="block w-full py-3.5 rounded-xl text-center font-bold text-base transition-all duration-200 hover:scale-[1.02] active:scale-95 mb-3"
                                 style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
                             >
-                                Activar Plan Pro — $149/mes
+                                Activar Plan Pro — $249/mes
                             </Link>
                             <div className="flex items-center justify-center gap-2 mb-4">
                                 <Link href="/precios" className="text-white/40 hover:text-white/70 text-xs transition-colors">Ver todos los planes →</Link>
@@ -1100,8 +1100,8 @@ export default function ChatPage() {
                                     <div className="absolute -top-2 right-3 px-2 py-0.5 bg-accent-gold rounded-full text-[9px] font-bold text-black uppercase">Popular</div>
                                     <p className="text-[10px] font-semibold text-accent-gold uppercase tracking-wider mb-2">Recomendado</p>
                                     <p className="text-white font-bold text-sm">Pro</p>
-                                    <p className="text-accent-gold/80 text-xs mt-1">140 consultas/mes</p>
-                                    <p className="text-accent-gold text-sm mt-2 font-bold">$149/mes</p>
+                                    <p className="text-accent-gold/80 text-xs mt-1">Uso Justo Avanzado</p>
+                                    <p className="text-accent-gold text-sm mt-2 font-bold">$249/mes</p>
                                 </div>
                             </div>
 
@@ -1141,7 +1141,7 @@ export default function ChatPage() {
                                 className="block w-full py-3.5 rounded-xl text-center font-bold text-base transition-all duration-200 hover:scale-[1.02] active:scale-95 mb-3"
                                 style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
                             >
-                                Activar Plan Pro — $149/mes
+                                Activar Plan Pro — $249/mes
                             </Link>
                             <div className="flex items-center justify-center gap-2 mb-4">
                                 <Link href="/precios" className="text-white/40 hover:text-white/70 text-xs transition-colors">Ver todos los planes →</Link>

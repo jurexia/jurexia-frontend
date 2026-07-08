@@ -20,7 +20,9 @@ export default function PreciosPage() {
             <section className="pt-32 pb-12 px-4">
                 <div className="max-w-5xl mx-auto text-center">
                     <AnimateOnScroll delay={0}>
-                        <p className="text-accent-brown font-medium mb-4 tracking-wide">PRECIOS</p>
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-gold/15 border border-accent-gold/30 text-accent-gold text-xs font-semibold mb-6 tracking-wide shadow-sm animate-pulse">
+                            ✨ Nueva política de uso justo y ajuste de precios
+                        </div>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.1}>
                         <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
@@ -100,16 +102,16 @@ export default function PreciosPage() {
                             <PricingCard
                                 icon={<ShieldCheck className="w-6 h-6" />}
                                 name="Plan Básico"
-                                price="$79"
-                                originalPrice="$149"
+                                price="$129"
+                                originalPrice={null}
                                 period="MXN/mes"
-                                description="Búsqueda rápida en la base de datos legal de Iurexia"
+                                description="Búsqueda rápida en la base de datos de Iurexia"
                                 features={[
-                                    "70 consultas/mes",
-                                    "Búsqueda inteligente en la base de datos legal de Iurexia",
-                                    "Filtros de jurisdicción",
+                                    "Uso Justo (capacidades básicas)",
+                                    "Búsqueda inteligente con IA en legislación mexicana",
+                                    "Filtros de jurisdicción y entidad federativa",
                                     "Acceso a base documental completa",
-                                    <span className="text-gray-500">Sin acceso a Inteligencia Avanzada</span>
+                                    "Soporte estándar"
                                 ]}
                                 buttonText="Elegir Básico"
                                 priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_BASICO_MONTHLY}
@@ -122,13 +124,13 @@ export default function PreciosPage() {
                             <PricingCard
                                 icon={<Crown className="w-6 h-6" />}
                                 name="Plan Pro"
-                                price={isAnnual ? '$1,490' : '$149'}
-                                originalPrice={isAnnual ? '$1,788' : '$200'}
+                                price={isAnnual ? '$2,490' : '$249'}
+                                originalPrice={isAnnual ? '$2,988' : null}
                                 period={isAnnual ? 'MXN/año' : 'MXN/mes'}
                                 description={isAnnual ? 'Un solo pago, todo el año cubierto' : 'Para profesionales que necesitan potencia'}
-                                savingsBadge={isAnnual ? 'Ahorras $298 MXN' : undefined}
+                                savingsBadge={isAnnual ? 'Ahorras $498 MXN' : undefined}
                                 features={[
-                                    isAnnual ? '140 consultas/mes — 1,680 al año' : '140 consultas/mes',
+                                    "Uso Justo (capacidades extendidas)",
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
@@ -155,12 +157,12 @@ export default function PreciosPage() {
                                 icon={<Star className="w-6 h-6" />}
                                 name="Plan Platinum"
                                 price={isAnnual ? '$5,990' : '$599'}
-                                originalPrice={isAnnual ? '$7,188' : '$900'}
+                                originalPrice={isAnnual ? '$7,188' : null}
                                 period={isAnnual ? 'MXN/año' : 'MXN/mes'}
                                 description={isAnnual ? 'Máximo poder para tu despacho, todo el año' : 'Ideal para despachos y corporativos'}
                                 savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
                                 features={[
-                                    isAnnual ? '560 consultas/mes — 6,720 al año' : '560 consultas/mes — ideal para despachos',
+                                    "Uso Justo (capacidades premium máximas)",
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
@@ -285,7 +287,7 @@ export default function PreciosPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <ComparisonRow feature="Consultas/mes" free="5" basico="70" pro="140" platinum="560" />
+                                    <ComparisonRow feature="Límite de Consultas / Uso Justo" free="5 consultas/mes" basico="Uso Justo Básico" pro="Uso Justo Avanzado" platinum="Uso Justo Premium" />
                                     <ComparisonRow feature="Búsqueda con IA verificada" free="✓" basico="✓" pro="✓" platinum="✓" />
                                     <ComparisonRow feature="Filtros jurisdiccionales" free="✓" basico="✓" pro="✓" platinum="✓" />
                                     <ComparisonRow feature="Base documental completa" free="✓" basico="✓" pro="✓" platinum="✓" />
@@ -396,7 +398,7 @@ export default function PreciosPage() {
                                 href="/precios#pro"
                                 className="inline-flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full transition-colors shadow-lg shadow-green-500/20"
                             >
-                                Activar Plan Pro — $149/mes
+                                Activar Plan Pro — $249/mes
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
                             <Link
