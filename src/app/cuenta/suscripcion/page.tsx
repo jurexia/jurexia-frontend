@@ -23,7 +23,7 @@ interface SubscriptionInfo {
 }
 
 export default function SubscriptionPage() {
-    const { user, loading: authLoading, isAuthenticated } = useAuth();
+    const { user, profile, loading: authLoading, isAuthenticated } = useAuth();
     const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [portalLoading, setPortalLoading] = useState(false);
@@ -173,14 +173,16 @@ export default function SubscriptionPage() {
                             <div className="flex justify-between text-sm mb-2">
                                 <span className="text-charcoal-600">Consultas realizadas</span>
                                 <span className="font-medium text-charcoal-900">
-                                    {userPlan.includes('platinum') ? '∞' : `12 / ${userPlan.includes('pro') ? '140' : '5'}`}
+                                    {profile ? `${profile.queries_used ?? 0} / ${profile.queries_limit ?? 5}` : '...'}
                                 </span>
                             </div>
-                            {!userPlan.includes('platinum') && (
+                            {profile && (
                                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-accent-brown rounded-full transition-all"
-                                        style={{ width: '7%' }}
+                                        style={{ 
+                                            width: `${profile.queries_limit > 0 ? Math.min(100, Math.round(((profile.queries_used ?? 0) / profile.queries_limit) * 100)) : 0}%` 
+                                        }}
                                     />
                                 </div>
                             )}

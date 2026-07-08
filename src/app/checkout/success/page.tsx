@@ -41,7 +41,7 @@ const ULTRA_THEME: PlanTheme = {
         'Redactor de Sentencias TCC con IA',
         'Análisis automático de agravios y conceptos de violación',
         'Búsqueda inteligente de jurisprudencia y legislación',
-        'Hasta 700 consultas legales por mes',
+        'Uso Justo (capacidades avanzadas)',
         'Soporte prioritario',
     ],
     ctaText: 'Ir al Redactor TCC',
@@ -51,7 +51,7 @@ const ULTRA_THEME: PlanTheme = {
 const BASICO_THEME: PlanTheme = {
     title: '¡Bienvenido a Iurexia Básico!',
     subtitle: 'Tu suscripción Básica ha sido activada.',
-    description: 'Ahora tienes acceso a 70 consultas legales por mes con búsqueda inteligente.',
+    description: 'Ahora tienes acceso a la búsqueda inteligente y base documental completa de Iurexia.',
     icon: 'check',
     iconBg: 'bg-green-100',
     iconColor: 'text-green-600',
@@ -60,7 +60,7 @@ const BASICO_THEME: PlanTheme = {
     buttonBg: 'bg-accent-brown',
     buttonHover: 'hover:bg-accent-brown/90',
     features: [
-        'Realizar hasta 70 consultas/mes',
+        'Uso Justo (capacidades básicas)',
         'Búsqueda inteligente en la base legal',
         'Soporte estándar',
     ],
@@ -80,7 +80,7 @@ const PRO_THEME: PlanTheme = {
     buttonBg: 'bg-accent-brown',
     buttonHover: 'hover:bg-accent-brown/90',
     features: [
-        'Realizar hasta 140 o 560 consultas/mes según tu plan',
+        'Uso Justo (capacidades extendidas y premium)',
         'Analizar documentos legales con IA',
         'Acceder a soporte prioritario',
     ],

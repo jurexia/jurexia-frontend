@@ -30,7 +30,7 @@ export default function CheckoutCancelPage() {
                         ¿Por qué elegir Iurexia Pro?
                     </h3>
                     <ul className="space-y-2 text-sm text-charcoal-600">
-                        <li>• Hasta 140 consultas mensuales (vs 5 en plan gratuito)</li>
+                        <li>• Uso Justo Avanzado (IA avanzada y redacción profunda)</li>
                         <li>• Análisis inteligente de documentos legales</li>
                         <li>• Búsqueda en más de 100,000 documentos</li>
                         <li>• Soporte prioritario por email</li>
