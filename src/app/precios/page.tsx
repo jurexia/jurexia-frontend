@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
 import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
+import { PLANS } from '@/lib/stripe';
 
 export default function PreciosPage() {
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
@@ -114,7 +115,7 @@ export default function PreciosPage() {
                                     "Soporte estándar"
                                 ]}
                                 buttonText="Elegir Básico"
-                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_BASICO_MONTHLY}
+                                priceId={PLANS.basico_monthly.priceId || undefined}
                                 highlighted={false}
                                 isBasic={true}
                             />
@@ -146,7 +147,7 @@ export default function PreciosPage() {
                                     "Soporte prioritario"
                                 ]}
                                 buttonText={isAnnual ? 'Elegir Pro Anual' : 'Elegir Plan Pro'}
-                                priceId={isAnnual ? process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL : process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY}
+                                priceId={isAnnual ? PLANS.pro_annual.priceId || undefined : PLANS.pro_monthly.priceId || undefined}
                                 highlighted={true}
                                 badge="MÁS POPULAR"
                             />
@@ -185,7 +186,7 @@ export default function PreciosPage() {
                                     "Soporte VIP dedicado"
                                 ]}
                                 buttonText={isAnnual ? 'Elegir Platinum Anual' : 'Elegir Platinum'}
-                                priceId={isAnnual ? process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_ANNUAL : process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINUM_MONTHLY}
+                                priceId={isAnnual ? PLANS.platinum_annual.priceId || undefined : PLANS.platinum_monthly.priceId || undefined}
                                 highlighted={false}
                                 isPlatinum={true}
                                 badge="PREMIUM"
