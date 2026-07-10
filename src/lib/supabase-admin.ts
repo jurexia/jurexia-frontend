@@ -28,11 +28,11 @@ function getSupabaseAdmin(): any {
 // Plan configuration mapping
 export const PLAN_CONFIG = {
     gratuito: { queriesLimit: 5, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    basico_monthly: { queriesLimit: 5, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    pro_monthly: { queriesLimit: 200, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    pro_annual: { queriesLimit: 200, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    platinum_monthly: { queriesLimit: 700, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    platinum_annual: { queriesLimit: 700, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    basico_monthly: { queriesLimit: 70, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    pro_monthly: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    pro_annual: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    platinum_monthly: { queriesLimit: 560, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    platinum_annual: { queriesLimit: 560, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
     ultra_secretarios: { queriesLimit: 140, draftsLimit: 20, sentenciaQueriesLimit: 50, isUnlimited: false },
 } as const;
 

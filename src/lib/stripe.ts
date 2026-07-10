@@ -50,44 +50,42 @@ export const PLANS = {
     basico_monthly: {
         name: 'Plan Básico',
         get priceId() { return getPriceId('STRIPE_PRICE_BASICO_MONTHLY'); },
-        price: 129,
+        price: 79,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 5,
+        queryLimit: 70,
         features: [
-            'Uso Justo (capacidades básicas)',
-            'Búsqueda inteligente con IA en legislación mexicana',
-            'Filtros de jurisdicción y entidad federativa',
+            '70 consultas/mes',
+            'Búsqueda inteligente en la base de datos legal de Iurexia',
             'Soporte estándar',
         ]
     },
     pro_monthly: {
         name: 'Plan Pro',
         get priceId() { return getPriceId('STRIPE_PRICE_PRO_MONTHLY'); },
-        price: 249,
+        price: 149,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 200,
+        queryLimit: 140,
         features: [
-            'Uso Justo (capacidades extendidas)',
-            'Arquitectura Multi-Genio (IA avanzada)',
-            'Redacción Pro (motor de razonamiento profundo)',
-            'Análisis y auditoría de documentos legales',
-            'Filtros avanzados por entidad federativa',
+            '140 consultas/mes',
+            'Búsqueda jurídica precisa y fundamentada',
+            'Análisis de documentos',
+            'Filtros por entidad federativa',
             'Soporte prioritario'
         ]
     },
     pro_annual: {
         name: 'Plan Pro Anual',
         get priceId() { return getPriceId('STRIPE_PRICE_PRO_ANNUAL'); },
-        price: 2490,
+        price: 1490,
         currency: 'MXN',
         interval: 'year' as const,
-        queryLimit: 200, // per month
+        queryLimit: 140, // per month
         features: [
-            'Uso Justo (capacidades extendidas)',
+            '140 consultas/mes (1,680/año)',
             'Todo lo del Plan Pro incluido',
-            'Ahorro de $498 MXN al año',
+            'Ahorro de $910 MXN al año',
             'Precio fijo garantizado',
             'Soporte prioritario'
         ]
@@ -98,13 +96,12 @@ export const PLANS = {
         price: 599,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 700,
+        queryLimit: 560,
         features: [
-            'Uso Justo (capacidades premium máximas)',
+            '560 consultas/mes — ideal para despachos',
             'Todo lo del Plan Pro incluido',
-            'Redactor de Sentencias TCC (Beta)',
-            'Jurimetría (predicción de sentido)',
-            'Consulta personalizada con equipo legal',
+            'Consulta con equipo legal',
+            'Contrato de servicios profesionales',
             'Soporte VIP dedicado'
         ]
     },
@@ -114,11 +111,11 @@ export const PLANS = {
         price: 5990,
         currency: 'MXN',
         interval: 'year' as const,
-        queryLimit: 700,
+        queryLimit: 560,
         features: [
-            'Uso Justo (capacidades premium máximas)',
+            '560 consultas/mes (6,720/año)',
             'Todo lo del Plan Platinum incluido',
-            'Ahorro de $1,198 MXN al año',
+            'Ahorro de $4,810 MXN al año',
             'Precio fijo garantizado',
             'Soporte VIP dedicado'
         ]
