@@ -53,7 +53,7 @@ export const PLANS = {
         price: 129,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 70,
+        queryLimit: 5,
         features: [
             'Uso Justo (capacidades básicas)',
             'Búsqueda inteligente con IA en legislación mexicana',
@@ -67,7 +67,7 @@ export const PLANS = {
         price: 249,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 140,
+        queryLimit: 200,
         features: [
             'Uso Justo (capacidades extendidas)',
             'Arquitectura Multi-Genio (IA avanzada)',
@@ -83,7 +83,7 @@ export const PLANS = {
         price: 2490,
         currency: 'MXN',
         interval: 'year' as const,
-        queryLimit: 140, // per month
+        queryLimit: 200, // per month
         features: [
             'Uso Justo (capacidades extendidas)',
             'Todo lo del Plan Pro incluido',
@@ -98,7 +98,7 @@ export const PLANS = {
         price: 599,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 560,
+        queryLimit: 700,
         features: [
             'Uso Justo (capacidades premium máximas)',
             'Todo lo del Plan Pro incluido',
@@ -114,7 +114,7 @@ export const PLANS = {
         price: 5990,
         currency: 'MXN',
         interval: 'year' as const,
-        queryLimit: 560,
+        queryLimit: 700,
         features: [
             'Uso Justo (capacidades premium máximas)',
             'Todo lo del Plan Platinum incluido',

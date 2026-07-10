@@ -107,7 +107,7 @@ export default function PreciosPage() {
                                 period="MXN/mes"
                                 description="Búsqueda rápida en la base de datos de Iurexia"
                                 features={[
-                                    "Uso Justo (capacidades básicas)",
+                                    "Consultas limitadas (5 por mes) para uso profesional normal*",
                                     "Búsqueda inteligente con IA en legislación mexicana",
                                     "Filtros de jurisdicción y entidad federativa",
                                     "Acceso a base documental completa",
@@ -130,7 +130,7 @@ export default function PreciosPage() {
                                 description={isAnnual ? 'Un solo pago, todo el año cubierto' : 'Para profesionales que necesitan potencia'}
                                 savingsBadge={isAnnual ? 'Ahorras $498 MXN' : undefined}
                                 features={[
-                                    "Uso Justo (capacidades extendidas)",
+                                    <span className="text-accent-gold font-bold">Consultas y análisis ilimitados (200 consultas mensuales garantizadas)*</span>,
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
@@ -162,7 +162,7 @@ export default function PreciosPage() {
                                 description={isAnnual ? 'Máximo poder para tu despacho, todo el año' : 'Ideal para despachos y corporativos'}
                                 savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
                                 features={[
-                                    "Uso Justo (capacidades premium máximas)",
+                                    <span className="text-accent-gold font-bold">Consultas y análisis ilimitados (500 consultas mensuales garantizadas)*</span>,
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
@@ -287,7 +287,7 @@ export default function PreciosPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <ComparisonRow feature="Límite de Consultas / Uso Justo" free="5 consultas/mes" basico="Uso Justo Básico" pro="Uso Justo Avanzado" platinum="Uso Justo Premium" />
+                                    <ComparisonRow feature="Límite de Consultas / Uso Justo" free="5 consultas/mes" basico="5 consultas/mes*" pro="Ilimitadas (200/mes garantizadas)*" platinum="Ilimitadas (500/mes garantizadas)*" />
                                     <ComparisonRow feature="Búsqueda con IA verificada" free="✓" basico="✓" pro="✓" platinum="✓" />
                                     <ComparisonRow feature="Filtros jurisdiccionales" free="✓" basico="✓" pro="✓" platinum="✓" />
                                     <ComparisonRow feature="Base documental completa" free="✓" basico="✓" pro="✓" platinum="✓" />
@@ -425,9 +425,12 @@ export default function PreciosPage() {
             </section>
 
             {/* Nota de uso responsable */}
-            <section className="py-8 bg-cream-200">
-                <div className="max-w-4xl mx-auto text-center px-4">
-                    <p className="text-sm text-charcoal-500">
+            <section className="py-8 bg-cream-200 border-b border-black/5">
+                <div className="max-w-4xl mx-auto text-center px-4 space-y-4">
+                    <p className="text-sm text-charcoal-600 leading-relaxed">
+                        <strong>* Política de uso justo:</strong> cubre con holgura el trabajo de un despacho activo — equivalente a más de 200 consultas al mes (o 500 para plan Platinum). Solo aplica ante uso automatizado o cuentas compartidas, y siempre te avisaríamos antes.
+                    </p>
+                    <p className="text-xs text-charcoal-400">
                         <strong>Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
                     </p>
                 </div>

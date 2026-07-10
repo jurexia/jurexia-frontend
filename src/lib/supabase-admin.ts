@@ -28,11 +28,11 @@ function getSupabaseAdmin(): any {
 // Plan configuration mapping
 export const PLAN_CONFIG = {
     gratuito: { queriesLimit: 5, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    basico_monthly: { queriesLimit: 70, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    pro_monthly: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    pro_annual: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    platinum_monthly: { queriesLimit: 560, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    platinum_annual: { queriesLimit: 560, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    basico_monthly: { queriesLimit: 5, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    pro_monthly: { queriesLimit: 200, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    pro_annual: { queriesLimit: 200, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    platinum_monthly: { queriesLimit: 700, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    platinum_annual: { queriesLimit: 700, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
     ultra_secretarios: { queriesLimit: 140, draftsLimit: 20, sentenciaQueriesLimit: 50, isUnlimited: false },
 } as const;
 
@@ -93,6 +93,17 @@ export async function updateUserSubscription(
         throw error;
     }
 
+    // Force queries_limit override to bypass the DB trigger auto_update_queries_limit
+    try {
+        console.log(`🔄 Overriding DB trigger queries_limit for ${normalizedEmail} to ${config.queriesLimit}`);
+        await getSupabaseAdmin()
+            .from('user_profiles')
+            .update({ queries_limit: config.queriesLimit })
+            .eq('email', normalizedEmail);
+    } catch (triggerOverrideErr) {
+        console.error(`⚠️ DB trigger override failed for ${normalizedEmail} (continuing):`, triggerOverrideErr);
+    }
+
     // Check if any rows were actually updated
     if (!data || data.length === 0) {
         console.error(`⚠️ UPDATE affected 0 rows for email "${normalizedEmail}"`);
@@ -123,6 +134,16 @@ export async function updateUserSubscription(
             if (retryError) {
                 console.error(`❌ Retry UPDATE by id failed:`, retryError);
                 throw retryError;
+            }
+
+            // Force queries_limit override on retry
+            try {
+                await getSupabaseAdmin()
+                    .from('user_profiles')
+                    .update({ queries_limit: config.queriesLimit })
+                    .eq('id', profileId);
+            } catch (triggerOverrideErr) {
+                console.error(`⚠️ DB trigger override retry failed for ${profileId} (continuing):`, triggerOverrideErr);
             }
 
             if (retryData && retryData.length > 0) {
