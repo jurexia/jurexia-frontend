@@ -21,7 +21,7 @@ export default function PreciosPage() {
                 <div className="max-w-5xl mx-auto text-center">
                     <AnimateOnScroll delay={0}>
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-gold/15 border border-accent-gold/30 text-accent-gold text-xs font-semibold mb-6 tracking-wide shadow-sm animate-pulse">
-                            ✨ Nueva política de uso justo y ajuste de precios
+                            ✨ ¡Vuelven la promoción fundadores por tiempo limitado! 🚀
                         </div>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.1}>
@@ -103,7 +103,7 @@ export default function PreciosPage() {
                                 icon={<ShieldCheck className="w-6 h-6" />}
                                 name="Plan Básico"
                                 price="$79"
-                                originalPrice={null}
+                                originalPrice="$129"
                                 period="MXN/mes"
                                 description="Búsqueda rápida en la base de datos de Iurexia"
                                 features={[
@@ -125,7 +125,7 @@ export default function PreciosPage() {
                                 icon={<Crown className="w-6 h-6" />}
                                 name="Plan Pro"
                                 price={isAnnual ? '$1,490' : '$149'}
-                                originalPrice={isAnnual ? '$1,788' : null}
+                                originalPrice={isAnnual ? '$2,988' : '$249'}
                                 period={isAnnual ? 'MXN/año' : 'MXN/mes'}
                                 description={isAnnual ? 'Un solo pago, todo el año cubierto' : 'Para profesionales que necesitan potencia'}
                                 savingsBadge={isAnnual ? 'Ahorras $298 MXN' : undefined}
@@ -140,7 +140,7 @@ export default function PreciosPage() {
                                         <span className="ml-auto text-[9px] bg-accent-gold text-charcoal-900 px-1.5 py-0.5 rounded-full font-bold shrink-0">NUEVO</span>
                                     </span>,
                                     "Registra tu cédula para conectar clientes",
-                                    "Búsqueda con IA verificada en constante actualización",
+                                    "Búsqueda con IA verificado en constante actualización",
                                     "Filtros por entidad federativa + marco federal",
                                     <span className="text-green-300 font-medium">📧 Mensaje de bienvenida con instrucciones para sacar el máximo provecho</span>,
                                     "Soporte prioritario"
@@ -157,7 +157,7 @@ export default function PreciosPage() {
                                 icon={<Star className="w-6 h-6" />}
                                 name="Plan Platinum"
                                 price={isAnnual ? '$5,990' : '$599'}
-                                originalPrice={isAnnual ? '$7,188' : null}
+                                originalPrice={isAnnual ? '$9,588' : '$799'}
                                 period={isAnnual ? 'MXN/año' : 'MXN/mes'}
                                 description={isAnnual ? 'Máximo poder para tu despacho, todo el año' : 'Ideal para despachos y corporativos'}
                                 savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
