@@ -29,7 +29,7 @@ export default function PreciosPage() {
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
                         <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-10">
-                            Elige el plan que se adapte a tu práctica. Comienza gratis y escala cuando lo necesites.
+                            Elige el plan que se adapte a tu práctica. Comienza gratis y escala cuando lo necesites. Cancela cuando quieras.
                         </p>
                     </AnimateOnScroll>
 
