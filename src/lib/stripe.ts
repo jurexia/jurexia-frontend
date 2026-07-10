@@ -24,9 +24,32 @@ export const stripe = {
     get subscriptions() { return getStripe().subscriptions; },
 };
 
+const PROMOTION_PRICE_IDS: Record<string, string> = {
+    STRIPE_PRICE_BASICO_MONTHLY: 'price_1T8IMF3uD85CqvjMM49lRfxI', // $79 MXN
+    STRIPE_PRICE_PRO_MONTHLY: 'price_1Sy2l63uD85CqvjMku0MM4k3', // $149 MXN
+    STRIPE_PRICE_PRO_ANNUAL: 'price_1Sy2l23uD85CqvjMOwcGmC1N', // $1,490 MXN
+    STRIPE_PRICE_PLATINUM_MONTHLY: 'price_1Sy2l03uD85CqvjMMJ4mFqhw', // $599 MXN
+    STRIPE_PRICE_PLATINUM_ANNUAL: 'price_1Sy2kw3uD85CqvjM45ZABmfE', // $5,990 MXN
+    STRIPE_PRICE_ULTRA_SECRETARIOS: 'price_1T2MzR3uD85CqvjMW6MK8OyG', // $999 MXN
+};
+
 // Resolve price IDs at runtime (NOT at module load/build time)
 function getPriceId(envVar: string): string | null {
-    return process.env[envVar] || null;
+    const cleanVar = envVar.replace('NEXT_PUBLIC_', '');
+    const envValue = process.env[envVar] || process.env[cleanVar] || process.env[`NEXT_PUBLIC_${cleanVar}`] || null;
+
+    // List of expensive (non-promotional) price IDs to override
+    const expensiveIds = [
+        'price_1Tqpju3uD85CqvjMUyT7T5Z1', // Básico $129 MXN
+        'price_1Tqpjw3uD85CqvjMJ9OdNpqZ', // Pro $249 MXN
+        'price_1Tqpjz3uD85CqvjMjf2D3adz', // Pro Anual $2,490 MXN
+    ];
+
+    if (envValue && !expensiveIds.includes(envValue)) {
+        return envValue;
+    }
+
+    return PROMOTION_PRICE_IDS[cleanVar] || null;
 }
 
 // Plan definitions with Stripe Price IDs
