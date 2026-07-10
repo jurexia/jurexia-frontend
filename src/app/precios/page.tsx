@@ -20,11 +20,6 @@ export default function PreciosPage() {
             {/* Hero Section */}
             <section className="pt-32 pb-12 px-4">
                 <div className="max-w-5xl mx-auto text-center">
-                    <AnimateOnScroll delay={0}>
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-gold/15 border border-accent-gold/30 text-accent-gold text-xs font-semibold mb-6 tracking-wide shadow-sm animate-pulse">
-                            ✨ ¡Vuelven la promoción fundadores por tiempo limitado! 🚀
-                        </div>
-                    </AnimateOnScroll>
                     <AnimateOnScroll delay={0.1}>
                         <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
                             Inversión transparente,
@@ -40,34 +35,44 @@ export default function PreciosPage() {
 
                     {/* Billing Period Toggle */}
                     <AnimateOnScroll delay={0.3}>
-                        <div className="flex items-center justify-center gap-3">
-                            <div className="relative inline-flex items-center bg-charcoal-100 rounded-full p-1 shadow-inner">
-                                <button
-                                    onClick={() => setBillingPeriod('monthly')}
-                                    className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
-                                        !isAnnual
-                                            ? 'bg-charcoal-900 text-white shadow-lg'
-                                            : 'text-charcoal-500 hover:text-charcoal-700'
-                                    }`}
-                                >
-                                    Mensual
-                                </button>
-                                <button
-                                    onClick={() => setBillingPeriod('annual')}
-                                    className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
-                                        isAnnual
-                                            ? 'bg-charcoal-900 text-white shadow-lg'
-                                            : 'text-charcoal-500 hover:text-charcoal-700'
-                                    }`}
-                                >
-                                    Anual
-                                </button>
+                        <div className="flex flex-col items-center gap-6">
+                            <div className="flex items-center justify-center gap-3">
+                                <div className="relative inline-flex items-center bg-charcoal-100 rounded-full p-1 shadow-inner">
+                                    <button
+                                        onClick={() => setBillingPeriod('monthly')}
+                                        className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                            !isAnnual
+                                                ? 'bg-charcoal-900 text-white shadow-lg'
+                                                : 'text-charcoal-500 hover:text-charcoal-700'
+                                        }`}
+                                    >
+                                        Mensual
+                                    </button>
+                                    <button
+                                        onClick={() => setBillingPeriod('annual')}
+                                        className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                            isAnnual
+                                                ? 'bg-charcoal-900 text-white shadow-lg'
+                                                : 'text-charcoal-500 hover:text-charcoal-700'
+                                        }`}
+                                    >
+                                        Anual
+                                    </button>
+                                </div>
+                                {isAnnual && (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 border border-green-200 text-green-700 text-xs font-bold animate-in fade-in slide-in-from-left-2 duration-300">
+                                        <span>✨</span> Ahorra hasta 17%
+                                    </span>
+                                )}
                             </div>
-                            {isAnnual && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 border border-green-200 text-green-700 text-xs font-bold animate-in fade-in slide-in-from-left-2 duration-300">
-                                    <span>✨</span> Ahorra hasta 17%
-                                </span>
-                            )}
+
+                            {/* Founders Promotion Callout */}
+                            <div className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-full bg-gradient-to-r from-accent-gold/15 via-accent-gold/25 to-accent-gold/15 border border-accent-gold/40 shadow-sm animate-in fade-in zoom-in-95 duration-500">
+                                <span className="text-accent-gold text-base leading-none animate-pulse">✨</span>
+                                <p className="text-xs sm:text-sm font-bold text-charcoal-900 tracking-wide">
+                                    ¡Vuelven los precios de descuento para suscriptores fundadores por tiempo limitado! 🚀
+                                </p>
+                            </div>
                         </div>
                     </AnimateOnScroll>
                 </div>
