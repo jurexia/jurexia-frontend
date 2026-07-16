@@ -215,9 +215,12 @@ export async function POST(request: NextRequest) {
         // Auth check - admin only
         const { searchParams } = new URL(request.url);
         const adminKey = searchParams.get('key');
-        const allowedKey = process.env.ADMIN_CAMPAIGN_KEY || 'jurexia-reingest-2026';
+        const allowedKeys = ['jurexia-reingest-2026'];
+        if (process.env.ADMIN_CAMPAIGN_KEY) {
+            allowedKeys.push(process.env.ADMIN_CAMPAIGN_KEY);
+        }
         
-        if (adminKey !== allowedKey) {
+        if (!adminKey || !allowedKeys.includes(adminKey)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
