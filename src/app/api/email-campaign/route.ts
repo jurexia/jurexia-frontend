@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
         const testEmails: string[] = body.testEmails || []; // Send preview to specific emails
 
         const resend = new Resend(process.env.RESEND_API_KEY!);
-        const fromEmail = process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>';
+        const fromEmail = 'Iurexia <administracion@iurexia.com>';
 
         // ── TEST MODE: Send preview to specific emails ──
         if (testEmails.length > 0) {
