@@ -239,14 +239,19 @@ export async function POST(request: NextRequest) {
             for (const email of testEmails) {
                 const firstName = email.split('@')[0].split('.')[0] || 'Profesional';
                 try {
-                    await resend.emails.send({
+                    const { data, error } = await resend.emails.send({
                         from: fromEmail,
                         to: email,
                         subject: `${firstName}, nuevas funciones te esperan en Iurexia ⚖️`,
                         html: buildConversionEmail(firstName),
                     });
-                    testResults.push({ email, status: 'sent' });
-                    console.log(`📧 TEST email sent to ${email}`);
+                    if (error) {
+                        testResults.push({ email, status: 'error', error: error.message });
+                        console.error(`❌ TEST email error for ${email}:`, error);
+                    } else {
+                        testResults.push({ email, status: 'sent' });
+                        console.log(`📧 TEST email sent to ${email}, id: ${data?.id}`);
+                    }
                 } catch (emailErr: any) {
                     testResults.push({ email, status: 'error', error: emailErr.message });
                 }
@@ -289,15 +294,20 @@ export async function POST(request: NextRequest) {
                 // Rate limit: 100ms between emails to respect Resend limits
                 await new Promise(r => setTimeout(r, 100));
 
-                await resend.emails.send({
+                const { data, error } = await resend.emails.send({
                     from: fromEmail,
                     to: email,
                     subject: `${firstName}, nuevas funciones te esperan en Iurexia ⚖️`,
                     html: buildConversionEmail(firstName),
                 });
 
-                results.push({ email, status: 'sent' });
-                console.log(`📧 Conversion email sent to ${email}`);
+                if (error) {
+                    results.push({ email, status: 'error', error: error.message });
+                    console.error(`❌ Failed to send to ${email}:`, error);
+                } else {
+                    results.push({ email, status: 'sent' });
+                    console.log(`📧 Conversion email sent to ${email}, id: ${data?.id}`);
+                }
             } catch (emailErr: any) {
                 results.push({ email, status: 'error', error: emailErr.message });
                 console.error(`❌ Failed to send to ${email}:`, emailErr.message);
