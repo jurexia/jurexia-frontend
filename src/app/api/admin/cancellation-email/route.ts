@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
         authHeader.replace('Bearer ', '')
     );
 
-    const adminEmail = process.env.ADMIN_EMAIL || 'administracion@iurexia.com';
-    if (authError || !user || user.email !== adminEmail) {
+    const ADMIN_EMAILS = ['administracion@iurexia.com', 'jdm.juridico@gmail.com', 'yair@iurexia.com'];
+    if (authError || !user || !user.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
         console.error('Admin Auth Failed:', authError || `User ${user?.email} is not admin`);
         return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }

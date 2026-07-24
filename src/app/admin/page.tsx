@@ -14,7 +14,8 @@ import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.iurexia.com';
+const ADMIN_EMAILS = ['administracion@iurexia.com', 'jdm.juridico@gmail.com', 'yair@iurexia.com'];
+const isAdminEmail = (email?: string | null) => !!email && ADMIN_EMAILS.includes(email.toLowerCase());
 const ADMIN_EMAIL = 'administracion@iurexia.com';
 
 type Tab = 'usuarios' | 'alertas' | 'estadisticas' | 'feedback' | 'finanzas';
@@ -221,14 +222,14 @@ export default function AdminPage() {
 
     // Auth guard
     useEffect(() => {
-        if (!loading && (!user || user.email !== ADMIN_EMAIL)) {
+        if (!loading && (!user || !isAdminEmail(user.email))) {
             router.push('/');
         }
     }, [user, loading, router]);
 
     // Fetch data when tab changes
     useEffect(() => {
-        if (!user || user.email !== ADMIN_EMAIL || !session) return;
+        if (!user || !isAdminEmail(user.email) || !session) return;
 
         const fetchData = async () => {
             setLoadingData(true);
