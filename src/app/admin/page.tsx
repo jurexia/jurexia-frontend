@@ -6,7 +6,8 @@ import {
     Eye, RefreshCw, Search, ChevronDown, X, Lock, Unlock, CreditCard, Mail, Bell,
     MoreVertical, ChevronLeft, ChevronRight, Filter, Scale, Send, UserCheck, AlertCircle,
     MessageCircle, Bug, Lightbulb, MessageSquare, Clock, CheckCircle2, XCircle, Archive,
-    DollarSign, TrendingUp, TrendingDown, Minus, Server, Database, Cloud, Brain, Megaphone, Scissors, Cpu, Globe, Wallet
+    DollarSign, TrendingUp, TrendingDown, Minus, Server, Database, Cloud, Brain, Megaphone, Scissors, Cpu, Globe, Wallet,
+    MailX
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
@@ -196,6 +197,7 @@ export default function AdminPage() {
     const [stripeData, setStripeData] = useState<Record<string, StripeSubData>>({});
     const [welcomeSent, setWelcomeSent] = useState<Set<string>>(new Set());
     const [updateSent, setUpdateSent] = useState<Set<string>>(new Set());
+    const [cancellationSent, setCancellationSent] = useState<Set<string>>(new Set());
     const [isSendingMails, setIsSendingMails] = useState(false);
     const [unconfirmedUsers, setUnconfirmedUsers] = useState<{id: string; email: string; created_at: string | null; full_name: string}[]>([]);
     const [showUnconfirmed, setShowUnconfirmed] = useState(false);
@@ -959,6 +961,44 @@ export default function AdminPage() {
                                                         )}
                                                         {isPaid && u.estado === 'GUANAJUATO' && updateSent.has(u.email) && (
                                                             <span title="Notificación de Estado enviada" className="text-green-400"><CheckCircle className="w-4 h-4" /></span>
+                                                        )}
+                                                        {/* Cancellation email button — only for users with cancel_at_period_end */}
+                                                        {sub && sub.cancel_at_period_end && sub.status === 'active' && !cancellationSent.has(u.email) && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    setActionLoading(u.id);
+                                                                    try {
+                                                                        const { data: { session } } = await supabase.auth.getSession();
+                                                                        const res = await fetch('/api/admin/cancellation-email', {
+                                                                            method: 'POST',
+                                                                            headers: {
+                                                                                'Content-Type': 'application/json',
+                                                                                'Authorization': `Bearer ${session?.access_token}`,
+                                                                            },
+                                                                            body: JSON.stringify({
+                                                                                email: u.email,
+                                                                                name: u.full_name || u.email.split('@')[0],
+                                                                                planLabel: plan.label,
+                                                                            }),
+                                                                        });
+                                                                        if (res.ok) {
+                                                                            setCancellationSent(prev => new Set(Array.from(prev).concat(u.email)));
+                                                                        } else {
+                                                                            const err = await res.json();
+                                                                            alert(`Error: ${err.error}`);
+                                                                        }
+                                                                    } catch { alert('Error al enviar email de cancelación'); }
+                                                                    setActionLoading(null);
+                                                                }}
+                                                                disabled={actionLoading === u.id}
+                                                                className={`p-2 rounded-lg transition-colors bg-red-500/10 text-red-400 hover:bg-red-500/20 focus:outline-none ${actionLoading === u.id ? 'opacity-50' : ''}`}
+                                                                title="Enviar email de cancelación (cupón 30%)"
+                                                            >
+                                                                <MailX className="w-4 h-4" />
+                                                            </button>
+                                                        )}
+                                                        {sub && sub.cancel_at_period_end && sub.status === 'active' && cancellationSent.has(u.email) && (
+                                                            <span title="Email de cancelación enviado" className="text-red-400"><CheckCircle className="w-4 h-4" /></span>
                                                         )}
                                                     </div>
                                                 </td>

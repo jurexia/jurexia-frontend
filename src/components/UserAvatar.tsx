@@ -382,25 +382,36 @@ export function UserAvatar() {
                         {/* ── ESTADO: ERROR ── */}
                         {cancelState === 'error' && (
                             <div className="p-6 text-center">
-                                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <AlertTriangle className="w-8 h-8 text-red-600" />
+                                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AlertTriangle className="w-8 h-8 text-amber-600" />
                                 </div>
                                 <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-2">
-                                    Error al cancelar
+                                    Hubo un inconveniente
                                 </h3>
-                                <p className="text-charcoal-600 mb-6 text-sm">
+                                <p className="text-charcoal-600 mb-2 text-sm">
                                     {cancelError}
+                                </p>
+                                <p className="text-charcoal-500 mb-6 text-xs">
+                                    Si ya solicitaste la cancelación, es posible que se haya procesado correctamente.
+                                    Puedes verificar el estado de tu suscripción en tu perfil.
                                 </p>
                                 <div className="flex flex-col gap-3">
                                     <button
-                                        onClick={() => setCancelState('confirm')}
-                                        className="w-full px-4 py-3 bg-charcoal-900 text-white rounded-xl hover:bg-charcoal-800 transition-colors font-medium"
+                                        onClick={() => {
+                                            closeCancelModal();
+                                            window.location.href = '/perfil';
+                                        }}
+                                        className="w-full px-4 py-3 font-medium text-sm transition-all rounded-xl"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #c9a962 0%, #a8883e 100%)',
+                                            color: '#0f0f0f',
+                                        }}
                                     >
-                                        Intentar de nuevo
+                                        Verificar en mi perfil
                                     </button>
                                     <button
                                         onClick={closeCancelModal}
-                                        className="w-full px-4 py-3 border border-charcoal-200 text-charcoal-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                                        className="w-full px-4 py-3 border border-charcoal-200 text-charcoal-700 rounded-xl hover:bg-gray-50 transition-colors font-medium text-sm"
                                     >
                                         Cerrar
                                     </button>

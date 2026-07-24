@@ -238,17 +238,18 @@ export default function PerfilPage() {
             const result = await response.json();
 
             if (!response.ok) {
-                setCancelMessage(result.error || 'Error al cancelar');
+                setCancelMessage(result.error || 'No pudimos procesar la cancelación. Por favor, intenta de nuevo en unos minutos.');
             } else {
                 const cancelDate = result.cancelAt
                     ? new Date(result.cancelAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })
                     : 'el final del periodo';
-                setCancelMessage(`Tu suscripción se cancelará el ${cancelDate}. Mantendrás el acceso hasta esa fecha.`);
+                const alreadyMsg = result.alreadyCancelled ? ' (ya estaba programada)' : '';
+                setCancelMessage(`Tu suscripción se cancelará el ${cancelDate}${alreadyMsg}. Mantendrás el acceso hasta esa fecha. No se realizarán más cobros.`);
                 setShowCancelModal(false);
             }
         } catch (error) {
             console.error('Error cancelling subscription:', error);
-            setCancelMessage('Error de conexión al cancelar la suscripción');
+            setCancelMessage('Hubo un problema de conexión. Tu suscripción podría haberse cancelado correctamente. Verifica en el portal de facturación.');
         }
 
         setCancellingSubscription(false);

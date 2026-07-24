@@ -45,6 +45,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Check if subscription is already scheduled for cancellation
+        if (subscription.cancel_at_period_end) {
+            const periodEnd = new Date((subscription as any).current_period_end * 1000);
+            console.log(`ℹ️ Subscription ${subscriptionId} already scheduled for cancellation at ${periodEnd.toISOString()} for user ${user.email}`);
+            return NextResponse.json({
+                success: true,
+                message: 'Tu suscripción ya estaba programada para cancelarse al final del periodo actual',
+                cancelAt: periodEnd.toISOString(),
+                alreadyCancelled: true,
+            });
+        }
+
         // Cancel at period end (user keeps access until the billing period ends)
         const updated = await stripe.subscriptions.update(subscriptionId, {
             cancel_at_period_end: true,
@@ -61,8 +73,26 @@ export async function POST(request: NextRequest) {
         });
     } catch (error) {
         console.error('Cancel subscription error:', error);
+
+        // Try to recover: check if the subscription was actually cancelled despite the error
+        try {
+            const stripe = getStripe();
+            const currentSub = await stripe.subscriptions.retrieve(subscriptionId);
+            if (currentSub.cancel_at_period_end) {
+                const periodEnd = new Date((currentSub as any).current_period_end * 1000);
+                console.log(`🔄 Recovery: Subscription ${subscriptionId} is actually cancelled — returning success`);
+                return NextResponse.json({
+                    success: true,
+                    message: 'Tu suscripción se cancelará al final del periodo actual',
+                    cancelAt: periodEnd.toISOString(),
+                });
+            }
+        } catch (recoveryError) {
+            console.error('Recovery check also failed:', recoveryError);
+        }
+
         return NextResponse.json(
-            { error: 'Error al cancelar la suscripción' },
+            { error: 'No pudimos procesar la cancelación en este momento. Por favor, intenta de nuevo en unos minutos.' },
             { status: 500 }
         );
     }
