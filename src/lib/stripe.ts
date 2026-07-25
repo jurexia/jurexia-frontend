@@ -26,7 +26,7 @@ export const stripe = {
 
 const PROMOTION_PRICE_IDS: Record<string, string> = {
     STRIPE_PRICE_BASICO_MONTHLY: 'price_1T8IMF3uD85CqvjMM49lRfxI', // $79 MXN
-    STRIPE_PRICE_BASICO_ANNUAL: 'price_PENDING_BASICO_ANNUAL', // TODO: Rellenar con Price ID de Stripe ($790 MXN)
+    STRIPE_PRICE_BASICO_ANNUAL: 'price_1Tx9m23uD85CqvjM9OPUDdQg', // $790 MXN
     STRIPE_PRICE_PRO_MONTHLY: 'price_1Sy2l63uD85CqvjMku0MM4k3', // $149 MXN
     STRIPE_PRICE_PRO_ANNUAL: 'price_1Sy2l23uD85CqvjMOwcGmC1N', // $1,490 MXN
     STRIPE_PRICE_PLATINUM_MONTHLY: 'price_1Sy2l03uD85CqvjMMJ4mFqhw', // $599 MXN
