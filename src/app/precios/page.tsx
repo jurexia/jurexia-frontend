@@ -92,6 +92,7 @@ export default function PreciosPage() {
                                 description="Ideal para probar la plataforma"
                                 features={[
                                     "5 consultas/mes",
+                                    "Asistente de IA Básico",
                                     "Acceso a Leyes del Estado",
                                     "Búsqueda con IA en legislación mexicana verificada",
                                     "Filtros de jurisdicción",
@@ -115,6 +116,7 @@ export default function PreciosPage() {
                                 savingsBadge={isAnnual ? 'Ahorras $158 MXN' : undefined}
                                 features={[
                                     isAnnual ? <span className="font-bold">70 consultas/mes (840/año)</span> : "70 consultas/mes",
+                                    "Asistente de IA Plus (Alta eficiencia)",
                                     "Búsqueda inteligente con IA en legislación mexicana",
                                     "Filtros de jurisdicción y entidad federativa",
                                     "Acceso a base documental completa",
@@ -138,6 +140,7 @@ export default function PreciosPage() {
                                 savingsBadge={isAnnual ? 'Ahorras $298 MXN' : undefined}
                                 features={[
                                     <span className="text-accent-gold font-bold">140 consultas/mes</span>,
+                                    <span className="text-accent-gold font-bold">IA Jurídica Avanzada (Análisis complejo y deducción)</span>,
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
@@ -169,27 +172,28 @@ export default function PreciosPage() {
                                 description={isAnnual ? 'Máximo poder para tu despacho, todo el año' : 'Ideal para despachos y corporativos'}
                                 savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
                                 features={[
-                                    <span className="text-accent-gold font-bold">560 consultas/mes — ideal para despachos</span>,
-                                    <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
-                                    <span className="text-accent-gold font-medium">Análisis de documentos y auditoría</span>,
-                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-accent-gold text-base leading-none">✦</span>
-                                        <span className="text-accent-gold">Redacción Pro — Motor de razonamiento profundo</span>
+                                    <span className="text-charcoal-900 font-bold">560 consultas/mes — ideal para despachos</span>,
+                                    <span className="text-charcoal-900 font-bold">IA Jurídica de Élite (Máxima precisión argumentativa)</span>,
+                                    <span className="text-charcoal-900 font-bold">Arquitectura Multi-Genio (IA avanzada)</span>,
+                                    <span className="text-charcoal-900 font-bold">Análisis de documentos y auditoría</span>,
+                                    <span className="text-charcoal-900 font-bold">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
+                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-gradient-to-r from-amber-200 to-amber-100 border border-amber-300 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-amber-600 text-base leading-none">✦</span>
+                                        <span className="text-charcoal-900 font-bold">Redacción Pro — Motor de razonamiento profundo</span>
                                     </span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-accent-gold text-base leading-none">✦</span>
-                                        <span className="text-accent-gold">Jurimetría — Predicción de sentido</span>
+                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-gradient-to-r from-amber-200 to-amber-100 border border-amber-300 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-amber-600 text-base leading-none">✦</span>
+                                        <span className="text-charcoal-900 font-bold">Jurimetría — Predicción de sentido</span>
                                     </span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-red-600/20 to-accent-gold/10 border border-red-500/30 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-red-400 text-base leading-none">⚡</span>
-                                        <span className="text-red-400">Redactor de Sentencias TCC</span>
+                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-gradient-to-r from-red-100 to-red-50 border border-red-200 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-red-500 text-base leading-none">⚡</span>
+                                        <span className="text-charcoal-900 font-bold">Redactor de Sentencias TCC</span>
                                         <span className="ml-auto text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold shrink-0">BETA</span>
                                     </span>,
-                                    "Registra tu cédula para conectar clientes",
-                                    "Consulta personalizada con equipo legal de Iurexia (vía correo)",
-                                    <span className="text-amber-600 font-medium">📧 Mensaje de bienvenida con instrucciones premium</span>,
-                                    "Soporte VIP dedicado"
+                                    <span className="text-charcoal-900 font-bold">Registra tu cédula para conectar clientes</span>,
+                                    <span className="text-charcoal-900 font-bold">Consulta personalizada con equipo legal de Iurexia (vía correo)</span>,
+                                    <span className="text-charcoal-900 font-bold">📧 Mensaje de bienvenida con instrucciones premium</span>,
+                                    <span className="text-charcoal-900 font-bold">Soporte VIP dedicado</span>
                                 ]}
                                 buttonText={isAnnual ? 'Elegir Platinum Anual' : 'Elegir Platinum'}
                                 priceId={isAnnual ? PLANS.platinum_annual.priceId || undefined : PLANS.platinum_monthly.priceId || undefined}
