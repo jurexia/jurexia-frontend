@@ -108,19 +108,20 @@ export default function PreciosPage() {
                             <PricingCard
                                 icon={<ShieldCheck className="w-6 h-6" />}
                                 name="Plan Básico"
-                                price="$79"
-                                originalPrice="$129"
-                                period="MXN/mes"
-                                description="Búsqueda rápida en la base de datos de Iurexia"
+                                price={isAnnual ? '$790' : '$79'}
+                                originalPrice={isAnnual ? '$1,548' : '$129'}
+                                period={isAnnual ? 'MXN/año' : 'MXN/mes'}
+                                description={isAnnual ? 'Un solo pago, búsqueda garantizada todo el año' : 'Búsqueda rápida en la base de datos de Iurexia'}
+                                savingsBadge={isAnnual ? 'Ahorras $158 MXN' : undefined}
                                 features={[
-                                    "70 consultas/mes",
+                                    isAnnual ? <span className="font-bold">70 consultas/mes (840/año)</span> : "70 consultas/mes",
                                     "Búsqueda inteligente con IA en legislación mexicana",
                                     "Filtros de jurisdicción y entidad federativa",
                                     "Acceso a base documental completa",
                                     "Soporte estándar"
                                 ]}
-                                buttonText="Elegir Básico"
-                                priceId={PLANS.basico_monthly.priceId || undefined}
+                                buttonText={isAnnual ? 'Elegir Básico Anual' : 'Elegir Básico'}
+                                priceId={isAnnual ? PLANS.basico_annual?.priceId || undefined : PLANS.basico_monthly?.priceId || undefined}
                                 highlighted={false}
                                 isBasic={true}
                             />

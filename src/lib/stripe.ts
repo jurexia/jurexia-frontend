@@ -26,6 +26,7 @@ export const stripe = {
 
 const PROMOTION_PRICE_IDS: Record<string, string> = {
     STRIPE_PRICE_BASICO_MONTHLY: 'price_1T8IMF3uD85CqvjMM49lRfxI', // $79 MXN
+    STRIPE_PRICE_BASICO_ANNUAL: 'price_PENDING_BASICO_ANNUAL', // TODO: Rellenar con Price ID de Stripe ($790 MXN)
     STRIPE_PRICE_PRO_MONTHLY: 'price_1Sy2l63uD85CqvjMku0MM4k3', // $149 MXN
     STRIPE_PRICE_PRO_ANNUAL: 'price_1Sy2l23uD85CqvjMOwcGmC1N', // $1,490 MXN
     STRIPE_PRICE_PLATINUM_MONTHLY: 'price_1Sy2l03uD85CqvjMMJ4mFqhw', // $599 MXN
@@ -80,6 +81,20 @@ export const PLANS = {
         features: [
             '70 consultas/mes',
             'Búsqueda inteligente en la base de datos legal de Iurexia',
+            'Soporte estándar',
+        ]
+    },
+    basico_annual: {
+        name: 'Plan Básico Anual',
+        get priceId() { return getPriceId('STRIPE_PRICE_BASICO_ANNUAL'); },
+        price: 790, // Precio con descuento sugerido (10 meses)
+        currency: 'MXN',
+        interval: 'year' as const,
+        queryLimit: 70, // por mes
+        features: [
+            '70 consultas/mes (840/año)',
+            'Búsqueda inteligente en la base de datos legal de Iurexia',
+            'Ahorro de $158 MXN al año',
             'Soporte estándar',
         ]
     },
@@ -168,11 +183,12 @@ export type PlanId = keyof typeof PLANS;
 export const PLAN_RANK: Record<PlanId, number> = {
     gratuito: 0,
     basico_monthly: 1,
-    pro_monthly: 2,
-    pro_annual: 3,
-    platinum_monthly: 4,
-    platinum_annual: 5,
-    ultra_secretarios: 6,
+    basico_annual: 2,
+    pro_monthly: 3,
+    pro_annual: 4,
+    platinum_monthly: 5,
+    platinum_annual: 6,
+    ultra_secretarios: 7,
 };
 
 /** Returns true if newPlan is strictly higher tier than currentPlan */

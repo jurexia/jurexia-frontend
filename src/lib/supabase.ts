@@ -60,10 +60,14 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export async function signInWithGoogle() {
+    const redirectUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : 'https://www.iurexia.com/auth/callback';
+
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
+            redirectTo: redirectUrl,
             queryParams: {
                 access_type: 'offline',
                 prompt: 'consent',
@@ -76,10 +80,14 @@ export async function signInWithGoogle() {
 }
 
 export async function signInWithApple() {
+    const redirectUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : 'https://www.iurexia.com/auth/callback';
+
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
+            redirectTo: redirectUrl,
         }
     })
 
