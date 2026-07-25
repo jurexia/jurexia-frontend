@@ -65,6 +65,7 @@ export const PLANS = {
         queryLimit: 5,
         features: [
             '5 consultas/mes',
+            'Asistente de IA Básico',
             'Acceso a Leyes del Estado',
             'Búsqueda inteligente en la base de datos legal de Iurexia',
             'Filtros de jurisdicción',
@@ -80,6 +81,7 @@ export const PLANS = {
         queryLimit: 70,
         features: [
             '70 consultas/mes',
+            'Asistente de IA Plus (Alta eficiencia)',
             'Búsqueda inteligente en la base de datos legal de Iurexia',
             'Soporte estándar',
         ]
@@ -93,6 +95,7 @@ export const PLANS = {
         queryLimit: 70, // por mes
         features: [
             '70 consultas/mes (840/año)',
+            'Asistente de IA Plus (Alta eficiencia)',
             'Búsqueda inteligente en la base de datos legal de Iurexia',
             'Ahorro de $158 MXN al año',
             'Soporte estándar',
@@ -107,6 +110,7 @@ export const PLANS = {
         queryLimit: 140,
         features: [
             '140 consultas/mes',
+            'IA Jurídica Avanzada (Análisis complejo y deducción)',
             'Búsqueda jurídica precisa y fundamentada',
             'Análisis de documentos',
             'Filtros por entidad federativa',
@@ -122,6 +126,7 @@ export const PLANS = {
         queryLimit: 140, // per month
         features: [
             '140 consultas/mes (1,680/año)',
+            'IA Jurídica Avanzada (Análisis complejo y deducción)',
             'Todo lo del Plan Pro incluido',
             'Ahorro de $910 MXN al año',
             'Precio fijo garantizado',
@@ -137,6 +142,7 @@ export const PLANS = {
         queryLimit: 560,
         features: [
             '560 consultas/mes — ideal para despachos',
+            'IA Jurídica de Élite (Máxima precisión argumentativa)',
             'Todo lo del Plan Pro incluido',
             'Consulta con equipo legal',
             'Contrato de servicios profesionales',
@@ -152,6 +158,7 @@ export const PLANS = {
         queryLimit: 560,
         features: [
             '560 consultas/mes (6,720/año)',
+            'IA Jurídica de Élite (Máxima precisión argumentativa)',
             'Todo lo del Plan Platinum incluido',
             'Ahorro de $4,810 MXN al año',
             'Precio fijo garantizado',
