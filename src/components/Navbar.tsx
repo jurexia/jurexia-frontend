@@ -55,6 +55,9 @@ export default function Navbar() {
                         </Link>
                         <NavLink href="/precios">Precios</NavLink>
                         <NavLink href="/seguridad">Seguridad</NavLink>
+                        {/* Las carpetas son de quien ya entro: a un visitante
+                            no le dice nada y le quita sitio a lo que si vende. */}
+                        {isLoggedIn && <NavLink href="/carpetas">Mis carpetas</NavLink>}
                         {isAdminEmail && (
                             <Link
                                 href="/admin"
@@ -128,6 +131,11 @@ export default function Navbar() {
                             <MobileNavLink href="/seguridad" onClick={() => setIsMenuOpen(false)}>
                                 Seguridad
                             </MobileNavLink>
+                            {isLoggedIn && (
+                                <MobileNavLink href="/carpetas" onClick={() => setIsMenuOpen(false)}>
+                                    Mis carpetas
+                                </MobileNavLink>
+                            )}
 
                             {/* Divider */}
                             <div className="h-px bg-black/5 my-2" />
