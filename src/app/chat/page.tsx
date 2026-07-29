@@ -17,6 +17,7 @@ import WelcomeExperience from '@/components/WelcomeExperience';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
 import WelcomeVideoModal from '@/components/WelcomeVideoModal';
 import NewFeaturesAnnouncementModal from '@/components/NewFeaturesAnnouncementModal';
+import InvitacionBetaAndroidModal, { BotonBetaAndroid } from '@/components/InvitacionBetaAndroidModal';
 import FeedbackWidget from '@/components/FeedbackWidget';
 // FreeUserOnboardingModal removed — was causing 43% user abandonment (audio-modal blocker)
 import { markWelcomeVideoSeen } from '@/lib/supabase';
@@ -1176,6 +1177,14 @@ export default function ChatPage() {
                 isOpen={showNewFeaturesAnnouncement}
                 onClose={handleNewFeaturesAnnouncementClose}
             />
+
+            {/*
+                La invitación al grupo fundador de la beta de Android. Sólo la
+                ven los veinte marcados en `beta_android_invitado`, y sólo una
+                vez: el propio componente recuerda que ya se cerró.
+            */}
+            <InvitacionBetaAndroidModal invitado={profile?.beta_android_invitado === true} />
+            <BotonBetaAndroid invitado={profile?.beta_android_invitado === true} />
 
             {/* FreeUserOnboardingModal + old WelcomeGuidePrompt REMOVED — replaced by WelcomeExperience */}
 

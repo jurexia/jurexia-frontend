@@ -150,6 +150,8 @@ export interface UserProfile {
     is_active: boolean;
     can_access_sentencia: boolean;
     has_seen_welcome_video: boolean;
+    /** Parte del grupo fundador que probó la app de Android antes del lanzamiento. */
+    beta_android_invitado: boolean;
     created_at: string;
     updated_at: string;
 }
