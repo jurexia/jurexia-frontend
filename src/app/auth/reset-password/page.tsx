@@ -15,42 +15,72 @@ export default function ResetPasswordPage() {
     const [sessionReady, setSessionReady] = useState(false);
 
     useEffect(() => {
-        // Listen for the PASSWORD_RECOVERY event — Supabase handles the hash/code exchange
+        let listo = false;
+        const marcar = () => { listo = true; setSessionReady(true); setError(''); };
+
+        // Escuchar sigue siendo útil (flujo implícito con hash), pero ya no es
+        // la única esperanza: abajo se canjea el token de forma EXPLÍCITA.
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
-                if (event === 'PASSWORD_RECOVERY' && session) {
-                    setSessionReady(true);
-                }
-                // Also handle if user already has a session (e.g., page refresh)
-                if (event === 'SIGNED_IN' && session) {
-                    setSessionReady(true);
-                }
+                if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) marcar();
             }
         );
 
-        // Check if there's already a session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
-                setSessionReady(true);
-            }
-        });
+        (async () => {
+            // ¿Ya hay sesión? (refresh de la página, p. ej.)
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) { marcar(); return; }
 
-        // Timeout fallback
+            // Canje explícito según lo que traiga la URL. Esperar a que el SDK
+            // «lo haga solo» era la causa de que el formulario apareciera sin
+            // sesión y el guardar terminara en «Auth session missing!».
+            const url = new URL(window.location.href);
+            const tokenHash = url.searchParams.get('token_hash');
+            const code = url.searchParams.get('code');
+            try {
+                if (tokenHash) {
+                    const { error: e } = await supabase.auth.verifyOtp({ type: 'recovery', token_hash: tokenHash });
+                    if (!e) { marcar(); return; }
+                } else if (code) {
+                    const { error: e } = await supabase.auth.exchangeCodeForSession(code);
+                    if (!e) { marcar(); return; }
+                }
+            } catch { /* cae al timeout de abajo */ }
+        })();
+
+        // Si en 8 s no hubo sesión, el enlace no sirve EN ESTE navegador. El
+        // caso típico: el correo lo pidió la app del teléfono (la sesión PKCE
+        // vive allá) — por eso la app ahora restablece por código de 6 dígitos
+        // sin pasar por aquí.
         const timeout = setTimeout(() => {
-            if (!sessionReady) {
-                setError('El enlace ha expirado o es inválido. Solicita uno nuevo.');
+            if (!listo) {
+                setError(
+                    'Este enlace no se puede usar en este navegador o ya expiró. ' +
+                    'Si pediste el cambio desde la app de Iurexia, usa ahí la opción ' +
+                    '«Olvidé mi contraseña» con el código de 6 dígitos. O solicita un enlace nuevo.'
+                );
             }
-        }, 10000);
+        }, 8000);
 
         return () => {
             subscription.unsubscribe();
             clearTimeout(timeout);
         };
-    }, [sessionReady]);
+    }, []);
 
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        // Sin sesión no hay a quién cambiarle la contraseña: mejor decirlo
+        // claro que dejar que updateUser devuelva «Auth session missing!».
+        if (!sessionReady) {
+            setError(
+                'Este enlace no estableció sesión en este navegador. Si pediste el cambio ' +
+                'desde la app, usa ahí «Olvidé mi contraseña» con el código de 6 dígitos.'
+            );
+            return;
+        }
 
         if (password.length < 6) {
             setError('La contraseña debe tener al menos 6 caracteres');
