@@ -439,8 +439,14 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, hasPdf }: LeyArticu
             {/* Divider */}
             {(hasPdf || isCuadernillo) && <div className="mx-5 border-t border-cream-400" />}
 
-            {/* Cuadernillo section */}
-            {isCuadernillo ? (
+            {/* Con PDF oficial, SIEMPRE el visor — también para cuadernillos.
+                Este desvío al repositorio se escribió cuando los cuadernillos
+                de la CoIDH no tenían PDF en GCS; desde el 31-jul-2026 los 20
+                están enlazados y verificados, así que la tarjeta del
+                repositorio queda solo como respaldo para citas sin documento.
+                La app ya se comportaba así; la web mandaba al repositorio
+                aunque el PDF existiera. */}
+            {isCuadernillo && !hasPdf ? (
                 <div className="p-5">
                     <div className="bg-white border border-cream-400 rounded-2xl p-6 shadow-sm flex flex-col items-center text-center">
                         <div className="w-12 h-12 rounded-xl bg-accent-gold/10 flex items-center justify-center mb-4">
