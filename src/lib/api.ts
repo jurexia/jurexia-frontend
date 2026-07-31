@@ -100,6 +100,12 @@ async function* streamChatInternal(
     // Build headers with optional auth
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        // Opt-in al razonamiento en vivo: el backend transmite el análisis
+        // conforme ocurre (<!--thinking-->…<!--/thinking-->) en lugar de
+        // retenerlo hasta el primer token de respuesta. Sólo lo pide la web:
+        // los builds móviles en circulación traen el parser viejo y a ellos
+        // el backend les sigue mandando el bloque clásico.
+        'X-Razonamiento-Vivo': '1',
     };
 
     if (accessToken) {

@@ -33,37 +33,39 @@ interface UseChatReturn {
 // This marker can be SPLIT across TCP chunk boundaries, so we use a
 // buffer-based parser to handle partial markers safely.
 const THINKING_MARKER = '<!--thinking-->';
+// Centinela explícito de cierre. El backend lo emite exactamente una vez,
+// cuando el razonamiento terminó y empieza la respuesta. Con él la transición
+// deja de adivinarse: antes el parser suponía que «texto sin marcador» era ya
+// la respuesta, y un corte del proxy en el lugar equivocado partía cada token
+// de razonamiento en dos — mitad al panel, mitad al cuerpo (31-jul-2026).
+const THINKING_END_MARKER = '<!--/thinking-->';
 
-// The longest possible partial marker prefix is len(THINKING_MARKER) - 1
-const MARKER_LEN = THINKING_MARKER.length;
+// The longest possible partial marker prefix is len(marker) - 1
+const MARKER_LEN = Math.max(THINKING_MARKER.length, THINKING_END_MARKER.length);
 
 /**
- * Buffer-based parser that handles <!--thinking--> markers even when
- * they are split across multiple TCP chunks.
+ * Parser determinista del protocolo de razonamiento en vivo.
  *
- * Backend protocol:
- * - Each reasoning token is sent as: <!--thinking-->TOKEN
- * - Each content token is sent as: TOKEN (no prefix)
- * - The transition from reasoning→content happens when tokens stop
- *   being prefixed with <!--thinking-->
+ * Protocolo del backend (cuando el cliente manda `X-Razonamiento-Vivo: 1`):
+ * - Cada trozo de razonamiento llega como: <!--thinking-->TEXTO
+ * - Al terminar el razonamiento llega UNA vez: <!--/thinking-->
+ * - Todo lo posterior es la respuesta, sin prefijos.
  *
- * Strategy:
- * - We maintain a `pending` buffer of unprocessed text.
- * - We scan for complete markers. Text BEFORE a marker = content,
- *   text AFTER a marker (until next marker or non-marker text) = thinking.
- * - When no marker is found and we've been in thinking mode, we check:
- *   if the text has no marker prefix, it must be content → switch back.
- * - We hold partial markers at the tail until the next chunk confirms.
+ * Reglas:
+ * - Antes del primer <!--thinking-->: todo es respuesta (modo bloque clásico,
+ *   incluidos los bloques <!--THINKING_START-->…<!--THINKING_END--> que pinta
+ *   ChatMessage; este parser no los toca).
+ * - Entre <!--thinking--> y <!--/thinking-->: TODO es razonamiento; los
+ *   marcadores <!--thinking--> intermedios sólo se descartan. Nada de
+ *   adivinar transiciones.
+ * - Después de <!--/thinking-->: todo es respuesta.
+ * - Una posible cola de marcador partido se retiene hasta el siguiente chunk.
  */
 class ThinkingParser {
     thinking = '';
     content = '';
     private pending = '';
-    // reasoningPhase tracks whether we're still in the reasoning phase
-    // (markers are still arriving). Once we see content without markers
-    // after having been in reasoning, we switch to content mode permanently.
     private reasoningPhase = false;
-    private seenAnyMarker = false;
 
     /** Feed a new chunk from the stream. */
     feed(chunk: string): void {
@@ -77,116 +79,54 @@ class ThinkingParser {
     }
 
     private drain(isFinal: boolean): void {
-        while (true) {
-            const idx = this.pending.indexOf(THINKING_MARKER);
-
-            if (idx !== -1) {
-                this.seenAnyMarker = true;
-                // Found a complete marker.
-                // Text BEFORE the marker is CONTENT (not prefixed by thinking)
-                const before = this.pending.slice(0, idx);
-                if (before) {
-                    this.content += before;
+        while (this.pending) {
+            if (!this.reasoningPhase) {
+                const idx = this.pending.indexOf(THINKING_MARKER);
+                if (idx !== -1) {
+                    // Todo lo anterior al primer marcador es respuesta.
+                    this.content += this.pending.slice(0, idx);
+                    this.pending = this.pending.slice(idx + THINKING_MARKER.length);
+                    this.reasoningPhase = true;
+                    continue;
                 }
-                // After the marker: enter reasoning phase
-                this.reasoningPhase = true;
-                this.pending = this.pending.slice(idx + MARKER_LEN);
-
-                // Now grab the text that follows this marker, up to the next marker.
-                // This text is THINKING content.
-                const nextIdx = this.pending.indexOf(THINKING_MARKER);
-                if (nextIdx !== -1) {
-                    // There's another marker — text before it is thinking
-                    const thinkText = this.pending.slice(0, nextIdx);
-                    if (thinkText) {
-                        this.thinking += thinkText;
-                    }
-                    this.pending = this.pending.slice(nextIdx);
-                    continue; // process next marker
-                }
-
-                // No next marker found. The remaining text COULD be:
-                // a) More thinking text (next marker arrives in future chunk)
-                // b) The start of content (markers have stopped)
-                // c) A partial marker at the tail
-                // We can't know yet, so we hold it in pending.
-                if (!isFinal) {
-                    // Hold everything — can't decide yet
-                    break;
-                } else {
-                    // Stream is done. Everything remaining after the last marker
-                    // is thinking content (since it was preceded by a marker).
-                    if (this.pending) {
-                        this.thinking += this.pending;
-                        this.pending = '';
-                    }
-                    break;
-                }
+                // Sin marcador: retener sólo una posible cola partida.
+                const hold = isFinal ? this.pending.length : this.holdFrom();
+                this.content += this.pending.slice(0, hold);
+                this.pending = this.pending.slice(hold);
+                return;
             }
 
-            // No complete marker found in pending.
-            if (isFinal) {
-                // Stream is done — flush everything.
-                if (this.pending) {
-                    if (this.reasoningPhase) {
-                        // We were in reasoning but stream ended without more markers.
-                        // This remaining text is likely content (the answer).
-                        // But it could also be leftover thinking if model stopped mid-reasoning.
-                        // Since the backend sends content WITHOUT markers, treat as content.
-                        this.content += this.pending;
-                    } else {
-                        this.content += this.pending;
-                    }
-                    this.pending = '';
-                }
-                break;
-            }
+            // Fase de razonamiento: buscar el cierre y descartar los prefijos.
+            const fin = this.pending.indexOf(THINKING_END_MARKER);
+            const sig = this.pending.indexOf(THINKING_MARKER);
 
-            // Check if the END of `pending` could be the beginning of a marker.
-            const holdFrom = this.findPartialMarkerTail();
-            if (holdFrom < this.pending.length) {
-                // Flush the safe portion
-                const safe = this.pending.slice(0, holdFrom);
-                if (safe) {
-                    if (this.reasoningPhase && !this.seenAnyMarkerInText(safe)) {
-                        // Text without markers while in reasoning phase = content
-                        this.reasoningPhase = false;
-                        this.content += safe;
-                    } else if (this.reasoningPhase) {
-                        this.thinking += safe;
-                    } else {
-                        this.content += safe;
-                    }
-                }
-                this.pending = this.pending.slice(holdFrom);
-            } else {
-                // No partial marker — flush all
-                if (this.pending) {
-                    if (this.reasoningPhase) {
-                        // No marker in this text but we were reasoning.
-                        // This means markers have stopped → transition to content.
-                        this.reasoningPhase = false;
-                        this.content += this.pending;
-                    } else {
-                        this.content += this.pending;
-                    }
-                    this.pending = '';
-                }
+            if (fin !== -1 && (sig === -1 || fin <= sig)) {
+                this.thinking += this.pending.slice(0, fin);
+                this.pending = this.pending.slice(fin + THINKING_END_MARKER.length);
+                this.reasoningPhase = false;
+                continue;
             }
-            break;
+            if (sig !== -1) {
+                // Otro prefijo de token: lo anterior es razonamiento.
+                this.thinking += this.pending.slice(0, sig);
+                this.pending = this.pending.slice(sig + THINKING_MARKER.length);
+                continue;
+            }
+            // Sin marcadores completos: todo es razonamiento salvo una posible
+            // cola de marcador partido.
+            const hold = isFinal ? this.pending.length : this.holdFrom();
+            this.thinking += this.pending.slice(0, hold);
+            this.pending = this.pending.slice(hold);
+            return;
         }
     }
 
-    private seenAnyMarkerInText(text: string): boolean {
-        return text.includes(THINKING_MARKER);
-    }
-
-    /** Find the earliest position in pending where a partial marker could start at the tail. */
-    private findPartialMarkerTail(): number {
-        const searchStart = Math.max(0, this.pending.length - (MARKER_LEN - 1));
-        for (let i = searchStart; i < this.pending.length; i++) {
+    /** Posición desde la cual la cola podría ser el inicio de un marcador. */
+    private holdFrom(): number {
+        const start = Math.max(0, this.pending.length - (MARKER_LEN - 1));
+        for (let i = start; i < this.pending.length; i++) {
             const tail = this.pending.slice(i);
-            if (THINKING_MARKER.startsWith(tail)) {
+            if (THINKING_MARKER.startsWith(tail) || THINKING_END_MARKER.startsWith(tail)) {
                 return i;
             }
         }
@@ -203,6 +143,7 @@ class ThinkingParser {
         return display;
     }
 }
+
 
 export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [messages, setMessages] = useState<Message[]>([]);
