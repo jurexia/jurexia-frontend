@@ -70,6 +70,13 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         if (thinkingMatch) {
             thinking = thinkingMatch[1];
             content = content.replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/, '').trim();
+        } else if (content.includes('<!--THINKING_START-->')) {
+            // El razonamiento aún está llegando y su marcador de cierre no ha
+            // aparecido. Sin esto, el texto del razonamiento —y el marcador—
+            // se pintarían crudos en la burbuja mientras dura la espera.
+            const inicio = content.indexOf('<!--THINKING_START-->');
+            thinking = content.slice(inicio + '<!--THINKING_START-->'.length);
+            content = content.slice(0, inicio).trim();
         }
 
         // Determine if DeepSeek synthesis is happening
