@@ -203,6 +203,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
             const parser = new ThinkingParser();
             let isProMode = false;
+            let isPlatinumMode = false;
 
             for await (const chunk of streamChat(
                 updatedMessages,
@@ -231,7 +232,16 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     // If there's content after the marker, process it below
                 }
 
-                // Check for Pro mode marker: <!--MODE:PRO-->
+                // Escalón de redacción: <!--MODE:PRO--> o <!--MODE:PLATINUM-->
+                // Platinum también marca Pro para que el resto del código que ya
+                // distingue "respuesta de redacción avanzada" siga funcionando.
+                if (chunk.includes('<!--MODE:PLATINUM-->')) {
+                    isProMode = true;
+                    isPlatinumMode = true;
+                    const remaining = chunk.replace('<!--MODE:PLATINUM-->', '');
+                    if (!remaining.trim()) continue;
+                }
+
                 if (chunk.includes('<!--MODE:PRO-->')) {
                     isProMode = true;
                     const remaining = chunk.replace('<!--MODE:PRO-->', '');
@@ -256,7 +266,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
                 // Add assistant message on first chunk
                 if (!assistantMessageAdded) {
-                    setMessages(prev => [...prev, { role: 'assistant', content: displayContent, isPro: isProMode }]);
+                    setMessages(prev => [...prev, { role: 'assistant', content: displayContent, isPro: isProMode, isPlatinum: isPlatinumMode }]);
                     assistantMessageAdded = true;
                 } else {
                     // Update existing assistant message
@@ -266,6 +276,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                             role: 'assistant',
                             content: displayContent,
                             isPro: isProMode,
+                            isPlatinum: isPlatinumMode,
                         };
                         return newMessages;
                     });

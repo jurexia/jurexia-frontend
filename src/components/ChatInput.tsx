@@ -17,7 +17,8 @@ import {
     Lock,
     Mic,
     BookOpen,
-    BarChart2
+    BarChart2,
+    Gem
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -28,6 +29,72 @@ import JurimetriaModal from './JurimetriaModal';
 import { enhanceText } from '@/lib/api';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
+
+// ── Los tres escalones de redacción ──────────────────────────────────────────
+//
+// Profesional lo tiene todo el mundo; Pro viene con el plan Pro; Platinum con
+// el plan Platinum. Ojo con el nombre: «Redacción Platinum» es el escalón de
+// este botón y no tiene relación con el futuro Platinum del redactor de
+// sentencias — son productos distintos que comparten palabra.
+//
+// La tabla vive fuera del componente para que las tres tarjetas se declaren
+// igual y ninguna se quede sin candado o sin título por descuido.
+type NivelRedaccion = 'profesional' | 'pro' | 'platinum';
+
+interface AccesoRedaccion {
+    pro: boolean;
+    platinum: boolean;
+}
+
+const NIVELES_REDACCION: {
+    id: NivelRedaccion;
+    etiqueta: string;
+    icono: typeof PenTool;
+    permitido: (a: AccesoRedaccion) => boolean;
+    titulo: string;
+    tituloBloqueado: string;
+    claseActiva: string;
+    claseHover: string;
+    claseIcono: string;
+    clasePunto: string;
+}[] = [
+    {
+        id: 'profesional',
+        etiqueta: 'Profesional',
+        icono: PenTool,
+        permitido: () => true,
+        titulo: 'Redacción Profesional — incluida en todos los planes',
+        tituloBloqueado: '',
+        claseActiva: 'bg-charcoal-900 text-white border-charcoal-900',
+        claseHover: 'hover:border-charcoal-400 hover:text-charcoal-700',
+        claseIcono: 'text-white',
+        clasePunto: 'bg-white',
+    },
+    {
+        id: 'pro',
+        etiqueta: 'Pro',
+        icono: Sparkles,
+        permitido: a => a.pro,
+        titulo: 'Redacción Pro — razonamiento profundo, mayor calidad jurídica',
+        tituloBloqueado: 'Redacción Pro disponible en plan Pro',
+        claseActiva: 'bg-gradient-to-r from-amber-50 via-white to-amber-50 text-[#8a6d2e] border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.35)]',
+        claseHover: 'hover:border-[#c9a962]/50 hover:text-[#8a6d2e]',
+        claseIcono: 'text-[#c9a962]',
+        clasePunto: 'bg-[#c9a962]',
+    },
+    {
+        id: 'platinum',
+        etiqueta: 'Platinum',
+        icono: Gem,
+        permitido: a => a.platinum,
+        titulo: 'Redacción Platinum — el motor de máxima calidad de Iurexia',
+        tituloBloqueado: 'Redacción Platinum disponible en plan Platinum',
+        claseActiva: 'bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-[#e8e4dd] border-slate-600 shadow-[0_0_10px_rgba(100,116,139,0.45)]',
+        claseHover: 'hover:border-slate-400 hover:text-slate-700',
+        claseIcono: 'text-[#e8e4dd]',
+        clasePunto: 'bg-[#e8e4dd]',
+    },
+];
 
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
@@ -70,7 +137,9 @@ export default function ChatInput({
     const [isListening, setIsListening] = useState(false);
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
-    const [redactarPro, setRedactarPro] = useState(false);
+    // Se guarda el escalón elegido, no una bandera por escalón: así no existe
+    // el estado imposible «Pro y Platinum a la vez».
+    const [nivelRedaccion, setNivelRedaccion] = useState<NivelRedaccion>('profesional');
     const [selectedCircuit, setSelectedCircuit] = useState<number | 'ALL' | null>(null);
     const [tribunalFilter, setTribunalFilter] = useState<string | null>(null);
     // Precedentes: corte (SCJN | TCC | ALL) y sala SCJN (PLENO | PRIMERA_SALA | SEGUNDA_SALA | null=todas)
@@ -185,6 +254,14 @@ export default function ChatInput({
     const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
     const canAccessTccBeta     = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
     const canAccessRedactarPro = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
+    // Platinum: planes Platinum y superiores. El backend lo vuelve a comprobar,
+    // porque el marcador se puede escribir a mano en el cuadro de texto.
+    const canAccessRedactarPlatinum = isAdmin(user?.email)
+        || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
+    const accesoRedaccion: AccesoRedaccion = {
+        pro: canAccessRedactarPro,
+        platinum: canAccessRedactarPlatinum,
+    };
 
     const geniosList = [
         {
@@ -355,11 +432,14 @@ export default function ChatInput({
                 return;
             }
 
-            // Prepend [MODO_REDACCION] or [MODO_REDACCION_PRO] marker when in Redactar mode
+            // Marcador del escalón: Profesional, Pro o Platinum
             if (chatMode === 'redactar') {
-                finalMessage = redactarPro
-                    ? `[MODO_REDACCION_PRO] ${finalMessage}`
-                    : `[MODO_REDACCION] ${finalMessage}`;
+                const marcador = nivelRedaccion === 'platinum'
+                    ? '[MODO_REDACCION_PLATINUM]'
+                    : nivelRedaccion === 'pro'
+                        ? '[MODO_REDACCION_PRO]'
+                        : '[MODO_REDACCION]';
+                finalMessage = `${marcador} ${finalMessage}`;
             }
 
             // Prepend [MODO_PRECEDENTES] marker when in Precedentes mode
@@ -379,9 +459,10 @@ export default function ChatInput({
             onSubmit(finalMessage, true);
             setMessage('');
             
-            // Auto-reset Pro mode after submission to optimize API costs
-            if (redactarPro) {
-                setRedactarPro(false);
+            // Vuelve a Profesional tras enviar: los escalones altos cuestan y
+            // dejarlos encendidos gasta sin que el abogado lo pida.
+            if (nivelRedaccion !== 'profesional') {
+                setNivelRedaccion('profesional');
             }
 
             if (textareaRef.current) {
@@ -674,7 +755,7 @@ ${draftRequest.descripcion}`;
                                 className="inline-flex items-center rounded-md border border-gray-200 overflow-hidden flex-shrink-0 mr-1"
                             >
                                 <button
-                                    onClick={() => { setChatMode('buscar'); setRedactarPro(false); }}
+                                    onClick={() => { setChatMode('buscar'); setNivelRedaccion('profesional'); }}
                                     className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${chatMode === 'buscar'
                                         ? 'bg-charcoal-900 text-white'
                                         : 'bg-white text-gray-500 hover:text-gray-700'
@@ -703,35 +784,40 @@ ${draftRequest.descripcion}`;
                                 </button>
                             </div>
 
-                            {/* Pro toggle — contextual, only visible when Redactar mode is active */}
+                            {/* Los tres escalones de redacción. Sólo en modo Redactar.
+                                Uno siempre está elegido —Profesional por omisión— para que
+                                el abogado sepa con qué motor va a escribir, en vez de
+                                deducirlo de un interruptor apagado. */}
                             {chatMode === 'redactar' && (
-                                <button
-                                    onClick={() => {
-                                        if (!canAccessRedactarPro) {
-                                            setShowUpgradeModal('pro');
-                                            return;
-                                        }
-                                        setRedactarPro(prev => !prev);
-                                    }}
-                                    className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-full border transition-all duration-300 flex-shrink-0 mr-1 ${redactarPro
-                                        ? 'bg-gradient-to-r from-amber-50 via-white to-amber-50 text-[#8a6d2e] border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.35)]'
-                                        : 'bg-white text-gray-500 border-gray-200 hover:border-[#c9a962]/50 hover:text-[#8a6d2e]'
-                                        }`}
-                                    title={canAccessRedactarPro
-                                        ? (redactarPro
-                                            ? "Redacción Pro activa — razonamiento profundo con motor avanzado"
-                                            : "Activar Redacción Pro — mayor calidad jurídica (más lento)")
-                                        : "Redacción Pro disponible en plan Pro"}
-                                >
-                                    <Sparkles className={`w-3 h-3 ${redactarPro ? 'text-[#c9a962]' : ''}`} />
-                                    <span>Pro</span>
-                                    {redactarPro && (
-                                        <span className="w-1.5 h-1.5 rounded-full bg-[#c9a962] animate-pulse" />
-                                    )}
-                                    {!canAccessRedactarPro && (
-                                        <Lock className="w-2.5 h-2.5 ml-0.5" />
-                                    )}
-                                </button>
+                                <div className="inline-flex items-center gap-1 flex-shrink-0">
+                                    {NIVELES_REDACCION.map(nivel => {
+                                        const elegido = nivelRedaccion === nivel.id;
+                                        const bloqueado = !nivel.permitido(accesoRedaccion);
+                                        const Icono = nivel.icono;
+                                        return (
+                                            <button
+                                                key={nivel.id}
+                                                onClick={() => {
+                                                    if (bloqueado) { setShowUpgradeModal('pro'); return; }
+                                                    setNivelRedaccion(nivel.id);
+                                                }}
+                                                aria-pressed={elegido}
+                                                className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-lg border
+                                                    transition-all duration-300 flex-shrink-0
+                                                    ${elegido ? nivel.claseActiva : 'bg-white text-gray-500 border-gray-200 ' + nivel.claseHover}
+                                                    ${bloqueado ? 'opacity-60' : ''}`}
+                                                title={bloqueado ? nivel.tituloBloqueado : nivel.titulo}
+                                            >
+                                                <Icono className={`w-3 h-3 ${elegido ? nivel.claseIcono : ''}`} />
+                                                <span>{nivel.etiqueta}</span>
+                                                {elegido && (
+                                                    <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${nivel.clasePunto}`} />
+                                                )}
+                                                {bloqueado && <Lock className="w-2.5 h-2.5 ml-0.5" />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             )}
                         </div>
 

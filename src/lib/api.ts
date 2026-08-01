@@ -8,6 +8,7 @@ export interface Message {
     role: 'user' | 'assistant' | 'system';
     content: string;
     isPro?: boolean;  // True when the assistant message was generated in Redacción Pro mode
+    isPlatinum?: boolean;  // Redacción Platinum: el escalón superior (también trae isPro)
 }
 
 export interface SearchResult {

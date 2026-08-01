@@ -851,7 +851,7 @@ function limpiarMarcadores(texto: string): string {
     return texto
         .replace(/<!--PING-->/g, '')
         .replace(/<!--CACHE:ACTIVE-->/g, '')
-        .replace(/<!--MODE:PRO-->/g, '')
+        .replace(/<!--MODE:(?:PRO|PLATINUM)-->/g, '')
         .replace(/<!-- CITATION_META:[\s\S]*?-->/g, '')
         .replace(/<think>[\s\S]*?<\/think>/g, '')
 }
