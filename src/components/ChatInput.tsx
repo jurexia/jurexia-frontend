@@ -18,7 +18,8 @@ import {
     Mic,
     BookOpen,
     BarChart2,
-    Gem
+    Gem,
+    Zap
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -135,7 +136,7 @@ export default function ChatInput({
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
-    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes'>('search');
+    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes' | 'flash'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
     // Se guarda el escalón elegido, no una bandera por escalón: así no existe
     // el estado imposible «Pro y Platinum a la vez».
@@ -430,6 +431,12 @@ export default function ChatInput({
                     textareaRef.current.style.height = 'auto';
                 }
                 return;
+            }
+
+            // Consulta rápida: va delante de todo. Si el abogado pidió el
+            // rayo, quiere el artículo ya — no un análisis en modo redacción.
+            if (activeMode === 'flash') {
+                finalMessage = `[MODO_FLASH] ${finalMessage}`;
             }
 
             // Marcador del escalón: Profesional, Pro o Platinum
@@ -822,7 +829,25 @@ ${draftRequest.descripcion}`;
                         </div>
 
                         {/* Action Buttons — Elegant Black Pills */}
-                        <div className="grid grid-cols-4 gap-1.5 w-full">
+                        <div className="grid grid-cols-5 gap-1.5 w-full">
+                            {/* Consulta rápida — va PRIMERO porque es lo que más
+                                se va a usar: el abogado que sólo necesita el
+                                artículo y volver a lo suyo. */}
+                            <button
+                                data-guide="flash"
+                                onClick={() => setActiveMode(activeMode === 'flash' ? 'search' : 'flash')}
+                                title="Consulta rápida — el artículo que buscas, en segundos"
+                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                    transition-all duration-200
+                                    ${activeMode === 'flash'
+                                        ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-charcoal-900 shadow-sm ring-1 ring-amber-500'
+                                        : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
+                                    }`}
+                            >
+                                <Zap className={`w-2.5 h-2.5 flex-shrink-0 ${activeMode === 'flash' ? 'fill-charcoal-900' : ''}`} />
+                                <span className="truncate">Rápida</span>
+                            </button>
+
                             <button
                                 data-guide="escrito"
                                 onClick={() => handleModeClick('draft')}
