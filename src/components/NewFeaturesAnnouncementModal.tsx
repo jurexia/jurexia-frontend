@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Sparkles, BookOpen, X, ChevronRight, ChevronLeft, PenTool, Zap, Scale, FileText, Crown } from 'lucide-react';
+import { Sparkles, BookOpen, X, ChevronRight, ChevronLeft, PenTool, Zap, Scale, FileText, Crown, Gem } from 'lucide-react';
 import Link from 'next/link';
 
 interface NewFeaturesAnnouncementModalProps {
@@ -9,7 +9,7 @@ interface NewFeaturesAnnouncementModalProps {
     onClose: () => void;
 }
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 export default function NewFeaturesAnnouncementModal({ isOpen, onClose }: NewFeaturesAnnouncementModalProps) {
     const [step, setStep] = useState(0);
@@ -88,17 +88,73 @@ export default function NewFeaturesAnnouncementModal({ isOpen, onClose }: NewFea
                                     <div className="text-white text-xs font-medium">Jurimetría</div>
                                     <div className="text-white/40 text-[10px] mt-0.5">Precedentes TCC</div>
                                 </div>
-                                <div className="px-3 py-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-[#c9a962]/30 transition-colors relative">
+                                <div className="px-3 py-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-amber-400/40 transition-colors relative">
                                     <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[8px] font-bold tracking-wider">NUEVO</div>
-                                    <FileText className="w-4 h-4 text-[#c9a962] mb-2 mx-auto" />
-                                    <div className="text-white text-xs font-medium">Redactor TCC</div>
-                                    <div className="text-white/40 text-[10px] mt-0.5">Borradores de sentencia</div>
+                                    <Zap className="w-4 h-4 text-amber-400 mb-2 mx-auto" />
+                                    <div className="text-white text-xs font-medium">Consulta rápida</div>
+                                    <div className="text-white/40 text-[10px] mt-0.5">El artículo, en segundos</div>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {step === 1 && (
+                        <div className="flex flex-col animate-fade-in">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-amber-400/30 blur-xl rounded-full" />
+                                    <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 flex items-center justify-center">
+                                        <Zap className="w-6 h-6 text-[#1a1a1f]" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-semibold tracking-[0.2em] text-amber-400">CONSULTA RÁPIDA</span>
+                                    <h2 className="text-xl font-serif text-white">El artículo que buscas, en segundos</h2>
+                                </div>
+                            </div>
+
+                            <p className="text-white/70 text-sm leading-relaxed mb-5">
+                                No siempre necesitas un análisis de tres mil palabras. A veces sólo quieres
+                                <span className="text-amber-400 font-medium"> el artículo, la ley y volver a lo tuyo</span>.
+                                Para eso es la consulta rápida: responde en unos segundos, citando únicamente
+                                los artículos que encuentra en la legislación de tu entidad.
+                            </p>
+
+                            <div className="rounded-xl bg-white/[0.02] border border-white/5 p-4 mb-3">
+                                <div className="text-[10px] font-semibold tracking-[0.15em] text-white/40 mb-3">CÓMO USARLA</div>
+                                <ol className="space-y-3">
+                                    <li className="flex items-start gap-3">
+                                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-400/20 text-amber-400 text-[11px] font-semibold flex items-center justify-center mt-0.5">1</span>
+                                        <div className="text-white/70 text-[13px] leading-snug">
+                                            Selecciona tu entidad en el filtro de jurisdicción. Ya está cargada la legislación de <span className="text-white/90">las 32 entidades del país</span>.
+                                        </div>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-400/20 text-amber-400 text-[11px] font-semibold flex items-center justify-center mt-0.5">2</span>
+                                        <div className="text-white/70 text-[13px] leading-snug">
+                                            Toca <span className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded bg-gradient-to-r from-amber-400 to-amber-500 text-[#1a1a1f] text-[11px] font-medium align-middle"><Zap className="w-2.5 h-2.5" />Rápida</span>, el primer botón de la fila de acciones.
+                                        </div>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-400/20 text-amber-400 text-[11px] font-semibold flex items-center justify-center mt-0.5">3</span>
+                                        <div className="text-white/70 text-[13px] leading-snug">
+                                            Pregunta directo: «pena por robo con violencia en casa habitación», «plazo para contestar la demanda».
+                                        </div>
+                                    </li>
+                                </ol>
+                            </div>
+
+                            <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-400/5 border border-amber-400/20">
+                                <Zap className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-white/60 text-[11px] leading-relaxed">
+                                    Cada cita trae el enlace al PDF oficial de la ley, para que la verifiques antes de usarla.
+                                    Si necesitas el análisis completo, desactiva el rayo y pregunta normal.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 2 && (
                         <div className="flex flex-col animate-fade-in">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="relative">
@@ -132,20 +188,23 @@ export default function NewFeaturesAnnouncementModal({ isOpen, onClose }: NewFea
                                     <li className="flex items-start gap-3">
                                         <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#c9a962]/20 text-[#c9a962] text-[11px] font-semibold flex items-center justify-center mt-0.5">2</span>
                                         <div className="text-white/70 text-[13px] leading-snug">
-                                            Aparecerá a su derecha el toggle <span className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded-full bg-gradient-to-r from-amber-50 via-white to-amber-50 text-[#8a6d2e] border border-[#c9a962] text-[11px] align-middle"><Sparkles className="w-2.5 h-2.5 text-[#c9a962]" />Pro</span>
+                                            Aparecerán a su derecha tres escalones:
+                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded-lg bg-charcoal-900 text-white border border-charcoal-900 text-[11px] align-middle"><PenTool className="w-2.5 h-2.5" />Profesional</span>
+                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded-lg bg-gradient-to-r from-amber-50 via-white to-amber-50 text-[#8a6d2e] border border-[#c9a962] text-[11px] align-middle"><Sparkles className="w-2.5 h-2.5 text-[#c9a962]" />Pro</span>
+                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded-lg bg-gradient-to-r from-slate-800 to-slate-700 text-[#e8e4dd] border border-slate-600 text-[11px] align-middle"><Gem className="w-2.5 h-2.5" />Platinum</span>
                                         </div>
                                     </li>
                                     <li className="flex items-start gap-3">
                                         <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#c9a962]/20 text-[#c9a962] text-[11px] font-semibold flex items-center justify-center mt-0.5">3</span>
                                         <div className="text-white/70 text-[13px] leading-snug">
-                                            Actívalo y escribe tu consulta. Notarás que la respuesta tarda un poco más, pero la calidad es notable.
+                                            Elige el escalón y escribe tu consulta. <span className="text-white/90">Pro</span> viene con tu plan Pro; <span className="text-white/90">Platinum</span>, con el plan Platinum, y razona más a fondo antes de escribir.
                                         </div>
                                     </li>
                                 </ol>
                             </div>
 
                             <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-[#c9a962]/5 border border-[#c9a962]/20">
-                                <Zap className="w-3.5 h-3.5 text-[#c9a962] flex-shrink-0 mt-0.5" />
+                                <Sparkles className="w-3.5 h-3.5 text-[#c9a962] flex-shrink-0 mt-0.5" />
                                 <p className="text-white/60 text-[11px] leading-relaxed">
                                     Ideal para: demandas, amparos, considerandos de sentencia, agravios, recursos y argumentos que exigen máxima profundidad.
                                 </p>
@@ -153,7 +212,7 @@ export default function NewFeaturesAnnouncementModal({ isOpen, onClose }: NewFea
                         </div>
                     )}
 
-                    {step === 2 && (
+                    {step === 3 && (
                         <div className="flex flex-col animate-fade-in">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="relative">
@@ -204,7 +263,7 @@ export default function NewFeaturesAnnouncementModal({ isOpen, onClose }: NewFea
                         </div>
                     )}
 
-                    {step === 3 && (
+                    {step === 4 && (
                         <div className="flex flex-col animate-fade-in">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="relative">

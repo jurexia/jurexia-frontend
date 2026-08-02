@@ -299,7 +299,11 @@ export default function ChatPage() {
         const isAdminUser = isAdmin(user.email);
         if (!isProOrPlatinum && !isAdminUser) return;
 
-        const lsKey = `iurexia_new_features_v3_${user.id}`;
+        // v4: el walkthrough cambió de fondo —consulta rápida, los tres
+        // escalones de redacción y la legislación de las 32 entidades—, así que
+        // quien ya vio la v3 tiene que volver a verlo. Subir esta versión es lo
+        // único que hace que reaparezca.
+        const lsKey = `iurexia_new_features_v4_${user.id}`;
         if (typeof window !== 'undefined' && localStorage.getItem(lsKey) === '1') return;
         if (showWelcomeVideo) return; // wait until welcome video is closed
 
