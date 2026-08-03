@@ -27,6 +27,10 @@ interface UseChatReturn {
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
     retryMessage: string | null;  // New field for retry status
     retryType: string | null;     // 'cold' | 'busy' | null
+    /** Fuentes halladas por el RAG en la consulta EN CURSO — viene del marcador
+     *  <!--SOURCES:n--> del backend. null mientras la búsqueda no termina;
+     *  se resetea a null al enviar la siguiente consulta. */
+    sourcesCount: number | null;
 }
 
 // Thinking marker used by the backend to separate reasoning from content.
@@ -151,6 +155,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [error, setError] = useState<string | null>(null);
     const [retryMessage, setRetryMessage] = useState<string | null>(null);
     const [retryType, setRetryType] = useState<string | null>(null);
+    const [sourcesCount, setSourcesCount] = useState<number | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     // FIX 2026-05-22: Ref-based mutex to prevent duplicate simultaneous sends.
     // React batches state updates, so two rapid clicks can both see isLoading=false
@@ -175,6 +180,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setIsLoading(true);
         setRetryMessage(null);  // Reset retry message
         setRetryType(null);
+        setSourcesCount(null);  // Nueva consulta: la cuenta de fuentes vuelve a cero
 
         // Add user message
         const userMessage: Message = { role: 'user', content };
@@ -205,7 +211,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             let isProMode = false;
             let isPlatinumMode = false;
 
-            for await (const chunk of streamChat(
+            for await (let chunk of streamChat(
                 updatedMessages,
                 options.estado,
                 options.topK,
@@ -221,6 +227,20 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 // This is sent immediately to prevent mobile carriers from
                 // closing the TCP connection when no data flows for >15s.
                 if (chunk === '<!--PING-->' || chunk.trim() === '<!--PING-->') continue;
+
+                // <!--SOURCES:n--> — el backend lo emite al terminar la búsqueda,
+                // ANTES del primer token de respuesta. Antes de capturarlo aquí,
+                // el marcador caía al parser como contenido: creaba el mensaje
+                // del asistente con solo un comentario invisible y mataba el
+                // indicador de espera antes de tiempo. Ahora alimenta la línea
+                // de pasos del agente (PasosAgente) y se retira del stream.
+                const sourcesMatch = chunk.match(/<!--SOURCES:(\d+)-->/);
+                if (sourcesMatch) {
+                    setSourcesCount(parseInt(sourcesMatch[1], 10));
+                    const remaining = chunk.replace(sourcesMatch[0], '');
+                    if (!remaining.trim()) continue;
+                    chunk = remaining;
+                }
 
                 // Check for cache active marker: <!--CACHE:ACTIVE-->
                 const cacheMatch = chunk.match(/<!--CACHE:ACTIVE-->/);
@@ -376,5 +396,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setMessages,
         retryMessage,
         retryType,
+        sourcesCount,
     };
 }
