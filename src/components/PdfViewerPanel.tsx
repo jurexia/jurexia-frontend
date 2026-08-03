@@ -1,5 +1,7 @@
 'use client';
 
+import { TesisVerificada } from '@/components/TesisVerificada';
+
 import { useEffect, useRef, useMemo } from 'react';
 import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel } from 'lucide-react';
 import { findLawPdfUrl } from '@/lib/lawPdfLookup';
@@ -790,31 +792,18 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                             {/* Divider */}
                             <div className="my-5 border-t border-cream-400" />
 
-                            {/* SCJN Link */}
-                            {scjnUrl ? (
-                                <a
-                                    href={scjnUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-4 p-4 bg-white border border-cream-400 rounded-2xl shadow-sm hover:border-accent-gold/50 hover:shadow-md transition-all group"
-                                >
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-charcoal-900 to-charcoal-700 flex items-center justify-center shrink-0">
-                                        <Scale className="w-6 h-6 text-accent-gold" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-charcoal-900 group-hover:text-accent-gold transition-colors">
-                                            Ver en Semanario Judicial
-                                        </p>
-                                        <p className="text-[11px] text-charcoal-500 mt-0.5">
-                                            Suprema Corte de Justicia de la Nación · sjf2.scjn.gob.mx
-                                        </p>
-                                    </div>
-                                    <ExternalLink className="w-4 h-4 text-charcoal-400 group-hover:text-accent-gold transition-colors shrink-0" />
-                                </a>
+                            {/* Ficha oficial traída del Semanario en el momento.
+                                Sustituye al enlace suelto que había aquí: el
+                                abogado ya no tiene que salir a comprobar la
+                                cita, la comprobación viene hecha — y si el
+                                registro no existe, se dice. */}
+                            {registroNumber && scjnUrl ? (
+                                <TesisVerificada registro={registroNumber} urlSemanario={scjnUrl} />
                             ) : (
                                 <div className="bg-cream-200 rounded-2xl p-4 text-xs text-charcoal-600 text-center">
                                     <Scale className="w-5 h-5 mx-auto mb-2 text-charcoal-400" />
-                                    Enlace al Semanario Judicial no disponible para esta tesis.
+                                    Esta cita no trae registro digital, así que no se pudo comprobar
+                                    automáticamente en el Semanario.
                                 </div>
                             )}
                         </div>
