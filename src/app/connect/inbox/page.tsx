@@ -16,17 +16,17 @@ import { getConnectRequests, updateConnectRequestStatus, ConnectRequest } from '
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     pending: {
         label: 'Pendiente',
-        color: 'bg-amber-50 text-amber-700 border-amber-200',
+        color: 'bg-accent-gold/[0.07] text-accent-gold border-accent-gold/30',
         icon: <Clock className="w-3.5 h-3.5" />,
     },
     read: {
         label: 'Leída',
-        color: 'bg-blue-50 text-blue-700 border-blue-200',
+        color: 'bg-cream-200 text-charcoal-800 border-charcoal-900/10',
         icon: <Eye className="w-3.5 h-3.5" />,
     },
     accepted: {
         label: 'Aceptada',
-        color: 'bg-green-50 text-green-700 border-green-200',
+        color: 'bg-accent-gold/[0.07] text-accent-gold border-accent-gold/30',
         icon: <CheckCircle2 className="w-3.5 h-3.5" />,
     },
     rejected: {
@@ -146,7 +146,7 @@ export default function ConnectInboxPage() {
                             <span className="font-serif text-xl font-semibold text-charcoal-900">
                                 Iurex<span className="text-accent-gold">ia</span>
                             </span>
-                            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 uppercase tracking-wide">
+                            <span className="text-xs font-bold text-charcoal-800 bg-cream-200 px-2 py-0.5 rounded-lg border border-charcoal-900/10 uppercase tracking-wide">
                                 Connect
                             </span>
                         </Link>
@@ -160,7 +160,7 @@ export default function ConnectInboxPage() {
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="font-serif text-3xl font-medium text-charcoal-900 flex items-center gap-3">
-                            <Inbox className="w-8 h-8 text-blue-600" />
+                            <Inbox className="w-8 h-8 text-charcoal-800" />
                             Bandeja de Solicitudes
                         </h1>
                         <p className="text-sm text-charcoal-500 mt-1">
@@ -170,15 +170,15 @@ export default function ConnectInboxPage() {
 
                     <div className="flex items-center gap-3">
                         {pendingCount > 0 && (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full">
-                                <span className="text-xs font-bold text-amber-700">{pendingCount}</span>
-                                <span className="text-xs text-amber-600">pendiente{pendingCount !== 1 ? 's' : ''}</span>
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-gold/[0.07] border border-accent-gold/30 rounded-lg">
+                                <span className="text-xs font-bold text-accent-gold">{pendingCount}</span>
+                                <span className="text-xs text-accent-gold">pendiente{pendingCount !== 1 ? 's' : ''}</span>
                             </div>
                         )}
                         {lawyerProfile && (
-                            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-full">
-                                <BadgeCheck className="w-4 h-4 text-green-600" />
-                                <span className="text-xs font-medium text-green-700">Verificado</span>
+                            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-accent-gold/[0.07] border border-accent-gold/30 rounded-lg">
+                                <BadgeCheck className="w-4 h-4 text-accent-gold" />
+                                <span className="text-xs font-medium text-accent-gold">Verificado</span>
                             </div>
                         )}
                     </div>
@@ -219,8 +219,8 @@ export default function ConnectInboxPage() {
                 {/* Empty State */}
                 {!loadingRequests && requests.length === 0 && (
                     <div className="text-center py-20">
-                        <div className="w-20 h-20 mx-auto mb-6 bg-blue-50 rounded-2xl flex items-center justify-center">
-                            <Inbox className="w-10 h-10 text-blue-400" />
+                        <div className="w-20 h-20 mx-auto mb-6 bg-cream-200 rounded-2xl flex items-center justify-center">
+                            <Inbox className="w-10 h-10 text-charcoal-500" />
                         </div>
                         <h3 className="text-xl font-semibold text-charcoal-900 mb-2">
                             Sin solicitudes aún
@@ -261,7 +261,7 @@ export default function ConnectInboxPage() {
                                 <div
                                     key={request.id}
                                     className={`bg-white rounded-xl border transition-all ${request.status === 'pending'
-                                            ? 'border-amber-200 shadow-sm'
+                                            ? 'border-accent-gold/30 shadow-sm'
                                             : 'border-cream-300'
                                         }`}
                                 >
@@ -279,8 +279,8 @@ export default function ConnectInboxPage() {
                                         <div className="flex items-start gap-4">
                                             {/* Client Avatar */}
                                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0 ${request.status === 'pending'
-                                                    ? 'bg-gradient-to-br from-amber-400 to-amber-600'
-                                                    : 'bg-gradient-to-br from-blue-400 to-blue-600'
+                                                    ? 'bg-accent-gold'
+                                                    : 'bg-charcoal-800'
                                                 }`}>
                                                 {request.client_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                                             </div>
@@ -291,7 +291,7 @@ export default function ConnectInboxPage() {
                                                         {request.client_name}
                                                     </h3>
                                                     <div className="flex items-center gap-2">
-                                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${statusConfig.color}`}>
+                                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium border ${statusConfig.color}`}>
                                                             {statusConfig.icon}
                                                             {statusConfig.label}
                                                         </span>
@@ -307,7 +307,7 @@ export default function ConnectInboxPage() {
 
                                                 {request.search_query && (
                                                     <div className="flex items-center gap-1 mt-2">
-                                                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                                                        <span className="text-xs text-charcoal-800 bg-cream-200 px-2 py-0.5 rounded-lg border border-charcoal-900/10">
                                                             🔍 {request.search_query}
                                                         </span>
                                                     </div>
@@ -335,17 +335,17 @@ export default function ConnectInboxPage() {
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                                                 <a
                                                     href={`mailto:${request.client_email}`}
-                                                    className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all group"
+                                                    className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-cream-200 hover:border-charcoal-900/10 border border-transparent transition-all group"
                                                 >
-                                                    <Mail className="w-4 h-4 text-charcoal-400 group-hover:text-blue-600" />
-                                                    <span className="text-sm text-charcoal-700 group-hover:text-blue-700">{request.client_email}</span>
+                                                    <Mail className="w-4 h-4 text-charcoal-400 group-hover:text-charcoal-800" />
+                                                    <span className="text-sm text-charcoal-700 group-hover:text-charcoal-800">{request.client_email}</span>
                                                 </a>
                                                 <a
                                                     href={`tel:${request.client_phone}`}
-                                                    className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all group"
+                                                    className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-accent-gold/[0.07] hover:border-accent-gold/30 border border-transparent transition-all group"
                                                 >
-                                                    <Phone className="w-4 h-4 text-charcoal-400 group-hover:text-green-600" />
-                                                    <span className="text-sm text-charcoal-700 group-hover:text-green-700">{request.client_phone}</span>
+                                                    <Phone className="w-4 h-4 text-charcoal-400 group-hover:text-accent-gold" />
+                                                    <span className="text-sm text-charcoal-700 group-hover:text-accent-gold">{request.client_phone}</span>
                                                 </a>
                                             </div>
 
@@ -355,7 +355,7 @@ export default function ConnectInboxPage() {
                                                     <button
                                                         onClick={() => handleStatusChange(request.id, 'accepted')}
                                                         disabled={isUpdating}
-                                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-cream-200 text-white rounded-xl text-sm font-medium hover:bg-cream-200 transition-colors disabled:opacity-50"
                                                     >
                                                         {isUpdating ? (
                                                             <Loader2 className="w-4 h-4 animate-spin" />

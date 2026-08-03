@@ -1,184 +1,273 @@
 'use client';
 
-import { useState } from 'react';
-import {
-    Search, MapPin, Shield, Star, MessageSquare, ChevronDown, Check
-} from 'lucide-react';
+import { BadgeCheck, MessageSquare, Search, Shield, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
 import Navbar from '@/components/Navbar';
 
+/* Reescrita el 3-ago-2026. La página era la única del sitio en azul: 62
+   estilos en línea con hex a mano (#60a5fa, #2563eb, degradados azul→dorado)
+   que el barrido de paleta no podía tocar porque no eran clases de Tailwind.
+   Ahora usa el mismo sistema que el resto: crema, carbón y dorado; un solo
+   radio; el hover cambia color y no mueve nada.
+
+   Cambio de fondo, no sólo de forma: la red deja de ser cerrada. Cualquier
+   abogado puede formar parte con su cédula verificada. */
+
 export default function ConnectPage() {
     const { user } = useAuth();
     const router = useRouter();
 
-    const handleEntrar = () => {
-        if (!user) {
-            router.push('/login?redirect=/connect/buscar');
-            return;
-        }
-        router.push('/connect/buscar');
+    const entrar = () => {
+        router.push(user ? '/connect/buscar' : '/login?redirect=/connect/buscar');
     };
 
     return (
-        <div style={{ backgroundColor: '#0a0a0a', minHeight: '100vh', color: '#f5f5f5', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
+        <main className="min-h-screen bg-cream-300">
             <Navbar />
 
-            {/* ── Hero Section ── */}
-            <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', paddingTop: '140px', paddingBottom: '60px', background: 'linear-gradient(180deg, #0a0a0a 0%, #0d1117 50%, #0a0a0a 100%)' }}>
-                <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', width: '600px', height: '400px', background: 'radial-gradient(ellipse, rgba(59, 130, 246, 0.08) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+            {/* ── Hero ── */}
+            <section className="px-4 pb-16 pt-32 sm:px-6 sm:pb-20 sm:pt-40">
+                <div className="mx-auto max-w-3xl text-center">
+                    <span className="mb-6 inline-flex items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-charcoal-600">
+                        <Shield className="h-3 w-3 text-accent-gold" />
+                        Iurexia Connect
+                    </span>
 
-                <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1, width: '100%' }}>
-                    {/* Brand Badge — Iurexia Connect */}
-                    <div style={{ display: 'inline-flex', justifyContent: 'center', marginBottom: '24px' }}>
-                        <div style={{ padding: '8px 20px', borderRadius: '9999px', border: '1px solid rgba(59, 130, 246, 0.3)', background: 'rgba(59, 130, 246, 0.08)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Shield className="w-4 h-4 text-blue-400" />
-                            <span style={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                                <span style={{ color: '#d4af37' }}>Iurexia</span>{' '}
-                                <span style={{ color: '#60a5fa' }}>Connect</span>
-                            </span>
-                        </div>
-                    </div>
-
-                    <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, color: '#e5e5e5', fontFamily: 'Georgia, serif', marginBottom: '24px' }}>
-                        La justicia exige seriedad.<br />
-                        <span style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #d4af37 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'block', marginTop: '8px' }}>Encuentra representación real.</span>
+                    <h1 className="mb-6 font-serif text-4xl font-semibold leading-[1.1] tracking-[-0.02em] text-charcoal-900 sm:text-5xl md:text-6xl">
+                        La justicia exige seriedad.
+                        <br />
+                        <span className="text-accent-gold">Encuentra representación real.</span>
                     </h1>
 
-                    <p style={{ fontSize: '1.25rem', color: '#a3a3a3', fontWeight: 400, margin: '0 auto 40px', lineHeight: 1.7, maxWidth: '640px' }}>
-                        La libertad, la salud y el patrimonio no son un juego. Nuestra IA te conecta <strong style={{ color: '#d4af37' }}>gratuitamente</strong> con abogados cuyas cédulas han sido rigurosamente verificadas.
+                    <p className="mx-auto mb-9 max-w-xl text-base leading-relaxed text-charcoal-600 sm:text-lg">
+                        La libertad, la salud y el patrimonio no son un juego. Iurexia te
+                        conecta <strong className="font-semibold text-charcoal-900">sin costo</strong> con
+                        abogados cuya cédula profesional ha sido verificada.
                     </p>
 
-                    {/* Primary CTA in hero — scrolls to bottom CTA or enters search */}
-                    <button
-                        onClick={handleEntrar}
-                        className="hover:-translate-y-1 hover:shadow-lg"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', padding: '18px 44px', borderRadius: '16px', fontSize: '1.1rem', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 8px 30px rgba(37, 99, 235, 0.3)' }}
-                    >
-                        <Search className="w-5 h-5" />
-                        Buscar Abogado
-                    </button>
+                    <div className="flex flex-col items-center justify-center gap-2.5 sm:flex-row">
+                        <button
+                            onClick={entrar}
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-charcoal-900 px-7 text-[0.9375rem] font-medium text-white transition-colors hover:bg-charcoal-800"
+                        >
+                            <Search className="h-4 w-4 text-accent-gold" />
+                            Buscar abogado
+                        </button>
+                        <Link
+                            href={user ? '/perfil' : '/registro'}
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-charcoal-900/15 px-7 text-[0.9375rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/30 hover:bg-charcoal-900/[0.03]"
+                        >
+                            <BadgeCheck className="h-4 w-4" />
+                            Soy abogado
+                        </Link>
+                    </div>
 
-                    <p style={{ marginTop: '16px', color: '#555', fontSize: '0.85rem' }}>
+                    <p className="mt-4 text-xs text-charcoal-500">
                         {user ? 'Acceso directo al directorio verificado' : 'Inicia sesión para acceder al directorio'}
                     </p>
                 </div>
             </section>
 
-            {/* Mission Section */}
-            <section style={{ padding: '100px 5%', background: '#111', borderTop: '1px solid #222', borderBottom: '1px solid #222' }}>
-                <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 60px' }}>
-                    <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '2.5rem', fontWeight: 300, color: '#f5f5f5', marginBottom: '24px' }}>Por qué creamos CONNECT</h2>
-                    <p style={{ color: '#a3a3a3', fontSize: '1.15rem', lineHeight: 1.8, marginBottom: '24px' }}>
-                        Enfrentamos una dura realidad social en México: miles de personas pierden su patrimonio, libertad o tranquilidad simplemente porque <strong style={{ color: '#e5e5e5' }}>no logran contactar a un abogado profesional y responsable</strong> que les brinde una representación de calidad.
-                    </p>
-                    <p style={{ color: '#a3a3a3', fontSize: '1.15rem', lineHeight: 1.8 }}>
-                        El equipo de Iurexia decidió crear un puente confiable, usando inteligencia artificial para asegurar que cada ciudadano encuentre al especialista correcto, y que cada abogado en la plataforma tenga sus credenciales validadas.
-                    </p>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', maxWidth: '1200px', margin: '0 auto' }}>
-                    <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', padding: '40px 30px', transition: 'transform 0.3s ease', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                        <div style={{ flexShrink: 0, width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-                            <Shield className="w-6 h-6" />
-                        </div>
+            {/* ── La red abierta ──
+                Antes la entrada era por invitación; ahora el requisito es la
+                cédula, no el contacto. Va arriba porque es lo que cambió. */}
+            <section className="border-y border-charcoal-900/[0.07] bg-white py-16 sm:py-20">
+                <div className="mx-auto max-w-5xl px-4 sm:px-6">
+                    <div className="grid items-center gap-10 md:grid-cols-[1fr_auto]">
                         <div>
-                            <h3 style={{ fontSize: '1.25rem', color: '#f5f5f5', marginBottom: '12px', fontWeight: 600 }}>Cero Engaños</h3>
-                            <p style={{ color: '#a3a3a3', fontSize: '0.95rem', lineHeight: 1.6 }}>La representación legal no se simula. Protegemos a los usuarios listando únicamente abogados que han demostrado documentalmente su cédula profesional y trayectoria real.</p>
+                            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-accent-brown">
+                                Para abogados
+                            </p>
+                            <h2 className="mb-4 font-serif text-2xl font-semibold leading-tight text-charcoal-900 sm:text-3xl">
+                                La red está abierta. El requisito es tu <span className="text-accent-gold">cédula</span>
+                            </h2>
+                            <p className="max-w-xl text-[0.9375rem] leading-relaxed text-charcoal-600 sm:text-base">
+                                Cualquier abogado puede formar parte de Connect: no hace falta
+                                invitación ni contactos. Verificamos tu cédula profesional contra
+                                el registro oficial y, una vez validada, tu perfil entra al
+                                directorio y empieza a recibir asuntos de tu materia y tu estado.
+                            </p>
+                            <ol className="mt-6 flex flex-col gap-3 sm:flex-row sm:gap-6">
+                                {[
+                                    ['1', 'Crea tu perfil', 'Materias, estado y trayectoria.'],
+                                    ['2', 'Verificamos tu cédula', 'Contra el registro oficial.'],
+                                    ['3', 'Recibes asuntos', 'Ya planteados por quien consulta.'],
+                                ].map(([n, titulo, texto]) => (
+                                    <li key={n} className="flex flex-1 gap-3">
+                                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-accent-gold/15 text-[11px] font-bold text-accent-brown">
+                                            {n}
+                                        </span>
+                                        <span>
+                                            <span className="block text-sm font-semibold text-charcoal-900">{titulo}</span>
+                                            <span className="block text-[13px] leading-snug text-charcoal-600">{texto}</span>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
                         </div>
-                    </div>
 
-                    <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', padding: '40px 30px', transition: 'transform 0.3s ease', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                        <div style={{ flexShrink: 0, width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
-                            <Star className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 style={{ fontSize: '1.25rem', color: '#f5f5f5', marginBottom: '12px', fontWeight: 600 }}>Matching por Especialidad</h3>
-                            <p style={{ color: '#a3a3a3', fontSize: '0.95rem', lineHeight: 1.6 }}>Nuestra IA lee tu caso y no busca palabras clave al azar. Encuentra al abogado que, por su biografía y perfil estadístico de experiencia, está preparado justo para lo que requieres.</p>
-                        </div>
-                    </div>
-
-                    <div style={{ background: '#0a0a0a', border: '1px solid #222', borderRadius: '16px', padding: '40px 30px', transition: 'transform 0.3s ease', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                        <div style={{ flexShrink: 0, width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(212, 175, 55, 0.1)', color: '#d4af37' }}>
-                            <MessageSquare className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h3 style={{ fontSize: '1.25rem', color: '#f5f5f5', marginBottom: '12px', fontWeight: 600 }}>Reseñas y Evaluación Directa</h3>
-                            <p style={{ color: '#a3a3a3', fontSize: '0.95rem', lineHeight: 1.6 }}>El sistema se alimenta de reseñas reales. Podrás calificar la honestidad, el trato del primer acercamiento y la transparencia en el costo ofrecido por el litigante.</p>
-                        </div>
+                        <Link
+                            href={user ? '/perfil' : '/registro'}
+                            className="inline-flex h-11 items-center justify-center rounded-lg bg-charcoal-900 px-6 text-[0.9375rem] font-medium text-white transition-colors hover:bg-charcoal-800 md:w-48"
+                        >
+                            Verificar mi cédula
+                        </Link>
                     </div>
                 </div>
             </section>
 
-            {/* Problem/Solution Section */}
-            <section style={{ padding: '100px 5%', maxWidth: '1200px', margin: '0 auto' }}>
-                <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16 mb-24">
-                    <div style={{ flex: 1 }}>
-                        <h3 style={{ fontSize: '2rem', marginBottom: '24px', color: '#f5f5f5', fontFamily: 'Georgia, serif' }}>El problema del coyotaje y la informalidad</h3>
-                        <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: '24px', lineHeight: 1.7 }}>Buscar representación legal en redes sociales o foros no regulados expone a las personas a fraudes. Muchos &ldquo;abogados&rdquo; toman anticipos y desaparecen, o carecen de la cédula necesaria para litigar ante juzgados federales.</p>
-                        <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: '24px', lineHeight: 1.7 }}>Con <span style={{ color: '#60a5fa', fontWeight: 500 }}>Iurexia Connect</span>, cerramos la puerta a las estafas. Si un usuario tiene una urgencia legal, le mostramos a los abogados confiables de su estado en segundos.</p>
+            {/* ── Por qué existe ── */}
+            <section className="py-16 sm:py-20">
+                <div className="mx-auto max-w-5xl px-4 sm:px-6">
+                    <div className="mx-auto mb-12 max-w-2xl text-center">
+                        <h2 className="mb-5 font-serif text-2xl font-semibold text-charcoal-900 sm:text-3xl md:text-4xl">
+                            Por qué creamos <span className="text-accent-gold">Connect</span>
+                        </h2>
+                        <p className="mb-4 leading-relaxed text-charcoal-600">
+                            En México miles de personas pierden su patrimonio, su libertad o su
+                            tranquilidad simplemente porque{' '}
+                            <strong className="font-medium text-charcoal-900">
+                                no logran contactar a un abogado profesional y responsable
+                            </strong>{' '}
+                            que les dé una representación de calidad.
+                        </p>
+                        <p className="leading-relaxed text-charcoal-600">
+                            Connect es el puente: la IA lee el caso y encuentra al especialista
+                            correcto, y cada abogado del directorio tiene sus credenciales
+                            validadas.
+                        </p>
                     </div>
-                    <div style={{ flex: 1, background: 'linear-gradient(145deg, #111, #0a0a0a)', border: '1px solid #222', borderRadius: '24px', padding: '40px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
-                        <div style={{ width: '100%', maxWidth: '400px', background: '#0f0f0f', border: '1px solid #333', borderRadius: '12px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', color: '#666', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-                            <Search className="w-5 h-5 text-gray-500" />
-                            <span className="text-sm md:text-base">Ej: Me acaban de despedir sin darme finiquito...</span>
-                        </div>
+
+                    <div className="grid gap-4 md:grid-cols-3">
+                        {[
+                            {
+                                icono: Shield,
+                                titulo: 'Cero engaños',
+                                texto: 'La representación legal no se simula. Sólo entran al directorio abogados que han demostrado documentalmente su cédula profesional y su trayectoria.',
+                            },
+                            {
+                                icono: Star,
+                                titulo: 'Match por especialidad',
+                                texto: 'La IA lee tu caso, no busca palabras sueltas. Encuentra al abogado que por su perfil y experiencia está preparado justo para lo que necesitas.',
+                            },
+                            {
+                                icono: MessageSquare,
+                                titulo: 'Reseñas reales',
+                                texto: 'El sistema se alimenta de quienes ya contrataron: honestidad, trato en el primer acercamiento y transparencia en el costo ofrecido.',
+                            },
+                        ].map((c) => (
+                            <div
+                                key={c.titulo}
+                                className="rounded-xl border border-cream-400 bg-white p-6 transition-colors duration-300 hover:border-accent-gold/50"
+                            >
+                                <c.icono className="mb-4 h-5 w-5 text-accent-gold" />
+                                <h3 className="mb-2 font-serif text-lg font-semibold text-charcoal-900">{c.titulo}</h3>
+                                <p className="text-[0.9375rem] leading-relaxed text-charcoal-600">{c.texto}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
+            </section>
 
-                <div className="flex flex-col md:flex-row-reverse items-center gap-12 md:gap-16">
-                    <div style={{ flex: 1 }}>
-                        <h3 style={{ fontSize: '2rem', marginBottom: '24px', color: '#f5f5f5', fontFamily: 'Georgia, serif' }}>IA que entiende el Derecho</h3>
-                        <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: '24px', lineHeight: 1.7 }}>Las personas no siempre saben qué rama del derecho necesitan buscar. Alguien describiendo &ldquo;problemas con los linderos de mi rancho&rdquo; no tiene por qué saber que necesita a un agrarista o civilista.</p>
-                        <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: '24px', lineHeight: 1.7 }}>Nuestro algoritmo de <span style={{ color: '#60a5fa', fontWeight: 500 }}>búsqueda semántica</span> analiza la petición del usuario, determina la materia jurídica y clasifica a los abogados validados dándoles un &ldquo;Match Score&rdquo; basado en su especialización certificada.</p>
+            {/* ── El problema, en dos bloques ── */}
+            <section className="border-t border-charcoal-900/[0.07] bg-white py-16 sm:py-20">
+                <div className="mx-auto max-w-5xl space-y-14 px-4 sm:px-6">
+                    <div className="grid items-start gap-8 md:grid-cols-2">
+                        <div>
+                            <h3 className="mb-4 font-serif text-xl font-semibold text-charcoal-900 sm:text-2xl">
+                                El coyotaje y la informalidad
+                            </h3>
+                            <p className="mb-4 text-[0.9375rem] leading-relaxed text-charcoal-600">
+                                Buscar abogado en redes sociales o foros sin regular expone a la
+                                gente al fraude. Hay quien toma el anticipo y desaparece, o
+                                carece de la cédula necesaria para litigar ante juzgados
+                                federales.
+                            </p>
+                            <p className="text-[0.9375rem] leading-relaxed text-charcoal-600">
+                                Con Connect, quien tiene una urgencia ve en segundos a los
+                                abogados verificados de su estado.
+                            </p>
+                        </div>
+                        <div className="rounded-xl border border-cream-400 bg-cream-200 p-8">
+                            <div className="flex items-center gap-3 rounded-lg border border-charcoal-900/10 bg-white px-4 py-3">
+                                <Search className="h-4 w-4 flex-shrink-0 text-charcoal-400" />
+                                <span className="text-sm text-charcoal-500">
+                                    Me acaban de despedir sin darme finiquito…
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div style={{ flex: 1, background: 'linear-gradient(145deg, #111, #0a0a0a)', border: '1px solid #222', borderRadius: '24px', padding: '40px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
-                        <div className="hover:translate-y-[-5px] hover:rotate-0" style={{ width: '80%', maxWidth: '350px', background: '#111', border: '1px solid #333', borderRadius: '16px', padding: '20px', position: 'absolute', transform: 'rotate(-2deg)', boxShadow: '0 15px 35px rgba(0,0,0,0.6)', transition: 'transform 0.3s' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <div>
-                                    <div style={{ width: '120px', height: '16px', background: '#333', borderRadius: '4px', marginBottom: '8px' }}></div>
-                                    <div style={{ width: '80px', height: '12px', background: '#222', borderRadius: '4px' }}></div>
+
+                    <div className="grid items-start gap-8 md:grid-cols-2">
+                        <div className="md:order-2">
+                            <h3 className="mb-4 font-serif text-xl font-semibold text-charcoal-900 sm:text-2xl">
+                                IA que entiende el derecho
+                            </h3>
+                            <p className="mb-4 text-[0.9375rem] leading-relaxed text-charcoal-600">
+                                Nadie tiene por qué saber qué rama del derecho le toca. Quien
+                                describe «problemas con los linderos de mi rancho» no sabe que
+                                necesita a un agrarista o a un civilista.
+                            </p>
+                            <p className="text-[0.9375rem] leading-relaxed text-charcoal-600">
+                                La búsqueda semántica lee la petición, determina la materia y
+                                ordena a los abogados validados según su especialización.
+                            </p>
+                        </div>
+                        <div className="rounded-xl border border-cream-400 bg-cream-200 p-8 md:order-1">
+                            <div className="rounded-lg border border-charcoal-900/10 bg-white p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-charcoal-900">Lic. A. Ramírez</p>
+                                        <p className="text-xs text-charcoal-500">Querétaro</p>
+                                    </div>
+                                    <span className="flex-shrink-0 rounded-md bg-accent-gold/15 px-2 py-0.5 text-xs font-semibold text-accent-brown">
+                                        95% afinidad
+                                    </span>
                                 </div>
-                                <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', fontWeight: 'bold', padding: '4px 12px', borderRadius: '12px', fontSize: '14px' }}>
-                                    95% Match
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                    {['Civil', 'Corporativo'].map((m) => (
+                                        <span key={m} className="rounded-md border border-charcoal-900/10 px-2 py-0.5 text-[11px] text-charcoal-600">
+                                            {m}
+                                        </span>
+                                    ))}
+                                    <span className="inline-flex items-center gap-1 rounded-md border border-accent-gold/30 bg-accent-gold/[0.08] px-2 py-0.5 text-[11px] text-charcoal-700">
+                                        <BadgeCheck className="h-3 w-3 text-accent-gold" /> Cédula verificada
+                                    </span>
                                 </div>
                             </div>
-                            <div style={{ marginTop: '20px', display: 'flex', gap: '8px' }}>
-                                <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', fontSize: '12px', padding: '4px 10px', borderRadius: '20px' }}>Civil</span>
-                                <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', fontSize: '12px', padding: '4px 10px', borderRadius: '20px' }}>Corporativo</span>
-                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Action Section */}
-            <section style={{ padding: '100px 5%', textAlign: 'center', background: 'linear-gradient(to bottom, #0a0a0a, #0f172a)', borderTop: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                <div style={{ maxWidth: '800px', margin: '0 auto', background: 'rgba(20, 20, 20, 0.6)', backdropFilter: 'blur(10px)', border: '1px solid #222', padding: '60px 40px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', color: '#60a5fa', background: 'rgba(59, 130, 246, 0.1)', padding: '10px 20px', borderRadius: '30px', fontSize: '0.95rem', fontWeight: 600, marginBottom: '30px' }}>
-                        <Shield className="w-5 h-5" />
-                        Tu puente seguro a la justicia
+            {/* ── Cierre ── */}
+            <section className="bg-charcoal-900 py-16 text-white sm:py-20">
+                <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+                    <h2 className="mb-4 font-serif text-2xl font-semibold sm:text-3xl">
+                        ¿Eres abogado o <span className="text-accent-gold">necesitas uno</span>?
+                    </h2>
+                    <p className="mx-auto mb-8 max-w-xl leading-relaxed text-white/60">
+                        Connect existe para profesionalizar el enlace entre litigantes éticos y
+                        quien enfrenta un problema de salud, patrimonio o libertad.
+                    </p>
+                    <div className="flex flex-col items-center justify-center gap-2.5 sm:flex-row">
+                        <button
+                            onClick={entrar}
+                            className="inline-flex h-12 items-center justify-center rounded-lg bg-white px-7 text-[0.9375rem] font-medium text-charcoal-900 transition-colors hover:bg-cream-200"
+                        >
+                            Entrar a Connect
+                        </button>
+                        <Link
+                            href={user ? '/perfil' : '/registro'}
+                            className="inline-flex h-12 items-center justify-center rounded-lg border border-white/25 px-7 text-[0.9375rem] font-medium text-white transition-colors hover:border-white/50 hover:bg-white/10"
+                        >
+                            Verificar mi cédula
+                        </Link>
                     </div>
-
-                    <h2 style={{ fontSize: '2.5rem', marginBottom: '20px', fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>¿Eres abogado o necesitas uno?</h2>
-                    <p style={{ fontSize: '1.125rem', color: '#a3a3a3', marginBottom: '40px', maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
-                        Nuestra plataforma está 100% enfocada en profesionalizar y asegurar el enlace entre litigantes éticos y ciudadanos en necesidad médica, patrimonial o de libertad.
-                    </p>
-
-                    <button
-                        onClick={handleEntrar}
-                        className="hover:-translate-y-1 hover:shadow-lg"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', textDecoration: 'none', padding: '20px 50px', borderRadius: '16px', fontSize: '1.25rem', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.3s ease' }}
-                    >
-                        Entrar a Connect
-                    </button>
-
-                    <p style={{ marginTop: '32px', color: '#666', fontSize: '0.9rem' }}>
-                        Iniciativa y responsabilidad ética de <strong style={{ color: '#f5f5f5' }}>Iurexia Technologies</strong>
-                    </p>
                 </div>
             </section>
-        </div>
+        </main>
     );
 }

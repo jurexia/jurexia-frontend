@@ -354,7 +354,7 @@ function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: (
                             {lawyer.full_name}
                         </h3>
                         {isVerified && (
-                            <span title="Cédula verificada"><BadgeCheck className="w-5 h-5 text-green-500 flex-shrink-0" /></span>
+                            <span title="Cédula verificada"><BadgeCheck className="w-5 h-5 text-accent-gold flex-shrink-0" /></span>
                         )}
                     </div>
                     <p style={{ fontSize: '0.75rem', color: '#a3a3a3', marginTop: '2px' }}>
@@ -388,7 +388,7 @@ function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: (
             {/* Phone */}
             {lawyer.phone_visible && lawyer.phone && (
                 <div className="flex items-center gap-2 mb-3" style={{ fontSize: '0.875rem', color: '#a3a3a3' }}>
-                    <Phone className="w-4 h-4 text-green-500" />
+                    <Phone className="w-4 h-4 text-accent-gold" />
                     <a href={`tel:${lawyer.phone}`} style={{ textDecoration: 'none', color: '#a3a3a3' }} onMouseOver={(e) => e.currentTarget.style.color = '#fff'} onMouseOut={(e) => e.currentTarget.style.color = '#a3a3a3'}>
                         {lawyer.phone}
                     </a>
@@ -484,7 +484,7 @@ function ContactModal({ lawyer, searchQuery, userId, onClose }: { lawyer: Lawyer
                 {sent ? (
                     <div style={{ padding: '32px', textAlign: 'center' }}>
                         <div style={{ width: '64px', height: '64px', margin: '0 auto 16px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <CheckCircle2 className="w-8 h-8 text-green-500" />
+                            <CheckCircle2 className="w-8 h-8 text-accent-gold" />
                         </div>
                         <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#fff', marginBottom: '8px' }}>¡Solicitud enviada!</h3>
                         <p style={{ color: '#888', marginBottom: '24px' }}>Tu solicitud fue enviada a <strong>{lawyer.full_name}</strong>. El abogado recibirá una notificación y podrá contactarte directamente.</p>
