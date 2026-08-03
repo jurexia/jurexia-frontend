@@ -773,24 +773,12 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                 )}
                             </div>
 
-                            {/* ── Rubro + Body ── */}
-                            <div className="bg-white border border-cream-400 rounded-xl shadow-sm overflow-hidden">
-                                {tesisMeta.rubro && (
-                                    <div className="bg-charcoal-900 px-5 py-4 border-b border-charcoal-700">
-                                        <p className="text-[12px] font-bold text-white leading-relaxed tracking-wide text-justify" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-                                            {tesisMeta.rubro}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Body text with formatted sections */}
-                                <div className="px-5 py-5">
-                                    <TesisBodyText text={tesisMeta.textoBody || source.texto || 'Sin texto disponible.'} />
-                                </div>
-                            </div>
-
-                            {/* Divider */}
-                            <div className="my-5 border-t border-cream-400" />
+                            {/* El texto de la tesis que guardábamos en nuestra
+                                base se retiró el 3-ago-2026: repetía lo que ya
+                                muestran la ficha verificada y el PDF oficial de
+                                abajo, que además vienen del Semanario y no de
+                                nuestra copia. La franja de metadatos se queda
+                                porque identifica la cita de un vistazo. */}
 
                             {/* Ficha oficial traída del Semanario en el momento.
                                 Sustituye al enlace suelto que había aquí: el

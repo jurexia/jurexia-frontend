@@ -168,7 +168,7 @@ export function TesisVerificada({ registro, urlSemanario }: { registro: string; 
 
             <div className="hidden items-center justify-between gap-2 border-b border-cream-400 px-5 py-2 md:flex">
                 <p className="text-[10.5px] text-charcoal-500">
-                    PDF generado con los datos oficiales del Semanario
+                    Documento oficial del Semanario Judicial de la Federación
                 </p>
                 <a
                     href={`/api/tesis/${t.registro}/pdf`}
@@ -179,8 +179,10 @@ export function TesisVerificada({ registro, urlSemanario }: { registro: string; 
                 </a>
             </div>
 
-            {/* Rubro y texto, tal como los publica la Corte */}
-            <div className="px-5 py-4">
+            {/* Rubro y texto — sólo en teléfono, donde el iframe con PDF no
+                funciona. En escritorio esto lo cubre el documento oficial de
+                arriba y repetirlo era una tercera copia de lo mismo. */}
+            <div className="px-5 py-4 md:hidden">
                 <h4 className="mb-3 text-[13px] font-bold leading-snug text-charcoal-900">{t.rubro}</h4>
                 {t.texto.split('\n\n').filter(Boolean).map((p, i) => (
                     <p key={i} className="mb-2.5 text-[12.5px] leading-relaxed text-charcoal-700 last:mb-0" style={{ textAlign: 'justify' }}>
