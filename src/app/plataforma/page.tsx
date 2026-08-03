@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare, Brain, Paperclip, TrendingUp } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import HomeDemo from '@/components/HomeDemo';
 import { useEffect, useRef, useState } from 'react';
 
 export default function PlataformaPage() {
@@ -136,6 +137,20 @@ export default function PlataformaPage() {
                             </p>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            {/* Demo en vídeo — vivía en la home; se mudó aquí el 3-ago-2026
+                porque allá competía con el hero de vídeo. */}
+            <section className="py-16 bg-cream-300">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6">
+                    <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-center text-charcoal-900 mb-3 sm:mb-4">
+                        Mira cómo <span className="text-accent-gold">funciona</span>
+                    </h2>
+                    <p className="text-center text-base sm:text-lg text-charcoal-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
+                        Desde la selección de jurisdicción hasta consultar documentos fuente, todo en segundos.
+                    </p>
+                    <HomeDemo />
                 </div>
             </section>
 
