@@ -1228,6 +1228,19 @@ ${draftRequest.descripcion}`;
                         )}
                     </div>
 
+                    {/* El agente: plan aprobable antes de redactar. Va junto al
+                        Secretario porque los dos son trabajo largo, no consulta. */}
+                    <a
+                        href="/agente"
+                        className="mt-2 flex items-center gap-2 rounded-md border border-[#c9a962]/25 bg-[#1a1a1a] px-3 py-1 transition-colors duration-200 hover:border-[#c9a962]/50"
+                    >
+                        <Sparkles className="w-3 h-3 text-[#c9a962]/70 flex-shrink-0" />
+                        <span className="flex-1 text-[10px] text-white/60">
+                            Agente — <span className="font-semibold text-[#c9a962]/80">Demanda de amparo con plan aprobable</span>
+                        </span>
+                        <span className="flex-shrink-0 text-[7px] font-bold uppercase tracking-wider text-[#c9a962]/60">Beta</span>
+                    </a>
+
                     {/* Secretario PJF — Compact CTA */}
                     <a
                         href={canAccessTccBeta ? '/tcc-beta' : '#'}
