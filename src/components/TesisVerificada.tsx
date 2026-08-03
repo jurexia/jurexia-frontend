@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Check, ExternalLink, Loader2, Scale } from 'lucide-react';
+import { AlertTriangle, Check, Download, ExternalLink, Loader2, Scale } from 'lucide-react';
 
 /**
  * Comprueba una tesis contra el Semanario Judicial de la Federación y muestra
@@ -151,6 +151,32 @@ export function TesisVerificada({ registro, urlSemanario }: { registro: string; 
                         </div>
                     ))}
                 </dl>
+            </div>
+
+            {/* El documento en PDF, en el mismo visor que las leyes.
+                Sólo en pantalla grande: iOS no pinta PDF dentro de un iframe,
+                así que en teléfono se lee la ficha de abajo, que además es más
+                cómoda a ese tamaño. */}
+            <div className="hidden border-b border-cream-400 bg-cream-200 md:block" style={{ height: '460px' }}>
+                <iframe
+                    src={`/api/tesis/${t.registro}/pdf#toolbar=1&navpanes=0&scrollbar=1`}
+                    className="h-full w-full"
+                    title={`Tesis ${t.registro} en PDF`}
+                    loading="lazy"
+                />
+            </div>
+
+            <div className="hidden items-center justify-between gap-2 border-b border-cream-400 px-5 py-2 md:flex">
+                <p className="text-[10.5px] text-charcoal-500">
+                    PDF generado con los datos oficiales del Semanario
+                </p>
+                <a
+                    href={`/api/tesis/${t.registro}/pdf`}
+                    download={`Tesis${t.registro}.pdf`}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-charcoal-900/10 px-2 py-1 text-[10.5px] font-medium text-charcoal-700 transition-colors hover:bg-charcoal-900/[0.04]"
+                >
+                    <Download className="h-3 w-3" /> Descargar
+                </a>
             </div>
 
             {/* Rubro y texto, tal como los publica la Corte */}

@@ -162,8 +162,8 @@ export default function HomePage() {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <AnimatedSection animation="slide-up">
                         <div className="text-center mb-4">
-                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-bold tracking-widest uppercase mb-6">
-                                ⚠️ Dato importante
+                            <span className="inline-flex items-center rounded-lg border border-charcoal-900/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-charcoal-600 mb-6">
+                                Comparativa
                             </span>
                         </div>
                         <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-center text-charcoal-900 mb-4">
@@ -177,8 +177,8 @@ export default function HomePage() {
                     </AnimatedSection>
 
                     <AnimatedSection animation="slide-up" delay={200}>
-                        <div className="rounded-3xl border-2 border-charcoal-900 shadow-2xl overflow-hidden bg-charcoal-900 p-1">
-                            <div className="rounded-2xl overflow-hidden bg-white">
+                        <div className="overflow-hidden rounded-xl border border-charcoal-900/12">
+                            <div className="overflow-hidden bg-white">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm">
                                         <thead>
@@ -266,8 +266,8 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6">
                     <AnimatedSection animation="slide-up">
                         <div className="text-center mb-12">
-                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold tracking-widest uppercase mb-4">
-                                ★ Testimonios reales
+                            <span className="inline-flex items-center rounded-lg border border-charcoal-900/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-charcoal-600 mb-4">
+                                Testimonios
                             </span>
                             <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-charcoal-900">
                                 Lo que dicen <span className="text-accent-gold">nuestros usuarios</span>
@@ -278,12 +278,8 @@ export default function HomePage() {
                     <div className="grid md:grid-cols-3 gap-6">
                         {/* Testimonial 1: Daniel Vecker */}
                         <AnimatedSection animation="slide-up" delay={100}>
-                            <div className="relative bg-gradient-to-br from-cream-100 via-cream-50 to-white rounded-3xl border border-cream-400 p-6 sm:p-8 shadow-sm h-full flex flex-col">
-                                <div className="absolute -top-3 -left-1 text-accent-gold/15 font-serif text-[80px] leading-none select-none pointer-events-none">&ldquo;</div>
-                                <div className="flex gap-0.5 mb-4">
-                                    {[1,2,3,4,5].map(i => <svg key={i} className="w-4 h-4 text-accent-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
-                                </div>
-                                <blockquote className="font-serif text-base sm:text-lg text-charcoal-900 leading-relaxed mb-6 italic flex-grow">
+                            <div className="relative rounded-xl border border-cream-400 bg-white p-6 sm:p-7 h-full flex flex-col">
+                                <blockquote className="font-serif text-[17px] sm:text-lg text-charcoal-900 leading-[1.6] mb-6 flex-grow">
                                     &ldquo;Antes de Iurexia, pasaba horas buscando tesis en bases de datos obsoletas. La primera vez que activé un Genio de Amparo y me citó el artículo exacto con la tesis aplicable en segundos, supe que mi forma de litigar había cambiado para siempre. Es como tener un asociado senior disponible las 24 horas.&rdquo;
                                 </blockquote>
                                 <div className="flex items-center gap-3 mt-auto pt-4 border-t border-cream-300">
@@ -304,12 +300,8 @@ export default function HomePage() {
 
                         {/* Testimonial 2: Ulises Alegando */}
                         <AnimatedSection animation="slide-up" delay={200}>
-                            <div className="relative bg-gradient-to-br from-cream-100 via-cream-50 to-white rounded-3xl border border-cream-400 p-6 sm:p-8 shadow-sm h-full flex flex-col">
-                                <div className="absolute -top-3 -left-1 text-accent-gold/15 font-serif text-[80px] leading-none select-none pointer-events-none">&ldquo;</div>
-                                <div className="flex gap-0.5 mb-4">
-                                    {[1,2,3,4,5].map(i => <svg key={i} className="w-4 h-4 text-accent-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
-                                </div>
-                                <blockquote className="font-serif text-base sm:text-lg text-charcoal-900 leading-relaxed mb-6 italic flex-grow">
+                            <div className="relative rounded-xl border border-cream-400 bg-white p-6 sm:p-7 h-full flex flex-col">
+                                <blockquote className="font-serif text-[17px] sm:text-lg text-charcoal-900 leading-[1.6] mb-6 flex-grow">
                                     &ldquo;En un amparo contra una autoridad fiscal, necesitaba jurisprudencia de la Décima Época sobre competencia territorial. Iurexia me encontró tres tesis aplicables que ni mi equipo había localizado en dos días de búsqueda manual. Ganamos el caso. Esa sola consulta pagó un año de suscripción.&rdquo;
                                 </blockquote>
                                 <div className="flex items-center gap-3 mt-auto pt-4 border-t border-cream-300">
@@ -330,12 +322,8 @@ export default function HomePage() {
 
                         {/* Testimonial 3: Jorge Adrián Morales */}
                         <AnimatedSection animation="slide-up" delay={300}>
-                            <div className="relative bg-gradient-to-br from-cream-100 via-cream-50 to-white rounded-3xl border border-cream-400 p-6 sm:p-8 shadow-sm h-full flex flex-col">
-                                <div className="absolute -top-3 -left-1 text-accent-gold/15 font-serif text-[80px] leading-none select-none pointer-events-none">&ldquo;</div>
-                                <div className="flex gap-0.5 mb-4">
-                                    {[1,2,3,4,5].map(i => <svg key={i} className="w-4 h-4 text-accent-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
-                                </div>
-                                <blockquote className="font-serif text-base sm:text-lg text-charcoal-900 leading-relaxed mb-6 italic flex-grow">
+                            <div className="relative rounded-xl border border-cream-400 bg-white p-6 sm:p-7 h-full flex flex-col">
+                                <blockquote className="font-serif text-[17px] sm:text-lg text-charcoal-900 leading-[1.6] mb-6 flex-grow">
                                     &ldquo;Lo que más me impresionó fue la precisión del filtro jurisdiccional. Trabajo en materia penal en Querétaro y cada respuesta viene fundamentada con legislación de mi estado, no con artículos de otros códigos. Esa seguridad jurídica no la encuentras en ninguna otra herramienta de IA. Iurexia es el futuro de la abogacía en México.&rdquo;
                                 </blockquote>
                                 <div className="flex items-center gap-3 mt-auto pt-4 border-t border-cream-300">
@@ -663,17 +651,20 @@ function ComparisonChatRow({
     isLast?: boolean;
 }) {
     return (
-        <tr className={!isLast ? 'border-b border-gray-100' : ''}>
-            <td className="py-4 px-5 font-medium text-charcoal-900 text-sm">{feature}</td>
-            <td className="py-4 px-4 text-center text-charcoal-400 text-sm">
-                <span className="inline-flex items-center justify-center gap-1.5">
-                    <svg className="w-4 h-4 text-charcoal-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+        /* El texto va en carbón en las dos columnas; el color lo lleva sólo el
+           icono. Antes la columna de Iurexia iba entera en dorado y a ese
+           tamaño costaba leerla. */
+        <tr className={!isLast ? 'border-b border-charcoal-900/[0.06]' : ''}>
+            <td className="py-3.5 px-5 text-sm font-medium text-charcoal-900">{feature}</td>
+            <td className="py-3.5 px-4 text-center text-sm text-charcoal-500">
+                <span className="inline-flex items-start justify-center gap-1.5 text-left">
+                    <svg className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-charcoal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                     <span>{chatgpt}</span>
                 </span>
             </td>
-            <td className="py-4 px-4 text-center text-accent-gold font-semibold text-sm bg-accent-gold/[0.06]">
-                <span className="inline-flex items-center justify-center gap-1.5">
-                    <svg className="w-4 h-4 text-accent-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+            <td className="bg-accent-gold/[0.06] py-3.5 px-4 text-center text-sm text-charcoal-800">
+                <span className="inline-flex items-start justify-center gap-1.5 text-left">
+                    <svg className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                     <span>{iurexia}</span>
                 </span>
             </td>
