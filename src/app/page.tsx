@@ -1,6 +1,7 @@
 'use client';
 
 import Navbar from '@/components/Navbar';
+import HeroVideo from '@/components/HeroVideo';
 import ChatInput from '@/components/ChatInput';
 import Link from 'next/link';
 import { HeroCTA } from '@/components/HeroCTA';
@@ -29,18 +30,13 @@ export default function HomePage() {
                     })
                 }}
             />
-            <Navbar />
+            <Navbar sobreOscuro />
 
-            {/* Hero Section - Harvey.AI Style */}
-            <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6">
+            {/* Hero con vídeo de fondo. El titular y los botones viven ahí. */}
+            <HeroVideo />
+
+            <section className="pt-14 sm:pt-20 pb-12 sm:pb-20 px-4 sm:px-6">
                 <div className="max-w-4xl mx-auto text-center">
-                    {/* Logo */}
-                    <AnimatedSection animation="scale-in">
-                        <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
-                            Iurex<span className="text-accent-gold">ia</span>
-                        </h1>
-                    </AnimatedSection>
-
                     {/* Promotional Video */}
                     <AnimatedSection animation="fade-in" delay={200}>
                         <div className="mb-8 rounded-xl sm:rounded-2xl overflow-hidden shadow-xl max-w-2xl mx-auto aspect-video">
@@ -55,9 +51,10 @@ export default function HomePage() {
                         </div>
                     </AnimatedSection>
 
-                    {/* Headline */}
+                    {/* El titular se mudó al hero; aquí sólo queda el remate
+                        que enlaza el vídeo de presentación con las tarjetas. */}
                     <AnimatedSection animation="slide-up" delay={300}>
-                        <p className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-charcoal-900 leading-tight mb-12 px-2">
+                        <p className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal-900 leading-tight mb-12 px-2">
                             La inteligencia artificial <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">más precisa</span> para el sistema jurídico Mexicano
                         </p>
                     </AnimatedSection>
