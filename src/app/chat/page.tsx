@@ -17,7 +17,6 @@ import StateSelectorModal from '@/components/StateSelectorModal';
 import WelcomeExperience from '@/components/WelcomeExperience';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
 import WelcomeVideoModal from '@/components/WelcomeVideoModal';
-import NewFeaturesAnnouncementModal from '@/components/NewFeaturesAnnouncementModal';
 import InvitacionBetaAndroidModal, { BotonBetaAndroid } from '@/components/InvitacionBetaAndroidModal';
 import FeedbackWidget from '@/components/FeedbackWidget';
 // FreeUserOnboardingModal removed — was causing 43% user abandonment (audio-modal blocker)
@@ -101,8 +100,6 @@ export default function ChatPage() {
     const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [isDocumentAnalyzing, setIsDocumentAnalyzing] = useState(false);
     const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
-    const [showNewFeaturesAnnouncement, setShowNewFeaturesAnnouncement] = useState(false);
-    const announcementInitiatedRef = useRef(false); // Guard against double-fire race condition
     // showFreeOnboarding removed — onboarding now inline via Quick Start buttons
     const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
     const [showWelcomeExperience, setShowWelcomeExperience] = useState(false);
@@ -290,35 +287,10 @@ export default function ChatPage() {
         }
     }, [profile, user]);
 
-    // New features announcement (TCC Beta + Redacción Pro + Precedentes) — show once for Pro/Platinum/Admin
-    // FIX v3: ref-guarded, no setTimeout (was causing race condition where React cleanup
-    // cancelled the timer but localStorage was already marked, so modal never showed).
-    useEffect(() => {
-        if (announcementInitiatedRef.current) return;
-        if (!profile || !user) return;
-        const isProOrPlatinum = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile.subscription_type || '');
-        const isAdminUser = isAdmin(user.email);
-        if (!isProOrPlatinum && !isAdminUser) return;
-
-        // v4: el walkthrough cambió de fondo —consulta rápida, los tres
-        // escalones de redacción y la legislación de las 32 entidades—, así que
-        // quien ya vio la v3 tiene que volver a verlo. Subir esta versión es lo
-        // único que hace que reaparezca.
-        const lsKey = `iurexia_new_features_v4_${user.id}`;
-        if (typeof window !== 'undefined' && localStorage.getItem(lsKey) === '1') return;
-        if (showWelcomeVideo) return; // wait until welcome video is closed
-
-        // Mark as initiated to prevent double-fire across re-renders
-        announcementInitiatedRef.current = true;
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(lsKey, '1');
-        }
-        setShowNewFeaturesAnnouncement(true);
-    }, [profile, user, showWelcomeVideo]);
-
-    const handleNewFeaturesAnnouncementClose = useCallback(() => {
-        setShowNewFeaturesAnnouncement(false);
-    }, []);
+    // El walkthrough de «Nuevas herramientas» se retiró el 3-ago-2026 a
+    // petición de David: las funciones que anunciaba ya no son nuevas y el
+    // modal estorbaba al entrar. El componente sigue en el repo por si un
+    // lanzamiento futuro amerita reactivarlo (con su lsKey subida de versión).
 
     // Free user onboarding removed — was causing 43% user abandonment
     // Now handled inline via Quick Start suggestion buttons in empty state
@@ -1187,11 +1159,6 @@ export default function ChatPage() {
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 
             <WelcomeVideoModal isOpen={showWelcomeVideo} onClose={handleWelcomeVideoClose} />
-
-            <NewFeaturesAnnouncementModal
-                isOpen={showNewFeaturesAnnouncement}
-                onClose={handleNewFeaturesAnnouncementClose}
-            />
 
             {/*
                 La invitación al grupo fundador de la beta de Android. Sólo la

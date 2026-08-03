@@ -37,23 +37,11 @@ export default function HomePage() {
 
             <section className="pt-14 sm:pt-20 pb-12 sm:pb-20 px-4 sm:px-6">
                 <div className="max-w-4xl mx-auto text-center">
-                    {/* Promotional Video */}
-                    <AnimatedSection animation="fade-in" delay={200}>
-                        <div className="mb-8 rounded-xl sm:rounded-2xl overflow-hidden shadow-xl max-w-2xl mx-auto aspect-video">
-                            <video
-                                controls
-                                playsInline
-                                className="w-full h-full object-cover"
-                                poster="/video-poster.jpg"
-                            >
-                                <source src="/iurexia-front-final.mp4" type="video/mp4" />
-                            </video>
-                        </div>
-                    </AnimatedSection>
-
-                    {/* El titular se mudó al hero; aquí sólo queda el remate
-                        que enlaza el vídeo de presentación con las tarjetas. */}
-                    <AnimatedSection animation="slide-up" delay={300}>
+                    {/* El vídeo promocional reproducible se retiró el 3-ago-2026:
+                        el hero de vídeo ya cuenta la historia y dos vídeos en la
+                        misma pantalla competían entre sí. El archivo sigue en
+                        /public por si se quiere en otra página. */}
+                    <AnimatedSection animation="slide-up" delay={200}>
                         <p className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal-900 leading-tight mb-12 px-2">
                             La inteligencia artificial <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">más precisa</span> para el sistema jurídico Mexicano
                         </p>
