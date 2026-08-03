@@ -35,6 +35,39 @@ const TIPOS_ASUNTO = [
 const MATERIAS = ['civil', 'penal', 'administrativa', 'laboral', 'familiar', 'mercantil'];
 const CIRCUITOS = Array.from({ length: 32 }, (_, i) => i + 1);
 
+/* F1 (3-ago-2026): el secretario DICTA el sentido; el pipeline lo demuestra.
+   Las opciones dependen del tipo de asunto porque el resolutivo de un directo
+   (conceder/negar/sobreseer) no es el de una revisión (confirmar/revocar/
+   modificar) ni el de una queja (fundada/infundada/desechar). */
+const SENTIDOS_POR_TIPO: Record<string, string[]> = {
+    amparo_directo: [
+        'Conceder el amparo',
+        'Conceder para efectos',
+        'Negar el amparo',
+        'Sobreseer',
+        'Conceder en parte y negar en parte',
+    ],
+    amparo_revision: [
+        'Confirmar la sentencia recurrida',
+        'Revocar y conceder el amparo',
+        'Revocar y negar el amparo',
+        'Revocar y sobreseer',
+        'Modificar la sentencia recurrida',
+    ],
+    revision_fiscal: [
+        'Fundada — revocar la sentencia del TFJA',
+        'Infundada — confirmar la sentencia del TFJA',
+        'Desechar el recurso',
+        'Sin materia',
+    ],
+    recurso_queja: [
+        'Fundado el recurso',
+        'Infundado el recurso',
+        'Desechar el recurso',
+        'Sin materia',
+    ],
+};
+
 const CALIFICACIONES = [
     'fundado', 'parcialmente_fundado', 'esencialmente_fundado',
     'infundado', 'inoperante', 'inatendible',
@@ -80,6 +113,9 @@ export default function TccBetaPage() {
     const [tipoAsunto, setTipoAsunto] = useState(TIPOS_ASUNTO[0].id);
     const [materia, setMateria] = useState('civil');
     const [circuito, setCircuito] = useState(1);
+    // El sentido dictado es OBLIGATORIO: sin él no se analiza (F1).
+    const [sentidoDictado, setSentidoDictado] = useState('');
+    const [calificacionAgravios, setCalificacionAgravios] = useState('');
     const [fileActo, setFileActo] = useState<File | null>(null);
     const [fileConceptos, setFileConceptos] = useState<File | null>(null);
     const [textoActo, setTextoActo] = useState('');
@@ -217,6 +253,12 @@ export default function TccBetaPage() {
 
     // ─── Validación común del formulario ───
     const validateForm = (): boolean => {
+        // El sentido es lo primero: sin él la máquina estaría decidiendo el
+        // fallo, que es exactamente lo que este rediseño prohíbe.
+        if (!sentidoDictado) {
+            setError('Dicta el sentido de la resolución: el proyecto se construye para demostrarlo.');
+            return false;
+        }
         const hasFiles = inputMode === 'files' && (fileActo || fileConceptos);
         const hasText = inputMode === 'text' && (textoActo.trim() || textoConceptos.trim());
         if (!hasFiles && !hasText) {
@@ -251,6 +293,8 @@ export default function TccBetaPage() {
 
         const fd = new FormData();
         fd.append('user_email', user?.email || '');
+        fd.append('sentido_dictado', sentidoDictado);
+        fd.append('calificacion_agravios', calificacionAgravios.trim());
         if (inputMode === 'files') {
             if (fileActo) fd.append('doc_acto', fileActo);
             if (fileConceptos) fd.append('doc_conceptos', fileConceptos);
@@ -519,7 +563,7 @@ export default function TccBetaPage() {
                     <div className="grid grid-cols-3 gap-4">
                         <div>
                             <label className="text-sm font-medium block mb-1">Tipo de asunto</label>
-                            <select className="w-full border rounded px-3 py-2" value={tipoAsunto} onChange={(e) => setTipoAsunto(e.target.value)}>
+                            <select className="w-full border rounded px-3 py-2" value={tipoAsunto} onChange={(e) => { setTipoAsunto(e.target.value); setSentidoDictado(''); }}>
                                 {TIPOS_ASUNTO.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
                             </select>
                         </div>
@@ -535,6 +579,41 @@ export default function TccBetaPage() {
                                 {CIRCUITOS.map((c) => <option key={c} value={c}>{c}°</option>)}
                             </select>
                         </div>
+                    </div>
+
+                    {/* ── El sentido dictado (F1) ──
+                        Es el corazón del rediseño: la máquina nunca decide el
+                        fallo. Sin sentido no hay análisis. */}
+                    <div className="border-t pt-4">
+                        <label className="text-sm font-medium block mb-1">
+                            Sentido de la resolución <span className="text-red-600">*</span>
+                        </label>
+                        <select
+                            className={`w-full border rounded px-3 py-2 ${!sentidoDictado ? 'border-amber-400 bg-amber-50/40' : ''}`}
+                            value={sentidoDictado}
+                            onChange={(e) => setSentidoDictado(e.target.value)}
+                        >
+                            <option value="">— Dicta el sentido del proyecto —</option>
+                            {(SENTIDOS_POR_TIPO[tipoAsunto] || []).map((s) => (
+                                <option key={s} value={s}>{s}</option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                            El proyecto se construye para demostrar este sentido. Si el
+                            análisis encuentra un obstáculo serio (jurisprudencia obligatoria
+                            en contra, improcedencia), lo señalará en ADVERTENCIAS sin
+                            cambiar el sentido.
+                        </p>
+
+                        <label className="text-sm font-medium block mb-1 mt-3">
+                            Calificación de los agravios <span className="text-gray-400 font-normal">(opcional)</span>
+                        </label>
+                        <input
+                            className="w-full border rounded px-3 py-2"
+                            placeholder="Ej.: primero y segundo infundados; tercero inoperante"
+                            value={calificacionAgravios}
+                            onChange={(e) => setCalificacionAgravios(e.target.value)}
+                        />
                     </div>
 
                     <div className="border-t pt-4">
