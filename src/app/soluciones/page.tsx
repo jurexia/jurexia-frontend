@@ -114,7 +114,7 @@ export default function SolucionesPage() {
                                         : 'border-cream-400 hover:border-accent-gold/50'
                                 }`}>
                                     <div className="mb-3 flex items-center gap-2">
-                                        <span className={`text-[11px] font-semibold uppercase tracking-[0.12em] ${p.urgente ? 'text-red-700' : 'text-accent-brown'}`}>
+                                        <span className={`text-[11px] font-semibold uppercase tracking-[0.12em] ${p.urgente ? 'text-charcoal-800' : 'text-accent-brown'}`}>
                                             {p.perfil}
                                         </span>
                                         {p.beta && (

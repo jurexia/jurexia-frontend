@@ -31,9 +31,9 @@ export default function PlataformaPage() {
                                 {/* Browser Toolbar */}
                                 <div className="flex items-center gap-2 px-4 py-3 bg-white/70 border-b border-black/5">
                                     <div className="flex gap-1.5 w-16">
-                                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                                        <div className="w-3 h-3 rounded-full bg-charcoal-900/20"></div>
+                                        <div className="w-3 h-3 rounded-full bg-charcoal-900/15"></div>
+                                        <div className="w-3 h-3 rounded-full bg-charcoal-900/10"></div>
                                     </div>
                                     <div className="flex-1 text-center text-xs text-charcoal-500 font-medium">iurexia.app</div>
                                     <div className="w-16"></div>
@@ -64,11 +64,11 @@ export default function PlataformaPage() {
                                     {/* Chat Input Container */}
                                     <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-gray-100 p-2 sm:p-3 relative z-10 transition-shadow">
                                         <div className="flex items-center px-4 py-3 border-b border-gray-100/60 pb-3 mb-2">
-                                            <button className="flex items-center gap-1.5 px-3 py-1 bg-charcoal-900 text-white rounded-full text-xs font-medium shadow-sm">
+                                            <button className="flex items-center gap-1.5 px-3 py-1 bg-charcoal-900 text-white rounded-lg text-xs font-medium shadow-sm">
                                                 <Search className="w-3.5 h-3.5" />
                                                 <span>Buscar</span>
                                             </button>
-                                            <button className="flex items-center gap-1.5 px-3 py-1 text-gray-400 rounded-full text-xs font-medium">
+                                            <button className="flex items-center gap-1.5 px-3 py-1 text-gray-400 rounded-lg text-xs font-medium">
                                                 <FileText className="w-3.5 h-3.5" />
                                                 <span>Analizar</span>
                                             </button>
@@ -93,18 +93,18 @@ export default function PlataformaPage() {
                                                 <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-charcoal-600">Genios</span>
                                             </div>
 
-                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-medium border border-[#c9a962] bg-gradient-to-r from-purple-50 to-white text-purple-700 shadow-[0_0_8px_rgba(201,169,98,0.2)]">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-medium border border-[#c9a962] bg-gradient-to-r from-cream-200 to-white text-accent-brown shadow-[0_0_8px_rgba(201,169,98,0.2)]">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-accent-gold"></span>
                                                 Amparo
                                             </div>
 
-                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-medium border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-colors">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 opacity-60"></span>
+                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-medium border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-colors">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-accent-gold opacity-60"></span>
                                                 Mercantil
                                             </div>
 
-                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] sm:text-[11px] font-medium border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-colors hidden sm:flex">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 opacity-60"></span>
+                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-medium border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-colors hidden sm:flex">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-charcoal-900 opacity-60"></span>
                                                 Civil
                                             </div>
                                         </div>
@@ -336,10 +336,10 @@ export default function PlataformaPage() {
             </section>
 
             {/* Premium Legal Assistance Section */}
-            <section className="py-24 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-t border-amber-100">
+            <section className="py-24 bg-cream-200 border-t border-accent-gold/20">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="text-center mb-16">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-full mb-6">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-gold/10 text-white text-sm font-bold rounded-lg mb-6">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
@@ -348,7 +348,7 @@ export default function PlataformaPage() {
                         <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
                             Más que tecnología:
                             <br />
-                            <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                            <span className="text-accent-gold">
                                 acompañamiento humano
                             </span>
                         </h2>
@@ -358,8 +358,8 @@ export default function PlataformaPage() {
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
-                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-amber-100 hover:shadow-xl transition-shadow">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6">
+                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-accent-gold/20 hover:shadow-xl transition-shadow">
+                            <div className="w-14 h-14 rounded-2xl bg-accent-gold/10 flex items-center justify-center mb-6">
                                 <MessageSquare className="w-7 h-7 text-white" />
                             </div>
                             <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">
@@ -370,8 +370,8 @@ export default function PlataformaPage() {
                             </p>
                         </div>
 
-                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-amber-100 hover:shadow-xl transition-shadow">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6">
+                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-accent-gold/20 hover:shadow-xl transition-shadow">
+                            <div className="w-14 h-14 rounded-2xl bg-accent-gold/10 flex items-center justify-center mb-6">
                                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                 </svg>
@@ -384,8 +384,8 @@ export default function PlataformaPage() {
                             </p>
                         </div>
 
-                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-amber-100 hover:shadow-xl transition-shadow">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6">
+                        <div className="bg-white rounded-3xl p-8 shadow-lg border border-accent-gold/20 hover:shadow-xl transition-shadow">
+                            <div className="w-14 h-14 rounded-2xl bg-accent-gold/10 flex items-center justify-center mb-6">
                                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
@@ -402,7 +402,7 @@ export default function PlataformaPage() {
                     <div className="text-center mt-12">
                         <Link
                             href="/precios"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-lg hover:bg-charcoal-800 transition-colors"
                         >
                             Conocer Plan Platinum
                             <ArrowRight className="w-5 h-5" />
@@ -422,7 +422,7 @@ export default function PlataformaPage() {
                     </p>
                     <Link
                         href="/chat"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-full hover:bg-charcoal-800 transition-colors mb-8"
+                        className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-lg hover:bg-charcoal-800 transition-colors mb-8"
                     >
                         Comenzar ahora
                         <ArrowRight className="w-5 h-5" />
@@ -521,7 +521,7 @@ function FeatureSection({
                                         }`}
                                     style={{ transitionDelay: `${index * 100}ms` }}
                                 >
-                                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                    <CheckCircle className="w-5 h-5 text-accent-gold mt-0.5 flex-shrink-0" />
                                     <span className="text-charcoal-700">{feature}</span>
                                 </li>
                             ))}
@@ -544,10 +544,10 @@ function FeatureSection({
 // Visual Components for each feature
 function HybridSearchVisual() {
     return (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl p-8 shadow-lg">
+        <div className="bg-gradient-to-br from-cream-200 to-cream-300 rounded-3xl p-8 shadow-lg">
             <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
                 <div className="flex items-center gap-3 mb-4">
-                    <Search className="w-5 h-5 text-blue-600" />
+                    <Search className="w-5 h-5 text-charcoal-800" />
                     <span className="text-charcoal-600">derecho del tanto arrendamiento</span>
                 </div>
                 <div className="h-px bg-gray-100 mb-4"></div>
@@ -574,7 +574,7 @@ function HybridSearchVisual() {
             </div>
             <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
                 <span className="flex items-center gap-1">
-                    <Zap className="w-4 h-4 text-yellow-500" />
+                    <Zap className="w-4 h-4 text-accent-gold" />
                     Búsqueda Híbrida Verificada
                 </span>
             </div>
@@ -584,36 +584,36 @@ function HybridSearchVisual() {
 
 function SentinelAgentVisual() {
     return (
-        <div className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-3xl p-8 shadow-lg">
+        <div className="bg-accent-gold/10 rounded-3xl p-8 shadow-lg">
             <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
-                    <Shield className="w-6 h-6 text-amber-600" />
+                    <Shield className="w-6 h-6 text-accent-gold" />
                     <span className="font-medium text-charcoal-900">Análisis de Demanda</span>
                 </div>
 
                 <div className="space-y-4">
                     {/* Fortalezas */}
-                    <div className="p-3 bg-green-50 rounded-lg border border-green-100">
-                        <p className="text-sm font-medium text-green-700 mb-1">✓ Fortalezas</p>
-                        <p className="text-xs text-green-600">Fundamentación sólida en Art. 14 CPEUM</p>
+                    <div className="p-3 bg-accent-gold/[0.07] rounded-lg border border-accent-gold/20">
+                        <p className="text-sm font-medium text-accent-gold mb-1">✓ Fortalezas</p>
+                        <p className="text-xs text-accent-gold">Fundamentación sólida en Art. 14 CPEUM</p>
                     </div>
 
                     {/* Debilidades */}
-                    <div className="p-3 bg-red-50 rounded-lg border border-red-100">
-                        <p className="text-sm font-medium text-red-700 mb-1">⚠ Debilidades</p>
-                        <p className="text-xs text-red-600">Falta jurisprudencia de 5ta época aplicable</p>
+                    <div className="p-3 bg-cream-200 rounded-lg border border-charcoal-900/10">
+                        <p className="text-sm font-medium text-charcoal-800 mb-1">⚠ Debilidades</p>
+                        <p className="text-xs text-charcoal-800">Falta jurisprudencia de 5ta época aplicable</p>
                     </div>
 
                     {/* Sugerencias */}
-                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                        <p className="text-sm font-medium text-blue-700 mb-1">💡 Sugerencia</p>
-                        <p className="text-xs text-blue-600">Agregar Tesis 2a. LXVII/2021 como apoyo</p>
+                    <div className="p-3 bg-cream-200 rounded-lg border border-charcoal-900/10">
+                        <p className="text-sm font-medium text-charcoal-800 mb-1">💡 Sugerencia</p>
+                        <p className="text-xs text-charcoal-800">Agregar Tesis 2a. LXVII/2021 como apoyo</p>
                     </div>
 
                     {/* Risk */}
                     <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                         <span className="text-sm text-gray-500">Riesgo General:</span>
-                        <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm font-medium rounded-full">
+                        <span className="px-3 py-1 bg-accent-gold/15 text-accent-gold text-sm font-medium rounded-lg">
                             MEDIO
                         </span>
                     </div>
@@ -633,10 +633,10 @@ function JurisdictionalFiltersVisual() {
     ];
 
     return (
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-100 rounded-3xl p-8 shadow-lg">
+        <div className="bg-gradient-to-br from-cream-200 to-cream-300 rounded-3xl p-8 shadow-lg">
             <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
-                    <MapPin className="w-6 h-6 text-emerald-600" />
+                    <MapPin className="w-6 h-6 text-accent-gold" />
                     <span className="font-medium text-charcoal-900">Jurisdicción Activa</span>
                 </div>
 
@@ -645,15 +645,15 @@ function JurisdictionalFiltersVisual() {
                         <div
                             key={state.name}
                             className={`flex items-center justify-between p-3 rounded-lg transition-all ${state.active
-                                ? 'bg-emerald-50 border border-emerald-200'
+                                ? 'bg-accent-gold/[0.07] border border-accent-gold/30'
                                 : 'bg-gray-50 border border-gray-100 opacity-50'
                                 }`}
                         >
-                            <span className={`text-sm ${state.active ? 'text-emerald-700 font-medium' : 'text-gray-400'}`}>
+                            <span className={`text-sm ${state.active ? 'text-accent-gold font-medium' : 'text-gray-400'}`}>
                                 {state.federal && '🇲🇽 '}{state.name}
                             </span>
                             {state.active ? (
-                                <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                <CheckCircle className="w-4 h-4 text-accent-gold" />
                             ) : (
                                 <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>
                             )}
@@ -681,9 +681,9 @@ function ResultItem({
     color: string;
 }) {
     const colors: Record<string, string> = {
-        blue: 'bg-blue-100 text-blue-700',
-        purple: 'bg-purple-100 text-purple-700',
-        green: 'bg-green-100 text-green-700',
+        blue: 'bg-cream-300 text-charcoal-800',
+        purple: 'bg-accent-gold/15 text-accent-brown',
+        green: 'bg-accent-gold/15 text-accent-gold',
     };
 
     return (
@@ -731,9 +731,9 @@ function PrecedentesVisual() {
     ] as const;
 
     const sentidoStyle: Record<string, string> = {
-        CONCEDE: 'bg-green-100 text-green-700',
-        NIEGA: 'bg-red-100 text-red-700',
-        SOBRESEE: 'bg-amber-100 text-amber-700',
+        CONCEDE: 'bg-accent-gold/15 text-accent-gold',
+        NIEGA: 'bg-red-800/10 text-charcoal-800',
+        SOBRESEE: 'bg-accent-gold/15 text-accent-gold',
     };
 
     return (
@@ -751,7 +751,7 @@ function PrecedentesVisual() {
                             <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs font-mono text-charcoal-500">Circ. {item.circuito} · {item.tribunal}</span>
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${sentidoStyle[item.sentido]}`}>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-lg font-bold ${sentidoStyle[item.sentido]}`}>
                                         {item.sentido}
                                     </span>
                                 </div>
@@ -779,20 +779,20 @@ function JurimetriaVisual() {
                     <TrendingUp className="w-4 h-4 text-[#c9a962]" />
                     <span className="text-white/60 text-xs font-medium uppercase tracking-wider">Jurimetría Predictiva</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-full font-bold">PLATINUM</span>
+                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-lg font-bold">PLATINUM</span>
             </div>
 
-            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 mb-4">
-                <p className="text-red-300 text-xs font-medium mb-1">Sentido probable</p>
-                <p className="text-3xl font-serif font-medium text-red-400">NIEGA</p>
-                <p className="text-xs text-red-300/70 mt-1">Basado en 6,379 precedentes análogos</p>
+            <div className="bg-red-900/20 border border-red-800/40 rounded-2xl p-5 mb-4">
+                <p className="text-red-200/80 text-xs font-medium mb-1">Sentido probable</p>
+                <p className="text-3xl font-serif font-medium text-red-200/80">NIEGA</p>
+                <p className="text-xs text-red-200/60 mt-1">Basado en 6,379 precedentes análogos</p>
             </div>
 
             <div className="space-y-3 mb-4">
                 {[
-                    { label: 'NIEGA', pct: 71, color: 'bg-red-500' },
-                    { label: 'CONCEDE', pct: 19, color: 'bg-green-500' },
-                    { label: 'SOBRESEE', pct: 10, color: 'bg-amber-500' },
+                    { label: 'NIEGA', pct: 71, color: 'bg-red-800' },
+                    { label: 'CONCEDE', pct: 19, color: 'bg-charcoal-900' },
+                    { label: 'SOBRESEE', pct: 10, color: 'bg-accent-gold' },
                 ].map(bar => (
                     <div key={bar.label}>
                         <div className="flex justify-between text-xs text-white/60 mb-1">
@@ -817,12 +817,12 @@ function GenioAmparoVisual() {
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-lg bg-accent-gold/20 flex flex-col items-center justify-center relative">
                         <div className="flex gap-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-accent-gold/50"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-accent-gold"></span>
                         </div>
                     </div>
                     <span className="font-medium text-charcoal-900">Genios Especializados</span>
-                    <span className="ml-auto px-2 py-0.5 rounded-full bg-accent-gold/10 text-accent-brown text-[10px] font-bold">PRO</span>
+                    <span className="ml-auto px-2 py-0.5 rounded-lg bg-accent-gold/10 text-accent-brown text-[10px] font-bold">PRO</span>
                 </div>
 
                 <div className="space-y-3 mb-4">
@@ -830,7 +830,7 @@ function GenioAmparoVisual() {
                         <p className="text-[10px] text-charcoal-500 uppercase tracking-wider mb-1">Consulta</p>
                         <p className="text-sm text-charcoal-800">¿Cómo impugno una orden de aprehensión sin fundamentación considerando los criterios interamericanos?</p>
                     </div>
-                    <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
+                    <div className="p-3 bg-accent-gold/[0.07] rounded-lg border border-accent-gold/20">
                         <p className="text-[10px] text-accent-brown uppercase tracking-wider mb-1">Perspectiva Combinada</p>
                         <p className="text-sm text-charcoal-700">Vía amparo indirecto (Art. 107 L.A.) alegando violación al debido proceso. La Corte IDH en <i>Caso Cabrera García</i> establece que toda restricción a la libertad personal debe...</p>
                     </div>
@@ -856,7 +856,7 @@ function RedaccionProVisual() {
                     <FileText className="w-4 h-4 text-[#c9a962]" />
                     <span className="text-white/60 text-xs font-medium uppercase tracking-wider">Redacción Pro</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-full font-bold">PRO</span>
+                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-lg font-bold">PRO</span>
             </div>
 
             {/* Comparison */}
@@ -864,7 +864,7 @@ function RedaccionProVisual() {
                 {/* Normal mode */}
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] px-2 py-0.5 bg-white/10 text-white/50 rounded-full font-medium">NORMAL</span>
+                        <span className="text-[10px] px-2 py-0.5 bg-white/10 text-white/50 rounded-lg font-medium">NORMAL</span>
                     </div>
                     <p className="text-sm text-white/40 leading-relaxed">
                         El acto reclamado viola el artículo 14 constitucional porque no se respetó el debido proceso...
@@ -874,8 +874,8 @@ function RedaccionProVisual() {
                 {/* Pro mode */}
                 <div className="bg-[#c9a962]/10 border border-[#c9a962]/30 rounded-2xl p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-full font-bold">REDACCIÓN PRO</span>
-                        <span className="text-[9px] bg-[#c9a962] text-charcoal-900 px-1.5 py-0.5 rounded-full font-bold">NUEVO</span>
+                        <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-lg font-bold">REDACCIÓN PRO</span>
+                        <span className="text-[9px] bg-[#c9a962] text-charcoal-900 px-1.5 py-0.5 rounded-lg font-bold">NUEVO</span>
                     </div>
                     <p className="text-sm text-white/80 leading-relaxed">
                         El acto de autoridad impugnado transgrede la garantía de audiencia prevista en el artículo 14 de la Constitución Política de los Estados Unidos Mexicanos, al haberse emitido sin agotar el procedimiento que exige la subsunción del supuesto normativo en el caso concreto...

@@ -167,7 +167,7 @@ export default function HomePage() {
                             </span>
                         </div>
                         <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-center text-charcoal-900 mb-4">
-                            ¿Por qué <span className="text-red-700">no</span> usar ChatGPT para derecho mexicano?
+                            ¿Por qué <span className="text-charcoal-800">no</span> usar ChatGPT para derecho mexicano?
                         </h2>
                     </AnimatedSection>
                     <AnimatedSection animation="fade-in" delay={100}>
@@ -233,7 +233,7 @@ export default function HomePage() {
                                             <ComparisonChatRow
                                                 feature="Precio"
                                                 chatgpt="~$400 MXN/mes (Plus)"
-                                                iurexia="Desde $129 MXN/mes con todo incluido"
+                                                iurexia="Desde $79 MXN/mes con todo incluido"
                                                 isLast
                                             />
                                         </tbody>

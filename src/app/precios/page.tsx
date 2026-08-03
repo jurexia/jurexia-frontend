@@ -61,16 +61,16 @@ export default function PreciosPage() {
                                 </div>
                                 {isAnnual && (
                                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30 text-charcoal-900 text-xs font-bold animate-in fade-in slide-in-from-left-2 duration-300">
-                                        <span>✨</span> Ahorra hasta 17%
+                                        Ahorra hasta 17%
                                     </span>
                                 )}
                             </div>
 
                             {/* Founders Promotion Callout */}
                             <div className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-lg bg-gradient-to-r from-accent-gold/15 via-accent-gold/25 to-accent-gold/15 border border-accent-gold/40 shadow-sm animate-in fade-in zoom-in-95 duration-500">
-                                <span className="text-accent-gold text-base leading-none animate-pulse">✨</span>
+                                
                                 <p className="text-xs sm:text-sm font-bold text-charcoal-900 tracking-wide">
-                                    ¡Vuelven los precios de descuento para suscriptores fundadores por tiempo limitado! 🚀
+                                    Precios de descuento para suscriptores fundadores, por tiempo limitado.
                                 </p>
                             </div>
                         </div>
@@ -152,7 +152,7 @@ export default function PreciosPage() {
                                     "Registra tu cédula para conectar clientes",
                                     "Búsqueda con IA verificado en constante actualización",
                                     "Filtros por entidad federativa + marco federal",
-                                    <span className="text-accent-gold font-medium">📧 Mensaje de bienvenida con instrucciones para sacar el máximo provecho</span>,
+                                    <span className="text-accent-gold font-medium">Mensaje de bienvenida con instrucciones para sacar el máximo provecho</span>,
                                     "Soporte prioritario"
                                 ]}
                                 buttonText={isAnnual ? 'Elegir Pro Anual' : 'Elegir Plan Pro'}
@@ -185,14 +185,14 @@ export default function PreciosPage() {
                                         <span className="text-accent-gold text-base leading-none">✦</span>
                                         <span className="text-charcoal-900 font-bold">Jurimetría — Predicción de sentido</span>
                                     </span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-gradient-to-r from-red-100 to-red-50 border border-red-200 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-charcoal-400 text-base leading-none">⚡</span>
+                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-accent-gold/[0.07] border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
+                                        
                                         <span className="text-charcoal-900 font-bold">Redactor de Sentencias TCC</span>
-                                        <span className="ml-auto text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-lg font-bold shrink-0">BETA</span>
+                                        <span className="ml-auto text-[9px] border border-accent-gold/40 text-accent-brown px-1.5 py-0.5 rounded font-bold shrink-0">BETA</span>
                                     </span>,
                                     <span className="text-charcoal-900 font-bold">Registra tu cédula para conectar clientes</span>,
                                     <span className="text-charcoal-900 font-bold">Consulta personalizada con equipo legal de Iurexia (vía correo)</span>,
-                                    <span className="text-charcoal-900 font-bold">📧 Mensaje de bienvenida con instrucciones premium</span>,
+                                    <span className="text-charcoal-900 font-bold">Mensaje de bienvenida con instrucciones premium</span>,
                                     <span className="text-charcoal-900 font-bold">Soporte VIP dedicado</span>
                                 ]}
                                 buttonText={isAnnual ? 'Elegir Platinum Anual' : 'Elegir Platinum'}
@@ -332,7 +332,7 @@ export default function PreciosPage() {
                                         feature={
                                             <span className="flex items-center gap-1.5 font-semibold text-charcoal-400">
                                                 Redactor de Sentencias TCC
-                                                <span className="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-lg font-bold">BETA</span>
+                                                <span className="text-[9px] border border-accent-gold/40 text-accent-brown px-1.5 py-0.5 rounded font-bold">BETA</span>
                                             </span>
                                         }
                                         free="—"
@@ -508,7 +508,7 @@ function PricingCard({
 
         // Check if user is logged in
         if (!user?.email) {
-            console.warn('⚠️ User not logged in, redirecting to login');
+            console.warn('User not logged in, redirecting to login');
             alert('Por favor inicia sesión para suscribirte.');
             window.location.href = '/login?redirect=/precios';
             return;
@@ -600,7 +600,7 @@ function PricingCard({
                 )}
                 {savingsBadge && (
                     <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30">
-                        <span className="text-xs font-bold text-accent-gold">✨ {savingsBadge}</span>
+                        <span className="text-xs font-bold text-accent-gold">{savingsBadge}</span>
                     </div>
                 )}
             </div>
