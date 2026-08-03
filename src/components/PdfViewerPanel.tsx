@@ -355,10 +355,12 @@ interface LeyArticuloViewProps {
     source: PdfSource;
     leyLabel: string;
     resolvedPdfUrl: string | null;
+    /** La misma, servida desde nuestro dominio, para incrustarla. */
+    urlParaVisor: string | null;
     hasPdf: boolean;
 }
 
-function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, hasPdf }: LeyArticuloViewProps) {
+function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, urlParaVisor, hasPdf }: LeyArticuloViewProps) {
     const parsed = useMemo(
         () => parseLeyArticuloTexto(source.texto || '', source),
         [source]
@@ -511,7 +513,7 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, hasPdf }: LeyArticu
                         </div>
                         <div className="hidden md:block rounded-xl overflow-hidden border border-cream-400 bg-cream-200" style={{ height: '440px' }}>
                             <iframe
-                                src={`${resolvedPdfUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+                                src={`${urlParaVisor}#toolbar=1&navpanes=0&scrollbar=1`}
                                 className="w-full h-full"
                                 title={`PDF: ${displayLey}`}
                                 loading="lazy"
@@ -605,6 +607,14 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
         return null;
     }, [source, tesisMeta]);
 
+    /* Los PDF de leyes se sirven desde iurexia.com, no desde el dominio donde
+       están alojados. No es que la fuente bloquee —se comprobó que no—: es que
+       incrustar un archivo de otro dominio queda a merced del navegador del
+       usuario, y un bloqueador o la opción de «descargar en vez de abrir» dejan
+       el visor con el icono de documento roto. Mismo origen, y deja de pasar. */
+    const porNuestroDominio = (u: string | null) =>
+        u && /^https:\/\//.test(u) ? `/api/ley/pdf?u=${encodeURIComponent(u)}` : u;
+
     // Resolve PDF URL: direct from backend, or lookup from estadosData for state/federal laws
     const resolvedPdfUrl = useMemo(() => {
         if (!source) return null;
@@ -632,6 +642,10 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
         }
         return null;
     }, [source]);
+
+    /* Lo que ve el visor. El enlace «abrir en otra pestaña» conserva la
+       dirección original, que es la que el abogado querrá copiar o citar. */
+    const urlParaVisor = useMemo(() => porNuestroDominio(resolvedPdfUrl), [resolvedPdfUrl]);
 
     if (!isOpen || !source) return null;
 
@@ -797,7 +811,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                         </div>
                     ) : (
                         /* ════════════════ STANDARD LEY VIEW ════════════════ */
-                        <LeyArticuloView source={source} leyLabel={leyLabel} resolvedPdfUrl={resolvedPdfUrl} hasPdf={hasPdf} />
+                        <LeyArticuloView source={source} leyLabel={leyLabel} resolvedPdfUrl={resolvedPdfUrl} urlParaVisor={urlParaVisor} hasPdf={hasPdf} />
                     )}
                 </div>
 
