@@ -27,10 +27,23 @@ import { NextRequest } from 'next/server';
  * pedir direcciones internas (SSRF).
  */
 
-/** Sólo estos orígenes. Son los del catálogo de normativa. */
+/**
+ * Sólo estos orígenes: los del catálogo de normativa y los que guarda Qdrant
+ * en el payload de las citas.
+ *
+ * `diputados.gob.mx` es el que motivó todo esto. Las leyes federales tienen su
+ * dirección oficial en Qdrant bajo la clave `url_pdf` —no `pdf_url`, que es la
+ * que usan las estatales—, y ese sitio **sí** manda `X-Frame-Options:
+ * SAMEORIGIN`: el navegador se niega a incrustarlo y no hay nada que hacer del
+ * lado del cliente. Reenviarlo desde aquí es la única salida.
+ */
 const PERMITIDOS = [
     'ukcuzhwmmfwvcedvhfll.supabase.co',
     'storage.googleapis.com',
+    'www.diputados.gob.mx',
+    'diputados.gob.mx',
+    'www.scjn.gob.mx',
+    'www.buholegal.com',
     'www.congresochihuahua2.gob.mx',
     'www.congresochihuahua.gob.mx',
 ];
@@ -52,7 +65,13 @@ export async function GET(req: NextRequest) {
 
     try {
         const r = await fetch(destino.toString(), {
-            headers: { Accept: 'application/pdf,*/*' },
+            headers: {
+                Accept: 'application/pdf,*/*',
+                // Algunos portales de gobierno cortan las peticiones que no
+                // parecen venir de un navegador.
+                'User-Agent':
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            },
             // Las leyes cambian poco; un día de caché en el borde evita
             // repetir la descarga en cada clic.
             next: { revalidate: 86400 },
