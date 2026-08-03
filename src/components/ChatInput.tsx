@@ -757,6 +757,27 @@ ${draftRequest.descripcion}`;
                     <div className="mt-2 pt-2 border-t border-gray-100">
                         {/* Buscar / Redactar toggle + Pro — stays compact */}
                         <div className="flex items-center gap-1 mb-2">
+                            {/* Consulta rápida: sólo el rayo. Se enciende en el
+                                dorado de la casa —el amarillo de Iurexia— y el
+                                nombre vive en el tooltip, que es lo que pidió
+                                David: un control, no una etiqueta. */}
+                            <button
+                                data-guide="flash"
+                                type="button"
+                                onClick={() => setActiveMode(activeMode === 'flash' ? 'search' : 'flash')}
+                                title="Respuesta rápida"
+                                aria-label="Respuesta rápida"
+                                aria-pressed={activeMode === 'flash'}
+                                className={`flex items-center justify-center w-[26px] h-[26px] rounded-md border flex-shrink-0 mr-1
+                                    transition-colors duration-200
+                                    ${activeMode === 'flash'
+                                        ? 'bg-accent-gold border-accent-gold text-charcoal-900'
+                                        : 'bg-white border-gray-200 text-gray-500 hover:text-charcoal-900 hover:border-gray-300'
+                                    }`}
+                            >
+                                <Zap className={`w-3.5 h-3.5 ${activeMode === 'flash' ? 'fill-charcoal-900' : ''}`} />
+                            </button>
+
                             <div
                                 data-guide="buscar-redactar"
                                 className="inline-flex items-center rounded-md border border-gray-200 overflow-hidden flex-shrink-0 mr-1"
@@ -829,24 +850,10 @@ ${draftRequest.descripcion}`;
                         </div>
 
                         {/* Action Buttons — Elegant Black Pills */}
-                        <div className="grid grid-cols-5 gap-1.5 w-full">
-                            {/* Consulta rápida — va PRIMERO porque es lo que más
-                                se va a usar: el abogado que sólo necesita el
-                                artículo y volver a lo suyo. */}
-                            <button
-                                data-guide="flash"
-                                onClick={() => setActiveMode(activeMode === 'flash' ? 'search' : 'flash')}
-                                title="Consulta rápida — el artículo que buscas, en segundos"
-                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
-                                    transition-all duration-200
-                                    ${activeMode === 'flash'
-                                        ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-charcoal-900 shadow-sm ring-1 ring-amber-500'
-                                        : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
-                                    }`}
-                            >
-                                <Zap className={`w-2.5 h-2.5 flex-shrink-0 ${activeMode === 'flash' ? 'fill-charcoal-900' : ''}`} />
-                                <span className="truncate">Rápida</span>
-                            </button>
+                        {/* La consulta rápida salió de esta rejilla: ahora vive
+                            junto a Buscar, que es donde el abogado decide CÓMO
+                            quiere la respuesta, no QUÉ herramienta abre. */}
+                        <div className="grid grid-cols-4 gap-1.5 w-full">
 
                             <button
                                 data-guide="escrito"
