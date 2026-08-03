@@ -158,13 +158,13 @@ export default function SolucionesPage() {
             </section>
 
             {/* Premium Legal Assistance Section */}
-            <section className="py-24 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-t border-amber-100 overflow-hidden">
+            <section className="py-24 bg-cream-200 border-t border-accent-gold/20 overflow-hidden">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         {/* Content */}
                         <AnimateOnScroll direction="left">
                             <div>
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-full mb-6">
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-gold text-charcoal-900 text-sm font-semibold rounded-lg mb-6">
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                     </svg>
@@ -173,7 +173,7 @@ export default function SolucionesPage() {
                                 <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6 leading-tight">
                                     Asesoría legal
                                     <br />
-                                    <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                                    <span className="text-accent-gold">
                                         personalizada
                                     </span>
                                 </h2>
@@ -189,7 +189,7 @@ export default function SolucionesPage() {
                                     ].map((item, i) => (
                                         <AnimateOnScroll key={i} delay={0.2 + i * 0.1}>
                                             <div className="flex items-start gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
+                                                <div className="w-10 h-10 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0">
                                                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                                                     </svg>
@@ -205,7 +205,7 @@ export default function SolucionesPage() {
 
                                 <Link
                                     href="/precios"
-                                    className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl"
+                                    className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-lg hover:bg-charcoal-800 transition-colors"
                                 >
                                     Conocer Plan Platinum
                                     <ArrowRight className="w-5 h-5" />
@@ -216,10 +216,10 @@ export default function SolucionesPage() {
                         {/* Visual Element */}
                         <AnimateOnScroll direction="right" delay={0.2}>
                             <div className="relative">
-                                <div className="absolute inset-0 bg-gradient-to-br from-amber-200/50 to-orange-200/50 rounded-3xl blur-3xl"></div>
-                                <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-amber-100">
+                                <div className="absolute inset-0 bg-accent-gold/15 rounded-3xl blur-3xl"></div>
+                                <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-accent-gold/20">
                                     <div className="text-center mb-6">
-                                        <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-4">
+                                        <div className="w-20 h-20 mx-auto rounded-full bg-accent-gold/10 flex items-center justify-center mb-4">
                                             <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
@@ -233,8 +233,8 @@ export default function SolucionesPage() {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl">
-                                            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                                        <div className="flex items-center gap-3 p-4 bg-accent-gold/[0.07] rounded-xl">
+                                            <div className="w-3 h-3 rounded-full bg-charcoal-900 animate-pulse"></div>
                                             <span className="text-charcoal-700 font-medium">Disponible para consultas</span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4 text-center">
@@ -271,7 +271,7 @@ export default function SolucionesPage() {
                     <AnimateOnScroll delay={0.3} direction="scale">
                         <Link
                             href="/chat"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-full hover:bg-charcoal-800 transition-colors"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-lg hover:bg-charcoal-800 transition-colors"
                         >
                             Probar Gratis
                             <ArrowRight className="w-5 h-5" />
@@ -311,7 +311,7 @@ export default function SolucionesPage() {
 
 function BenefitCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
     return (
-        <div className="p-8 rounded-2xl bg-cream-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+        <div className="p-8 rounded-2xl bg-cream-300 hover:shadow-lg transition-all duration-300">
             <div className="text-accent-brown mb-4">{icon}</div>
             <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">{title}</h3>
             <p className="text-charcoal-600 leading-relaxed">{description}</p>
@@ -321,7 +321,7 @@ function BenefitCard({ icon, title, description }: { icon: React.ReactNode; titl
 
 function UseCaseCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
     return (
-        <div className="p-6 bg-white rounded-2xl border border-black/5 hover:shadow-lg hover:border-accent-brown/20 transition-all duration-300 hover:-translate-y-1">
+        <div className="p-6 bg-white rounded-2xl border border-black/5 hover:shadow-lg hover:border-accent-brown/20 transition-all duration-300">
             <div className="w-12 h-12 rounded-xl bg-accent-brown/10 flex items-center justify-center text-accent-brown mb-4">
                 {icon}
             </div>
@@ -335,7 +335,7 @@ function PlatformFeatureCard({ title, description, href }: { title: string; desc
     return (
         <Link
             href={href}
-            className="block p-8 rounded-2xl bg-charcoal-800 hover:bg-charcoal-700 transition-all duration-300 group hover:-translate-y-1"
+            className="block p-8 rounded-2xl bg-charcoal-800 hover:bg-charcoal-700 transition-all duration-300 group"
         >
             <h3 className="text-xl font-medium text-white mb-3 group-hover:text-accent-brown transition-colors">
                 {title}
@@ -352,7 +352,7 @@ function PlatformFeatureCard({ title, description, href }: { title: string; desc
 function SecurityBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
     return (
         <div className="flex items-center gap-2 text-charcoal-700">
-            <div className="text-green-500">{icon}</div>
+            <div className="text-accent-gold">{icon}</div>
             <span className="text-sm font-medium">{label}</span>
         </div>
     );

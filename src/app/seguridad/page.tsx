@@ -100,7 +100,7 @@ export default function SeguridadPage() {
                                     ].map((item, i) => (
                                         <AnimateOnScroll key={i} delay={0.3 + i * 0.1}>
                                             <li className="flex items-start gap-3">
-                                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                                <CheckCircle className="w-5 h-5 text-accent-gold mt-0.5 flex-shrink-0" />
                                                 <span className="text-charcoal-700">{item}</span>
                                             </li>
                                         </AnimateOnScroll>
@@ -162,7 +162,7 @@ export default function SeguridadPage() {
                     <AnimateOnScroll delay={0.3} direction="scale">
                         <Link
                             href="/chat"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-full hover:bg-gray-100 transition-colors"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-lg hover:bg-gray-100 transition-colors"
                         >
                             Comenzar ahora
                             <ArrowRight className="w-5 h-5" />
@@ -203,7 +203,7 @@ export default function SeguridadPage() {
 function SecurityBadge({ label }: { label: string }) {
     return (
         <div className="flex items-center gap-2 text-white">
-            <CheckCircle className="w-5 h-5 text-green-400" />
+            <CheckCircle className="w-5 h-5 text-accent-gold" />
             <span className="text-sm font-medium">{label}</span>
         </div>
     );
@@ -211,7 +211,7 @@ function SecurityBadge({ label }: { label: string }) {
 
 function SecurityCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
     return (
-        <div className="p-8 rounded-2xl bg-cream-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+        <div className="p-8 rounded-2xl bg-cream-300 hover:shadow-lg transition-all duration-300">
             <div className="text-accent-brown mb-4">{icon}</div>
             <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">{title}</h3>
             <p className="text-charcoal-600 leading-relaxed">{description}</p>

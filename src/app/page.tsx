@@ -162,12 +162,12 @@ export default function HomePage() {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <AnimatedSection animation="slide-up">
                         <div className="text-center mb-4">
-                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs font-bold tracking-widest uppercase mb-6">
+                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-bold tracking-widest uppercase mb-6">
                                 ⚠️ Dato importante
                             </span>
                         </div>
                         <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-center text-charcoal-900 mb-4">
-                            ¿Por qué <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">no</span> usar ChatGPT para derecho mexicano?
+                            ¿Por qué <span className="text-red-700">no</span> usar ChatGPT para derecho mexicano?
                         </h2>
                     </AnimatedSection>
                     <AnimatedSection animation="fade-in" delay={100}>
@@ -250,7 +250,7 @@ export default function HomePage() {
                             </p>
                             <Link
                                 href="/login"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-charcoal-900 text-white font-semibold rounded-full hover:bg-charcoal-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-charcoal-900 text-white font-semibold rounded-lg hover:bg-charcoal-800 transition-all shadow-lg hover:shadow-xl"
                             >
                                 Probar Iurexia Gratis →
                             </Link>
@@ -266,11 +266,11 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6">
                     <AnimatedSection animation="slide-up">
                         <div className="text-center mb-12">
-                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold tracking-widest uppercase mb-4">
+                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold tracking-widest uppercase mb-4">
                                 ★ Testimonios reales
                             </span>
                             <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-charcoal-900">
-                                Lo que dicen <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">nuestros usuarios</span>
+                                Lo que dicen <span className="text-accent-gold">nuestros usuarios</span>
                             </h2>
                         </div>
                     </AnimatedSection>
@@ -294,7 +294,7 @@ export default function HomePage() {
                                         <p className="font-semibold text-charcoal-900 text-sm">Lic. Daniel Vecker</p>
                                         <p className="text-charcoal-500 text-xs">Abogado Litigante</p>
                                     </div>
-                                    <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">
+                                    <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">
                                         <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                                         Pro
                                     </span>
@@ -320,7 +320,7 @@ export default function HomePage() {
                                         <p className="font-semibold text-charcoal-900 text-sm">Lic. Ulises Alejandro</p>
                                         <p className="text-charcoal-500 text-xs">Abogado Litigante</p>
                                     </div>
-                                    <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">
+                                    <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">
                                         <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                                         Pro
                                     </span>
@@ -346,7 +346,7 @@ export default function HomePage() {
                                         <p className="font-semibold text-charcoal-900 text-sm">Lic. Jorge Adrián Morales</p>
                                         <p className="text-charcoal-500 text-xs">Abogado Penalista</p>
                                     </div>
-                                    <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">
+                                    <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-medium">
                                         <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                                         Pro
                                     </span>
@@ -367,7 +367,7 @@ export default function HomePage() {
                         {/* Content */}
                         <div>
                             <AnimatedSection animation="slide-up">
-                                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold tracking-widest uppercase mb-6">
+                                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold tracking-widest uppercase mb-6">
                                     ✦ Exclusivo PRO
                                 </span>
                             </AnimatedSection>
@@ -402,13 +402,13 @@ export default function HomePage() {
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <Link
                                         href="/precios"
-                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent-gold text-charcoal-900 font-semibold rounded-full hover:bg-accent-gold/90 transition-all shadow-lg shadow-accent-gold/10 hover:shadow-accent-gold/20"
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent-gold text-charcoal-900 font-semibold rounded-lg hover:bg-accent-gold/90 transition-all shadow-lg shadow-accent-gold/10 hover:shadow-accent-gold/20"
                                     >
                                         Desbloquear Genios PRO →
                                     </Link>
                                     <Link
                                         href="/plataforma"
-                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-cream-400/20 text-cream-300 font-medium rounded-full hover:bg-white/5 transition-all"
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-cream-400/20 text-cream-300 font-medium rounded-lg hover:bg-white/5 transition-all"
                                     >
                                         Conocer más
                                     </Link>
@@ -425,15 +425,15 @@ export default function HomePage() {
                                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
                                         <div className="w-10 h-10 rounded-xl bg-accent-gold/20 flex flex-col items-center justify-center relative">
                                             <div className="flex gap-0.5">
-                                                <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
-                                                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                                                <span className="w-2 h-2 rounded-full bg-accent-gold"></span>
+                                                <span className="w-2 h-2 rounded-full bg-accent-gold/50"></span>
                                             </div>
                                         </div>
                                         <div>
                                             <p className="text-white font-medium text-sm">Genios Especializados</p>
                                             <p className="text-accent-gold/70 text-xs">Amparo + CIDH Activos</p>
                                         </div>
-                                        <span className="ml-auto px-2.5 py-1 rounded-full bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-bold tracking-wide">PRO</span>
+                                        <span className="ml-auto px-2.5 py-1 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-bold tracking-wide">PRO</span>
                                     </div>
 
                                     {/* Chat bubbles */}
@@ -475,7 +475,7 @@ export default function HomePage() {
                     {/* Section Header */}
                     <div className="text-center mb-6 sm:mb-8">
                         <AnimatedSection animation="scale-in">
-                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-charcoal-900 text-white text-xs font-medium tracking-widest uppercase mb-6">
+                            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-charcoal-900 text-white text-xs font-medium tracking-widest uppercase mb-6">
                                 <span className="w-2 h-2 bg-accent-gold rounded-full animate-pulse-subtle" />
                                 Nuevo
                             </span>
@@ -596,7 +596,7 @@ export default function HomePage() {
                                         />
                                     </ul>
 
-                                    <Link href="/precios" className="inline-flex flex-col items-center gap-1 px-6 py-3 bg-accent-gold text-charcoal-900 font-semibold rounded-full hover:bg-accent-gold/90 transition-all duration-300 hover:shadow-lg hover:shadow-accent-gold/20">
+                                    <Link href="/precios" className="inline-flex flex-col items-center gap-1 px-6 py-3 bg-accent-gold text-charcoal-900 font-semibold rounded-lg hover:bg-accent-gold/90 transition-all duration-300 hover:shadow-lg hover:shadow-accent-gold/20">
                                         <span className="flex items-center gap-2">
                                             Registrar mi perfil
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
@@ -611,7 +611,7 @@ export default function HomePage() {
                     {/* Workflow: How Connect Works */}
                     <div className="max-w-4xl mx-auto">
                         <h3 className="font-serif text-2xl md:text-3xl font-medium text-center text-charcoal-900 mb-12">
-                            ¿Cómo <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">funciona</span>?
+                            ¿Cómo <span className="text-accent-gold">funciona</span>?
                         </h3>
 
                         <div className="grid md:grid-cols-3 gap-8 relative">
@@ -642,14 +642,14 @@ export default function HomePage() {
             <section className="py-20 bg-charcoal-900 text-white">
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                        Comienza hoy con <span className="bg-gradient-to-r from-amber-500 to-orange-400 bg-clip-text text-transparent">Iurexia</span>
+                        Comienza hoy con <span className="text-accent-gold">Iurexia</span>
                     </h2>
                     <p className="text-lg text-gray-300 mb-8">
                         Únete a los profesionales del derecho que ya utilizan IA especializada.
                     </p>
                     <Link
                         href="/login"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-full hover:bg-gray-100 transition-colors"
+                        className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-lg hover:bg-gray-100 transition-colors"
                     >
                         Probar Gratis
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -772,15 +772,15 @@ function ComparisonChatRow({
     return (
         <tr className={!isLast ? 'border-b border-gray-100' : ''}>
             <td className="py-4 px-5 font-medium text-charcoal-900 text-sm">{feature}</td>
-            <td className="py-4 px-4 text-center text-red-500 text-sm">
+            <td className="py-4 px-4 text-center text-charcoal-400 text-sm">
                 <span className="inline-flex items-center justify-center gap-1.5">
-                    <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                    <svg className="w-4 h-4 text-charcoal-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                     <span>{chatgpt}</span>
                 </span>
             </td>
-            <td className="py-4 px-4 text-center text-green-700 font-semibold text-sm bg-green-50/50">
+            <td className="py-4 px-4 text-center text-accent-gold font-semibold text-sm bg-accent-gold/[0.06]">
                 <span className="inline-flex items-center justify-center gap-1.5">
-                    <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                    <svg className="w-4 h-4 text-accent-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                     <span>{iurexia}</span>
                 </span>
             </td>

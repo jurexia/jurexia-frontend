@@ -40,7 +40,7 @@ export default function PreciosPage() {
                                 <div className="relative inline-flex items-center bg-charcoal-100 rounded-full p-1 shadow-inner">
                                     <button
                                         onClick={() => setBillingPeriod('monthly')}
-                                        className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                        className={`relative z-10 px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                                             !isAnnual
                                                 ? 'bg-charcoal-900 text-white shadow-lg'
                                                 : 'text-charcoal-500 hover:text-charcoal-700'
@@ -50,7 +50,7 @@ export default function PreciosPage() {
                                     </button>
                                     <button
                                         onClick={() => setBillingPeriod('annual')}
-                                        className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                        className={`relative z-10 px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                                             isAnnual
                                                 ? 'bg-charcoal-900 text-white shadow-lg'
                                                 : 'text-charcoal-500 hover:text-charcoal-700'
@@ -60,14 +60,14 @@ export default function PreciosPage() {
                                     </button>
                                 </div>
                                 {isAnnual && (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 border border-green-200 text-green-700 text-xs font-bold animate-in fade-in slide-in-from-left-2 duration-300">
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30 text-charcoal-900 text-xs font-bold animate-in fade-in slide-in-from-left-2 duration-300">
                                         <span>✨</span> Ahorra hasta 17%
                                     </span>
                                 )}
                             </div>
 
                             {/* Founders Promotion Callout */}
-                            <div className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-full bg-gradient-to-r from-accent-gold/15 via-accent-gold/25 to-accent-gold/15 border border-accent-gold/40 shadow-sm animate-in fade-in zoom-in-95 duration-500">
+                            <div className="inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-lg bg-gradient-to-r from-accent-gold/15 via-accent-gold/25 to-accent-gold/15 border border-accent-gold/40 shadow-sm animate-in fade-in zoom-in-95 duration-500">
                                 <span className="text-accent-gold text-base leading-none animate-pulse">✨</span>
                                 <p className="text-xs sm:text-sm font-bold text-charcoal-900 tracking-wide">
                                     ¡Vuelven los precios de descuento para suscriptores fundadores por tiempo limitado! 🚀
@@ -147,12 +147,12 @@ export default function PreciosPage() {
                                     <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
                                         <span className="text-accent-gold text-base leading-none">✦</span>
                                         <span className="text-accent-gold">Redacción Pro — Motor de razonamiento profundo</span>
-                                        <span className="ml-auto text-[9px] bg-accent-gold text-charcoal-900 px-1.5 py-0.5 rounded-full font-bold shrink-0">NUEVO</span>
+                                        <span className="ml-auto text-[9px] bg-accent-gold text-charcoal-900 px-1.5 py-0.5 rounded-lg font-bold shrink-0">NUEVO</span>
                                     </span>,
                                     "Registra tu cédula para conectar clientes",
                                     "Búsqueda con IA verificado en constante actualización",
                                     "Filtros por entidad federativa + marco federal",
-                                    <span className="text-green-300 font-medium">📧 Mensaje de bienvenida con instrucciones para sacar el máximo provecho</span>,
+                                    <span className="text-accent-gold font-medium">📧 Mensaje de bienvenida con instrucciones para sacar el máximo provecho</span>,
                                     "Soporte prioritario"
                                 ]}
                                 buttonText={isAnnual ? 'Elegir Pro Anual' : 'Elegir Plan Pro'}
@@ -177,18 +177,18 @@ export default function PreciosPage() {
                                     <span className="text-charcoal-900 font-bold">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-charcoal-900 font-bold">Análisis de documentos y auditoría</span>,
                                     <span className="text-charcoal-900 font-bold">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-gradient-to-r from-amber-200 to-amber-100 border border-amber-300 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-amber-600 text-base leading-none">✦</span>
+                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-accent-gold/10 border border-accent-gold/40 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-accent-gold text-base leading-none">✦</span>
                                         <span className="text-charcoal-900 font-bold">Redacción Pro — Motor de razonamiento profundo</span>
                                     </span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-gradient-to-r from-amber-200 to-amber-100 border border-amber-300 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-amber-600 text-base leading-none">✦</span>
+                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-accent-gold/10 border border-accent-gold/40 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-accent-gold text-base leading-none">✦</span>
                                         <span className="text-charcoal-900 font-bold">Jurimetría — Predicción de sentido</span>
                                     </span>,
                                     <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-gradient-to-r from-red-100 to-red-50 border border-red-200 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-red-500 text-base leading-none">⚡</span>
+                                        <span className="text-charcoal-400 text-base leading-none">⚡</span>
                                         <span className="text-charcoal-900 font-bold">Redactor de Sentencias TCC</span>
-                                        <span className="ml-auto text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold shrink-0">BETA</span>
+                                        <span className="ml-auto text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-lg font-bold shrink-0">BETA</span>
                                     </span>,
                                     <span className="text-charcoal-900 font-bold">Registra tu cédula para conectar clientes</span>,
                                     <span className="text-charcoal-900 font-bold">Consulta personalizada con equipo legal de Iurexia (vía correo)</span>,
@@ -211,12 +211,12 @@ export default function PreciosPage() {
                 <div className="max-w-5xl mx-auto">
                     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-charcoal-500 text-xs">
                         <div className="flex items-center gap-1.5">
-                            <ShieldCheck className="w-4 h-4 text-green-500" />
+                            <ShieldCheck className="w-4 h-4 text-accent-gold" />
                             <span>Pago seguro con <strong className="text-charcoal-700">Stripe</strong></span>
                         </div>
                         <span className="hidden sm:inline text-charcoal-300">·</span>
                         <div className="flex items-center gap-1.5">
-                            <Lock className="w-3.5 h-3.5 text-green-500" />
+                            <Lock className="w-3.5 h-3.5 text-accent-gold" />
                             <span>Cifrado SSL de extremo a extremo</span>
                         </div>
                         <span className="hidden sm:inline text-charcoal-300">·</span>
@@ -239,7 +239,7 @@ export default function PreciosPage() {
                         <div className="rounded-2xl bg-gradient-to-br from-[#0d1525] to-[#1a1a2e] border border-accent-gold/30 p-8">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div>
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-gold/15 border border-accent-gold/30 mb-4">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30 mb-4">
                                         <span className="text-[10px] font-bold text-accent-gold tracking-widest">PLAN ULTRA SECRETARIOS · $999 MXN/mes</span>
                                     </div>
                                     <h3 className="font-serif text-xl md:text-2xl font-medium text-white mb-3">
@@ -317,7 +317,7 @@ export default function PreciosPage() {
                                     <ComparisonRow feature="Soporte prioritario" free="—" basico="Estándar" pro="✓" platinum="VIP" />
                                     <ComparisonRow feature="Consulta legal estratégica (vía correo)" free="—" basico="—" pro="—" platinum="✓" />
                                     <ComparisonRow
-                                        feature={<span className="flex items-center gap-1.5 font-semibold text-accent-gold">Redacción Pro — Razonamiento profundo <span className="text-[9px] bg-accent-brown text-white px-1.5 py-0.5 rounded-full font-bold">NUEVO</span></span>}
+                                        feature={<span className="flex items-center gap-1.5 font-semibold text-accent-gold">Redacción Pro — Razonamiento profundo <span className="text-[9px] bg-accent-brown text-white px-1.5 py-0.5 rounded-lg font-bold">NUEVO</span></span>}
                                         free="—" basico="—" pro="✓"
                                         platinum="✓"
                                         goldFeature={true}
@@ -330,9 +330,9 @@ export default function PreciosPage() {
                                     />
                                     <ComparisonRow
                                         feature={
-                                            <span className="flex items-center gap-1.5 font-semibold text-red-400">
+                                            <span className="flex items-center gap-1.5 font-semibold text-charcoal-400">
                                                 Redactor de Sentencias TCC
-                                                <span className="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-bold">BETA</span>
+                                                <span className="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded-lg font-bold">BETA</span>
                                             </span>
                                         }
                                         free="—"
@@ -340,7 +340,7 @@ export default function PreciosPage() {
                                         pro="—"
                                         platinum={
                                             <span className="flex flex-col items-center">
-                                                <span className="text-red-400 font-bold">✓ (Beta)</span>
+                                                <span className="text-charcoal-400 font-bold">✓ (Beta)</span>
                                                 <span className="text-[9px] text-gray-400 leading-none mt-0.5 font-normal">10 cons/gen</span>
                                             </span>
                                         }
@@ -407,14 +407,14 @@ export default function PreciosPage() {
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Link
                                 href="/precios#pro"
-                                className="inline-flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full transition-colors shadow-lg shadow-green-500/20"
+                                className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold rounded-lg transition-colors shadow-lg shadow-charcoal-900/20"
                             >
                                 Activar Plan Pro — $149/mes
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
                             <Link
                                 href="/chat"
-                                className="inline-flex items-center gap-2 px-8 py-4 border border-white/20 text-white font-medium rounded-full hover:bg-white/5 transition-colors"
+                                className="inline-flex items-center gap-2 px-8 py-4 border border-white/20 text-white font-medium rounded-lg hover:bg-white/5 transition-colors"
                             >
                                 Comenzar Gratis
                             </Link>
@@ -423,7 +423,7 @@ export default function PreciosPage() {
                     <AnimateOnScroll delay={0.5}>
                         <div className="flex items-center justify-center gap-4 mt-8 text-gray-500 text-xs">
                             <div className="flex items-center gap-1.5">
-                                <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                                <ShieldCheck className="w-3.5 h-3.5 text-accent-gold" />
                                 <span>Pago seguro con Stripe</span>
                             </div>
                             <span className="text-gray-700">·</span>
@@ -542,34 +542,34 @@ function PricingCard({
     };
 
     const cardStyles = isPlatinum
-        ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200 hover:shadow-xl hover:border-amber-300'
+        ? 'bg-cream-200 border-2 border-accent-gold/30 hover:shadow-xl hover:border-accent-gold/40'
         : highlighted
             ? 'bg-charcoal-900 text-white shadow-2xl relative z-10'
             : 'bg-white border border-black/5 hover:shadow-lg';
 
     const badgeStyles = isPlatinum
-        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+        ? 'bg-accent-gold text-charcoal-900'
         : highlighted
             ? 'bg-accent-brown text-white'
-            : 'bg-green-500 text-white';
+            : 'bg-charcoal-900 text-white';
 
-    const buttonBaseStyles = `block w-full text-center py-3 px-6 rounded-full font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`;
+    const buttonBaseStyles = `block w-full text-center py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`;
     const buttonColorStyles = isPlatinum
-        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600'
+        ? 'bg-charcoal-900 text-white hover:bg-charcoal-800'
         : highlighted
             ? 'bg-white text-charcoal-900 hover:bg-gray-100'
             : 'bg-charcoal-900 text-white hover:bg-charcoal-800';
 
     return (
-        <div className={`relative rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full ${cardStyles}`}>
+        <div className={`relative rounded-3xl p-8 transition-all duration-300 flex flex-col h-full ${cardStyles}`}>
             {badge && (
-                <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide ${badgeStyles}`}>
+                <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide ${badgeStyles}`}>
                     {badge}
                 </div>
             )}
 
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${isPlatinum
-                ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white'
+                ? 'bg-accent-gold/10 text-white'
                 : highlighted
                     ? 'bg-white/10 text-white'
                     : 'bg-accent-brown/10 text-accent-brown'
@@ -599,8 +599,8 @@ function PricingCard({
                     </p>
                 )}
                 {savingsBadge && (
-                    <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/15 border border-green-500/25">
-                        <span className="text-xs font-bold text-green-600">✨ {savingsBadge}</span>
+                    <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30">
+                        <span className="text-xs font-bold text-accent-gold">✨ {savingsBadge}</span>
                     </div>
                 )}
             </div>
@@ -614,10 +614,10 @@ function PricingCard({
                 {features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-3">
                         <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isPlatinum
-                            ? 'text-amber-500'
+                            ? 'text-accent-gold'
                             : highlighted
-                                ? 'text-green-400'
-                                : 'text-green-500'
+                                ? 'text-accent-gold'
+                                : 'text-accent-gold'
                             }`} />
                         <span className={`text-sm ${highlighted ? 'text-gray-300' : 'text-charcoal-700'
                             }`}>
@@ -657,8 +657,8 @@ function PricingCard({
             {showWarning && isBasic && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center animate-in fade-in zoom-in duration-200">
-                        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertTriangle className="w-8 h-8 text-amber-600" />
+                        <div className="w-16 h-16 bg-accent-gold/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="w-8 h-8 text-accent-gold" />
                         </div>
                         <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
                             Aviso Importante
