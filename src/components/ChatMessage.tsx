@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus } from 'lucide-react';
+import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import type { Message } from '@/lib/api';
 
 interface ChatMessageProps {
@@ -1039,6 +1040,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Handle copy to clipboard
     const [copied, setCopied] = useState(false);
+    // Contenido listo para mandar a una carpeta inteligente; null = modal cerrado.
+    const [paraCarpeta, setParaCarpeta] = useState<ContenidoParaCarpeta | null>(null);
     const handleCopy = useCallback(() => {
         // Clean up internal tags, metadata, and HTML comments before copying
         let cleanContent = message.content
@@ -1255,8 +1258,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 <button
                                     onClick={handleCopy}
                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
-                                        copied 
-                                        ? 'bg-green-100 text-green-700 border border-green-200' 
+                                        copied
+                                        ? 'bg-green-100 text-green-700 border border-green-200'
                                         : 'bg-cream-200 text-charcoal-700 hover:bg-cream-300'
                                     }`}
                                     title="Copiar texto de la respuesta"
@@ -1264,8 +1267,35 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                                     {copied ? '¡Copiado!' : 'Copiar'}
                                 </button>
+
+                                {/* La consulta entra al expediente donde sirve, como en la
+                                    app. El título sale del arranque de la respuesta limpia. */}
+                                <button
+                                    onClick={() => {
+                                        const markdown = cleanContentForExport(message.content);
+                                        const titulo = markdown
+                                            .replace(/[#*_>`]/g, '')
+                                            .trim()
+                                            .split(/\s+/)
+                                            .slice(0, 9)
+                                            .join(' ')
+                                            .slice(0, 80) || 'Consulta Iurexia';
+                                        setParaCarpeta({ titulo, markdown });
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-md border border-accent-gold/40 bg-accent-gold/10 px-2.5 py-1.5 text-xs font-medium text-charcoal-900 transition-colors hover:bg-accent-gold/20"
+                                    title="Guardar esta respuesta en una carpeta de Mi trabajo"
+                                >
+                                    <FolderPlus className="w-3.5 h-3.5 text-accent-gold" />
+                                    A mi carpeta
+                                </button>
                             </div>
                         )}
+
+                        <GuardarEnCarpetaModal
+                            abierto={paraCarpeta !== null}
+                            onCerrar={() => setParaCarpeta(null)}
+                            contenido={paraCarpeta}
+                        />
                     </>
                 )}
             </div>

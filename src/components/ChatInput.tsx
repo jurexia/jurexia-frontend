@@ -586,10 +586,10 @@ ${draftRequest.descripcion}`;
 
 
                 {/* Main Input Container - Harvey Style */}
-                <div className="chat-input-container p-4">
+                <div className="chat-input-container p-3">
                     {/* Fuero + Materia Toggle — Same row, compact pills above textarea */}
                     {(onFueroChange || onMateriaChange) && (
-                        <div data-guide="fuero-materia-filter" className="flex items-center gap-1 sm:gap-1.5 mb-3 pb-2 border-b border-gray-100/60 flex-nowrap overflow-x-auto">
+                        <div data-guide="fuero-materia-filter" className="flex items-center gap-1 sm:gap-1.5 mb-2 pb-1.5 border-b border-gray-100/60 flex-nowrap overflow-x-auto">
                             {/* Fuero section */}
                             {onFueroChange && (
                                 <div data-guide="fuero-filter" className="flex items-center gap-1.5 flex-shrink-0">
@@ -682,7 +682,7 @@ ${draftRequest.descripcion}`;
                                 className="w-full resize-none bg-transparent text-charcoal-900 placeholder:text-gray-400 
                              focus:outline-none text-base leading-relaxed py-2
                              disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{ minHeight: '24px', maxHeight: '200px' }}
+                                style={{ minHeight: '22px', maxHeight: '160px' }}
                             />
                         </div>
 
@@ -754,9 +754,9 @@ ${draftRequest.descripcion}`;
                     </div>
 
                     {/* Action Cards Row — Blue Cards */}
-                    <div className="mt-4 pt-3 border-t border-gray-100">
+                    <div className="mt-2 pt-2 border-t border-gray-100">
                         {/* Buscar / Redactar toggle + Pro — stays compact */}
-                        <div className="flex items-center gap-1 mb-3">
+                        <div className="flex items-center gap-1 mb-2">
                             <div
                                 data-guide="buscar-redactar"
                                 className="inline-flex items-center rounded-md border border-gray-200 overflow-hidden flex-shrink-0 mr-1"
@@ -1238,7 +1238,7 @@ ${draftRequest.descripcion}`;
                                 setShowUpgradeModal('platinum');
                             }
                         }}
-                        className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-md bg-[#1a1a1a] border border-[#c9a962]/20 hover:border-[#c9a962]/40 transition-all duration-200 group"
+                        className="flex items-center gap-2 mt-1.5 px-3 py-1 rounded-md bg-[#1a1a1a] border border-[#c9a962]/20 hover:border-[#c9a962]/40 transition-all duration-200 group"
                     >
                         <Gavel className="w-3 h-3 text-[#c9a962]/70 flex-shrink-0" />
                         <span className="text-[10px] text-white/60 group-hover:text-white/80 transition-colors flex-1">

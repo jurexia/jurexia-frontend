@@ -680,41 +680,62 @@ export default function ChatPage() {
             />
 
             <div className="flex flex-col h-screen md:ml-72">
+                {/* Encabezado alineado con el sistema de la barra pública
+                    (3-ago-2026): todo control mide h-8, radio único, sin
+                    píldoras ni degradados. Sálvame conserva su rojo por ser el
+                    módulo de urgencia; el resto vive en la paleta de la casa. */}
                 <header className="fixed top-0 left-0 right-0 md:left-72 z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 h-14">
-                    <div className="max-w-4xl mx-auto px-4 h-full flex items-center justify-end gap-2">
-                        <Link href="/salvame" className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-charcoal-900 text-white text-xs font-bold hover:bg-charcoal-800 shadow-sm tracking-wide">
-                            <Plus className="w-4 h-4 text-red-600 stroke-[4]" />
-                            <span className="hidden sm:inline">SALVAME</span>
+                    <div className="max-w-4xl mx-auto px-4 h-full flex items-center justify-end gap-1.5">
+                        <Link
+                            href="/salvame"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-700/25 bg-red-50/60 px-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-red-700 transition-colors hover:bg-red-50"
+                        >
+                            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                            <span className="hidden sm:inline">Sálvame</span>
                         </Link>
 
-                        <Link href="/normativa" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-charcoal-900 text-white text-xs font-semibold hover:bg-charcoal-800 shadow-sm">
+                        {/* Mi trabajo: la puerta a las carpetas inteligentes.
+                            Es la pieza que conecta el chat con el espacio de
+                            trabajo del abogado, como en la app. */}
+                        <Link
+                            href="/carpetas"
+                            data-guide="mi-trabajo"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800"
+                        >
+                            <FileText className="w-3.5 h-3.5 text-accent-gold" />
+                            <span className="hidden sm:inline">Mi trabajo</span>
+                        </Link>
+
+                        <Link
+                            href="/normativa"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]"
+                        >
                             <BookOpen className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Normativa</span>
                         </Link>
 
-                        <button data-guide="jurisdiccion" onClick={() => setShowConfigModal(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm" style={{ background: 'linear-gradient(135deg, #dc2626 0%, #8B6914 100%)' }}>
-                            <span className="hidden sm:inline text-white/70">Jurisdicción:</span>
-                            <span className="truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
+                        <button
+                            data-guide="jurisdiccion"
+                            onClick={() => setShowConfigModal(true)}
+                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-3 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-accent-gold/20"
+                        >
+                            <MapPin className="w-3.5 h-3.5 text-accent-gold" />
+                            <span className="max-w-[110px] truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
                         </button>
 
-                        <div className={`px-3 py-1.5 bg-cream-100 rounded-lg text-xs font-medium transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40 scale-105' : ''}`}>
-                            <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1">
-                                    <span className="hidden sm:inline text-charcoal-500">Consultas</span>
-                                    <span className={`font-bold tabular-nums ${queriesRemaining <= 1 ? 'text-red-600' : queriesRemaining <= 3 ? 'text-amber-600' : 'text-emerald-700'}`}>
-                                        {queriesUsed}<span className="text-charcoal-400 font-normal">/{queriesLimit}</span>
-                                    </span>
-                                </div>
-                                {/* Mini progress bar */}
-                                <div className="hidden sm:block w-12 h-1.5 bg-charcoal-200/50 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full transition-all duration-500 ease-out ${
-                                            queriesRemaining <= 1 ? 'bg-red-500' : queriesRemaining <= 3 ? 'bg-amber-500' : 'bg-emerald-500'
-                                        }`}
-                                        style={{ width: `${Math.min(100, (queriesUsed / Math.max(1, queriesLimit)) * 100)}%` }}
-                                    />
-                                </div>
-                            </div>
+                        <div
+                            className={`hidden sm:flex h-8 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
+                            title={`Consultas usadas este mes: ${queriesUsed} de ${queriesLimit}`}
+                        >
+                            <span className={`font-semibold tabular-nums ${queriesRemaining <= 1 ? 'text-red-700' : 'text-charcoal-900'}`}>
+                                {queriesUsed}<span className="font-normal text-charcoal-500">/{queriesLimit}</span>
+                            </span>
+                            <span className="h-1 w-10 overflow-hidden rounded-full bg-charcoal-900/10">
+                                <span
+                                    className={`block h-full rounded-full transition-all duration-500 ease-out ${queriesRemaining <= 1 ? 'bg-red-600' : 'bg-accent-gold'}`}
+                                    style={{ width: `${Math.min(100, (queriesUsed / Math.max(1, queriesLimit)) * 100)}%` }}
+                                />
+                            </span>
                         </div>
                         <UserAvatar />
                     </div>
