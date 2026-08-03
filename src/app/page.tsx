@@ -436,17 +436,43 @@ export default function HomePage() {
                                         <span className="ml-auto px-2.5 py-1 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-bold tracking-wide">PRO</span>
                                     </div>
 
-                                    {/* Chat bubbles */}
+                                    {/* Chat bubbles.
+                                        Los pasos del agente son los que el chat
+                                        pinta de verdad; antes esta tarjeta sólo
+                                        mostraba pregunta y respuesta y se perdía
+                                        lo que distingue a Iurexia: que enseña por
+                                        dónde pasó antes de responder. */}
                                     <div className="space-y-3">
                                         <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                                             <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1">Tu consulta</p>
                                             <p className="text-white text-sm leading-relaxed">¿Cómo impugno una orden de aprehensión sin fundamentación considerando los criterios interamericanos?</p>
                                         </div>
+
+                                        <ol className="space-y-1.5 px-1">
+                                            {[
+                                                'Entendiendo la consulta',
+                                                'Revisando el bloque de constitucionalidad',
+                                                'Buscando jurisprudencia y precedentes',
+                                                'Con los genios de Amparo y CIDH',
+                                                '18 fuentes encontradas',
+                                            ].map((paso) => (
+                                                <li key={paso} className="flex items-center gap-2">
+                                                    <span className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full bg-accent-gold/20">
+                                                        <svg className="h-2 w-2 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </span>
+                                                    <span className="text-[11px] text-gray-400">{paso}</span>
+                                                </li>
+                                            ))}
+                                        </ol>
+
                                         <div className="p-3 rounded-xl bg-accent-gold/5 border border-accent-gold/10">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <p className="text-accent-gold text-[10px] uppercase tracking-wider">Perspectiva Combinada</p>
+                                            <p className="text-gray-300 text-sm leading-relaxed">Vía amparo indirecto alegando violación al debido proceso. La Corte IDH en <i>Caso Cabrera García</i> establece que toda restricción a la libertad personal debe…</p>
+                                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                                <span className="rounded-md border border-accent-gold/30 px-1.5 py-0.5 text-[10px] text-accent-gold/90">Artículo 107 · Ley de Amparo</span>
+                                                <span className="rounded-md border border-accent-gold/30 px-1.5 py-0.5 text-[10px] text-accent-gold/90">Corte IDH · Cabrera García</span>
                                             </div>
-                                            <p className="text-gray-300 text-sm leading-relaxed">Vía amparo indirecto (Art. 107 L.A.) alegando violación al debido proceso. La Corte IDH en <i>Caso Cabrera García</i> establece que toda restricción a la libertad personal debe...</p>
                                         </div>
                                     </div>
 

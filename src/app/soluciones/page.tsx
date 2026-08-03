@@ -49,6 +49,96 @@ export default function SolucionesPage() {
                 </div>
             </section>
 
+            {/* ── Por perfil ──
+                Añadido el 3-ago-2026. Es lo que la página no tenía y Harvey sí:
+                que cada visitante se reconozca en una línea antes de leer nada
+                más. Los cinco perfiles son los que la plataforma atiende de
+                verdad —el de secretarios existe como plan (ultra_secretarios) y
+                tiene su propia herramienta, el redactor de sentencias. */}
+            <section className="py-20 bg-cream-300 border-t border-black/5">
+                <div className="max-w-6xl mx-auto px-4">
+                    <AnimateOnScroll>
+                        <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-3 text-center">
+                            Encuentra tu <span className="text-accent-gold">perfil</span>
+                        </h2>
+                        <p className="text-center text-charcoal-600 mb-12 max-w-2xl mx-auto">
+                            La misma base de datos, distintas formas de trabajarla.
+                        </p>
+                    </AnimateOnScroll>
+
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {[
+                            {
+                                perfil: 'Litigante',
+                                titulo: 'Gana el argumento antes de escribirlo',
+                                texto: 'Precedentes de Tribunales Colegiados, jurisprudencia y la legislación de tu estado, con el artículo citado y su documento oficial.',
+                                herramientas: ['Precedentes', 'Jurimetría', 'Escrito legal'],
+                            },
+                            {
+                                perfil: 'Despacho',
+                                titulo: 'Más asuntos sin más nómina',
+                                texto: 'Reduce las horas no facturables de investigación y redacción. Cada abogado atiende más materias y más jurisdicciones sin cambiar de herramienta.',
+                                herramientas: ['Carpetas', 'Redacción Pro', 'Análisis'],
+                            },
+                            {
+                                perfil: 'Abogado in-house',
+                                titulo: 'Resuelve dentro antes de pagar fuera',
+                                texto: 'Responde a las consultas de las demás áreas con fundamento propio y baja el gasto en despachos externos en las primeras fases.',
+                                herramientas: ['Consulta rápida', 'Normativa', 'Carpetas'],
+                            },
+                            {
+                                perfil: 'Secretario del PJF',
+                                titulo: 'Del expediente al proyecto',
+                                texto: 'Un borrador de sentencia estructurado a partir del acto reclamado y los agravios, con los precedentes del circuito a la vista.',
+                                herramientas: ['Redactor de sentencias', 'Precedentes'],
+                                beta: true,
+                            },
+                            {
+                                perfil: 'Persona sin abogado',
+                                titulo: 'Entiende dónde estás parado',
+                                texto: 'Explicaciones en lenguaje llano sobre tu situación, los pasos posibles y, cuando hace falta, un abogado verificado.',
+                                herramientas: ['Chat', 'Connect'],
+                            },
+                            {
+                                perfil: 'Urgencia',
+                                titulo: 'Un amparo cuando no hay tiempo',
+                                texto: 'Sálvame redacta una demanda de amparo indirecto para una detención en curso, lista para presentar.',
+                                herramientas: ['Sálvame'],
+                                urgente: true,
+                            },
+                        ].map((p, i) => (
+                            <AnimateOnScroll key={p.perfil} delay={i * 0.08}>
+                                <div className={`h-full rounded-xl border bg-white p-6 transition-colors duration-300 ${
+                                    p.urgente
+                                        ? 'border-red-700/20 hover:border-red-700/40'
+                                        : 'border-cream-400 hover:border-accent-gold/50'
+                                }`}>
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <span className={`text-[11px] font-semibold uppercase tracking-[0.12em] ${p.urgente ? 'text-red-700' : 'text-accent-brown'}`}>
+                                            {p.perfil}
+                                        </span>
+                                        {p.beta && (
+                                            <span className="rounded border border-accent-gold/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-gold">
+                                                Beta
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h3 className="font-serif text-xl font-semibold text-charcoal-900 mb-2.5">{p.titulo}</h3>
+                                    <p className="text-[0.9375rem] leading-relaxed text-charcoal-600 mb-4">{p.texto}</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {p.herramientas.map((h) => (
+                                            <span key={h} className="rounded-md border border-charcoal-900/10 px-2 py-1 text-[11px] font-medium text-charcoal-700">
+                                                {h}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </AnimateOnScroll>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* Use Cases Section */}
             <section className="py-24 bg-cream-300 overflow-hidden">
                 <div className="max-w-6xl mx-auto px-4">

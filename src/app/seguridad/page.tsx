@@ -117,6 +117,69 @@ export default function SeguridadPage() {
                 </div>
             </section>
 
+            {/* ── El secreto profesional ──
+                Añadido el 3-ago-2026. La página respondía a las preguntas de
+                cualquier SaaS —cifrado, pagos, borrado— pero no a la que de
+                verdad se hace un abogado antes de pegar un expediente en una
+                IA. Se plantea como las preguntas que hay que hacerle a
+                CUALQUIER herramienta, con las respuestas de Iurexia al lado:
+                así el lector se lleva un criterio, no una promesa. */}
+            <section className="py-24 bg-cream-200 border-t border-black/5 overflow-hidden">
+                <div className="max-w-5xl mx-auto px-4">
+                    <AnimateOnScroll>
+                        <div className="text-center mb-12">
+                            <p className="text-accent-brown font-medium mb-4 tracking-wide">SECRETO PROFESIONAL</p>
+                            <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
+                                Lo que deberías preguntarle a <span className="text-accent-gold">cualquier IA jurídica</span>
+                            </h2>
+                            <p className="text-charcoal-600 max-w-2xl mx-auto">
+                                Antes de escribir el nombre de un cliente en una herramienta de
+                                inteligencia artificial, estas cuatro preguntas separan a las que
+                                puedes usar de las que no.
+                            </p>
+                        </div>
+                    </AnimateOnScroll>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {[
+                            {
+                                pregunta: '¿Mi consulta entrena al modelo?',
+                                respuesta: 'En Iurexia, no. Si la respuesta de una herramienta es «sí» o «depende de tu configuración», lo que escribas puede reaparecer en la respuesta de otro usuario.',
+                            },
+                            {
+                                pregunta: '¿Quién puede leer lo que subo?',
+                                respuesta: 'Sólo tú. Ni el equipo de Iurexia ni otros usuarios ven tus consultas ni los documentos de tus carpetas.',
+                            },
+                            {
+                                pregunta: '¿Puedo borrarlo todo cuando el asunto termina?',
+                                respuesta: 'Sí, en cualquier momento y sin pedirlo por correo: historial, documentos y cuenta se eliminan desde tu perfil.',
+                            },
+                            {
+                                pregunta: '¿La respuesta se puede verificar?',
+                                respuesta: 'Cada cita lleva su artículo y el enlace a su documento oficial. Una herramienta que no te enseña la fuente te obliga a comprobarla entera a mano.',
+                            },
+                        ].map((q, i) => (
+                            <AnimateOnScroll key={q.pregunta} delay={i * 0.1}>
+                                <div className="h-full rounded-xl border border-cream-400 bg-white p-6">
+                                    <h3 className="mb-2.5 font-serif text-lg font-semibold text-charcoal-900">
+                                        {q.pregunta}
+                                    </h3>
+                                    <p className="text-[0.9375rem] leading-relaxed text-charcoal-600">{q.respuesta}</p>
+                                </div>
+                            </AnimateOnScroll>
+                        ))}
+                    </div>
+
+                    <AnimateOnScroll delay={0.4}>
+                        <p className="mt-8 text-center text-sm text-charcoal-500 max-w-2xl mx-auto">
+                            El secreto profesional sigue siendo tuyo: ninguna herramienta te releva
+                            de él. Iurexia está construida para que puedas cumplirlo, no para
+                            sustituirlo.
+                        </p>
+                    </AnimateOnScroll>
+                </div>
+            </section>
+
             {/* FAQ Section */}
             <section className="py-24 bg-white overflow-hidden">
                 <div className="max-w-4xl mx-auto px-4">
