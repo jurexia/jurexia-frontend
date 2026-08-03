@@ -14,7 +14,9 @@ import {
     DATOS_VACIOS,
     avisoDePlazo,
     construirPlan,
+    faltantes108,
     instruccionDesdePlan,
+    requisitos108,
     type ClaveVia,
     type DatosAmparo,
 } from '@/lib/agente-amparo';
@@ -48,8 +50,8 @@ export default function AgentePage() {
     );
     const aviso = useMemo(() => avisoDePlazo(datos), [datos]);
 
-    const listoParaPlan =
-        datos.quejoso.trim() && datos.actoReclamado.trim() && datos.autoridades.trim();
+    const faltan = useMemo(() => faltantes108(datos), [datos]);
+    const listoParaPlan = faltan.length === 0;
 
     function alternar(clave: ClaveVia) {
         setDesactivados((d) => (d.includes(clave) ? d.filter((c) => c !== clave) : [...d, clave]));
@@ -156,88 +158,94 @@ export default function AgentePage() {
                         </p>
 
                         <div className="flex flex-col gap-4">
-                            <Campo etiqueta="Quejoso" obligatorio>
+                            {/* ── Fracción I ── */}
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <Campo etiqueta="Persona quejosa" obligatorio nota="art. 108, fr. I">
+                                    <input
+                                        value={datos.quejoso}
+                                        onChange={(e) => setDatos({ ...datos, quejoso: e.target.value })}
+                                        placeholder="Nombre completo"
+                                        className={CLASE_INPUT}
+                                    />
+                                </Campo>
+                                <Campo etiqueta="Domicilio para oír notificaciones" obligatorio nota="art. 108, fr. I">
+                                    <input
+                                        value={datos.domicilioQuejoso}
+                                        onChange={(e) => setDatos({ ...datos, domicilioQuejoso: e.target.value })}
+                                        placeholder="Calle, número, colonia, ciudad"
+                                        className={CLASE_INPUT}
+                                    />
+                                </Campo>
+                            </div>
+
+                            <Campo etiqueta="Promueve en su nombre" nota="sólo si no promueve la propia quejosa; deberá acreditar su representación">
                                 <input
-                                    value={datos.quejoso}
-                                    onChange={(e) => setDatos({ ...datos, quejoso: e.target.value })}
-                                    placeholder="Nombre completo de quien promueve"
+                                    value={datos.promovente}
+                                    onChange={(e) => setDatos({ ...datos, promovente: e.target.value })}
+                                    placeholder="Nombre del representante, si aplica"
                                     className={CLASE_INPUT}
                                 />
                             </Campo>
 
-                            <Campo etiqueta="Acto reclamado" obligatorio>
-                                <textarea
-                                    value={datos.actoReclamado}
-                                    onChange={(e) => setDatos({ ...datos, actoReclamado: e.target.value })}
-                                    placeholder="Qué hizo la autoridad. Ej.: la negativa a dar acceso al expediente…"
-                                    rows={3}
-                                    className={`${CLASE_INPUT} resize-none`}
+                            {/* ── Fracción II ── */}
+                            <Campo etiqueta="Persona tercera interesada" obligatorio nota="art. 108, fr. II">
+                                <input
+                                    value={datos.terceroInteresado}
+                                    onChange={(e) => setDatos({ ...datos, terceroInteresado: e.target.value })}
+                                    placeholder="Nombre y domicilio"
+                                    disabled={datos.terceroDesconocido}
+                                    className={`${CLASE_INPUT} disabled:bg-cream-200 disabled:text-charcoal-400`}
                                 />
+                                <label className="mt-2 flex cursor-pointer items-start gap-2.5 text-[13px] leading-snug text-charcoal-700">
+                                    <input
+                                        type="checkbox"
+                                        checked={datos.terceroDesconocido}
+                                        onChange={(e) => setDatos({ ...datos, terceroDesconocido: e.target.checked })}
+                                        className="mt-0.5 accent-charcoal-900"
+                                    />
+                                    No se conocen. Se manifestará así bajo protesta de decir verdad, como exige la fracción II.
+                                </label>
                             </Campo>
 
-                            <Campo etiqueta="Autoridades responsables" obligatorio>
+                            {/* ── Fracciones III y IV ── */}
+                            <Campo etiqueta="Autoridades responsables" obligatorio nota="art. 108, fr. III">
                                 <textarea
                                     value={datos.autoridades}
                                     onChange={(e) => setDatos({ ...datos, autoridades: e.target.value })}
-                                    placeholder="Una por línea, con su denominación oficial"
+                                    placeholder="Una por línea, con su denominación oficial. Indica si es ordenadora o ejecutora."
                                     rows={2}
                                     className={`${CLASE_INPUT} resize-none`}
                                 />
                             </Campo>
 
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <Campo etiqueta="Fecha en que se conoció el acto">
-                                    <input
-                                        type="date"
-                                        value={datos.fechaConocimiento}
-                                        onChange={(e) => setDatos({ ...datos, fechaConocimiento: e.target.value })}
-                                        className={CLASE_INPUT}
-                                    />
-                                </Campo>
-                                <Campo etiqueta="Entidad">
-                                    <select
-                                        value={datos.estado}
-                                        onChange={(e) => setDatos({ ...datos, estado: e.target.value })}
-                                        className={CLASE_INPUT}
-                                    >
-                                        {ESTADOS_MEXICO.map((e) => (
-                                            <option key={e.value} value={e.value}>{e.label}</option>
-                                        ))}
-                                    </select>
-                                </Campo>
-                            </div>
-
-                            <Campo etiqueta="Plazo">
-                                <div className="flex flex-col gap-2">
-                                    {(
-                                        [
-                                            ['ordinario', 'Plazo genérico de quince días (art. 17)'],
-                                            ['sin_plazo', 'Peligro de privación de la vida, ataque a la libertad fuera de procedimiento, incomunicación, destierro o desaparición forzada — en cualquier tiempo (art. 17, fr. IV)'],
-                                        ] as [DatosAmparo['urgencia'], string][]
-                                    ).map(([valor, texto]) => (
-                                        <label key={valor} className="flex cursor-pointer items-start gap-2.5 text-[13px] leading-snug text-charcoal-700">
-                                            <input
-                                                type="radio"
-                                                name="urgencia"
-                                                checked={datos.urgencia === valor}
-                                                onChange={() => setDatos({ ...datos, urgencia: valor })}
-                                                className="mt-0.5 accent-charcoal-900"
-                                            />
-                                            {texto}
-                                        </label>
-                                    ))}
-                                </div>
+                            <Campo etiqueta="Acto u omisión reclamado" obligatorio nota="art. 108, fr. IV — lo que de cada autoridad se reclama">
+                                <textarea
+                                    value={datos.actoReclamado}
+                                    onChange={(e) => setDatos({ ...datos, actoReclamado: e.target.value })}
+                                    placeholder="Qué hizo u omitió cada autoridad. Ej.: la negativa a dar acceso al expediente…"
+                                    rows={3}
+                                    className={`${CLASE_INPUT} resize-none`}
+                                />
                             </Campo>
 
-                            <label className="flex cursor-pointer items-center gap-2.5 text-[0.9375rem] text-charcoal-800">
-                                <input
-                                    type="checkbox"
-                                    checked={datos.pideSuspension}
-                                    onChange={(e) => setDatos({ ...datos, pideSuspension: e.target.checked })}
-                                    className="accent-charcoal-900"
+                            {/* ── Fracción V: el relato ── */}
+                            <Campo
+                                etiqueta="Hechos"
+                                obligatorio
+                                nota="art. 108, fr. V — irán bajo protesta de decir verdad"
+                            >
+                                <textarea
+                                    value={datos.hechos}
+                                    onChange={(e) => setDatos({ ...datos, hechos: e.target.value })}
+                                    placeholder={'Relata en orden lo que pasó: cuándo, dónde, quién y qué. Escríbelo como lo contarías; Iurexia lo ordena y lo numera.\n\nEj.: El 3 de marzo solicité por escrito el acceso al expediente. El 12 de marzo la autoridad respondió negándolo sin fundar…'}
+                                    rows={7}
+                                    className={`${CLASE_INPUT} resize-y`}
                                 />
-                                Solicitar la suspensión del acto
-                            </label>
+                                <p className="mt-2 rounded-lg border border-accent-gold/30 bg-accent-gold/[0.07] px-3 py-2 text-[12px] leading-relaxed text-charcoal-700">
+                                    Estos hechos se presentarán <strong className="font-semibold">bajo protesta de decir verdad</strong>.
+                                    Relata sólo lo que te conste; el agente no inventará ninguno y lo que falte lo dejará entre corchetes.
+                                </p>
+                            </Campo>
 
                             <Campo etiqueta="Notas para el agente">
                                 <textarea
@@ -249,6 +257,25 @@ export default function AgentePage() {
                                 />
                             </Campo>
                         </div>
+
+                        {faltan.length > 0 && (
+                            <div className="mt-6 rounded-lg border border-accent-gold/30 bg-accent-gold/[0.07] px-4 py-3">
+                                <p className="text-[12.5px] font-semibold text-charcoal-900">
+                                    Faltan requisitos del artículo 108
+                                </p>
+                                <p className="mt-1 text-[12px] leading-relaxed text-charcoal-600">
+                                    Sin ellos el órgano previene conforme al artículo 114 y, de no
+                                    subsanarse en cinco días, la demanda se tiene por no presentada.
+                                </p>
+                                <ul className="mt-2 flex flex-col gap-1">
+                                    {faltan.map((r) => (
+                                        <li key={r.fraccion} className="text-[12px] text-charcoal-700">
+                                            <span className="font-semibold">Fr. {r.fraccion}</span> · {r.texto}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
 
                         <div className="mt-7 flex items-center justify-between gap-3">
                             <Link href="/chat" className="text-[13px] text-charcoal-500 hover:text-charcoal-800">
@@ -345,6 +372,29 @@ export default function AgentePage() {
                             })}
                         </ol>
 
+                        {/* Los ocho requisitos, a la vista. Es lo que separa una
+                            demanda que se admite de una que se previene. */}
+                        <div className="border-t border-cream-400 bg-cream-200/40 px-6 py-4">
+                            <p className="mb-3 text-[12.5px] font-semibold text-charcoal-900">
+                                Requisitos del artículo 108
+                            </p>
+                            <ul className="flex flex-col gap-1.5">
+                                {requisitos108(datos).map((r) => (
+                                    <li key={r.fraccion} className="flex items-start gap-2 text-[12px] leading-snug">
+                                        <span className="mt-[3px] flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full bg-accent-gold/20">
+                                            <Check className="h-2 w-2 text-accent-brown" strokeWidth={4} />
+                                        </span>
+                                        <span className="text-charcoal-700">
+                                            <span className="font-semibold">Fr. {r.fraccion}</span> · {r.texto}
+                                            <span className="ml-1.5 text-charcoal-500">
+                                                {r.condicional ? '(sólo si aplica)' : r.origen === 'datos' ? '— lo aportaste tú' : '— lo redacta el agente'}
+                                            </span>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
                         <div className="flex items-center justify-between gap-3 border-t border-cream-400 bg-cream-200/50 px-6 py-4">
                             <button
                                 onClick={() => setEtapa('datos')}
@@ -440,17 +490,23 @@ const CLASE_INPUT =
 function Campo({
     etiqueta,
     obligatorio,
+    nota,
     children,
 }: {
     etiqueta: string;
     obligatorio?: boolean;
+    /** La fracción del 108 que cubre el campo, para que se vea por qué se pide. */
+    nota?: string;
     children: React.ReactNode;
 }) {
     return (
         <label className="block">
-            <span className="mb-1.5 block text-[12.5px] font-semibold text-charcoal-700">
-                {etiqueta}
-                {obligatorio && <span className="ml-1 text-accent-brown">*</span>}
+            <span className="mb-1.5 flex flex-wrap items-baseline gap-x-2">
+                <span className="text-[12.5px] font-semibold text-charcoal-700">
+                    {etiqueta}
+                    {obligatorio && <span className="ml-1 text-accent-brown">*</span>}
+                </span>
+                {nota && <span className="text-[11px] text-charcoal-500">{nota}</span>}
             </span>
             {children}
         </label>
