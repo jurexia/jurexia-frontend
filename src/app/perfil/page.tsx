@@ -60,6 +60,7 @@ export default function PerfilPage() {
         ascenso: { vence_at: string; plan_previo: string; revertido_at: string | null } | null;
     } | null>(null);
     const [copiado, setCopiado] = useState(false);
+    const [otraCuenta, setOtraCuenta] = useState<{ hay_otra: boolean; correo_oculto?: string } | null>(null);
     const [nuevaPass, setNuevaPass] = useState('');
     const [confirmaPass, setConfirmaPass] = useState('');
     const [passCargando, setPassCargando] = useState(false);
@@ -105,6 +106,27 @@ export default function PerfilPage() {
                 if (r.ok) setReferidos(await r.json());
             } catch {
                 // Que no cargue el avance de referidos no debe romper el perfil.
+            }
+        })();
+    }, [user, profile]);
+
+    // ¿Tiene otra cuenta con plan de pago? Sólo se pregunta si esta es
+    // gratuita: la ruta lo vuelve a verificar en el servidor, pero así se
+    // ahorra la llamada para la mayoría.
+    useEffect(() => {
+        if (!user || !profile || profile.subscription_type !== 'gratuito') return;
+
+        (async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
+                const r = await fetch('/api/cuenta/otra-cuenta', {
+                    headers: { Authorization: `Bearer ${session.access_token}` },
+                });
+                if (r.ok) setOtraCuenta(await r.json());
+            } catch {
+                // El aviso es una ayuda, no un requisito: si falla, el perfil
+                // se ve igual.
             }
         })();
     }, [user, profile]);
@@ -391,6 +413,32 @@ export default function PerfilPage() {
                 <h1 className="font-serif text-4xl font-medium text-charcoal-900 mb-8">
                     Mi Perfil
                 </h1>
+
+                {/* Aviso de cuenta duplicada. Va arriba del todo porque quien
+                    llega aquí creyendo que perdió su plan tiene que verlo antes
+                    que nada — si no, escribe a soporte convencido de que se lo
+                    quitamos. Salió de un caso real. */}
+                {otraCuenta?.hay_otra && (
+                    <div className="mb-6 p-5 rounded-2xl border border-accent-gold/60 bg-cream-100">
+                        <p className="text-charcoal-900 font-medium mb-2">
+                            Tiene otra cuenta con plan de pago
+                        </p>
+                        <p className="text-sm text-charcoal-700">
+                            Está usando una cuenta gratuita, pero encontramos otra a su nombre
+                            con una suscripción activa en{' '}
+                            <strong className="text-charcoal-900">{otraCuenta.correo_oculto}</strong>.
+                            Cierre sesión e ingrese con ese correo para recuperar todas sus
+                            funciones. Su suscripción no ha sufrido ningún cambio.
+                        </p>
+                        <p className="text-sm text-charcoal-700 mt-2">
+                            ¿Prefiere usar este correo? Escríbanos a{' '}
+                            <a href="mailto:soporte@iurexia.com" className="text-accent-brown underline">
+                                soporte@iurexia.com
+                            </a>{' '}
+                            y trasladamos su suscripción sin costo ni interrupción.
+                        </p>
+                    </div>
+                )}
 
                 {/* Información Personal */}
                 <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
