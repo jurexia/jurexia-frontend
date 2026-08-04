@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 
     const { data: yo } = await admin
         .from('user_profiles')
-        .select('id, full_name, subscription_type')
+        .select('id, full_name, subscription_type, estado')
         .eq('id', sesion.user.id)
         .maybeSingle();
 
@@ -78,11 +78,25 @@ export async function GET(req: NextRequest) {
     // Un nombre demasiado corto («Miguel») produciría coincidencias falsas.
     if (miNombre.split(' ').length < 2) return NextResponse.json({ hay_otra: false });
 
+    // El nombre por sí solo NO basta, y hay un caso real que lo demuestra: en
+    // la base hay dos «Martin Gómez» distintos —uno en la Ciudad de México y
+    // otro en San Luis Potosí—, uno gratuito y otro de pago. Emparejarlos por
+    // nombre le habría enseñado a cada uno la existencia de la cuenta del
+    // otro, con su correo, y le habría dicho al gratuito que tiene un plan
+    // que no ha pagado.
+    //
+    // La entidad federativa es el desempate barato: es dato que el propio
+    // usuario declaró, y dos homónimos rara vez comparten estado. Si alguna
+    // de las dos cuentas no lo tiene declarado, se prefiere NO avisar: un
+    // aviso equivocado sobre la cuenta de un tercero es peor que ninguno.
+    if (!yo.estado) return NextResponse.json({ hay_otra: false });
+
     const { data: candidatas } = await admin
         .from('user_profiles')
-        .select('email, full_name')
+        .select('email, full_name, estado')
         .in('subscription_type', PLANES_DE_PAGO)
         .eq('is_active', true)
+        .eq('estado', yo.estado)
         .neq('id', yo.id);
 
     const otra = (candidatas ?? []).find(
