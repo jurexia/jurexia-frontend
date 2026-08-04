@@ -1,15 +1,17 @@
 /**
- * Los tres correos de captación, uno por segmento.
+ * Los correos de captación, uno por segmento.
  *
- * El reparto real de la base (4-ago-2026) manda sobre el tono de cada uno:
+ * El reparto real de la base (5-ago-2026) manda sobre el tono de cada uno:
  *
- *   0 consultas — nunca probó   1,564   88.8 %   → ACTIVACIÓN
- *   1-4 consultas                 131    7.4 %   → ACTIVACIÓN / SUSCRIPCIÓN
- *   5+ topó el límite              66    3.7 %   → SUSCRIPCIÓN
+ *   nunca inició sesión .......  65   → ENTRADA
+ *   nunca consultó ............ 566   → ACTIVACIÓN
+ *   inactivos 30+ días ........ 894   → REACTIVACIÓN
+ *   toparon el tope ...........  76   → SUSCRIPCIÓN
+ *   clientes de pago .......... 159   → REFERIDOS
  *
- * De ahí la regla que ordena todo: sólo 66 personas en toda la base han
+ * De ahí la regla que ordena todo: sólo 76 personas en toda la base han
  * chocado con el muro del plan gratuito. Son las únicas a las que una oferta
- * les dice algo. A los 1,564 que nunca escribieron una consulta ofrecerles
+ * les dice algo. A los cientos que nunca escribieron una consulta ofrecerles
  * descuento es rebajar algo que no han usado: convierte mal y gasta la lista.
  * Por eso el correo de activación NO vende plan. Su única meta es la primera
  * consulta.
@@ -23,6 +25,7 @@ import {
     boton, caja, envolver, esc, fuerte, listado, nombrePila, parrafo, rotulo, SITIO,
 } from './plantilla';
 import { urlBaja } from './baja';
+import { urlEntrada } from './entrada';
 import {
     codigoReferido, enlaceInvitacion, MESES_DE_PREMIO, REFERIDOS_NECESARIOS,
 } from './referidos';
@@ -298,7 +301,49 @@ function fuerteTexto(n: number): string {
     return String(n);
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// 5. ENTRADA — para quien se registró y NUNCA llegó a iniciar sesión.
+//    Son 65 cuentas: se dieron de alta y algo se rompió o lo dejaron a medias.
+//    No hay que venderles nada; hay que quitarles el obstáculo de encima.
+//    El botón no lleva el enlace mágico (caducaría, y el antivirus del
+//    destinatario lo consumiría antes que él) sino a /entrar, donde se genera
+//    fresco de un clic.
+// ─────────────────────────────────────────────────────────────────────────
+export function correoEntrada(d: Destinatario): Correo {
+    const nombre = nombrePila(d.full_name, d.email);
+
+    const cuerpo =
+        parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
+        parrafo(
+            'Usted creó una cuenta en Iurexia, pero nunca llegó a entrar. Puede que el registro ' +
+            'se interrumpiera, o simplemente que quedara pendiente entre asuntos más urgentes.',
+        ) +
+        parrafo(
+            `Su cuenta sigue ahí, ${fuerte('activa y sin costo')}. Y para que no tenga que ` +
+            'recordar ninguna contraseña, le preparamos una entrada directa:',
+        ) +
+        boton('Entrar sin contraseña', urlEntrada(d.email)) +
+        parrafo(
+            'Pulse el botón y le enviaremos al instante un enlace de acceso. Un clic más y estará dentro.',
+            '20px 0 20px 0',
+        ) +
+        porQueImporta() +
+        parrafo(
+            'Si prefiere entrar con su contraseña de siempre, también puede hacerlo desde ' +
+            `${SITIO}/login. Y si necesita ayuda, responda este correo: le contestamos nosotros.`,
+            '22px 0 0 0',
+        );
+
+    const html = envolver({ cuerpo, urlBaja: urlBaja(d.email) });
+    return {
+        asunto: `Licenciado ${nombre}, su cuenta de Iurexia quedó a medio camino`,
+        html,
+        texto: aTexto(cuerpo) + `\n\nEntrar sin contraseña: ${urlEntrada(d.email)}\nDarse de baja: ${urlBaja(d.email)}`,
+    };
+}
+
 export const CAMPANIAS = {
+    entrada: { construir: correoEntrada, etiqueta: 'Entrada — nunca inició sesión' },
     activacion: { construir: correoActivacion, etiqueta: 'Activación — nunca consultó' },
     reactivacion: { construir: correoReactivacion, etiqueta: 'Reactivación — Iurexia 2.0' },
     suscripcion: { construir: correoSuscripcion, etiqueta: 'Suscripción — topó el límite' },

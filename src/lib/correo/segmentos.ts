@@ -45,8 +45,24 @@ function admin() {
     );
 }
 
+/**
+ * De dónde sale cada segmento. Casi todos vienen de `user_profiles`, pero
+ * `entrada` necesita `last_sign_in_at`, que vive en `auth.users` y PostgREST
+ * no expone: para eso está la vista `cuentas_dormidas`.
+ */
+function origen(campania: NombreCampania): string {
+    return campania === 'entrada' ? 'cuentas_dormidas' : 'user_profiles';
+}
+
 /** Aplica los filtros del segmento a una consulta ya iniciada. */
 function filtrar(q: any, campania: NombreCampania) {
+    if (campania === 'entrada') {
+        // La vista ya filtra por «nunca inició sesión» y plan gratuito. Aquí
+        // sólo se dejan pasar 48 h desde el alta, para no pisar al correo de
+        // bienvenida de quien se registró hace un rato.
+        return q.lt('created_at', new Date(Date.now() - 48 * 3600_000).toISOString());
+    }
+
     if (campania === 'referidos') {
         // Único segmento de clientes, no de prospectos. Se les pide que
         // recomienden, así que tienen que estar al corriente.
@@ -81,7 +97,7 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
     const filas: Destinatario[] = [];
 
     for (let desde = 0; ; desde += TAMANO) {
-        const q = filtrar(admin().from('user_profiles').select(COLUMNAS), campania);
+        const q = filtrar(admin().from(origen(campania)).select(COLUMNAS), campania);
         const { data, error } = await q.range(desde, desde + TAMANO - 1);
         if (error) throw new Error(`segmento ${campania}: ${error.message}`);
 

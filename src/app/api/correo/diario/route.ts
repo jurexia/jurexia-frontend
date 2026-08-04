@@ -13,12 +13,16 @@
  *                       pide nada: ofrece. Y cada referido que convierte trae
  *                       un cliente nuevo, así que rinde más que cualquier
  *                       correo dirigido a prospectos.
- *   2. suscripcion   —  ~98 personas. Ya chocaron con el muro: son las únicas
+ *   2. entrada       —   65 cuentas que se registraron y NUNCA entraron. Es
+ *                       el fallo más crudo del embudo: gente que quiso usar
+ *                       la plataforma y se quedó en la puerta. Se les quita
+ *                       el obstáculo antes que venderle nada a nadie.
+ *   3. suscripcion   —  ~98 personas. Ya chocaron con el muro: son las únicas
  *                       a las que una oferta les dice algo. Se agotan en dos
  *                       días y valen más que el resto junto.
- *   3. reactivacion  —  ~896. Probaron y se fueron; recuperarlos cuesta menos
+ *   4. reactivacion  —  ~894. Probaron y se fueron; recuperarlos cuesta menos
  *                       que activar a quien nunca escribió nada.
- *   4. activacion    — ~1,564. El grueso. Se recorre despacio, en varias
+ *   5. activacion    —   ~566. El grueso. Se recorre despacio, en varias
  *                       semanas, que es exactamente lo que conviene: así se
  *                       mide si el correo funciona antes de gastar la lista
  *                       entera.
@@ -36,7 +40,7 @@ import { cupoDisponibleHoy, enviarCampania, type Resultado } from '@/lib/correo/
 export const maxDuration = 300;
 
 /** El orden importa: se gasta el cupo de arriba hacia abajo. */
-const PRIORIDAD: NombreCampania[] = ['referidos', 'suscripcion', 'reactivacion', 'activacion'];
+const PRIORIDAD: NombreCampania[] = ['referidos', 'entrada', 'suscripcion', 'reactivacion', 'activacion'];
 
 /**
  * Vercel firma sus crons con CRON_SECRET. Se acepta también la clave de
