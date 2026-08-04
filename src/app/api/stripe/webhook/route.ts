@@ -318,6 +318,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         true
     );
 
+    // ── PROGRAMA DE REFERIDOS ────────────────────────────────────────
+    // Éste es el único momento en que se puede contar una conversión: alguien
+    // que llegó por invitación acaba de contratar. Si con él su padrino junta
+    // tres, se le otorga aquí mismo el ascenso a Platinum por tres meses.
+    //
+    // Va envuelto en try/catch y después de actualizar la suscripción: un
+    // fallo del programa de referidos no puede impedir que se registre un
+    // cobro que Stripe ya hizo.
+    try {
+        const { alSuscribirseUnReferido } = await import('@/lib/referidos-backend');
+        const r = await alSuscribirseUnReferido(email, subscriptionType);
+        if (r.ascenso?.otorgado) {
+            console.log(`🎁 Ascenso por referidos otorgado — vence ${r.ascenso.vence_at}`);
+        }
+    } catch (refErr) {
+        console.error('⚠️ Programa de referidos falló (la suscripción sí se registró):', refErr);
+    }
+
     // ── AUTO-CANCEL previous subscriptions on upgrade ────────────────
     // When a user upgrades (e.g., Básico→Pro, Pro→Platinum), they go through
     // a new checkout which creates a NEW subscription. The old one stays active,

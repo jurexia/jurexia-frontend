@@ -50,18 +50,54 @@ export async function updateUserSubscription(
     resetUsage: boolean = false
 ) {
     const normalizedEmail = email.toLowerCase().trim();
-    const config = PLAN_CONFIG[subscriptionType];
+    let config = PLAN_CONFIG[subscriptionType];
+    let tipoAEscribir: PlanType = subscriptionType;
+
+    // ── Defensa del ascenso por referidos ────────────────────────────────
+    // Cada renovación mensual dispara este webhook con el plan REAL de Stripe
+    // (pro_monthly). Si un usuario está gozando su Platinum de tres meses por
+    // haber invitado a tres colegas, escribir 'pro_monthly' aquí se lo quita
+    // en silencio: sin error, sin aviso, sólo una fila sobrescrita. El premio
+    // moriría en la primera renovación en vez de durar los tres meses
+    // prometidos.
+    //
+    // El plan de Stripe se sigue respetando para el cobro —esto no toca la
+    // suscripción, el abogado sigue pagando su Pro— y `plan_previo` ya guardó
+    // ese dato, así que la reversión al vencer devuelve lo correcto.
+    //
+    // Sólo se protege frente a bajadas: si Stripe informa Platinum o superior
+    // (el usuario lo contrató de verdad), esa sí manda.
+    const esBajadaDesdeElPremio =
+        !subscriptionType.startsWith('platinum') &&
+        subscriptionType !== 'ultra_secretarios' &&
+        subscriptionType !== 'gratuito';
+
+    if (esBajadaDesdeElPremio) {
+        try {
+            const { hayAscensoActivo } = await import('./referidos-backend');
+            if (await hayAscensoActivo(normalizedEmail)) {
+                console.log(`🎁 ${normalizedEmail} tiene ascenso por referidos vigente — se conserva Platinum`);
+                tipoAEscribir = 'platinum_monthly';
+                config = PLAN_CONFIG.platinum_monthly;
+            }
+        } catch (e) {
+            // Si la comprobación falla, se sigue con el plan de Stripe: es
+            // preferible perder el premio a dejar la suscripción sin escribir.
+            console.error('No pude comprobar el ascenso por referidos:', e);
+        }
+    }
 
     console.log(`🔄 updateUserSubscription called:`, {
         email: normalizedEmail,
         subscriptionType,
+        escrito: tipoAEscribir,
         queriesLimit: config.queriesLimit,
         stripeCustomerId,
         stripeSubscriptionId,
     });
 
     const updatePayload: any = {
-        subscription_type: subscriptionType,
+        subscription_type: tipoAEscribir,
         queries_limit: config.queriesLimit,
         drafts_limit: config.draftsLimit,
         sentencia_queries_limit: config.sentenciaQueriesLimit,

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
-import { User, CreditCard, Shield, AlertTriangle, Check, X, FileText, Building2 } from 'lucide-react';
+import { User, CreditCard, Shield, AlertTriangle, Check, X, FileText, Building2, KeyRound, Gift } from 'lucide-react';
+import { updatePassword } from '@/lib/supabase';
 import ConnectLawyerSection from '@/components/ConnectLawyerSection';
 import AdminLawyerPanel from '@/components/AdminLawyerPanel';
 
@@ -54,6 +55,15 @@ export default function PerfilPage() {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancellingSubscription, setCancellingSubscription] = useState(false);
     const [cancelMessage, setCancelMessage] = useState('');
+    const [referidos, setReferidos] = useState<{
+        codigo: string; invitados: number; suscritos: number; faltan: number; necesarios: number;
+        ascenso: { vence_at: string; plan_previo: string; revertido_at: string | null } | null;
+    } | null>(null);
+    const [copiado, setCopiado] = useState(false);
+    const [nuevaPass, setNuevaPass] = useState('');
+    const [confirmaPass, setConfirmaPass] = useState('');
+    const [passCargando, setPassCargando] = useState(false);
+    const [passMsg, setPassMsg] = useState<{ ok: boolean; texto: string } | null>(null);
 
     // Fiscal data state
     const [showFiscalForm, setShowFiscalForm] = useState(false);
@@ -79,6 +89,25 @@ export default function PerfilPage() {
             setNewName(profile.full_name);
         }
     }, [profile]);
+
+    // Avance del programa de referidos. Sólo se pide para quien paga: a un
+    // usuario gratuito la sección no le aplica y no vale la pena la llamada.
+    useEffect(() => {
+        if (!user || !profile || profile.subscription_type === 'gratuito') return;
+
+        (async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
+                const r = await fetch('/api/referidos/estado', {
+                    headers: { Authorization: `Bearer ${session.access_token}` },
+                });
+                if (r.ok) setReferidos(await r.json());
+            } catch {
+                // Que no cargue el avance de referidos no debe romper el perfil.
+            }
+        })();
+    }, [user, profile]);
 
     // Load existing fiscal data
     useEffect(() => {
@@ -292,6 +321,37 @@ export default function PerfilPage() {
         }
 
         setFiscalSaving(false);
+    };
+
+    const cambiarContrasena = async () => {
+        if (nuevaPass.length < 8) {
+            setPassMsg({ ok: false, texto: 'La contraseña debe tener al menos ocho caracteres.' });
+            return;
+        }
+        if (nuevaPass !== confirmaPass) {
+            setPassMsg({ ok: false, texto: 'Las dos contraseñas no coinciden.' });
+            return;
+        }
+
+        setPassCargando(true);
+        setPassMsg(null);
+        try {
+            await updatePassword(nuevaPass);
+            setNuevaPass('');
+            setConfirmaPass('');
+            setPassMsg({ ok: true, texto: 'Contraseña actualizada.' });
+        } catch (e) {
+            // Supabase devuelve en inglés; el usuario no tiene por qué leerlo.
+            const crudo = e instanceof Error ? e.message : String(e);
+            const texto = /should be different|same as the old/i.test(crudo)
+                ? 'La contraseña nueva debe ser distinta de la actual.'
+                : /session|not authenticated/i.test(crudo)
+                    ? 'Su sesión expiró. Vuelva a entrar e inténtelo de nuevo.'
+                    : 'No pudimos actualizar la contraseña. Inténtelo de nuevo.';
+            setPassMsg({ ok: false, texto });
+        } finally {
+            setPassCargando(false);
+        }
     };
 
     const handleDeleteAccount = async () => {
@@ -759,6 +819,157 @@ export default function PerfilPage() {
                                 Verificado
                             </span>
                         </div>
+                    </div>
+                </section>
+
+                {/* Invite y ascienda. Sólo aparece para quien ya paga: el
+                    programa es para clientes, no para prospectos. El plazo de
+                    tres meses se muestra al mismo tamaño que el resto — nunca
+                    en letra chica. */}
+                {referidos && (
+                    <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <Gift className="w-5 h-5 text-charcoal-700" />
+                            <h2 className="font-serif text-2xl font-medium text-charcoal-900">
+                                Invite y ascienda
+                            </h2>
+                        </div>
+
+                        {referidos.ascenso && !referidos.ascenso.revertido_at &&
+                         new Date(referidos.ascenso.vence_at) > new Date() ? (
+                            <div className="mb-5 p-4 rounded-lg border border-accent-gold/50 bg-cream-100">
+                                <p className="text-sm text-charcoal-900 font-medium mb-1">
+                                    Sus capacidades Platinum están activas.
+                                </p>
+                                <p className="text-sm text-charcoal-700">
+                                    Vigentes hasta el{' '}
+                                    {new Date(referidos.ascenso.vence_at).toLocaleDateString('es-MX', {
+                                        day: 'numeric', month: 'long', year: 'numeric',
+                                    })}
+                                    . Su plan de cobro no cambió: sigue pagando lo mismo de siempre.
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-sm text-charcoal-700 mb-4">
+                                    Cuando <strong className="text-charcoal-900">{referidos.necesarios} colegas</strong> que
+                                    usted invite contraten un plan Pro o superior, su cuenta recibe las
+                                    capacidades Platinum durante <strong className="text-charcoal-900">3 meses</strong>.
+                                    Usted seguirá pagando exactamente lo mismo que paga hoy: lo que se le
+                                    regala es el aumento de capacidades, no la mensualidad.
+                                </p>
+
+                                <div className="flex items-center gap-2 mb-5">
+                                    {Array.from({ length: referidos.necesarios }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className={`h-2 flex-1 rounded-full ${
+                                                i < referidos.suscritos ? 'bg-accent-gold' : 'bg-cream-400'
+                                            }`}
+                                        />
+                                    ))}
+                                    <span className="text-sm text-charcoal-700 ml-2 whitespace-nowrap">
+                                        {referidos.suscritos} de {referidos.necesarios}
+                                    </span>
+                                </div>
+                            </>
+                        )}
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-xs uppercase tracking-wider text-accent-brown mb-2">
+                                    Su enlace de invitación
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        readOnly
+                                        value={`https://www.iurexia.com/registro?ref=${referidos.codigo}`}
+                                        onFocus={(e) => e.currentTarget.select()}
+                                        className="flex-1 px-4 py-2.5 rounded-lg border border-cream-400 bg-cream-50 text-charcoal-900 text-sm font-mono"
+                                    />
+                                    <button
+                                        onClick={async () => {
+                                            await navigator.clipboard.writeText(
+                                                `https://www.iurexia.com/registro?ref=${referidos.codigo}`,
+                                            );
+                                            setCopiado(true);
+                                            setTimeout(() => setCopiado(false), 2000);
+                                        }}
+                                        className="px-4 py-2.5 rounded-lg bg-charcoal-900 text-cream-100 text-sm font-medium hover:bg-charcoal-800 transition-colors whitespace-nowrap"
+                                    >
+                                        {copiado ? 'Copiado' : 'Copiar'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p className="text-sm text-charcoal-700">
+                                O que su colega escriba el código{' '}
+                                <strong className="text-charcoal-900 tracking-widest">{referidos.codigo}</strong>{' '}
+                                al registrarse.
+                            </p>
+
+                            <div className="flex gap-6 pt-2 text-sm">
+                                <span className="text-charcoal-700">
+                                    Invitados registrados:{' '}
+                                    <strong className="text-charcoal-900">{referidos.invitados}</strong>
+                                </span>
+                                <span className="text-charcoal-700">
+                                    Ya suscritos:{' '}
+                                    <strong className="text-charcoal-900">{referidos.suscritos}</strong>
+                                </span>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* Contraseña — cerraba el ciclo que faltaba: el helper
+                    updatePassword() ya existía en lib/supabase, pero no había
+                    ninguna pantalla que lo llamara. Sin esto, cambiar de
+                    contraseña obligaba a fingir que se había olvidado. */}
+                <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
+                    <div className="flex items-center gap-3 mb-6">
+                        <KeyRound className="w-5 h-5 text-charcoal-700" />
+                        <h2 className="font-serif text-2xl font-medium text-charcoal-900">
+                            Contraseña
+                        </h2>
+                    </div>
+
+                    <p className="text-sm text-charcoal-700 mb-5">
+                        Elija una contraseña nueva de al menos ocho caracteres. Al guardarla,
+                        sus otras sesiones seguirán abiertas.
+                    </p>
+
+                    <div className="space-y-3 max-w-md">
+                        <input
+                            type="password"
+                            value={nuevaPass}
+                            onChange={(e) => { setNuevaPass(e.target.value); setPassMsg(null); }}
+                            placeholder="Contraseña nueva"
+                            autoComplete="new-password"
+                            className="w-full px-4 py-2.5 rounded-lg border border-cream-400 bg-cream-50 text-charcoal-900 text-sm focus:outline-none focus:border-accent-gold"
+                        />
+                        <input
+                            type="password"
+                            value={confirmaPass}
+                            onChange={(e) => { setConfirmaPass(e.target.value); setPassMsg(null); }}
+                            placeholder="Repita la contraseña nueva"
+                            autoComplete="new-password"
+                            className="w-full px-4 py-2.5 rounded-lg border border-cream-400 bg-cream-50 text-charcoal-900 text-sm focus:outline-none focus:border-accent-gold"
+                        />
+
+                        {passMsg && (
+                            <p className={`text-sm ${passMsg.ok ? 'text-accent-brown' : 'text-red-700'}`}>
+                                {passMsg.texto}
+                            </p>
+                        )}
+
+                        <button
+                            onClick={cambiarContrasena}
+                            disabled={passCargando || !nuevaPass || !confirmaPass}
+                            className="px-5 py-2.5 rounded-lg bg-charcoal-900 text-cream-100 text-sm font-medium hover:bg-charcoal-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {passCargando ? 'Guardando…' : 'Guardar contraseña'}
+                        </button>
                     </div>
                 </section>
 

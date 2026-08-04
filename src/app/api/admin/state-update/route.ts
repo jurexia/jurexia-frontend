@@ -97,6 +97,24 @@ function buildStateUpdateEmail(params: { name: string; estado: string }) {
  * Body: { email, name, estado }
  */
 export async function POST(req: NextRequest) {
+    // Esta ruta estaba desplegada SIN autenticación: cualquiera que conociera
+    // la URL podía hacer que iurexia.com enviara correos a la dirección que
+    // quisiera, desde noreply@iurexia.com. Además de servir para phishing con
+    // nuestro dominio, un abuso habría hundido la reputación de envío y con
+    // ella los correos de confirmación de cuenta y recuperación de contraseña.
+    const esperada = process.env.ADMIN_CAMPAIGN_KEY;
+    if (!esperada) {
+        return NextResponse.json({ error: 'ADMIN_CAMPAIGN_KEY no configurada' }, { status: 500 });
+    }
+    const dada = req.headers.get('x-admin-key') ?? '';
+    let dif = dada.length === esperada.length ? 0 : 1;
+    for (let i = 0; i < esperada.length; i++) {
+        dif |= (dada.charCodeAt(i) || 0) ^ esperada.charCodeAt(i);
+    }
+    if (dif !== 0) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
         return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 });

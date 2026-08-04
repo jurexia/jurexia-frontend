@@ -8,6 +8,14 @@ import { signInWithGoogle, signInWithApple, supabase } from '@/lib/supabase';
 
 export default function RegistroPage() {
     const router = useRouter();
+
+    // Se lee una sola vez al montar: en el servidor no hay `window`, y
+    // useSearchParams obligaría a envolver la página en <Suspense>.
+    const [codigoReferido, setCodigoReferido] = useState<string | null>(null);
+    useEffect(() => {
+        const ref = new URLSearchParams(window.location.search).get('ref');
+        if (ref) setCodigoReferido(ref.trim().toUpperCase());
+    }, []);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -155,6 +163,11 @@ export default function RegistroPage() {
                     email: email.trim().toLowerCase(),
                     code,
                     password,
+                    // Código de invitación, si llegó por el enlace de un
+                    // colega (/registro?ref=XXXXXXXX). Se lee de la URL en
+                    // vez de guardarse en estado para que sobreviva a que el
+                    // usuario recargue a medio registro.
+                    ref: codigoReferido,
                 }),
             });
 

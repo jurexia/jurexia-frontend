@@ -212,15 +212,35 @@ function buildConversionEmail(firstName: string): string {
 
 export async function POST(request: NextRequest) {
     try {
-        // Auth check - admin only
-        const { searchParams } = new URL(request.url);
-        const adminKey = searchParams.get('key');
-        const allowedKeys = ['jurexia-reingest-2026'];
-        if (process.env.ADMIN_CAMPAIGN_KEY) {
-            allowedKeys.push(process.env.ADMIN_CAMPAIGN_KEY);
+        // Auth check - admin only.
+        //
+        // Antes había una clave de respaldo escrita aquí mismo, en claro. Al
+        // vivir en el repositorio, cualquiera con acceso al código podía
+        // disparar un envío masivo a toda la base de usuarios desde el dominio
+        // de Iurexia. Ahora la única llave válida es ADMIN_CAMPAIGN_KEY, y sin
+        // ella la ruta no corre.
+        //
+        // También se movió de la query string a una cabecera: las URLs quedan
+        // registradas en los logs de acceso y en el historial del navegador.
+        const esperada = process.env.ADMIN_CAMPAIGN_KEY;
+        if (!esperada) {
+            return NextResponse.json(
+                { error: 'ADMIN_CAMPAIGN_KEY no está configurada' },
+                { status: 500 },
+            );
         }
-        
-        if (!adminKey || !allowedKeys.includes(adminKey)) {
+
+        const { searchParams } = new URL(request.url);
+        const adminKey = request.headers.get('x-admin-key') ?? searchParams.get('key') ?? '';
+
+        if (adminKey.length !== esperada.length) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        let dif = 0;
+        for (let i = 0; i < esperada.length; i++) {
+            dif |= adminKey.charCodeAt(i) ^ esperada.charCodeAt(i);
+        }
+        if (dif !== 0) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

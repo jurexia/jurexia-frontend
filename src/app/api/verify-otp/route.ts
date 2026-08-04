@@ -13,7 +13,7 @@ function getSupabaseAdmin() {
 
 export async function POST(request: NextRequest) {
     try {
-        const { email, code, password } = await request.json();
+        const { email, code, password, ref } = await request.json();
 
         if (!email || !code || !password) {
             return NextResponse.json(
@@ -104,6 +104,24 @@ export async function POST(request: NextRequest) {
         await supabase.from('otp_codes').delete().eq('email', normalizedEmail);
 
         console.log(`✅ User created with verified email: ${normalizedEmail}`);
+
+        // ── PROGRAMA DE REFERIDOS ────────────────────────────────────────
+        // Si llegó con un código de invitación, se ata aquí con quien lo
+        // invitó. Es el único punto donde existen a la vez el código y el id
+        // recién creado.
+        //
+        // Silencioso a propósito: un código caducado, mal escrito o de un
+        // usuario borrado NO puede impedir que se complete un alta. Lo peor
+        // que pasa es que el padrino no reciba su crédito.
+        if (ref && userData.user?.id) {
+            try {
+                const { registrarReferido } = await import('@/lib/referidos-backend');
+                const atado = await registrarReferido(String(ref), userData.user.id);
+                console.log(`🔗 Referido ${atado ? 'registrado' : 'no aplicable'} para ${normalizedEmail}`);
+            } catch (refErr) {
+                console.error('⚠️ No pude registrar el referido (el alta sí se completó):', refErr);
+            }
+        }
 
         return NextResponse.json({
             success: true,
