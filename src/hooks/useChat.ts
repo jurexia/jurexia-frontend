@@ -31,7 +31,11 @@ interface UseChatReturn {
      *  <!--SOURCES:n--> del backend. null mientras la búsqueda no termina;
      *  se resetea a null al enviar la siguiente consulta. */
     sourcesCount: number | null;
+    /** Etapas reales del pipeline, en orden de llegada (<!--PASO:nombre|detalle-->). */
+    pasos: Paso[];
 }
+
+export type Paso = { nombre: string; detalle?: string };
 
 // Thinking marker used by the backend to separate reasoning from content.
 // This marker can be SPLIT across TCP chunk boundaries, so we use a
@@ -156,6 +160,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [retryMessage, setRetryMessage] = useState<string | null>(null);
     const [retryType, setRetryType] = useState<string | null>(null);
     const [sourcesCount, setSourcesCount] = useState<number | null>(null);
+    const [pasos, setPasos] = useState<Paso[]>([]);
     const abortControllerRef = useRef<AbortController | null>(null);
     // FIX 2026-05-22: Ref-based mutex to prevent duplicate simultaneous sends.
     // React batches state updates, so two rapid clicks can both see isLoading=false
@@ -180,7 +185,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setIsLoading(true);
         setRetryMessage(null);  // Reset retry message
         setRetryType(null);
-        setSourcesCount(null);  // Nueva consulta: la cuenta de fuentes vuelve a cero
+        setSourcesCount(null); setPasos([]);  // Nueva consulta: la cuenta de fuentes vuelve a cero
 
         // Add user message
         const userMessage: Message = { role: 'user', content };
@@ -233,13 +238,35 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 // el marcador caía al parser como contenido: creaba el mensaje
                 // del asistente con solo un comentario invisible y mataba el
                 // indicador de espera antes de tiempo. Ahora alimenta la línea
-                // de pasos del agente (PasosAgente) y se retira del stream.
+                // del flujo del agente (FlujoAgente) y se retira del stream.
                 const sourcesMatch = chunk.match(/<!--SOURCES:(\d+)-->/);
                 if (sourcesMatch) {
                     setSourcesCount(parseInt(sourcesMatch[1], 10));
                     const remaining = chunk.replace(sourcesMatch[0], '');
                     if (!remaining.trim()) continue;
                     chunk = remaining;
+                }
+
+                // <!--PASO:nombre--> o <!--PASO:nombre|detalle--> — cada etapa
+                // real del pipeline, emitida desde el punto exacto donde ocurre.
+                // Pueden venir VARIOS en un mismo chunk (el backend vacía su cola
+                // de golpe), así que se recorren todos en vez de tomar el primero.
+                if (chunk.includes('<!--PASO:')) {
+                    const nuevos: Paso[] = [];
+                    chunk = chunk.replace(/<!--PASO:([^|>]+)(?:\|([^>]*))?-->/g, (_m, nombre, detalle) => {
+                        nuevos.push({ nombre: String(nombre).trim(), detalle: detalle || undefined });
+                        return '';
+                    });
+                    if (nuevos.length) {
+                        // Si una etapa se repite (reintento), se queda la última:
+                        // su detalle es el bueno.
+                        setPasos((prev) => {
+                            const mapa = new Map(prev.map((x) => [x.nombre, x]));
+                            nuevos.forEach((x) => mapa.set(x.nombre, x));
+                            return Array.from(mapa.values());
+                        });
+                    }
+                    if (!chunk.trim()) continue;
                 }
 
                 // Check for cache active marker: <!--CACHE:ACTIVE-->
@@ -397,5 +424,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         retryMessage,
         retryType,
         sourcesCount,
+        pasos,
     };
 }

@@ -7,7 +7,7 @@ import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage from '@/components/ChatMessage';
-import { PasosAgente } from '@/components/PasosAgente';
+import { FlujoAgente } from '@/components/FlujoAgente';
 import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
 import VisualGuideOverlay from '@/components/VisualGuideOverlay';
@@ -239,7 +239,7 @@ export default function ChatPage() {
     }, []);
 
     // Chat Hook
-    const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount } = useChat({
+    const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos } = useChat({
         estado: selectedEstado || undefined,
         topK: 30,
         fuero: selectedFuero.length ? selectedFuero : undefined,
@@ -931,11 +931,9 @@ export default function ChatPage() {
                                 );
                             })}
                             {(isLoading || isDocumentAnalyzing) && messages[messages.length - 1]?.role === 'user' && (
-                                <PasosAgente
-                                    estado={selectedEstado || undefined}
-                                    fuero={selectedFuero.length ? selectedFuero : undefined}
-                                    materia={selectedMateria || undefined}
-                                    genios={activeGenios.length ? activeGenios : undefined}
+                                <FlujoAgente
+                                    consulta={messages[messages.length - 1]?.content}
+                                    pasos={pasos}
                                     sourcesCount={sourcesCount}
                                     retryMessage={retryMessage || undefined}
                                     retryType={retryType || undefined}
