@@ -804,8 +804,14 @@ export default function ChatPage() {
 
                 <main className="flex-1 pt-14 overflow-y-auto">
                     {!hasMessages ? (
-                        <div className="h-full flex flex-col items-center justify-center px-3 sm:px-4 -mt-4 sm:-mt-8">
-                            <div className="max-w-2xl w-full text-center">
+                        /* min-h-full + my-auto en el hijo, NO justify-center:
+                           con justify-center, cuando el interior es más alto
+                           que la ventana el flexbox recorta la parte de ARRIBA
+                           y el scroll no llega a ella — el logo «Iurexia»
+                           quedaba decapitado bajo la barra. Con my-auto se
+                           centra cuando cabe y se desplaza cuando no. */
+                        <div className="min-h-full flex flex-col items-center px-3 sm:px-4 py-4">
+                            <div className="max-w-2xl w-full text-center my-auto">
                                 <div className="mb-2 sm:mb-4">
                                     <Link href="/" className="cursor-pointer hover:opacity-90 transition-opacity">
                                         <span className="font-serif text-3xl sm:text-5xl font-semibold text-charcoal-900">
@@ -925,19 +931,18 @@ export default function ChatPage() {
                                 const showNudge = !isPro && message.role === 'assistant' && assistantCount > 0 && assistantCount % 3 === 0 && index !== messages.length - 1;
                                 return (
                                     <div key={index}>
-                                        <ChatMessage message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} />
+                                        <ChatMessage message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} />
                                         {showNudge && <UpgradeNudge messageIndex={assistantCount} />}
                                     </div>
                                 );
                             })}
                             {(isLoading || isDocumentAnalyzing) && messages[messages.length - 1]?.role === 'user' && (
+                                /* Sin `consulta`: la tarjeta del consultante ya
+                                   es el propio mensaje del historial, justo
+                                   arriba — repetirla aquí la mostraba doble. */
                                 <FlujoAgente
-                                    consulta={messages[messages.length - 1]?.content}
                                     pasos={pasos}
                                     sourcesCount={sourcesCount}
-                                    nombre={profile?.full_name}
-                                    avatarUrl={profile?.avatar_url}
-                                    tratamiento={profile?.tratamiento}
                                     retryMessage={retryMessage || undefined}
                                     retryType={retryType || undefined}
                                 />

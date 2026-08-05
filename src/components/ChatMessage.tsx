@@ -8,6 +8,10 @@ import type { Message } from '@/lib/api';
 interface ChatMessageProps {
     message: Message;
     isStreaming?: boolean;
+    /** Para la tarjeta del consultante: nombre, foto y tratamiento del perfil. */
+    nombre?: string | null;
+    avatarUrl?: string | null;
+    tratamiento?: string | null;
     onCitationClick?: (source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }) => void;
 }
 
@@ -16,6 +20,22 @@ const UUID_REGEX = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}
 
 // Filter out document content from user messages (content between markers is hidden)
 // For AUDITAR_SENTENCIA, show a compact card with file info
+/**
+ * Marcadores internos que viajan DENTRO del mensaje del usuario y que jamás
+ * deben verse en pantalla: [MODO_FLASH], [MODO_REDACCION_*],
+ * [MODO_PRECEDENTES] con sus [CORTE:]/[SALA:]/[CIRCUITO:]/[TRIBUNAL:].
+ * En producción se llegó a ver «[MODO_FLASH] ¿qué artículos…» en el historial.
+ */
+function limpiarMarcadoresInternos(content: string): string {
+    return content.replace(/^(?:\s*\[[A-Z_]+(?::[^\]]*)?\])+\s*/g, '').trim();
+}
+
+const TRATAMIENTOS_CHAT: Record<string, string> = {
+    licenciado: 'El abogado',
+    licenciada: 'La abogada',
+    lic: 'Lic.',
+};
+
 function filterDocumentContent(content: string): string {
     // Check if this is a sentencia audit message
     if (content.includes('[AUDITAR_SENTENCIA]')) {
@@ -55,7 +75,7 @@ function filterDocumentContent(content: string): string {
 
 
 
-export default function ChatMessage({ message, isStreaming = false, onCitationClick }: ChatMessageProps) {
+export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
@@ -1075,9 +1095,35 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     }`}
             >
                 {isUser ? (
-                    <p className="text-sm sm:text-base whitespace-pre-wrap px-4 py-3">
-                        {filterDocumentContent(message.content)}
-                    </p>
+                    /* La tarjeta del consultante, permanente en el historial.
+                       Es la misma identidad visual que encabeza el flujo del
+                       agente: monograma o fotografía, tratamiento elegido y
+                       «pregunta:». Los marcadores internos ([MODO_FLASH],
+                       [MODO_REDACCION…]) se limpian — llegaron a verse crudos
+                       en producción. */
+                    <div>
+                        <div className="flex items-center gap-2.5 mb-2">
+                            {avatarUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover ring-1 ring-accent-gold/60" />
+                            ) : (
+                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-gold/20 ring-1 ring-accent-gold/60 font-serif text-xs font-semibold text-accent-gold">
+                                    {((nombre ?? 'I').trim() || 'I').charAt(0).toUpperCase()}
+                                </span>
+                            )}
+                            {(nombre ?? '').trim() ? (
+                                <p className="min-w-0 truncate text-[12.5px] font-medium text-cream-100">
+                                    {TRATAMIENTOS_CHAT[tratamiento ?? 'lic'] ?? 'Lic.'} {(nombre ?? '').trim()}{' '}
+                                    <span className="text-cream-100/60">pregunta:</span>
+                                </p>
+                            ) : (
+                                <p className="text-[12.5px] font-medium text-cream-100/80">Consulta:</p>
+                            )}
+                        </div>
+                        <p className="text-sm sm:text-base whitespace-pre-wrap">
+                            {limpiarMarcadoresInternos(filterDocumentContent(message.content))}
+                        </p>
+                    </div>
                 ) : (
                     <>
                         {/* Insignia del escalón con el que se redactó la respuesta.
@@ -1300,12 +1346,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                 )}
             </div>
 
-            {/* Avatar - User */}
-            {isUser && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent-brown flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
-                </div>
-            )}
+            {/* Sin avatar lateral para el usuario: la tarjeta del consultante
+                ya lleva su fotografía o monograma dentro — el circulito
+                genérico de al lado era redundante y desalineaba la burbuja. */}
         </div>
     );
 }
