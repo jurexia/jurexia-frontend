@@ -65,7 +65,7 @@ const BASICO_THEME: PlanTheme = {
         'Soporte estándar',
     ],
     ctaText: 'Comenzar a usar Iurexia',
-    ctaHref: '/chat',
+    ctaHref: '/chat?bienvenida=1',
 };
 
 const PRO_THEME: PlanTheme = {
@@ -85,7 +85,7 @@ const PRO_THEME: PlanTheme = {
         'Acceder a soporte prioritario',
     ],
     ctaText: 'Comenzar a usar Iurexia',
-    ctaHref: '/chat',
+    ctaHref: '/chat?bienvenida=1',
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

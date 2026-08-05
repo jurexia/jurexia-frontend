@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { LogOut, User, CreditCard, Settings, AlertTriangle, CheckCircle, Heart, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
+import { Insignia, nivelDePlan } from '@/components/Insignia';
 import { signOut, supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -160,7 +161,12 @@ export function UserAvatar() {
                 </div>
 
                 {/* Plan Badge */}
-                <span className={`hidden md:inline-flex px-3 py-1 rounded-full text-xs font-semibold ${planStyle.bg} ${planStyle.text}`}>
+                {/* La insignia sustituye a la píldora de texto: se reconoce de
+                    un vistazo y da algo que subir de nivel, cosa que «Platinum
+                    Anual» sobre crema no hacía. El nombre del plan sigue ahí
+                    como texto, para que nadie tenga que adivinar. */}
+                <span className="hidden md:inline-flex items-center gap-1.5 pl-1.5 pr-3 py-1 rounded-full text-xs font-semibold bg-charcoal-900/5 text-charcoal-900 border border-cream-400">
+                    <Insignia nivel={nivelDePlan(plan)} tam={18} />
                     {planStyle.label}
                 </span>
             </button>
@@ -176,7 +182,8 @@ export function UserAvatar() {
                         <p className="text-sm text-charcoal-500 truncate">
                             {userEmail}
                         </p>
-                        <div className={`inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold ${planStyle.bg} ${planStyle.text}`}>
+                        <div className="inline-flex items-center gap-1.5 mt-2 pl-1.5 pr-3 py-1 rounded-full text-xs font-semibold bg-charcoal-900/5 text-charcoal-900 border border-cream-400">
+                            <Insignia nivel={nivelDePlan(plan)} tam={18} />
                             Plan {planStyle.label}
                         </div>
                         {profile && (

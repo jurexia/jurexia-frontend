@@ -22,6 +22,8 @@ import FeedbackWidget from '@/components/FeedbackWidget';
 // FreeUserOnboardingModal removed — was causing 43% user abandonment (audio-modal blocker)
 import { markWelcomeVideoSeen } from '@/lib/supabase';
 import { useChat } from '@/hooks/useChat';
+import { useInsignia } from '@/hooks/useInsignia';
+import { CeremoniaInsignia } from '@/components/CeremoniaInsignia';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
@@ -62,6 +64,11 @@ export default function ChatPage() {
     // Auth protection - redirects to login if not authenticated
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
     const router = useRouter();
+
+    // La entrega de la insignia del plan. Vive aquí y no en la pantalla de
+    // pago: ahí el webhook de Stripe aún no ha escrito el plan nuevo y se
+    // entregaría la insignia vieja a quien acaba de pagar.
+    const { insigniaPendiente, cerrarInsignia } = useInsignia(profile);
 
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const isPro = _PRO_PLUS.includes(profile?.subscription_type || '');
@@ -771,36 +778,11 @@ export default function ChatPage() {
                 {/* Anuncio de Precedentes Judiciales removido — sustituido por NewFeaturesAnnouncementModal
                     que cubre Redacción Pro + Precedentes en un solo walkthrough. */}
 
-                {/* ═══ PATIENCE BANNER — Visible during entire response generation ═══ */}
-                {(isLoading || isDocumentAnalyzing) && hasMessages && (
-                    <div className="fixed top-14 left-0 right-0 md:left-72 z-25" style={{ animation: 'fadeIn 0.4s ease-out' }}>
-                        <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a1510 0%, #22201c 50%, #1a1510 100%)' }}>
-                            {/* Animated progress shimmer */}
-                            <div className="absolute inset-0" style={{
-                                background: 'linear-gradient(90deg, transparent 0%, rgba(201,169,98,0.08) 30%, rgba(201,169,98,0.15) 50%, rgba(201,169,98,0.08) 70%, transparent 100%)',
-                                animation: 'patienceShimmer 2.5s ease-in-out infinite',
-                            }} />
-                            {/* Gold accent line at top */}
-                            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(90deg, transparent, #c9a962, transparent)' }} />
-                            <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-3 relative">
-                                <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(201,169,98,0.15)', border: '1px solid rgba(201,169,98,0.3)' }}>
-                                    <Loader2Icon className="w-3 h-3 animate-spin" style={{ color: '#c9a962' }} />
-                                </div>
-                                <p className="text-[11px] sm:text-xs font-medium" style={{ color: 'rgba(245,244,240,0.85)' }}>
-                                    Por favor sé paciente, tu respuesta está siendo generada.
-                                    <span className="hidden sm:inline" style={{ color: 'rgba(201,169,98,0.7)' }}> No abandones el chat hasta obtener tu respuesta completa.</span>
-                                    <span className="sm:hidden" style={{ color: 'rgba(201,169,98,0.7)' }}> No abandones el chat.</span>
-                                </p>
-                            </div>
-                        </div>
-                        <style>{`
-                            @keyframes patienceShimmer {
-                                0% { transform: translateX(-100%); }
-                                100% { transform: translateX(100%); }
-                            }
-                        `}</style>
-                    </div>
-                )}
+                {/* El banner de «sé paciente» se retiró: el flujo ramificado del
+                    agente ya muestra QUÉ está haciendo el motor en cada momento,
+                    con sus fuentes y sus conteos reales. Pedir paciencia mientras
+                    se ve el trabajo avanzar era ruido — y ocupaba la franja
+                    superior tapando el contenido. */}
 
                 <main className="flex-1 pt-14 overflow-y-auto">
                     {!hasMessages ? (
@@ -947,7 +929,15 @@ export default function ChatPage() {
                                     retryType={retryType || undefined}
                                 />
                             )}
-                            {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
+                        {insigniaPendiente && (
+                <CeremoniaInsignia
+                    nivel={insigniaPendiente.nivel}
+                    esAscenso={insigniaPendiente.esAscenso}
+                    onCerrar={cerrarInsignia}
+                />
+            )}
+
+                {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
                             <div ref={messagesEndRef} />
                         </div>
                     )}

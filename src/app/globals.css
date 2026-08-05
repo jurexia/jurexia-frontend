@@ -1169,3 +1169,44 @@ h6 {
 @media (prefers-reduced-motion: reduce) {
     .anima-rama, .anima-brote, .anima-onda { animation: none; }
 }
+
+/* ─── Insignias y su ceremonia ────────────────────────────────────────────
+   El destello recorre la insignia cada pocos segundos, no en bucle continuo:
+   un brillo permanente se vuelve ruido y compite con el contenido. */
+@keyframes insigniaBarrido {
+    0%, 78%  { transform: translateX(-110%); }
+    92%, 100% { transform: translateX(110%); }
+}
+.insignia-viva .insignia-barrido {
+    animation: insigniaBarrido 4.5s ease-in-out infinite;
+}
+/* Sin la clase `insignia-viva` (la barra superior) el barrido no corre. */
+.insignia-barrido { transform: translateX(-200%); }
+
+@keyframes ceremoniaFondo {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.ceremonia-fondo { animation: ceremoniaFondo 0.35s ease-out both; }
+
+/* La insignia entra girando y creciendo: se lee como algo que se acuña. */
+@keyframes insigniaAparece {
+    0%   { opacity: 0; transform: scale(0.3) rotate(-25deg); }
+    65%  { opacity: 1; transform: scale(1.12) rotate(6deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.insignia-aparece { animation: insigniaAparece 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Y sale volando hacia la esquina superior derecha, que es donde vivirá:
+   la animación enseña dónde buscarla después. */
+@keyframes insigniaVuela {
+    0%   { opacity: 1; transform: scale(1) translate(0, 0); }
+    100% { opacity: 0; transform: scale(0.16) translate(46vw, -42vh); }
+}
+.insignia-vuela { animation: insigniaVuela 1s cubic-bezier(0.5, 0, 0.75, 0) both; }
+
+@media (prefers-reduced-motion: reduce) {
+    .insignia-viva .insignia-barrido,
+    .insignia-aparece, .insignia-vuela, .ceremonia-fondo { animation: none; }
+    .insignia-vuela { opacity: 0; }
+}

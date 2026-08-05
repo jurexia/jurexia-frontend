@@ -155,6 +155,8 @@ export interface UserProfile {
      *  el nombre no dice el género, y equivocarse en cada consulta es peor
      *  que no personalizar. El usuario lo cambia en /perfil si quiere. */
     tratamiento: 'lic' | 'licenciado' | 'licenciada';
+    /** Nivel de insignia ya entregado. NULL = nunca ha visto ninguna. */
+    insignia_vista: 'gratuito' | 'basico' | 'pro' | 'platinum' | null;
     /** Parte del grupo fundador que probó la app de Android antes del lanzamiento. */
     beta_android_invitado: boolean;
     created_at: string;
