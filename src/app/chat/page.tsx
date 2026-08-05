@@ -918,17 +918,19 @@ export default function ChatPage() {
                                     </div>
                                 );
                             })}
-                            {/* Visible MIENTRAS trabaja, y se retira al terminar.
-                                Las dos versiones anteriores fallaron por extremos
-                                opuestos: con `último mensaje del usuario` duraba
-                                2.3 s —medido: la etapa web llega a los 15.5 y el
-                                primer token a los 17.8—, y con sólo `pasos.length`
-                                se quedaba en pantalla para siempre, estorbando
-                                bajo una respuesta ya terminada.
-                                Atado a isLoading dura toda la generación (45-60 s,
-                                de sobra para leer las fuentes) y desaparece cuando
-                                deja de tener función. */}
-                            {pasos.length > 0 && (isLoading || isDocumentAnalyzing) && (
+                            {/* El flujo cede el sitio en cuanto empieza a escribirse
+                                la respuesta: mientras el último mensaje siga siendo
+                                el del usuario, no hay nada que leer y el flujo es
+                                lo único que informa; en cuanto llega el primer
+                                token, lo que importa es la respuesta.
+
+                                Coste conocido y medido: la etapa web llega a los
+                                18.0 s y el primer token a los 19.5, así que las
+                                fuentes en línea se ven ~1.5 s. Si hace falta que
+                                queden a mano, su sitio es el panel «N fuentes» de
+                                la respuesta, que sí permanece. */}
+                            {pasos.length > 0 && (isLoading || isDocumentAnalyzing)
+                                && messages[messages.length - 1]?.role === 'user' && (
                                 /* Sin `consulta`: la tarjeta del consultante ya
                                    es el propio mensaje del historial, justo
                                    arriba — repetirla aquí la mostraba doble. */
