@@ -935,6 +935,9 @@ export default function ChatPage() {
                                     consulta={messages[messages.length - 1]?.content}
                                     pasos={pasos}
                                     sourcesCount={sourcesCount}
+                                    nombre={profile?.full_name}
+                                    avatarUrl={profile?.avatar_url}
+                                    tratamiento={profile?.tratamiento}
                                     retryMessage={retryMessage || undefined}
                                     retryType={retryType || undefined}
                                 />

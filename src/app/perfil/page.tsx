@@ -61,6 +61,8 @@ export default function PerfilPage() {
     } | null>(null);
     const [copiado, setCopiado] = useState(false);
     const [otraCuenta, setOtraCuenta] = useState<{ hay_otra: boolean; correo_oculto?: string } | null>(null);
+    const [tratamiento, setTratamiento] = useState<'lic' | 'licenciado' | 'licenciada'>('lic');
+    const [tratamientoGuardando, setTratamientoGuardando] = useState(false);
     const [nuevaPass, setNuevaPass] = useState('');
     const [confirmaPass, setConfirmaPass] = useState('');
     const [passCargando, setPassCargando] = useState(false);
@@ -89,7 +91,28 @@ export default function PerfilPage() {
         if (profile?.full_name) {
             setNewName(profile.full_name);
         }
+        if (profile?.tratamiento) {
+            setTratamiento(profile.tratamiento);
+        }
     }, [profile]);
+
+    const guardarTratamiento = async (valor: 'lic' | 'licenciado' | 'licenciada') => {
+        if (!user) return;
+        const previo = tratamiento;
+        setTratamiento(valor);          // respuesta inmediata en pantalla
+        setTratamientoGuardando(true);
+        try {
+            const { error } = await supabase
+                .from('user_profiles')
+                .update({ tratamiento: valor })
+                .eq('id', user.id);
+            if (error) setTratamiento(previo);
+        } catch {
+            setTratamiento(previo);
+        } finally {
+            setTratamientoGuardando(false);
+        }
+    };
 
     // Avance del programa de referidos. Sólo se pide para quien paga: a un
     // usuario gratuito la sección no le aplica y no vale la pena la llamada.
@@ -969,6 +992,45 @@ export default function PerfilPage() {
                         </div>
                     </section>
                 )}
+
+                {/* Tratamiento profesional. El nombre no dice el género, y
+                    llamarle «El abogado» a una abogada en cada consulta es
+                    peor que no personalizar: por eso lo elige cada quien, y
+                    el neutro «Lic.» es el valor por omisión. */}
+                <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <User className="w-5 h-5 text-charcoal-700" />
+                        <h2 className="font-serif text-2xl font-medium text-charcoal-900">
+                            ¿Cómo prefiere ser nombrado?
+                        </h2>
+                    </div>
+                    <p className="text-sm text-charcoal-700 mb-5">
+                        Así encabezaremos sus consultas: «{
+                            tratamiento === 'licenciado' ? 'El abogado'
+                            : tratamiento === 'licenciada' ? 'La abogada' : 'Lic.'
+                        } {profile.full_name || 'su nombre'} pregunta:»
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        {([
+                            { valor: 'lic', etiqueta: 'Lic. (neutro)' },
+                            { valor: 'licenciado', etiqueta: 'El abogado' },
+                            { valor: 'licenciada', etiqueta: 'La abogada' },
+                        ] as const).map((op) => (
+                            <button
+                                key={op.valor}
+                                onClick={() => guardarTratamiento(op.valor)}
+                                disabled={tratamientoGuardando}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                                    tratamiento === op.valor
+                                        ? 'bg-charcoal-900 text-cream-100 border-charcoal-900'
+                                        : 'bg-cream-50 text-charcoal-900 border-cream-400 hover:border-accent-gold'
+                                }`}
+                            >
+                                {op.etiqueta}
+                            </button>
+                        ))}
+                    </div>
+                </section>
 
                 {/* Contraseña — cerraba el ciclo que faltaba: el helper
                     updatePassword() ya existía en lib/supabase, pero no había

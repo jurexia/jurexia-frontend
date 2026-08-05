@@ -150,6 +150,11 @@ export interface UserProfile {
     is_active: boolean;
     can_access_sentencia: boolean;
     has_seen_welcome_video: boolean;
+    avatar_url: string | null;
+    /** Cómo prefiere ser nombrado. 'lic' es el neutro y el valor por omisión:
+     *  el nombre no dice el género, y equivocarse en cada consulta es peor
+     *  que no personalizar. El usuario lo cambia en /perfil si quiere. */
+    tratamiento: 'lic' | 'licenciado' | 'licenciada';
     /** Parte del grupo fundador que probó la app de Android antes del lanzamiento. */
     beta_android_invitado: boolean;
     created_at: string;

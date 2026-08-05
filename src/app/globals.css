@@ -1137,3 +1137,35 @@ h6 {
   pointer-events: none;
   z-index: 10;
 }
+/* ─── Flujo del agente: la ramificación y sus efectos ─────────────────────
+   Tres animaciones y una regla de mesura: efectos que digan «precisión de
+   máquina», no «videojuego». Nada sacude la pantalla. */
+
+/* La rama entra deslizándose desde su lado (--dir la fija el componente). */
+@keyframes ramaEntra {
+    from { opacity: 0; transform: translateX(var(--dir, 10px)); }
+    to   { opacity: 1; transform: none; }
+}
+.anima-rama { animation: ramaEntra 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* La ficha de fuente aterriza con rebote de resorte. */
+@keyframes broteFicha {
+    0%   { opacity: 0; transform: translateY(6px) scale(0.85); }
+    60%  { opacity: 1; transform: translateY(-2px) scale(1.05); }
+    100% { opacity: 1; transform: none; }
+}
+.anima-brote { animation: broteFicha 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* El «retumbar» al completar una etapa: una onda dorada que emana del nodo
+   y se disuelve, como una gota en agua. Corre una sola vez. */
+@keyframes ondaDorada {
+    0%   { box-shadow: 0 0 0 0 rgba(201, 169, 98, 0.45); }
+    100% { box-shadow: 0 0 0 16px rgba(201, 169, 98, 0); }
+}
+.anima-onda { animation: ondaDorada 0.9s ease-out 1; }
+
+/* Accesibilidad: quien pidió movimiento reducido ve el flujo quieto.
+   La información completa está en el contenido; el movimiento es cortesía. */
+@media (prefers-reduced-motion: reduce) {
+    .anima-rama, .anima-brote, .anima-onda { animation: none; }
+}
