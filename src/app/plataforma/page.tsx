@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare, Brain, Paperclip, TrendingUp } from 'lucide-react';
+import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare, Brain, Paperclip, TrendingUp, PenLine, FileEdit, Gavel, Library, BarChart3 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import HomeDemo from '@/components/HomeDemo';
 import { useEffect, useRef, useState } from 'react';
@@ -50,62 +50,74 @@ export default function PlataformaPage() {
                                         ¿En qué te puedo ayudar, Licenciado?
                                     </h2>
 
-                                    <div className="font-serif italic text-charcoal-900/40 text-sm mb-8 text-center max-w-md hidden sm:block">
-                                        "Estoy diseñando una demanda de amparo contra actos de revisión administrativa..."
+                                    <div className="font-serif italic text-charcoal-900/40 text-sm mb-6 text-center max-w-md hidden sm:block">
+                                        "Consulto la legislación de mi estado con el artículo y su fuente oficial..."
                                     </div>
 
-                                    <div className="mb-6 flex justify-center gap-2">
-                                        <div className="flex bg-charcoal-800/50 p-1.5 rounded-xl shadow-inner">
-                                            <button className="px-4 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-br from-accent-gold to-accent-brown text-white shadow-md">Federal</button>
-                                            <button className="px-4 py-1.5 rounded-lg text-xs font-medium text-charcoal-400">Común</button>
+                                    {/* Fuero y materia: dos etiquetas sobrias sobre el cuadro,
+                                        como en el chat. Antes era un conmutador Federal/Común
+                                        con degradado dorado que ya no existe en la plataforma. */}
+                                    <div className="mb-5 flex justify-center gap-1.5">
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium border border-accent-gold bg-cream-100 text-accent-brown">
+                                            <MapPin className="w-3 h-3" />
+                                            Oaxaca
+                                        </div>
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium border border-cream-400 bg-white text-charcoal-700">
+                                            Amparo
                                         </div>
                                     </div>
 
-                                    {/* Chat Input Container */}
-                                    <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-gray-100 p-2 sm:p-3 relative z-10 transition-shadow">
-                                        <div className="flex items-center px-4 py-3 border-b border-gray-100/60 pb-3 mb-2">
-                                            <button className="flex items-center gap-1.5 px-3 py-1 bg-charcoal-900 text-white rounded-lg text-xs font-medium shadow-sm">
+                                    {/* Cuadro del chat */}
+                                    <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-cream-300 p-2 sm:p-3 relative z-10">
+                                        {/* Rayo + Buscar + Redactar, en ese orden.
+                                            El rayo es sólo icono y se pone dorado al activarse. */}
+                                        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-cream-300 mb-2">
+                                            <div className="w-[26px] h-[26px] flex items-center justify-center rounded-lg bg-accent-gold text-charcoal-900">
+                                                <Zap className="w-3.5 h-3.5" />
+                                            </div>
+                                            <button className="flex items-center gap-1.5 px-3 py-1 bg-charcoal-900 text-cream-100 rounded-lg text-xs font-medium">
                                                 <Search className="w-3.5 h-3.5" />
                                                 <span>Buscar</span>
                                             </button>
-                                            <button className="flex items-center gap-1.5 px-3 py-1 text-gray-400 rounded-lg text-xs font-medium">
-                                                <FileText className="w-3.5 h-3.5" />
-                                                <span>Analizar</span>
+                                            <button className="flex items-center gap-1.5 px-3 py-1 text-charcoal-700 rounded-lg text-xs font-medium">
+                                                <PenLine className="w-3.5 h-3.5" />
+                                                <span>Redactar</span>
                                             </button>
                                         </div>
+
                                         <div className="flex items-center px-3">
-                                            <div className="w-full text-charcoal-900 py-2 outline-none text-[15px] font-normal leading-relaxed overflow-hidden whitespace-nowrap overflow-ellipsis">
-                                                ¿Qué jurisprudencia aplica para impugnar la constitucionalidad del artículo 107 de la Ley de Amparo?
+                                            <div className="w-full text-charcoal-900 py-2 text-[15px] leading-relaxed overflow-hidden whitespace-nowrap overflow-ellipsis">
+                                                ¿Qué plazo tengo para responder una solicitud de acceso a la información pública en Oaxaca?
                                             </div>
                                             <div className="flex flex-shrink-0 ml-auto items-center gap-2 pl-2">
-                                                <button className="hidden sm:flex p-2 rounded-full text-gray-400 bg-gray-50 border border-gray-200/50">
+                                                <button className="hidden sm:flex p-2 rounded-lg text-charcoal-700 bg-cream-200 border border-cream-400">
                                                     <Paperclip className="w-4 h-4" />
                                                 </button>
-                                                <div className="w-9 h-9 flex items-center justify-center rounded-full bg-accent-gold text-white shadow-md shadow-accent-gold/30">
+                                                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-accent-gold text-charcoal-900">
                                                     <ArrowRight className="w-4 h-4" />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center w-full mt-3 pt-2 sm:pt-3 pb-1 border-t border-gray-100/60 gap-1 sm:gap-1.5 px-2">
-                                            <div className="flex items-center flex-shrink-0 gap-1 pr-2 mr-0.5 border-r border-gray-200/40">
-                                                <Brain className="w-3 h-3 text-charcoal-500" />
-                                                <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-charcoal-600">Genios</span>
+                                        {/* Las cuatro herramientas reales. Antes decía
+                                            «GENIOS: Amparo · Mercantil · Civil», que no
+                                            corresponde a nada de lo que hay hoy en el chat. */}
+                                        <div className="grid grid-cols-4 gap-1.5 w-full mt-3 pt-3 border-t border-cream-300 px-1 pb-1">
+                                            <div className="flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[10px] font-medium bg-charcoal-900 text-cream-100">
+                                                <FileEdit className="w-2.5 h-2.5 flex-shrink-0" />
+                                                <span className="truncate">Escrito legal</span>
                                             </div>
-
-                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-medium border border-[#c9a962] bg-gradient-to-r from-cream-200 to-white text-accent-brown shadow-[0_0_8px_rgba(201,169,98,0.2)]">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-accent-gold"></span>
-                                                Amparo
+                                            <div className="flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[10px] font-medium bg-charcoal-900/90 text-cream-100/90">
+                                                <Gavel className="w-2.5 h-2.5 flex-shrink-0" />
+                                                <span className="truncate">Sentencia</span>
                                             </div>
-
-                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-medium border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-colors">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-accent-gold opacity-60"></span>
-                                                Mercantil
+                                            <div className="flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[10px] font-medium bg-charcoal-900/90 text-cream-100/90">
+                                                <Library className="w-2.5 h-2.5 flex-shrink-0" />
+                                                <span className="truncate">Precedentes</span>
                                             </div>
-
-                                            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-medium border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-colors hidden sm:flex">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-charcoal-900 opacity-60"></span>
-                                                Civil
+                                            <div className="flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[10px] font-medium bg-charcoal-900/90 text-cream-100/90">
+                                                <BarChart3 className="w-2.5 h-2.5 flex-shrink-0" />
+                                                <span className="truncate">Jurimetría</span>
                                             </div>
                                         </div>
                                     </div>
