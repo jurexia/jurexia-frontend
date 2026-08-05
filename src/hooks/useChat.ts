@@ -216,6 +216,19 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             let isProMode = false;
             let isPlatinumMode = false;
 
+            /* Cola para marcadores partidos entre trozos.
+               El backend emite `<!--PASO:web|scjn.gob.mx-->` de una vez, pero la
+               red no respeta esas fronteras: un trozo puede acabar en
+               `<!--PASO:web|scjn.` y el siguiente empezar en `gob.mx-->`. Sin
+               esta cola ninguna de las dos mitades casa con la expresión
+               regular, así que la etapa se pierde Y sus restos se cuelan como
+               texto en la respuesta. Pasó en las pruebas contra producción.
+
+               Se retiene sólo lo que hay tras un `<!--` sin cerrar, y se limita
+               a 200 caracteres para que un `<` suelto en el texto jurídico no
+               congele el stream entero. */
+            let colaMarcador = '';
+
             for await (let chunk of streamChat(
                 updatedMessages,
                 options.estado,
@@ -232,6 +245,16 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 // This is sent immediately to prevent mobile carriers from
                 // closing the TCP connection when no data flows for >15s.
                 if (chunk === '<!--PING-->' || chunk.trim() === '<!--PING-->') continue;
+
+                // Se antepone lo retenido y se vuelve a retener la cola si el
+                // trozo termina con un marcador a medio cerrar.
+                if (colaMarcador) { chunk = colaMarcador + chunk; colaMarcador = ''; }
+                const abre = chunk.lastIndexOf('<!--');
+                if (abre !== -1 && chunk.indexOf('-->', abre) === -1) {
+                    const cola = chunk.slice(abre);
+                    if (cola.length <= 200) { colaMarcador = cola; chunk = chunk.slice(0, abre); }
+                }
+                if (!chunk) continue;
 
                 // <!--SOURCES:n--> — el backend lo emite al terminar la búsqueda,
                 // ANTES del primer token de respuesta. Antes de capturarlo aquí,

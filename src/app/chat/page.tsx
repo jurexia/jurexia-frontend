@@ -918,7 +918,15 @@ export default function ChatPage() {
                                     </div>
                                 );
                             })}
-                            {(isLoading || isDocumentAnalyzing) && messages[messages.length - 1]?.role === 'user' && (
+                            {/* El flujo se mantiene mientras haya etapas, no sólo
+                                mientras el último mensaje sea del usuario. Medido:
+                                la etapa web llega a los 15.5 s y el primer token a
+                                los 17.8 — con la condición anterior el abogado tenía
+                                2.3 s para ver qué fuentes se consultaron, y al
+                                terminar la respuesta el rastro se borraba entero.
+                                Ahora queda debajo de la respuesta hasta la siguiente
+                                consulta, que es cuando `pasos` se vacía. */}
+                            {pasos.length > 0 && (
                                 /* Sin `consulta`: la tarjeta del consultante ya
                                    es el propio mensaje del historial, justo
                                    arriba — repetirla aquí la mostraba doble. */
