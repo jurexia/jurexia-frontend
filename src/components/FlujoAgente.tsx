@@ -48,7 +48,7 @@ const ETAPAS: { nombre: string; titulo: string; glosa: string }[] = [
     { nombre: 'expandir', titulo: 'Ampliando la búsqueda', glosa: 'Sinónimos jurídicos y figuras equivalentes' },
     { nombre: 'buscar', titulo: 'Recorriendo el acervo', glosa: 'Artículo por artículo, con su fuente' },
     { nombre: 'precedentes', titulo: 'Buscando precedentes', glosa: 'Jurisprudencia y tesis aisladas' },
-    { nombre: 'web', titulo: 'Consultando fuentes en línea', glosa: 'Reformas y publicaciones recientes' },
+    { nombre: 'web', titulo: 'Consultando fuentes oficiales en línea', glosa: 'Tres agentes en paralelo: vigencia, criterios y ámbito local' },
     { nombre: 'cruzar', titulo: 'Cruzando artículos citados', glosa: 'Trae el texto de lo que el precedente invoca' },
     { nombre: 'ordenar', titulo: 'Ordenando por pertinencia', glosa: 'Lo aplicable primero' },
     { nombre: 'redactar', titulo: 'Redactando con sus citas', glosa: 'Cada afirmación con su fuente' },
@@ -78,11 +78,19 @@ function fichasDe(nombre: string, detalle: string | undefined, fuentes: number |
             { texto: `${detalle} precedentes`, icono: 'enlace' },
         ];
     }
-    if (nombre === 'web' && detalle) {
+    if (nombre === 'web') {
+        // El backend consultó y no había nada oficial nuevo. Se dice, en vez
+        // de dejar una ficha vacía con sólo el globo — que es lo que se veía
+        // como «un globo en blanco» cuando el marcador llegaba sin dominios.
+        if (!detalle || detalle === '__sin_novedades__') {
+            return [{ texto: 'Sin cambios recientes', icono: 'web' }];
+        }
         // Dominios REALES devueltos por el anclaje. «dof.gob.mx» convence;
         // «3 sitios» no dice nada.
-        return detalle.split(',').filter(Boolean).slice(0, 3)
-            .map((d) => ({ texto: d.trim(), icono: 'web' as const }));
+        const ds = detalle.split(',').map((d) => d.trim()).filter(Boolean);
+        return ds.length
+            ? ds.slice(0, 3).map((d) => ({ texto: d, icono: 'web' as const }))
+            : [{ texto: 'Sin cambios recientes', icono: 'web' }];
     }
     if (nombre === 'jurisdiccion' && detalle) {
         const nombreEstado = ESTADOS_MEXICO.find((e) => e.value === detalle)?.label ?? detalle;
