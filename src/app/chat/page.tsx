@@ -918,15 +918,17 @@ export default function ChatPage() {
                                     </div>
                                 );
                             })}
-                            {/* El flujo se mantiene mientras haya etapas, no sólo
-                                mientras el último mensaje sea del usuario. Medido:
-                                la etapa web llega a los 15.5 s y el primer token a
-                                los 17.8 — con la condición anterior el abogado tenía
-                                2.3 s para ver qué fuentes se consultaron, y al
-                                terminar la respuesta el rastro se borraba entero.
-                                Ahora queda debajo de la respuesta hasta la siguiente
-                                consulta, que es cuando `pasos` se vacía. */}
-                            {pasos.length > 0 && (
+                            {/* Visible MIENTRAS trabaja, y se retira al terminar.
+                                Las dos versiones anteriores fallaron por extremos
+                                opuestos: con `último mensaje del usuario` duraba
+                                2.3 s —medido: la etapa web llega a los 15.5 y el
+                                primer token a los 17.8—, y con sólo `pasos.length`
+                                se quedaba en pantalla para siempre, estorbando
+                                bajo una respuesta ya terminada.
+                                Atado a isLoading dura toda la generación (45-60 s,
+                                de sobra para leer las fuentes) y desaparece cuando
+                                deja de tener función. */}
+                            {pasos.length > 0 && (isLoading || isDocumentAnalyzing) && (
                                 /* Sin `consulta`: la tarjeta del consultante ya
                                    es el propio mensaje del historial, justo
                                    arriba — repetirla aquí la mostraba doble. */
