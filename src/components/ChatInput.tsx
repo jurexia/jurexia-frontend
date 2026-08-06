@@ -802,11 +802,14 @@ ${draftRequest.descripcion}`;
                                 className={`flex items-center justify-center w-[26px] h-[26px] rounded-md border flex-shrink-0 mr-1
                                     transition-colors duration-200
                                     ${fuentesWeb
-                                        ? 'bg-accent-gold border-accent-gold text-charcoal-900'
-                                        : 'bg-white border-gray-200 text-gray-500 hover:text-charcoal-900 hover:border-gray-300'
+                                        ? 'bg-blue-50 border-blue-400'
+                                        : 'bg-white border-gray-200 hover:border-gray-300'
                                     }`}
                             >
-                                <Globe className="w-3.5 h-3.5" />
+                                {/* Azul y no dorado, a petición de David: la
+                                    esfera azul es el lenguaje universal de
+                                    internet, y así se distingue del rayo. */}
+                                <Globe className={`w-3.5 h-3.5 ${fuentesWeb ? 'text-blue-600' : 'text-gray-500'}`} />
                             </button>
 
                             <div

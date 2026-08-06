@@ -48,7 +48,7 @@ const ETAPAS: { nombre: string; titulo: string; glosa: string }[] = [
     { nombre: 'expandir', titulo: 'Ampliando la búsqueda', glosa: 'Sinónimos jurídicos y figuras equivalentes' },
     { nombre: 'buscar', titulo: 'Recorriendo el acervo', glosa: 'Artículo por artículo, con su fuente' },
     { nombre: 'precedentes', titulo: 'Buscando precedentes', glosa: 'Jurisprudencia y tesis aisladas' },
-    { nombre: 'web', titulo: 'Consultando fuentes de internet', glosa: 'Solicitado por usted — sólo dominios oficiales' },
+    { nombre: 'web', titulo: 'Buscando en internet', glosa: 'Las fuentes aparecen conforme se consultan — sólo dominios oficiales' },
     { nombre: 'cruzar', titulo: 'Cruzando artículos citados', glosa: 'Trae el texto de lo que el precedente invoca' },
     { nombre: 'ordenar', titulo: 'Ordenando por pertinencia', glosa: 'Lo aplicable primero' },
     { nombre: 'redactar', titulo: 'Redactando con sus citas', glosa: 'Cada afirmación con su fuente' },
