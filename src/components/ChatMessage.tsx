@@ -3,6 +3,7 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
 import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus } from 'lucide-react';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
+import { SelloCitas, registrosDeLaRespuesta } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
 
 interface ChatMessageProps {
@@ -1209,6 +1210,21 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 }
                             }}
                         />
+                        {/* ── El sello de verificación ──────────────────────────
+                            Hasta ahora, que el backend comprobara cada cita
+                            contra el acervo sólo se veía en un log del
+                            servidor. Aquí se le dice al abogado, y además se
+                            comprueba contra el Semanario cada registro de
+                            tesis citado en la prosa —lo único que el
+                            validador del backend NO miraba. (7-ago-2026) */}
+                        {!isStreaming && (
+                            <SelloCitas
+                                trazadas={citationMeta?.valid ?? 0}
+                                noTrazadas={citationMeta?.invalid ?? 0}
+                                registros={registrosDeLaRespuesta(processedContent)}
+                            />
+                        )}
+
                         {/* Citation Legend — collapsible source list */}
                         {!isStreaming && docIdMap.size > 0 && (
                             <details className="mx-4 mb-2 mt-1 rounded-lg border border-cream-300 bg-cream-50/80 overflow-hidden group/sources">

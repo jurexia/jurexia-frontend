@@ -69,9 +69,20 @@ export async function GET(
             }
         );
 
-        if (!r.ok) {
+        // Sólo un 404 prueba que la tesis NO existe. Cualquier otro fallo
+        // (500, 503, mantenimiento) es del servidor de la Corte, y tratarlo
+        // como «no encontrada» sería acusar al chat de inventar un registro
+        // que quizá es correcto. En una función que vende confianza, esa
+        // equivocación es más cara que no poder comprobar. (7-ago-2026)
+        if (r.status === 404) {
             return NextResponse.json(
                 { verificada: false, motivo: 'no_encontrada', registro },
+                { status: 200 }
+            );
+        }
+        if (!r.ok) {
+            return NextResponse.json(
+                { verificada: false, motivo: 'semanario_no_disponible', registro },
                 { status: 200 }
             );
         }
