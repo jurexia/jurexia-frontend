@@ -604,7 +604,7 @@ export default function ChatSentenciaPage() {
             />
 
             {/* Main Content Wrapper */}
-            <div className="flex-1 flex flex-col min-w-0 md:ml-72 transition-all duration-300">
+            <div className="flex-1 flex flex-col min-w-0 md:ml-[var(--sidebar-w,18rem)] transition-all duration-300">
                 {/* ── Header ─────────────────────────────────────────────────────── */}
                 <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0f0f0f]/80 backdrop-blur-xl supports-[backdrop-filter]:bg-[#0f0f0f]/60">
                     <div className="max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between">
