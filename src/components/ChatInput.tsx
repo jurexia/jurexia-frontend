@@ -19,7 +19,8 @@ import {
     BookOpen,
     BarChart2,
     Gem,
-    Zap
+    Zap,
+    Globe
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import { FileText, X } from 'lucide-react';
@@ -138,6 +139,10 @@ export default function ChatInput({
     const [isListening, setIsListening] = useState(false);
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes' | 'flash'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
+    /* Fuentes de internet, OPT-IN. Encendido, la consulta lleva [FUENTES_WEB]
+       y el backend lanza los tres agentes de búsqueda oficial (~2s más de
+       espera). Persiste entre consultas: es un modo elegido, no un disparo. */
+    const [fuentesWeb, setFuentesWeb] = useState(false);
     // Se guarda el escalón elegido, no una bandera por escalón: así no existe
     // el estado imposible «Pro y Platinum a la vez».
     const [nivelRedaccion, setNivelRedaccion] = useState<NivelRedaccion>('profesional');
@@ -437,6 +442,11 @@ export default function ChatInput({
             // rayo, quiere el artículo ya — no un análisis en modo redacción.
             if (activeMode === 'flash') {
                 finalMessage = `[MODO_FLASH] ${finalMessage}`;
+            }
+
+            // Fuentes de internet: sólo si el abogado encendió el globo.
+            if (fuentesWeb) {
+                finalMessage = `[FUENTES_WEB] ${finalMessage}`;
             }
 
             // Marcador del escalón: Profesional, Pro o Platinum
@@ -776,6 +786,27 @@ ${draftRequest.descripcion}`;
                                     }`}
                             >
                                 <Zap className={`w-3.5 h-3.5 ${activeMode === 'flash' ? 'fill-charcoal-900' : ''}`} />
+                            </button>
+
+                            {/* Fuentes de internet: opt-in. Dorado al activarse,
+                                como el rayo. La búsqueda web dejó de correr por
+                                defecto porque añadía ~2s a todas las consultas;
+                                quien la enciende sabe qué pide. */}
+                            <button
+                                data-guide="fuentes-web"
+                                type="button"
+                                onClick={() => setFuentesWeb((v) => !v)}
+                                title="Agregar fuentes de internet"
+                                aria-label="Agregar fuentes de internet"
+                                aria-pressed={fuentesWeb}
+                                className={`flex items-center justify-center w-[26px] h-[26px] rounded-md border flex-shrink-0 mr-1
+                                    transition-colors duration-200
+                                    ${fuentesWeb
+                                        ? 'bg-accent-gold border-accent-gold text-charcoal-900'
+                                        : 'bg-white border-gray-200 text-gray-500 hover:text-charcoal-900 hover:border-gray-300'
+                                    }`}
+                            >
+                                <Globe className="w-3.5 h-3.5" />
                             </button>
 
                             <div
