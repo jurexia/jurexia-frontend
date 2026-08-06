@@ -269,7 +269,8 @@ export default function ChatInput({
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
     const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
-    const canAccessTccBeta     = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
+    // (El Secretario del PJF se mudó a la barra superior del chat; su
+    //  comprobación de plan vive ahora en app/chat/page.tsx.)
     const canAccessRedactarPro = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
     // Platinum: planes Platinum y superiores. El backend lo vuelve a comprobar,
     // porque el marcador se puede escribir a mano en el cuadro de texto.
@@ -1294,25 +1295,10 @@ ${draftRequest.descripcion}`;
                         <span className="flex-shrink-0 text-[7px] font-bold uppercase tracking-wider text-[#c9a962]/60">Beta</span>
                     </a>
 
-                    {/* Secretario PJF — Compact CTA */}
-                    <a
-                        href={canAccessTccBeta ? '/tcc-beta' : '#'}
-                        data-guide="tcc-beta"
-                        onClick={(e) => {
-                            if (!canAccessTccBeta) {
-                                e.preventDefault();
-                                setShowUpgradeModal('platinum');
-                            }
-                        }}
-                        className="flex items-center gap-2 mt-1.5 px-3 py-1 rounded-md bg-[#1a1a1a] border border-[#c9a962]/20 hover:border-[#c9a962]/40 transition-all duration-200 group"
-                    >
-                        <Gavel className="w-3 h-3 text-[#c9a962]/70 flex-shrink-0" />
-                        <span className="text-[10px] text-white/60 group-hover:text-white/80 transition-colors flex-1">
-                            Secretario del PJF — <span className="font-semibold text-[#c9a962]/80">Crea un borrador de sentencia</span>
-                        </span>
-                        {!canAccessTccBeta && <Lock className="w-2.5 h-2.5 text-[#c9a962]/40 flex-shrink-0" />}
-                        <span className="text-[7px] font-bold text-[#c9a962]/60 uppercase tracking-wider flex-shrink-0">Beta</span>
-                    </a>
+                    {/* El Secretario del PJF ya NO vive aquí (6-ago-2026). Es
+                        una función exclusiva de Platinum y trabajo largo, no
+                        una opción más de la caja de consulta: se movió a la
+                        barra superior, entre Sálvame y Mi trabajo. */}
 
                 </div>
             </div>

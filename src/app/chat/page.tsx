@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Message, fuentesWebActivas } from '@/lib/api';
-import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Loader2 as Loader2Icon } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import ChatInput from '@/components/ChatInput';
@@ -12,7 +12,7 @@ import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
 import VisualGuideOverlay from '@/components/VisualGuideOverlay';
 import PromptGuide from '@/components/PromptGuide';
-import ChatTour from '@/components/ChatTour';
+import ChatTour, { pasoPorId } from '@/components/ChatTour';
 import StateSelectorModal from '@/components/StateSelectorModal';
 import WelcomeExperience from '@/components/WelcomeExperience';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
@@ -74,13 +74,19 @@ export default function ChatPage() {
     const isPro = _PRO_PLUS.includes(profile?.subscription_type || '');
     const isProPlus = isPro && !isAdmin(user?.email);
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com' || profile?.can_access_sentencia === true;
+    // Secretario del PJF: SÓLO Platinum. Misma regla que tenía en la caja de
+    // consulta, ahora en la barra superior. El backend la vuelve a comprobar.
+    const canAccessSecretarioPJF = isAdmin(user?.email)
+        || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
 
     // States
+    const [showPlatinumSentencia, setShowPlatinumSentencia] = useState(false);
     const [quotaExceeded, setQuotaExceeded] = useState(false);
     const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(false);
     const [showPrecedentesTour, setShowPrecedentesTour] = useState(false);
-    // Index of the Precedentes step in ChatTour (0-based; adjust if TOUR_STEPS order changes)
-    const PRECEDENTES_TOUR_STEP = 9;
+    // El índice se pide por id: codificarlo a mano hacía que cualquier cambio
+    // en el orden del recorrido apuntara el foco al botón equivocado.
+    const PRECEDENTES_TOUR_STEP = pasoPorId('precedentes');
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     const [showStateModal, setShowStateModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
@@ -712,6 +718,30 @@ export default function ChatPage() {
                             <span className="hidden sm:inline">Sálvame</span>
                         </Link>
 
+                        {/* Secretario del PJF — exclusivo Platinum.
+                            Bajó de la caja de consulta a la barra superior
+                            (6-ago-2026): es trabajo largo con su propia
+                            pantalla, no una opción más del chat. Quien no
+                            tenga Platinum ve el candado y la invitación. */}
+                        <button
+                            data-guide="tcc-beta"
+                            onClick={() => {
+                                if (canAccessSecretarioPJF) router.push('/tcc-beta');
+                                else setShowPlatinumSentencia(true);
+                            }}
+                            title={canAccessSecretarioPJF
+                                ? 'Secretario del PJF — crea un borrador de sentencia'
+                                : 'Borrador de sentencia — exclusivo del plan Platinum'}
+                            className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors ${canAccessSecretarioPJF
+                                ? 'border border-accent-gold/45 bg-accent-gold/10 text-charcoal-900 hover:bg-accent-gold/20'
+                                : 'border border-charcoal-900/10 text-charcoal-500 hover:border-accent-gold/40 hover:text-charcoal-800'
+                                }`}
+                        >
+                            <Gavel className={`w-3.5 h-3.5 ${canAccessSecretarioPJF ? 'text-accent-gold' : 'text-charcoal-400'}`} />
+                            <span className="hidden md:inline">Sentencia</span>
+                            {!canAccessSecretarioPJF && <Lock className="w-2.5 h-2.5 opacity-60" />}
+                        </button>
+
                         {/* Mi trabajo: la puerta a las carpetas inteligentes.
                             Es la pieza que conecta el chat con el espacio de
                             trabajo del abogado, como en la app. */}
@@ -1185,6 +1215,50 @@ export default function ChatPage() {
                                 <span className="text-white/15">·</span>
                                 <span className="text-white/30 text-xs">Cancela cuando quieras</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Secretario del PJF bloqueado: mismo lenguaje visual que el
+                modal de la caja de consulta, para que la invitación no cambie
+                de tono según por dónde toque el abogado. */}
+            {showPlatinumSentencia && (
+                <div
+                    className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    onClick={() => setShowPlatinumSentencia(false)}
+                >
+                    <div
+                        className="relative w-full max-w-sm bg-[#0f0f0f] border border-white/10 rounded-2xl shadow-2xl px-7 py-8 text-center animate-in zoom-in-95 fade-in duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
+                            style={{ background: 'linear-gradient(90deg, #c9a84c, #e8c56d, #c9a84c)' }} />
+                        <div className="mx-auto mb-4 w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                            <Gavel className="w-5 h-5 text-[#c9a962]" />
+                        </div>
+                        <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
+                            Función exclusiva Platinum
+                        </p>
+                        <p className="text-white/80 text-sm leading-relaxed mb-6">
+                            El <span className="text-white font-semibold">Secretario del PJF</span> redacta un borrador
+                            de sentencia completo a partir del expediente: antecedentes, considerandos y puntos
+                            resolutivos. Está disponible en el plan <span className="text-white font-semibold">Platinum</span>.
+                        </p>
+                        <div className="flex flex-col gap-2">
+                            <a
+                                href="/precios"
+                                className="block w-full py-2.5 rounded-xl text-center text-sm font-bold transition-transform hover:scale-[1.02] active:scale-95"
+                                style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
+                            >
+                                Ver plan Platinum
+                            </a>
+                            <button
+                                onClick={() => setShowPlatinumSentencia(false)}
+                                className="text-white/30 hover:text-white/60 text-xs transition-colors py-1"
+                            >
+                                Cerrar
+                            </button>
                         </div>
                     </div>
                 </div>

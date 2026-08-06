@@ -4,80 +4,149 @@ import { useEffect, useState, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TourStep {
+    id: string;
     selector: string;
     title: string;
     description: string;
-    preferBelow?: boolean; // force tooltip below element
+    preferBelow?: boolean; // fuerza el globo por debajo del elemento
     padding?: number;
 }
 
+/* Recorrido de la interfaz, revisado el 6-ago-2026 contra los controles que
+   existen de verdad. La versión anterior se quedó corta: no mencionaba el
+   rayo de respuesta rápida, el globo de fuentes de internet, Jurimetría,
+   Mi trabajo ni el Secretario del PJF, que son justo lo que el abogado no
+   sabe para qué sirve. El orden sigue el recorrido visual: primero la barra
+   superior, después la caja de consulta de arriba abajo. */
 const TOUR_STEPS: TourStep[] = [
+    // ── Barra superior ────────────────────────────────────────────────
     {
+        id: 'jurisdiccion',
         selector: '[data-guide="jurisdiccion"]',
-        title: '🗺️ Tu jurisdicción',
-        description: 'Al registrarte elegiste tu estado. Toda consulta se filtra automáticamente hacia la legislación de esa entidad federativa. Puedes cambiarlo desde tu perfil cuando lo necesites.',
+        title: '📍 Tu jurisdicción',
+        description: 'Marca el estado con el que trabajas. Toda consulta se filtra hacia la legislación de esa entidad, para que no se te cuele un artículo de otro código local.\n\nSe cambia con un clic, y puedes citar leyes de otro estado mencionándolo en la propia pregunta.',
         padding: 10,
         preferBelow: true,
     },
     {
+        id: 'tcc-beta',
+        selector: '[data-guide="tcc-beta"]',
+        title: '⚖️ Sentencia — Secretario del PJF',
+        description: 'Redacta un borrador de sentencia completo a partir del expediente: antecedentes, considerandos y puntos resolutivos, con la estructura que usa un tribunal.\n\nAbre su propia pantalla de trabajo, porque no es una consulta: es un documento largo.\n\nExclusivo del plan Platinum.',
+        padding: 10,
+        preferBelow: true,
+    },
+    {
+        id: 'mi-trabajo',
+        selector: '[data-guide="mi-trabajo"]',
+        title: '📁 Mi trabajo',
+        description: 'Tus carpetas. Aquí se guarda lo que produces —consultas, escritos, documentos analizados— organizado por asunto en lugar de perderse en el historial.\n\nEs el puente entre el chat y tu expediente real.',
+        padding: 10,
+        preferBelow: true,
+    },
+
+    // ── Filtros de la consulta ────────────────────────────────────────
+    {
+        id: 'fuero-filter',
         selector: '[data-guide="fuero-filter"]',
-        title: '⚖️ Filtro de Fuero',
-        description: 'Define el ámbito normativo de tu consulta:\n\n• Auto: Iurexia decide automáticamente (recomendado para la mayoría).\n• Const.: Enfoque en la CPEUM y tratados internacionales de DDHH.\n• Federal: Leyes federales como LGTOC, LFT, CFF, Código Civil Federal.\n• Estatal: Legislación local de tu estado seleccionado.\n\nCombinar este filtro con el de Materia te da resultados muy precisos sin necesidad de activar un Genio.',
+        title: '⚖️ Fuero',
+        description: 'Define el ámbito normativo de la búsqueda:\n\n• Const. — CPEUM y tratados de derechos humanos.\n• Federal — leyes federales: LFT, CFF, LGTOC, Código Civil Federal.\n• Estatal — la legislación local de tu estado.\n\nSin nada marcado, Iurexia busca en todos los ámbitos y decide sola. Marcar fuero y materia juntos es la forma más rápida de afinar un resultado sin gastar un Genio.',
         padding: 10,
         preferBelow: true,
     },
     {
+        id: 'materia-filter',
         selector: '[data-guide="materia-filter"]',
-        title: '📚 Filtro de Materia',
-        description: 'Enfoca tu consulta a una rama jurídica específica:\n\n• Auto: Búsqueda amplia en todas las materias.\n• Civil: Contratos, obligaciones, propiedad, sucesiones.\n• Penal: Delitos, penas, procedimiento penal.\n• Familiar: Divorcio, custodia, alimentos, adopción.\n• Admin: Procedimiento administrativo, responsabilidades.\n\nAl seleccionar una materia, Iurexia filtra los resultados para que cada artículo, tesis y ley recuperada sea relevante a esa rama.',
+        title: '📚 Materia',
+        description: 'Enfoca la consulta a una rama: Civil, Penal, Familiar o Administrativa.\n\nEn Auto, Iurexia detecta la materia por el texto de tu pregunta. Fíjala a mano cuando la consulta sea ambigua —«prescripción», por ejemplo, existe en casi todas las materias y significa cosas distintas en cada una.',
         padding: 10,
         preferBelow: true,
     },
+
+    // ── Modificadores de la consulta ──────────────────────────────────
     {
+        id: 'flash',
+        selector: '[data-guide="flash"]',
+        title: '⚡ Respuesta rápida',
+        description: 'Enciende el rayo cuando quieres el artículo y nada más: la cita al grano, sin análisis ni desarrollo.\n\nÚsalo para verificar un plazo, un requisito o el texto exacto de una norma cuando ya sabes lo que buscas. Apágalo cuando quieras el razonamiento completo.',
+        padding: 8,
+    },
+    {
+        id: 'fuentes-web',
+        selector: '[data-guide="fuentes-web"]',
+        title: '🌐 Fuentes de internet',
+        description: 'El globo azul añade una búsqueda en internet a tu consulta, restringida a dominios oficiales: poderes judiciales, congresos, diarios oficiales, portales de gobierno.\n\nSirve para reformas recientes o criterios que aún no están en el acervo. Verás en el flujo qué sitios se van consultando, y la respuesta termina con la lista de fuentes enlazadas.\n\nTarda unos segundos más, por eso lo enciendes tú. Lo que encuentre complementa la ley: nunca la sustituye.',
+        padding: 8,
+    },
+    {
+        id: 'buscar-redactar',
         selector: '[data-guide="buscar-redactar"]',
-        title: '🔍 Buscar / Redactar',
-        description: 'Dos modos de trabajo:\n\nBuscar: Encuentra leyes, artículos y jurisprudencia con citas textuales exactas y referencias verificables.\n\nRedactar: Genera argumentos jurídicos articulados con estructura profesional. Ideal para preparar considerandos, alegatos o fundamentos de un escrito.\n\nCombina estos modos con los filtros de Fuero y Materia para obtener el máximo rendimiento.',
+        title: '🔍 Buscar / ✍️ Redactar',
+        description: 'Buscar — encuentra leyes, artículos y jurisprudencia con cita textual y referencia verificable.\n\nRedactar — construye el argumento jurídico ya articulado: considerandos, alegatos, fundamentos listos para un escrito.\n\nAl elegir Redactar aparecen tres escalones de calidad: Profesional (en todos los planes), Pro y Platinum, cada uno con un motor de razonamiento más profundo.',
         padding: 8,
     },
+
+    // ── Modos de trabajo ──────────────────────────────────────────────
     {
-        selector: '[data-guide="genios-container"]',
-        title: '🧠 Genios — Especialistas por materia',
-        description: '¿Cuándo activar un Genio? Cuando tu consulta requiere máxima especialización. Cada Genio tiene en su memoria el corpus completo de leyes de su materia (códigos, leyes orgánicas, reglamentos), lo que le permite citar artículos textuales y conectar normas como un especialista.\n\nEjemplos ideales para Genio:\n• "¿Se puede revocar un aval en un pagaré?" → Genio Mercantil\n• "Prescripción en delitos culposos" → Genio Penal\n• "Competencia en amparo indirecto contra actos de tribunales" → Genio Amparo\n\n¿Y si no necesitas tanta especialización? Usa los filtros de Fuero y Materia. Te darán respuestas muy completas, con jurisprudencia y capacidad de redacción, sin consumir una sesión de Genio.\n\nReglas de uso:\n• Exclusivo plan Pro. Hasta 2 Genios simultáneos.\n• La sesión dura 3 minutos tras activarse.',
-        padding: 6,
-        preferBelow: false,
-    },
-    {
+        id: 'escrito',
         selector: '[data-guide="escrito"]',
-        title: '📄 Escrito Jurídico',
-        description: 'Genera escritos jurídicos formales: demandas, contestaciones, recursos de amparo, denuncias y más. Describe tu caso y Iurexia estructura el documento completo con los fundamentos legales correspondientes.',
+        title: '📄 Escrito legal',
+        description: 'Genera el documento formal completo: demanda, contestación, amparo, denuncia, recurso. Describe el caso y Iurexia arma la estructura con sus fundamentos.\n\nDisponible en todos los planes.',
         padding: 8,
     },
     {
+        id: 'sentencia',
         selector: '[data-guide="sentencia"]',
-        title: '🔨 Auditor de Sentencias',
-        description: 'Sube o describe una sentencia o resolución judicial. Iurexia la analiza a profundidad: identifica inconsistencias jurídicas, evalúa el apego a principios constitucionales y señala posibles vicios de forma o fondo.',
+        title: '🔨 Revisa una sentencia',
+        description: 'Pega o sube una sentencia o resolución y Iurexia la audita: incoherencias en el razonamiento, apego a los principios constitucionales, vicios de forma y de fondo.\n\nEs el análisis crítico de una resolución ajena. Para redactar una propia, usa el Secretario del PJF de la barra superior.\n\nDesde el plan Pro.',
         padding: 8,
     },
     {
-        selector: '[data-guide="adjuntar"]',
-        title: '📎 Adjuntar Documento',
-        description: 'Sube un PDF, Word o TXT para que Iurexia lo analice en el contexto de tu consulta. Ideal para contratos, actas, resoluciones o cualquier documento que quieras revisar con criterio jurídico.',
-        padding: 8,
-    },
-    {
-        selector: '[data-guide="dictado"]',
-        title: '🎙️ Dictado por Voz',
-        description: 'Dicta tu consulta legal en lugar de escribirla. Iurexia transcribe tu voz en tiempo real. Útil para describir casos extensos o cuando prefieres hablar. Compatible con Chrome y Safari.',
-        padding: 8,
-    },
-    {
+        id: 'precedentes',
         selector: '[data-guide="precedentes"]',
-        title: '⚖️ Precedentes Judiciales — Nuevo',
-        description: 'Consulta la jurisprudencia y tesis más relevantes de los Tribunales Colegiados de Circuito directamente desde el chat.\n\nCómo usarlo:\n1. Haz clic en este botón para activar el modo Precedentes.\n2. Selecciona el Circuito y, si lo deseas, el Tribunal específico.\n3. Escribe tu consulta y Iurexia buscará entre miles de sentencias reales.\n\nEsta función está en desarrollo y seguirá creciendo, priorizando las regiones con más usuarios.',
+        title: '⚖️ Precedentes',
+        description: 'Busca directamente en la jurisprudencia y las tesis del Poder Judicial de la Federación.\n\nAl activarlo eliges la corte —SCJN o Tribunales Colegiados— y, si quieres, la sala, el circuito o el tribunal concreto. La respuesta trae la ficha de cada criterio con su registro digital verificado.\n\nDesde el plan Pro.',
         padding: 10,
         preferBelow: true,
+    },
+    {
+        id: 'jurimetria',
+        selector: '[data-guide="jurimetria"]',
+        title: '📊 Jurimetría',
+        description: 'Estadística judicial: cómo han resuelto en la práctica los tribunales asuntos como el tuyo, en qué sentido y con qué frecuencia.\n\nSirve para calibrar expectativas antes de litigar y para sustentar una estrategia con números, no con intuición.\n\nExclusivo del plan Platinum.',
+        padding: 8,
+    },
+    {
+        id: 'genios',
+        selector: '[data-guide="genios-container"]',
+        title: '🧠 Genios — especialistas por materia',
+        description: 'Cada Genio lleva en memoria el corpus completo de su materia —códigos, leyes orgánicas, reglamentos—, así que cita artículos textuales y conecta normas como un especialista.\n\nActívalo cuando la consulta pide profundidad real:\n• «¿Se puede revocar el aval de un pagaré?» → Mercantil\n• «Prescripción en delitos culposos» → Penal\n• «Competencia en amparo indirecto contra actos de tribunales» → Amparo\n\nSi no necesitas tanto, los filtros de fuero y materia ya te dan respuestas muy completas sin consumir una sesión.\n\nDesde el plan Pro. Hasta 2 a la vez; la sesión dura 3 minutos.',
+        padding: 6,
+    },
+
+    // ── Entrada ───────────────────────────────────────────────────────
+    {
+        id: 'adjuntar',
+        selector: '[data-guide="adjuntar"]',
+        title: '📎 Adjuntar documento',
+        description: 'Sube un PDF, Word o TXT y Iurexia lo lee completo para responder sobre él: contratos, actas, resoluciones, escritos de la contraparte.\n\nEl límite de páginas crece con tu plan. Si tienes el globo encendido, también contrasta el documento con fuentes oficiales en línea.',
+        padding: 8,
+    },
+    {
+        id: 'dictado',
+        selector: '[data-guide="dictado"]',
+        title: '🎙️ Dictado por voz',
+        description: 'Dicta la consulta en vez de escribirla; se transcribe en tiempo real. Cómodo para describir un caso largo o mientras revisas el expediente en papel.\n\nFunciona en Chrome y Safari.',
+        padding: 8,
     },
 ];
+
+/** Índice de un paso por su id. Antes se codificaba a mano (PRECEDENTES_TOUR_STEP = 9)
+ *  y cualquier reordenamiento del recorrido apuntaba el foco al botón equivocado. */
+export function pasoPorId(id: string): number {
+    const i = TOUR_STEPS.findIndex(p => p.id === id);
+    return i === -1 ? 0 : i;
+}
 
 interface Rect { top: number; left: number; width: number; height: number; }
 
@@ -88,8 +157,24 @@ interface ChatTourProps {
 }
 
 export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourProps) {
-    const [step, setStep] = useState(startStep);
+    const [step, setStep] = useState(0);
     const [rect, setRect] = useState<Rect | null>(null);
+    // Sólo los pasos cuyo control existe de verdad en la pantalla. Antes, un
+    // paso huérfano dejaba el globo flotando en mitad de la pantalla sin
+    // señalar nada, y el contador «Paso 7/10» mentía.
+    const [pasos, setPasos] = useState<TourStep[]>(TOUR_STEPS);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const presentes = TOUR_STEPS.filter(p => document.querySelector(p.selector));
+        const lista = presentes.length ? presentes : TOUR_STEPS;
+        setPasos(lista);
+        // startStep viene indexado sobre TOUR_STEPS; se traduce por id para que
+        // el filtrado no desplace el foco a otro botón.
+        const idBuscado = TOUR_STEPS[startStep]?.id;
+        const i = lista.findIndex(p => p.id === idBuscado);
+        setStep(i === -1 ? 0 : i);
+    }, [isOpen, startStep]);
 
     const measureElement = useCallback((selector: string, padding = 4) => {
         const el = document.querySelector(selector) as HTMLElement | null;
@@ -109,24 +194,39 @@ export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourPro
     }, []);
 
     useEffect(() => {
-        if (!isOpen) { setStep(startStep); return; }
-        const current = TOUR_STEPS[step];
+        if (!isOpen) return;
+        const current = pasos[step];
+        if (!current) return;
         const t = setTimeout(() => measureElement(current.selector, current.padding ?? 4), 150);
         return () => clearTimeout(t);
-    }, [isOpen, step, startStep, measureElement]);
+    }, [isOpen, step, pasos, measureElement]);
 
     useEffect(() => {
         const handleResize = () => {
-            if (isOpen) measureElement(TOUR_STEPS[step].selector, TOUR_STEPS[step].padding ?? 4);
+            const current = pasos[step];
+            if (isOpen && current) measureElement(current.selector, current.padding ?? 4);
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, [isOpen, step, measureElement]);
+    }, [isOpen, step, pasos, measureElement]);
+
+    // Escape cierra el recorrido, y las flechas lo navegan.
+    useEffect(() => {
+        if (!isOpen) return;
+        const alTeclear = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+            if (e.key === 'ArrowRight') setStep(s => Math.min(s + 1, pasos.length - 1));
+            if (e.key === 'ArrowLeft') setStep(s => Math.max(s - 1, 0));
+        };
+        window.addEventListener('keydown', alTeclear);
+        return () => window.removeEventListener('keydown', alTeclear);
+    }, [isOpen, pasos.length, onClose]);
 
     if (!isOpen) return null;
 
-    const current = TOUR_STEPS[step];
-    const isLast = step === TOUR_STEPS.length - 1;
+    const current = pasos[step];
+    if (!current) return null;
+    const isLast = step === pasos.length - 1;
     const isFirst = step === 0;
 
     const WH = typeof window !== 'undefined' ? { w: window.innerWidth, h: window.innerHeight } : { w: 1024, h: 768 };
@@ -218,7 +318,7 @@ export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourPro
                         padding: '3px 8px', borderRadius: 99,
                         border: '1px solid rgba(201,169,98,0.2)',
                     }}>
-                        Paso {step + 1} / {TOUR_STEPS.length}
+                        Paso {step + 1} / {pasos.length}
                     </span>
 
                     {/* Title */}
@@ -246,7 +346,7 @@ export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourPro
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         {/* Progress dots */}
                         <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                            {TOUR_STEPS.map((_, i) => (
+                            {pasos.map((_, i) => (
                                 <button key={i} onClick={() => setStep(i)} style={{
                                     width: i === step ? 20 : 6, height: 6,
                                     borderRadius: 9999, padding: 0, border: 'none', cursor: 'pointer',
