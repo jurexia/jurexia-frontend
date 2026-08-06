@@ -117,6 +117,12 @@ interface ChatInputProps {
     onMateriaChange?: (materia: string) => void;
 }
 
+/* Fuentes de internet encendidas EN ESTA VISITA. A nivel de módulo a
+   propósito: sobrevive al remontaje de ChatInput —que ocurre cuando se
+   crea la conversación— pero se reinicia al recargar la página, así que
+   el botón no se queda pulsado para siempre desde el primer uso. */
+let webDeEstaVisita = false;
+
 export default function ChatInput({
     onSubmit,
     onDocumentSubmit,
@@ -139,21 +145,7 @@ export default function ChatInput({
     const [isListening, setIsListening] = useState(false);
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes' | 'flash'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
-    /* Fuentes de internet, OPT-IN. Encendido, la consulta lleva [FUENTES_WEB]
-       y el backend lanza los agentes de búsqueda oficial.
-
-       Se guarda en localStorage y no en el estado a secas: al enviar el primer
-       mensaje se crea la conversación y ChatInput se REMONTA, así que el
-       interruptor se apagaba solo justo después de usarlo. Es un modo elegido;
-       tiene que sobrevivir al remontaje y a la recarga. */
     const [fuentesWeb, setFuentesWeb] = useState(false);
-    useEffect(() => {
-        try { setFuentesWeb(localStorage.getItem('iurexia-fuentes-web') === '1'); } catch { }
-    }, []);
-    const cambiarFuentesWeb = (v: boolean) => {
-        setFuentesWeb(v);
-        try { localStorage.setItem('iurexia-fuentes-web', v ? '1' : '0'); } catch { }
-    };
     // Se guarda el escalón elegido, no una bandera por escalón: así no existe
     // el estado imposible «Pro y Platinum a la vez».
     const [nivelRedaccion, setNivelRedaccion] = useState<NivelRedaccion>('profesional');
@@ -267,6 +259,28 @@ export default function ChatInput({
     const isFreeUser = !profile?.subscription_type || ['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const isGenioLocked = isFreeUser && !isAdmin(user?.email);
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
+    // La capa web sólo desde Pro: cuesta dinero por consulta.
+    const canAccessWeb = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
+
+    /* Fuentes de internet, OPT-IN y sólo desde Pro.
+
+       El interruptor vive en `webDeEstaVisita` (nivel de módulo): sobrevive al
+       remontaje de ChatInput —que ocurre al crearse la conversación, y que
+       antes lo apagaba justo después de usarlo— pero MUERE al recargar la
+       página. Antes se leía de localStorage y quien lo encendía una vez lo
+       dejaba encendido para siempre, en cada consulta de cada día; esta capa
+       cuesta dinero real (15 USD en un solo día). localStorage queda sólo como
+       transporte hacia api.ts. */
+    useEffect(() => {
+        const encendida = canAccessWeb && webDeEstaVisita;
+        setFuentesWeb(encendida);
+        try { localStorage.setItem('iurexia-fuentes-web', encendida ? '1' : '0'); } catch { }
+    }, [canAccessWeb]);
+    const cambiarFuentesWeb = (v: boolean) => {
+        webDeEstaVisita = v;
+        setFuentesWeb(v);
+        try { localStorage.setItem('iurexia-fuentes-web', v ? '1' : '0'); } catch { }
+    };
     const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
     const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
     // (El Secretario del PJF se mudó a la barra superior del chat; su
@@ -808,13 +822,18 @@ ${draftRequest.descripcion}`;
                             <button
                                 data-guide="fuentes-web"
                                 type="button"
-                                onClick={() => cambiarFuentesWeb(!fuentesWeb)}
-                                title="Agregar fuentes de internet"
+                                onClick={() => {
+                                    if (!canAccessWeb) { setShowUpgradeModal('pro'); return; }
+                                    cambiarFuentesWeb(!fuentesWeb);
+                                }}
+                                title={canAccessWeb
+                                    ? 'Agregar fuentes de internet'
+                                    : 'Fuentes de internet — desde el plan Pro'}
                                 aria-label="Agregar fuentes de internet"
-                                aria-pressed={fuentesWeb}
-                                className={`flex items-center justify-center w-[26px] h-[26px] rounded-md border flex-shrink-0 mr-1
+                                aria-pressed={canAccessWeb && fuentesWeb}
+                                className={`relative flex items-center justify-center w-[26px] h-[26px] rounded-md border flex-shrink-0 mr-1
                                     transition-colors duration-200
-                                    ${fuentesWeb
+                                    ${canAccessWeb && fuentesWeb
                                         ? 'bg-blue-50 border-blue-400'
                                         : 'bg-white border-gray-200 hover:border-gray-300'
                                     }`}
@@ -822,7 +841,10 @@ ${draftRequest.descripcion}`;
                                 {/* Azul y no dorado, a petición de David: la
                                     esfera azul es el lenguaje universal de
                                     internet, y así se distingue del rayo. */}
-                                <Globe className={`w-3.5 h-3.5 ${fuentesWeb ? 'text-blue-600' : 'text-gray-500'}`} />
+                                <Globe className={`w-3.5 h-3.5 ${canAccessWeb && fuentesWeb ? 'text-blue-600' : 'text-gray-500'}`} />
+                                {!canAccessWeb && (
+                                    <Lock className="absolute -top-1 -right-1 w-2 h-2 text-gray-400" />
+                                )}
                             </button>
 
                             <div

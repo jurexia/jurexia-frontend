@@ -709,10 +709,10 @@ export default function ChatPage() {
                     píldoras ni degradados. Sálvame conserva su rojo por ser el
                     módulo de urgencia; el resto vive en la paleta de la casa. */}
                 <header className="fixed top-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 h-14">
-                    <div className="max-w-4xl mx-auto px-4 h-full flex items-center justify-end gap-1.5">
+                    <div className="h-full flex items-center justify-end gap-1.5 px-4 min-w-0">
                         <Link
                             href="/salvame"
-                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-700/25 bg-red-50/60 px-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-red-700 transition-colors hover:bg-red-50"
+                            className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-red-700/25 bg-red-50/60 px-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-red-700 transition-colors hover:bg-red-50"
                         >
                             <Plus className="w-3.5 h-3.5 stroke-[3]" />
                             <span className="hidden sm:inline">Sálvame</span>
@@ -732,7 +732,7 @@ export default function ChatPage() {
                             title={canAccessSecretarioPJF
                                 ? 'Secretario del PJF — crea un borrador de sentencia'
                                 : 'Borrador de sentencia — exclusivo del plan Platinum'}
-                            className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors ${canAccessSecretarioPJF
+                            className={`inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors ${canAccessSecretarioPJF
                                 ? 'border border-accent-gold/45 bg-accent-gold/10 text-charcoal-900 hover:bg-accent-gold/20'
                                 : 'border border-charcoal-900/10 text-charcoal-500 hover:border-accent-gold/40 hover:text-charcoal-800'
                                 }`}
@@ -748,7 +748,7 @@ export default function ChatPage() {
                         <Link
                             href="/carpetas"
                             data-guide="mi-trabajo"
-                            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800"
+                            className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800"
                         >
                             <FileText className="w-3.5 h-3.5 text-accent-gold" />
                             <span className="hidden sm:inline">Mi trabajo</span>
@@ -756,7 +756,7 @@ export default function ChatPage() {
 
                         <Link
                             href="/normativa"
-                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]"
+                            className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]"
                         >
                             <BookOpen className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Normativa</span>
@@ -765,14 +765,14 @@ export default function ChatPage() {
                         <button
                             data-guide="jurisdiccion"
                             onClick={() => setShowConfigModal(true)}
-                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-3 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-accent-gold/20"
+                            className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-3 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-accent-gold/20"
                         >
                             <MapPin className="w-3.5 h-3.5 text-accent-gold" />
                             <span className="max-w-[110px] truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
                         </button>
 
                         <div
-                            className={`hidden sm:flex h-8 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
+                            className={`hidden lg:flex h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
                             title={`Consultas usadas este mes: ${queriesUsed} de ${queriesLimit}`}
                         >
                             <span className={`font-semibold tabular-nums ${queriesRemaining <= 1 ? 'text-red-700' : 'text-charcoal-900'}`}>
