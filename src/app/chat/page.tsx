@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { Message } from '@/lib/api';
+import { Message, fuentesWebActivas } from '@/lib/api';
 import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
@@ -527,6 +527,12 @@ export default function ChatPage() {
         formData.append('file', file);
         formData.append('prompt', prompt);
         if (user.id) formData.append('user_id', user.id);
+        // El globo también aplica al análisis de documentos: antes este camino
+        // lo ignoraba en silencio y el abogado no recibía sus fuentes.
+        if (fuentesWebActivas()) {
+            formData.append('fuentes_web', '1');
+            if (selectedEstado) formData.append('estado', selectedEstado);
+        }
 
         try {
             const controller = new AbortController();

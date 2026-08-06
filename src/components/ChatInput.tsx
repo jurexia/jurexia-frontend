@@ -455,10 +455,11 @@ export default function ChatInput({
                 finalMessage = `[MODO_FLASH] ${finalMessage}`;
             }
 
-            // Fuentes de internet: sólo si el abogado encendió el globo.
-            if (fuentesWeb) {
-                finalMessage = `[FUENTES_WEB] ${finalMessage}`;
-            }
+            // Fuentes de internet: ya NO se antepone «[FUENTES_WEB]» al texto.
+            // La señal viaja como campo `fuentes_web` del request (api.ts la
+            // lee de localStorage al enviar). El marcador en el texto se perdía
+            // en los caminos que no pasaban por aquí —documentos, sugerencias—
+            // y además se colaba en los títulos del historial.
 
             // Marcador del escalón: Profesional, Pro o Platinum
             if (chatMode === 'redactar') {

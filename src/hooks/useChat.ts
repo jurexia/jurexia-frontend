@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Message, streamChat, SearchResult } from '@/lib/api';
+import { Message, streamChat, SearchResult, fuentesWebActivas } from '@/lib/api';
 import { getSession } from '@/lib/supabase';
 import { checkCanQuery, getSubscriptionInfo } from '@/lib/supabase';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
@@ -185,7 +185,14 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setIsLoading(true);
         setRetryMessage(null);  // Reset retry message
         setRetryType(null);
-        setSourcesCount(null); setPasos([]);  // Nueva consulta: la cuenta de fuentes vuelve a cero
+        setSourcesCount(null);
+        // Nueva consulta: la cuenta de fuentes vuelve a cero. Si el globo está
+        // encendido, la etapa de internet se siembra DESDE YA: el abogado ve
+        // «Buscando en internet» al instante en la ramificación, y el backend
+        // la va actualizando con los dominios reales conforme llegan. Antes la
+        // etapa aparecía hasta el primer resultado (~5s) y con respuestas
+        // rápidas nunca alcanzaba a verse.
+        setPasos(fuentesWebActivas() ? [{ nombre: 'web', detalle: '__buscando__' }] : []);
 
         // Add user message
         const userMessage: Message = { role: 'user', content };

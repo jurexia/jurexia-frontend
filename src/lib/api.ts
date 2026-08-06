@@ -82,6 +82,14 @@ function sleep(ms: number): Promise<void> {
 /**
  * Stream chat response with internal implementation (no retry logic)
  */
+/* La señal del globo se lee de localStorage EN EL MOMENTO del envío y viaja
+   como campo del request. Antes viajaba como texto «[FUENTES_WEB] » antepuesto
+   por ChatInput, y cada camino que armaba el mensaje distinto (documentos,
+   sugerencias) la perdía en silencio. */
+export function fuentesWebActivas(): boolean {
+    try { return localStorage.getItem('iurexia-fuentes-web') === '1'; } catch { return false; }
+}
+
 async function* streamChatInternal(
     messages: Message[],
     estado?: string,
@@ -124,6 +132,7 @@ async function* streamChatInternal(
             enable_reasoning: enableReasoning,
             genio_ids: genioIds || [],
             user_id: userId,
+            fuentes_web: fuentesWebActivas(),
             ...(fuero ? { fuero } : {}),
             ...(materia ? { materia } : {}),
         }),

@@ -79,6 +79,12 @@ function fichasDe(nombre: string, detalle: string | undefined, fuentes: number |
         ];
     }
     if (nombre === 'web') {
+        // La etapa se siembra desde el cliente al enviar (useChat) con este
+        // centinela: los agentes aún no reportan, pero el abogado ya ve que
+        // su globo encendido está trabajando.
+        if (detalle === '__buscando__') {
+            return [{ texto: 'Consultando dominios oficiales…', icono: 'web' }];
+        }
         // Se consultó y no había nada oficial que aportar. Se dice, en vez de
         // dejar una ficha vacía con sólo el globo.
         if (!detalle || detalle === '__sin_novedades__') {
