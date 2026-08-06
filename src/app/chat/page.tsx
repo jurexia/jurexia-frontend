@@ -930,7 +930,8 @@ export default function ChatPage() {
                                 queden a mano, su sitio es el panel «N fuentes» de
                                 la respuesta, que sí permanece. */}
                             {pasos.length > 0 && (isLoading || isDocumentAnalyzing)
-                                && messages[messages.length - 1]?.role === 'user' && (
+                                && (messages[messages.length - 1]?.role === 'user'
+                                    || !messages[messages.length - 1]?.content?.trim()) && (
                                 /* Sin `consulta`: la tarjeta del consultante ya
                                    es el propio mensaje del historial, justo
                                    arriba — repetirla aquí la mostraba doble. */

@@ -140,9 +140,20 @@ export default function ChatInput({
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes' | 'flash'>('search');
     const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
     /* Fuentes de internet, OPT-IN. Encendido, la consulta lleva [FUENTES_WEB]
-       y el backend lanza los tres agentes de búsqueda oficial (~2s más de
-       espera). Persiste entre consultas: es un modo elegido, no un disparo. */
+       y el backend lanza los agentes de búsqueda oficial.
+
+       Se guarda en localStorage y no en el estado a secas: al enviar el primer
+       mensaje se crea la conversación y ChatInput se REMONTA, así que el
+       interruptor se apagaba solo justo después de usarlo. Es un modo elegido;
+       tiene que sobrevivir al remontaje y a la recarga. */
     const [fuentesWeb, setFuentesWeb] = useState(false);
+    useEffect(() => {
+        try { setFuentesWeb(localStorage.getItem('iurexia-fuentes-web') === '1'); } catch { }
+    }, []);
+    const cambiarFuentesWeb = (v: boolean) => {
+        setFuentesWeb(v);
+        try { localStorage.setItem('iurexia-fuentes-web', v ? '1' : '0'); } catch { }
+    };
     // Se guarda el escalón elegido, no una bandera por escalón: así no existe
     // el estado imposible «Pro y Platinum a la vez».
     const [nivelRedaccion, setNivelRedaccion] = useState<NivelRedaccion>('profesional');
@@ -795,7 +806,7 @@ ${draftRequest.descripcion}`;
                             <button
                                 data-guide="fuentes-web"
                                 type="button"
-                                onClick={() => setFuentesWeb((v) => !v)}
+                                onClick={() => cambiarFuentesWeb(!fuentesWeb)}
                                 title="Agregar fuentes de internet"
                                 aria-label="Agregar fuentes de internet"
                                 aria-pressed={fuentesWeb}

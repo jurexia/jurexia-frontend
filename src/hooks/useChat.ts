@@ -334,6 +334,18 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
                 const displayContent = parser.getDisplayContent();
 
+                // El mensaje del asistente se crea con el primer contenido REAL,
+                // no con el primer trozo.
+                //
+                // Antes bastaba con que llegara un trozo —aunque sólo trajera
+                // marcadores— para insertar una burbuja VACÍA. Eso causaba las
+                // dos cosas que David reportaba a la vez: se veía un óvalo
+                // blanco junto al icono («el globito»), y como el último
+                // mensaje pasaba a ser del asistente, el flujo ramificado se
+                // ocultaba de golpe — antes incluso de que llegaran las etapas
+                // de internet. Por eso «no veo el flujo ni las fuentes».
+                if (!displayContent.trim() && !assistantMessageAdded) continue;
+
                 // Add assistant message on first chunk
                 if (!assistantMessageAdded) {
                     setMessages(prev => [...prev, { role: 'assistant', content: displayContent, isPro: isProMode, isPlatinum: isPlatinumMode }]);
