@@ -1597,7 +1597,9 @@ function formatMarkdown(text: string): string {
     // Remove [Doc ID: uuid] patterns - they're for internal linking, not display
     processed = processed.replace(/\[Doc\s*ID:\s*[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\]/gi, '');
     // Remove bare UUIDs that aren't inside HTML attributes
-    processed = processed.replace(/(?<!")([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?!")/gi, '');
+    // Se excluyen también `/`, `=` y `-`: un UUID dentro de una URL (ruta o
+    // parámetro) se estaba borrando y dejaba el enlace roto.
+    processed = processed.replace(/(?<!["/=-])([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?!["-])/gi, '');
     // Clean up leftover Doc ID labels without UUIDs
     processed = processed.replace(/\[Doc\s*ID:\s*\]/gi, '');
     // Clean up parentheses or brackets that now only contain whitespace
@@ -1643,6 +1645,15 @@ function formatMarkdown(text: string): string {
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         // Inline code
         .replace(/`([^`]+)`/g, '<code class="bg-cream-300 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
+        // Enlaces [texto](url) — NUNCA existió esta regla. Cualquier enlace que
+        // el modelo escribiera salía crudo como «[Ficha](https://…)», estirado
+        // además por el `text-align: justify` de .prose-legal (6-ago-2026).
+        // Exige el paréntesis con esquema http(s), así que las referencias
+        // sueltas tipo «[1]» y las citas internas siguen intactas.
+        .replace(
+            /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g,
+            '<a href="$2" target="_blank" rel="noopener noreferrer" class="enlace-externo">$1</a>'
+        )
         // Blockquotes - special handling for "Fuente:" lines (add extra margin)
         .replace(/^> \*?Fuente:(.*$)/gmi, '<div class="pl-4 border-l-4 border-accent-gold text-sm text-charcoal-600 mb-6"><em>Fuente:$1</em></div>')
         // Regular blockquotes

@@ -197,6 +197,188 @@ h6 {
   @apply pl-4 border-l-4 border-accent-brown italic text-charcoal-700 my-2;
 }
 
+/* Enlaces dentro de una respuesta. Se rompen por cualquier punto porque las
+   URLs de los portales oficiales son larguísimas y desbordaban la burbuja. */
+.prose-legal .enlace-externo {
+  color: #8a6d2e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  overflow-wrap: anywhere;
+}
+
+.prose-legal .enlace-externo:hover {
+  color: #c9a962;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Fuentes de internet consultadas
+   Tarjetas con favicon del propio dominio (nunca un tercero: no se
+   filtra a Google qué consultó el abogado). Si el sitio no sirve el
+   icono, el fondo no pinta y queda debajo la inicial del dominio.
+   ══════════════════════════════════════════════════════════════════ */
+.prose-legal .fuentes-web {
+  text-align: left;
+  margin: 1.5rem 0 0.5rem;
+  padding: 0.875rem 1rem 1rem;
+  border: 1px solid rgba(201, 169, 98, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(201, 169, 98, 0.07), rgba(201, 169, 98, 0.02));
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.prose-legal .fw-cab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #8a6d2e;
+  margin-bottom: 0.75rem;
+}
+
+.prose-legal .fw-globo {
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.prose-legal .fw-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.prose-legal .fw-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  padding: 0.5rem 0.625rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.prose-legal .fw-item:hover {
+  background: #fff;
+  border-color: rgba(201, 169, 98, 0.4);
+  transform: translateX(2px);
+}
+
+.prose-legal .fw-ico {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #8a6d2e;
+  background-color: rgba(201, 169, 98, 0.18);
+  background-size: 16px 16px;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* Iconos institucionales por tipo de sitio. Los portales oficiales mexicanos
+   NO sirven /favicon.ico —se verificaron ocho, todos 404 o 403— y un servicio
+   externo de favicons le contaría a un tercero qué consulta cada abogado. Un
+   icono por naturaleza del organismo es local, siempre pinta y dice más que
+   un favicon borroso de 16px. (6-ago-2026) */
+.prose-legal .fw-ico--judicial {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='rgb(138,109,46)'%20stroke-width='1.7'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M12%203v18M7%2021h10M5%207h14M5%207l-3%206a3%203%200%200%200%206%200L5%207zM19%207l-3%206a3%203%200%200%200%206%200l-3-6z'/%3E%3C/svg%3E");
+}
+
+.prose-legal .fw-ico--legislativo {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='rgb(138,109,46)'%20stroke-width='1.7'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M3%2021h18M4%2010v8M9%2010v8M15%2010v8M20%2010v8M2%2010l10-6%2010%206z'/%3E%3C/svg%3E");
+}
+
+.prose-legal .fw-ico--oficial {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='rgb(138,109,46)'%20stroke-width='1.7'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M14%202H6a2%202%200%200%200-2%202v16a2%202%200%200%200%202%202h12a2%202%200%200%200%202-2V8z'/%3E%3Cpath%20d='M14%202v6h6M8%2013h8M8%2017h5'/%3E%3C/svg%3E");
+}
+
+.prose-legal .fw-ico--municipal {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='rgb(138,109,46)'%20stroke-width='1.7'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Crect%20x='4'%20y='3'%20width='16'%20height='18'%20rx='1.5'/%3E%3Cpath%20d='M9%208h.01M15%208h.01M9%2012h.01M15%2012h.01M10%2021v-4h4v4'/%3E%3C/svg%3E");
+}
+
+.prose-legal .fw-ico--ejecutivo {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='rgb(138,109,46)'%20stroke-width='1.7'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M12%2022s8-4%208-10V5l-8-3-8%203v7c0%206%208%2010%208%2010z'/%3E%3C/svg%3E");
+}
+
+.prose-legal .fw-ico--web {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='rgb(138,109,46)'%20stroke-width='1.7'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Ccircle%20cx='12'%20cy='12'%20r='9'/%3E%3Cpath%20d='M3%2012h18M12%203a15%2015%200%200%201%200%2018%2015%2015%200%200%201%200-18z'/%3E%3C/svg%3E");
+}
+
+.prose-legal .fw-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 1px;
+}
+
+.prose-legal .fw-tit {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  font-weight: 500;
+  color: #2a2a2a;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.prose-legal .fw-item:hover .fw-tit {
+  color: #8a6d2e;
+}
+
+.prose-legal .fw-dom {
+  font-size: 0.6875rem;
+  color: rgba(0, 0, 0, 0.42);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere;
+}
+
+.prose-legal .fw-flecha {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: rgba(201, 169, 98, 0.55);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.prose-legal .fw-item:hover .fw-flecha {
+  opacity: 1;
+}
+
+.prose-legal .fw-nota {
+  margin-top: 0.75rem;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  font-style: italic;
+  color: rgba(0, 0, 0, 0.42);
+}
+
+@media (max-width: 640px) {
+  .prose-legal .fuentes-web {
+    padding: 0.75rem;
+    border-radius: 12px;
+  }
+
+  .prose-legal .fw-flecha {
+    display: none;
+  }
+}
+
 .prose-legal code {
   @apply bg-cream-300 px-1.5 py-0.5 rounded text-sm font-mono;
 }
