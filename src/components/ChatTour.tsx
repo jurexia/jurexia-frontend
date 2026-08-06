@@ -1,88 +1,106 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import {
+    X, ArrowLeft, ArrowRight, MapPin, Gavel, FolderClosed, Scale, Library,
+    Zap, Globe, PenLine, FileText, ClipboardCheck, BookOpen, BarChart3,
+    Brain, Paperclip, Mic,
+} from 'lucide-react';
+
+type Icono = typeof MapPin;
 
 interface TourStep {
     id: string;
     selector: string;
+    icono: Icono;
     title: string;
+    /** Una idea por párrafo. Corto: la tarjeta es una guía, no un manual. */
     description: string;
-    preferBelow?: boolean; // fuerza el globo por debajo del elemento
+    /** Plan mínimo, si la función está gatead. Se pinta como pastilla. */
+    plan?: 'Pro' | 'Platinum';
+    preferBelow?: boolean;
     padding?: number;
 }
 
 /* Recorrido de la interfaz, revisado el 6-ago-2026 contra los controles que
-   existen de verdad. La versión anterior se quedó corta: no mencionaba el
-   rayo de respuesta rápida, el globo de fuentes de internet, Jurimetría,
-   Mi trabajo ni el Secretario del PJF, que son justo lo que el abogado no
-   sabe para qué sirve. El orden sigue el recorrido visual: primero la barra
-   superior, después la caja de consulta de arriba abajo. */
+   existen de verdad, y reescrito en corto: la versión larga desbordaba la
+   tarjeta y empujaba el botón «Siguiente» fuera de la pantalla. El orden
+   sigue el recorrido visual: barra superior primero, después la caja de
+   consulta de arriba abajo. */
 const TOUR_STEPS: TourStep[] = [
     // ── Barra superior ────────────────────────────────────────────────
     {
         id: 'jurisdiccion',
         selector: '[data-guide="jurisdiccion"]',
-        title: '📍 Tu jurisdicción',
-        description: 'Marca el estado con el que trabajas. Toda consulta se filtra hacia la legislación de esa entidad, para que no se te cuele un artículo de otro código local.\n\nSe cambia con un clic, y puedes citar leyes de otro estado mencionándolo en la propia pregunta.',
+        icono: MapPin,
+        title: 'Tu jurisdicción',
+        description: 'Fija el estado con el que trabajas. Toda consulta se filtra hacia esa legislación, para que no se cuele el código de otra entidad.\n\nPuedes citar leyes de otro estado mencionándolo en la pregunta.',
         padding: 10,
         preferBelow: true,
     },
     {
         id: 'tcc-beta',
         selector: '[data-guide="tcc-beta"]',
-        title: '⚖️ Sentencia — Secretario del PJF',
-        description: 'Redacta un borrador de sentencia completo a partir del expediente: antecedentes, considerandos y puntos resolutivos, con la estructura que usa un tribunal.\n\nAbre su propia pantalla de trabajo, porque no es una consulta: es un documento largo.\n\nExclusivo del plan Platinum.',
+        icono: Gavel,
+        title: 'Sentencia',
+        description: 'El Secretario del PJF redacta un borrador completo desde el expediente: antecedentes, considerandos y resolutivos.\n\nAbre su propia pantalla: es un documento largo, no una consulta.',
+        plan: 'Platinum',
         padding: 10,
         preferBelow: true,
     },
     {
         id: 'mi-trabajo',
         selector: '[data-guide="mi-trabajo"]',
-        title: '📁 Mi trabajo',
-        description: 'Tus carpetas. Aquí se guarda lo que produces —consultas, escritos, documentos analizados— organizado por asunto en lugar de perderse en el historial.\n\nEs el puente entre el chat y tu expediente real.',
+        icono: FolderClosed,
+        title: 'Mi trabajo',
+        description: 'Tus carpetas. Lo que produces se guarda por asunto en lugar de perderse en el historial.\n\nEs el puente entre el chat y tu expediente real.',
         padding: 10,
         preferBelow: true,
     },
 
-    // ── Filtros de la consulta ────────────────────────────────────────
+    // ── Filtros ───────────────────────────────────────────────────────
     {
         id: 'fuero-filter',
         selector: '[data-guide="fuero-filter"]',
-        title: '⚖️ Fuero',
-        description: 'Define el ámbito normativo de la búsqueda:\n\n• Const. — CPEUM y tratados de derechos humanos.\n• Federal — leyes federales: LFT, CFF, LGTOC, Código Civil Federal.\n• Estatal — la legislación local de tu estado.\n\nSin nada marcado, Iurexia busca en todos los ámbitos y decide sola. Marcar fuero y materia juntos es la forma más rápida de afinar un resultado sin gastar un Genio.',
+        icono: Scale,
+        title: 'Fuero',
+        description: 'Acota el ámbito: Constitucional, Federal o Estatal.\n\nSin marcar nada, Iurexia busca en todos y decide. Fuero y materia juntos afinan un resultado sin gastar un Genio.',
         padding: 10,
         preferBelow: true,
     },
     {
         id: 'materia-filter',
         selector: '[data-guide="materia-filter"]',
-        title: '📚 Materia',
-        description: 'Enfoca la consulta a una rama: Civil, Penal, Familiar o Administrativa.\n\nEn Auto, Iurexia detecta la materia por el texto de tu pregunta. Fíjala a mano cuando la consulta sea ambigua —«prescripción», por ejemplo, existe en casi todas las materias y significa cosas distintas en cada una.',
+        icono: Library,
+        title: 'Materia',
+        description: 'Enfoca la rama: Civil, Penal, Familiar o Administrativa.\n\nEn Auto se detecta sola. Fíjala cuando la palabra sea ambigua: «prescripción» significa algo distinto en cada materia.',
         padding: 10,
         preferBelow: true,
     },
 
-    // ── Modificadores de la consulta ──────────────────────────────────
+    // ── Modificadores ─────────────────────────────────────────────────
     {
         id: 'flash',
         selector: '[data-guide="flash"]',
-        title: '⚡ Respuesta rápida',
-        description: 'Enciende el rayo cuando quieres el artículo y nada más: la cita al grano, sin análisis ni desarrollo.\n\nÚsalo para verificar un plazo, un requisito o el texto exacto de una norma cuando ya sabes lo que buscas. Apágalo cuando quieras el razonamiento completo.',
+        icono: Zap,
+        title: 'Respuesta rápida',
+        description: 'El rayo entrega la cita al grano, sin desarrollo.\n\nPara verificar un plazo o el texto exacto de una norma cuando ya sabes qué buscas.',
         padding: 8,
     },
     {
         id: 'fuentes-web',
         selector: '[data-guide="fuentes-web"]',
-        title: '🌐 Fuentes de internet',
-        description: 'El globo azul añade una búsqueda en internet a tu consulta, restringida a dominios oficiales: poderes judiciales, congresos, diarios oficiales, portales de gobierno.\n\nSirve para reformas recientes o criterios que aún no están en el acervo. Verás en el flujo qué sitios se van consultando, y la respuesta termina con la lista de fuentes enlazadas.\n\nTarda unos segundos más, por eso lo enciendes tú. Lo que encuentre complementa la ley: nunca la sustituye.',
+        icono: Globe,
+        title: 'Fuentes de internet',
+        description: 'El globo añade una búsqueda en dominios oficiales: poderes judiciales, congresos, diarios oficiales.\n\nÚtil para reformas recientes. Verás los sitios consultados en el flujo y enlazados al final.\n\nComplementa la ley; nunca la sustituye.',
         padding: 8,
     },
     {
         id: 'buscar-redactar',
         selector: '[data-guide="buscar-redactar"]',
-        title: '🔍 Buscar / ✍️ Redactar',
-        description: 'Buscar — encuentra leyes, artículos y jurisprudencia con cita textual y referencia verificable.\n\nRedactar — construye el argumento jurídico ya articulado: considerandos, alegatos, fundamentos listos para un escrito.\n\nAl elegir Redactar aparecen tres escalones de calidad: Profesional (en todos los planes), Pro y Platinum, cada uno con un motor de razonamiento más profundo.',
+        icono: PenLine,
+        title: 'Buscar y Redactar',
+        description: 'Buscar encuentra la norma con cita textual verificable.\n\nRedactar construye el argumento ya articulado. Al elegirlo aparecen tres escalones: Profesional, Pro y Platinum.',
         padding: 8,
     },
 
@@ -90,37 +108,46 @@ const TOUR_STEPS: TourStep[] = [
     {
         id: 'escrito',
         selector: '[data-guide="escrito"]',
-        title: '📄 Escrito legal',
-        description: 'Genera el documento formal completo: demanda, contestación, amparo, denuncia, recurso. Describe el caso y Iurexia arma la estructura con sus fundamentos.\n\nDisponible en todos los planes.',
+        icono: FileText,
+        title: 'Escrito legal',
+        description: 'El documento formal completo: demanda, contestación, amparo, denuncia o recurso, con sus fundamentos.',
         padding: 8,
     },
     {
         id: 'sentencia',
         selector: '[data-guide="sentencia"]',
-        title: '🔨 Revisa una sentencia',
-        description: 'Pega o sube una sentencia o resolución y Iurexia la audita: incoherencias en el razonamiento, apego a los principios constitucionales, vicios de forma y de fondo.\n\nEs el análisis crítico de una resolución ajena. Para redactar una propia, usa el Secretario del PJF de la barra superior.\n\nDesde el plan Pro.',
+        icono: ClipboardCheck,
+        title: 'Revisa una sentencia',
+        description: 'Audita una resolución ajena: incoherencias del razonamiento, apego constitucional, vicios de forma y fondo.\n\nPara redactar una propia, usa Sentencia en la barra superior.',
+        plan: 'Pro',
         padding: 8,
     },
     {
         id: 'precedentes',
         selector: '[data-guide="precedentes"]',
-        title: '⚖️ Precedentes',
-        description: 'Busca directamente en la jurisprudencia y las tesis del Poder Judicial de la Federación.\n\nAl activarlo eliges la corte —SCJN o Tribunales Colegiados— y, si quieres, la sala, el circuito o el tribunal concreto. La respuesta trae la ficha de cada criterio con su registro digital verificado.\n\nDesde el plan Pro.',
+        icono: BookOpen,
+        title: 'Precedentes',
+        description: 'Jurisprudencia y tesis del Poder Judicial de la Federación.\n\nEliges corte, sala, circuito o tribunal. Cada criterio llega con su registro digital verificado.',
+        plan: 'Pro',
         padding: 10,
         preferBelow: true,
     },
     {
         id: 'jurimetria',
         selector: '[data-guide="jurimetria"]',
-        title: '📊 Jurimetría',
-        description: 'Estadística judicial: cómo han resuelto en la práctica los tribunales asuntos como el tuyo, en qué sentido y con qué frecuencia.\n\nSirve para calibrar expectativas antes de litigar y para sustentar una estrategia con números, no con intuición.\n\nExclusivo del plan Platinum.',
+        icono: BarChart3,
+        title: 'Jurimetría',
+        description: 'Cómo han resuelto los tribunales asuntos como el tuyo, en qué sentido y con qué frecuencia.\n\nPara calibrar expectativas con números antes de litigar.',
+        plan: 'Platinum',
         padding: 8,
     },
     {
         id: 'genios',
         selector: '[data-guide="genios-container"]',
-        title: '🧠 Genios — especialistas por materia',
-        description: 'Cada Genio lleva en memoria el corpus completo de su materia —códigos, leyes orgánicas, reglamentos—, así que cita artículos textuales y conecta normas como un especialista.\n\nActívalo cuando la consulta pide profundidad real:\n• «¿Se puede revocar el aval de un pagaré?» → Mercantil\n• «Prescripción en delitos culposos» → Penal\n• «Competencia en amparo indirecto contra actos de tribunales» → Amparo\n\nSi no necesitas tanto, los filtros de fuero y materia ya te dan respuestas muy completas sin consumir una sesión.\n\nDesde el plan Pro. Hasta 2 a la vez; la sesión dura 3 minutos.',
+        icono: Brain,
+        title: 'Genios',
+        description: 'Cada Genio lleva en memoria el corpus completo de su materia, así que cita artículos textuales como un especialista.\n\nActívalo cuando la consulta pida profundidad real. Si no, los filtros ya dan respuestas muy completas.\n\nHasta 2 a la vez; la sesión dura 3 minutos.',
+        plan: 'Pro',
         padding: 6,
     },
 
@@ -128,15 +155,17 @@ const TOUR_STEPS: TourStep[] = [
     {
         id: 'adjuntar',
         selector: '[data-guide="adjuntar"]',
-        title: '📎 Adjuntar documento',
-        description: 'Sube un PDF, Word o TXT y Iurexia lo lee completo para responder sobre él: contratos, actas, resoluciones, escritos de la contraparte.\n\nEl límite de páginas crece con tu plan. Si tienes el globo encendido, también contrasta el documento con fuentes oficiales en línea.',
+        icono: Paperclip,
+        title: 'Adjuntar documento',
+        description: 'Sube un PDF, Word o TXT y Iurexia lo lee completo para responder sobre él.\n\nEl límite de páginas crece con tu plan.',
         padding: 8,
     },
     {
         id: 'dictado',
         selector: '[data-guide="dictado"]',
-        title: '🎙️ Dictado por voz',
-        description: 'Dicta la consulta en vez de escribirla; se transcribe en tiempo real. Cómodo para describir un caso largo o mientras revisas el expediente en papel.\n\nFunciona en Chrome y Safari.',
+        icono: Mic,
+        title: 'Dictado por voz',
+        description: 'Dicta la consulta en vez de escribirla; se transcribe en tiempo real.\n\nFunciona en Chrome y Safari.',
         padding: 8,
     },
 ];
@@ -156,13 +185,28 @@ interface ChatTourProps {
     startStep?: number;
 }
 
+const MARGEN = 16;   // aire mínimo contra el borde de la ventana
+const HUECO = 14;    // separación entre el control iluminado y la tarjeta
+
 export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourProps) {
     const [step, setStep] = useState(0);
     const [rect, setRect] = useState<Rect | null>(null);
-    // Sólo los pasos cuyo control existe de verdad en la pantalla. Antes, un
-    // paso huérfano dejaba el globo flotando en mitad de la pantalla sin
-    // señalar nada, y el contador «Paso 7/10» mentía.
+    // Sólo los pasos cuyo control existe de verdad en la pantalla. Un paso
+    // huérfano dejaba la tarjeta flotando sin señalar nada y el contador
+    // «Paso 7/10» mentía.
     const [pasos, setPasos] = useState<TourStep[]>(TOUR_STEPS);
+    const [ventana, setVentana] = useState({ w: 1024, h: 768 });
+    const tarjetaRef = useRef<HTMLDivElement>(null);
+    const [altoTarjeta, setAltoTarjeta] = useState(0);
+
+    const esMovil = ventana.w < 640;
+
+    useEffect(() => {
+        const medir = () => setVentana({ w: window.innerWidth, h: window.innerHeight });
+        medir();
+        window.addEventListener('resize', medir);
+        return () => window.removeEventListener('resize', medir);
+    }, []);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -176,12 +220,10 @@ export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourPro
         setStep(i === -1 ? 0 : i);
     }, [isOpen, startStep]);
 
-    const measureElement = useCallback((selector: string, padding = 4) => {
+    const medirElemento = useCallback((selector: string, padding = 4) => {
         const el = document.querySelector(selector) as HTMLElement | null;
         if (!el) { setRect(null); return; }
-        // First scroll element into view
         el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        // Then measure AFTER scroll finishes (300ms delay for smooth scroll)
         setTimeout(() => {
             const r = el.getBoundingClientRect();
             setRect({
@@ -195,22 +237,34 @@ export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourPro
 
     useEffect(() => {
         if (!isOpen) return;
-        const current = pasos[step];
-        if (!current) return;
-        const t = setTimeout(() => measureElement(current.selector, current.padding ?? 4), 150);
+        const actual = pasos[step];
+        if (!actual) return;
+        const t = setTimeout(() => medirElemento(actual.selector, actual.padding ?? 4), 150);
         return () => clearTimeout(t);
-    }, [isOpen, step, pasos, measureElement]);
+    }, [isOpen, step, pasos, medirElemento]);
 
     useEffect(() => {
-        const handleResize = () => {
-            const current = pasos[step];
-            if (isOpen && current) measureElement(current.selector, current.padding ?? 4);
+        const alRedimensionar = () => {
+            const actual = pasos[step];
+            if (isOpen && actual) medirElemento(actual.selector, actual.padding ?? 4);
         };
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, [isOpen, step, pasos, measureElement]);
+        window.addEventListener('resize', alRedimensionar);
+        return () => window.removeEventListener('resize', alRedimensionar);
+    }, [isOpen, step, pasos, medirElemento]);
 
-    // Escape cierra el recorrido, y las flechas lo navegan.
+    // La altura real de la tarjeta manda en la colocación: sin medirla no se
+    // puede garantizar que el pie —y con él «Siguiente»— quede dentro.
+    useLayoutEffect(() => {
+        if (!isOpen) return;
+        const el = tarjetaRef.current;
+        if (!el) return;
+        const medir = () => setAltoTarjeta(el.getBoundingClientRect().height);
+        medir();
+        const ro = new ResizeObserver(medir);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [isOpen, step, pasos]);
+
     useEffect(() => {
         if (!isOpen) return;
         const alTeclear = (e: KeyboardEvent) => {
@@ -224,39 +278,57 @@ export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourPro
 
     if (!isOpen) return null;
 
-    const current = pasos[step];
-    if (!current) return null;
-    const isLast = step === pasos.length - 1;
-    const isFirst = step === 0;
+    const actual = pasos[step];
+    if (!actual) return null;
+    const esUltimo = step === pasos.length - 1;
+    const esPrimero = step === 0;
+    const Icono = actual.icono;
 
-    const WH = typeof window !== 'undefined' ? { w: window.innerWidth, h: window.innerHeight } : { w: 1024, h: 768 };
-    const tooltipW = 340;
-    const GAP = 20; // gap between element and tooltip — never overlaps
+    /* ── Colocación ────────────────────────────────────────────────────
+       En móvil la tarjeta se ancla abajo, ocupando el ancho: perseguir un
+       control de 40px en 375px de pantalla no cabe.
+       En escritorio se coloca debajo o encima del control y SIEMPRE se
+       recorta contra la ventana con `alto` ya medido, así que el pie nunca
+       se sale. Antes sólo se fijaba `top`/`bottom` sin mirar la altura, y
+       con textos largos «Siguiente» quedaba fuera de la pantalla. */
+    const anchoTarjeta = esMovil ? ventana.w - MARGEN * 2 : 360;
+    const altoMax = Math.min(esMovil ? ventana.h * 0.55 : ventana.h * 0.72, 520);
 
-    let tooltipStyle: React.CSSProperties = {};
-    if (rect) {
-        const centerX = Math.min(Math.max(rect.left + rect.width / 2 - tooltipW / 2, 16), WH.w - tooltipW - 16);
-        const spaceBelow = WH.h - (rect.top + rect.height) - GAP;
-        const spaceAbove = rect.top - GAP;
+    let estilo: React.CSSProperties;
+    if (esMovil) {
+        estilo = { left: MARGEN, bottom: MARGEN, width: anchoTarjeta };
+    } else if (rect) {
+        const alto = altoTarjeta || altoMax;
+        const centroX = Math.min(
+            Math.max(rect.left + rect.width / 2 - anchoTarjeta / 2, MARGEN),
+            ventana.w - anchoTarjeta - MARGEN,
+        );
+        const espacioAbajo = ventana.h - (rect.top + rect.height) - HUECO;
+        const espacioArriba = rect.top - HUECO;
+        const debajo = actual.preferBelow
+            ? espacioAbajo >= alto || espacioAbajo >= espacioArriba
+            : espacioArriba < alto && espacioAbajo > espacioArriba;
 
-        if (current.preferBelow || spaceAbove < 160) {
-            // Place BELOW the element
-            tooltipStyle = { top: rect.top + rect.height + GAP, left: centerX };
-        } else {
-            // Place ABOVE the element
-            tooltipStyle = { bottom: WH.h - rect.top + GAP, left: centerX };
-        }
-        void spaceBelow; // suppress unused warning
+        const deseado = debajo ? rect.top + rect.height + HUECO : rect.top - HUECO - alto;
+        const arriba = Math.min(
+            Math.max(deseado, MARGEN),
+            Math.max(MARGEN, ventana.h - alto - MARGEN),
+        );
+        estilo = { top: arriba, left: centroX, width: anchoTarjeta };
     } else {
-        tooltipStyle = { top: WH.h / 2 - 80, left: WH.w / 2 - tooltipW / 2 };
+        estilo = {
+            top: Math.max(MARGEN, ventana.h / 2 - (altoTarjeta || 240) / 2),
+            left: Math.max(MARGEN, ventana.w / 2 - anchoTarjeta / 2),
+            width: anchoTarjeta,
+        };
     }
 
-    // Split description on \n\n for multi-paragraph support
-    const descParts = current.description.split('\n\n');
+    const parrafos = actual.description.split('\n\n');
+    const avance = ((step + 1) / pasos.length) * 100;
 
     return (
-        <div className="fixed inset-0 z-[200]" style={{ pointerEvents: 'auto' }}>
-            {/* Spotlight SVG overlay */}
+        <div className="fixed inset-0 z-[200]">
+            {/* Foco */}
             <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
                 <defs>
                     <mask id="tour-mask">
@@ -270,124 +342,140 @@ export default function ChatTour({ isOpen, onClose, startStep = 0 }: ChatTourPro
                         )}
                     </mask>
                 </defs>
-                <rect width="100%" height="100%" fill="rgba(0,0,0,0.72)" mask="url(#tour-mask)" />
+                <rect width="100%" height="100%" fill="rgba(12,12,12,0.66)" mask="url(#tour-mask)" />
                 {rect && (
                     <rect
-                        x={rect.left - 2} y={rect.top - 2}
-                        width={rect.width + 4} height={rect.height + 4}
-                        rx="11" fill="none"
-                        stroke="#c9a962" strokeWidth="2"
-                        strokeDasharray="6 3"
-                        style={{ animation: 'tourDash 1.2s linear infinite' }}
+                        x={rect.left} y={rect.top}
+                        width={rect.width} height={rect.height}
+                        rx="10" fill="none"
+                        stroke="#c9a962" strokeWidth="1.5" strokeOpacity="0.9"
                     />
                 )}
             </svg>
 
-            {/* Dismiss on backdrop click */}
-            <div className="absolute inset-0" onClick={onClose} style={{ pointerEvents: 'auto' }} />
+            <div className="absolute inset-0" onClick={onClose} />
 
-            {/* Tooltip Card */}
+            {/* Tarjeta */}
             <div
-                className="absolute shadow-2xl"
-                style={{ ...tooltipStyle, width: tooltipW, pointerEvents: 'auto', zIndex: 210 }}
+                ref={tarjetaRef}
+                className="absolute flex flex-col overflow-hidden"
+                style={{
+                    ...estilo,
+                    maxHeight: altoMax,
+                    zIndex: 210,
+                    background: '#fbfaf7',
+                    border: '1px solid rgba(26,26,26,0.10)',
+                    borderRadius: 16,
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.35)',
+                }}
                 onClick={e => e.stopPropagation()}
             >
-                <div style={{
-                    background: 'linear-gradient(160deg, #1c1c1e 0%, #111111 100%)',
-                    border: '1px solid rgba(201,169,98,0.4)',
-                    borderRadius: '18px',
-                    padding: '22px 22px 18px',
-                    position: 'relative',
-                    boxShadow: '0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
-                }}>
-                    {/* Close */}
-                    <button onClick={onClose} style={{
-                        position: 'absolute', top: 14, right: 14,
-                        color: 'rgba(255,255,255,0.35)', background: 'none',
-                        border: 'none', cursor: 'pointer', padding: 2, lineHeight: 0,
-                    }}>
-                        <X size={15} />
-                    </button>
+                {/* Barra de avance: sustituye a los puntos. Un solo trazo. */}
+                <div style={{ height: 2, background: 'rgba(26,26,26,0.07)', flexShrink: 0 }}>
+                    <div style={{
+                        height: '100%', width: `${avance}%`, background: '#c9a962',
+                        transition: 'width 0.3s ease',
+                    }} />
+                </div>
 
-                    {/* Step badge */}
-                    <span style={{
-                        fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em',
-                        color: '#c9a962', textTransform: 'uppercase',
-                        display: 'inline-block', marginBottom: 10,
-                        background: 'rgba(201,169,98,0.10)',
-                        padding: '3px 8px', borderRadius: 99,
-                        border: '1px solid rgba(201,169,98,0.2)',
-                    }}>
-                        Paso {step + 1} / {pasos.length}
+                {/* Cabecera */}
+                <div className="flex items-start gap-3 px-5 pt-4 pb-3" style={{ flexShrink: 0 }}>
+                    <span
+                        className="flex items-center justify-center flex-shrink-0"
+                        style={{
+                            width: 30, height: 30, borderRadius: 9,
+                            background: 'rgba(201,169,98,0.13)',
+                        }}
+                    >
+                        <Icono size={15} color="#8a6d2e" strokeWidth={1.9} />
                     </span>
 
-                    {/* Title */}
-                    <h3 style={{
-                        fontSize: '15px', fontWeight: 700, color: '#f0f0f0',
-                        marginBottom: 10, lineHeight: 1.35,
-                        fontFamily: 'Georgia, "Times New Roman", serif',
-                    }}>
-                        {current.title}
-                    </h3>
-
-                    {/* Description — multi-paragraph */}
-                    <div style={{ marginBottom: 18 }}>
-                        {descParts.map((part, i) => (
-                            <p key={i} style={{
-                                fontSize: '12.5px', color: 'rgba(255,255,255,0.62)',
-                                lineHeight: 1.65, marginBottom: i < descParts.length - 1 ? 10 : 0,
+                    <div className="min-w-0 flex-1">
+                        <h3 style={{
+                            fontSize: 15, fontWeight: 600, color: '#1a1a1a',
+                            lineHeight: 1.3, letterSpacing: '-0.01em',
+                        }}>
+                            {actual.title}
+                        </h3>
+                        {actual.plan && (
+                            <span style={{
+                                display: 'inline-block', marginTop: 5,
+                                fontSize: 9, fontWeight: 700, letterSpacing: '0.1em',
+                                textTransform: 'uppercase', color: '#8a6d2e',
+                                background: 'rgba(201,169,98,0.13)',
+                                padding: '2px 7px', borderRadius: 5,
                             }}>
-                                {part}
-                            </p>
-                        ))}
+                                Plan {actual.plan}
+                            </span>
+                        )}
                     </div>
 
-                    {/* Navigation row */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        {/* Progress dots */}
-                        <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                            {pasos.map((_, i) => (
-                                <button key={i} onClick={() => setStep(i)} style={{
-                                    width: i === step ? 20 : 6, height: 6,
-                                    borderRadius: 9999, padding: 0, border: 'none', cursor: 'pointer',
-                                    background: i === step ? '#c9a962' : 'rgba(255,255,255,0.18)',
-                                    transition: 'all 0.25s ease',
-                                }} />
-                            ))}
-                        </div>
+                    <button
+                        onClick={onClose}
+                        aria-label="Cerrar guía"
+                        className="flex-shrink-0 transition-colors"
+                        style={{ color: 'rgba(26,26,26,0.3)', background: 'none', border: 'none', cursor: 'pointer', padding: 2, lineHeight: 0 }}
+                        onMouseEnter={e => (e.currentTarget.style.color = 'rgba(26,26,26,0.65)')}
+                        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(26,26,26,0.3)')}
+                    >
+                        <X size={15} />
+                    </button>
+                </div>
 
-                        {/* Prev / Next */}
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            {!isFirst && (
-                                <button onClick={() => setStep(s => s - 1)} style={{
-                                    padding: '6px 14px', borderRadius: 10, fontSize: 12,
-                                    fontWeight: 600, border: '1px solid rgba(255,255,255,0.12)',
-                                    background: 'transparent', color: 'rgba(255,255,255,0.55)',
-                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-                                }}>
-                                    <ChevronLeft size={13} /> Anterior
-                                </button>
-                            )}
-                            <button onClick={() => isLast ? onClose() : setStep(s => s + 1)} style={{
-                                padding: '6px 18px', borderRadius: 10, fontSize: 12,
-                                fontWeight: 700, border: 'none', cursor: 'pointer',
-                                background: isLast
-                                    ? 'linear-gradient(135deg, #c9a962 0%, #a07830 100%)'
-                                    : 'rgba(255,255,255,0.10)',
-                                color: isLast ? '#fff' : 'rgba(255,255,255,0.85)',
-                                display: 'flex', alignItems: 'center', gap: 4,
-                                transition: 'all 0.2s ease',
-                            }}>
-                                {isLast ? '¡Listo!' : (<>Siguiente <ChevronRight size={13} /></>)}
+                {/* Cuerpo: es lo ÚNICO que se desplaza. El pie queda anclado,
+                    así que «Siguiente» está siempre a la vista. */}
+                <div className="px-5 pb-4 overflow-y-auto sidebar-scroll" style={{ flex: '1 1 auto', minHeight: 0 }}>
+                    {parrafos.map((p, i) => (
+                        <p key={i} style={{
+                            fontSize: 13, lineHeight: 1.6, color: 'rgba(26,26,26,0.66)',
+                            marginBottom: i < parrafos.length - 1 ? 9 : 0,
+                        }}>
+                            {p}
+                        </p>
+                    ))}
+                </div>
+
+                {/* Pie */}
+                <div
+                    className="flex items-center justify-between px-5 py-3"
+                    style={{ flexShrink: 0, borderTop: '1px solid rgba(26,26,26,0.07)' }}
+                >
+                    <span style={{ fontSize: 11, color: 'rgba(26,26,26,0.35)', fontVariantNumeric: 'tabular-nums' }}>
+                        {step + 1} de {pasos.length}
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                        {!esPrimero && (
+                            <button
+                                onClick={() => setStep(s => s - 1)}
+                                aria-label="Paso anterior"
+                                className="flex items-center justify-center transition-colors"
+                                style={{
+                                    width: 30, height: 30, borderRadius: 9,
+                                    border: '1px solid rgba(26,26,26,0.12)',
+                                    background: 'transparent', color: 'rgba(26,26,26,0.5)', cursor: 'pointer',
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(26,26,26,0.04)')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                            >
+                                <ArrowLeft size={14} />
                             </button>
-                        </div>
+                        )}
+                        <button
+                            onClick={() => (esUltimo ? onClose() : setStep(s => s + 1))}
+                            className="flex items-center gap-1.5 transition-opacity hover:opacity-90"
+                            style={{
+                                height: 30, padding: '0 14px', borderRadius: 9,
+                                fontSize: 12.5, fontWeight: 600, border: 'none', cursor: 'pointer',
+                                background: '#1a1a1a', color: '#fff',
+                            }}
+                        >
+                            {esUltimo ? 'Entendido' : 'Siguiente'}
+                            {!esUltimo && <ArrowRight size={13} />}
+                        </button>
                     </div>
                 </div>
             </div>
-
-            <style>{`
-                @keyframes tourDash { to { stroke-dashoffset: -18; } }
-            `}</style>
         </div>
     );
 }
