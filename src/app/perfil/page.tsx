@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
-import { User, CreditCard, Shield, AlertTriangle, Check, X, FileText, Building2, KeyRound, Gift } from 'lucide-react';
+import { User, CreditCard, Shield, AlertTriangle, Check, X, FileText, Building2, KeyRound, Gift, ChevronRight } from 'lucide-react';
+import { Insignia, nivelDePlan } from '@/components/Insignia';
 import { updatePassword } from '@/lib/supabase';
 import ConnectLawyerSection from '@/components/ConnectLawyerSection';
 import AdminLawyerPanel from '@/components/AdminLawyerPanel';
@@ -41,6 +42,99 @@ const USOS_CFDI = [
     { clave: 'P01', nombre: 'Por definir' },
     { clave: 'S01', nombre: 'Sin efectos fiscales' },
 ];
+
+/* ── La tarjeta del perfil ────────────────────────────────────────────────
+ *
+ * Todas las secciones eran la misma caja blanca del mismo peso, apiladas en
+ * una columna larguísima: no había forma de saber de un vistazo dónde está
+ * cada cosa. Aquí el color no decora, CLASIFICA — cada naturaleza de dato
+ * tiene el suyo, y se queda en el icono y en una línea superior de 2px, nunca
+ * en el fondo. Así la página sigue siendo de Iurexia: crema, carbón y oro.
+ *
+ * Por qué estos colores:
+ *   oro     — la suscripción. Es el color de la casa y marca lo que vale.
+ *   azul    — los datos de uso y el programa de referidos. El azul se lee
+ *             como calma y confianza, que es justo lo que debe transmitir un
+ *             contador de consumo; en rojo o naranja parecería una alarma.
+ *   pizarra — lo administrativo (fiscal, cuenta). Serio y sin ruido.
+ *   carbón  — la identidad. Neutro, porque es el punto de partida.
+ *   rojo    — sólo lo irreversible, y apagado hasta que se toca.
+ */
+const ACENTO = {
+    carbon: { linea: '#1a1a1a', chip: 'rgba(26,26,26,0.06)', icono: '#1a1a1a' },
+    oro: { linea: '#c9a962', chip: 'rgba(201,169,98,0.14)', icono: '#8a6d2e' },
+    azul: { linea: '#3b6ea5', chip: 'rgba(59,110,165,0.10)', icono: '#3b6ea5' },
+    pizarra: { linea: '#6b7280', chip: 'rgba(107,114,128,0.10)', icono: '#4b5563' },
+    rojo: { linea: '#b91c1c', chip: 'rgba(185,28,28,0.08)', icono: '#b91c1c' },
+} as const;
+
+function Tarjeta({
+    icono: Icono,
+    titulo,
+    descripcion,
+    acento = 'carbon',
+    accion,
+    children,
+}: {
+    icono: typeof User;
+    titulo: string;
+    descripcion?: string;
+    acento?: keyof typeof ACENTO;
+    accion?: React.ReactNode;
+    children: React.ReactNode;
+}) {
+    const c = ACENTO[acento];
+    return (
+        <section
+            className="overflow-hidden rounded-2xl bg-white"
+            style={{ border: '1px solid rgba(26,26,26,0.07)', boxShadow: '0 1px 2px rgba(26,26,26,0.04)' }}
+        >
+            <div style={{ height: 2, background: c.linea, opacity: 0.75 }} />
+            <div className="px-5 py-4 sm:px-6 sm:py-5">
+                <div className="mb-4 flex items-start gap-3">
+                    <span
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+                        style={{ background: c.chip }}
+                    >
+                        <Icono className="h-[18px] w-[18px]" style={{ color: c.icono }} strokeWidth={1.9} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                        <h2
+                            className="text-[1.0625rem] font-semibold leading-tight text-charcoal-900"
+                            style={{ letterSpacing: '-0.01em' }}
+                        >
+                            {titulo}
+                        </h2>
+                        {descripcion && (
+                            <p className="mt-0.5 text-[0.8125rem] leading-snug text-charcoal-500">
+                                {descripcion}
+                            </p>
+                        )}
+                    </div>
+                    {accion && <div className="flex-shrink-0">{accion}</div>}
+                </div>
+                {children}
+            </div>
+        </section>
+    );
+}
+
+/** Fila de dato: etiqueta a la izquierda, valor a la derecha. Como en Ajustes. */
+function Fila({ etiqueta, children, ultima = false }: {
+    etiqueta: string; children: React.ReactNode; ultima?: boolean;
+}) {
+    return (
+        <div
+            className="flex items-center justify-between gap-4 py-2.5"
+            style={ultima ? undefined : { borderBottom: '1px solid rgba(26,26,26,0.06)' }}
+        >
+            <span className="text-[0.8125rem] text-charcoal-500">{etiqueta}</span>
+            <span className="min-w-0 text-right text-[0.8125rem] font-medium text-charcoal-900">
+                {children}
+            </span>
+        </div>
+    );
+}
 
 export default function PerfilPage() {
     const { user, profile, loading, isAuthenticated } = useAuth();
@@ -431,11 +525,51 @@ export default function PerfilPage() {
         <div className="min-h-screen bg-cream-200">
             <Navbar />
 
-            <main className="max-w-4xl mx-auto px-4 py-12">
-                {/* Header */}
-                <h1 className="font-serif text-4xl font-medium text-charcoal-900 mb-8">
-                    Mi Perfil
-                </h1>
+            {/* pt-24: el encabezado fijo tapaba «Mi Perfil». */}
+            <main className="mx-auto max-w-5xl px-4 pb-16 pt-24">
+                {/* ── Identidad ──────────────────────────────────────────────
+                    Quién eres y en qué plan estás, de un vistazo y sin
+                    competir con nada. Antes esto vivía dentro de una tarjeta
+                    más, al mismo nivel que los datos fiscales. */}
+                <div
+                    className="mb-6 overflow-hidden rounded-3xl"
+                    style={{
+                        background: 'linear-gradient(135deg, #1c1c1e 0%, #262628 55%, #1a1a1a 100%)',
+                        border: '1px solid rgba(201,169,98,0.18)',
+                    }}
+                >
+                    <div className="flex flex-col items-center gap-5 px-6 py-7 text-center sm:flex-row sm:items-center sm:gap-6 sm:text-left">
+                        <div
+                            className="flex h-[68px] w-[68px] flex-shrink-0 items-center justify-center rounded-full text-[1.35rem] font-semibold text-white"
+                            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(201,169,98,0.35)' }}
+                        >
+                            {(profile?.full_name || user.email || '?')
+                                .split(' ').filter(Boolean).slice(0, 2)
+                                .map(p => p[0]).join('').toUpperCase()}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                            <h1
+                                className="truncate text-[1.5rem] font-semibold text-white"
+                                style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
+                            >
+                                {profile?.full_name || 'Su perfil'}
+                            </h1>
+                            <p className="mt-0.5 truncate text-[0.8125rem]" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                                {user.email}
+                            </p>
+                        </div>
+
+                        {/* La insignia dice el plan sin una palabra. */}
+                        <div className="flex flex-shrink-0 items-center gap-2.5 rounded-full px-3.5 py-2"
+                             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                            <Insignia nivel={nivelDePlan(profile?.subscription_type)} tam={22} animada />
+                            <span className="text-[0.8125rem] font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                                {planColors[profile?.subscription_type || 'gratuito']?.label ?? 'Gratuito'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Aviso de cuenta duplicada. Va arriba del todo porque quien
                     llega aquí creyendo que perdió su plan tiene que verlo antes
@@ -463,14 +597,17 @@ export default function PerfilPage() {
                     </div>
                 )}
 
+                {/* ── Rejilla ──────────────────────────────────────────────
+                    Antes era UNA columna de nueve tarjetas idénticas: había
+                    que rodar toda la página para saber qué hay. En escritorio
+                    van a dos columnas, y sólo lo que de verdad manda —la
+                    suscripción y el programa de referidos— ocupa el ancho.
+                    En móvil vuelve a una sola, que es lo que cabe. */}
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+
                 {/* Información Personal */}
-                <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <User className="w-5 h-5 text-charcoal-700" />
-                        <h2 className="font-serif text-2xl font-medium text-charcoal-900">
-                            Información Personal
-                        </h2>
-                    </div>
+                <Tarjeta icono={User} titulo="Información personal" acento="carbon"
+                    descripcion="Cómo aparece en la plataforma">
 
                     <div className="space-y-4">
                         {/* Avatar */}
@@ -556,16 +693,12 @@ export default function PerfilPage() {
                             </p>
                         </div>
                     </div>
-                </section>
+                </Tarjeta>
 
                 {/* Mi Suscripción */}
-                <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <CreditCard className="w-5 h-5 text-charcoal-700" />
-                        <h2 className="font-serif text-2xl font-medium text-charcoal-900">
-                            Mi Suscripción
-                        </h2>
-                    </div>
+                <div className="lg:col-span-2">
+                <Tarjeta icono={CreditCard} titulo="Mi suscripción" acento="oro"
+                    descripcion="Su plan y el consumo del periodo">
 
                     <div className="space-y-4">
                         {/* Plan actual */}
@@ -681,24 +814,26 @@ export default function PerfilPage() {
                             </div>
                         )}
                     </div>
-                </section>
+                </Tarjeta>
+
+                </div>
 
                 {/* Datos Fiscales */}
-                <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-charcoal-700" />
-                            <h2 className="font-serif text-2xl font-medium text-charcoal-900">
-                                Datos Fiscales
-                            </h2>
-                        </div>
+                <Tarjeta
+                    icono={FileText}
+                    titulo="Datos fiscales"
+                    acento="pizarra"
+                    descripcion="Para la factura de su suscripción"
+                    accion={
                         <button
                             onClick={() => setShowFiscalForm(!showFiscalForm)}
-                            className="text-sm text-charcoal-600 hover:text-charcoal-900 transition-colors"
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[0.8125rem] font-medium text-charcoal-600 transition-colors hover:bg-charcoal-900/[0.04] hover:text-charcoal-900"
                         >
-                            {showFiscalForm ? 'Ocultar' : (fiscalData.rfc ? 'Editar' : 'Agregar datos')}
+                            {showFiscalForm ? 'Ocultar' : (fiscalData.rfc ? 'Editar' : 'Agregar')}
+                            {!showFiscalForm && <ChevronRight className="h-3.5 w-3.5" />}
                         </button>
-                    </div>
+                    }
+                >
 
                     {/* Summary when collapsed */}
                     {!showFiscalForm && fiscalData.rfc && (
@@ -845,30 +980,27 @@ export default function PerfilPage() {
                             </p>
                         </div>
                     )}
-                </section>
+                </Tarjeta>
 
                 {/* IUREXIA Connect — Solo para PRO/Platinum */}
                 {isPro && (
+                    <div className="lg:col-span-2">
                     <ConnectLawyerSection
                         userId={user.id}
                         userName={profile.full_name || user.email || ''}
                         avatarUrl={user.user_metadata?.avatar_url}
                     />
+                    </div>
                 )}
 
                 {/* Admin: Registro de Abogados — Solo para admin */}
                 {user.email === ADMIN_EMAIL && (
-                    <AdminLawyerPanel />
+                    <div className="lg:col-span-2"><AdminLawyerPanel /></div>
                 )}
 
                 {/* Detalles de Cuenta */}
-                <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <Shield className="w-5 h-5 text-charcoal-700" />
-                        <h2 className="font-serif text-2xl font-medium text-charcoal-900">
-                            Detalles de Cuenta
-                        </h2>
-                    </div>
+                <Tarjeta icono={Shield} titulo="Detalles de cuenta" acento="pizarra"
+                    descripcion="Identificadores y estado de verificación">
 
                     <div className="space-y-3">
                         <div className="flex justify-between text-sm">
@@ -891,20 +1023,16 @@ export default function PerfilPage() {
                             </span>
                         </div>
                     </div>
-                </section>
+                </Tarjeta>
 
                 {/* Invite y ascienda. Sólo aparece para quien ya paga: el
                     programa es para clientes, no para prospectos. El plazo de
                     tres meses se muestra al mismo tamaño que el resto — nunca
                     en letra chica. */}
                 {referidos && (
-                    <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <Gift className="w-5 h-5 text-charcoal-700" />
-                            <h2 className="font-serif text-2xl font-medium text-charcoal-900">
-                                Invite y ascienda
-                            </h2>
-                        </div>
+                    <div className="lg:col-span-2">
+                    <Tarjeta icono={Gift} titulo="Invite y ascienda" acento="azul"
+                        descripcion="Tres colegas con plan Pro o superior, y sube a Platinum">
 
                         {referidos.ascenso && !referidos.ascenso.revertido_at &&
                          new Date(referidos.ascenso.vence_at) > new Date() ? (
@@ -990,20 +1118,16 @@ export default function PerfilPage() {
                                 </span>
                             </div>
                         </div>
-                    </section>
+                    </Tarjeta>
+                    </div>
                 )}
 
                 {/* Tratamiento profesional. El nombre no dice el género, y
                     llamarle «El abogado» a una abogada en cada consulta es
                     peor que no personalizar: por eso lo elige cada quien, y
                     el neutro «Lic.» es el valor por omisión. */}
-                <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-4">
-                        <User className="w-5 h-5 text-charcoal-700" />
-                        <h2 className="font-serif text-2xl font-medium text-charcoal-900">
-                            ¿Cómo prefiere ser nombrado?
-                        </h2>
-                    </div>
+                <Tarjeta icono={User} titulo="¿Cómo prefiere ser nombrado?" acento="carbon"
+                    descripcion="Encabeza cada una de sus consultas">
                     <p className="text-sm text-charcoal-700 mb-5">
                         Así encabezaremos sus consultas: «{
                             tratamiento === 'licenciado' ? 'El abogado'
@@ -1030,19 +1154,14 @@ export default function PerfilPage() {
                             </button>
                         ))}
                     </div>
-                </section>
+                </Tarjeta>
 
                 {/* Contraseña — cerraba el ciclo que faltaba: el helper
                     updatePassword() ya existía en lib/supabase, pero no había
                     ninguna pantalla que lo llamara. Sin esto, cambiar de
                     contraseña obligaba a fingir que se había olvidado. */}
-                <section className="bg-white rounded-2xl shadow-sm border border-cream-300 p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <KeyRound className="w-5 h-5 text-charcoal-700" />
-                        <h2 className="font-serif text-2xl font-medium text-charcoal-900">
-                            Contraseña
-                        </h2>
-                    </div>
+                <Tarjeta icono={KeyRound} titulo="Contraseña" acento="pizarra"
+                    descripcion="Acceso a su cuenta">
 
                     <p className="text-sm text-charcoal-700 mb-5">
                         Elija una contraseña nueva de al menos ocho caracteres. Al guardarla,
@@ -1081,28 +1200,31 @@ export default function PerfilPage() {
                             {passCargando ? 'Guardando…' : 'Guardar contraseña'}
                         </button>
                     </div>
-                </section>
+                </Tarjeta>
 
-                {/* Zona de Peligro */}
-                <section className="bg-white rounded-2xl shadow-sm border border-red-200 p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <AlertTriangle className="w-5 h-5 text-red-600" />
-                        <h2 className="font-serif text-2xl font-medium text-red-600">
-                            Zona de Peligro
-                        </h2>
-                    </div>
+                </div>
 
-                    <p className="text-sm text-charcoal-600 mb-4">
-                        Esta acción es irreversible. Todos tus datos, conversaciones y configuraciones se eliminarán permanentemente.
+                {/* Lo irreversible va al final y CALLADO: un botón rojo sólido
+                    compitiendo con el resto invita a pulsarlo. Se enciende al
+                    pasar el cursor, no antes. */}
+                <Tarjeta
+                    icono={AlertTriangle}
+                    titulo="Eliminar cuenta"
+                    acento="rojo"
+                    descripcion="Esta acción no se puede deshacer"
+                >
+                    <p className="mb-4 text-[0.8125rem] leading-relaxed text-charcoal-500">
+                        Se borrarán de forma permanente sus conversaciones, carpetas y
+                        preferencias. Si sólo desea dejar de pagar, cancele la suscripción
+                        desde «Mi suscripción» y conserve su cuenta y su historial.
                     </p>
-
                     <button
                         onClick={() => setShowDeleteModal(true)}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        className="rounded-lg border border-red-300 px-3.5 py-2 text-[0.8125rem] font-medium text-red-700 transition-colors hover:bg-red-600 hover:border-red-600 hover:text-white"
                     >
                         Eliminar mi cuenta
                     </button>
-                </section>
+                </Tarjeta>
             </main>
 
             {/* Cancel Subscription Modal */}

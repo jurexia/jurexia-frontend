@@ -98,6 +98,24 @@ export async function GET(req: NextRequest) {
             const destinatarios = await segmento(campania);
             if (destinatarios.length === 0) continue;
 
+            // El enlace de invitación se DERIVA del id del usuario, pero el
+            // padrino se busca por el código GUARDADO. Si no se guarda antes
+            // de mandar el correo, el enlace viaja apuntando a un código que
+            // no existe: quien se registre con él no queda atado a nadie y el
+            // referido se pierde en silencio.
+            //
+            // Pasó de verdad: 151 de los 161 correos de la primera tanda
+            // salieron con un enlace irresoluble, porque el código sólo se
+            // guardaba cuando el abogado abría su panel de referidos.
+            if (campania === 'referidos') {
+                const { asegurarCodigo } = await import('@/lib/referidos-backend');
+                await Promise.all(
+                    destinatarios
+                        .filter(d => d.id)
+                        .map(d => asegurarCodigo(d.id as string).catch(() => null)),
+                );
+            }
+
             const r = await enviarCampania({
                 campania,
                 destinatarios,
