@@ -125,6 +125,77 @@ export const TEMAS: Tema[] = [
     },
 ];
 
+
+/* ── QUÉ ES CADA COSA EN IUREXIA ──────────────────────────────────────────
+ *
+ * Sin esto, soporte contestaba «no manejo esa información» a preguntas sobre
+ * funciones propias de la plataforma. Un abogado preguntó por los Genios —que
+ * son una función central— y se le respondió que no se le podía ayudar. Eso no
+ * es prudencia: es no conocer el producto, y cuesta más confianza que un error.
+ *
+ * Aquí va lo que el USUARIO ve y usa. Nada de cómo está construido.
+ */
+export const MAPA_PLATAFORMA = `
+LA CAJA DE CONSULTA (pantalla del chat)
+· Fuero — acota a Constitucional, Federal o Estatal. Sin marcar, busca en todos.
+· Materia — Civil, Penal, Familiar o Administrativa. En Auto se detecta sola.
+· Rayo (Respuesta rápida) — la cita al grano, sin desarrollo. Todos los planes.
+· Globo (Fuentes de internet) — añade búsqueda en dominios oficiales: poderes
+  judiciales, congresos, diarios oficiales. Desde plan Pro. Se enciende con un
+  clic y se apaga al recargar, para no gastar cuando no hace falta.
+· Buscar / Redactar — Buscar halla la norma con cita verificable; Redactar
+  construye el argumento articulado. Al elegir Redactar aparecen tres escalones:
+  Profesional (todos los planes), Pro y Platinum, con razonamiento más profundo.
+· Micrófono — dicta la consulta en vez de escribirla. Chrome y Safari.
+· Clip — sube un PDF, Word o TXT y Iurexia lo lee completo. El límite de páginas
+  crece con el plan.
+
+LOS MODOS DE TRABAJO
+· Escrito legal — genera demanda, contestación, amparo, denuncia o recurso con
+  sus fundamentos. Todos los planes.
+· Sentencia — audita una resolución AJENA: incoherencias del razonamiento, apego
+  constitucional, vicios de forma y fondo. Desde plan Pro.
+· Precedentes — busca en la jurisprudencia y tesis del Poder Judicial de la
+  Federación. Se elige corte (SCJN o Tribunales Colegiados), sala, circuito o
+  tribunal. Cada criterio llega con su registro digital verificado. Desde Pro.
+· Jurimetría — estadística judicial: cómo han resuelto los tribunales asuntos
+  como el suyo, en qué sentido y con qué frecuencia. Exclusivo Platinum.
+
+LOS GENIOS
+Especialistas por materia: CIDH, Amparo, Civil, Penal, Laboral, Agrario, Fiscal,
+Mercantil y Administrativo. Cada uno lleva en memoria el corpus completo de su
+materia —códigos, leyes orgánicas, reglamentos—, así que cita artículos
+textuales y conecta normas como un especialista.
+· Se activan con un clic en la fila de Genios, bajo la caja de consulta.
+· Desde plan Pro. Hasta DOS a la vez. La sesión dura 3 minutos tras activarse.
+· No se pueden combinar con el modo Redacción cuando hay dos activos.
+· Si no necesita tanta profundidad, los filtros de Fuero y Materia ya dan
+  respuestas muy completas sin consumir una sesión de Genio.
+
+LA BARRA SUPERIOR
+· Sálvame — el amparo por salud, con su propio flujo de urgencia.
+· Sentencia (Secretario del PJF) — redacta un borrador de sentencia COMPLETO
+  desde el expediente: antecedentes, considerandos y resolutivos. Abre su propia
+  pantalla. Exclusivo Platinum.
+· Mi trabajo — sus carpetas. Ahí se guarda lo que produce, organizado por
+  asunto. Cada respuesta tiene «A mi carpeta» para archivarla.
+· Normativa — el acervo de leyes navegable.
+· El estado (jurisdicción) — filtra toda consulta hacia la legislación de esa
+  entidad. Se cambia con un clic.
+
+OTRAS PANTALLAS
+· Agente — arma una demanda de amparo indirecto por pasos, con un plan que usted
+  aprueba antes de que se redacte. En beta.
+· Perfil — plan, consumo del periodo, datos fiscales, contraseña y el programa
+  «Invite y ascienda»: tres colegas con plan Pro o superior y sube a Platinum.
+· Guía rápida de uso — en la barra izquierda del chat, recorre cada botón.
+
+EL ACERVO
+Legislación de las 32 entidades y federal, jurisprudencia y tesis del Poder
+Judicial de la Federación, y el bloque de constitucionalidad. Cada respuesta
+lleva un sello de citas verificadas contra el Semanario Judicial.
+`;
+
 /** El bloque que se le da al modelo. Sin metadatos ni ids: sólo lo útil. */
 export function conocimientoParaPrompt(): string {
     return TEMAS
@@ -164,8 +235,18 @@ function normalizar(texto: string): string {
         .replace(/[\u0300-\u036f]/g, '');
 }
 
-/** ¿Este caso tiene que ver el equipo aunque el usuario quede conforme? */
-export function exigeEquipo(texto: string): boolean {
+/** ¿Es un tema que, si NO se resuelve, debe acabar en el equipo?
+ *
+ * OJO con lo que esta función NO es (7-ago-2026): no es una orden de escalar
+ * ahora. Se usaba así y el resultado fue que soporte@iurexia.com recibía un
+ * correo POR CADA MENSAJE del usuario, desde el primero, aunque la respuesta
+ * lo resolviera en el acto. El buzón se llenó de conversaciones resueltas.
+ *
+ * Ahora sólo marca el tema como delicado. El escalado ocurre en un único
+ * momento —cuando el intercambio termina sin solución— y manda UN correo con
+ * la conversación completa, que es lo único que le sirve a quien la lee.
+ */
+export function temaDelicado(texto: string): boolean {
     const t = normalizar(texto);
     return DISPARADORES.some(grupo => grupo.every(raiz => t.includes(normalizar(raiz))));
 }

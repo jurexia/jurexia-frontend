@@ -22,7 +22,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
-import { conocimientoParaPrompt, exigeEquipo } from '@/lib/soporte/conocimiento';
+import { conocimientoParaPrompt, temaDelicado, MAPA_PLATAFORMA } from '@/lib/soporte/conocimiento';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -55,6 +55,14 @@ function sistema(): string {
         '· NUNCA inventes una causa. Si no sabes por qué falla, lo dices y lo escalas.',
         '· NUNCA prometas plazos concretos de corrección.',
         '· No das asesoría jurídica: para eso está el chat de Iurexia.',
+        '',
+        'CONOCES LA PLATAFORMA. Esto es lo que hay y cómo se usa:',
+        MAPA_PLATAFORMA,
+        '',
+        'Si preguntan por una función —los Genios, Precedentes, Jurimetría,',
+        'Sálvame, las carpetas—, EXPLÍCALA con lo de arriba. Decir «no manejo esa',
+        'información» sobre algo que la plataforma sí tiene es el peor error que',
+        'puedes cometer: el abogado concluye que ni el soporte conoce el producto.',
         '',
         'LO QUE SABES RESOLVER',
         conocimientoParaPrompt(),
@@ -232,28 +240,35 @@ export async function POST(req: NextRequest) {
         });
     }
 
-    // El modelo pide ayuda, o el tema exige que el equipo lo vea igual.
+    // ── El correo sale UNA vez, y sólo si no se resolvió ──────────────
+    //
+    // Antes bastaba con que el tema fuese delicado para mandar correo, así que
+    // soporte@iurexia.com recibía uno POR CADA MENSAJE desde el primero,
+    // aunque la respuesta resolviera el caso en el acto. El buzón se llenó de
+    // conversaciones ya resueltas y el escalado dejó de significar nada.
+    //
+    // Ahora sólo escala cuando el modelo declara que no puede —o cuando se
+    // agotan los cinco turnos, más arriba—, y va UN correo con la
+    // conversación entera, que es lo único útil para quien la lee.
     const pidioEscalar = /\[ESCALAR\]/i.test(texto);
-    const temaDelicado = exigeEquipo(ultimo.texto);
-    const escalado = pidioEscalar || temaDelicado;
+    const delicado = temaDelicado(ultimo.texto);
 
     texto = texto.replace(/\[ESCALAR\]/gi, '').trim();
     if (!texto) {
         texto = 'Déjeme pasarlo al equipo para revisarlo con calma. Le escribirán a su correo.';
     }
 
-    if (escalado) {
-        await avisarAlEquipo({
-            ...comun,
-            motivo: pidioEscalar ? 'Soporte no pudo resolverlo' : 'Tema que requiere revisión del equipo',
-        });
+    if (pidioEscalar) {
+        await avisarAlEquipo({ ...comun, motivo: 'Soporte no pudo resolverlo' });
     }
 
-    await guardar(ultimo.texto.trim(), escalado ? 'error' : 'otro');
+    // El reporte SÍ se guarda siempre: el panel de admin tiene que ver todo lo
+    // que reporta la gente, se haya escalado o no. Guardar no es avisar.
+    await guardar(ultimo.texto.trim(), pidioEscalar || delicado ? 'error' : 'otro');
 
     return NextResponse.json({
         respuesta: texto,
-        escalado,
+        escalado: pidioEscalar,
         cerrado: pidioEscalar,
         turnosRestantes: Math.max(0, MAX_TURNOS_USUARIO - turnosUsuario),
     });

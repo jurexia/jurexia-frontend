@@ -9,13 +9,13 @@
  * hay —contesta al instante y, si no puede, escala al equipo con la
  * conversación entera.
  *
- * Y no estorba: la burbuja se arrastra a donde el usuario quiera (se recuerda
- * el sitio), se pliega a un punto discreto y se puede ocultar del todo por lo
- * que queda de la visita.
+ * Y no estorba: la burbuja se arrastra a donde el usuario quiera y recuerda el
+ * sitio. Pero NUNCA desaparece —cerrar sólo repliega el panel—, porque tras
+ * escalar un caso el abogado se quedaba sin canal para la siguiente duda.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, X, Send, Minus, EyeOff, GripHorizontal } from 'lucide-react';
+import { MessageCircle, X, Send, RotateCcw, GripHorizontal } from 'lucide-react';
 
 interface FeedbackWidgetProps {
     userId?: string;
@@ -27,13 +27,11 @@ interface FeedbackWidgetProps {
 interface Turno { rol: 'usuario' | 'soporte'; texto: string }
 
 const CLAVE_POSICION = 'iurexia-soporte-pos';
-const CLAVE_OCULTO = 'iurexia-soporte-oculto';
 const SALUDO =
     'Hola. Soy de soporte de Iurexia. Cuénteme qué está fallando y lo vemos ahora mismo.';
 
 export default function FeedbackWidget({ userId, userEmail, userName, plan }: FeedbackWidgetProps) {
     const [abierto, setAbierto] = useState(false);
-    const [oculto, setOculto] = useState(false);
     const [turnos, setTurnos] = useState<Turno[]>([{ rol: 'soporte', texto: SALUDO }]);
     const [texto, setTexto] = useState('');
     const [pensando, setPensando] = useState(false);
@@ -49,7 +47,6 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
 
     useEffect(() => {
         try {
-            if (sessionStorage.getItem(CLAVE_OCULTO) === '1') setOculto(true);
             const g = localStorage.getItem(CLAVE_POSICION);
             if (g) {
                 const p = JSON.parse(g);
@@ -97,10 +94,14 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
         window.addEventListener('pointerup', alSoltar);
     };
 
-    const ocultar = () => {
-        setOculto(true);
-        setAbierto(false);
-        try { sessionStorage.setItem(CLAVE_OCULTO, '1'); } catch { }
+    /* El botón NUNCA desaparece. Antes podía ocultarse por toda la visita y,
+       tras escalar un caso, el abogado se quedaba sin canal: ni podía volver a
+       preguntar ni sabía cómo recuperarlo. Cerrar sólo repliega el panel. */
+    const reiniciar = () => {
+        setTurnos([{ rol: 'soporte', texto: SALUDO }]);
+        setTexto('');
+        setCerrado(false);
+        setTimeout(() => entradaRef.current?.focus(), 100);
     };
 
     const enviar = async () => {
@@ -135,8 +136,6 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
         }
     };
 
-    if (oculto) return null;
-
     return (
         <>
             {/* ── Burbuja ─────────────────────────────────────────────── */}
@@ -157,7 +156,7 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                         <GripHorizontal className="h-4 w-4" style={{ color: 'rgba(26,26,26,0.35)' }} />
                     </button>
 
-                    <div className="group relative">
+                    <div className="relative">
                         <button
                             onClick={() => setAbierto(true)}
                             aria-label="Soporte de Iurexia"
@@ -168,17 +167,6 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                             }}
                         >
                             <MessageCircle className="h-5 w-5" style={{ color: '#c9a962' }} />
-                        </button>
-
-                        {/* Ocultar del todo por esta visita. */}
-                        <button
-                            onClick={ocultar}
-                            aria-label="Ocultar soporte"
-                            title="Ocultar hasta que recargue"
-                            className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                            style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.18)' }}
-                        >
-                            <EyeOff className="h-2.5 w-2.5" style={{ color: 'rgba(255,255,255,0.6)' }} />
                         </button>
                     </div>
                 </div>
@@ -214,12 +202,16 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                                 {pensando ? 'Escribiendo…' : 'Le respondemos al momento'}
                             </p>
                         </div>
-                        <button onClick={() => setAbierto(false)} aria-label="Minimizar"
-                            className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
-                            style={{ color: 'rgba(255,255,255,0.45)' }}>
-                            <Minus className="h-4 w-4" />
-                        </button>
-                        <button onClick={ocultar} aria-label="Cerrar"
+                        {turnos.length > 1 && (
+                            <button onClick={reiniciar} aria-label="Nueva consulta"
+                                title="Empezar una consulta nueva"
+                                className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
+                                style={{ color: 'rgba(255,255,255,0.45)' }}>
+                                <RotateCcw className="h-3.5 w-3.5" />
+                            </button>
+                        )}
+                        <button onClick={() => setAbierto(false)} aria-label="Cerrar"
+                            title="Replegar (el botón sigue disponible)"
                             className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
                             style={{ color: 'rgba(255,255,255,0.45)' }}>
                             <X className="h-4 w-4" />
@@ -260,11 +252,25 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                     {/* Entrada */}
                     <div className="flex-shrink-0 px-3 pb-3">
                         {cerrado ? (
-                            <p className="rounded-xl px-3.5 py-3 text-center text-[0.75rem] leading-relaxed"
-                                style={{ background: 'rgba(201,169,98,0.10)', color: 'rgba(255,255,255,0.65)' }}>
-                                Su caso ya está con el equipo. Le escribirán a{' '}
-                                <span style={{ color: '#c9a962' }}>{userEmail || 'su correo'}</span>.
-                            </p>
+                            /* Escalar no puede ser un callejón sin salida: el
+                               abogado suele tener otra duda distinta, y antes se
+                               quedaba con la caja bloqueada y sin forma de
+                               volver a empezar. */
+                            <div className="rounded-xl px-3.5 py-3 text-center"
+                                style={{ background: 'rgba(201,169,98,0.10)' }}>
+                                <p className="text-[0.75rem] leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                                    Su caso ya está con el equipo. Le escribirán a{' '}
+                                    <span style={{ color: '#c9a962' }}>{userEmail || 'su correo'}</span>.
+                                </p>
+                                <button
+                                    onClick={reiniciar}
+                                    className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[0.75rem] font-medium transition-colors"
+                                    style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.85)' }}
+                                >
+                                    <RotateCcw className="h-3 w-3" />
+                                    Tengo otra consulta
+                                </button>
+                            </div>
                         ) : (
                             <div className="flex items-end gap-2 rounded-xl p-2"
                                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
