@@ -1291,6 +1291,7 @@ export default function ChatPage() {
                     userId={user.id}
                     userEmail={user.email ?? undefined}
                     userName={profile?.full_name ?? undefined}
+                    plan={profile?.subscription_type ?? undefined}
                 />
             )}
         </div>

@@ -1,347 +1,300 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, CheckCircle, ChevronDown } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+/**
+ * Soporte de Iurexia: de buzón a conversación.
+ *
+ * Antes esto era un formulario que guardaba el mensaje y no respondía nada.
+ * Entre los 91 reportes reales hay gente escribiendo «nadie me responde» y
+ * «llevo días esperando»: creían que había alguien leyendo en vivo. Ahora lo
+ * hay —contesta al instante y, si no puede, escala al equipo con la
+ * conversación entera.
+ *
+ * Y no estorba: la burbuja se arrastra a donde el usuario quiera (se recuerda
+ * el sitio), se pliega a un punto discreto y se puede ocultar del todo por lo
+ * que queda de la visita.
+ */
+
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { MessageCircle, X, Send, Minus, EyeOff, GripHorizontal } from 'lucide-react';
 
 interface FeedbackWidgetProps {
     userId?: string;
     userEmail?: string;
     userName?: string;
+    plan?: string;
 }
 
-type FeedbackCategory = 'error' | 'mejora' | 'otro';
+interface Turno { rol: 'usuario' | 'soporte'; texto: string }
 
-const CATEGORY_CONFIG: Record<FeedbackCategory, { label: string; emoji: string; placeholder: string }> = {
-    error: {
-        label: 'Reportar un error',
-        emoji: '🐛',
-        placeholder: 'Describe el error que encontraste: qué estabas haciendo, qué esperabas y qué ocurrió...',
-    },
-    mejora: {
-        label: 'Sugerir una mejora',
-        emoji: '💡',
-        placeholder: 'Cuéntanos qué funcionalidad te gustaría ver o qué podríamos mejorar...',
-    },
-    otro: {
-        label: 'Otro comentario',
-        emoji: '💬',
-        placeholder: 'Escribe tu mensaje aquí...',
-    },
-};
+const CLAVE_POSICION = 'iurexia-soporte-pos';
+const CLAVE_OCULTO = 'iurexia-soporte-oculto';
+const SALUDO =
+    'Hola. Soy de soporte de Iurexia. Cuénteme qué está fallando y lo vemos ahora mismo.';
 
-export default function FeedbackWidget({ userId, userEmail, userName }: FeedbackWidgetProps) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [phase, setPhase] = useState<'form' | 'sending' | 'success'>('form');
-    const [category, setCategory] = useState<FeedbackCategory>('error');
-    const [message, setMessage] = useState('');
-    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const panelRef = useRef<HTMLDivElement>(null);
+export default function FeedbackWidget({ userId, userEmail, userName, plan }: FeedbackWidgetProps) {
+    const [abierto, setAbierto] = useState(false);
+    const [oculto, setOculto] = useState(false);
+    const [turnos, setTurnos] = useState<Turno[]>([{ rol: 'soporte', texto: SALUDO }]);
+    const [texto, setTexto] = useState('');
+    const [pensando, setPensando] = useState(false);
+    const [cerrado, setCerrado] = useState(false);
 
-    // Focus textarea when panel opens
+    // Posición de la burbuja: derecha/abajo en píxeles desde la esquina.
+    const [pos, setPos] = useState({ derecha: 24, abajo: 24 });
+    const arrastre = useRef<{ x: number; y: number; d: number; b: number } | null>(null);
+    const [arrastrando, setArrastrando] = useState(false);
+
+    const finRef = useRef<HTMLDivElement>(null);
+    const entradaRef = useRef<HTMLTextAreaElement>(null);
+
     useEffect(() => {
-        if (isOpen && phase === 'form') {
-            setTimeout(() => textareaRef.current?.focus(), 300);
-        }
-    }, [isOpen, phase]);
-
-    // Close on outside click
-    useEffect(() => {
-        if (!isOpen) return;
-        const handler = (e: MouseEvent) => {
-            if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-                handleClose();
+        try {
+            if (sessionStorage.getItem(CLAVE_OCULTO) === '1') setOculto(true);
+            const g = localStorage.getItem(CLAVE_POSICION);
+            if (g) {
+                const p = JSON.parse(g);
+                if (typeof p.derecha === 'number' && typeof p.abajo === 'number') setPos(p);
             }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, [isOpen]);
+        } catch { }
+    }, []);
 
-    const handleClose = () => {
-        setIsOpen(false);
-        // Reset after animation
-        setTimeout(() => {
-            setPhase('form');
-            setMessage('');
-            setCategory('error');
-        }, 300);
+    useEffect(() => {
+        finRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, [turnos, pensando]);
+
+    useEffect(() => {
+        if (abierto) setTimeout(() => entradaRef.current?.focus(), 250);
+    }, [abierto]);
+
+    // ── Arrastre de la burbuja ────────────────────────────────────────
+    // Se mide contra la ventana y se recorta a los bordes: no puede quedar
+    // fuera de la pantalla ni tapando el borde del navegador.
+    const alMover = useCallback((e: PointerEvent) => {
+        if (!arrastre.current) return;
+        const dx = arrastre.current.x - e.clientX;
+        const dy = arrastre.current.y - e.clientY;
+        setPos({
+            derecha: Math.min(Math.max(arrastre.current.d + dx, 8), window.innerWidth - 80),
+            abajo: Math.min(Math.max(arrastre.current.b + dy, 8), window.innerHeight - 80),
+        });
+    }, []);
+
+    const alSoltar = useCallback(() => {
+        arrastre.current = null;
+        setArrastrando(false);
+        window.removeEventListener('pointermove', alMover);
+        window.removeEventListener('pointerup', alSoltar);
+        setPos(p => {
+            try { localStorage.setItem(CLAVE_POSICION, JSON.stringify(p)); } catch { }
+            return p;
+        });
+    }, [alMover]);
+
+    const empezarArrastre = (e: React.PointerEvent) => {
+        arrastre.current = { x: e.clientX, y: e.clientY, d: pos.derecha, b: pos.abajo };
+        setArrastrando(true);
+        window.addEventListener('pointermove', alMover);
+        window.addEventListener('pointerup', alSoltar);
     };
 
-    const handleSubmit = async () => {
-        if (!message.trim() || !userId) return;
+    const ocultar = () => {
+        setOculto(true);
+        setAbierto(false);
+        try { sessionStorage.setItem(CLAVE_OCULTO, '1'); } catch { }
+    };
 
-        setPhase('sending');
+    const enviar = async () => {
+        const limpio = texto.trim();
+        if (!limpio || pensando || cerrado) return;
+
+        const nuevos: Turno[] = [...turnos, { rol: 'usuario', texto: limpio }];
+        setTurnos(nuevos);
+        setTexto('');
+        setPensando(true);
 
         try {
-            const { error } = await supabase.from('user_feedback').insert({
-                user_id: userId,
-                user_email: userEmail || null,
-                user_name: userName || null,
-                category,
-                message: message.trim(),
+            const r = await fetch('/api/soporte/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    conversacion: nuevos,
+                    userId, email: userEmail, nombre: userName, plan,
+                }),
             });
-
-            if (error) throw error;
-            setPhase('success');
-        } catch (err) {
-            console.error('Error sending feedback:', err);
-            // Still show success to user (graceful degradation)
-            setPhase('success');
+            const d = await r.json();
+            setTurnos(t => [...t, { rol: 'soporte', texto: d.respuesta || 'No pude responder ahora.' }]);
+            if (d.cerrado) setCerrado(true);
+        } catch {
+            setTurnos(t => [...t, {
+                rol: 'soporte',
+                texto: 'Se cortó la conexión. Escríbanos a soporte@iurexia.com y lo atendemos por ahí.',
+            }]);
+            setCerrado(true);
+        } finally {
+            setPensando(false);
         }
     };
 
-    const currentCategory = CATEGORY_CONFIG[category];
+    if (oculto) return null;
 
     return (
         <>
-            {/* ═══ FLOATING BUTTON ═══ */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`fixed z-40 transition-all duration-300 ease-out group ${
-                    isOpen 
-                        ? 'bottom-[420px] sm:bottom-[460px] right-4 sm:right-6 scale-90 opacity-70 hover:opacity-100' 
-                        : 'bottom-24 sm:bottom-6 right-4 sm:right-6 hover:scale-110'
-                }`}
-                title="Enviar feedback o reportar un error"
-                aria-label="Abrir widget de feedback"
-            >
-                <div className="relative">
-                    <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-all duration-300"
-                        style={{
-                            background: isOpen
-                                ? '#374151'
-                                : 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-                            border: '2px solid rgba(201, 168, 76, 0.4)',
-                        }}
-                    >
-                        {isOpen ? (
-                            <X className="w-5 h-5 text-white" />
-                        ) : (
-                            <MessageCircle className="w-5 h-5 text-accent-gold" />
-                        )}
-                    </div>
-                    {/* Pulse ring — only when closed */}
-                    {!isOpen && (
-                        <span
-                            className="absolute inset-0 rounded-full animate-ping"
-                            style={{
-                                background: 'rgba(201, 168, 76, 0.15)',
-                                animationDuration: '3s',
-                            }}
-                        />
-                    )}
-                </div>
-            </button>
-
-            {/* ═══ FEEDBACK PANEL ═══ */}
-            <div
-                ref={panelRef}
-                className={`fixed z-50 right-4 sm:right-6 bottom-20 sm:bottom-6 w-[calc(100vw-2rem)] sm:w-[380px] transition-all duration-300 ease-out ${
-                    isOpen
-                        ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
-                        : 'opacity-0 translate-y-4 scale-95 pointer-events-none'
-                }`}
-            >
+            {/* ── Burbuja ─────────────────────────────────────────────── */}
+            {!abierto && (
                 <div
-                    className="rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-                    style={{ background: '#0f0f0f' }}
+                    className="fixed z-[90] flex flex-col items-center gap-1.5"
+                    style={{ right: pos.derecha, bottom: pos.abajo }}
                 >
-                    {/* ── Header ── */}
-                    <div
-                        className="relative px-6 pt-6 pb-5"
-                        style={{
-                            background: 'linear-gradient(135deg, #1a1510 0%, #0f0f0f 100%)',
-                        }}
+                    {/* Asa de arrastre: sólo aparece al acercar el cursor, para
+                        no ensuciar la pantalla cuando no se usa. */}
+                    <button
+                        onPointerDown={empezarArrastre}
+                        aria-label="Mover el botón de soporte"
+                        title="Arrastre para moverlo"
+                        className="opacity-0 transition-opacity hover:opacity-100 focus:opacity-100"
+                        style={{ cursor: arrastrando ? 'grabbing' : 'grab', touchAction: 'none' }}
                     >
-                        <div
-                            className="absolute top-0 left-0 right-0 h-1"
-                            style={{
-                                background: 'linear-gradient(90deg, #c9a84c, #e8c56d, #c9a84c)',
-                            }}
-                        />
-                        {/* Close */}
+                        <GripHorizontal className="h-4 w-4" style={{ color: 'rgba(26,26,26,0.35)' }} />
+                    </button>
+
+                    <div className="group relative">
                         <button
-                            onClick={handleClose}
-                            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                            onClick={() => setAbierto(true)}
+                            aria-label="Soporte de Iurexia"
+                            className="flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
+                            style={{
+                                background: 'linear-gradient(135deg, #2a2a2c 0%, #1a1a1a 100%)',
+                                border: '1px solid rgba(201,169,98,0.35)',
+                            }}
                         >
-                            <X className="w-4 h-4 text-white/50" />
+                            <MessageCircle className="h-5 w-5" style={{ color: '#c9a962' }} />
                         </button>
 
-                        {/* Logo */}
-                        <div className="flex items-center gap-3 mb-3">
-                            <div
-                                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                                style={{
-                                    background: 'linear-gradient(135deg, #c9a84c 0%, #a88832 100%)',
-                                }}
-                            >
-                                <span className="text-white font-serif font-bold text-lg">I</span>
-                            </div>
-                            <div>
-                                <h3 className="font-serif text-lg font-semibold text-white leading-tight">
-                                    Iurex<span style={{ color: '#c9a84c' }}>ia</span>
-                                </h3>
-                                <p className="text-white/40 text-[11px]">Soporte y Feedback</p>
-                            </div>
-                        </div>
-
-                        {phase === 'form' && (
-                            <p className="text-white/70 text-sm leading-relaxed">
-                                Hola{userName ? `, ${userName.split(' ')[0]}` : ''} 👋<br />
-                                <span className="text-white/50 text-xs">
-                                    ¿Encontraste un error o tienes una sugerencia? Tu opinión nos ayuda a mejorar.
-                                </span>
-                            </p>
-                        )}
+                        {/* Ocultar del todo por esta visita. */}
+                        <button
+                            onClick={ocultar}
+                            aria-label="Ocultar soporte"
+                            title="Ocultar hasta que recargue"
+                            className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                            style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.18)' }}
+                        >
+                            <EyeOff className="h-2.5 w-2.5" style={{ color: 'rgba(255,255,255,0.6)' }} />
+                        </button>
                     </div>
-
-                    {/* ── Body ── */}
-                    <div className="px-6 py-5">
-                        {phase === 'form' && (
-                            <div className="space-y-4">
-                                {/* Category selector */}
-                                <div className="relative">
-                                    <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-1.5">
-                                        Tipo de mensaje
-                                    </label>
-                                    <button
-                                        onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                        className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors text-left"
-                                    >
-                                        <span className="flex items-center gap-2 text-sm text-white">
-                                            <span>{currentCategory.emoji}</span>
-                                            <span>{currentCategory.label}</span>
-                                        </span>
-                                        <ChevronDown
-                                            className={`w-4 h-4 text-white/30 transition-transform duration-200 ${
-                                                showCategoryDropdown ? 'rotate-180' : ''
-                                            }`}
-                                        />
-                                    </button>
-
-                                    {showCategoryDropdown && (
-                                        <div className="absolute top-full left-0 right-0 mt-1 rounded-xl bg-[#1a1a1a] border border-white/10 overflow-hidden z-10 shadow-xl">
-                                            {(Object.entries(CATEGORY_CONFIG) as [FeedbackCategory, typeof CATEGORY_CONFIG['error']][]).map(
-                                                ([key, config]) => (
-                                                    <button
-                                                        key={key}
-                                                        onClick={() => {
-                                                            setCategory(key);
-                                                            setShowCategoryDropdown(false);
-                                                        }}
-                                                        className={`w-full flex items-center gap-2 px-3.5 py-2.5 text-sm text-left transition-colors ${
-                                                            key === category
-                                                                ? 'bg-accent-gold/10 text-accent-gold'
-                                                                : 'text-white/70 hover:bg-white/5'
-                                                        }`}
-                                                    >
-                                                        <span>{config.emoji}</span>
-                                                        <span>{config.label}</span>
-                                                    </button>
-                                                )
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Message textarea */}
-                                <div>
-                                    <label className="block text-[10px] font-semibold text-white/40 uppercase tracking-wider mb-1.5">
-                                        Tu mensaje
-                                    </label>
-                                    <textarea
-                                        ref={textareaRef}
-                                        value={message}
-                                        onChange={(e) => setMessage(e.target.value)}
-                                        placeholder={currentCategory.placeholder}
-                                        rows={4}
-                                        maxLength={2000}
-                                        className="w-full px-3.5 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-white/25 resize-none focus:outline-none focus:border-accent-gold/40 focus:ring-1 focus:ring-accent-gold/20 transition-all"
-                                        style={{ scrollbarWidth: 'thin' }}
-                                    />
-                                    <div className="flex justify-end mt-1">
-                                        <span className={`text-[10px] ${message.length > 1800 ? 'text-amber-400' : 'text-white/20'}`}>
-                                            {message.length}/2000
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Submit */}
-                                <button
-                                    onClick={handleSubmit}
-                                    disabled={!message.trim()}
-                                    className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                                        message.trim()
-                                            ? 'hover:scale-[1.02] active:scale-95 cursor-pointer'
-                                            : 'opacity-40 cursor-not-allowed'
-                                    }`}
-                                    style={{
-                                        background: message.trim()
-                                            ? 'linear-gradient(135deg, #c9a84c, #e8c56d)'
-                                            : 'rgba(255,255,255,0.05)',
-                                        color: message.trim() ? '#1a1a1a' : 'rgba(255,255,255,0.3)',
-                                    }}
-                                >
-                                    <Send className="w-4 h-4" />
-                                    Enviar mensaje
-                                </button>
-                            </div>
-                        )}
-
-                        {phase === 'sending' && (
-                            <div className="flex flex-col items-center justify-center py-8">
-                                <div className="w-10 h-10 rounded-full border-2 border-accent-gold/30 border-t-accent-gold animate-spin mb-4" />
-                                <p className="text-white/60 text-sm">Enviando tu mensaje...</p>
-                            </div>
-                        )}
-
-                        {phase === 'success' && (
-                            <div className="flex flex-col items-center justify-center py-6 text-center">
-                                <div
-                                    className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
-                                    style={{ background: 'rgba(34, 197, 94, 0.1)', border: '2px solid rgba(34, 197, 94, 0.3)' }}
-                                >
-                                    <CheckCircle className="w-7 h-7 text-emerald-400" />
-                                </div>
-                                <h4 className="font-serif text-lg font-semibold text-white mb-2">
-                                    ¡Gracias por tu mensaje!
-                                </h4>
-                                <p className="text-white/50 text-sm leading-relaxed mb-4 max-w-[280px]">
-                                    Tu {category === 'error' ? 'reporte' : category === 'mejora' ? 'sugerencia' : 'mensaje'} será
-                                    revisado por nuestro equipo de soporte de Iurexia. Nos comprometemos a mejorar tu experiencia.
-                                </p>
-                                <div className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/5">
-                                    <p className="text-white/40 text-[11px] mb-1">
-                                        Para una atención más completa, escríbenos a:
-                                    </p>
-                                    <a
-                                        href="mailto:soporte@iurexia.com"
-                                        className="text-accent-gold text-sm font-semibold hover:underline"
-                                    >
-                                        soporte@iurexia.com
-                                    </a>
-                                </div>
-                                <button
-                                    onClick={handleClose}
-                                    className="mt-5 text-white/40 hover:text-white/70 text-xs transition-colors"
-                                >
-                                    Cerrar
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* ── Footer ── */}
-                    {phase === 'form' && (
-                        <div className="px-6 py-3 border-t border-white/5 flex items-center justify-center gap-1.5">
-                            <span className="text-white/20 text-[10px]">⚡</span>
-                            <span className="text-white/20 text-[10px]">Powered by Iurexia</span>
-                        </div>
-                    )}
                 </div>
-            </div>
+            )}
+
+            {/* ── Panel ───────────────────────────────────────────────── */}
+            {abierto && (
+                <div
+                    className="fixed z-[90] flex flex-col overflow-hidden rounded-2xl shadow-2xl"
+                    style={{
+                        right: Math.min(pos.derecha, 24),
+                        bottom: Math.min(pos.abajo, 24),
+                        width: 'min(380px, calc(100vw - 32px))',
+                        height: 'min(560px, calc(100vh - 100px))',
+                        background: 'linear-gradient(180deg, #1c1c1e 0%, #141415 100%)',
+                        border: '1px solid rgba(201,169,98,0.28)',
+                    }}
+                >
+                    {/* Cabecera */}
+                    <div
+                        className="flex flex-shrink-0 items-center gap-3 px-4 py-3"
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+                    >
+                        <span
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-semibold"
+                            style={{ background: 'linear-gradient(135deg,#c9a962,#8b7355)', color: '#1a1a1a' }}
+                        >
+                            I
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[0.9375rem] font-semibold leading-tight text-white">Soporte Iurexia</p>
+                            <p className="text-[0.6875rem]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                {pensando ? 'Escribiendo…' : 'Le respondemos al momento'}
+                            </p>
+                        </div>
+                        <button onClick={() => setAbierto(false)} aria-label="Minimizar"
+                            className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
+                            style={{ color: 'rgba(255,255,255,0.45)' }}>
+                            <Minus className="h-4 w-4" />
+                        </button>
+                        <button onClick={ocultar} aria-label="Cerrar"
+                            className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
+                            style={{ color: 'rgba(255,255,255,0.45)' }}>
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    {/* Conversación */}
+                    <div className="sidebar-scroll flex-1 space-y-3 overflow-y-auto px-4 py-4">
+                        {turnos.map((t, i) => (
+                            <div key={i} className={`flex ${t.rol === 'usuario' ? 'justify-end' : 'justify-start'}`}>
+                                <div
+                                    className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[0.8125rem] leading-relaxed"
+                                    style={t.rol === 'usuario'
+                                        ? { background: 'rgba(201,169,98,0.16)', color: '#f0e9da', borderBottomRightRadius: 6 }
+                                        : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.88)', borderBottomLeftRadius: 6 }}
+                                >
+                                    {t.texto}
+                                </div>
+                            </div>
+                        ))}
+                        {pensando && (
+                            <div className="flex justify-start">
+                                <div className="flex gap-1 rounded-2xl px-3.5 py-3"
+                                    style={{ background: 'rgba(255,255,255,0.06)' }}>
+                                    {[0, 1, 2].map(i => (
+                                        <span key={i} className="h-1.5 w-1.5 rounded-full"
+                                            style={{
+                                                background: 'rgba(255,255,255,0.45)',
+                                                animation: `typing 1.4s ${i * 0.2}s infinite`,
+                                            }} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <div ref={finRef} />
+                    </div>
+
+                    {/* Entrada */}
+                    <div className="flex-shrink-0 px-3 pb-3">
+                        {cerrado ? (
+                            <p className="rounded-xl px-3.5 py-3 text-center text-[0.75rem] leading-relaxed"
+                                style={{ background: 'rgba(201,169,98,0.10)', color: 'rgba(255,255,255,0.65)' }}>
+                                Su caso ya está con el equipo. Le escribirán a{' '}
+                                <span style={{ color: '#c9a962' }}>{userEmail || 'su correo'}</span>.
+                            </p>
+                        ) : (
+                            <div className="flex items-end gap-2 rounded-xl p-2"
+                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                                <textarea
+                                    ref={entradaRef}
+                                    value={texto}
+                                    onChange={e => setTexto(e.target.value)}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
+                                    }}
+                                    rows={1}
+                                    placeholder="Cuéntenos qué ocurre…"
+                                    maxLength={2000}
+                                    className="max-h-24 flex-1 resize-none bg-transparent px-1.5 py-1 text-[0.8125rem] outline-none"
+                                    style={{ color: 'rgba(255,255,255,0.9)' }}
+                                />
+                                <button
+                                    onClick={enviar}
+                                    disabled={!texto.trim() || pensando}
+                                    aria-label="Enviar"
+                                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity disabled:opacity-30"
+                                    style={{ background: 'linear-gradient(135deg,#c9a962,#8b7355)' }}
+                                >
+                                    <Send className="h-3.5 w-3.5" style={{ color: '#1a1a1a' }} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </>
     );
 }
