@@ -48,6 +48,7 @@ const ETAPAS: { nombre: string; titulo: string; glosa: string }[] = [
     { nombre: 'expandir', titulo: 'Ampliando la búsqueda', glosa: 'Sinónimos jurídicos y figuras equivalentes' },
     { nombre: 'buscar', titulo: 'Recorriendo el acervo', glosa: 'Artículo por artículo, con su fuente' },
     { nombre: 'precedentes', titulo: 'Buscando precedentes', glosa: 'Jurisprudencia y tesis aisladas' },
+    { nombre: 'doctrina', titulo: 'Consultando doctrina', glosa: 'Obras jurídicas de referencia, con autor y página' },
     { nombre: 'web', titulo: 'Buscando en internet', glosa: 'Las fuentes aparecen conforme se consultan — sólo dominios oficiales' },
     { nombre: 'cruzar', titulo: 'Cruzando artículos citados', glosa: 'Trae el texto de lo que el precedente invoca' },
     { nombre: 'ordenar', titulo: 'Ordenando por pertinencia', glosa: 'Lo aplicable primero' },
@@ -77,6 +78,12 @@ function fichasDe(nombre: string, detalle: string | undefined, fuentes: number |
             { texto: 'Semanario Judicial', icono: 'balanza' },
             { texto: `${detalle} precedentes`, icono: 'enlace' },
         ];
+    }
+    if (nombre === 'doctrina' && detalle) {
+        // El detalle llega como «Atienza;Ferrer Mac-Gregor»: un chip por autor
+        // es lo que hace visible que la respuesta lleva doctrina de verdad.
+        return detalle.split(';').filter(Boolean).slice(0, 3)
+            .map((a) => ({ texto: a.trim(), icono: 'ley' as const }));
     }
     if (nombre === 'web') {
         // La etapa se siembra desde el cliente al enviar (useChat) con este
