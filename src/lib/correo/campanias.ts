@@ -27,7 +27,7 @@ import {
 import { urlBaja } from './baja';
 import { urlEntrada } from './entrada';
 import {
-    codigoReferido, enlaceInvitacion, MESES_DE_PREMIO, REFERIDOS_NECESARIOS,
+    codigoReferido, enlaceInvitacion, DIAS_DE_BIENVENIDA, ESCALERA,
 } from './referidos';
 import type { Correo, Destinatario } from './enviar';
 
@@ -244,33 +244,30 @@ export function correoReferidos(d: Destinatario): Correo {
     const cuerpo =
         parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
         parrafo(
-            'Usted es de quienes sostienen Iurexia. No lo decimos por cortesía: los despachos que pagan ' +
-            'y usan la plataforma a diario son los que marcan hacia dónde crece. Por eso queremos ' +
-            'devolverle algo, y hacerlo de la manera más útil para usted.',
+            `Le escribimos para ponerle en las manos algo que puede regalar: ` +
+            `${fuerte(`${DIAS_DE_BIENVENIDA} días de Iurexia Pro`)} para cada colega que usted invite. ` +
+            'Sin tarjeta, sin compromiso de renovación y sin que a usted le cueste nada.',
         ) +
         parrafo(
-            `Abrimos el programa ${fuerte('Invite y ascienda')}. Funciona así de simple:`,
+            'La idea es sencilla. Cuando usted le recomienda una herramienta a un colega está poniendo ' +
+            'su nombre de por medio, y eso vale. Así que quien reciba su invitación no llega a una ' +
+            'prueba recortada: entra con el plan Pro completo desde el primer día.',
         ) +
         caja(
-            rotulo('El programa, completo') +
-            listado([
-                `Comparta su enlace personal con colegas de su confianza.`,
-                `Cuando ${fuerteTexto(REFERIDOS_NECESARIOS)} de ellos contraten un plan Pro o superior…`,
-                `…su cuenta recibe las capacidades Platinum durante ${fuerteTexto(MESES_DE_PREMIO)} meses.`,
-            ]) +
-            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Para que quede claro: ` +
-            `<strong style="color:#1a1a1a;">usted seguirá pagando exactamente lo mismo que paga hoy ` +
-            `por su plan Pro</strong>, ni un peso más. Lo que le regalamos no es la mensualidad, sino ` +
-            `el aumento de capacidades. Su suscripción no se modifica, no se cobra ningún cargo ` +
-            `adicional y no hay renovación automática de nada.</p>` +
-            `<p style="margin:12px 0 0;font-size:13px;color:#404040;">El ascenso dura tres meses ` +
-            `completos y le avisaremos por correo antes de que termine. Al concluir, su cuenta ` +
-            `continúa en el mismo plan Pro que venía pagando, sin interrupción.</p>`,
-        ) +
-        parrafo(
-            'Durante esos tres meses tendrá el límite de consultas de Platinum, los modos de ' +
-            'razonamiento más profundos y prioridad en los asuntos largos.',
-            '20px 0 20px 0',
+            rotulo('Y usted también cobra') +
+            listado(ESCALERA.map((p) =>
+                `${p.nivel} ${p.nivel === 1 ? 'colega invitado que use la plataforma' : 'colegas invitados que la usen'} → ` +
+                `${p.dias} días de Pro para su cuenta`,
+            )) +
+            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Se paga desde el primero: ` +
+            `<strong style="color:#1a1a1a;">no hay que juntar cinco para recibir algo</strong>. ` +
+            `Cuenta el colega que verifica su correo y hace al menos una consulta real — no las altas ` +
+            `vacías, porque premiar registros de humo no le sirve a nadie.</p>` +
+            `<p style="margin:12px 0 0;font-size:13px;color:#404040;">Si usted ya paga un plan, ` +
+            `<strong style="color:#1a1a1a;">seguirá pagando exactamente lo mismo</strong>: los días ` +
+            `regalados se suman a sus capacidades, no a su recibo. Su suscripción no se modifica y no ` +
+            `se genera ningún cargo. Al terminar los días, su cuenta vuelve sola al plan que traía, ` +
+            `sin interrupción y sin cobro sorpresa.</p>`,
         ) +
         (codigo
             ? caja(
@@ -281,25 +278,21 @@ export function correoReferidos(d: Destinatario): Correo {
             )
             : '') +
         parrafo('', '18px 0 0 0') +
-        boton('Ver mis invitaciones', `${SITIO}/perfil`) +
+        boton('Compartir por WhatsApp o correo', `${SITIO}/perfil`) +
         parrafo(
-            'Le agradecemos de antemano cada colega que nos recomiende. Sabemos lo que significa poner ' +
-            'su nombre de por medio, y no lo tomamos a la ligera.',
+            'Desde su perfil puede mandarlo por WhatsApp con un toque, que es como se pasan estas ' +
+            'cosas entre colegas, y seguir ahí mismo cuántos ya lo están usando.',
             '22px 0 0 0',
         );
 
     const html = envolver({ cuerpo, urlBaja: urlBaja(d.email) });
     return {
-        asunto: `Licenciado ${nombre}, invite a tres colegas y ascienda a Platinum`,
+        asunto: `Licenciado ${nombre}, regale ${DIAS_DE_BIENVENIDA} días de Iurexia Pro a un colega`,
         html,
         texto: aTexto(cuerpo) + `\n\nSu enlace: ${enlace}\nDarse de baja: ${urlBaja(d.email)}`,
     };
 }
 
-/** Número resaltado dentro de un elemento de lista (que ya escapa su texto). */
-function fuerteTexto(n: number): string {
-    return String(n);
-}
 
 // ─────────────────────────────────────────────────────────────────────────
 // 5. ENTRADA — para quien se registró y NUNCA llegó a iniciar sesión.

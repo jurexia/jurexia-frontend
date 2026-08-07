@@ -65,25 +65,32 @@ export async function updateUserSubscription(
     // suscripción, el abogado sigue pagando su Pro— y `plan_previo` ya guardó
     // ese dato, así que la reversión al vencer devuelve lo correcto.
     //
-    // Sólo se protege frente a bajadas: si Stripe informa Platinum o superior
-    // (el usuario lo contrató de verdad), esa sí manda.
-    const esBajadaDesdeElPremio =
-        !subscriptionType.startsWith('platinum') &&
-        subscriptionType !== 'ultra_secretarios' &&
-        subscriptionType !== 'gratuito';
+    // Desde la escalera de «Regale Iurexia» el premio ya NO es siempre
+    // Platinum: puede ser Pro. Suponerlo escribía Platinum a un cliente que
+    // sólo tenía regalados días de Pro — le habríamos regalado un plan que
+    // nadie prometió. Por eso se consulta QUÉ plan se otorgó y se conserva el
+    // MEJOR de los dos: el premio nunca degrada, y Stripe nunca se degrada
+    // por culpa del premio. Si el usuario contrató de verdad algo superior,
+    // ese manda y el premio simplemente queda por debajo.
+    const RANGO: Record<string, number> = {
+        gratuito: 0, basico_monthly: 1,
+        pro_monthly: 2, pro_annual: 2, ultra_secretarios: 2,
+        platinum_monthly: 3, platinum_annual: 3,
+    };
 
-    if (esBajadaDesdeElPremio) {
+    if (subscriptionType !== 'gratuito') {
         try {
-            const { hayAscensoActivo } = await import('./referidos-backend');
-            if (await hayAscensoActivo(normalizedEmail)) {
-                console.log(`🎁 ${normalizedEmail} tiene ascenso por referidos vigente — se conserva Platinum`);
-                tipoAEscribir = 'platinum_monthly';
-                config = PLAN_CONFIG.platinum_monthly;
+            const { premioVigente } = await import('./referidos-backend');
+            const premio = await premioVigente(normalizedEmail);
+            if (premio && (RANGO[premio.plan] ?? 0) > (RANGO[subscriptionType] ?? 0)) {
+                console.log(`🎁 ${normalizedEmail} tiene ${premio.plan} de regalo vigente — se conserva`);
+                tipoAEscribir = premio.plan as PlanType;
+                config = PLAN_CONFIG[premio.plan as PlanType] ?? config;
             }
         } catch (e) {
             // Si la comprobación falla, se sigue con el plan de Stripe: es
             // preferible perder el premio a dejar la suscripción sin escribir.
-            console.error('No pude comprobar el ascenso por referidos:', e);
+            console.error('No pude comprobar el premio por referidos:', e);
         }
     }
 

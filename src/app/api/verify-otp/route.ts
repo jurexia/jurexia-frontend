@@ -107,17 +107,20 @@ export async function POST(request: NextRequest) {
 
         // ── PROGRAMA DE REFERIDOS ────────────────────────────────────────
         // Si llegó con un código de invitación, se ata aquí con quien lo
-        // invitó. Es el único punto donde existen a la vez el código y el id
-        // recién creado.
+        // invitó y se le entregan sus días de Pro de bienvenida. Es el único
+        // punto donde existen a la vez el código y el id recién creado.
         //
         // Silencioso a propósito: un código caducado, mal escrito o de un
         // usuario borrado NO puede impedir que se complete un alta. Lo peor
-        // que pasa es que el padrino no reciba su crédito.
+        // que pasa es que el regalo no se aplique.
+        let regalo: any = null;
         if (ref && userData.user?.id) {
             try {
                 const { registrarReferido } = await import('@/lib/referidos-backend');
-                const atado = await registrarReferido(String(ref), userData.user.id);
-                console.log(`🔗 Referido ${atado ? 'registrado' : 'no aplicable'} para ${normalizedEmail}`);
+                const r = await registrarReferido(String(ref), userData.user.id);
+                regalo = r.regalo?.otorgado ? r.regalo : null;
+                console.log(`🔗 Referido ${r.atado ? 'registrado' : 'no aplicable'} para ${normalizedEmail}`
+                    + (regalo ? ` · ${regalo.dias} días de Pro entregados` : ''));
             } catch (refErr) {
                 console.error('⚠️ No pude registrar el referido (el alta sí se completó):', refErr);
             }
@@ -127,6 +130,10 @@ export async function POST(request: NextRequest) {
             success: true,
             message: 'Cuenta creada exitosamente',
             userId: userData.user?.id,
+            // Para que la pantalla de bienvenida pueda decirle al invitado lo
+            // que acaba de recibir: si no se lo enseñamos, el regalo se gasta
+            // sin que se entere de que lo tenía.
+            regalo: regalo ? { dias: regalo.dias, plan: regalo.plan, vence_at: regalo.vence_at } : null,
         });
     } catch (err: any) {
         console.error('OTP verify error:', err);

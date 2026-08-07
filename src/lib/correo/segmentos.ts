@@ -27,12 +27,11 @@
  *   nunca consultaron ....... 569   → activacion
  *   inactivos 30+ días ...... 894   → reactivacion
  *   toparon el límite ........ 76   → suscripcion
- *   clientes de pago ........ 159   → referidos
+ *   ya usaron (pago o no) ... 1,394 → referidos  (antes: sólo 159 de pago)
  */
 
 import { createClient } from '@supabase/supabase-js';
 import { ADMINS, type Destinatario } from './enviar';
-import { PLANES_QUE_CUENTAN } from './referidos';
 import type { NombreCampania } from './campanias';
 
 const COLUMNAS = 'id, email, full_name, estado, queries_used';
@@ -64,9 +63,18 @@ function filtrar(q: any, campania: NombreCampania) {
     }
 
     if (campania === 'referidos') {
-        // Único segmento de clientes, no de prospectos. Se les pide que
-        // recomienden, así que tienen que estar al corriente.
-        return q.in('subscription_type', PLANES_QUE_CUENTAN).eq('is_active', true);
+        // ABIERTO A QUIEN YA USÓ LA PLATAFORMA (cambio del 7-ago-2026).
+        //
+        // Antes iba sólo a los ~165 clientes de pago, y en seis meses produjo
+        // CERO invitaciones. Una causa medida: el 91% de los usuarios ni
+        // siquiera tenía código guardado, así que jamás pudo invitar.
+        //
+        // Ahora entra cualquiera que haya escrito al menos una consulta —de
+        // pago o gratuito—, porque el programa nuevo también premia al
+        // gratuito con días de Pro. Se exige `last_query_at` para no pedirle
+        // una recomendación a quien todavía no conoce la herramienta: nadie
+        // recomienda lo que no ha usado, y pedírselo quema el remitente.
+        return q.eq('is_active', true).not('last_query_at', 'is', null);
     }
     if (campania === 'activacion') {
         // Nunca escribió una consulta — `last_query_at` nulo, que es lo único

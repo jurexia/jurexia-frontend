@@ -329,8 +329,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     try {
         const { alSuscribirseUnReferido } = await import('@/lib/referidos-backend');
         const r = await alSuscribirseUnReferido(email, subscriptionType);
-        if (r.ascenso?.otorgado) {
-            console.log(`🎁 Ascenso por referidos otorgado — vence ${r.ascenso.vence_at}`);
+        if (r.premio?.otorgado) {
+            console.log(`🎁 Peldaño ${r.premio.nivel} otorgado al padrino — ${r.premio.dias} días, vence ${r.premio.vence_at}`);
         }
     } catch (refErr) {
         console.error('⚠️ Programa de referidos falló (la suscripción sí se registró):', refErr);

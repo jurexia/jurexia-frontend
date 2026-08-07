@@ -85,8 +85,20 @@ export async function GET(req: NextRequest) {
         //
         // Sólo devuelve a su plan a quien todavía está en el de premio: si en
         // el ínterin contrató Platinum de verdad, no se le toca.
-        const { revertirVencidos } = await import('@/lib/referidos-backend');
+        const { revertirVencidos, sincronizarActivaciones } = await import('@/lib/referidos-backend');
         const reversiones = await revertirVencidos();
+
+        // ── Activaciones y peldaños ──────────────────────────────────────
+        // Sella qué invitados ya son usuarios reales (una consulta hecha) y
+        // paga los peldaños alcanzados. Va aquí y no en el navegador porque
+        // el premio es dinero: se cuenta con la llave de servicio, jamás con
+        // un dato que mande el cliente. El panel de referidos lo repite para
+        // ese padrino al abrirlo, así nadie espera a la tarde para ver su
+        // avance; aquí se cubre a quien no ha entrado.
+        const activaciones = await sincronizarActivaciones();
+        if (activaciones.activados) {
+            console.log(`🎁 ${activaciones.activados} invitados activados · ${activaciones.premios.length} peldaños pagados`);
+        }
 
         const inicio = await cupoDisponibleHoy();
         const tandas: Resultado[] = [];
@@ -135,6 +147,7 @@ export async function GET(req: NextRequest) {
             fecha: new Date().toISOString().slice(0, 10),
             simulacro,
             ascensos_revertidos: reversiones,
+            activaciones,
             cuota: inicio,
             enviados,
             cupo_sin_usar: restante,

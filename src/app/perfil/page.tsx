@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
-import { User, CreditCard, Shield, AlertTriangle, Check, X, FileText, Building2, KeyRound, Gift, ChevronRight } from 'lucide-react';
+import { User, CreditCard, Shield, AlertTriangle, Check, X, FileText, Building2, KeyRound, Gift, ChevronRight, MessageCircle, Mail, Copy } from 'lucide-react';
 import { Insignia, nivelDePlan } from '@/components/Insignia';
 import { updatePassword } from '@/lib/supabase';
 import ConnectLawyerSection from '@/components/ConnectLawyerSection';
@@ -60,6 +60,28 @@ const USOS_CFDI = [
  *   carbón  — la identidad. Neutro, porque es el punto de partida.
  *   rojo    — sólo lo irreversible, y apagado hasta que se toca.
  */
+/**
+ * El texto que el abogado manda por WhatsApp o correo.
+ *
+ * Vive aquí y no en lib/correo/referidos.ts porque aquél importa `crypto` de
+ * Node en el módulo, y esta página es un componente de cliente: importarlo
+ * arrastraría Node al navegador.
+ *
+ * Redactado como lo escribiría él, no como lo escribiría una campaña: primero
+ * el regalo, luego el motivo y el enlace al final. Sin signos de admiración ni
+ * promesas — va dirigido a un colega y quien lo manda pone su prestigio.
+ */
+function textoInvitacion(nombre: string | null | undefined, codigo: string): string {
+    const enlace = `https://www.iurexia.com/registro?ref=${codigo}`;
+    const firma = nombre?.trim() ? `\n\n— ${nombre.trim()}` : '';
+    return (
+        `Colega, le comparto 6 días de Iurexia Pro sin costo ni tarjeta.\n\n` +
+        `Es el asistente jurídico con el que trabajo: responde con la ley y la ` +
+        `jurisprudencia mexicanas citadas y verificables, no de memoria.\n\n` +
+        `Actívelos aquí: ${enlace}${firma}`
+    );
+}
+
 const ACENTO = {
     carbon: { linea: '#1a1a1a', chip: 'rgba(26,26,26,0.06)', icono: '#1a1a1a' },
     oro: { linea: '#c9a962', chip: 'rgba(201,169,98,0.14)', icono: '#8a6d2e' },
@@ -150,8 +172,11 @@ export default function PerfilPage() {
     const [cancellingSubscription, setCancellingSubscription] = useState(false);
     const [cancelMessage, setCancelMessage] = useState('');
     const [referidos, setReferidos] = useState<{
-        codigo: string; invitados: number; suscritos: number; faltan: number; necesarios: number;
-        ascenso: { vence_at: string; plan_previo: string; revertido_at: string | null } | null;
+        codigo: string; invitados: number; activos: number; suscritos: number;
+        meta: number; diasDeBienvenida: number;
+        escalera: { nivel: number; dias: number }[];
+        siguiente: { nivel: number; dias: number; faltan: number } | null;
+        premio: { vence_at: string; plan_previo: string; plan_premio: string; nivel: number } | null;
     } | null>(null);
     const [copiado, setCopiado] = useState(false);
     const [otraCuenta, setOtraCuenta] = useState<{ hay_otra: boolean; correo_oculto?: string } | null>(null);
@@ -1025,66 +1050,136 @@ export default function PerfilPage() {
                     </div>
                 </Tarjeta>
 
-                {/* Invite y ascienda. Sólo aparece para quien ya paga: el
-                    programa es para clientes, no para prospectos. El plazo de
-                    tres meses se muestra al mismo tamaño que el resto — nunca
-                    en letra chica. */}
+                {/* Regale Iurexia.
+                    Ahora la ve CUALQUIER usuario, no sólo quien paga: el
+                    programa anterior estaba cerrado a los clientes y produjo
+                    cero invitaciones en seis meses, en parte porque el 91% de
+                    los usuarios ni siquiera tenía código.
+
+                    Los días y su vencimiento van al mismo tamaño que el resto,
+                    nunca en letra chica: ocultar un término material de una
+                    promoción es publicidad engañosa (art. 32 LFPC) y aquí el
+                    destinatario es un abogado. */}
                 {referidos && (
                     <div className="lg:col-span-2">
-                    <Tarjeta icono={Gift} titulo="Invite y ascienda" acento="azul"
-                        descripcion="Tres colegas con plan Pro o superior, y sube a Platinum">
+                    <Tarjeta icono={Gift} titulo="Regale Iurexia" acento="azul"
+                        descripcion={`Regale ${referidos.diasDeBienvenida} días de Pro a un colega y gane los suyos`}>
 
-                        {referidos.ascenso && !referidos.ascenso.revertido_at &&
-                         new Date(referidos.ascenso.vence_at) > new Date() ? (
+                        {referidos.premio && (
                             <div className="mb-5 p-4 rounded-lg border border-accent-gold/50 bg-cream-100">
                                 <p className="text-sm text-charcoal-900 font-medium mb-1">
-                                    Sus capacidades Platinum están activas.
+                                    Sus días de Pro están activos.
                                 </p>
                                 <p className="text-sm text-charcoal-700">
                                     Vigentes hasta el{' '}
-                                    {new Date(referidos.ascenso.vence_at).toLocaleDateString('es-MX', {
+                                    {new Date(referidos.premio.vence_at).toLocaleDateString('es-MX', {
                                         day: 'numeric', month: 'long', year: 'numeric',
                                     })}
-                                    . Su plan de cobro no cambió: sigue pagando lo mismo de siempre.
+                                    {referidos.premio.plan_previo !== 'gratuito'
+                                        ? '. Su plan de cobro no cambió: sigue pagando lo mismo de siempre.'
+                                        : '. Al terminar, su cuenta vuelve sola al plan gratuito. No se le cobrará nada.'}
                                 </p>
                             </div>
-                        ) : (
-                            <>
-                                <p className="text-sm text-charcoal-700 mb-4">
-                                    Cuando <strong className="text-charcoal-900">{referidos.necesarios} colegas</strong> que
-                                    usted invite contraten un plan Pro o superior, su cuenta recibe las
-                                    capacidades Platinum durante <strong className="text-charcoal-900">3 meses</strong>.
-                                    Usted seguirá pagando exactamente lo mismo que paga hoy: lo que se le
-                                    regala es el aumento de capacidades, no la mensualidad.
-                                </p>
-
-                                <div className="flex items-center gap-2 mb-5">
-                                    {Array.from({ length: referidos.necesarios }).map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className={`h-2 flex-1 rounded-full ${
-                                                i < referidos.suscritos ? 'bg-accent-gold' : 'bg-cream-400'
-                                            }`}
-                                        />
-                                    ))}
-                                    <span className="text-sm text-charcoal-700 ml-2 whitespace-nowrap">
-                                        {referidos.suscritos} de {referidos.necesarios}
-                                    </span>
-                                </div>
-                            </>
                         )}
+
+                        <p className="text-sm text-charcoal-700 mb-5">
+                            Cada colega que invite entra con{' '}
+                            <strong className="text-charcoal-900">{referidos.diasDeBienvenida} días de Iurexia Pro</strong>,
+                            sin tarjeta. Y usted gana los suyos conforme lo vayan usando:
+                        </p>
+
+                        {/* La escalera. Se pinta completa para que se vea que
+                            paga desde el primero — con la valla anterior en
+                            tres, quien traía dos se quedaba sin nada. */}
+                        <div className="grid grid-cols-3 gap-2 mb-5">
+                            {referidos.escalera.map((p) => {
+                                const logrado = referidos.activos >= p.nivel;
+                                return (
+                                    <div key={p.nivel}
+                                        className={`rounded-lg border p-3 text-center transition-colors ${
+                                            logrado
+                                                ? 'border-accent-gold bg-accent-gold/10'
+                                                : 'border-cream-400 bg-cream-50'
+                                        }`}>
+                                        {/* nowrap y tipografía menor: con «colegas»
+                                            completo, los peldaños 3 y 5 partían en
+                                            dos líneas y los días quedaban a distinta
+                                            altura que los del peldaño 1. */}
+                                        <p className={`text-[10px] sm:text-xs uppercase tracking-wider mb-1 whitespace-nowrap ${
+                                            logrado ? 'text-accent-brown' : 'text-charcoal-700'
+                                        }`}>
+                                            {p.nivel} {p.nivel === 1 ? 'colega' : 'colegas'}
+                                        </p>
+                                        <p className={`text-lg font-medium ${
+                                            logrado ? 'text-charcoal-900' : 'text-charcoal-700'
+                                        }`}>
+                                            {p.dias} días
+                                        </p>
+                                        {logrado && (
+                                            <Check className="w-4 h-4 text-accent-gold mx-auto mt-1" />
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-2">
+                            {Array.from({ length: referidos.meta }).map((_, i) => (
+                                <div key={i}
+                                    className={`h-2 flex-1 rounded-full ${
+                                        i < referidos.activos ? 'bg-accent-gold' : 'bg-cream-400'
+                                    }`}
+                                />
+                            ))}
+                            <span className="text-sm text-charcoal-700 ml-2 whitespace-nowrap">
+                                {referidos.activos} de {referidos.meta}
+                            </span>
+                        </div>
+                        <p className="text-sm text-charcoal-700 mb-5">
+                            {referidos.siguiente
+                                ? <>Le {referidos.siguiente.faltan === 1 ? 'falta' : 'faltan'}{' '}
+                                    <strong className="text-charcoal-900">
+                                        {referidos.siguiente.faltan} {referidos.siguiente.faltan === 1 ? 'colega' : 'colegas'}
+                                    </strong>{' '}
+                                    para sus {referidos.siguiente.dias} días.</>
+                                : <>Completó la escalera. Gracias por cada colega que nos recomendó.</>}
+                            {' '}Cuenta quien verifique su correo y haga al menos una consulta.
+                        </p>
+
+                        {/* Compartir. WhatsApp primero y ancho completo en
+                            móvil: es donde de verdad se pasan estas cosas
+                            entre abogados, y la mayoría abre esto en el
+                            teléfono. El texto va redactado como lo escribiría
+                            el propio abogado, no como una campaña. */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+                            <a
+                                href={`https://wa.me/?text=${encodeURIComponent(textoInvitacion(profile?.full_name, referidos.codigo))}`}
+                                target="_blank" rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#25D366] text-white text-sm font-medium hover:brightness-95 transition-all"
+                            >
+                                <MessageCircle className="w-4 h-4" />
+                                Enviar por WhatsApp
+                            </a>
+                            <a
+                                href={`mailto:?subject=${encodeURIComponent('Le comparto ' + referidos.diasDeBienvenida + ' días de Iurexia Pro')}&body=${encodeURIComponent(textoInvitacion(profile?.full_name, referidos.codigo))}`}
+                                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-cream-400 bg-cream-50 text-charcoal-900 text-sm font-medium hover:bg-cream-100 transition-colors"
+                            >
+                                <Mail className="w-4 h-4" />
+                                Enviar por correo
+                            </a>
+                        </div>
 
                         <div className="space-y-3">
                             <div>
                                 <label className="block text-xs uppercase tracking-wider text-accent-brown mb-2">
-                                    Su enlace de invitación
+                                    O copie su enlace
                                 </label>
                                 <div className="flex gap-2">
                                     <input
                                         readOnly
                                         value={`https://www.iurexia.com/registro?ref=${referidos.codigo}`}
                                         onFocus={(e) => e.currentTarget.select()}
-                                        className="flex-1 px-4 py-2.5 rounded-lg border border-cream-400 bg-cream-50 text-charcoal-900 text-sm font-mono"
+                                        className="flex-1 min-w-0 px-4 py-2.5 rounded-lg border border-cream-400 bg-cream-50 text-charcoal-900 text-sm font-mono"
                                     />
                                     <button
                                         onClick={async () => {
@@ -1094,8 +1189,9 @@ export default function PerfilPage() {
                                             setCopiado(true);
                                             setTimeout(() => setCopiado(false), 2000);
                                         }}
-                                        className="px-4 py-2.5 rounded-lg bg-charcoal-900 text-cream-100 text-sm font-medium hover:bg-charcoal-800 transition-colors whitespace-nowrap"
+                                        className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-charcoal-900 text-cream-100 text-sm font-medium hover:bg-charcoal-800 transition-colors whitespace-nowrap"
                                     >
+                                        <Copy className="w-3.5 h-3.5" />
                                         {copiado ? 'Copiado' : 'Copiar'}
                                     </button>
                                 </div>
@@ -1107,20 +1203,21 @@ export default function PerfilPage() {
                                 al registrarse.
                             </p>
 
-                            <div className="flex gap-6 pt-2 text-sm">
+                            <div className="flex flex-wrap gap-x-6 gap-y-1 pt-2 text-sm">
                                 <span className="text-charcoal-700">
-                                    Invitados registrados:{' '}
+                                    Invitados:{' '}
                                     <strong className="text-charcoal-900">{referidos.invitados}</strong>
                                 </span>
                                 <span className="text-charcoal-700">
-                                    Ya suscritos:{' '}
-                                    <strong className="text-charcoal-900">{referidos.suscritos}</strong>
+                                    Ya usándolo:{' '}
+                                    <strong className="text-charcoal-900">{referidos.activos}</strong>
                                 </span>
                             </div>
                         </div>
                     </Tarjeta>
                     </div>
                 )}
+
 
                 {/* Tratamiento profesional. El nombre no dice el género, y
                     llamarle «El abogado» a una abogada en cada consulta es
