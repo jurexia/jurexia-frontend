@@ -1289,10 +1289,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 </div>
                             </details>
                         )}
-                        {/* Export Buttons - Only show when not streaming and has content */}
+                        {/* Botones de acción. `flex-wrap` (7-ago-2026): sin él, los
+                            cinco botones y la etiqueta medían 507 px dentro de una
+                            fila de 272 en móvil, y «A mi carpeta» terminaba 197 px
+                            fuera de la pantalla. La etiqueta se oculta en pantallas
+                            estrechas porque los iconos ya dicen qué hace cada uno. */}
                         {!isStreaming && message.content.length > 50 && (
-                            <div className="flex items-center gap-2 px-4 py-2 border-t border-cream-300 bg-cream-100/50">
-                                <span className="text-xs text-charcoal-500 mr-2">Exportar:</span>
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border-t border-cream-300 bg-cream-100/50">
+                                <span className="hidden sm:inline text-xs text-charcoal-500 mr-2">Exportar:</span>
                                 <button
                                     onClick={handleExportPDF}
                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 bg-cream-200 hover:bg-cream-300 rounded-md transition-colors"
