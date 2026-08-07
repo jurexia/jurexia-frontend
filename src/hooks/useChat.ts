@@ -222,6 +222,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             const parser = new ThinkingParser();
             let isProMode = false;
             let isPlatinumMode = false;
+            let isProfesionalMode = false;
 
             /* Cola para marcadores partidos entre trozos.
                El backend emite `<!--PASO:web|scjn.gob.mx-->` de una vez, pero la
@@ -325,6 +326,14 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     if (!remaining.trim()) continue;
                 }
 
+                // Escalón base. Se captura para que TODA respuesta de redacción
+                // diga con qué motor se escribió, no sólo las de pago.
+                if (chunk.includes('<!--MODE:PROFESIONAL-->')) {
+                    isProfesionalMode = true;
+                    const remaining = chunk.replace('<!--MODE:PROFESIONAL-->', '');
+                    if (!remaining.trim()) continue;
+                }
+
                 // Check if this is a retry marker: <!--RETRY:1:2000:cold--> or <!--RETRY:1:2000-->
                 const retryMatch = chunk.match(/<!--RETRY:(\d+):(\d+)(?::(\w+))?-->/);
                 if (retryMatch) {
@@ -355,7 +364,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
                 // Add assistant message on first chunk
                 if (!assistantMessageAdded) {
-                    setMessages(prev => [...prev, { role: 'assistant', content: displayContent, isPro: isProMode, isPlatinum: isPlatinumMode }]);
+                    setMessages(prev => [...prev, { role: 'assistant', content: displayContent, isPro: isProMode, isPlatinum: isPlatinumMode, isProfesional: isProfesionalMode }]);
                     assistantMessageAdded = true;
                 } else {
                     // Update existing assistant message
@@ -366,6 +375,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                             content: displayContent,
                             isPro: isProMode,
                             isPlatinum: isPlatinumMode,
+                            isProfesional: isProfesionalMode,
                         };
                         return newMessages;
                     });

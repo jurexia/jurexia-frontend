@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool } from 'lucide-react';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import { SelloCitas, registrosDeLaRespuesta } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
@@ -1135,12 +1135,21 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 <Gem className="w-3 h-3 text-[#e8e4dd]" />
                                 <span>REDACCIÓN PLATINUM</span>
                             </div>
-                        ) : message.isPro && (
+                        ) : message.isPro ? (
                             <div className="mx-4 mt-3 mb-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold tracking-wide rounded-full bg-gradient-to-r from-amber-50 via-white to-amber-50 text-[#8a6d2e] border border-[#c9a962] shadow-[0_0_6px_rgba(201,169,98,0.3)]">
                                 <Sparkles className="w-3 h-3 text-[#c9a962]" />
                                 <span>REDACCIÓN PRO</span>
                             </div>
-                        )}
+                        ) : message.isProfesional ? (
+                            /* El escalón base también se declara. Antes salía sin
+                               insignia: el abogado no tenía cómo saber qué motor
+                               escribió su documento, y al ver PLATINUM en otra
+                               respuesta parecía que las funciones se mezclaban. */
+                            <div className="mx-4 mt-3 mb-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold tracking-wide rounded-full bg-cream-100 text-charcoal-700 border border-cream-400">
+                                <PenTool className="w-3 h-3 text-charcoal-500" />
+                                <span>REDACCIÓN PROFESIONAL</span>
+                            </div>
+                        ) : null}
                         {/* Thinking/Reasoning section (collapsible) */}
                         {thinkingContent && (
                             <details className="mx-4 mt-3 mb-1 rounded-lg border border-cream-400/60 bg-cream-50/50 overflow-hidden">

@@ -407,6 +407,24 @@ export default function ChatInput({
         };
     }, []);
 
+    // ── El escalón vuelve a Profesional CUANDO TERMINA la respuesta ──────
+    // Antes se reiniciaba en el instante del envío. El resultado: el abogado
+    // pulsaba Platinum, mandaba, y el botón saltaba a «Profesional» mientras
+    // el motor Platinum escribía. La insignia de la respuesta decía PLATINUM y
+    // el botón decía Profesional — parecía que las funciones estaban
+    // mezcladas. No lo estaban: la pantalla mentía.
+    //
+    // Se conserva el reinicio (los escalones altos cuestan y dejarlos
+    // encendidos gasta sin que se pida), pero al terminar, que es cuando el
+    // abogado ya vio con qué motor se le escribió.
+    const cargandoAntes = useRef(false);
+    useEffect(() => {
+        if (cargandoAntes.current && !isLoading && nivelRedaccion !== 'profesional') {
+            setNivelRedaccion('profesional');
+        }
+        cargandoAntes.current = isLoading;
+    }, [isLoading, nivelRedaccion]);
+
     // Default to global search when entering Precedentes mode; reset tribunal on exit
     useEffect(() => {
         if (activeMode === 'precedentes' && selectedCircuit === null) {
@@ -503,11 +521,9 @@ export default function ChatInput({
             onSubmit(finalMessage, true);
             setMessage('');
             
-            // Vuelve a Profesional tras enviar: los escalones altos cuestan y
-            // dejarlos encendidos gasta sin que el abogado lo pida.
-            if (nivelRedaccion !== 'profesional') {
-                setNivelRedaccion('profesional');
-            }
+            // El regreso a Profesional NO va aquí. Ver el efecto de abajo:
+            // reiniciarlo en este punto hacía que el botón dijera «Profesional»
+            // mientras la respuesta Platinum se estaba escribiendo.
 
             if (textareaRef.current) {
                 textareaRef.current.style.height = 'auto';

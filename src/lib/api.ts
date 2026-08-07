@@ -9,6 +9,7 @@ export interface Message {
     content: string;
     isPro?: boolean;  // True when the assistant message was generated in Redacción Pro mode
     isPlatinum?: boolean;  // Redacción Platinum: el escalón superior (también trae isPro)
+    isProfesional?: boolean;  // Redacción Profesional: el escalón base, incluido en todos los planes
 }
 
 export interface SearchResult {
