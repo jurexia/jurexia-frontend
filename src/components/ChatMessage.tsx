@@ -3,7 +3,7 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
 import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool } from 'lucide-react';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
-import { SelloCitas, registrosDeLaRespuesta } from '@/components/SelloCitas';
+import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
 
 interface ChatMessageProps {
@@ -1231,6 +1231,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 trazadas={citationMeta?.valid ?? 0}
                                 noTrazadas={citationMeta?.invalid ?? 0}
                                 registros={registrosDeLaRespuesta(processedContent)}
+                                rubros={rubrosPorRegistro(processedContent)}
                             />
                         )}
 

@@ -28,7 +28,20 @@ type Estado = 'comprobando' | 'listo';
 
 interface Resultado {
     registro: string;
-    estado: 'existe' | 'no_existe' | 'sin_comprobar';
+    /**
+     * `no_corresponde` es el hallazgo del 8-ago-2026 y el motivo de este
+     * cambio: el registro EXISTE pero la respuesta le atribuyó el rubro de
+     * otra tesis. Comprobado con un abogado que reportó «al solicitarle
+     * tesis, siempre se equivoca»: de 12 pares revisados, 12 mal
+     * emparejados —«TUTELA JUDICIAL EFECTIVA» resultó ser «CHEQUES. SON
+     * TÍTULOS PAGADEROS A LA VISTA»—.
+     *
+     * Es MÁS grave que un número inventado: la cita parece verificable, y
+     * el sello anterior la sellaba en verde por existir. Un abogado que la
+     * copia a un escrito queda expuesto.
+     */
+    estado: 'existe' | 'no_existe' | 'no_corresponde' | 'sin_comprobar';
+    rubroReal?: string;
 }
 
 interface Props {
@@ -38,10 +51,12 @@ interface Props {
     noTrazadas: number;
     /** Registros digitales mencionados en la prosa de la respuesta. */
     registros: string[];
+    /** Rubro que la respuesta atribuyó a cada registro, para contrastarlo. */
+    rubros?: Record<string, string>;
     onVerTesis?: (registro: string) => void;
 }
 
-export function SelloCitas({ trazadas, noTrazadas, registros, onVerTesis }: Props) {
+export function SelloCitas({ trazadas, noTrazadas, registros, rubros, onVerTesis }: Props) {
     const [fase, setFase] = useState<Estado>(registros.length ? 'comprobando' : 'listo');
     const [resultados, setResultados] = useState<Resultado[]>([]);
 
@@ -55,7 +70,15 @@ export function SelloCitas({ trazadas, noTrazadas, registros, onVerTesis }: Prop
                 try {
                     const r = await fetch(`/api/tesis/${registro}`);
                     const d = await r.json();
-                    if (d?.verificada) return { registro, estado: 'existe' };
+                    if (d?.verificada) {
+                        // Existir no basta. Se contrasta el rubro: es donde
+                        // fallaba de verdad.
+                        const citado = rubros?.[registro];
+                        if (citado && !rubroCorresponde(citado, d.rubro || '')) {
+                            return { registro, estado: 'no_corresponde', rubroReal: d.rubro };
+                        }
+                        return { registro, estado: 'existe' };
+                    }
                     // El proxy distingue el 404 (no existe) de un fallo del
                     // servidor de la Corte (no se pudo comprobar).
                     if (d?.motivo === 'no_encontrada') return { registro, estado: 'no_existe' };
@@ -77,10 +100,11 @@ export function SelloCitas({ trazadas, noTrazadas, registros, onVerTesis }: Prop
     if (!trazadas && !noTrazadas && !registros.length) return null;
 
     const inventadas = resultados.filter(r => r.estado === 'no_existe');
+    const desviadas = resultados.filter(r => r.estado === 'no_corresponde');
     const confirmadas = resultados.filter(r => r.estado === 'existe');
     const dudosas = resultados.filter(r => r.estado === 'sin_comprobar');
 
-    const hayProblema = noTrazadas > 0 || inventadas.length > 0;
+    const hayProblema = noTrazadas > 0 || inventadas.length > 0 || desviadas.length > 0;
     const comprobando = fase === 'comprobando';
 
     const partes: string[] = [];
@@ -89,6 +113,8 @@ export function SelloCitas({ trazadas, noTrazadas, registros, onVerTesis }: Prop
         partes.push(`comprobando ${registros.length} ${registros.length === 1 ? 'tesis' : 'tesis'} en el Semanario…`);
     } else {
         if (confirmadas.length) partes.push(`${confirmadas.length} ${confirmadas.length === 1 ? 'tesis confirmada' : 'tesis confirmadas'} en el Semanario`);
+        if (desviadas.length) partes.push(
+            `${desviadas.length} ${desviadas.length === 1 ? 'registro que NO corresponde' : 'registros que NO corresponden'} al rubro citado`);
         if (dudosas.length) partes.push(`${dudosas.length} sin comprobar`);
     }
 
@@ -187,4 +213,49 @@ export function registrosDeLaRespuesta(texto: string): string[] {
     let m: RegExpExecArray | null;
     while ((m = patron.exec(texto)) !== null) encontrados.add(m[1]);
     return Array.from(encontrados);
+}
+
+/**
+ * El RUBRO que la respuesta atribuye a cada registro.
+ *
+ * Se busca hacia atrás desde el número: el rubro es el último texto en
+ * mayúsculas que aparece antes de «Registro digital: N», que es como se
+ * escriben las citas de tesis. Si no se encuentra ninguno, se devuelve
+ * cadena vacía y ese registro sólo se comprueba por existencia.
+ */
+export function rubrosPorRegistro(texto: string): Record<string, string> {
+    const mapa: Record<string, string> = {};
+    const patron = /[Rr]egistro(?:\s+digital)?\s*(?:n[úu]m(?:ero)?\.?)?\s*[:.]?\s*(\d{6,8})/g;
+    let m: RegExpExecArray | null;
+    while ((m = patron.exec(texto)) !== null) {
+        const antes = texto.slice(Math.max(0, m.index - 700), m.index);
+        // Tramos largos en mayúsculas: así se escriben los rubros del Semanario.
+        const mays = antes.match(/[A-ZÁÉÍÓÚÑÜ][A-ZÁÉÍÓÚÑÜ0-9 ,.;:()«»"'\-\/]{24,}/g);
+        if (mays?.length) mapa[m[1]] = mays[mays.length - 1].trim();
+    }
+    return mapa;
+}
+
+/** Normaliza para comparar: sin acentos, sin puntuación, sin dobles espacios. */
+function norm(t: string): string {
+    return (t || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/).filter(Boolean).join(' ');
+}
+
+/**
+ * ¿El rubro citado se corresponde con el real?
+ *
+ * Basta con que las primeras palabras coincidan: el modelo a veces recorta el
+ * rubro, y exigir identidad literal marcaría como falso un recorte legítimo.
+ * Lo que se persigue es el caso grave —registro real con rubro de OTRA
+ * tesis—, y ahí las primeras palabras ya no se parecen en nada.
+ */
+export function rubroCorresponde(citado: string, real: string): boolean {
+    const a = norm(citado), b = norm(real);
+    if (!a || !b) return true;                 // sin dato, no se acusa
+    const inicio = a.split(' ').slice(0, 5).join(' ');
+    if (inicio.length < 12) return true;
+    return b.includes(inicio) || a.includes(b.split(' ').slice(0, 5).join(' '));
 }
