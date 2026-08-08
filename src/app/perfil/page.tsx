@@ -171,6 +171,19 @@ export default function PerfilPage() {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancellingSubscription, setCancellingSubscription] = useState(false);
     const [cancelMessage, setCancelMessage] = useState('');
+    // ── Retención antes de cancelar ──────────────────────────────────────
+    // Tres pasos: motivo → oferta según el motivo → (si pausó) confirmación.
+    // «Cancelar de todas formas» está visible en TODOS los pasos: la baja
+    // debe ser tan sencilla como el alta (art. 76 bis fr. VII LFPC), y el
+    // público de Iurexia litiga eso por oficio. La retención convence o no
+    // convence; jamás estorba.
+    const [retPaso, setRetPaso] = useState<'motivo' | 'oferta' | 'pausada'>('motivo');
+    const [retMotivo, setRetMotivo] = useState('');
+    const [retTexto, setRetTexto] = useState('');
+    const [retPausando, setRetPausando] = useState(false);
+    const [retAviso, setRetAviso] = useState('');
+    const [retReanuda, setRetReanuda] = useState('');
+    const [retEnviado, setRetEnviado] = useState(false);
     const [referidos, setReferidos] = useState<{
         codigo: string; invitados: number; activos: number; suscritos: number;
         meta: number; diasDeBienvenida: number;
@@ -403,6 +416,48 @@ export default function PerfilPage() {
         }
 
         setLoadingPortal(false);
+    };
+
+    /** Guarda el motivo sin estorbar: si falla, la retención sigue igual. */
+    const retEnviarMotivo = async (motivo: string, texto = '') => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) return;
+            await fetch('/api/stripe/retencion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                body: JSON.stringify({ accion: 'motivo', motivo, texto }),
+            });
+        } catch { /* el motivo es un dato, no un requisito */ }
+    };
+
+    /** Pausa un mes sin cargo: la alternativa real a cancelar. */
+    const retPausar = async () => {
+        if (!profile.stripe_subscription_id) return;
+        setRetPausando(true); setRetAviso('');
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const r = await fetch('/api/stripe/retencion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+                body: JSON.stringify({ accion: 'pausar', subscriptionId: profile.stripe_subscription_id }),
+            });
+            const j = await r.json();
+            if (!r.ok) { setRetAviso(j.error || 'No se pudo pausar. Escríbanos a soporte@iurexia.com.'); }
+            else {
+                setRetReanuda(new Date(j.reanuda).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }));
+                setRetPaso('pausada');
+            }
+        } catch {
+            setRetAviso('Problema de conexión. Intente de nuevo o escríbanos a soporte@iurexia.com.');
+        }
+        setRetPausando(false);
+    };
+
+    const abrirCancelacion = () => {
+        setRetPaso('motivo'); setRetMotivo(''); setRetTexto('');
+        setRetAviso(''); setRetEnviado(false);
+        setShowCancelModal(true);
     };
 
     const handleCancelSubscription = async () => {
@@ -831,7 +886,7 @@ export default function PerfilPage() {
                         {profile.stripe_subscription_id && profile.subscription_type !== 'gratuito' && (
                             <div className="pt-3 border-t border-cream-300">
                                 <button
-                                    onClick={() => setShowCancelModal(true)}
+                                    onClick={() => abrirCancelacion()}
                                     className="text-sm text-red-500 hover:text-red-700 transition-colors"
                                 >
                                     Cancelar mi suscripción
@@ -1325,39 +1380,181 @@ export default function PerfilPage() {
             </main>
 
             {/* Cancel Subscription Modal */}
+            {/* ── Retención antes de cancelar ──────────────────────────────
+                Tres pasos y una regla: «Cancelar de todas formas» visible en
+                todos, a un clic, sin trucos. La retención convence o no
+                convence; jamás estorba (art. 76 bis fr. VII LFPC — y el
+                público de esta casa litiga eso por oficio).
+
+                El tono tampoco es de vendedor: a un abogado no se le insiste.
+                Se le pregunta el motivo, se le hace UNA oferta pertinente, y
+                si dice que no, se cancela limpio y se le desea suerte. El que
+                se va sin fricción, vuelve. */}
             {showCancelModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <AlertTriangle className="w-6 h-6 text-amber-500" />
-                            <h3 className="font-serif text-2xl font-medium text-charcoal-900">
-                                Cancelar Suscripción
-                            </h3>
-                        </div>
 
-                        <p className="text-charcoal-600 mb-2">
-                            ¿Estás seguro de que deseas cancelar tu suscripción <strong>{planStyle.label}</strong>?
-                        </p>
-                        <p className="text-sm text-charcoal-500 mb-6">
-                            Mantendrás el acceso completo hasta el final de tu periodo de facturación actual. Después de eso, tu cuenta regresará al plan Gratuito.
-                        </p>
+                        {retPaso === 'motivo' && (
+                            <>
+                                <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                                    Antes de cancelar
+                                </h3>
+                                <p className="text-sm text-charcoal-600 mb-4">
+                                    ¿Nos dice por qué se va? Es una pregunta honesta: lo que
+                                    respondan quienes se van es lo que decide qué arreglamos.
+                                </p>
+                                <div className="space-y-2 mb-5">
+                                    {([
+                                        ['precio', 'El precio no me conviene'],
+                                        ['poco_uso', 'Casi no lo uso'],
+                                        ['fallo', 'Algo no funcionó o me dio resultados incorrectos'],
+                                        ['falta_algo', 'Le falta algo que necesito'],
+                                        ['otro', 'Otro motivo'],
+                                    ] as [string, string][]).map(([clave, etiqueta]) => (
+                                        <button key={clave}
+                                            onClick={() => { setRetMotivo(clave); retEnviarMotivo(clave); setRetPaso('oferta'); }}
+                                            className="w-full text-left px-4 py-2.5 rounded-lg border border-cream-400 text-sm text-charcoal-900 hover:bg-cream-100 transition-colors">
+                                            {etiqueta}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
 
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowCancelModal(false)}
-                                disabled={cancellingSubscription}
-                                className="flex-1 px-4 py-2 bg-charcoal-900 text-white rounded-lg hover:bg-charcoal-800 transition-colors disabled:opacity-50"
-                            >
-                                Mantener Plan
-                            </button>
-                            <button
-                                onClick={handleCancelSubscription}
-                                disabled={cancellingSubscription}
-                                className="flex-1 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
-                            >
-                                {cancellingSubscription ? 'Cancelando...' : 'Sí, cancelar'}
-                            </button>
-                        </div>
+                        {retPaso === 'oferta' && (
+                            <>
+                                {retMotivo === 'precio' && (
+                                    <>
+                                        <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                                            Una alternativa antes de irse
+                                        </h3>
+                                        <p className="text-sm text-charcoal-600 mb-4">
+                                            Podemos <strong className="text-charcoal-900">pausar su suscripción un mes,
+                                            sin cargo</strong>: conserva su cuenta, su historial y su acceso, y el
+                                            siguiente cobro se recorre un mes completo. Si al reanudarse sigue sin
+                                            convenirle, cancela entonces — sin compromiso.
+                                        </p>
+                                        <p className="text-xs text-charcoal-500 mb-4">
+                                            También existe el plan Básico ($79/mes) en{' '}
+                                            <a href="/precios" className="underline text-accent-brown">iurexia.com/precios</a>.
+                                        </p>
+                                        <button onClick={retPausar} disabled={retPausando}
+                                            className="w-full mb-3 px-4 py-2.5 rounded-lg bg-charcoal-900 text-white text-sm font-medium hover:bg-charcoal-800 disabled:opacity-50">
+                                            {retPausando ? 'Pausando…' : 'Pausar un mes sin cargo'}
+                                        </button>
+                                    </>
+                                )}
+
+                                {retMotivo === 'poco_uso' && (
+                                    <>
+                                        <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                                            ¿Y si lo pausamos?
+                                        </h3>
+                                        <p className="text-sm text-charcoal-600 mb-4">
+                                            Si este mes no lo va a usar, no tiene por qué pagarlo:{' '}
+                                            <strong className="text-charcoal-900">pausamos un mes sin cargo</strong> y
+                                            su cuenta queda intacta. La plataforma además cambia rápido — esta misma
+                                            semana entró la biblioteca doctrinal, y la app móvil está a semanas de
+                                            publicarse. Puede que al volver le sirva más que hoy.
+                                        </p>
+                                        <button onClick={retPausar} disabled={retPausando}
+                                            className="w-full mb-3 px-4 py-2.5 rounded-lg bg-charcoal-900 text-white text-sm font-medium hover:bg-charcoal-800 disabled:opacity-50">
+                                            {retPausando ? 'Pausando…' : 'Pausar un mes sin cargo'}
+                                        </button>
+                                    </>
+                                )}
+
+                                {retMotivo === 'fallo' && (
+                                    <>
+                                        <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                                            Eso es exactamente lo que queremos saber
+                                        </h3>
+                                        <p className="text-sm text-charcoal-600 mb-3">
+                                            Se lo decimos sin rodeos: esta semana corregimos dos fallas que
+                                            reportaron usuarios — citas de tesis que no correspondían al criterio
+                                            y un botón de cancelación que confirmaba mal. Se detectaron porque
+                                            alguien se tomó la molestia de decirlo.
+                                        </p>
+                                        <p className="text-sm text-charcoal-600 mb-3">
+                                            Si lo que le falló es otra cosa, cuéntenoslo aquí.{' '}
+                                            <strong className="text-charcoal-900">Lo revisa una persona, no un
+                                            robot</strong>, y le respondemos por correo.
+                                        </p>
+                                        <textarea value={retTexto} onChange={e => setRetTexto(e.target.value)}
+                                            rows={3} placeholder="¿Qué falló? Entre más concreto, más rápido lo corregimos."
+                                            className="w-full px-3 py-2 rounded-lg border border-cream-400 text-sm text-charcoal-900 mb-3" />
+                                        <button
+                                            onClick={() => { if (retTexto.trim()) { retEnviarMotivo('fallo_detalle', retTexto); setRetEnviado(true); } }}
+                                            disabled={!retTexto.trim() || retEnviado}
+                                            className="w-full mb-3 px-4 py-2.5 rounded-lg bg-charcoal-900 text-white text-sm font-medium hover:bg-charcoal-800 disabled:opacity-50">
+                                            {retEnviado ? 'Recibido — le escribiremos' : 'Enviar el reporte'}
+                                        </button>
+                                    </>
+                                )}
+
+                                {(retMotivo === 'falta_algo' || retMotivo === 'otro') && (
+                                    <>
+                                        <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                                            {retMotivo === 'falta_algo' ? '¿Qué le falta?' : 'Cuéntenos'}
+                                        </h3>
+                                        <p className="text-sm text-charcoal-600 mb-3">
+                                            La plataforma se construye con lo que piden quienes la usan: la
+                                            legislación de las 32 entidades, el bloque de constitucionalidad y la
+                                            doctrina entraron así. {retMotivo === 'falta_algo' ? 'Dígalo en una línea; si está a nuestro alcance, lo construimos.' : 'Una línea basta.'}
+                                        </p>
+                                        <textarea value={retTexto} onChange={e => setRetTexto(e.target.value)}
+                                            rows={3} placeholder="Escríbalo aquí…"
+                                            className="w-full px-3 py-2 rounded-lg border border-cream-400 text-sm text-charcoal-900 mb-3" />
+                                        <button
+                                            onClick={() => { if (retTexto.trim()) { retEnviarMotivo(retMotivo + '_detalle', retTexto); setRetEnviado(true); } }}
+                                            disabled={!retTexto.trim() || retEnviado}
+                                            className="w-full mb-3 px-4 py-2.5 rounded-lg bg-charcoal-900 text-white text-sm font-medium hover:bg-charcoal-800 disabled:opacity-50">
+                                            {retEnviado ? 'Recibido, gracias' : 'Enviar'}
+                                        </button>
+                                    </>
+                                )}
+
+                                {retAviso && (
+                                    <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">{retAviso}</p>
+                                )}
+                            </>
+                        )}
+
+                        {retPaso === 'pausada' && (
+                            <>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Check className="w-6 h-6 text-green-600" />
+                                    <h3 className="font-serif text-2xl font-medium text-charcoal-900">Pausada</h3>
+                                </div>
+                                <p className="text-sm text-charcoal-600 mb-5">
+                                    Su suscripción queda en pausa: <strong className="text-charcoal-900">sin cargo
+                                    este mes</strong> y con su acceso intacto. Se reanuda el {retReanuda}. Si para
+                                    entonces decide cancelar, el botón seguirá aquí mismo.
+                                </p>
+                                <button onClick={() => setShowCancelModal(false)}
+                                    className="w-full px-4 py-2.5 rounded-lg bg-charcoal-900 text-white text-sm font-medium hover:bg-charcoal-800">
+                                    Entendido
+                                </button>
+                            </>
+                        )}
+
+                        {/* La salida, SIEMPRE visible salvo cuando ya pausó. */}
+                        {retPaso !== 'pausada' && (
+                            <div className="flex gap-3 pt-2 border-t border-cream-300">
+                                <button
+                                    onClick={() => setShowCancelModal(false)}
+                                    disabled={cancellingSubscription}
+                                    className="flex-1 px-4 py-2 text-sm text-charcoal-700 rounded-lg hover:bg-cream-100 transition-colors disabled:opacity-50">
+                                    Conservar mi plan
+                                </button>
+                                <button
+                                    onClick={handleCancelSubscription}
+                                    disabled={cancellingSubscription}
+                                    className="flex-1 px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50">
+                                    {cancellingSubscription ? 'Cancelando…' : 'Cancelar de todas formas'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
