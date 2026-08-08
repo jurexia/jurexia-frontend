@@ -379,7 +379,7 @@ export function correoVitrinaAbogado(d: Destinatario): Correo {
             listado([
                 'Su firma a la vista de cerca de dos mil abogados registrados en Iurexia, y de quien llegue buscando representación.',
                 'Un enlace directo desde nuestro sitio al suyo, permanente mientras usted quiera.',
-                'Platinum tres meses sin costo, desde que confirma su participación.',
+                'Acceso a un periodo de prueba Platinum, si lo desea.',
             ]) +
             `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Iurexia se construyó bajo ` +
             `la dirección de juristas con años de ejercicio en la judicatura, y ese es el ` +
@@ -400,10 +400,10 @@ export function correoVitrinaAbogado(d: Destinatario): Correo {
             `fotografía, testimonio y logotipo van por separado— y nada aparece antes de ` +
             `que lo revisemos con usted.</p>` +
             `<p style="margin:0 0 10px;">Puede retirarlo cuando quiera, sin explicar por qué ` +
-            `y <strong style="color:#1a1a1a;">sin perder los tres meses de Platinum</strong>: ` +
-            `si retirarse costara el beneficio, no sería un derecho sino una penalización.</p>` +
-            `<p style="margin:0;">Los tres meses no generan cargo ni renovación automática. ` +
-            `Al terminar, su cuenta continúa en el plan que ya tenía.</p>`,
+            `y <strong style="color:#1a1a1a;">conservando el periodo de prueba</strong>: ` +
+            `si retirarse costara el acceso, no sería un derecho sino una penalización.</p>` +
+            `<p style="margin:0;">El periodo de prueba no genera cargo ni renovación ` +
+            `automática. Al terminar, su cuenta continúa en el plan que ya tenía.</p>`,
         ) +
         parrafo(
             'Si prefiere mantener su práctica fuera de escaparates, lo entendemos y no ' +
@@ -437,7 +437,7 @@ export function correoVitrinaDespacho(d: Destinatario): Correo {
             listado([
                 'El logotipo de su despacho en la página de Iurexia, con enlace directo a su sitio.',
                 'Exposición ante cerca de dos mil abogados registrados y ante quien llegue buscando representación.',
-                'Platinum tres meses sin costo para su cuenta.',
+                'Acceso a un periodo de prueba Platinum, si lo desea.',
             ]) +
             `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Le pedimos el logotipo ` +
             `en <strong style="color:#1a1a1a;">PNG con fondo transparente</strong>, que es lo ` +
@@ -453,7 +453,7 @@ export function correoVitrinaDespacho(d: Destinatario): Correo {
             `publicidad pagada sin consultarle antes, no se modifica y no se cede a ` +
             `terceros.</strong></p>` +
             `<p style="margin:0;">Puede retirarlo cuando quiera, sin explicar por qué y sin ` +
-            `perder los tres meses. No hay cargo ni renovación automática.</p>`,
+            `perder el periodo de prueba. No hay cargo ni renovación automática.</p>`,
         ) +
         parrafo('', '18px 0 0 0') +
         boton('Reservar el lugar de mi firma', `${SITIO}/vitrina`) +

@@ -15,12 +15,10 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { cabecerasBaja, urlBaja } from './baja';
 
-export const ADMINS = [
-    'yair@iurexia.com',
-    'jdm.juridico@gmail.com',
-    'administracion@iurexia.com',
-    'soporte@iurexia.com',
-];
+// La lista vive en `@/lib/admins`, que no depende de nada. Se importa y se
+// reexporta porque varios módulos ya la traen desde aquí.
+import { ADMINS } from '../admins';
+export { ADMINS };
 
 /** Ritmo de envío. Resend admite 2 por segundo. */
 const PAUSA_MS = 600;

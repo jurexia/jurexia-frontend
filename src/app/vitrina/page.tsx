@@ -181,8 +181,9 @@ export default function VitrinaPage() {
                         <p className="text-charcoal-700 mb-4">
                             {listo.yaLoTenia
                                 ? 'Su cuenta ya está en Platinum, así que no hay nada que subirle — pero el reconocimiento queda.'
-                                : <>Su cuenta acaba de pasar a <strong className="text-charcoal-900">Platinum
-                                    por {listo.dias ?? 90} días</strong>, sin cargo y sin renovación automática.</>}
+                                : <>Su periodo de prueba <strong className="text-charcoal-900">Platinum
+                                    ya está activo</strong> —{listo.dias ?? 90} días—, sin cargo y sin
+                                    renovación automática.</>}
                         </p>
                         <p className="text-sm text-charcoal-700">
                             Revisaremos lo que envió antes de publicarlo. Nada aparece en el sitio
@@ -213,9 +214,9 @@ export default function VitrinaPage() {
                             <ul className="space-y-2 text-sm text-charcoal-700">
                                 <li className="flex gap-2">
                                     <Check className="w-4 h-4 text-accent-gold shrink-0 mt-0.5" />
-                                    <span><strong className="text-charcoal-900">Platinum tres meses sin costo</strong>,
-                                        desde que envía esto. Sin cargo y sin renovación automática: al
-                                        terminar, su cuenta vuelve sola al plan que traía.</span>
+                                    <span><strong className="text-charcoal-900">Acceso a un periodo de
+                                        prueba Platinum</strong>, si lo desea. Sin cargo y sin renovación
+                                        automática: al terminar, su cuenta vuelve sola al plan que traía.</span>
                                 </li>
                                 <li className="flex gap-2">
                                     <Check className="w-4 h-4 text-accent-gold shrink-0 mt-0.5" />
@@ -333,8 +334,8 @@ export default function VitrinaPage() {
                                     El alcance es la publicación en el sitio de Iurexia y sus materiales
                                     de difusión, <strong className="text-charcoal-900">mientras usted no
                                     lo revoque</strong>. Puede retirarlo cuando quiera, sin explicar por
-                                    qué y sin perder los tres meses de Platinum: si retirarlo costara el
-                                    beneficio, no sería un derecho sino una multa. Escriba a
+                                    qué y conservando su periodo de prueba: si retirarlo costara el
+                                    acceso, no sería un derecho sino una multa. Escriba a
                                     soporte@iurexia.com y lo bajamos.
                                 </p>
                                 <p className="text-sm text-charcoal-700 mt-2">
@@ -351,7 +352,7 @@ export default function VitrinaPage() {
                             <button onClick={enviar} disabled={guardando || !cNombre}
                                 className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-charcoal-900 text-cream-100 font-medium hover:bg-charcoal-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 {guardando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gem className="w-4 h-4" />}
-                                {guardando ? 'Enviando…' : 'Autorizar y activar mi Platinum'}
+                                {guardando ? 'Enviando…' : 'Autorizar mi participación'}
                             </button>
 
                             <a href="/privacidad" target="_blank" rel="noopener noreferrer"

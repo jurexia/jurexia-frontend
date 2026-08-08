@@ -1,22 +1,9 @@
-// Admin access control for Leyes Estatales section
-// Only @iurexia.com domain emails can access this section
-
-const ADMIN_DOMAIN = '@iurexia.com';
-
-// Specific admin emails (fallback if domain check isn't enough)
-const ADMIN_EMAILS: string[] = [
-    'jenycampos@hotmail.com',
-];
-
-export function isAdmin(email: string | undefined | null): boolean {
-    if (!email) return false;
-    const lowerEmail = email.toLowerCase();
-
-    // Check domain
-    if (lowerEmail.endsWith(ADMIN_DOMAIN)) return true;
-
-    // Check specific emails
-    if (ADMIN_EMAILS.some(admin => admin.toLowerCase() === lowerEmail)) return true;
-
-    return false;
-}
+// Control de acceso de administración.
+//
+// La lista vive en un solo sitio: `@/lib/admins`. Aquí sólo queda el reenvío
+// porque media aplicación ya importa `isAdmin` desde esta ruta, y mover todos
+// los llamadores para renombrar una función es cambio sin beneficio.
+//
+// Antes esta lista NO incluía jdm.juridico@gmail.com mientras que la de
+// campañas sí: dos listas contradictorias sobre quién manda.
+export { esAdmin as isAdmin } from '@/lib/admins';
