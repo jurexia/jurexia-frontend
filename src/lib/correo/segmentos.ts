@@ -87,21 +87,16 @@ function filtrar(q: any, campania: NombreCampania) {
     }
 
     // ── VITRINA ──────────────────────────────────────────────────────────
-    // Tanda 1: a quien de verdad la usa. Se le va a pedir su cara y su
-    // palabra, así que el corte es alto a propósito: un testimonio de alguien
-    // con tres consultas no convence a nadie y le pone en un compromiso.
-    if (campania === 'vitrina_abogado') {
+    // TODOS los planes de pago, incluido Básico (decisión de David, 8-ago).
+    // No se filtra por uso: no se les pide un testimonio sobre la
+    // herramienta, se les ofrece un espacio en la portada, y para eso lo que
+    // importa es que sean clientes — no cuántas veces entraron.
+    if (campania === 'vitrina') {
         return q.eq('is_active', true)
-                .in('subscription_type', ['pro_monthly', 'pro_annual',
-                    'platinum_monthly', 'platinum_annual', 'ultra_secretarios'])
-                .not('last_query_at', 'is', null);
+                .in('subscription_type', ['basico_monthly', 'pro_monthly', 'pro_annual',
+                    'platinum_monthly', 'platinum_annual', 'ultra_secretarios']);
     }
-    // Tanda 2: dominio propio = despacho con marca que prestar. La lista se
-    // filtra después contra DOMINIOS_DESPACHO, porque el dominio no se puede
-    // consultar con un `like` sin barrer también a los gratuitos de correo.
-    if (campania === 'vitrina_despacho') {
-        return q.eq('is_active', true);
-    }
+
 
     if (campania === 'referidos') {
         // ABIERTO A QUIEN YA USÓ LA PLATAFORMA (cambio del 7-ago-2026).
@@ -164,9 +159,5 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
     // El filtro por dominio va AQUÍ y no en la consulta: Supabase no permite
     // filtrar por la parte derecha del correo sin un `like` que barrería
     // también gmail. Con 1,969 filas el coste es irrelevante.
-    if (campania === 'vitrina_despacho') {
-        return limpias.filter(u => esDespacho(u.email));
-    }
-
     return limpias;
 }

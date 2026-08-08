@@ -14,8 +14,12 @@
  * despacho sin prestar la cara, y decirlo sin renunciar a lo demás.
  *
  * NADA SE PUBLICA AUTOMÁTICAMENTE. La autorización nace `pendiente`; David
- * la aprueba. El beneficio, en cambio, se entrega en el acto: quien cumplió
- * su parte no debe esperar a que nosotros hagamos la nuestra.
+ * la aprueba antes de que nada aparezca en la portada.
+ *
+ * NO SE OTORGA NINGÚN PLAN. Se probó ofrecer tres meses de Platinum y se
+ * retiró: convertía la invitación en un trueque —«tu logotipo por
+ * software»— y devaluaba justo lo que se quiere transmitir. Lo que se
+ * ofrece ES el espacio en la portada.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -111,34 +115,12 @@ export async function POST(req: NextRequest) {
         console.error('vitrina: no pude guardar la autorización', error);
         return NextResponse.json({ error: 'No se pudo guardar. Intente de nuevo.' }, { status: 500 });
     }
+    // NO se otorga ningún plan (decisión de David, 8-ago-2026). Ofrecer un
+    // ascenso convertía esto en un trueque —«tu logotipo por software»— y
+    // devaluaba justo lo que se quiere transmitir. Lo que se ofrece ES el
+    // espacio en la portada.
 
-    // ── El beneficio, en el acto ────────────────────────────────────────
-    // Quien ya cumplió su parte no espera a que aprobemos nada. Se entrega
-    // una sola vez: `beneficio_at` es el candado, no la buena fe.
-    let beneficio = null;
-    if (!data.beneficio_at) {
-        try {
-            const { otorgarBeneficioVitrina } = await import('@/lib/referidos-backend');
-            const r = await otorgarBeneficioVitrina(user.id);
-            if (r.otorgado) {
-                beneficio = { dias: r.dias, plan: r.plan, vence_at: r.vence_at };
-                await admin().from('vitrina_autorizaciones')
-                    .update({ beneficio_at: ahora }).eq('usuario_id', user.id);
-            } else {
-                // Ya estaba en Platinum: no hay nada que subirle, y decirle que
-                // «se otorgó» sería mentira.
-                beneficio = { yaLoTenia: true, motivo: r.motivo };
-                await admin().from('vitrina_autorizaciones')
-                    .update({ beneficio_at: ahora }).eq('usuario_id', user.id);
-            }
-        } catch (e) {
-            // El beneficio puede reintentarse; la autorización YA quedó
-            // asentada, que es lo que no se puede perder.
-            console.error('vitrina: la autorización se guardó pero el beneficio falló', e);
-        }
-    }
-
-    return NextResponse.json({ ok: true, autorizacion: data, beneficio });
+    return NextResponse.json({ ok: true, autorizacion: data });
 }
 
 /** Revocar. Sin preguntas ni fricción: es su derecho, no una concesión. */
@@ -152,8 +134,5 @@ export async function DELETE(req: NextRequest) {
         .update({ revocado_at: ahora, estado: 'rechazada', actualizado_at: ahora })
         .eq('usuario_id', user.id);
 
-    // El Platinum ya entregado NO se retira. Se ganó por autorizar en su
-    // momento, y quitárselo al revocar convertiría el derecho a revocar en
-    // una multa.
     return NextResponse.json({ ok: true });
 }

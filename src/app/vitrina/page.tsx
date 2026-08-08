@@ -56,7 +56,7 @@ export default function VitrinaPage() {
 
     const [cargando, setCargando] = useState(true);
     const [guardando, setGuardando] = useState(false);
-    const [listo, setListo] = useState<{ dias?: number; yaLoTenia?: boolean } | null>(null);
+    const [listo, setListo] = useState(false);
     const [error, setError] = useState('');
 
     const [despacho, setDespacho] = useState('');
@@ -145,7 +145,7 @@ export default function VitrinaPage() {
             });
             const j = await r.json();
             if (!r.ok) { setError(j.error || 'No se pudo guardar.'); return; }
-            setListo(j.beneficio || {});
+            setListo(true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch {
             setError('No se pudo guardar. Intente de nuevo.');
@@ -179,11 +179,7 @@ export default function VitrinaPage() {
                             Recibido, y gracias.
                         </h1>
                         <p className="text-charcoal-700 mb-4">
-                            {listo.yaLoTenia
-                                ? 'Su cuenta ya está en Platinum, así que no hay nada que subirle — pero el reconocimiento queda.'
-                                : <>Su periodo de prueba <strong className="text-charcoal-900">Platinum
-                                    ya está activo</strong> —{listo.dias ?? 90} días—, sin cargo y sin
-                                    renovación automática.</>}
+                            Revisaremos su material y le escribiremos antes de publicarlo.
                         </p>
                         <p className="text-sm text-charcoal-700">
                             Revisaremos lo que envió antes de publicarlo. Nada aparece en el sitio
@@ -209,22 +205,18 @@ export default function VitrinaPage() {
 
                         <div className="rounded-xl border border-accent-gold/50 bg-white p-5 mb-8">
                             <p className="text-xs uppercase tracking-wider text-accent-brown mb-3">
-                                Lo que recibe a cambio
+                                Dónde aparecerá su firma
                             </p>
-                            <ul className="space-y-2 text-sm text-charcoal-700">
-                                <li className="flex gap-2">
-                                    <Check className="w-4 h-4 text-accent-gold shrink-0 mt-0.5" />
-                                    <span><strong className="text-charcoal-900">Acceso a un periodo de
-                                        prueba Platinum</strong>, si lo desea. Sin cargo y sin renovación
-                                        automática: al terminar, su cuenta vuelve sola al plan que traía.</span>
-                                </li>
-                                <li className="flex gap-2">
-                                    <Check className="w-4 h-4 text-accent-gold shrink-0 mt-0.5" />
-                                    <span><strong className="text-charcoal-900">Su ficha enlazada</strong> desde
-                                        nuestro sitio hacia su despacho o su perfil profesional. Quien
-                                        llegue buscando un abogado, lo encuentra a usted.</span>
-                                </li>
-                            </ul>
+                            {/* La imagen enseña el sitio exacto. «Aparecerá en nuestra
+                                página» no significa nada hasta que se ve. */}
+                            <img src="/vitrina/ejemplo.png" alt="La franja de despachos, inmediatamente debajo del vídeo principal de la portada."
+                                className="w-full rounded-lg border border-cream-400 mb-3" />
+                            <p className="text-sm text-charcoal-700">
+                                Inmediatamente debajo del vídeo principal, con enlace directo
+                                al sitio de su despacho. <strong className="text-charcoal-900">Sin
+                                costo y sin cambio en su plan</strong>: esto no es una oferta
+                                comercial, es una invitación a aparecer.
+                            </p>
                         </div>
 
                         <div className="space-y-5">
@@ -334,8 +326,7 @@ export default function VitrinaPage() {
                                     El alcance es la publicación en el sitio de Iurexia y sus materiales
                                     de difusión, <strong className="text-charcoal-900">mientras usted no
                                     lo revoque</strong>. Puede retirarlo cuando quiera, sin explicar por
-                                    qué y conservando su periodo de prueba: si retirarlo costara el
-                                    acceso, no sería un derecho sino una multa. Escriba a
+                                    qué. Escriba a
                                     soporte@iurexia.com y lo bajamos.
                                 </p>
                                 <p className="text-sm text-charcoal-700 mt-2">
@@ -352,7 +343,7 @@ export default function VitrinaPage() {
                             <button onClick={enviar} disabled={guardando || !cNombre}
                                 className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-charcoal-900 text-cream-100 font-medium hover:bg-charcoal-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 {guardando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gem className="w-4 h-4" />}
-                                {guardando ? 'Enviando…' : 'Autorizar mi participación'}
+                                {guardando ? 'Enviando…' : 'Reservar el lugar de mi firma'}
                             </button>
 
                             <a href="/privacidad" target="_blank" rel="noopener noreferrer"

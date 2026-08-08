@@ -337,134 +337,100 @@ export function correoEntrada(d: Destinatario): Correo {
 
 
 // ─────────────────────────────────────────────────────────────────────────
-// VITRINA — dos tandas, dos textos.
+// VITRINA DE DESPACHOS — un solo correo, a TODOS los planes de pago.
 //
-// EL TONO (corrección de David, 8-ago-2026): esto NO se pide, se OFRECE.
-// El abogado tiene que leerlo como lo que es —una selección y una plataforma
-// de difusión para su despacho—, no como un favor que le pedimos.
+// EL GIRO (David, 8-ago-2026): no se ofrece ningún plan. Ofrecer un ascenso
+// convertía esto en un trueque —«tu logotipo por software»— y devaluaba
+// exactamente lo que se quiere transmitir. Lo que se ofrece ES el espacio:
+// notoriedad para su firma en la portada de Iurexia.
 //
-// Ahora bien, el halago suelto a un abogado le suena a publicidad y le baja
-// la guardia al revés. Lo que vuelve real el privilegio es decirle POR QUÉ
-// fue él, con un hecho que puede comprobar en su propia cuenta: está entre
-// los que más usan la plataforma. Un criterio verificable convence donde
-// «usted es especial» sólo despierta sospecha — y el destinatario es la
-// única profesión que cobra por desconfiar de los adjetivos.
+// EL ARGUMENTO, que es lo que hace que un abogado lo lea dos veces: no se le
+// halaga por pagar, se le reconoce un CRITERIO. Pudo resolver con ChatGPT o
+// Gemini, que es lo que hace la mayoría, y en cambio eligió una herramienta
+// construida para el sistema jurídico mexicano, con fuentes verificables. Eso
+// habla de alguien que adopta tecnología nueva y lo hace con responsabilidad
+// profesional. El halago suelto se huele; el reconocimiento de una decisión
+// concreta, no.
 //
-// La autoridad de Iurexia se declara una vez y sin insistir: dirigida por
-// juristas con años en la judicatura. Repetirlo lo debilita.
+// Va con una IMAGEN que enseña el sitio exacto —debajo del vídeo principal—,
+// porque «aparecerá en nuestra página» no significa nada hasta que se ve.
 //
-// Lo que NO cambia con el tono: el alcance, la revocación y el beneficio van
-// escritos y al mismo tamaño. Un correo entusiasta con las condiciones en
-// letra chica es exactamente lo que un litigante detecta en tres segundos.
+// Se declara lo que somos: emergente. Decir que ya somos líderes sería falso
+// y a un litigante se le nota. Se dice la convicción, no el hecho.
 // ─────────────────────────────────────────────────────────────────────────
 
-/** Tanda 1: los abogados que más la usan. Se les OFRECE la vitrina. */
-export function correoVitrinaAbogado(d: Destinatario): Correo {
+const IMAGEN_VITRINA = `${SITIO}/vitrina/ejemplo.png`;
+
+export function correoVitrina(d: Destinatario): Correo {
     const nombre = nombrePila(d.full_name, d.email);
+
     const cuerpo =
         parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
         parrafo(
-            `Su cuenta quedó dentro de un grupo reducido: ${fuerte('el de los abogados que ' +
-            'más trabajo real hacen en Iurexia')}. No es una cortesía ni un envío masivo — ` +
-            'es el criterio con el que se armó esta lista, y usted puede comprobarlo en su ' +
-            'propio historial de consultas.',
+            'Le escribo para invitar a su despacho a la vitrina de firmas de Iurexia: el ' +
+            `espacio de nuestra portada donde aparecerán ${fuerte('los logotipos de los ' +
+            'despachos que ejercen con la plataforma')}.`,
         ) +
         parrafo(
-            `A ese grupo le estamos abriendo ${fuerte('un espacio en la página de Iurexia')}: ` +
-            'su nombre, su fotografía, su despacho y su logotipo, con enlace directo a su ' +
-            'sitio o a su perfil profesional.',
+            'Antes de decirle en qué consiste, permítame explicarle por qué usted.',
         ) +
+        parrafo(
+            'La mayoría de los abogados que hoy usan inteligencia artificial lo hacen con ' +
+            'herramientas generales —ChatGPT, Gemini y similares—, que no fueron construidas ' +
+            'para el derecho mexicano y que redactan de memoria: inventan tesis que no ' +
+            'existen y citan artículos que nadie puede comprobar. Usted eligió otra cosa. ' +
+            'Eligió una plataforma que responde con la Constitución, los tratados ' +
+            'internacionales, la jurisprudencia interamericana, la legislación federal, la de ' +
+            `las 32 entidades y sus reglamentos, ${fuerte('y que enseña la fuente para que ' +
+            'usted la verifique')}.`,
+        ) +
+        parrafo(
+            'Esa decisión dice algo de un profesionista: que se adapta a la tecnología nueva ' +
+            'y que lo hace con responsabilidad. No son dos cosas que suelan ir juntas, y nos ' +
+            'parece que merece verse.',
+        ) +
+        `<p style="margin:26px 0 10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8b7355;">` +
+        `Dónde aparecería su logotipo</p>` +
+        `<img src="${esc(IMAGEN_VITRINA)}" alt="La portada de Iurexia: la franja de despachos va inmediatamente debajo del vídeo principal." ` +
+        `width="560" style="width:100%;max-width:560px;height:auto;display:block;border:1px solid #e5ded1;border-radius:8px;" />` +
+        `<p style="margin:10px 0 24px;font-size:12px;color:#666;">Inmediatamente debajo del ` +
+        `vídeo principal, con enlace directo al sitio de su despacho.</p>` +
         caja(
-            rotulo('Lo que esto significa para su despacho') +
+            rotulo('Qué le pedimos') +
             listado([
-                'Su firma a la vista de cerca de dos mil abogados registrados en Iurexia, y de quien llegue buscando representación.',
-                'Un enlace directo desde nuestro sitio al suyo, permanente mientras usted quiera.',
-                'Acceso a un periodo de prueba Platinum, si lo desea.',
+                'El logotipo de su firma en PNG con fondo transparente.',
+                'El enlace a su sitio o a su perfil profesional.',
+                'Si lo desea, una fotografía y unas líneas suyas — opcional, y se publican tal como usted las escriba.',
             ]) +
-            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Iurexia se construyó bajo ` +
-            `la dirección de juristas con años de ejercicio en la judicatura, y ese es el ` +
-            `estándar con el que se elige quién aparece en la página. Aparecer aquí no es ` +
-            `publicidad pagada: es una selección.</p>`,
-        ) +
-        parrafo(
-            `Si acepta, le pedimos su logotipo en PNG con fondo transparente, una fotografía ` +
-            `profesional y unas líneas suyas sobre su experiencia con la plataforma. ` +
-            `${fuerte('Se publican tal como usted las escriba')}: no las redactamos ni las ` +
-            'maquillamos, porque un testimonio escrito por nosotros no sería suyo.',
-            '20px 0 20px 0',
-        ) +
-        boton('Aceptar mi lugar en la página', `${SITIO}/vitrina`) +
-        caja(
-            rotulo('Las condiciones, sin letra chica') +
-            `<p style="margin:0 0 10px;">Usted autoriza qué se publica y qué no —nombre, ` +
-            `fotografía, testimonio y logotipo van por separado— y nada aparece antes de ` +
-            `que lo revisemos con usted.</p>` +
-            `<p style="margin:0 0 10px;">Puede retirarlo cuando quiera, sin explicar por qué ` +
-            `y <strong style="color:#1a1a1a;">conservando el periodo de prueba</strong>: ` +
-            `si retirarse costara el acceso, no sería un derecho sino una penalización.</p>` +
-            `<p style="margin:0;">El periodo de prueba no genera cargo ni renovación ` +
-            `automática. Al terminar, su cuenta continúa en el plan que ya tenía.</p>`,
-        ) +
-        parrafo(
-            'Si prefiere mantener su práctica fuera de escaparates, lo entendemos y no ' +
-            'insistiremos. El lugar queda abierto por si cambia de opinión.',
-            '22px 0 0 0',
-        );
-
-    return {
-        asunto: `Licenciado ${nombre}, su despacho fue seleccionado para aparecer en Iurexia`,
-        html: envolver({ cuerpo, urlBaja: urlBaja(d.email) }),
-        texto: aTexto(cuerpo) + `\n\n${SITIO}/vitrina\nDarse de baja: ${urlBaja(d.email)}`,
-    };
-}
-
-/** Tanda 2: los despachos con dominio propio. Se les ofrece la vitrina de firmas. */
-export function correoVitrinaDespacho(d: Destinatario): Correo {
-    const nombre = nombrePila(d.full_name, d.email);
-    const cuerpo =
-        parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
-        parrafo(
-            `Estamos formando ${fuerte('la vitrina de despachos de Iurexia')} —las firmas ` +
-            'que aparecerán en nuestra página— y la suya está entre las consideradas.',
-        ) +
-        parrafo(
-            'Iurexia se construyó bajo la dirección de juristas con años de ejercicio en la ' +
-            'judicatura, y la página es lo primero que ve un abogado que llega a evaluarnos. ' +
-            'Quién aparece ahí no se vende: se elige.',
-        ) +
-        caja(
-            rotulo('Lo que obtiene su firma') +
-            listado([
-                'El logotipo de su despacho en la página de Iurexia, con enlace directo a su sitio.',
-                'Exposición ante cerca de dos mil abogados registrados y ante quien llegue buscando representación.',
-                'Acceso a un periodo de prueba Platinum, si lo desea.',
-            ]) +
-            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Le pedimos el logotipo ` +
-            `en <strong style="color:#1a1a1a;">PNG con fondo transparente</strong>, que es lo ` +
-            `que permite montarlo con la calidad que su firma merece. Si además quiere ` +
-            `acompañarlo de una fotografía y unas líneas suyas, mejor — pero es opcional y el ` +
-            `beneficio es el mismo.</p>`,
-        ) +
-        caja(
-            rotulo('El alcance de lo que autoriza') +
-            `<p style="margin:0 0 10px;">Sabemos lo que significa prestar una marca, así que ` +
-            `va acotado por escrito: el logotipo aparece en la página junto al nombre de su ` +
-            `firma, mientras usted no lo revoque. <strong style="color:#1a1a1a;">No se usa en ` +
-            `publicidad pagada sin consultarle antes, no se modifica y no se cede a ` +
-            `terceros.</strong></p>` +
-            `<p style="margin:0;">Puede retirarlo cuando quiera, sin explicar por qué y sin ` +
-            `perder el periodo de prueba. No hay cargo ni renovación automática.</p>`,
+            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">No hay costo, no hay ` +
+            `cambio en su plan y no se le cobrará nada. Tampoco le pedimos que renueve, ` +
+            `recomiende ni firme permanencia: <strong style="color:#1a1a1a;">esto no es una ` +
+            `oferta comercial</strong>, es una invitación a aparecer.</p>` +
+            `<p style="margin:12px 0 0;font-size:13px;color:#404040;">El alcance va acotado: ` +
+            `su logotipo se muestra en la página junto al nombre de su firma, mientras usted ` +
+            `no lo revoque. No se usa en publicidad pagada sin consultarle antes, no se ` +
+            `modifica y no se cede a terceros. Puede retirarlo cuando quiera, sin explicar ` +
+            `por qué.</p>`,
         ) +
         parrafo('', '18px 0 0 0') +
         boton('Reservar el lugar de mi firma', `${SITIO}/vitrina`) +
         parrafo(
-            'Si la decisión corresponde a otro socio, le agradeceremos que nos indique con ' +
-            'quién conviene tratarlo.',
-            '22px 0 0 0',
+            'Iurexia es una plataforma emergente y no vamos a fingir lo contrario. Fue ' +
+            'construida bajo la dirección de juristas con años de ejercicio en la judicatura, ' +
+            'y estamos convencidos de que en poco tiempo estará entre las plataformas de ' +
+            'tecnología jurídica más sólidas de México. Ese es justamente el motivo de esta ' +
+            'invitación: queremos que los despachos que estuvieron desde el principio sean ' +
+            'los que aparezcan.',
+            '24px 0 0 0',
+        ) +
+        parrafo(
+            'Y si prefiere mantener su práctica fuera de escaparates, lo entendemos sin ' +
+            'reservas y no volveremos a insistir.',
+            '18px 0 0 0',
         );
 
     return {
-        asunto: `${esc(nombre)}: su firma fue considerada para la vitrina de despachos de Iurexia`,
+        asunto: `Licenciado ${nombre}, su despacho en la portada de Iurexia`,
         html: envolver({ cuerpo, urlBaja: urlBaja(d.email) }),
         texto: aTexto(cuerpo) + `\n\n${SITIO}/vitrina\nDarse de baja: ${urlBaja(d.email)}`,
     };
@@ -477,8 +443,7 @@ export const CAMPANIAS = {
     reactivacion: { construir: correoReactivacion, etiqueta: 'Reactivación — Iurexia 2.0' },
     suscripcion: { construir: correoSuscripcion, etiqueta: 'Suscripción — topó el límite' },
     referidos: { construir: correoReferidos, etiqueta: 'Referidos — usuarios Pro' },
-    vitrina_abogado: { construir: correoVitrinaAbogado, etiqueta: 'Vitrina — abogados activos (testimonio, foto y logo si tienen despacho)' },
-    vitrina_despacho: { construir: correoVitrinaDespacho, etiqueta: 'Vitrina — despachos con dominio propio (logo)' },
+    vitrina: { construir: correoVitrina, etiqueta: 'Vitrina de despachos — todos los planes de pago' },
 } as const;
 
 export type NombreCampania = keyof typeof CAMPANIAS;

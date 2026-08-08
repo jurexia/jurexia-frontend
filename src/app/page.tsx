@@ -1,7 +1,9 @@
 'use client';
 
 import Navbar from '@/components/Navbar';
+import { Suspense } from 'react';
 import HeroVideo from '@/components/HeroVideo';
+import DespachosVitrina from '@/components/DespachosVitrina';
 import ChatInput from '@/components/ChatInput';
 import Link from 'next/link';
 import { HeroCTA } from '@/components/HeroCTA';
@@ -33,6 +35,15 @@ export default function HomePage() {
 
             {/* Hero con vídeo de fondo. El titular y los botones viven ahí. */}
             <HeroVideo />
+
+            {/* La franja de despachos, inmediatamente bajo el vídeo. Es la
+                primera pregunta que se hace quien llega a evaluarnos: quién
+                más está usando esto. Si no hay logotipos publicados, no se
+                pinta nada — un escaparate con huecos grises dice lo contrario
+                de lo que se pretende. */}
+            <Suspense fallback={null}>
+                <DespachosVitrina />
+            </Suspense>
 
             {/* Rehecha el 3-ago-2026 (paso 2 de la estrategia de la home):
                 titular en la paleta de la casa, franja de números verificables
