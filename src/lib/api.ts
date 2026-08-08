@@ -10,6 +10,8 @@ export interface Message {
     isPro?: boolean;  // True when the assistant message was generated in Redacción Pro mode
     isPlatinum?: boolean;  // Redacción Platinum: el escalón superior (también trae isPro)
     isProfesional?: boolean;  // Redacción Profesional: el escalón base, incluido en todos los planes
+    /** Registros digitales citados que NO estaban en el acervo recuperado. */
+    registrosFuera?: string[];
 }
 
 export interface SearchResult {

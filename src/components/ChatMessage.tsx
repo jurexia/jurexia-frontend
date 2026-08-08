@@ -1232,6 +1232,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 noTrazadas={citationMeta?.invalid ?? 0}
                                 registros={registrosDeLaRespuesta(processedContent)}
                                 rubros={rubrosPorRegistro(processedContent)}
+                                fueraDelAcervo={message.registrosFuera}
                             />
                         )}
 

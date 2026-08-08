@@ -53,10 +53,18 @@ interface Props {
     registros: string[];
     /** Rubro que la respuesta atribuyó a cada registro, para contrastarlo. */
     rubros?: Record<string, string>;
+    /**
+     * Registros que el BACKEND detectó fuera del contexto recuperado. Es la
+     * comprobación fuerte: si el número no viajaba en el acervo, el modelo lo
+     * escribió de memoria, exista o no en el Semanario. Manda sobre cualquier
+     * otra: un registro puede existir y aun así no ser trazable a lo que se
+     * consultó.
+     */
+    fueraDelAcervo?: string[];
     onVerTesis?: (registro: string) => void;
 }
 
-export function SelloCitas({ trazadas, noTrazadas, registros, rubros, onVerTesis }: Props) {
+export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAcervo, onVerTesis }: Props) {
     const [fase, setFase] = useState<Estado>(registros.length ? 'comprobando' : 'listo');
     const [resultados, setResultados] = useState<Resultado[]>([]);
 
@@ -70,6 +78,11 @@ export function SelloCitas({ trazadas, noTrazadas, registros, rubros, onVerTesis
                 try {
                     const r = await fetch(`/api/tesis/${registro}`);
                     const d = await r.json();
+                    // El acervo manda: si no venía en el contexto, no es
+                    // trazable aunque el Semanario lo encuentre.
+                    if (fueraDelAcervo?.includes(registro)) {
+                        return { registro, estado: 'no_corresponde' };
+                    }
                     if (d?.verificada) {
                         // Existir no basta. Se contrasta el rubro: es donde
                         // fallaba de verdad.
@@ -94,7 +107,7 @@ export function SelloCitas({ trazadas, noTrazadas, registros, rubros, onVerTesis
         });
 
         return () => { vigente = false; };
-    }, [registros.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [registros.join(','), (fueraDelAcervo ?? []).join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Sin nada que sellar, no se pinta un adorno vacío.
     if (!trazadas && !noTrazadas && !registros.length) return null;

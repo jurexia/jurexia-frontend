@@ -223,6 +223,10 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             let isProMode = false;
             let isPlatinumMode = false;
             let isProfesionalMode = false;
+            // Registros citados que NO venían en el acervo. El backend los
+            // detecta comparando contra el contexto recuperado; aquí se
+            // recogen para que el sello los señale.
+            let registrosFuera: string[] = [];
 
             /* Cola para marcadores partidos entre trozos.
                El backend emite `<!--PASO:web|scjn.gob.mx-->` de una vez, pero la
@@ -334,6 +338,13 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     if (!remaining.trim()) continue;
                 }
 
+                const fuera = chunk.match(/<!--REGISTROS_FUERA:([^>]*)-->/);
+                if (fuera) {
+                    registrosFuera = fuera[1].split(',').map(x => x.trim()).filter(Boolean);
+                    const resto = chunk.replace(/<!--REGISTROS_FUERA:[^>]*-->/, '');
+                    if (!resto.trim()) continue;
+                }
+
                 // Check if this is a retry marker: <!--RETRY:1:2000:cold--> or <!--RETRY:1:2000-->
                 const retryMatch = chunk.match(/<!--RETRY:(\d+):(\d+)(?::(\w+))?-->/);
                 if (retryMatch) {
@@ -364,7 +375,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
                 // Add assistant message on first chunk
                 if (!assistantMessageAdded) {
-                    setMessages(prev => [...prev, { role: 'assistant', content: displayContent, isPro: isProMode, isPlatinum: isPlatinumMode, isProfesional: isProfesionalMode }]);
+                    setMessages(prev => [...prev, { role: 'assistant', content: displayContent, isPro: isProMode, isPlatinum: isPlatinumMode, isProfesional: isProfesionalMode, registrosFuera }]);
                     assistantMessageAdded = true;
                 } else {
                     // Update existing assistant message
@@ -376,6 +387,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                             isPro: isProMode,
                             isPlatinum: isPlatinumMode,
                             isProfesional: isProfesionalMode,
+                            registrosFuera,
                         };
                         return newMessages;
                     });
