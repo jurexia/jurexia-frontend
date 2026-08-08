@@ -339,128 +339,137 @@ export function correoEntrada(d: Destinatario): Correo {
 // ─────────────────────────────────────────────────────────────────────────
 // VITRINA — dos tandas, dos textos.
 //
-// A un litigante activo se le pide su CARA y su palabra: eso se pide con
-// respeto y explicando por qué él. A un despacho con dominio propio se le
-// pide su MARCA, que es otra conversación y otro riesgo para quien la
-// presta. Mandar el mismo texto a los dos habría sonado a circular.
+// EL TONO (corrección de David, 8-ago-2026): esto NO se pide, se OFRECE.
+// El abogado tiene que leerlo como lo que es —una selección y una plataforma
+// de difusión para su despacho—, no como un favor que le pedimos.
 //
-// Ninguno de los dos promete que se publicará: se pide autorización, y lo
-// que se publique se revisa antes con el interesado.
+// Ahora bien, el halago suelto a un abogado le suena a publicidad y le baja
+// la guardia al revés. Lo que vuelve real el privilegio es decirle POR QUÉ
+// fue él, con un hecho que puede comprobar en su propia cuenta: está entre
+// los que más usan la plataforma. Un criterio verificable convence donde
+// «usted es especial» sólo despierta sospecha — y el destinatario es la
+// única profesión que cobra por desconfiar de los adjetivos.
+//
+// La autoridad de Iurexia se declara una vez y sin insistir: dirigida por
+// juristas con años en la judicatura. Repetirlo lo debilita.
+//
+// Lo que NO cambia con el tono: el alcance, la revocación y el beneficio van
+// escritos y al mismo tamaño. Un correo entusiasta con las condiciones en
+// letra chica es exactamente lo que un litigante detecta en tres segundos.
 // ─────────────────────────────────────────────────────────────────────────
 
-/** Tanda 1: los abogados que más la usan. Se les pide testimonio y foto. */
+/** Tanda 1: los abogados que más la usan. Se les OFRECE la vitrina. */
 export function correoVitrinaAbogado(d: Destinatario): Correo {
     const nombre = nombrePila(d.full_name, d.email);
     const cuerpo =
         parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
         parrafo(
-            'Le escribo porque usted es de quienes más usan Iurexia — no de los que se ' +
-            'registraron y la dejaron, sino de los que la abren a trabajar. Eso, para ' +
-            'nosotros, vale más que cualquier cosa que podamos decir de nosotros mismos.',
+            `Su cuenta quedó dentro de un grupo reducido: ${fuerte('el de los abogados que ' +
+            'más trabajo real hacen en Iurexia')}. No es una cortesía ni un envío masivo — ` +
+            'es el criterio con el que se armó esta lista, y usted puede comprobarlo en su ' +
+            'propio historial de consultas.',
         ) +
         parrafo(
-            `Nos gustaría que otros colegas lo supieran, y para eso le pedimos su ` +
-            `autorización: ${fuerte('su nombre, una fotografía y unas líneas suyas')} ` +
-            'contando en qué le ha servido. Escritas por usted y publicadas tal cual; no ' +
-            'las redactamos nosotros.',
-        ) +
-        // ── El logotipo, para quien tenga despacho ────────────────────────
-        // Va DENTRO de este correo y no en uno aparte porque la mayoría de
-        // los que litigan con despacho propio usan correo personal: filtrar
-        // por dominio los dejaba fuera a todos. Se pregunta, no se supone.
-        caja(
-            rotulo('¿Tiene despacho propio?') +
-            `<p style="margin:0 0 12px;">Si su firma tiene logotipo, nos gustaría ` +
-            `<strong style="color:#1a1a1a;">mostrarlo en la página de Iurexia</strong>, ` +
-            `entre los despachos que trabajan con la plataforma. Mándenoslo en PNG con ` +
-            `fondo transparente y aparece junto a su nombre, enlazado a su sitio.</p>` +
-            `<p style="margin:0 0 12px;">Le seré franco sobre por qué se lo pedimos: cuando ` +
-            `un abogado entra a nuestra página, lo primero que se pregunta es quién más está ` +
-            `usando esto. Un logotipo de un despacho real contesta esa pregunta mejor que ` +
-            `cualquier párrafo que escribamos nosotros.</p>` +
-            `<p style="margin:0;font-size:13px;color:#404040;">Y funciona en las dos ` +
-            `direcciones: su firma queda a la vista de los colegas que visitan el sitio, con ` +
-            `un enlace directo al suyo. Si no tiene despacho o prefiere no prestarlo, el ` +
-            `beneficio es exactamente el mismo — el logotipo es opcional.</p>`,
+            `A ese grupo le estamos abriendo ${fuerte('un espacio en la página de Iurexia')}: ` +
+            'su nombre, su fotografía, su despacho y su logotipo, con enlace directo a su ' +
+            'sitio o a su perfil profesional.',
         ) +
         caja(
-            rotulo('Lo que recibe a cambio') +
+            rotulo('Lo que esto significa para su despacho') +
             listado([
-                'Platinum tres meses sin costo, desde que envía su autorización. Sin cargo y sin renovación automática.',
-                'Su ficha en nuestro sitio, enlazada a su despacho o a su perfil profesional: quien llegue buscando abogado, lo encuentra a usted.',
+                'Su firma a la vista de cerca de dos mil abogados registrados en Iurexia, y de quien llegue buscando representación.',
+                'Un enlace directo desde nuestro sitio al suyo, permanente mientras usted quiera.',
+                'Platinum tres meses sin costo, desde que confirma su participación.',
             ]) +
-            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Al terminar los tres ` +
-            `meses su cuenta vuelve sola al plan que traía, sin interrupción y sin cobro ` +
-            `sorpresa. Puede retirar su testimonio cuando quiera, sin explicar por qué y ` +
-            `<strong style="color:#1a1a1a;">sin perder los tres meses</strong>: si retirarlo ` +
-            `costara el beneficio, no sería un derecho sino una multa.</p>`,
+            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Iurexia se construyó bajo ` +
+            `la dirección de juristas con años de ejercicio en la judicatura, y ese es el ` +
+            `estándar con el que se elige quién aparece en la página. Aparecer aquí no es ` +
+            `publicidad pagada: es una selección.</p>`,
         ) +
         parrafo(
-            'Nada se publica de inmediato. Primero lo revisamos con usted.',
+            `Si acepta, le pedimos su logotipo en PNG con fondo transparente, una fotografía ` +
+            `profesional y unas líneas suyas sobre su experiencia con la plataforma. ` +
+            `${fuerte('Se publican tal como usted las escriba')}: no las redactamos ni las ` +
+            'maquillamos, porque un testimonio escrito por nosotros no sería suyo.',
             '20px 0 20px 0',
         ) +
-        boton('Ver de qué se trata', `${SITIO}/vitrina`) +
+        boton('Aceptar mi lugar en la página', `${SITIO}/vitrina`) +
+        caja(
+            rotulo('Las condiciones, sin letra chica') +
+            `<p style="margin:0 0 10px;">Usted autoriza qué se publica y qué no —nombre, ` +
+            `fotografía, testimonio y logotipo van por separado— y nada aparece antes de ` +
+            `que lo revisemos con usted.</p>` +
+            `<p style="margin:0 0 10px;">Puede retirarlo cuando quiera, sin explicar por qué ` +
+            `y <strong style="color:#1a1a1a;">sin perder los tres meses de Platinum</strong>: ` +
+            `si retirarse costara el beneficio, no sería un derecho sino una penalización.</p>` +
+            `<p style="margin:0;">Los tres meses no generan cargo ni renovación automática. ` +
+            `Al terminar, su cuenta continúa en el plan que ya tenía.</p>`,
+        ) +
         parrafo(
-            'Y si prefiere no aparecer, no pasa absolutamente nada: seguirá teniendo la ' +
-            'misma plataforma y la misma atención. Se lo pedimos porque nos honraría, no ' +
-            'porque se lo debamos cobrar de alguna forma.',
+            'Si prefiere mantener su práctica fuera de escaparates, lo entendemos y no ' +
+            'insistiremos. El lugar queda abierto por si cambia de opinión.',
             '22px 0 0 0',
         );
 
     return {
-        asunto: `Licenciado ${nombre}, ¿nos permite contar que usted usa Iurexia?`,
+        asunto: `Licenciado ${nombre}, su despacho fue seleccionado para aparecer en Iurexia`,
         html: envolver({ cuerpo, urlBaja: urlBaja(d.email) }),
         texto: aTexto(cuerpo) + `\n\n${SITIO}/vitrina\nDarse de baja: ${urlBaja(d.email)}`,
     };
 }
 
-/** Tanda 2: los despachos con dominio propio. Se les pide el logo. */
+/** Tanda 2: los despachos con dominio propio. Se les ofrece la vitrina de firmas. */
 export function correoVitrinaDespacho(d: Destinatario): Correo {
     const nombre = nombrePila(d.full_name, d.email);
     const cuerpo =
         parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
         parrafo(
-            'Su despacho es de los que trabajan con Iurexia, y nos gustaría poder decirlo: ' +
-            `le pedimos autorización para mostrar ${fuerte('el logotipo de su firma')} en ` +
-            'nuestro sitio, entre los despachos que usan la plataforma.',
+            `Estamos formando ${fuerte('la vitrina de despachos de Iurexia')} —las firmas ` +
+            'que aparecerán en nuestra página— y la suya está entre las consideradas.',
         ) +
         parrafo(
-            'Sabemos lo que se pide al pedir una marca. Por eso el alcance va escrito y ' +
-            'acotado: el logotipo aparece en la página, con su nombre, mientras usted no ' +
-            'lo revoque. No se usa en publicidad pagada sin consultarle antes, no se ' +
-            'modifica y no se cede a terceros.',
+            'Iurexia se construyó bajo la dirección de juristas con años de ejercicio en la ' +
+            'judicatura, y la página es lo primero que ve un abogado que llega a evaluarnos. ' +
+            'Quién aparece ahí no se vende: se elige.',
         ) +
         caja(
-            rotulo('Lo que recibe a cambio') +
+            rotulo('Lo que obtiene su firma') +
             listado([
-                'Platinum tres meses sin costo para su cuenta, desde que envía su autorización.',
-                'Su firma enlazada desde nuestro sitio al suyo.',
+                'El logotipo de su despacho en la página de Iurexia, con enlace directo a su sitio.',
+                'Exposición ante cerca de dos mil abogados registrados y ante quien llegue buscando representación.',
+                'Platinum tres meses sin costo para su cuenta.',
             ]) +
-            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Si además quiere ` +
-            `acompañarlo de unas líneas suyas y una fotografía, mejor — pero es opcional, y ` +
-            `el beneficio es el mismo con o sin ellas.</p>` +
-            `<p style="margin:12px 0 0;font-size:13px;color:#404040;">Le pedimos el logotipo ` +
+            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Le pedimos el logotipo ` +
             `en <strong style="color:#1a1a1a;">PNG con fondo transparente</strong>, que es lo ` +
-            `que permite montarlo sin recortes ni bordes blancos.</p>`,
+            `que permite montarlo con la calidad que su firma merece. Si además quiere ` +
+            `acompañarlo de una fotografía y unas líneas suyas, mejor — pero es opcional y el ` +
+            `beneficio es el mismo.</p>`,
         ) +
-        parrafo(
-            'Puede retirarlo cuando quiera, sin explicar por qué y sin perder los tres meses.',
-            '20px 0 20px 0',
+        caja(
+            rotulo('El alcance de lo que autoriza') +
+            `<p style="margin:0 0 10px;">Sabemos lo que significa prestar una marca, así que ` +
+            `va acotado por escrito: el logotipo aparece en la página junto al nombre de su ` +
+            `firma, mientras usted no lo revoque. <strong style="color:#1a1a1a;">No se usa en ` +
+            `publicidad pagada sin consultarle antes, no se modifica y no se cede a ` +
+            `terceros.</strong></p>` +
+            `<p style="margin:0;">Puede retirarlo cuando quiera, sin explicar por qué y sin ` +
+            `perder los tres meses. No hay cargo ni renovación automática.</p>`,
         ) +
-        boton('Autorizar y enviar el logotipo', `${SITIO}/vitrina`) +
+        parrafo('', '18px 0 0 0') +
+        boton('Reservar el lugar de mi firma', `${SITIO}/vitrina`) +
         parrafo(
-            'Si la decisión no le corresponde a usted, le agradeceríamos que nos indicara ' +
-            'con quién conviene tratarlo — o simplemente ignore este correo, sin ningún ' +
-            'inconveniente.',
+            'Si la decisión corresponde a otro socio, le agradeceremos que nos indique con ' +
+            'quién conviene tratarlo.',
             '22px 0 0 0',
         );
 
     return {
-        asunto: `${esc(nombre)}: ¿nos autoriza a mostrar el logotipo de su despacho?`,
+        asunto: `${esc(nombre)}: su firma fue considerada para la vitrina de despachos de Iurexia`,
         html: envolver({ cuerpo, urlBaja: urlBaja(d.email) }),
         texto: aTexto(cuerpo) + `\n\n${SITIO}/vitrina\nDarse de baja: ${urlBaja(d.email)}`,
     };
 }
+
 
 export const CAMPANIAS = {
     entrada: { construir: correoEntrada, etiqueta: 'Entrada — nunca inició sesión' },
