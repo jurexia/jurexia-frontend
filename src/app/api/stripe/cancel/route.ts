@@ -3,6 +3,14 @@ import { getStripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
+    // FUERA del try a propósito (8-ago-2026). Estaba declarado dentro, así
+    // que el bloque de recuperación del catch —el que comprueba si Stripe sí
+    // canceló pese al error— reventaba con ReferenceError y se tragaba la
+    // buena noticia. El abogado leía «no pudimos procesar la cancelación» y
+    // volvía a intentarlo durante días, mientras su suscripción YA estaba
+    // cancelada. Varios lo reportaron por correo.
+    let subscriptionId: string | undefined;
+
     try {
         // Authenticate user via Supabase JWT
         const authHeader = request.headers.get('authorization');
@@ -21,7 +29,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { subscriptionId } = body;
+        subscriptionId = body?.subscriptionId;
 
         if (!subscriptionId || !subscriptionId.startsWith('sub_')) {
             return NextResponse.json(
@@ -76,6 +84,7 @@ export async function POST(request: NextRequest) {
 
         // Try to recover: check if the subscription was actually cancelled despite the error
         try {
+            if (!subscriptionId) throw new Error('sin identificador de suscripción');
             const stripe = getStripe();
             const currentSub = await stripe.subscriptions.retrieve(subscriptionId);
             if (currentSub.cancel_at_period_end) {
