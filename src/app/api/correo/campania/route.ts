@@ -45,7 +45,7 @@ function autorizado(req: NextRequest): boolean {
 
 
 /** Muestra de todas las campañas al revisor, con datos de ejemplo. */
-async function mandarARevision() {
+async function mandarARevision(soloEstas?: string[]) {
     const { Resend } = await import('resend');
     const resend = new Resend(process.env.RESEND_API_KEY!);
     const remitente = process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>';
@@ -60,7 +60,11 @@ async function mandarARevision() {
 
     const salidas: { campania: string; asunto: string; enviado: boolean; error?: string }[] = [];
 
+    // Se puede pedir una o dos campañas concretas. Sin filtro van todas, que
+    // es lo que hacía antes: mandarle seis correos a David cuando sólo quiere
+    // ver una convierte la revisión en ruido y deja de revisarse.
     for (const [nombre, def] of Object.entries(CAMPANIAS)) {
+        if (soloEstas?.length && !soloEstas.includes(nombre)) continue;
         const correo = def.construir(ejemplo);
         const { error } = await resend.emails.send({
             from: remitente,
@@ -92,11 +96,14 @@ export async function POST(req: NextRequest) {
 
     try {
         if (modo === 'revision') {
+            // ?campania=a,b limita la muestra a esas campañas.
+            const filtro = (req.nextUrl.searchParams.get('campania') ?? '')
+                .split(',').map(s => s.trim()).filter(Boolean);
             return NextResponse.json({
                 modo: 'revision',
                 revisor: REVISOR,
                 nota: 'Muestras enviadas. Ninguna salió a usuarios reales.',
-                muestras: await mandarARevision(),
+                muestras: await mandarARevision(filtro),
             });
         }
 
