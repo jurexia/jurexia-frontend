@@ -40,7 +40,11 @@ import { cupoDisponibleHoy, enviarCampania, type Resultado } from '@/lib/correo/
 export const maxDuration = 300;
 
 /** El orden importa: se gasta el cupo de arriba hacia abajo. */
-const PRIORIDAD: NombreCampania[] = ['referidos', 'entrada', 'suscripcion', 'reactivacion', 'activacion'];
+// «vitrina» va primero mientras dure la invitación: son 169 clientes y el
+// cupo diario para campañas es de 70 —los otros 30 quedan reservados para lo
+// transaccional, que no puede quedarse sin cupo—. Así el cron completa la
+// tanda en tres días sin que nadie tenga que acordarse.
+const PRIORIDAD: NombreCampania[] = ['vitrina', 'referidos', 'entrada', 'suscripcion', 'reactivacion', 'activacion'];
 
 /**
  * Vercel firma sus crons con CRON_SECRET. Se acepta también la clave de
