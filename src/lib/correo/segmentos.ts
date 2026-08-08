@@ -36,6 +36,30 @@ import type { NombreCampania } from './campanias';
 
 const COLUMNAS = 'id, email, full_name, estado, queries_used';
 
+/**
+ * Los dominios de despacho detectados en la base el 8-ago-2026.
+ *
+ * Se enumeran a mano y no se deducen con un `like`, porque «no es gmail» NO
+ * significa «es despacho»: la base está llena de correos universitarios
+ * (.edu.mx), de alias de Apple (privaterelay.appleid.com) y de consultorías
+ * que no litigan. Pedirle su logotipo a un alumno de la UNAM sería ridículo.
+ *
+ * Cada uno se comprobó: que el dominio resuelva y que el sitio sea de un
+ * despacho. menra.mx entra pese a no tener sitio en pie —son dos abogados de
+ * pago con uso real— y se le pedirá el logotipo, no un enlace.
+ */
+export const DOMINIOS_DESPACHO = [
+    'menra.mx',
+    'rodriguezasociados.mx',
+    'geiserconsultores.com',
+    'sotomadrigal.com.mx',
+    'tbblaw.net',
+];
+
+export function esDespacho(email: string): boolean {
+    return DOMINIOS_DESPACHO.includes((email.split('@')[1] || '').toLowerCase());
+}
+
 function admin() {
     return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,6 +84,23 @@ function filtrar(q: any, campania: NombreCampania) {
         // sólo se dejan pasar 48 h desde el alta, para no pisar al correo de
         // bienvenida de quien se registró hace un rato.
         return q.lt('created_at', new Date(Date.now() - 48 * 3600_000).toISOString());
+    }
+
+    // ── VITRINA ──────────────────────────────────────────────────────────
+    // Tanda 1: a quien de verdad la usa. Se le va a pedir su cara y su
+    // palabra, así que el corte es alto a propósito: un testimonio de alguien
+    // con tres consultas no convence a nadie y le pone en un compromiso.
+    if (campania === 'vitrina_abogado') {
+        return q.eq('is_active', true)
+                .in('subscription_type', ['pro_monthly', 'pro_annual',
+                    'platinum_monthly', 'platinum_annual', 'ultra_secretarios'])
+                .not('last_query_at', 'is', null);
+    }
+    // Tanda 2: dominio propio = despacho con marca que prestar. La lista se
+    // filtra después contra DOMINIOS_DESPACHO, porque el dominio no se puede
+    // consultar con un `like` sin barrer también a los gratuitos de correo.
+    if (campania === 'vitrina_despacho') {
+        return q.eq('is_active', true);
     }
 
     if (campania === 'referidos') {
@@ -116,7 +157,16 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
         if (desde > 50_000) break;
     }
 
-    return filas.filter(
+    const limpias = filas.filter(
         (u: Destinatario) => u.email && !ADMINS.includes(u.email.toLowerCase()),
     );
+
+    // El filtro por dominio va AQUÍ y no en la consulta: Supabase no permite
+    // filtrar por la parte derecha del correo sin un `like` que barrería
+    // también gmail. Con 1,969 filas el coste es irrelevante.
+    if (campania === 'vitrina_despacho') {
+        return limpias.filter(u => esDespacho(u.email));
+    }
+
+    return limpias;
 }

@@ -156,7 +156,10 @@ export async function registrarReferido(codigo: string, ahijadoId: string) {
  * `plan_previo` guarda lo que tenía ANTES, que es lo único que permitirá
  * devolverlo a su sitio cuando venzan los días.
  */
-async function otorgarPremio(usuarioId: string, dias: number, nivel: number): Promise<ResultadoPremio> {
+export async function otorgarPremio(
+    usuarioId: string, dias: number, nivel: number,
+    plan: string = PLAN_REGALO,
+): Promise<ResultadoPremio> {
     const cliente = admin();
 
     const ahora = new Date();
@@ -186,7 +189,7 @@ async function otorgarPremio(usuarioId: string, dias: number, nivel: number): Pr
         .from('ascensos_referido')
         .select('id, plan_previo, vence_at')
         .eq('usuario_id', usuarioId)
-        .eq('plan_premio', PLAN_REGALO)
+        .eq('plan_premio', plan)
         .is('revertido_at', null)
         .gt('vence_at', ahora.toISOString())
         .order('vence_at', { ascending: false })
@@ -197,7 +200,7 @@ async function otorgarPremio(usuarioId: string, dias: number, nivel: number): Pr
 
     // Nunca degradar: si lo que de verdad tiene es igual o mejor que el
     // regalo, no hay nada que darle y su cuenta no se toca.
-    if (rango(origen) >= rango(PLAN_REGALO)) {
+    if (rango(origen) >= rango(plan)) {
         return { otorgado: false, motivo: `ya tiene ${origen}, que no es inferior al regalo` };
     }
 
@@ -209,7 +212,7 @@ async function otorgarPremio(usuarioId: string, dias: number, nivel: number): Pr
     const { error } = await cliente.from('ascensos_referido').insert({
         usuario_id: usuarioId,
         plan_previo: origen,
-        plan_premio: PLAN_REGALO,
+        plan_premio: plan,
         nivel,
         vence_at: vence.toISOString(),
     });
@@ -220,13 +223,13 @@ async function otorgarPremio(usuarioId: string, dias: number, nivel: number): Pr
     await cliente
         .from('user_profiles')
         .update({
-            subscription_type: PLAN_REGALO,
-            queries_limit: LIMITE[PLAN_REGALO],
+            subscription_type: plan,
+            queries_limit: LIMITE[plan] ?? 140,
             updated_at: ahora.toISOString(),
         })
         .eq('id', usuarioId);
 
-    return { otorgado: true, plan: PLAN_REGALO, dias, nivel, vence_at: vence.toISOString() };
+    return { otorgado: true, plan, dias, nivel, vence_at: vence.toISOString() };
 }
 
 /**
@@ -479,4 +482,24 @@ export async function estadoDeReferidos(usuarioId: string) {
         siguiente: siguientePeldano(activos),
         premio: premio ?? null,
     };
+}
+
+/**
+ * El beneficio de la vitrina: Platinum tres meses por prestar testimonio.
+ *
+ * Va por el MISMO `otorgarPremio` que los referidos, y no por un camino
+ * propio, porque ahí es donde vive lo difícil: conservar el plan real en
+ * `plan_previo` al encadenar tramos y no degradar a nadie al revertir. Un
+ * segundo camino habría que volver a probarlo entero — y los dos fallos que
+ * costaron Pro gratis para siempre estaban exactamente ahí.
+ *
+ * `nivel: -1` lo distingue de los peldaños de referidos sin chocar con su
+ * índice único, que sólo cubre `nivel > 0`.
+ */
+export const NIVEL_VITRINA = -1;
+export const DIAS_VITRINA = 90;
+export const PLAN_VITRINA = 'platinum_monthly';
+
+export async function otorgarBeneficioVitrina(usuarioId: string) {
+    return otorgarPremio(usuarioId, DIAS_VITRINA, NIVEL_VITRINA, PLAN_VITRINA);
 }
