@@ -411,12 +411,32 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 finalDisplay += fallback;
             }
 
+            // Se CONSERVA el resto del mensaje y sólo se sustituye el texto.
+            //
+            // Esta actualización reescribía el objeto entero con {role, content}
+            // y borraba todo lo demás: `registrosFuera`, `isPro`, `isPlatinum` e
+            // `isProfesional`. Como es la última que corre, ganaba siempre.
+            //
+            // Consecuencia real (detectada el 10-ago-2026): el backend detectaba
+            // los registros citados que no venían en el contexto —28 respuestas
+            // y 50 registros en dos días— y el sello estaba preparado para
+            // marcarlos, pero el aviso moría aquí y el abogado no veía NADA.
+            // Uno de ellos canceló tres minutos después de recibir dos de esas
+            // respuestas. También se perdía la etiqueta del motor en cada
+            // respuesta terminada.
+            //
+            // `registrosFuera` se pasa explícitamente porque su marcador llega
+            // en un trozo propio al final del stream: la rama que lo lee hace
+            // `continue` y nunca alcanza el setMessages de dentro del bucle.
             if (assistantMessageAdded) {
                 setMessages(prev => {
                     const newMessages = [...prev];
+                    const ultimo = newMessages[newMessages.length - 1];
                     newMessages[newMessages.length - 1] = {
+                        ...ultimo,
                         role: 'assistant',
                         content: finalDisplay,
+                        registrosFuera,
                     };
                     return newMessages;
                 });
