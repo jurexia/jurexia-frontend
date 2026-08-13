@@ -704,6 +704,67 @@ function extraerSeccion(texto: string, titulo: string): string | null {
  * suelta, así que con mayor razón tiene que contar. Por eso `userId` no es
  * opcional en la práctica — el backend sólo descuenta cuando lo recibe.
  */
+/**
+ * Cuántos caracteres de cada documento caben en el análisis.
+ *
+ * POR QUÉ HAY UN PRESUPUESTO (10-ago-2026)
+ * ----------------------------------------
+ * Esto mandaba el texto ÍNTEGRO de todos los documentos, sin tope. Una carpeta
+ * real con 35 documentos sumaba 201,965 caracteres —unos 50,500 tokens— antes
+ * de que el backend añadiera su propio contexto del acervo. El análisis moría
+ * con `RetryError[… BadRequestError]` y esa cadena se pintaba en pantalla como
+ * si fuera el resultado.
+ *
+ * Y aunque hubiera cabido, tampoco convenía: una abogada reportó que la
+ * plataforma no advirtió que un acuerdo venía firmado por un solo integrante
+ * del pleno cuando la Ley de Amparo exige el pleno completo. Un defecto así
+ * salta a la vista en una hoja y se pierde entre doscientos mil caracteres.
+ * Menos texto, mejor elegido, se lee mejor.
+ *
+ * EL REPARTO. A partes iguales, pero sin desperdiciar: en la primera vuelta
+ * cada documento toma lo que necesite hasta su parte; lo que dejan los cortos
+ * se reparte entre los largos en las siguientes. Así un anexo de una página no
+ * se lleva la misma tajada que la demanda, y ninguno queda fuera del todo.
+ */
+const PRESUPUESTO_ANALISIS = 120_000   // ~30,000 tokens de documentos
+const MINIMO_POR_DOCUMENTO = 1_200     // ni el más humilde entra mudo
+
+function repartirPresupuesto(
+    extractos: { doc: DocumentoExpediente; texto: string }[]
+): Map<string, number> {
+    const racion = new Map<string, number>()
+    const total = extractos.reduce((s, e) => s + e.texto.length, 0)
+    if (total <= PRESUPUESTO_ANALISIS) {
+        extractos.forEach((e) => racion.set(e.doc.id, e.texto.length))
+        return racion
+    }
+
+    let disponible = PRESUPUESTO_ANALISIS
+    let pendientes = [...extractos]
+    while (pendientes.length > 0 && disponible > 0) {
+        const parte = Math.max(MINIMO_POR_DOCUMENTO, Math.floor(disponible / pendientes.length))
+        const caben = pendientes.filter((e) => e.texto.length <= parte)
+        if (caben.length === 0) {
+            // Todos piden más de su parte: se les da su parte y se acabó.
+            pendientes.forEach((e) => {
+                racion.set(e.doc.id, Math.min(e.texto.length, parte))
+                disponible -= Math.min(e.texto.length, parte)
+            })
+            break
+        }
+        caben.forEach((e) => {
+            racion.set(e.doc.id, e.texto.length)
+            disponible -= e.texto.length
+        })
+        pendientes = pendientes.filter((e) => !racion.has(e.doc.id))
+    }
+    // Por si el reparto dejó a alguien sin asignar (presupuesto agotado).
+    extractos.forEach((e) => {
+        if (!racion.has(e.doc.id)) racion.set(e.doc.id, MINIMO_POR_DOCUMENTO)
+    })
+    return racion
+}
+
 export async function generarResumenCaso(
     expediente: Expediente,
     documentos: DocumentoExpediente[],
@@ -740,11 +801,25 @@ export async function generarResumenCaso(
 
     const tipo = tipoCarpeta(expediente.tipo)
 
+    const racion = repartirPresupuesto(extractos)
+
     const porCategoria = categoriasDe(expediente.tipo)
         .map((cat) => {
             const delGrupo = extractos.filter((e) => e.doc.categoria === cat.value)
             if (delGrupo.length === 0) return null
-            const cuerpo = delGrupo.map((e) => `— ${e.doc.nombre}:\n${e.texto}`).join('\n\n')
+            const cuerpo = delGrupo
+                .map((e) => {
+                    const tope = racion.get(e.doc.id) ?? e.texto.length
+                    if (e.texto.length <= tope) return `— ${e.doc.nombre}:\n${e.texto}`
+                    // Se dice que es un extracto para que el modelo no dé por
+                    // inexistente lo que simplemente no le llegó.
+                    return (
+                        `— ${e.doc.nombre} (EXTRACTO: primeros ${tope.toLocaleString('es-MX')} ` +
+                        `de ${e.texto.length.toLocaleString('es-MX')} caracteres):\n` +
+                        `${e.texto.slice(0, tope)}\n[…documento truncado…]`
+                    )
+                })
+                .join('\n\n')
             return `## ${cat.label}\n${cuerpo}`
         })
         .filter(Boolean)
