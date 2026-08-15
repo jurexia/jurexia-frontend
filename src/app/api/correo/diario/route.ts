@@ -36,6 +36,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CAMPANIAS, type NombreCampania } from '@/lib/correo/campanias';
 import { segmento } from '@/lib/correo/segmentos';
 import { cupoDisponibleHoy, enviarCampania, type Resultado } from '@/lib/correo/enviar';
+import { revisarAlmacenamiento } from '@/lib/correo/alerta-almacenamiento';
 
 export const maxDuration = 300;
 
@@ -147,7 +148,15 @@ export async function GET(req: NextRequest) {
         const enviados = tandas.reduce((s, t) => s + t.enviados, 0);
         const pendientes = tandas.reduce((s, t) => s + t.restantes_en_segmento, 0);
 
+        // Vigilancia del almacenamiento de expedientes. Va al final y en
+        // simulacro no manda nada: es una alarma que dormirá meses, y cuando
+        // suene tiene que encontrar margen de sobra para actuar con calma.
+        const almacenamiento = simulacro
+            ? 'almacenamiento: simulacro, no se revisa'
+            : await revisarAlmacenamiento();
+
         return NextResponse.json({
+            almacenamiento,
             fecha: new Date().toISOString().slice(0, 10),
             simulacro,
             ascensos_revertidos: reversiones,
