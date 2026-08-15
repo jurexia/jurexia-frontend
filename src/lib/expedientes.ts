@@ -305,6 +305,20 @@ export async function usoAlmacenamiento(
     }
 }
 
+/**
+ * El documento tiene más hojas de las que lee el plan.
+ *
+ * No es un error del abogado ni un fallo nuestro: es el límite anunciado.
+ * El mensaje viene del backend y ya nombra el plan que sí lo cubre, así que
+ * se muestra tal cual.
+ */
+export class DemasiadoGrande extends Error {
+    constructor(mensaje: string) {
+        super(mensaje)
+        this.name = 'DemasiadoGrande'
+    }
+}
+
 export class SinEspacio extends Error {
     constructor(usadoMB: number, cuotaMB: number) {
         super(
@@ -479,6 +493,21 @@ export async function subirDocumento(
         throw new SinEspacio(uso.usadoMB, uso.cuotaMB)
     }
 
+    // SE LEE ANTES DE GUARDAR (16-ago-2026).
+    //
+    // Antes el archivo se subía a Storage y la lectura salía después, en
+    // segundo plano y tragándose los errores: un documento de 300 hojas en un
+    // plan que lee 30 quedaba almacenado, sin extracto y sin que nadie
+    // avisara. Ahora, si no lo podemos leer, no lo guardamos y el abogado se
+    // entera en el momento.
+    //
+    // El extracto que devuelve esta lectura se guarda con el registro, así
+    // que no se lee dos veces ni se cobra dos veces.
+    let extractoLeido = extracto ?? null
+    if (!extractoLeido) {
+        extractoLeido = await extraerDeArchivo(null, categoria, archivo)
+    }
+
     const limpio = archivo.name.replace(/[^\w.\-]/g, '_')
     const storagePath = `${uid}/${expedienteId}/${Date.now()}-${limpio}`
 
@@ -504,7 +533,7 @@ export async function subirDocumento(
             storage_path: storagePath,
             mime_type: archivo.type || null,
             tamano: archivo.size,
-            extracto: extracto ?? null,
+            extracto: extractoLeido,
         })
         .select()
         .single()
@@ -522,10 +551,6 @@ export async function subirDocumento(
         .eq('id', expedienteId)
 
     const doc = data as DocumentoExpediente
-
-    // Lectura anticipada, en segundo plano para no bloquear la subida. Si el
-    // texto ya vino dado, no hay nada que leer.
-    if (!extracto) void extraerDeArchivo(doc.id, categoria, archivo)
 
     return doc
 }
@@ -584,7 +609,7 @@ function promptExtracto(categoria: CategoriaDocumento): string {
  * vez.
  */
 async function extraerDeArchivo(
-    docId: string,
+    docId: string | null,
     categoria: CategoriaDocumento,
     archivo: File
 ): Promise<string | null> {
@@ -608,7 +633,19 @@ async function extraerDeArchivo(
         if (uid) form.append('user_id', uid)
 
         const res = await fetch(`${API_URL}/analyze-document`, { method: 'POST', body: form })
-        if (!res.ok) return null
+        if (!res.ok) {
+            // El 413 lo manda el backend cuando el documento tiene más hojas de
+            // las que lee el plan. No es un fallo: es una respuesta que el
+            // abogado tiene que leer, con el nombre del plan que sí lo cubre.
+            // Se propaga en vez de tragarse, que es lo que hacía antes.
+            if (res.status === 413 || res.status === 402) {
+                const cuerpo = await res.json().catch(() => null)
+                throw new DemasiadoGrande(
+                    cuerpo?.detail ?? 'Este documento excede lo que tu plan puede leer.'
+                )
+            }
+            return null
+        }
 
         // El endpoint responde en SSE: se junta el texto de todos los marcos.
         const crudo = await res.text()
@@ -627,7 +664,9 @@ async function extraerDeArchivo(
         const extracto = texto.trim()
         if (!extracto) return null
 
-        await supabase.from('expediente_documentos').update({ extracto }).eq('id', docId)
+        if (docId) {
+            await supabase.from('expediente_documentos').update({ extracto }).eq('id', docId)
+        }
         return extracto
     } catch (err) {
         console.warn(`[expedientes] no se pudo leer ${archivo.name}:`, err)
