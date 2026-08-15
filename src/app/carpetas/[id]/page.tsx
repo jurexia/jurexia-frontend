@@ -456,7 +456,11 @@ function Detalle() {
                                         ) : (
                                             <Upload className="h-4 w-4" />
                                         )}
-                                        Subir
+                                        {/* El costo va en el botón. Subir un documento lo
+                                            manda a leer —con OCR si viene escaneado— y eso
+                                            consume una consulta; enterarse después, al ver
+                                            el contador bajar, se siente a cobro escondido. */}
+                                        Subir · 1 consulta
                                     </button>
                                 </div>
 

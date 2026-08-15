@@ -593,6 +593,20 @@ async function extraerDeArchivo(
         form.append('file', archivo)
         form.append('prompt', promptExtracto(categoria))
 
+        // ESTA LECTURA CUESTA Y AHORA SE COBRA (16-ago-2026).
+        //
+        // Iba sin `user_id`, y el backend sólo descuenta cuando lo recibe: la
+        // carpeta leía documentos gratis. No es poca cosa — un PDF escaneado
+        // se lee con OCR de Gemini, que es de lo más caro del sistema, y un
+        // expediente entra con diez o veinte archivos de golpe.
+        //
+        // Se cobra al SUBIR y no al analizar porque el extracto se guarda: la
+        // lectura ocurre una sola vez por documento y el análisis posterior ya
+        // no vuelve a pagarla. Cobrar aquí es cobrar el trabajo real, y por eso
+        // el botón de subir anuncia su costo.
+        const uid = await userId()
+        if (uid) form.append('user_id', uid)
+
         const res = await fetch(`${API_URL}/analyze-document`, { method: 'POST', body: form })
         if (!res.ok) return null
 
