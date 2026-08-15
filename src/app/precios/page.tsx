@@ -97,6 +97,7 @@ export default function PreciosPage() {
                                     "Búsqueda con IA en legislación mexicana verificada",
                                     "Filtros de jurisdicción",
                                     "Acceso a base documental completa",
+                                    "Lee documentos de hasta 20 hojas",
                                     <span className="text-gray-400">Sin acceso a Genios Especializados ni Análisis</span>
                                 ]}
                                 buttonText="Comenzar Gratis"
@@ -120,6 +121,7 @@ export default function PreciosPage() {
                                     "Búsqueda inteligente con IA en legislación mexicana",
                                     "Filtros de jurisdicción y entidad federativa",
                                     "Acceso a base documental completa",
+                                    <span className="font-semibold">Lee documentos de hasta 50 hojas</span>,
                                     "Soporte estándar"
                                 ]}
                                 buttonText={isAnnual ? 'Elegir Básico Anual' : 'Elegir Básico'}
@@ -143,6 +145,7 @@ export default function PreciosPage() {
                                     <span className="text-accent-gold font-bold">IA Jurídica Avanzada (Análisis complejo y deducción)</span>,
                                     <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
+                                    <span className="text-accent-gold font-medium">Lee documentos de hasta <span className="font-bold">100 hojas</span></span>,
                                     <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
                                     <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
                                         <span className="text-accent-gold text-base leading-none">✦</span>
@@ -176,6 +179,10 @@ export default function PreciosPage() {
                                     <span className="text-charcoal-900 font-bold">IA Jurídica de Élite (Máxima precisión argumentativa)</span>,
                                     <span className="text-charcoal-900 font-bold">Arquitectura Multi-Genio (IA avanzada)</span>,
                                     <span className="text-charcoal-900 font-bold">Análisis de documentos y auditoría</span>,
+                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-accent-gold/10 border border-accent-gold/40 rounded-lg px-3 py-2 -mx-1">
+                                        <span className="text-accent-gold text-base leading-none">✦</span>
+                                        <span className="text-charcoal-900 font-bold">Expedientes completos — lee documentos de hasta 600 hojas</span>
+                                    </span>,
                                     <span className="text-charcoal-900 font-bold">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
                                     <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-accent-gold/10 border border-accent-gold/40 rounded-lg px-3 py-2 -mx-1">
                                         <span className="text-accent-gold text-base leading-none">✦</span>
@@ -373,6 +380,7 @@ export default function PreciosPage() {
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
                             { question: '¿Qué son los Genios Especializados y por qué son exclusivos PRO?', answer: 'Los Genios son una capa de inteligencia artificial avanzada especializada en materias específicas (Amparo, CIDH, Civil, Penal, etc.). Se activan con un clic dentro del chat (pudiendo usar hasta 2 al mismo tiempo) y utilizan un modelo de IA más potente para generar razonamientos jurídicos interdisciplinarios con fundamento verificado. Debido al alto costo computacional de este procesamiento complejo simultáneo, los Genios están disponibles exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },
                             { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro con capacidades premium máximas (incluyendo el Redactor de Sentencias TCC Beta y Jurimetría avanzada), bajo nuestra política de uso justo, y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan la máxima potencia y volumen.' },
+                            { question: '¿De qué tamaño pueden ser los documentos que subo?', answer: 'Cada plan lee documentos hasta cierto número de hojas: Gratuito 20, Básico 50, Pro 100 y Platinum 600. El límite existe porque leer un documento —sobre todo escaneado, que exige reconocimiento de texto página por página— es la operación más costosa de la plataforma. Si un documento supera el límite de tu plan te lo decimos ANTES de procesarlo, sin consumirte ninguna consulta, y te indicamos qué plan sí lo cubre. También puedes dividirlo y subirlo por partes: dentro de una carpeta, Iurexia lo analiza todo junto.' },
                             { question: '¿Puedo cambiar de plan en cualquier momento?', answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación.' },
                             { question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo.' },
                             { question: '¿Ofrecen reembolsos?', answer: 'Iurexia no ofrece reembolsos. Por eso ofrecemos 5 consultas gratuitas mensuales para que pruebes la plataforma antes de suscribirte. Si decides cancelar, conservas el acceso hasta el final de tu periodo de facturación.' },
