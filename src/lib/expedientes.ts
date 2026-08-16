@@ -509,17 +509,23 @@ export async function subirDocumento(
     const uid = await userId()
     if (!uid) throw new Error('Inicia sesión para subir documentos.')
 
-    // El lector acepta hasta 25 MB por archivo (tope del backend). Se dice
-    // AQUÍ, con el peso y el porqué, antes de que el abogado espere minutos de
-    // subida para un rechazo seguro. Un expediente completo escaneado pasa de
-    // largo ese tope: la salida es partirlo, y se le dice cómo.
-    const MB_POR_ARCHIVO = 25
-    if (archivo.size > MB_POR_ARCHIVO * 1024 * 1024) {
+    // El tope de peso es POR PLAN, espejo del backend: platinum y ultra suben
+    // hasta 50 MB por archivo, el resto 25. Se dice AQUÍ, con el peso y el
+    // porqué, antes de que el abogado espere minutos de subida para un
+    // rechazo seguro. Quien decide sigue siendo el backend con su 400.
+    const esPlan50 = (plan ?? '').startsWith('platinum') || plan === 'ultra_secretarios'
+    const mbPorArchivo = esPlan50 ? 50 : 25
+    if (archivo.size > mbPorArchivo * 1024 * 1024) {
+        const pesoMB = archivo.size / 1024 / 1024
         throw new DemasiadoGrande(
-            `«${archivo.name}» pesa ${(archivo.size / 1024 / 1024).toFixed(0)} MB y el máximo ` +
-            `por archivo es ${MB_POR_ARCHIVO} MB. Divide el expediente en partes (por etapa ` +
-            `procesal funciona bien) y súbelas por separado: la carpeta las analiza juntas. ` +
-            `Tu plan lee hasta ${paginasDe(plan)} hojas por archivo.`
+            `«${archivo.name}» pesa ${pesoMB.toFixed(0)} MB y ` +
+            (esPlan50
+                ? `el máximo por archivo es ${mbPorArchivo} MB. `
+                : `tu plan acepta hasta ${mbPorArchivo} MB por archivo. ` +
+                  (pesoMB <= 50 ? 'El plan Platinum acepta archivos de hasta 50 MB. ' : '')) +
+            `Divide el expediente en partes (por etapa procesal funciona bien) y súbelas ` +
+            `por separado: la carpeta las analiza juntas. Tu plan lee hasta ` +
+            `${paginasDe(plan)} hojas por archivo.`
         )
     }
 
