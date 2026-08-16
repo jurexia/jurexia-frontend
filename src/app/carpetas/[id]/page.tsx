@@ -428,21 +428,12 @@ function Detalle() {
                                 </div>
                             </details>
 
-                            <div className="flex flex-wrap gap-2">
-                                <button
-                                    onClick={() => void analizar()}
-                                    disabled={documentos.length === 0}
-                                    className="rounded-lg border border-cream-400 px-4 py-2 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-200 disabled:opacity-50">
-                                    Actualizar análisis · 1 consulta
-                                </button>
-                                <button
-                                    onClick={() => setRedactando(true)}
-                                    disabled={leidos === 0}
-                                    className="flex items-center gap-2 rounded-lg bg-charcoal-900 px-4 py-2 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800 disabled:opacity-50">
-                                    <FileSignature className="h-4 w-4" />
-                                    Redactar un escrito
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => void analizar()}
+                                disabled={documentos.length === 0}
+                                className="rounded-lg border border-cream-400 px-4 py-2 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-200 disabled:opacity-50">
+                                Actualizar análisis · 1 consulta
+                            </button>
                         </div>
                     ) : (
                         <div>
@@ -467,6 +458,34 @@ function Detalle() {
                             {leidos} de {documentos.length} documentos ya fueron leídos por la IA.
                         </p>
                     ) : null}
+                </section>
+
+                {/* ── Redactar ─────────────────────────────────────────────
+                    Sección propia y no un botón dentro del análisis: para
+                    redactar basta con que haya documentos LEÍDOS. Estaba
+                    dentro de la rama «ya hay análisis», así que una carpeta
+                    recién creada ni lo mostraba y obligaba a analizar antes
+                    —una consulta que no hacía falta—. Se vio probándolo en
+                    producción, no leyendo el código. */}
+                <section className="mb-8 rounded-xl border border-cream-400 bg-white p-5">
+                    <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
+                        <FileSignature className="h-4 w-4" />
+                        Redactar
+                    </h2>
+                    <p className="mt-2.5 text-sm leading-relaxed text-charcoal-700/80">
+                        Incidentes, medidas provisionales, contestación de vistas, apelaciones.
+                        Iurexia los redacta con los documentos de esta carpeta y marca lo que
+                        usted debe completar antes de presentarlos.
+                    </p>
+                    <button
+                        onClick={() => setRedactando(true)}
+                        disabled={leidos === 0}
+                        className="mt-4 flex items-center gap-2 rounded-lg bg-charcoal-900 px-5 py-2.5 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800 disabled:opacity-50">
+                        <FileSignature className="h-4 w-4" />
+                        {leidos === 0
+                            ? 'Sube un documento primero'
+                            : 'Redactar un escrito · 1 consulta'}
+                    </button>
                 </section>
 
                 {/* ── Las gavetas ──────────────────────────────────────────── */}
