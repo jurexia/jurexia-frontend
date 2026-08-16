@@ -272,6 +272,29 @@ export function cuotaDe(plan: string | null | undefined): number {
     return CUOTA_MB[plan ?? 'gratuito'] ?? CUOTA_MB.gratuito
 }
 
+/**
+ * Hojas que lee cada plan de un documento. Espejo de `PAGINAS_POR_PLAN` en el
+ * API, que es quien manda: aquí sirve para DECIRLO ANTES, no para decidir.
+ *
+ * Quien rechaza es el backend, que cuenta las hojas de verdad y responde 413
+ * sin cobrar. Esta copia existe porque un abogado que sube un expediente de
+ * 400 hojas merece saber el tope antes de esperar la subida, no después.
+ */
+export const PAGINAS_POR_PLAN: Record<string, number> = {
+    gratuito: 20,
+    basico_monthly: 50,
+    basico_annual: 50,
+    pro_monthly: 100,
+    pro_annual: 100,
+    platinum_monthly: 600,
+    platinum_annual: 600,
+    ultra_secretarios: 600,
+}
+
+export function paginasDe(plan: string | null | undefined): number {
+    return PAGINAS_POR_PLAN[plan ?? 'gratuito'] ?? PAGINAS_POR_PLAN.gratuito
+}
+
 export interface UsoAlmacenamiento {
     usadoMB: number
     cuotaMB: number

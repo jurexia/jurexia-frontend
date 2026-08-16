@@ -35,8 +35,10 @@ export interface ContenidoParaCarpeta {
     markdown: string;
 }
 
-/** El .docx sobrio: título, fecha y el texto con el markdown aplanado. */
-async function construirDocx(contenido: ContenidoParaCarpeta): Promise<Blob> {
+/** El .docx sobrio: título, fecha y el texto con el markdown aplanado.
+ *  Exportado porque el generador de escritos de la carpeta produce el mismo
+ *  tipo de documento y no tiene sentido tener dos maneras de armar un .docx. */
+export async function construirDocx(contenido: ContenidoParaCarpeta): Promise<Blob> {
     const { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun } = await import('docx');
 
     const fecha = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });

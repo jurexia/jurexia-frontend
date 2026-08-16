@@ -9,11 +9,13 @@ import {
     Download,
     Loader2,
     Sparkles,
+    FileSignature,
     Target,
     Trash2,
     Upload,
 } from 'lucide-react'
 
+import GenerarEscrito from '@/components/GenerarEscrito'
 import Navbar from '@/components/Navbar'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { ArchivoIcono, CarpetaIcono } from '@/components/CarpetaIcono'
@@ -68,6 +70,7 @@ function Detalle() {
     const [progreso, setProgreso] = useState<ProgresoResumen | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [subiendoEn, setSubiendoEn] = useState<CategoriaDocumento | null>(null)
+    const [redactando, setRedactando] = useState(false)
     const [editandoObjetivo, setEditandoObjetivo] = useState(false)
     const [borradorObjetivo, setBorradorObjetivo] = useState('')
 
@@ -145,8 +148,21 @@ function Detalle() {
         const categoria = gavetaDestino.current
         setSubiendoEn(categoria)
         setError(null)
-        try {
-            for (const archivo of archivos) {
+
+        // CADA ARCHIVO SE JUZGA SOLO.
+        //
+        // Antes un `for` dentro de un `try` cortaba la tanda entera: si el
+        // abogado soltaba diez documentos y el tercero pasaba del tope de
+        // hojas de su plan, los siete siguientes NO se subían y él veía un
+        // solo mensaje —del tercero— sin enterarse de que le faltaban siete.
+        // Un expediente se sube de golpe, no de uno en uno, así que el fallo
+        // era silencioso y del peor tipo: la carpeta parecía completa.
+        //
+        // Ahora se intenta con todos y al final se dice qué entró y qué no,
+        // con el motivo de cada rechazo.
+        const rechazos: string[] = []
+        for (const archivo of archivos) {
+            try {
                 const doc = await subirDocumento(
                     expediente.id,
                     categoria,
@@ -154,12 +170,23 @@ function Detalle() {
                     profile?.subscription_type
                 )
                 setDocumentos((prev) => [doc, ...prev])
+            } catch (err) {
+                const motivo = err instanceof Error ? err.message : 'no se pudo subir'
+                rechazos.push(`${archivo.name}: ${motivo}`)
             }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'No se pudo subir el archivo.')
-        } finally {
-            setSubiendoEn(null)
         }
+        setSubiendoEn(null)
+
+        if (rechazos.length === 0) return
+        const entraron = archivos.length - rechazos.length
+        setError(
+            (entraron > 0
+                ? `Se guardaron ${entraron} de ${archivos.length} documentos. `
+                : '') +
+            (rechazos.length === 1
+                ? `No se guardó ${rechazos[0]}`
+                : `No se guardaron ${rechazos.length}:\n· ${rechazos.join('\n· ')}`)
+        )
     }
 
     async function abrir(doc: DocumentoExpediente) {
@@ -251,6 +278,15 @@ function Detalle() {
                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
             />
 
+            {redactando ? (
+                <GenerarEscrito
+                    expediente={expediente}
+                    documentos={documentos}
+                    onCerrar={() => setRedactando(false)}
+                    onGuardado={(doc) => setDocumentos((prev) => [doc, ...prev])}
+                />
+            ) : null}
+
             <main className="mx-auto max-w-4xl px-4 pb-20 pt-24 sm:px-6">
                 {/* ── Ruta ─────────────────────────────────────────────────── */}
                 <button
@@ -289,7 +325,7 @@ function Detalle() {
                 {error ? (
                     <div className="mb-6 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span className="flex-1">{error}</span>
+                        <span className="flex-1 whitespace-pre-line">{error}</span>
                     </div>
                 ) : null}
 
@@ -392,12 +428,21 @@ function Detalle() {
                                 </div>
                             </details>
 
-                            <button
-                                onClick={() => void analizar()}
-                                disabled={documentos.length === 0}
-                                className="rounded-lg border border-cream-400 px-4 py-2 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-200 disabled:opacity-50">
-                                Actualizar análisis · 1 consulta
-                            </button>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => void analizar()}
+                                    disabled={documentos.length === 0}
+                                    className="rounded-lg border border-cream-400 px-4 py-2 text-sm font-semibold text-charcoal-700 transition hover:bg-cream-200 disabled:opacity-50">
+                                    Actualizar análisis · 1 consulta
+                                </button>
+                                <button
+                                    onClick={() => setRedactando(true)}
+                                    disabled={leidos === 0}
+                                    className="flex items-center gap-2 rounded-lg bg-charcoal-900 px-4 py-2 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800 disabled:opacity-50">
+                                    <FileSignature className="h-4 w-4" />
+                                    Redactar un escrito
+                                </button>
+                            </div>
                         </div>
                     ) : (
                         <div>
