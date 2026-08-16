@@ -1,6 +1,7 @@
 import { streamChat } from './api'
 import {
     categoriasDe,
+    limpiarMarcadores,
     nombreCarpeta,
     tipoCarpeta,
     type DocumentoExpediente,
@@ -352,7 +353,7 @@ export async function generarEscrito(
         respuesta += trozo
     }
 
-    const limpio = respuesta.replace(/<!--thinking-->[\s\S]*?<!--\/thinking-->/g, '').trim()
+    const limpio = limpiarMarcadores(respuesta)
     if (!limpio) throw new Error('No se recibió respuesta. Vuelve a intentarlo.')
 
     // Los huecos se sacan del TEXTO, no de la sección final: el modelo puede

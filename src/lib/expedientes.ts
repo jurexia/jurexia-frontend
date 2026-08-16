@@ -997,12 +997,24 @@ export async function generarResumenCaso(
     return { resumen: limpio, estado, faltantes, riesgos, avance }
 }
 
-/** Quita los marcadores de control que el backend intercala entre tokens. */
-function limpiarMarcadores(texto: string): string {
+/** Quita los marcadores de control que el backend intercala entre tokens.
+ *
+ *  Faltaban `PASO` y `SOURCES`, y se vio probando el generador de escritos
+ *  contra producción: el borrador empezaba con
+ *  `<!--PASO:jurisdiccion|QUERETARO--><!--SOURCES:75-->` a la vista del
+ *  abogado. El chat sí los interpreta —son los pasos con nombre que pinta
+ *  mientras piensa—, pero aquí no hay quien los consuma, así que sobran.
+ *  Como el análisis de carpeta usa esta misma función, se arregla en los dos.
+ */
+export function limpiarMarcadores(texto: string): string {
     return texto
         .replace(/<!--PING-->/g, '')
+        .replace(/<!--PASO:[^>]*-->/g, '')
+        .replace(/<!--SOURCES:[^>]*-->/g, '')
         .replace(/<!--CACHE:ACTIVE-->/g, '')
         .replace(/<!--MODE:(?:PRO|PLATINUM)-->/g, '')
+        .replace(/<!--thinking-->[\s\S]*?<!--\/thinking-->/g, '')
         .replace(/<!-- CITATION_META:[\s\S]*?-->/g, '')
         .replace(/<think>[\s\S]*?<\/think>/g, '')
+        .trim()
 }
