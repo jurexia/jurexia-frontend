@@ -509,6 +509,20 @@ export async function subirDocumento(
     const uid = await userId()
     if (!uid) throw new Error('Inicia sesión para subir documentos.')
 
+    // El lector acepta hasta 25 MB por archivo (tope del backend). Se dice
+    // AQUÍ, con el peso y el porqué, antes de que el abogado espere minutos de
+    // subida para un rechazo seguro. Un expediente completo escaneado pasa de
+    // largo ese tope: la salida es partirlo, y se le dice cómo.
+    const MB_POR_ARCHIVO = 25
+    if (archivo.size > MB_POR_ARCHIVO * 1024 * 1024) {
+        throw new DemasiadoGrande(
+            `«${archivo.name}» pesa ${(archivo.size / 1024 / 1024).toFixed(0)} MB y el máximo ` +
+            `por archivo es ${MB_POR_ARCHIVO} MB. Divide el expediente en partes (por etapa ` +
+            `procesal funciona bien) y súbelas por separado: la carpeta las analiza juntas. ` +
+            `Tu plan lee hasta ${paginasDe(plan)} hojas por archivo.`
+        )
+    }
+
     // Se revisa la cuota ANTES de subir: si no cabe, no tiene sentido gastar la
     // red del abogado ni dejar el archivo a medias en Storage.
     const uso = await usoAlmacenamiento(plan)
@@ -661,7 +675,12 @@ async function extraerDeArchivo(
             // las que lee el plan. No es un fallo: es una respuesta que el
             // abogado tiene que leer, con el nombre del plan que sí lo cubre.
             // Se propaga en vez de tragarse, que es lo que hacía antes.
-            if (res.status === 413 || res.status === 402) {
+            if (res.status === 413 || res.status === 402 || res.status === 400) {
+                // El 400 también trae un motivo que el abogado DEBE leer: el
+                // backend lo usa para «Archivo muy grande (131MB). Máximo
+                // 25MB» y para formatos no soportados. Tragárselo fue lo que
+                // le pasó al usuario 14 con su expediente de 517 páginas: el
+                // rechazo existía, el porqué nunca llegó a la pantalla.
                 const cuerpo = await res.json().catch(() => null)
                 throw new DemasiadoGrande(
                     cuerpo?.detail ?? 'Este documento excede lo que tu plan puede leer.'
