@@ -37,6 +37,7 @@ import { CAMPANIAS, type NombreCampania } from '@/lib/correo/campanias';
 import { segmento } from '@/lib/correo/segmentos';
 import { cupoDisponibleHoy, enviarCampania, type Resultado } from '@/lib/correo/enviar';
 import { revisarAlmacenamiento } from '@/lib/correo/alerta-almacenamiento';
+import { revisarSaldoMotor } from '@/lib/correo/alerta-saldo-motor';
 
 export const maxDuration = 300;
 
@@ -155,8 +156,16 @@ export async function GET(req: NextRequest) {
             ? 'almacenamiento: simulacro, no se revisa'
             : await revisarAlmacenamiento();
 
+        // Y el saldo del motor. A diferencia del almacenamiento, éste puede
+        // apagar la plataforma en días: el 16-ago tocó fondo un sábado y el
+        // primer aviso fueron dos clientes de pago reportando.
+        const saldoMotor = simulacro
+            ? 'saldo-motor: simulacro, no se revisa'
+            : await revisarSaldoMotor();
+
         return NextResponse.json({
             almacenamiento,
+            saldo_motor: saldoMotor,
             fecha: new Date().toISOString().slice(0, 10),
             simulacro,
             ascensos_revertidos: reversiones,
