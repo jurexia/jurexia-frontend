@@ -1061,5 +1061,14 @@ export function limpiarMarcadores(texto: string): string {
         // el flujo se cortó. Ninguna expresión de las de arriba lo toca —todas
         // exigen el `-->`—, así que se recorta desde la apertura huérfana.
         .replace(/<!--[\s\S]*$/, '')
+        // El panel de fuentes (internet y doctrina) viaja como HTML, porque el
+        // chat lo pinta con la hoja de estilos. Dentro de un escrito no hay
+        // quien lo pinte: salía la etiqueta cruda en el documento que el
+        // abogado iba a presentar —`<div class="fuentes-web"><div class=…`—.
+        // Va siempre al final, así que se corta desde su apertura.
+        .replace(/<div class="fuentes-web"[\s\S]*$/i, '')
+        // Y por si alguna vez no fuera el último bloque: ninguna etiqueta HTML
+        // tiene sentido en un escrito jurídico.
+        .replace(/<\/?(?:div|span|br|p|ul|li|ol|a|strong|em|b|i)\b[^>]*>/gi, '')
         .trim()
 }
