@@ -35,7 +35,38 @@ export interface ContenidoParaCarpeta {
     markdown: string;
 }
 
-/** El .docx sobrio: título, fecha y el texto con el markdown aplanado.
+/** Parte una línea de markdown en tramos con y sin negrita.
+ *
+ *  Antes el .docx se armaba quitando los pares de asteriscos con un replace:
+ *  es decir, se BORRABA la negrita a propósito y el escrito llegaba a Word
+ *  como un bloque plano. En un escrito jurídico la negrita no es adorno
+ *  —marca el proemio, los puntos petitorios, los fundamentos— y sin ella el
+ *  abogado tiene que reformatear a mano lo que Iurexia ya sabía.
+ *
+ *  Se admite `**fuerte**` y `*énfasis*`. El resto del markdown no aparece en
+ *  estos escritos, y añadir un intérprete completo por si acaso sería peor.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function runsDeMarkdown(linea: string, forzarNegrita: boolean, TextRun: any): any[] {
+    const runs: any[] = []
+    const re = /\*\*([^*]+)\*\*|\*([^*\n]+)\*/g
+    let ultimo = 0
+    let m: RegExpExecArray | null
+    while ((m = re.exec(linea)) !== null) {
+        if (m.index > ultimo) {
+            runs.push(new TextRun({ text: linea.slice(ultimo, m.index), size: 22, bold: forzarNegrita }))
+        }
+        if (m[1] !== undefined) runs.push(new TextRun({ text: m[1], size: 22, bold: true }))
+        else runs.push(new TextRun({ text: m[2], size: 22, italics: true, bold: forzarNegrita }))
+        ultimo = m.index + m[0].length
+    }
+    if (ultimo < linea.length) {
+        runs.push(new TextRun({ text: linea.slice(ultimo), size: 22, bold: forzarNegrita }))
+    }
+    return runs.length ? runs : [new TextRun({ text: linea, size: 22, bold: forzarNegrita })]
+}
+
+/** El .docx sobrio: título, fecha y el texto con su formato.
  *  Exportado porque el generador de escritos de la carpeta produce el mismo
  *  tipo de documento y no tiene sentido tener dos maneras de armar un .docx. */
 export async function construirDocx(contenido: ContenidoParaCarpeta): Promise<Blob> {
@@ -52,9 +83,20 @@ export async function construirDocx(contenido: ContenidoParaCarpeta): Promise<Bl
         }),
         ...contenido.markdown
             .split(/\n+/)
-            .map((linea) => linea.replace(/^#{1,4}\s*/, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1').trim())
+            .map((linea) => linea.trim())
             .filter(Boolean)
-            .map((linea) => new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: linea, size: 22 })] })),
+            .map((linea) => {
+                // Un encabezado de markdown es un encabezado, no una línea con
+                // almohadillas: sale en negrita y sin justificar, porque
+                // justificar un título de tres palabras lo deja con huecos.
+                const encabezado = /^#{1,4}\s+/.test(linea);
+                const cuerpo = linea.replace(/^#{1,4}\s*/, '');
+                return new Paragraph({
+                    spacing: { after: encabezado ? 120 : 160, before: encabezado ? 220 : 0 },
+                    alignment: encabezado ? AlignmentType.LEFT : AlignmentType.JUSTIFIED,
+                    children: runsDeMarkdown(cuerpo, encabezado, TextRun),
+                });
+            }),
     ];
 
     const doc = new Document({ sections: [{ children: parrafos }] });

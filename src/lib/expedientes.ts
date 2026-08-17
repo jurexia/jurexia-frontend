@@ -1044,7 +1044,22 @@ export function limpiarMarcadores(texto: string): string {
         .replace(/<!--CACHE:ACTIVE-->/g, '')
         .replace(/<!--MODE:(?:PRO|PLATINUM)-->/g, '')
         .replace(/<!--thinking-->[\s\S]*?<!--\/thinking-->/g, '')
-        .replace(/<!-- CITATION_META:[\s\S]*?-->/g, '')
+        .replace(/<!-- ?CITATION_META:[\s\S]*?-->/g, '')
+        // La carga de precedentes (puntuaciones, silos y URLs internas de GCS)
+        // faltaba aquí, y el chat sí la quitaba. Resultado: el escrito que el
+        // abogado iba a presentar EMPEZABA con
+        // `… "score": 0.673, "silo": "sentencias_scjn_holdings", "pdf_url":
+        // "https://storage.googleapis.com/iurexia-leyes/…" }] -->`.
+        .replace(/<!-- ?PRECEDENTES_META:[\s\S]*?-->/g, '')
+        .replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/g, '')
         .replace(/<think>[\s\S]*?<\/think>/g, '')
+        // Cualquier otro comentario, conocido o no. Un marcador nuevo en el
+        // servidor no debería volver a aparecer dentro de un escrito jurídico
+        // sólo porque nadie se acordó de añadirlo a esta lista.
+        .replace(/<!--[\s\S]*?-->/g, '')
+        // Y el caso que de verdad falló: el bloque que llega SIN cerrar, porque
+        // el flujo se cortó. Ninguna expresión de las de arriba lo toca —todas
+        // exigen el `-->`—, así que se recorta desde la apertura huérfana.
+        .replace(/<!--[\s\S]*$/, '')
         .trim()
 }

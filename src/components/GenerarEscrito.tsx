@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { AlertTriangle, FileSignature, Loader2, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { AlertTriangle, Download, FileSignature, Loader2, PencilLine, X } from 'lucide-react'
 
 import { useAuth } from '@/lib/useAuth'
 import {
     CATEGORIAS_ESCRITO,
+    borradorAHtml,
+    borradorAMarkdown,
     escritosDe,
     generarEscrito,
     type EscritoGenerado,
@@ -56,6 +58,18 @@ export default function GenerarEscrito({
     const [guardando, setGuardando] = useState(false)
     const [guardado, setGuardado] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    // El markdown sigue siendo la fuente de verdad —es lo que viaja al .docx—,
+    // pero ahora puede haberlo tocado el abogado.
+    const [textoEditado, setTextoEditado] = useState('')
+    const refBorrador = useRef<HTMLDivElement | null>(null)
+
+    // El HTML se inyecta UNA vez por borrador. Volver a pintarlo desde el
+    // estado en cada tecla devolvería el cursor al principio en cada letra.
+    useEffect(() => {
+        if (!escrito) { setTextoEditado(''); return }
+        setTextoEditado(escrito.markdown)
+        if (refBorrador.current) refBorrador.current.innerHTML = borradorAHtml(escrito.markdown)
+    }, [escrito])
 
     // Cada tipo de carpeta tiene sus propias gavetas. Un escrito va donde
     // mejor encaje de las que existan, no a una fija que puede no estar.
@@ -97,12 +111,29 @@ export default function GenerarEscrito({
         }
     }
 
+    /** El .docx tal cual, para abrirlo en Word. Sale con sus negritas y
+     *  justificado, así que no hay que reformatear nada al llegar. */
+    async function descargarWord() {
+        if (!escrito) return
+        const blob = await construirDocx({
+            titulo: escrito.titulo,
+            markdown: textoEditado || escrito.markdown,
+        })
+        const limpio = escrito.titulo.replace(/[^\w\sáéíóúñÁÉÍÓÚÑ.-]/g, '').slice(0, 70).trim()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${limpio || 'Escrito'}.docx`
+        a.click()
+        URL.revokeObjectURL(url)
+    }
+
     async function guardarEnCarpeta() {
         if (!escrito) return
         setGuardando(true)
         setError(null)
         try {
-            const blob = await construirDocx({ titulo: escrito.titulo, markdown: escrito.markdown })
+            const blob = await construirDocx({ titulo: escrito.titulo, markdown: textoEditado || escrito.markdown })
             const limpio = escrito.titulo
                 .replace(/[^\w\sáéíóúñÁÉÍÓÚÑ.-]/g, '')
                 .slice(0, 70)
@@ -117,7 +148,7 @@ export default function GenerarEscrito({
                 gaveta,
                 archivo,
                 profile?.subscription_type,
-                escrito.markdown
+                textoEditado || escrito.markdown
             )
             setGuardado(true)
             onGuardado?.(doc)
@@ -185,11 +216,22 @@ export default function GenerarEscrito({
                                 </div>
                             ) : null}
 
-                            <div className="max-h-[45vh] overflow-y-auto rounded-lg border border-charcoal-900/10 bg-cream-50 px-5 py-4">
-                                <pre className="whitespace-pre-wrap font-serif text-[13.5px] leading-relaxed text-charcoal-900">
-                                    {escrito.markdown}
-                                </pre>
+                            <div className="mb-2 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-charcoal-700/45">
+                                <PencilLine className="h-3.5 w-3.5" />
+                                Puede editarlo aquí mismo antes de guardarlo
                             </div>
+                            <div
+                                ref={refBorrador}
+                                contentEditable
+                                suppressContentEditableWarning
+                                spellCheck={false}
+                                onInput={() => {
+                                    if (refBorrador.current) {
+                                        setTextoEditado(borradorAMarkdown(refBorrador.current))
+                                    }
+                                }}
+                                className="max-h-[45vh] overflow-y-auto rounded-lg border border-charcoal-900/10 bg-white px-6 py-5 font-serif text-[14px] leading-[1.75] text-charcoal-900 outline-none focus:border-accent-gold/60 focus:ring-2 focus:ring-accent-gold/15"
+                            />
 
                             <div className="mt-5 flex flex-wrap items-center gap-3">
                                 <button
@@ -199,6 +241,13 @@ export default function GenerarEscrito({
                                 >
                                     {guardando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                                     {guardado ? 'Guardado en la carpeta' : 'Guardar en la carpeta'}
+                                </button>
+                                <button
+                                    onClick={descargarWord}
+                                    className="inline-flex items-center gap-2 rounded-lg border border-charcoal-900/15 px-4 py-2.5 text-sm font-medium text-charcoal-800 transition hover:bg-cream-200"
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Descargar en Word
                                 </button>
                                 <button
                                     onClick={() => {

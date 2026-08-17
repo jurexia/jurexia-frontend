@@ -368,3 +368,70 @@ export async function generarEscrito(
         huecos,
     }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EL BORRADOR EN PANTALLA: CON FORMATO Y EDITABLE
+   ═══════════════════════════════════════════════════════════════════════════
+
+   El borrador se pintaba en un `<pre>` con el markdown crudo, así que el
+   abogado veía `**PRIMERO.**` con sus asteriscos, sin justificar y sin poder
+   tocar una coma. En un escrito jurídico la negrita no es adorno —marca el
+   proemio, los fundamentos y los puntos petitorios— y el texto SIEMPRE va
+   justificado.
+
+   El markdown sigue siendo la fuente de verdad, porque es lo que viaja al
+   .docx y a la carpeta. Estas dos funciones lo convierten a HTML para
+   enseñarlo y lo reconstruyen desde el DOM cuando el abogado lo edita.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function escapar(s: string): string {
+    return s.replace(/[&<>]/g, (c) => (({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c] as string))
+}
+
+/** Markdown del escrito → HTML justificado, con negritas y huecos resaltados. */
+export function borradorAHtml(md: string): string {
+    const lineas = md.split('\n').map((l) => l.trim())
+    return lineas
+        .filter((l) => l.length > 0)
+        .map((linea) => {
+            const encabezado = /^#{1,4}\s+/.test(linea)
+            let t = escapar(linea.replace(/^#{1,4}\s*/, ''))
+            t = t
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+                // El hueco se ve. Es lo único que el abogado tiene que
+                // completar, y esconderlo sería lo peor que podríamos hacer.
+                .replace(/\[\[([^\]]+)\]\]/g,
+                    '<mark data-hueco="1" style="background:#fef3c7;color:#92400e;' +
+                    'padding:0 2px;border-radius:2px">[[$1]]</mark>')
+            return encabezado
+                ? `<p style="text-align:left;margin:0 0 .5em"><strong>${t}</strong></p>`
+                : `<p style="text-align:justify;margin:0 0 .75em">${t}</p>`
+        })
+        .join('')
+}
+
+/** El DOM que el abogado acaba de editar → markdown otra vez. */
+export function borradorAMarkdown(raiz: HTMLElement): string {
+    const recorrer = (n: Node): string => {
+        if (n.nodeType === 3) return n.textContent ?? ''
+        if (n.nodeType !== 1) return ''
+        const el = n as HTMLElement
+        const dentro = Array.from(el.childNodes).map(recorrer).join('')
+        switch (el.tagName) {
+            case 'BR': return '\n'
+            case 'STRONG':
+            case 'B': return dentro.trim() ? `**${dentro}**` : dentro
+            case 'EM':
+            case 'I': return dentro.trim() ? `*${dentro}*` : dentro
+            case 'MARK': return dentro          // ya trae sus [[corchetes]]
+            case 'P':
+            case 'DIV': return dentro + '\n\n'
+            default: return dentro
+        }
+    }
+    return Array.from(raiz.childNodes).map(recorrer).join('')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+}
