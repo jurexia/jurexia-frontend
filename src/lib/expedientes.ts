@@ -1033,6 +1033,11 @@ export async function generarResumenCaso(
  */
 export function limpiarMarcadores(texto: string): string {
     return texto
+        // Los identificadores internos de documento NO son para el abogado.
+        // El chat los convierte en marcadores de cita [1], [2]; la carpeta no
+        // tiene dónde ponerlos, así que se quitan. Se veía feo de verdad:
+        // «…queda sin efecto alguno. [Doc ID: 7fc88536-c19a-25c3-ba36-…]».
+        .replace(/\s*\[Doc ID:[^\]]*\]/gi, '')
         .replace(/<!--PING-->/g, '')
         .replace(/<!--PASO:[^>]*-->/g, '')
         .replace(/<!--SOURCES:[^>]*-->/g, '')
