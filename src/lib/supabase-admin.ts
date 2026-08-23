@@ -235,18 +235,60 @@ export async function downgradeToFree(email: string, canceledSubscriptionId?: st
         }
     }
 
+    // ─── Guard: un regalo vigente sobrevive a la cancelación en Stripe ───
+    // Sin esto, quien tenía un plan regalado —un premio de referidos, una
+    // compensación de soporte— y además cancelaba su suscripción de pago se
+    // quedaba en gratuito al instante, aunque su regalo siguiera corriendo. El
+    // regalo desaparecía sin que nadie se enterara: el usuario ve que su plan
+    // bajó, nosotros vemos una cancelación normal, y el tramo sigue vivo en
+    // `ascensos_referido` esperando a revertir algo que ya no está.
+    //
+    // Si hay un tramo vigente, se conserva el plan regalado y sus consultas.
+    // Lo demás de la cancelación sí se aplica: la suscripción de Stripe se
+    // desvincula porque, en efecto, ya no existe. Cuando el tramo venza,
+    // `revertirVencidos` la devolverá a su `plan_previo`, que es quien sabe a
+    // dónde corresponde.
+    // Se resuelve en dos pasos y no con un join anidado: un join depende de que
+    // exista la relación declarada entre las tablas, y si no existiera esta
+    // consulta devolvería vacío en vez de fallar — o sea, borraría el regalo
+    // sin decir nada, que es justo lo que se quiere evitar.
+    let planDestino: PlanType = 'gratuito';
+    const { data: quien } = await getSupabaseAdmin()
+        .from('user_profiles')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+    const { data: regalo } = quien?.id
+        ? await getSupabaseAdmin()
+            .from('ascensos_referido')
+            .select('plan_premio, vence_at')
+            .eq('usuario_id', quien.id)
+            .is('revertido_at', null)
+            .gt('vence_at', new Date().toISOString())
+            .order('vence_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : { data: null };
+    if (regalo?.plan_premio && regalo.plan_premio in PLAN_CONFIG) {
+        planDestino = regalo.plan_premio as PlanType;
+        console.log(`🎁 ${normalizedEmail} cancela en Stripe pero conserva ${planDestino} ` +
+            `por un regalo vigente hasta ${regalo.vence_at}`);
+    }
+
+    const cfgDestino = PLAN_CONFIG[planDestino];
     const { data, error } = await getSupabaseAdmin()
         .from('user_profiles')
         .update({
-            subscription_type: 'gratuito',
-            queries_limit: PLAN_CONFIG.gratuito.queriesLimit,
+            subscription_type: planDestino,
+            queries_limit: cfgDestino.queriesLimit,
             queries_used: 0,
-            drafts_limit: 0,
+            drafts_limit: cfgDestino.draftsLimit,
             drafts_used: 0,
-            sentencia_queries_limit: 0,
+            sentencia_queries_limit: cfgDestino.sentenciaQueriesLimit,
             sentencia_queries_used: 0,
             stripe_subscription_id: null,
-            is_active: false,  // FIX #5: Marcar como inactivo al downgrade
+            // Sigue activa si le queda un regalo corriendo; si no, se apaga.
+            is_active: planDestino !== 'gratuito',
             updated_at: new Date().toISOString(),
         } as any)
         .eq('email', normalizedEmail)
