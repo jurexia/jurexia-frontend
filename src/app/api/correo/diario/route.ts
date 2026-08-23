@@ -38,6 +38,7 @@ import { segmento } from '@/lib/correo/segmentos';
 import { cupoDisponibleHoy, enviarCampania, type Resultado } from '@/lib/correo/enviar';
 import { revisarAlmacenamiento } from '@/lib/correo/alerta-almacenamiento';
 import { revisarSaldoMotor } from '@/lib/correo/alerta-saldo-motor';
+import { revisarRecuperacion } from '@/lib/correo/alerta-recuperacion';
 
 export const maxDuration = 300;
 
@@ -163,9 +164,18 @@ export async function GET(req: NextRequest) {
             ? 'saldo-motor: simulacro, no se revisa'
             : await revisarSaldoMotor();
 
+        // Y que la búsqueda no se quede otra vez sin concepto. HyDE estuvo
+        // MESES apagado sin que nada fallara —la respuesta seguía saliendo,
+        // sólo que peor— y se descubrió porque un abogado notó que faltaba lo
+        // obvio. Ésta es la alarma que faltaba ese día.
+        const recuperacion = simulacro
+            ? 'recuperacion: simulacro, no se revisa'
+            : await revisarRecuperacion();
+
         return NextResponse.json({
             almacenamiento,
             saldo_motor: saldoMotor,
+            recuperacion,
             fecha: new Date().toISOString().slice(0, 10),
             simulacro,
             ascensos_revertidos: reversiones,
