@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { exigirAdmin } from '@/lib/guardia-admin';
 import { getStripe } from '@/lib/stripe';
 
 // Price IDs mapped to plan names
@@ -8,7 +9,12 @@ const PRICE_TO_PLAN: Record<string, { name: string; monthly_equivalent: number }
     'price_1T8IMF3uD85CqvjMM49lRfxI': { name: 'Básico', monthly_equivalent: 7900 },
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    // Sin esto, cualquiera en internet leía el MRR de la empresa. Medido el
+    // 23-ago-2026: HTTP 200 sin credencial alguna.
+    const yo = await exigirAdmin(req);
+    if (yo instanceof NextResponse) return yo;
+
     if (!process.env.STRIPE_SECRET_KEY) {
         return NextResponse.json({ error: 'STRIPE_SECRET_KEY not configured' }, { status: 500 });
     }

@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { exigirAdmin } from '@/lib/guardia-admin';
 import { getStripe } from '@/lib/stripe';
 
 function safeDate(ts: any): string {
@@ -9,7 +10,10 @@ function safeDate(ts: any): string {
     } catch { return ''; }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+    const yo = await exigirAdmin(request);
+    if (yo instanceof NextResponse) return yo;
+
     const { searchParams } = new URL(request.url);
     const idsParam = searchParams.get('ids');
 

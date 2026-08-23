@@ -180,9 +180,18 @@ export default function AdminLawyerPanel() {
         setLoading(true);
         setError('');
         try {
-            const { error: err } = await supabase
-                .from('lawyer_profiles')
-                .update({
+            // Ya no se escribe la tabla desde el navegador: va por el servidor,
+            // que verifica el token y comprueba que quien pide es administrador.
+            // Antes esto funcionaba porque la tabla estaba abierta a cualquiera.
+            const { data: { session } } = await supabase.auth.getSession();
+            const resp = await fetch('/api/admin/abogados', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session?.access_token ?? ''}`,
+                },
+                body: JSON.stringify({
+                    id: editingId,
                     full_name: fullName.trim(),
                     specialties: selectedSpecialties,
                     bio: bio.trim(),
@@ -191,10 +200,11 @@ export default function AdminLawyerPanel() {
                     cp: cp.trim(),
                     phone: phone.trim(),
                     phone_visible: !!phone.trim(),
-                })
-                .eq('id', editingId);
-            if (err) {
-                setError('Error al actualizar: ' + err.message);
+                }),
+            });
+            if (!resp.ok) {
+                const d = await resp.json().catch(() => ({}));
+                setError('Error al actualizar: ' + (d.error || resp.status));
             } else {
                 setEditingId(null);
                 setCedula('');
@@ -213,11 +223,12 @@ export default function AdminLawyerPanel() {
     // ── Delete lawyer ────────────────────────────────────────────────────────
     const handleDelete = async (id: string) => {
         try {
-            const { error: err } = await supabase
-                .from('lawyer_profiles')
-                .delete()
-                .eq('id', id);
-            if (!err) {
+            const { data: { session } } = await supabase.auth.getSession();
+            const resp = await fetch(`/api/admin/abogados?id=${encodeURIComponent(id)}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
+            });
+            if (resp.ok) {
                 setDeleteConfirm(null);
                 await loadLawyers();
             }

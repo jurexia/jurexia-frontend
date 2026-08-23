@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { exigirAdmin } from '@/lib/guardia-admin';
 import { Resend } from 'resend';
 
 function buildAccountReadyEmail(params: { name: string; email: string }) {
@@ -137,6 +138,9 @@ function buildAccountReadyEmail(params: { name: string; email: string }) {
  * Body: { email, name }
  */
 export async function POST(req: NextRequest) {
+    const yo = await exigirAdmin(req);
+    if (yo instanceof NextResponse) return yo;
+
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
         return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 });

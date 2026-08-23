@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { exigirAdmin } from '@/lib/guardia-admin';
 import { Resend } from 'resend';
 import { buildWelcomeEmail } from '@/lib/welcome-email';
 
@@ -9,6 +10,11 @@ import { buildWelcomeEmail } from '@/lib/welcome-email';
  * Body: { email, name, estado, planType?, planLabel?, isIngested? }
  */
 export async function POST(req: NextRequest) {
+    // Manda correo desde nuestro dominio: abierto, es un cañón de phishing
+    // con la marca de Iurexia y una forma de quemar la cuota de Resend.
+    const yo = await exigirAdmin(req);
+    if (yo instanceof NextResponse) return yo;
+
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
         return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 });
