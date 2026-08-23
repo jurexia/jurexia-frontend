@@ -680,9 +680,25 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 /** Techo de devolución automática. Por encima, se avisa y decide una persona. */
 const TECHO_DEVOLUCION_MXN = Number(process.env.DEVOLUCION_AUTO_TOPE_MXN || 200);
 
-/** Reversa sin desplegar. */
+/**
+ * APAGADA POR OMISIÓN, por decisión de política (David, 22-ago-2026).
+ *
+ * La postura de Iurexia es que cancelar es responsabilidad enteramente del
+ * usuario: la plataforma le da el botón, la renovación es automática y
+ * anunciada, y el servicio queda disponible todo el periodo aunque no lo use
+ * —como cualquier suscripción—. Por eso NO se devuelve por el mero hecho de
+ * que alguien reclame a su banco.
+ *
+ * La vía de reembolso existe y está en los términos, pero es otra: que el
+ * usuario escriba a soporte y lo pida. Devolver automáticamente ante una
+ * consulta bancaria premiaría justo el camino que los términos piden evitar.
+ *
+ * Encenderla (DEVOLUCION_AUTO=true) cambia esa política a cambio de dinero:
+ * ahorra los 174 MXN de comisión y mantiene la disputa fuera de la tasa. Es
+ * una decisión de negocio, no técnica.
+ */
 function devolucionAutomaticaActiva(): boolean {
-    return (process.env.DEVOLUCION_AUTO || 'true').toLowerCase() !== 'false';
+    return (process.env.DEVOLUCION_AUTO || 'false').toLowerCase() === 'true';
 }
 
 /**

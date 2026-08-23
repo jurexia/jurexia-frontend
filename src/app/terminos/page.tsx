@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Scale, ArrowLeft } from 'lucide-react';
 
 export default function TerminosPage() {
-    const fechaActualizacion = "4 de febrero de 2026";
+    const fechaActualizacion = "22 de agosto de 2026";
 
     return (
         <main className="min-h-screen bg-cream-300">
@@ -148,28 +148,75 @@ export default function TerminosPage() {
                             <ul className="list-disc pl-6 text-charcoal-700 space-y-2">
                                 <li>Conocer previamente el precio total de los servicios</li>
                                 <li>Recibir comprobante de pago</li>
-                                <li>Solicitar la cancelación de su suscripción en cualquier momento</li>
+                                <li>Cancelar o suspender su suscripción en cualquier momento, por sí mismo, desde su cuenta</li>
                             </ul>
                         </section>
 
                         <section className="mb-8">
                             <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">
-                                7. Política de No Reembolso
+                                7. Renovación Automática, Cancelación y Reembolsos
                             </h2>
+
+                            <h3 className="font-serif text-lg font-medium text-charcoal-900 mt-6 mb-2">
+                                7.1 La suscripción se renueva sola hasta que el usuario la cancela
+                            </h3>
                             <p className="text-charcoal-700 leading-relaxed mb-4">
-                                Iurexia no ofrece reembolsos una vez procesado el pago de cualquier plan de
-                                suscripción. Esta política se fundamenta en que todos los usuarios disponen de
-                                un plan gratuito con 5 consultas mensuales que les permite evaluar la
-                                plataforma antes de adquirir un plan de pago.
+                                Todos los planes de pago son de <strong>renovación automática</strong>. Al
+                                contratar, el usuario autoriza que se cobre el importe del plan a su método de
+                                pago al inicio de cada período de facturación, de forma recurrente y sin
+                                necesidad de una nueva autorización, <strong>hasta que el propio usuario
+                                cancele o suspenda su suscripción</strong>.
+                            </p>
+
+                            <h3 className="font-serif text-lg font-medium text-charcoal-900 mt-6 mb-2">
+                                7.2 Cancelar es responsabilidad del usuario, y la plataforma se lo permite
+                            </h3>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Iurexia pone a disposición del usuario, dentro de su propia cuenta y sin
+                                necesidad de contactar a nadie, la posibilidad de <strong>cancelar o suspender
+                                su suscripción en cualquier momento</strong>, desde la sección de su perfil en
+                                la plataforma. El uso de esa función es{' '}
+                                <strong>responsabilidad enteramente del usuario</strong>.
                             </p>
                             <p className="text-charcoal-700 leading-relaxed mb-4">
-                                Al suscribirse a cualquier plan de pago, el usuario reconoce que ha tenido la
-                                oportunidad de probar el servicio de forma gratuita y que acepta esta política
-                                de no reembolso.
+                                En consecuencia, si el usuario no cancela antes de la fecha de renovación,
+                                asume el costo del período correspondiente, sin derecho a devolución.
+                            </p>
+
+                            <h3 className="font-serif text-lg font-medium text-charcoal-900 mt-6 mb-2">
+                                7.3 No utilizar el servicio no da derecho a reembolso
+                            </h3>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Lo que el usuario contrata es la <strong>disponibilidad</strong> del servicio
+                                durante el período pagado: su cuenta permanece activa en el plan contratado,
+                                con todas sus funciones y su cuota de consultas a su disposición, la use o no.
+                                Por lo mismo, <strong>el no uso, el uso parcial o el olvido de la suscripción
+                                no generan derecho a devolución</strong>, del mismo modo que ocurre con
+                                cualquier servicio por suscripción.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Esta política se sustenta, además, en que todo usuario dispone de un plan
+                                gratuito que le permite evaluar la plataforma antes de contratar. Al
+                                suscribirse a un plan de pago, el usuario reconoce haber tenido esa
+                                oportunidad y acepta las presentes condiciones.
+                            </p>
+
+                            <h3 className="font-serif text-lg font-medium text-charcoal-900 mt-6 mb-2">
+                                7.4 Dispensa por solicitud a soporte
+                            </h3>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                No obstante lo anterior, <strong>Iurexia dispensará del cargo al usuario que
+                                así lo solicite</strong> contactando al área de soporte, procediendo al
+                                reembolso del período correspondiente y a la cancelación de su suscripción.
+                                Esta vía está siempre abierta y no requiere justificación: basta con
+                                escribir a{' '}
+                                <a href="mailto:soporte@iurexia.com" className="underline">soporte@iurexia.com</a>{' '}
+                                o utilizar la sección de soporte dentro de la plataforma.
                             </p>
                             <p className="text-charcoal-700 leading-relaxed">
-                                El usuario podrá cancelar su suscripción en cualquier momento y conservará el
-                                acceso al servicio hasta el final del período de facturación en curso.
+                                Al existir esta vía de solución directa, sencilla y sin costo, el usuario se
+                                obliga a acudir a ella antes de iniciar cualquier reclamación ante su
+                                institución bancaria.
                             </p>
                         </section>
 
