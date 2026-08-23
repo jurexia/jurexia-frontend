@@ -60,6 +60,23 @@ function escapar(s: string) {
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] || c));
 }
 
+/**
+ * La respuesta previa se guarda tal cual la escribió el modelo, con su
+ * markdown. En un correo eso llega como «los artículos **964, 965**» y
+ * «### LEGISLACIÓN ESTATAL», que es ruido justo encima de lo único que hay
+ * que leer con atención. Se quitan las marcas y se deja el texto.
+ */
+function sinMarcas(s: string) {
+    return s
+        .replace(/^#{1,6}\s*/gm, '')      // ### encabezados
+        .replace(/^\s*[-*_]{3,}\s*$/gm, '')  // --- separadores
+        .replace(/\*\*(.+?)\*\*/g, '$1')   // **negritas**
+        .replace(/(?<!\w)\*(?!\s)(.+?)(?<!\s)\*(?!\w)/g, '$1')  // *cursivas*
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+}
+
 export async function revisarCorrecciones(): Promise<string> {
     const sb = admin();
 
@@ -109,7 +126,8 @@ export async function revisarCorrecciones(): Promise<string> {
             day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
             timeZone: 'America/Mexico_City',
         });
-        const previa = (c.respuesta_previa || '').slice(0, 700);
+        const limpia = sinMarcas(c.respuesta_previa || '');
+        const previa = limpia.slice(0, 700);
         return `
   <div style="border-left:3px solid #b08d3f;padding:2px 0 2px 16px;margin:0 0 26px">
     <p style="margin:0 0 4px;font-size:12px;color:#8a8578;letter-spacing:1px">
@@ -120,7 +138,7 @@ export async function revisarCorrecciones(): Promise<string> {
     <p style="margin:0 0 12px;font-size:16px"><b>«${escapar(c.texto.slice(0, 400))}»</b></p>
     ${previa ? `<p style="margin:0 0 4px;font-size:11.5px;color:#8a8578;letter-spacing:2px">LO QUE ESTABA CORRIGIENDO</p>
     <div style="background:#f7f5f0;padding:12px 14px;font-size:13.5px;line-height:1.6;color:#4a463f">
-      ${escapar(previa)}${(c.respuesta_previa || '').length > 700 ? '…' : ''}
+      ${escapar(previa)}${limpia.length > 700 ? '…' : ''}
     </div>` : '<p style="margin:0;font-size:13px;color:#8a8578">(sin respuesta previa capturada)</p>'}
   </div>`;
     }).join('');
