@@ -1,12 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmail, signInWithGoogle, signInWithApple, resetPassword } from '@/lib/supabase';
+import { destinoTrasEntrar, recordarDestino } from '@/lib/destino-tras-entrar';
 
 export default function LoginPage() {
     const router = useRouter();
+    // Si llegó desde Precios por tocar un plan, ahí es donde debe volver.
+    // Se lee del `window` y no con useSearchParams, que obligaría a envolver
+    // la página en <Suspense> — la misma razón que ya está anotada en
+    // registro/page.tsx para el código de referido.
+    const [destino, setDestino] = useState('/chat');
+    useEffect(() => {
+        const r = new URLSearchParams(window.location.search).get('redirect');
+        setDestino(destinoTrasEntrar(r));
+    }, []);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -26,7 +36,7 @@ export default function LoginPage() {
 
         try {
             await signInWithEmail(email, password);
-            router.push('/chat');
+            router.push(destino);
         } catch (err: any) {
             if (err.message?.includes('Invalid login')) {
                 setError('Email o contraseña incorrectos');
@@ -40,6 +50,7 @@ export default function LoginPage() {
 
     const handleGoogleLogin = async () => {
         try {
+            recordarDestino(destino);
             await signInWithGoogle();
         } catch (err: any) {
             setError('Error al conectar con Google');
@@ -48,6 +59,7 @@ export default function LoginPage() {
 
     const handleAppleLogin = async () => {
         try {
+            recordarDestino(destino);
             await signInWithApple();
         } catch (err: any) {
             setError('Error al conectar con Apple');

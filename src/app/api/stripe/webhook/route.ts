@@ -28,9 +28,20 @@ function getSupabaseAdmin() {
 
 // Map Stripe PlanId to Supabase PlanType
 function mapPlanIdToSubscriptionType(planId: PlanId): PlanType {
+    // OJO: este mapa debe cubrir TODOS los planes vendibles. Cuando falta uno,
+    // `mapping[planId]` da undefined y el `|| 'gratuito'` de abajo convierte a
+    // un cliente que acaba de pagar en usuario gratuito de cinco consultas.
+    //
+    // Le faltaba `basico_annual` (790 MXN al año), que sí se vende desde la
+    // pestaña «Anual» de la página de precios. Nadie lo había comprado todavía
+    // —comprobado en Stripe el 22-ago-2026, cero suscripciones en ese precio—
+    // así que era una mina sin pisar, no un daño hecho. El tipo Record<PlanId,…>
+    // ya obligaba a declararlo: el error existía desde hace meses y no frenó un
+    // solo despliegue porque next.config lleva `ignoreBuildErrors: true`.
     const mapping: Record<PlanId, PlanType> = {
         gratuito: 'gratuito',
         basico_monthly: 'basico_monthly',
+        basico_annual: 'basico_annual',
         pro_monthly: 'pro_monthly',
         pro_annual: 'pro_annual',
         platinum_monthly: 'platinum_monthly',
@@ -566,7 +577,32 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
         // After final failed attempts, proactively downgrade to prevent continued usage
         // Stripe will eventually cancel the subscription, but this is a safety net
         console.warn(`🚨 Payment failed ${attemptCount} times for ${email} — proactive downgrade`);
-        const failedSubId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+        // `invoice.subscription` DESAPARECIÓ de la API en la versión que usamos
+        // (2026-01-28.clover): Stripe lo movió a `parent.subscription_details`.
+        // Leerlo del sitio viejo devolvía siempre undefined, y eso no fallaba
+        // ruidosamente: apagaba el candado de `downgradeToFree`.
+        //
+        // Ese candado existe para no degradar a quien YA se cambió a otro plan.
+        // Sin id, el candado se salta, y la secuencia real es ésta: un cliente
+        // moroso mejora su plan (el propio checkout lo permite: «past_due +
+        // plan distinto → cancelar el viejo y seguir»), Stripe sigue
+        // reintentando la factura vieja, al cuarto intento entra aquí y se
+        // degrada a gratuito a alguien que acaba de pagar más.
+        //
+        // Comprobado el 22-ago-2026: ningún suscriptor activo está hoy en
+        // gratuito, así que tampoco había daño consumado. Se lee del sitio
+        // nuevo y se deja el viejo como respaldo por si cambia la versión.
+        const facturaConPadre = invoice as unknown as {
+            parent?: { subscription_details?: { subscription?: string | { id: string } } };
+            subscription?: string | { id: string };
+        };
+        const refSub = facturaConPadre.parent?.subscription_details?.subscription
+            ?? facturaConPadre.subscription;
+        const failedSubId = typeof refSub === 'string' ? refSub : refSub?.id;
+        if (!failedSubId) {
+            console.warn(`⚠️ Sin id de suscripción en la factura de ${email}: `
+                + 'el candado anti-degradación no puede verificar si ya tiene un plan más nuevo');
+        }
         await downgradeToFree(email, failedSubId || undefined);
     } else {
         console.log(`⚠️ Payment failed for ${email} (attempt ${attemptCount}) — awaiting retry and sending email`);

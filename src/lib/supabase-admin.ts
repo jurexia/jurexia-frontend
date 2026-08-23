@@ -29,6 +29,10 @@ function getSupabaseAdmin(): any {
 export const PLAN_CONFIG = {
     gratuito: { queriesLimit: 5, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
     basico_monthly: { queriesLimit: 70, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    // El Básico anual da lo mismo que el mensual: cambia el cobro, no el
+    // derecho. Faltaba aquí, y por eso el webhook no sabía cuántas consultas
+    // darle a quien lo comprara. Igual que pro_annual espeja a pro_monthly.
+    basico_annual: { queriesLimit: 70, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
     pro_monthly: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
     pro_annual: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
     platinum_monthly: { queriesLimit: 560, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },

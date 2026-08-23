@@ -5,6 +5,7 @@ import { Check, ChevronDown, ChevronUp, ArrowLeft, Mail } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithGoogle, signInWithApple, supabase } from '@/lib/supabase';
+import { destinoTrasEntrar } from '@/lib/destino-tras-entrar';
 
 export default function RegistroPage() {
     const router = useRouter();
@@ -12,9 +13,13 @@ export default function RegistroPage() {
     // Se lee una sola vez al montar: en el servidor no hay `window`, y
     // useSearchParams obligaría a envolver la página en <Suspense>.
     const [codigoReferido, setCodigoReferido] = useState<string | null>(null);
+    // Y por lo mismo, a dónde volver si se registró para comprar un plan.
+    const [destino, setDestino] = useState('/chat');
     useEffect(() => {
-        const ref = new URLSearchParams(window.location.search).get('ref');
+        const q = new URLSearchParams(window.location.search);
+        const ref = q.get('ref');
         if (ref) setCodigoReferido(ref.trim().toUpperCase());
+        setDestino(destinoTrasEntrar(q.get('redirect')));
     }, []);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -210,7 +215,7 @@ export default function RegistroPage() {
                 });
             }
 
-            router.push('/chat');
+            router.push(destino);
         } catch {
             setError('Error de conexión.');
         } finally {

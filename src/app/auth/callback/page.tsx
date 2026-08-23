@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { recogerDestino } from '@/lib/destino-tras-entrar';
 
 export default function AuthCallbackPage() {
     const router = useRouter();
@@ -24,7 +25,7 @@ export default function AuthCallbackPage() {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 if (event === 'SIGNED_IN' && session) {
-                    router.push('/chat');
+                    router.push(recogerDestino());
                     subscription.unsubscribe();
                 }
             }
