@@ -39,6 +39,7 @@ import { cupoDisponibleHoy, enviarCampania, type Resultado } from '@/lib/correo/
 import { revisarAlmacenamiento } from '@/lib/correo/alerta-almacenamiento';
 import { revisarSaldoMotor } from '@/lib/correo/alerta-saldo-motor';
 import { revisarRecuperacion } from '@/lib/correo/alerta-recuperacion';
+import { revisarCorrecciones } from '@/lib/correo/alerta-correcciones';
 
 export const maxDuration = 300;
 
@@ -172,10 +173,20 @@ export async function GET(req: NextRequest) {
             ? 'recuperacion: simulacro, no se revisa'
             : await revisarRecuperacion();
 
+        // Y las correcciones de los abogados. Las tres alarmas de arriba
+        // vigilan la máquina; ésta vigila lo único que la máquina no puede
+        // ver de sí misma: que alguien que sabe de la materia fue a la fuente
+        // y encontró que la respuesta estaba mal. Marie Mejía lo dijo el 29 de
+        // julio y canceló el 22 de agosto sin que nadie leyera la frase.
+        const correcciones = simulacro
+            ? 'correcciones: simulacro, no se revisa'
+            : await revisarCorrecciones();
+
         return NextResponse.json({
             almacenamiento,
             saldo_motor: saldoMotor,
             recuperacion,
+            correcciones,
             fecha: new Date().toISOString().slice(0, 10),
             simulacro,
             ascensos_revertidos: reversiones,
