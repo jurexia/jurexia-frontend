@@ -153,6 +153,26 @@ export async function POST(request: NextRequest) {
                 break;
             }
 
+            // ── ANTES DE QUE SEA CONTRACARGO ─────────────────────
+            // Medido el 22-ago-2026: CUATRO disputas, CUATRO perdidas — una de
+            // ellas con evidencia extraordinaria (bitácora de uso, historial de
+            // tres pagos, la cancelación posterior del propio usuario). Cada una
+            // cuesta 149 MXN del cargo MÁS 174 MXN de comisión: 323 pesos.
+            //
+            // Pelear no funciona. Devolver a tiempo sí: si el dinero vuelve
+            // ANTES de que la disputa se formalice, no hay comisión de disputa
+            // y no cuenta para la tasa —que es lo que mira Stripe para meter a
+            // un negocio en programas de vigilancia—.
+            case 'radar.early_fraud_warning.created': {
+                await manejarAvisoTempranoDeFraude(event.data.object as Stripe.Radar.EarlyFraudWarning);
+                break;
+            }
+
+            case 'charge.dispute.created': {
+                await manejarDisputaNueva(event.data.object as Stripe.Dispute);
+                break;
+            }
+
             default:
                 console.log(`Unhandled event type: ${event.type}`);
         }
@@ -637,6 +657,158 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
         } catch (err) {
             console.error(`❌ Failed to send payment failed email to ${email}:`, err);
         }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DISPUTAS: DEVOLVER A TIEMPO EN VEZ DE PELEAR Y PERDER
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// El historial al 22-ago-2026: cuatro disputas, CUATRO perdidas. En una se
+// presentó bitácora de uso, tres meses de pagos limpios y la prueba de que el
+// propio cliente canceló DESPUÉS de disputar. Se perdió igual.
+//
+// La aritmética manda: el cargo son 149 MXN y la comisión de disputa 174 MXN
+// (150 + IVA). Devolver cuesta 149; que llegue a contracargo cuesta 323 y
+// además ensucia la tasa de disputas, que es lo que Stripe vigila para meter a
+// un negocio en sus programas de seguimiento.
+//
+// La propia documentación de Stripe sitúa el punto óptimo de devolución en
+// cargos «menores o iguales a tu comisión de disputa». El nuestro es 149
+// contra 150: cae justo dentro.
+
+/** Techo de devolución automática. Por encima, se avisa y decide una persona. */
+const TECHO_DEVOLUCION_MXN = Number(process.env.DEVOLUCION_AUTO_TOPE_MXN || 200);
+
+/** Reversa sin desplegar. */
+function devolucionAutomaticaActiva(): boolean {
+    return (process.env.DEVOLUCION_AUTO || 'true').toLowerCase() !== 'false';
+}
+
+/**
+ * Devuelve el cargo y corta la suscripción, dejando constancia.
+ *
+ * Se cancela de inmediato y no al final del periodo: si se devuelve el dinero
+ * del mes, dejar el acceso abierto sería regalarlo.
+ */
+async function devolverYCortar(chargeId: string, motivo: string): Promise<string> {
+    const stripe = getStripe();
+    const cargo = await stripe.charges.retrieve(chargeId);
+
+    if (cargo.refunded || cargo.amount_refunded > 0) {
+        return `ya estaba devuelto (${chargeId})`;
+    }
+    const pesos = cargo.amount / 100;
+    if (pesos > TECHO_DEVOLUCION_MXN) {
+        // Un cargo grande no lo decide un webhook solo.
+        console.warn(`⚠️ DISPUTA: ${chargeId} son ${pesos} MXN, por encima del techo `
+            + `de ${TECHO_DEVOLUCION_MXN} — NO se devuelve automáticamente`);
+        return `por encima del techo (${pesos} MXN)`;
+    }
+
+    await stripe.refunds.create({
+        charge: chargeId,
+        reason: 'requested_by_customer',
+        metadata: { motivo, origen: 'prevencion_de_disputa' },
+    });
+
+    // Y cortar la suscripción: sin esto se devuelve el mes y al siguiente se
+    // vuelve a cobrar, que es la forma más rápida de ganarse la segunda
+    // disputa del mismo cliente.
+    let suscripcion = 'sin suscripción asociada';
+    try {
+        const clienteId = typeof cargo.customer === 'string' ? cargo.customer : cargo.customer?.id;
+        if (clienteId) {
+            const subs = await stripe.subscriptions.list({ customer: clienteId, status: 'all', limit: 10 });
+            const viva = subs.data.find(x => ['active', 'past_due', 'trialing'].includes(x.status));
+            if (viva) {
+                await stripe.subscriptions.cancel(viva.id);
+                suscripcion = `suscripción ${viva.id} cancelada`;
+            }
+        }
+    } catch (e) {
+        suscripcion = `no pude cancelar la suscripción (${e instanceof Error ? e.message : e})`;
+    }
+
+    const resumen = `devuelto ${pesos} MXN · ${suscripcion}`;
+    console.log(`💸 PREVENCIÓN DE DISPUTA: ${chargeId} — ${resumen} — motivo: ${motivo}`);
+    try {
+        await getSupabaseAdmin().from('avisos_infraestructura').insert({
+            asunto: 'disputa-prevenida',
+            detalle: { charge: chargeId, mxn: pesos, motivo, suscripcion },
+        });
+    } catch { /* la bitácora no bloquea la devolución */ }
+    return resumen;
+}
+
+/**
+ * Aviso temprano de fraude: el banco emisor marcó el cargo como sospechoso
+ * ANTES de que el cliente dispute. Stripe mide que el 80% de estos avisos
+ * acaba en disputa si no se hace nada.
+ */
+async function manejarAvisoTempranoDeFraude(aviso: Stripe.Radar.EarlyFraudWarning): Promise<void> {
+    const chargeId = typeof aviso.charge === 'string' ? aviso.charge : aviso.charge?.id;
+    console.log(`🚨 AVISO TEMPRANO DE FRAUDE: ${chargeId} (${aviso.fraud_type})`);
+    if (!chargeId) return;
+    if (!devolucionAutomaticaActiva()) {
+        console.warn('   devolución automática APAGADA (DEVOLUCION_AUTO=false) — no se hace nada');
+        return;
+    }
+    if (aviso.actionable === false) {
+        // Stripe marca así los avisos que llegan cuando la disputa YA existe:
+        // devolver entonces no evita la comisión y duplicaría la pérdida.
+        console.log('   el aviso no es accionable (la disputa ya existe) — no se devuelve');
+        return;
+    }
+    try {
+        console.log(`   → ${await devolverYCortar(chargeId, `aviso_temprano_${aviso.fraud_type}`)}`);
+    } catch (e) {
+        console.error('   ❌ no se pudo devolver:', e);
+    }
+}
+
+/**
+ * Disputa nueva. Sólo se devuelve en la fase de CONSULTA (`warning_*`), que es
+ * cuando devolver todavía evita la comisión.
+ *
+ * Esto pesa especialmente en México: Stripe documenta que los cargos
+ * domésticos mexicanos pasan por consulta antes de volverse disputa formal, y
+ * que en esa fase «puedes resolver el caso sin incurrir en comisión de disputa
+ * emitiendo una devolución completa». No responder a una consulta se lee como
+ * aceptación y escala a un contracargo casi imposible de ganar.
+ *
+ * En un contracargo ya formado NO se devuelve: el dinero ya está retenido y la
+ * comisión ya se cobró, así que devolver sería pagar dos veces. Ésos se
+ * registran para que los decida una persona.
+ */
+async function manejarDisputaNueva(disputa: Stripe.Dispute): Promise<void> {
+    const chargeId = typeof disputa.charge === 'string' ? disputa.charge : disputa.charge?.id;
+    const esConsulta = String(disputa.status).startsWith('warning');
+    console.log(`⚖️ DISPUTA ${disputa.id} · ${disputa.status} · ${disputa.reason} · `
+        + `${disputa.amount / 100} ${disputa.currency.toUpperCase()} · `
+        + `${esConsulta ? 'CONSULTA (aún se puede evitar la comisión)' : 'CONTRACARGO FORMAL'}`);
+
+    try {
+        await getSupabaseAdmin().from('avisos_infraestructura').insert({
+            asunto: esConsulta ? 'disputa-consulta' : 'disputa-formal',
+            detalle: {
+                disputa: disputa.id, charge: chargeId, motivo: disputa.reason,
+                estado: disputa.status, mxn: disputa.amount / 100,
+                vence: disputa.evidence_details?.due_by ?? null,
+            },
+        });
+    } catch { /* la bitácora no bloquea nada */ }
+
+    if (!esConsulta) {
+        console.warn('   contracargo ya formado: la comisión ya se cobró. '
+            + 'Devolver ahora sería pagar dos veces. Lo decide una persona.');
+        return;
+    }
+    if (!chargeId || !devolucionAutomaticaActiva()) return;
+    try {
+        console.log(`   → ${await devolverYCortar(chargeId, `consulta_${disputa.reason}`)}`);
+    } catch (e) {
+        console.error('   ❌ no se pudo devolver:', e);
     }
 }
 
