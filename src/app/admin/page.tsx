@@ -121,10 +121,17 @@ export default function PanelAdmin() {
     }, []);
 
     // Finanzas vive en su propia ruta porque su fuente es Stripe, no Supabase.
+    // La cabecera no es opcional: esa ruta estuvo devolviendo el MRR de la
+    // empresa a cualquiera hasta el 23-ago-2026, y al ponerle cerradura esta
+    // llamada —la única de la página que no mandaba el token— se quedó fuera.
     const pedirFinanzas = useCallback(async () => {
         setCargando('finanzas'); setError('');
         try {
-            const r = await fetch('/api/admin/finances');
+            const { data: { session } } = await supabase.auth.getSession();
+            const r = await fetch('/api/admin/finances', {
+                headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
+            });
+            if (!r.ok) { setError(r.status === 401 ? 'Sesión no autorizada.' : 'No se pudo leer Stripe.'); return; }
             const j = await r.json();
             setDatos(d => ({ ...d, finanzas: j }));
         } catch { setError('No se pudo leer Stripe.'); }
