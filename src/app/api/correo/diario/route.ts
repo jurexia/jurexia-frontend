@@ -40,6 +40,7 @@ import { revisarAlmacenamiento } from '@/lib/correo/alerta-almacenamiento';
 import { revisarSaldoMotor } from '@/lib/correo/alerta-saldo-motor';
 import { revisarRecuperacion } from '@/lib/correo/alerta-recuperacion';
 import { revisarCorrecciones } from '@/lib/correo/alerta-correcciones';
+import { revisarCreditosVoz } from '@/lib/correo/alerta-voz';
 
 export const maxDuration = 300;
 
@@ -182,11 +183,21 @@ export async function GET(req: NextRequest) {
             ? 'correcciones: simulacro, no se revisa'
             : await revisarCorrecciones();
 
+        // Y los créditos de voz del Agente IA. El 16-ago se acabó el saldo del
+        // motor un sábado y el primer aviso fueron dos clientes reportando;
+        // aquí sería un abogado de pie en una audiencia al que la voz se le
+        // apaga a media pregunta. Avisa en DÍAS de margen, no en porcentaje:
+        // «te queda el 20%» puede ser una semana o una tarde.
+        const creditosVoz = simulacro
+            ? 'creditos-voz: simulacro, no se revisa'
+            : await revisarCreditosVoz();
+
         return NextResponse.json({
             almacenamiento,
             saldo_motor: saldoMotor,
             recuperacion,
             correcciones,
+            creditos_voz: creditosVoz,
             fecha: new Date().toISOString().slice(0, 10),
             simulacro,
             ascensos_revertidos: reversiones,
