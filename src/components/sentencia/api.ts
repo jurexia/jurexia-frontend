@@ -116,10 +116,20 @@ export interface TesisDelAcervo {
     texto: string;
 }
 
+export interface ProblemaDelCaso {
+    pregunta: string;
+    /** Qué resolvió la responsable sobre este punto. */
+    resolvio: string;
+    /** El concepto o agravio que lo combate. */
+    combate: string;
+    /** Impedimento técnico que llevaría a inoperancia, si el pipeline lo advierte. */
+    impedimento?: { motivo: string; explicacion: string } | null;
+}
+
 export interface MaterialDelCaso {
     expediente: string;
     problema_global: string;
-    problemas: string[];
+    problemas: ProblemaDelCaso[];
     tesis: TesisDelAcervo[];
     normas: { cuerpo_legal: string; articulo: string; texto: string }[];
     avisos: string[];

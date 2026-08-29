@@ -3,161 +3,339 @@
 /**
  * Taller de sentencias — la pantalla del redactor desde el adelanto.
  *
- * El plan está en `IUREXIA-MAC/PLAN-REDACTOR-ADELANTO.md` y la forma de esta
- * pantalla sale de ahí, no al revés: rejilla bento de dos columnas, a la
- * izquierda lo que el secretario aporta y lo que la máquina dedujo, a la
- * derecha el recorrido del asunto, los problemas jurídicos y la ventana donde
- * entra su criterio.
+ * EL CIRCUITO ESTÁ PARTIDO EN DOS A PROPÓSITO, porque entre las dos mitades hay
+ * una PERSONA. La máquina lee y ordena; el secretario decide; la máquina
+ * redacta la demostración de lo que él decidió.
  *
- * Ruta aparte de `/sentencia`, que es el AUDITOR de sentencias y está vivo.
+ *     1. adelanto    los dos PDF y su plantilla → ficha, resúmenes, problemas
+ *     2. acervo      lo que la jurisprudencia dice de SUS problemas
+ *     3. criterio    ⏸ él decide, viendo ya la obligatoria del tema
+ *     4. proyecto    el estudio de fondo dentro de su propio .docx
  *
- * ESTADO: la interfaz está terminada y es navegable; los datos son de muestra
- * mientras se construyen las fases del backend. Todo lo que se pinta sale de
- * `tipos.ts`, que es el contrato con el pipeline: cuando las fases existan se
- * sustituye el estado inicial por la llamada, sin tocar un solo componente.
+ * El paso 2 va ANTES del 3 y no al revés: pedirle el sentido sin enseñarle la
+ * jurisprudencia obligatoria es justo el error que este taller existe para
+ * evitar.
+ *
+ * Y lo que sale NO es un proyecto firmable. La medición sobre tres expedientes
+ * reales lo dejó claro, así que el aviso va encima del documento, cada vez, con
+ * los números de ESE borrador.
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Loader2, Download, Search, FileText, AlertCircle } from 'lucide-react';
+import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
 import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
-import FichaAsunto from '@/components/sentencia/FichaAsunto';
 import LineaDeFases from '@/components/sentencia/LineaDeFases';
-import ProblemasJuridicos from '@/components/sentencia/ProblemasJuridicos';
 import VentanaCriterio from '@/components/sentencia/VentanaCriterio';
-import { Tarjeta, Rotulo } from '@/components/sentencia/primitivas';
+import FormularioEncargo, { ENCARGO_VACIO, faltaEnEncargo } from '@/components/sentencia/FormularioEncargo';
+import type { Encargo } from '@/components/sentencia/FormularioEncargo';
+import AvisoBorrador, { AvisoPiloto } from '@/components/sentencia/AvisoBorrador';
+import { Tarjeta, Rotulo, cn } from '@/components/sentencia/primitivas';
 import type { Asunto, Documento, Fase, ProblemaJuridico, RolDocumento } from '@/components/sentencia/tipos';
+import {
+    generarAdelanto, descargar, consultarAcervo, resolverConCriterio,
+    estadoPiloto, descargarProyecto,
+} from '@/components/sentencia/api';
+import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
 
-const FASES: Fase[] = [
-    { id: 'ficha', titulo: 'Ficha y oportunidad', detalle: 'Partes, fechas y cómputo de días hábiles. Sin modelo: aritmética.', estado: 'lista', segundos: 3 },
-    { id: 'ratio', titulo: 'Ratio del acto reclamado', detalle: 'Qué resolvió la responsable y con qué razones, anclado a su página.', estado: 'lista', segundos: 41 },
-    { id: 'conceptos', titulo: 'Síntesis de conceptos', detalle: 'Un párrafo por concepto, en el registro de tus engroses.', estado: 'lista', segundos: 28 },
-    { id: 'problemas', titulo: 'Problemas jurídicos', detalle: 'Del contraste entre lo resuelto y lo combatido.', estado: 'lista', segundos: 19 },
-    { id: 'busqueda', titulo: 'Búsqueda por problema', detalle: 'Un RAG dirigido a cada problema, con registro verificado.', estado: 'lista', segundos: 34 },
-    { id: 'criterio', titulo: 'Tu criterio', detalle: 'El único paso que no se automatiza. Decide y explica por qué.', estado: 'espera', requiereHumano: true },
+type Paso = 'ficha' | 'adelanto' | 'acervo' | 'criterio' | 'proyecto';
+
+const FASES_BASE: Fase[] = [
+    { id: 'ficha', titulo: 'Ficha y oportunidad', detalle: 'Partes, fechas y cómputo de días hábiles. Sin modelo: aritmética.', estado: 'pendiente' },
+    { id: 'ratio', titulo: 'Ratio del acto reclamado', detalle: 'Qué resolvió la responsable y con qué razones, anclado a su página.', estado: 'pendiente' },
+    { id: 'conceptos', titulo: 'Síntesis de conceptos', detalle: 'Un párrafo por concepto, en el registro de tus engroses.', estado: 'pendiente' },
+    { id: 'problemas', titulo: 'Problemas jurídicos', detalle: 'Del contraste entre lo resuelto y lo combatido.', estado: 'pendiente' },
+    { id: 'busqueda', titulo: 'Búsqueda por problema', detalle: 'Un RAG dirigido a cada problema, con registro verificado.', estado: 'pendiente' },
+    { id: 'criterio', titulo: 'Tu criterio', detalle: 'El único paso que no se automatiza. Decide y explica por qué.', estado: 'pendiente', requiereHumano: true },
     { id: 'estudio', titulo: 'Estudio de fondo', detalle: 'Tu criterio manda el sentido; el corpus, la forma; la ley, el fundamento.', estado: 'pendiente' },
     { id: 'ensamblado', titulo: 'Ensamblado en tu plantilla', detalle: 'Se rellenan los huecos del adelanto. No se construye un Word nuevo.', estado: 'pendiente' },
-    { id: 'verificacion', titulo: 'Verificación', detalle: 'Registros vivos, resolutivo concordante y ningún hueco sin llenar.', estado: 'pendiente' },
 ];
 
-const ASUNTO: Asunto = {
-    numero: 'ADA 240/2026',
-    tipo: 'amparo_directo',
-    quejoso: 'Edgar Soria Hernández',
-    magistrado: 'Luis Armando Pérez Topete',
-    secretario: 'José David Alcántar Mendoza',
-    autoridades: ['Magistrado Instructor de la Segunda Sección de la Sala Superior', 'Sala Superior'],
-    actoReclamado: 'La sentencia dictada el diecisiete de febrero de dos mil veintiséis en el expediente 2505/2025, que sobreseyó el juicio por consentimiento del acto impugnado.',
-    oportunidad: { notificacion: '2 mar 2026', presentacion: '20 mar 2026', plazo: 15, enTiempo: true },
-};
+/** Qué fases están hechas según dónde vamos. */
+function fasesSegun(paso: Paso, corriendo: boolean): Fase[] {
+    const hasta: Record<Paso, number> = { ficha: 0, adelanto: 4, acervo: 5, criterio: 5, proyecto: 8 };
+    const n = hasta[paso];
+    return FASES_BASE.map((f, i) => ({
+        ...f,
+        estado: i < n ? 'lista'
+            : i === n && corriendo ? 'corriendo'
+                : f.requiereHumano && i === n ? 'espera'
+                    : 'pendiente',
+    }));
+}
 
-const DOCUMENTOS: Documento[] = [
-    { id: 'd1', nombre: 'Acto reclamado ada 240-2026.pdf', rol: 'acto', bytes: 2_310_442, paginas: 11, via: 'ocr', progreso: 100, estado: 'listo' },
-    { id: 'd2', nombre: 'Conceptos de violación ada 240-2026.pdf', rol: 'conceptos', bytes: 984_112, paginas: 10, via: 'digital', progreso: 100, estado: 'listo' },
-];
-
-const EXTRACTOS = [
-    { etiqueta: 'Acto reclamado', pagina: 7, texto: 'La Sala consideró que el actor consintió tácitamente la boleta de infracción, al no haberla impugnado dentro del plazo de quince días previsto en el artículo 26 de la ley de la materia.' },
-    { etiqueta: 'Conceptos', pagina: 3, texto: 'Aduce que la boleta no señalaba con claridad los medios de impugnación procedentes, por lo que el plazo no pudo correr en su perjuicio.' },
-];
-
-const PROBLEMAS_BASE: ProblemaJuridico[] = [
-    {
-        id: 'p1',
-        pregunta: '¿Puede tenerse por consentido el acto cuando la notificación no informó los medios de impugnación procedentes?',
-        resolvio: 'Que el plazo corrió desde la notificación de la boleta y que el actor no la impugnó en quince días, por lo que la consintió.',
-        combate: 'Que la boleta omitió señalar los recursos procedentes, de modo que el plazo no pudo perjudicarle.',
-        candidatos: [
-            { tipo: 'tesis', registro: '2002341', rubro: 'NOTIFICACIÓN POR LISTA DEL ACUERDO QUE TIENE POR ADMITIDA LA CONTESTACIÓN DE LA DEMANDA. LA OMISIÓN DE REALIZARLA PERSONALMENTE ACTUALIZA UNA VIOLACIÓN PROCESAL QUE AMERITA LA REPOSICIÓN DEL PROCEDIMIENTO.', instancia: 'Tribunales Colegiados', porQue: 'fija que el vicio de la notificación impide que el plazo surta efectos en perjuicio del particular.', verificado: true },
-            { tipo: 'norma', rubro: 'Artículo 14 constitucional — garantía de audiencia y formalidades esenciales del procedimiento', porQue: 'es el marco del que deriva el deber de informar los medios de defensa.', verificado: true },
-        ],
-        criterio: '',
-    },
-    {
-        id: 'p2',
-        pregunta: '¿Es correcto sobreseer por consentimiento cuando la demanda ya había sido admitida sin objeción?',
-        resolvio: 'Que la admisión de la demanda no impide analizar de oficio las causales de improcedencia en la sentencia.',
-        combate: 'Que al admitirse la demanda debió analizarse entonces la improcedencia, y hacerlo después vulnera la seguridad jurídica.',
-        candidatos: [
-            { tipo: 'tesis', registro: '2028456', rubro: 'IMPROCEDENCIA. SU ANÁLISIS OFICIOSO EN LA SENTENCIA NO SE VE IMPEDIDO POR LA ADMISIÓN PREVIA DE LA DEMANDA.', instancia: 'Primera Sala', porQue: 'resuelve exactamente el punto, y en contra del planteamiento.', verificado: true },
-        ],
-        impedimento: {
-            motivo: 'inoperancia',
-            explicacion: 'El planteamiento no combate la razón toral —que la improcedencia es de orden público y de estudio oficioso—, sino un aspecto accesorio del trámite.',
-        },
-        criterio: '',
-    },
-];
+const boton = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 ' +
+    'text-[13px] font-medium transition disabled:cursor-not-allowed disabled:opacity-40';
 
 export default function TallerDeSentencias() {
-    const [documentos, setDocumentos] = useState<Documento[]>(DOCUMENTOS);
-    const [problemas, setProblemas] = useState<ProblemaJuridico[]>(PROBLEMAS_BASE);
-    const [generando, setGenerando] = useState(false);
+    const { user, loading: authLoading } = useRequireAuth();
+    const correo = user?.email ?? '';
+
+    const [paso, setPaso] = useState<Paso>('ficha');
+    const [corriendo, setCorriendo] = useState(false);
+    const [error, setError] = useState('');
+    const [piloto, setPiloto] = useState<EstadoPiloto | null>(null);
+
+    const [encargo, setEncargo] = useState<Encargo>(ENCARGO_VACIO);
+    const [documentos, setDocumentos] = useState<Documento[]>([]);
+    const [ficheros, setFicheros] = useState<Partial<Record<RolDocumento | 'plantilla', File>>>({});
+    const [material, setMaterial] = useState<MaterialDelCaso | null>(null);
+    const [problemas, setProblemas] = useState<ProblemaJuridico[]>([]);
+    const [proyecto, setProyecto] = useState<ResultadoProyecto | null>(null);
+
+    useEffect(() => {
+        if (!correo) return;
+        estadoPiloto(correo).then(setPiloto).catch(() => setPiloto(null));
+    }, [correo]);
 
     const soltar = useCallback((rol: RolDocumento, f: File) => {
-        const id = `${rol}-${f.name}`;
+        setFicheros((p) => ({ ...p, [rol]: f }));
         setDocumentos((prev) => [
             ...prev.filter((d) => d.rol !== rol),
-            { id, nombre: f.name, rol, bytes: f.size, progreso: 8, estado: 'subiendo' },
+            { id: `${rol}-${f.name}`, nombre: f.name, rol, bytes: f.size, progreso: 100, estado: 'listo' },
         ]);
-        // Progreso de muestra; se sustituye por el del backend.
-        let p = 8;
-        const t = setInterval(() => {
-            p = Math.min(100, p + 11);
-            setDocumentos((prev) => prev.map((d) => d.id === id
-                ? { ...d, progreso: p, estado: p < 60 ? 'subiendo' : p < 100 ? 'leyendo' : 'listo' }
-                : d));
-            if (p >= 100) clearInterval(t);
-        }, 260);
     }, []);
 
     const quitar = useCallback((id: string) => {
-        setDocumentos((prev) => prev.filter((d) => d.id !== id));
+        setDocumentos((prev) => {
+            const d = prev.find((x) => x.id === id);
+            if (d) setFicheros((f) => ({ ...f, [d.rol]: undefined }));
+            return prev.filter((x) => x.id !== id);
+        });
     }, []);
+
+    const falta = useMemo(() => {
+        const f = faltaEnEncargo(encargo);
+        if (!ficheros.plantilla) f.push('tu plantilla .docx');
+        if (!ficheros.acto) f.push('el acto reclamado');
+        if (!ficheros.conceptos) f.push('los conceptos de violación');
+        return f;
+    }, [encargo, ficheros]);
+
+    const pedirAdelanto = useCallback(async () => {
+        setError(''); setCorriendo(true);
+        try {
+            const r = await generarAdelanto(
+                { ...encargo, reglaSurtimiento: encargo.reglaSurtimiento },
+                { plantilla: ficheros.plantilla!, acto: ficheros.acto!, conceptos: ficheros.conceptos! },
+                correo,
+            );
+            descargar(r);
+            if (r.oportunidad === 'EXTEMPORANEA') {
+                setError('El cómputo da EXTEMPORÁNEA. Compruébalo antes de seguir: si es correcto, el asunto no se resuelve en el fondo.');
+            }
+            setPaso('adelanto');
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo generar el adelanto.');
+        } finally { setCorriendo(false); }
+    }, [encargo, ficheros, correo]);
+
+    const pedirAcervo = useCallback(async () => {
+        setError(''); setCorriendo(true);
+        try {
+            const m = await consultarAcervo(encargo.numero, correo);
+            setMaterial(m);
+            const candidatos = m.tesis.slice(0, 4).map((t) => ({
+                tipo: 'tesis' as const, registro: t.registro, rubro: t.rubro,
+                instancia: t.instancia,
+                porQue: t.obligatoria
+                    ? 'Jurisprudencia obligatoria del tema: vincula a este Tribunal.'
+                    : 'Tesis orientadora: ilustra, no vincula.',
+                verificado: true,
+            }));
+            setProblemas([
+                ...(m.problema_global ? [{
+                    id: 'global', pregunta: m.problema_global, resolvio: '', combate: '',
+                    candidatos, criterio: '',
+                }] : []),
+                ...m.problemas.map((p, i) => ({
+                    id: `p${i}`, pregunta: p.pregunta, resolvio: p.resolvio,
+                    combate: p.combate,
+                    impedimento: p.impedimento ?? undefined,
+                    candidatos, criterio: '',
+                })),
+            ]);
+            setPaso('acervo');
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo consultar el acervo.');
+        } finally { setCorriendo(false); }
+    }, [encargo.numero, correo]);
 
     const cambiarCriterio = useCallback((id: string, campo: 'criterio' | 'sentido', valor: string) => {
         setProblemas((prev) => prev.map((p) => p.id === id ? { ...p, [campo]: valor } : p));
     }, []);
 
-    const fases = useMemo(() => FASES, []);
+    const pedirProyecto = useCallback(async () => {
+        setError(''); setCorriendo(true);
+        try {
+            const p0 = problemas.find((p) => p.sentido) ?? problemas[0];
+            const r = await resolverConCriterio(encargo.numero, correo, {
+                sentido: p0?.sentido ?? 'infundado',
+                problema: p0?.pregunta ?? '',
+                razonamiento: problemas.filter((p) => p.criterio)
+                    .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
+            });
+            setProyecto(r);
+            descargarProyecto(r);
+            setPaso('proyecto');
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
+        } finally { setCorriendo(false); }
+    }, [problemas, encargo.numero, correo]);
+
+    const asunto: Asunto = useMemo(() => ({
+        numero: encargo.numero || '—',
+        tipo: encargo.esRecurso ? 'amparo_revision' : 'amparo_directo',
+        quejoso: encargo.quejoso || '—',
+        magistrado: encargo.magistrado, secretario: encargo.secretario,
+        autoridades: [], actoReclamado: '',
+        oportunidad: {
+            notificacion: encargo.notificacion, presentacion: encargo.presentacion,
+            plazo: encargo.plazo, enTiempo: true,
+        },
+    }), [encargo]);
+
+    if (authLoading) {
+        return <div className="grid min-h-screen place-items-center bg-charcoal-900">
+            <Loader2 className="h-6 w-6 animate-spin text-accent-gold" />
+        </div>;
+    }
+
+    const sinAcceso = piloto && !piloto.tiene_acceso;
 
     return (
         <div className="min-h-screen bg-charcoal-900 font-sans text-white antialiased">
-            {/* Resplandor ambiental: una sola fuente de luz, muy tenue. */}
-            <div
-                aria-hidden
-                className="pointer-events-none fixed inset-x-0 top-0 h-[420px] opacity-[0.55]"
-                style={{ background: 'radial-gradient(70% 100% at 50% 0%, rgba(201,169,98,0.10) 0%, transparent 70%)' }}
-            />
+            <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 h-[420px] opacity-[0.55]"
+                 style={{ background: 'radial-gradient(70% 100% at 50% 0%, rgba(201,169,98,0.10) 0%, transparent 70%)' }} />
 
-            <BarraSuperior asunto={ASUNTO} />
+            <BarraSuperior asunto={asunto} />
 
-            <main className="relative mx-auto grid max-w-[1500px] gap-4 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(320px,380px)_1fr]">
-                {/* Izquierda — lo que se aporta y lo que se dedujo */}
+            <main className="relative mx-auto grid max-w-[1500px] gap-4 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(320px,400px)_1fr]">
                 <div className="flex flex-col gap-4 lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)] lg:overflow-y-auto lg:pr-1">
-                    <PanelDocumentos
-                        documentos={documentos} onSoltar={soltar} onQuitar={quitar}
-                        extractos={EXTRACTOS}
-                    />
-                    <FichaAsunto asunto={ASUNTO} />
+                    {piloto && <AvisoPiloto secretarios={piloto.secretarios} cupo={piloto.cupo} />}
+                    <FormularioEncargo valor={encargo} onCambiar={setEncargo}
+                                       deshabilitado={corriendo || paso !== 'ficha'} />
+                    <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
+                                     extractos={[]} />
+                    <label className={cn('block cursor-pointer rounded-xl border border-dashed',
+                        'border-white/15 bg-white/[0.02] px-4 py-3 text-[12px] text-white/50',
+                        'transition hover:border-accent-gold/30 hover:text-white/70')}>
+                        <input type="file" accept=".docx" className="hidden"
+                               onChange={(e) => e.target.files?.[0] &&
+                                   setFicheros((p) => ({ ...p, plantilla: e.target.files![0] }))} />
+                        {ficheros.plantilla
+                            ? <>Plantilla: <span className="text-white/80">{ficheros.plantilla.name}</span></>
+                            : <>Tu plantilla .docx — el adelanto se rellena sobre ELLA, no se construye uno nuevo</>}
+                    </label>
                 </div>
 
-                {/* Derecha — el recorrido y la decisión */}
                 <div className="flex min-w-0 flex-col gap-4">
+                    {sinAcceso && (
+                        <Tarjeta className="border-amber-400/30 bg-amber-400/[0.06]">
+                            <p className="text-[13px] text-amber-100">
+                                El taller de sentencias es una función Platinum.
+                            </p>
+                        </Tarjeta>
+                    )}
+
+                    {error && (
+                        <Tarjeta className="border-red-400/30 bg-red-400/[0.06]">
+                            <div className="flex gap-2.5">
+                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
+                                <p className="text-[13px] leading-relaxed text-red-100">{error}</p>
+                            </div>
+                        </Tarjeta>
+                    )}
+
                     <Tarjeta>
                         <Rotulo accion={<span className="text-[11px] text-white/30">se detiene una sola vez</span>}>
                             Recorrido del asunto
                         </Rotulo>
-                        <LineaDeFases fases={fases} />
+                        <LineaDeFases fases={fasesSegun(paso, corriendo)} />
+
+                        <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.08] pt-4">
+                            <button className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
+                                    disabled={corriendo || falta.length > 0 || !!sinAcceso || paso !== 'ficha'}
+                                    onClick={pedirAdelanto}>
+                                {corriendo && paso === 'ficha'
+                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                    : <FileText className="h-4 w-4" />}
+                                Generar adelanto
+                            </button>
+                            <button className={cn(boton, 'border border-white/12 bg-white/[0.05] text-white/85 hover:bg-white/[0.08]')}
+                                    disabled={corriendo || paso === 'ficha'}
+                                    onClick={pedirAcervo}>
+                                {corriendo && paso === 'adelanto'
+                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                    : <Search className="h-4 w-4" />}
+                                Consultar el acervo
+                            </button>
+                        </div>
+
+                        {falta.length > 0 && paso === 'ficha' && (
+                            <p className="mt-3 text-[12px] text-white/40">
+                                Falta {falta.join(', ')}.
+                            </p>
+                        )}
                     </Tarjeta>
 
-                    <ProblemasJuridicos problemas={problemas} />
+                    {material && (
+                        <Tarjeta>
+                            <Rotulo accion={
+                                <span className="text-[11px] text-white/30">
+                                    {material.tesis.filter((t) => t.obligatoria).length} obligatorias
+                                    {' · '}{material.tesis.length} en total
+                                </span>
+                            }>
+                                Lo que dice el acervo
+                            </Rotulo>
+                            <ul className="grid gap-2">
+                                {material.tesis.slice(0, 12).map((t) => (
+                                    <li key={t.registro}
+                                        className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
+                                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                                            <span className={cn('rounded-md border px-1.5 py-0.5 text-[10px] font-medium',
+                                                t.obligatoria
+                                                    ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300'
+                                                    : 'border-white/10 bg-white/[0.05] text-white/50')}>
+                                                {t.obligatoria ? 'Obligatoria' : 'Orientadora'}
+                                            </span>
+                                            <span className="text-[11px] text-white/35">
+                                                Reg. {t.registro} · {t.instancia}
+                                            </span>
+                                        </div>
+                                        <p className="text-[12px] leading-snug text-white/75">{t.rubro}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                            {material.normas.length > 0 && (
+                                <p className="mt-3 text-[11px] text-white/35">
+                                    Y {material.normas.length} preceptos:{' '}
+                                    {material.normas.slice(0, 6).map((n) => `art. ${n.articulo}`).join(' · ')}
+                                </p>
+                            )}
+                        </Tarjeta>
+                    )}
 
-                    <VentanaCriterio
-                        problemas={problemas}
-                        onCambiar={cambiarCriterio}
-                        onGenerar={() => { setGenerando(true); setTimeout(() => setGenerando(false), 2200); }}
-                        generando={generando}
-                    />
+                    {problemas.length > 0 && (
+                        <VentanaCriterio problemas={problemas} onCambiar={cambiarCriterio}
+                                         onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo'} />
+                    )}
+
+                    {proyecto && (
+                        <>
+                            <AvisoBorrador datos={{
+                                palabras: proyecto.palabras, avisos: proyecto.avisos,
+                                huecos: proyecto.huecos, tieneAdvertencias: proyecto.tieneAdvertencias,
+                            }} />
+                            <button className={cn(boton, 'self-start bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
+                                    onClick={() => descargarProyecto(proyecto)}>
+                                <Download className="h-4 w-4" />
+                                Descargar de nuevo
+                            </button>
+                        </>
+                    )}
                 </div>
             </main>
         </div>
