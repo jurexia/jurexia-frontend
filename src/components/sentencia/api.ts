@@ -95,3 +95,126 @@ export function descargar(r: ResultadoAdelanto): void {
     a.remove();
     URL.revokeObjectURL(url);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   La segunda mitad: entre estas dos llamadas hay una PERSONA
+
+   El circuito está partido a propósito. La máquina lee y ordena; el secretario
+   decide; la máquina redacta la demostración. `consultarAcervo` le enseña lo
+   que la jurisprudencia dice de SUS problemas, y sólo después `resolver` recibe
+   su criterio. Pedirle el sentido sin enseñarle antes la jurisprudencia
+   obligatoria del tema es justo el error que este taller existe para evitar.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface TesisDelAcervo {
+    registro: string;
+    rubro: string;
+    instancia: string;
+    /** Vincula al tribunal. La orientadora sólo ilustra: no se tratan igual. */
+    obligatoria: boolean;
+    localizacion: string;
+    texto: string;
+}
+
+export interface MaterialDelCaso {
+    expediente: string;
+    problema_global: string;
+    problemas: string[];
+    tesis: TesisDelAcervo[];
+    normas: { cuerpo_legal: string; articulo: string; texto: string }[];
+    avisos: string[];
+}
+
+export interface EstadoPiloto {
+    activo: boolean;
+    secretarios: number;
+    cupo: number;
+    tiene_acceso: boolean;
+    aviso: string;
+}
+
+async function _fallo(res: Response): Promise<never> {
+    let detalle = `Error ${res.status}`;
+    try { detalle = (await res.json())?.detail ?? detalle; } catch { /* no JSON */ }
+    throw new Error(detalle);
+}
+
+/** Si el piloto sigue abierto y cuántas plazas quedan. */
+export async function estadoPiloto(userEmail: string): Promise<EstadoPiloto> {
+    const res = await fetch(
+        `${BASE}/taller/estado?user_email=${encodeURIComponent(userEmail)}`);
+    if (!res.ok) return _fallo(res);
+    return res.json();
+}
+
+/** Lo que el acervo dice sobre los problemas de ESTE asunto. */
+export async function consultarAcervo(
+    numero: string, userEmail: string, coleccionEstatal = 'leyes_queretaro',
+): Promise<MaterialDelCaso> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    fd.append('coleccion_estatal', coleccionEstatal);
+    const res = await fetch(`${BASE}/taller/consultar`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    return res.json();
+}
+
+export interface Criterio {
+    /** fundado | infundado | inoperante | ineficaz */
+    sentido: string;
+    problema?: string;
+    /** El PORQUÉ. Es lo que de verdad alinea el estudio con su cabeza. */
+    razonamiento?: string;
+}
+
+export interface ResultadoProyecto {
+    documento: Blob;
+    nombre: string;
+    /** Siempre true por ahora: esto NO es un proyecto firmable. */
+    esBorrador: boolean;
+    palabras: number;
+    avisos: number;
+    huecos: number;
+    /** El sistema encontró un obstáculo al sentido dictado y lo dice aparte. */
+    tieneAdvertencias: boolean;
+}
+
+/** La sentencia, con el criterio del secretario dentro. */
+export async function resolverConCriterio(
+    numero: string, userEmail: string, criterio: Criterio,
+): Promise<ResultadoProyecto> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    fd.append('sentido', criterio.sentido);
+    fd.append('problema', criterio.problema ?? '');
+    fd.append('razonamiento', criterio.razonamiento ?? '');
+    const res = await fetch(`${BASE}/taller/resolver`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+
+    const h = res.headers;
+    const disp = h.get('content-disposition') || '';
+    return {
+        documento: await res.blob(),
+        nombre: /filename="?([^";]+)"?/.exec(disp)?.[1]
+            ?? `${numero.replace('/', '-')} PROYECTO.docx`,
+        esBorrador: h.get('X-Borrador') === '1',
+        palabras: Number(h.get('X-Palabras') ?? 0),
+        avisos: Number(h.get('X-Avisos') ?? 0),
+        huecos: Number(h.get('X-Huecos') ?? 0),
+        tieneAdvertencias: h.get('X-Advertencias') === '1',
+    };
+}
+
+/** Ofrece cualquiera de los dos documentos al navegador. */
+export function descargarProyecto(r: ResultadoProyecto): void {
+    const url = URL.createObjectURL(r.documento);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = r.nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
