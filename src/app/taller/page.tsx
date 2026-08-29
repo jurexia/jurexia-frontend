@@ -107,7 +107,7 @@ export default function TallerDeSentencias() {
 
     const falta = useMemo(() => {
         const f = faltaEnEncargo(encargo);
-        if (!ficheros.plantilla) f.push('tu plantilla .docx');
+        // La plantilla NO se exige: hay una precargada por familia de asunto.
         if (!ficheros.acto) f.push('el acto reclamado');
         if (!ficheros.conceptos) f.push('los conceptos de violación');
         return f;
@@ -117,8 +117,9 @@ export default function TallerDeSentencias() {
         setError(''); setCorriendo(true);
         try {
             const r = await generarAdelanto(
-                { ...encargo, reglaSurtimiento: encargo.reglaSurtimiento },
-                { plantilla: ficheros.plantilla!, acto: ficheros.acto!, conceptos: ficheros.conceptos! },
+                { ...encargo, reglaSurtimiento: encargo.reglaSurtimiento,
+                  tipoAsunto: encargo.esRecurso ? 'amparo_revision' : 'amparo_directo' },
+                { plantilla: ficheros.plantilla, acto: ficheros.acto!, conceptos: ficheros.conceptos! },
                 correo,
             );
             descargar(r);
@@ -225,8 +226,8 @@ export default function TallerDeSentencias() {
                                onChange={(e) => e.target.files?.[0] &&
                                    setFicheros((p) => ({ ...p, plantilla: e.target.files![0] }))} />
                         {ficheros.plantilla
-                            ? <>Plantilla: <span className="text-white/80">{ficheros.plantilla.name}</span></>
-                            : <>Tu plantilla .docx — el adelanto se rellena sobre ELLA, no se construye uno nuevo</>}
+                            ? <>Plantilla propia: <span className="text-white/80">{ficheros.plantilla.name}</span></>
+                            : <>Se usará la plantilla del tribunal ya cargada. Sube una .docx sólo si quieres otra.</>}
                     </label>
                 </div>
 

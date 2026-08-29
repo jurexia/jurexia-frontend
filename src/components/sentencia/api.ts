@@ -20,6 +20,8 @@ export interface EncargoAdelanto {
     presentacion: string;
     reglaSurtimiento?: string;
     plazo?: number;
+    /** Familia del asunto: elige la plantilla precargada del tribunal. */
+    tipoAsunto?: string;
     responsable?: string;
     esRecurso?: boolean;
 }
@@ -39,7 +41,11 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 export async function generarAdelanto(
     encargo: EncargoAdelanto,
-    documentos: { plantilla: File; acto: File; conceptos: File },
+    /** `plantilla` es OPCIONAL: si no se manda, se usa la precargada de esa
+     *  familia. Pedírsela era además la causa de un defecto real: quien subía
+     *  un ADELANTO —que se detiene antes del resolutivo— recibía una sentencia
+     *  sin RESUELVE ni puntos resolutivos. */
+    documentos: { plantilla?: File; acto: File; conceptos: File },
     userEmail: string,
 ): Promise<ResultadoAdelanto> {
     const fd = new FormData();
@@ -55,7 +61,8 @@ export async function generarAdelanto(
     fd.append('plazo', String(encargo.plazo ?? 15));
     if (encargo.responsable) fd.append('responsable', encargo.responsable);
     fd.append('es_recurso', String(!!encargo.esRecurso));
-    fd.append('plantilla', documentos.plantilla);
+    fd.append('tipo_asunto', encargo.tipoAsunto ?? 'amparo_directo');
+    if (documentos.plantilla) fd.append('plantilla', documentos.plantilla);
     fd.append('acto', documentos.acto);
     fd.append('conceptos', documentos.conceptos);
 
