@@ -35,6 +35,7 @@ import { Tarjeta, Rotulo, cn } from '@/components/sentencia/primitivas';
 import type { Asunto, Documento, Fase, ProblemaJuridico, RolDocumento } from '@/components/sentencia/tipos';
 import {
     generarAdelanto, descargar, consultarAcervo, resolverConCriterio,
+    proponerSolucion, type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
 } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -73,6 +74,7 @@ export default function TallerDeSentencias() {
     const correo = user?.email ?? '';
 
     const [paso, setPaso] = useState<Paso>('ficha');
+    const [propuesta, setPropuesta] = useState<RespuestaPropuesta | null>(null);
     const [corriendo, setCorriendo] = useState(false);
     const [error, setError] = useState('');
     const [piloto, setPiloto] = useState<EstadoPiloto | null>(null);
@@ -118,7 +120,10 @@ export default function TallerDeSentencias() {
         try {
             const r = await generarAdelanto(
                 { ...encargo, reglaSurtimiento: encargo.reglaSurtimiento,
-                  tipoAsunto: encargo.esRecurso ? 'amparo_revision' : 'amparo_directo' },
+                  tipoAsunto: encargo.esRecurso ? 'amparo_revision' : 'amparo_directo',
+                  // El documento se escribe entero. La ruta de plantilla queda
+                  // sólo para quien suba la suya a propósito.
+                  modo: ficheros.plantilla ? 'plantilla' : 'generado' },
                 { plantilla: ficheros.plantilla, acto: ficheros.acto!, conceptos: ficheros.conceptos! },
                 correo,
             );
@@ -166,6 +171,34 @@ export default function TallerDeSentencias() {
     const cambiarCriterio = useCallback((id: string, campo: 'criterio' | 'sentido', valor: string) => {
         setProblemas((prev) => prev.map((p) => p.id === id ? { ...p, [campo]: valor } : p));
     }, []);
+
+    // LA PROPUESTA DE SOLUCIÓN. El motor sugiere el sentido de cada problema
+    // con su razón y los registros que lo apoyan; el secretario la acepta tal
+    // cual, la edita o dicta el suyo. Sin este paso el proyecto salía con la
+    // calificación que trajera la plantilla, y así nacían las incongruencias.
+    const pedirPropuesta = useCallback(async () => {
+        setError(''); setCorriendo(true);
+        try {
+            const p = await proponerSolucion(encargo.numero, correo);
+            setPropuesta(p);
+            // Se vuelca sobre los problemas para que se vean y se puedan editar.
+            setProblemas((prev) => prev.map((q, i) => {
+                const s = p.propuestas[i];
+                // El sentido es una unión cerrada: lo que venga de fuera se
+                // valida antes de entrar, no se castea a ciegas.
+                const valido = (['fundado', 'infundado', 'inoperante', 'ineficaz'] as const)
+                    .find((x) => x === s?.sentido);
+                return s && s.alcanza && valido
+                    ? { ...q, sentido: valido, criterio: q.criterio || s.razon }
+                    : q;
+            }));
+            if (!p.propuestas.length) {
+                setError('El motor no propuso ningún sentido. Dicta tu criterio.');
+            }
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo obtener la propuesta.');
+        } finally { setCorriendo(false); }
+    }, [encargo.numero, correo]);
 
     const pedirProyecto = useCallback(async () => {
         setError(''); setCorriendo(true);
@@ -321,7 +354,8 @@ export default function TallerDeSentencias() {
 
                     {problemas.length > 0 && (
                         <VentanaCriterio problemas={problemas} onCambiar={cambiarCriterio}
-                                         onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo'} />
+                                         onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo'}
+                                         onProponer={pedirPropuesta} propuesta={propuesta} />
                     )}
 
                     {proyecto && (

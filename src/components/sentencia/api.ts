@@ -20,10 +20,16 @@ export interface EncargoAdelanto {
     presentacion: string;
     reglaSurtimiento?: string;
     plazo?: number;
-    /** Familia del asunto: elige la plantilla precargada del tribunal. */
+    /** Familia del asunto: decide el esqueleto del documento. */
     tipoAsunto?: string;
     responsable?: string;
     esRecurso?: boolean;
+    /** EL TRIBUNAL QUE RESUELVE. Sin él la competencia sale incompleta: es el
+     *  dato que hace que esto sirva fuera de un solo circuito. */
+    tribunal?: string;
+    ciudad?: string;
+    /** `generado` escribe el documento entero; `plantilla` rellena la vieja. */
+    modo?: 'generado' | 'plantilla';
 }
 
 export interface ResultadoAdelanto {
@@ -62,6 +68,13 @@ export async function generarAdelanto(
     if (encargo.responsable) fd.append('responsable', encargo.responsable);
     fd.append('es_recurso', String(!!encargo.esRecurso));
     fd.append('tipo_asunto', encargo.tipoAsunto ?? 'amparo_directo');
+    // EL DOCUMENTO SE ESCRIBE ENTERO, NO SE RELLENA UNA PLANTILLA AJENA. Sin
+    // este campo el taller cae en la ruta vieja: encabezado con el expediente
+    // de otro asunto, catorce huecos y la estructura de un tribunal que no es
+    // el tuyo. Todo lo ganado vive en `generado`, y la pantalla no lo pedía.
+    fd.append('modo', encargo.modo ?? 'generado');
+    if (encargo.tribunal) fd.append('tribunal', encargo.tribunal);
+    if (encargo.ciudad) fd.append('ciudad', encargo.ciudad);
     if (documentos.plantilla) fd.append('plantilla', documentos.plantilla);
     fd.append('acto', documentos.acto);
     fd.append('conceptos', documentos.conceptos);
@@ -197,16 +210,67 @@ export interface ResultadoProyecto {
     tieneAdvertencias: boolean;
 }
 
+/** Lo que el motor propone para cada problema, antes de que el secretario decida. */
+export interface PropuestaDeSolucion {
+    problema: string;
+    sentido: string;
+    razon: string;
+    apoyos: string[];
+    confianza: string;
+    alcanza: boolean;
+}
+
+export interface RespuestaPropuesta {
+    propuestas: PropuestaDeSolucion[];
+    resumen: string;
+    avisos: string[];
+    /** Esto se devuelve tal cual —o editado— para resolver con ella. */
+    criteriosJson: string;
+    modelo: string;
+}
+
+/** Pide al motor que proponga el sentido de cada problema.
+ *
+ * NO decide: propone. El secretario la acepta, la corrige o dicta la suya. Sin
+ * este paso el proyecto salía con la calificación que trajera la plantilla, que
+ * es como nacían las sentencias incongruentes.
+ */
+export async function proponerSolucion(
+    numero: string, userEmail: string,
+): Promise<RespuestaPropuesta> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    const res = await fetch(`${BASE}/taller/proponer`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    const j = await res.json();
+    return {
+        propuestas: j.propuestas ?? [],
+        resumen: j.resumen ?? '',
+        avisos: j.avisos ?? [],
+        criteriosJson: j.criterios_json ?? '',
+        modelo: j.modelo ?? '',
+    };
+}
+
+
 /** La sentencia, con el criterio del secretario dentro. */
 export async function resolverConCriterio(
-    numero: string, userEmail: string, criterio: Criterio,
+    numero: string, userEmail: string, criterio: Criterio | null,
+    criteriosJson?: string,
 ): Promise<ResultadoProyecto> {
     const fd = new FormData();
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
-    fd.append('sentido', criterio.sentido);
-    fd.append('problema', criterio.problema ?? '');
-    fd.append('razonamiento', criterio.razonamiento ?? '');
+    // DOS CAMINOS Y NINGUNO ES «QUE SIGA COMO ESTÉ»: o el secretario dicta su
+    // criterio, o devuelve la propuesta que acaba de leer —editada o no—.
+    if (criteriosJson) {
+        fd.append('criterios_json', criteriosJson);
+    } else if (criterio) {
+        fd.append('sentido', criterio.sentido);
+        fd.append('problema', criterio.problema ?? '');
+        fd.append('razonamiento', criterio.razonamiento ?? '');
+    }
     const res = await fetch(`${BASE}/taller/resolver`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
 

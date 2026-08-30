@@ -25,6 +25,10 @@ export interface Encargo {
     reglaSurtimiento: string;
     plazo: number;
     esRecurso: boolean;
+    /** EL TRIBUNAL QUE RESUELVE. Sin él la competencia sale incompleta y el
+     *  documento hereda la identidad de otro circuito. */
+    tribunal?: string;
+    ciudad?: string;
 }
 
 export const ENCARGO_VACIO: Encargo = {
@@ -91,7 +95,23 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
                            onChange={(e) => set('quejoso', e.target.value)} />
                 </Campo>
 
+                {/* EL TRIBUNAL QUE RESUELVE. Sin este dato la competencia sale
+                    incompleta y el documento hereda la identidad del tribunal
+                    cuyo corpus alimentó las fórmulas. Es lo que hace que esto
+                    sirva a un secretario de cualquier circuito. */}
+                <Campo etiqueta="Tribunal que resuelve"
+                       ayuda="Como aparece en tus sentencias: «Primer Tribunal Colegiado en Materia Civil del Décimo Cuarto Circuito»">
+                    <input className={campo} value={valor.tribunal ?? ''}
+                           placeholder="Tercer Tribunal Colegiado en Materias Administrativa y Civil del Vigésimo Segundo Circuito"
+                           onChange={(e) => set('tribunal', e.target.value)} />
+                </Campo>
+
                 <div className="grid gap-3 sm:grid-cols-2">
+                    <Campo etiqueta="Ciudad" ayuda="Donde se dicta la resolución">
+                        <input className={campo} value={valor.ciudad ?? ''}
+                               placeholder="Santiago de Querétaro, Querétaro"
+                               onChange={(e) => set('ciudad', e.target.value)} />
+                    </Campo>
                     <Campo etiqueta="Magistrado ponente">
                         <input className={campo} value={valor.magistrado}
                                onChange={(e) => set('magistrado', e.target.value)} />

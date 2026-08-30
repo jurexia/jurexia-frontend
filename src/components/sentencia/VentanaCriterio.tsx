@@ -45,12 +45,17 @@ export function fuerzaDelCriterio(problemas: ProblemaJuridico[]) {
 }
 
 export default function VentanaCriterio({
-    problemas, onCambiar, onGenerar, generando,
+    problemas, onCambiar, onGenerar, generando, onProponer, propuesta,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
     onGenerar: () => void;
     generando?: boolean;
+    /** Pide al motor que proponga el sentido de cada problema. */
+    onProponer?: () => void;
+    propuesta?: { propuestas: { sentido: string; razon: string; apoyos: string[];
+                                confianza: string; alcanza: boolean }[];
+                  avisos: string[] } | null;
 }) {
     const fuerza = useMemo(() => fuerzaDelCriterio(problemas), [problemas]);
     const listo = fuerza.conSentido === fuerza.total && fuerza.total > 0;
@@ -149,6 +154,50 @@ export default function VentanaCriterio({
                     );
                 })}
             </div>
+
+            {/* LA PROPUESTA VA ANTES DEL BOTÓN DE GENERAR, y se ve que es una
+                sugerencia: el criterio sigue siendo del secretario. Sin este
+                paso el proyecto salía con la calificación de la plantilla. */}
+            {onProponer && (
+                <button
+                    onClick={onProponer}
+                    disabled={generando}
+                    className={cn(
+                        'mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl',
+                        'border border-white/[0.12] bg-white/[0.04] text-[12.5px] font-medium',
+                        'text-white/75 transition-all duration-200',
+                        generando ? 'cursor-not-allowed opacity-50' : 'hover:bg-white/[0.08]',
+                    )}
+                >
+                    {propuesta ? 'Volver a proponer' : 'Proponer solución con el acervo'}
+                </button>
+            )}
+            {propuesta && propuesta.propuestas.length > 0 && (
+                <div className="mt-3 space-y-2 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
+                    <p className="text-[11px] uppercase tracking-wide text-white/40">
+                        Propuesta del motor · la decides tú
+                    </p>
+                    {propuesta.propuestas.map((p, i) => (
+                        <div key={i} className="text-[12px] leading-relaxed text-white/70">
+                            <span className="font-semibold text-white/90">
+                                {p.alcanza ? p.sentido.toUpperCase() : 'SIN PROPUESTA'}
+                            </span>
+                            {p.alcanza && p.confianza && (
+                                <span className="ml-1 text-white/40">({p.confianza})</span>
+                            )}
+                            <span className="ml-1">{p.razon}</span>
+                            {p.apoyos?.length > 0 && (
+                                <span className="ml-1 text-white/35">
+                                    Se apoya en: {p.apoyos.join(', ')}
+                                </span>
+                            )}
+                        </div>
+                    ))}
+                    {propuesta.avisos?.map((a, i) => (
+                        <p key={i} className="text-[11px] text-amber-300/70">{a}</p>
+                    ))}
+                </div>
+            )}
 
             <button
                 onClick={onGenerar}
