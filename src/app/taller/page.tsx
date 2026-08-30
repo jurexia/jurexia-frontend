@@ -35,7 +35,7 @@ import { Tarjeta, Rotulo, cn } from '@/components/sentencia/primitivas';
 import type { Asunto, Documento, Fase, ProblemaJuridico, RolDocumento } from '@/components/sentencia/tipos';
 import {
     generarAdelanto, descargar, consultarAcervo, resolverConCriterio,
-    proponerSolucion, type RespuestaPropuesta,
+    proponerSolucion, aportarContexto, type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
 } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -75,6 +75,10 @@ export default function TallerDeSentencias() {
 
     const [paso, setPaso] = useState<Paso>('ficha');
     const [propuesta, setPropuesta] = useState<RespuestaPropuesta | null>(null);
+    // Lo que el secretario aporta porque el acervo no lo tenía. Vive aquí y
+    // viaja con cada petición: el servidor no lo guarda.
+    const [contexto, setContexto] = useState('');
+    const [aportando, setAportando] = useState(false);
     const [corriendo, setCorriendo] = useState(false);
     const [error, setError] = useState('');
     const [piloto, setPiloto] = useState<EstadoPiloto | null>(null);
@@ -179,7 +183,7 @@ export default function TallerDeSentencias() {
     const pedirPropuesta = useCallback(async () => {
         setError(''); setCorriendo(true);
         try {
-            const p = await proponerSolucion(encargo.numero, correo);
+            const p = await proponerSolucion(encargo.numero, correo, contexto);
             setPropuesta(p);
             // Se vuelca sobre los problemas para que se vean y se puedan editar.
             setProblemas((prev) => prev.map((q, i) => {
@@ -198,7 +202,27 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo obtener la propuesta.');
         } finally { setCorriendo(false); }
-    }, [encargo.numero, correo]);
+    }, [encargo.numero, correo, contexto]);
+
+    const aportarYProponer = useCallback(async (doc: File | null, texto: string) => {
+        setError(''); setAportando(true);
+        try {
+            const c = await aportarContexto(correo, doc, texto);
+            setContexto(c.texto);
+            const p = await proponerSolucion(encargo.numero, correo, c.texto);
+            setPropuesta(p);
+            setProblemas((prev) => prev.map((q, i) => {
+                const s2 = p.propuestas[i];
+                const valido = (['fundado', 'infundado', 'inoperante', 'ineficaz'] as const)
+                    .find((x) => x === s2?.sentido);
+                return s2 && s2.alcanza && valido
+                    ? { ...q, sentido: valido, criterio: q.criterio || s2.razon }
+                    : q;
+            }));
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo leer el documento.');
+        } finally { setAportando(false); }
+    }, [correo, encargo.numero]);
 
     const pedirProyecto = useCallback(async () => {
         setError(''); setCorriendo(true);
@@ -224,7 +248,7 @@ export default function TallerDeSentencias() {
                     razonamiento: problemas.filter((p) => p.criterio)
                         .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
                 },
-                criteriosJson,
+                criteriosJson, contexto,
             );
             setProyecto(r);
             descargarProyecto(r);
@@ -232,7 +256,7 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
         } finally { setCorriendo(false); }
-    }, [problemas, encargo.numero, correo]);
+    }, [problemas, encargo.numero, correo, contexto]);
 
     const asunto: Asunto = useMemo(() => ({
         numero: encargo.numero || '—',
@@ -371,7 +395,9 @@ export default function TallerDeSentencias() {
                     {problemas.length > 0 && (
                         <VentanaCriterio problemas={problemas} onCambiar={cambiarCriterio}
                                          onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo'}
-                                         onProponer={pedirPropuesta} propuesta={propuesta} />
+                                         onProponer={pedirPropuesta} propuesta={propuesta}
+                                         onAportar={aportarYProponer} aportando={aportando}
+                                         contextoAportado={contexto.length} />
                     )}
 
                     {proyecto && (

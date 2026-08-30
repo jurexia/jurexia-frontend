@@ -17,7 +17,7 @@
  * tienen razón escrita. Es una lista de comprobación, no una nota.
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PenLine, Lightbulb, ArrowRight } from 'lucide-react';
 import { Tarjeta, Pastilla, cn } from './primitivas';
 import type { ProblemaJuridico } from './tipos';
@@ -46,6 +46,7 @@ export function fuerzaDelCriterio(problemas: ProblemaJuridico[]) {
 
 export default function VentanaCriterio({
     problemas, onCambiar, onGenerar, generando, onProponer, propuesta,
+    onAportar, aportando, contextoAportado,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -56,8 +57,14 @@ export default function VentanaCriterio({
     propuesta?: { propuestas: { sentido: string; razon: string; apoyos: string[];
                                 confianza: string; alcanza: boolean }[];
                   avisos: string[] } | null;
+    /** Sube el documento que el motor echó en falta, o escribe el contexto. */
+    onAportar?: (documento: File | null, texto: string) => void;
+    aportando?: boolean;
+    contextoAportado?: number;
 }) {
     const fuerza = useMemo(() => fuerzaDelCriterio(problemas), [problemas]);
+    const [contexto, setContexto] = useState('');
+    const [fichero, setFichero] = useState<File | null>(null);
     // BASTA UN SENTIDO PARA PODER GENERAR. Exigirlos todos dejaba al
     // secretario encerrado: cuando el motor no alcanza a proponer —«SIN
     // PROPUESTA» en cinco de seis, porque el acervo no lo sostiene— la puerta
@@ -180,6 +187,63 @@ export default function VentanaCriterio({
                     {propuesta ? 'Volver a proponer' : 'Proponer solución con el acervo'}
                 </button>
             )}
+            {/* SI EL MOTOR DIJO QUÉ LE FALTA, QUE SE LE PUEDA DAR. Aparece
+                sólo cuando hay problemas sin propuesta: es entonces cuando el
+                diagnóstico —«el acervo no contiene la cláusula 64»— deja de
+                ser un callejón sin salida. */}
+            {propuesta && propuesta.propuestas.some((p) => !p.alcanza) && onAportar && (
+                <div className="mt-3 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-3">
+                    <p className="text-[12px] font-medium text-amber-200/90">
+                        Al motor le falta material para proponer en algunos puntos
+                    </p>
+                    <p className="mt-1 text-[11.5px] leading-relaxed text-white/55">
+                        Sube el documento que echó en falta —el contrato colectivo, el
+                        convenio, el acta— o escribe el contexto. Lo usará para proponer
+                        y para redactar, citándolo como documento aportado.
+                    </p>
+                    <textarea
+                        value={contexto}
+                        onChange={(e) => setContexto(e.target.value)}
+                        rows={3}
+                        placeholder="Por ejemplo: «CLÁUSULA 64. El trabajador que acredite incapacidad…»"
+                        className={cn(
+                            'mt-2 w-full rounded-xl border border-white/[0.10] bg-white/[0.03]',
+                            'px-3 py-2 text-[12.5px] text-white/85 placeholder:text-white/25',
+                            'outline-none focus:border-white/25',
+                        )}
+                    />
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <label className={cn(
+                            'inline-flex h-9 cursor-pointer items-center rounded-xl border',
+                            'border-white/[0.12] bg-white/[0.04] px-3 text-[12px] text-white/70',
+                            'hover:bg-white/[0.08]',
+                        )}>
+                            {fichero ? fichero.name.slice(0, 30) : 'Elegir documento…'}
+                            <input type="file" className="hidden"
+                                   accept=".pdf,.docx,.doc,.txt"
+                                   onChange={(e) => setFichero(e.target.files?.[0] ?? null)} />
+                        </label>
+                        <button
+                            onClick={() => onAportar(fichero, contexto)}
+                            disabled={aportando || (!fichero && !contexto.trim())}
+                            className={cn(
+                                'inline-flex h-9 items-center rounded-xl px-3 text-[12px] font-semibold',
+                                aportando || (!fichero && !contexto.trim())
+                                    ? 'cursor-not-allowed border border-white/[0.08] text-white/30'
+                                    : 'bg-amber-400/90 text-charcoal-900 hover:brightness-110',
+                            )}
+                        >
+                            {aportando ? 'Leyendo…' : 'Aportar y volver a proponer'}
+                        </button>
+                        {!!contextoAportado && (
+                            <span className="text-[11px] text-emerald-300/70">
+                                {contextoAportado.toLocaleString('es-MX')} caracteres aportados
+                            </span>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {propuesta && propuesta.propuestas.length > 0 && (
                 <div className="mt-3 space-y-2 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
                     <p className="text-[11px] uppercase tracking-wide text-white/40">

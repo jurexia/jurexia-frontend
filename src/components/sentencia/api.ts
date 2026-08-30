@@ -210,6 +210,27 @@ export interface ResultadoProyecto {
     tieneAdvertencias: boolean;
 }
 
+/** Lo que el acervo no tiene y el secretario sí.
+ *
+ * Cuando el motor no alcanza a proponer dice con precisión qué le falta —«el
+ * acervo no contiene la cláusula 64»—. Esto permite dárselo: el contrato, el
+ * convenio o el acta, o el contexto escrito a mano. No se guarda en el
+ * servidor; vuelve aquí y viaja con la propuesta y con el estudio.
+ */
+export async function aportarContexto(
+    userEmail: string, documento: File | null, texto: string,
+): Promise<{ texto: string; caracteres: number }> {
+    const fd = new FormData();
+    fd.append('user_email', userEmail);
+    if (texto.trim()) fd.append('texto', texto.trim());
+    if (documento) fd.append('documento', documento);
+    const res = await fetch(`${BASE}/taller/contexto`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    const j = await res.json();
+    return { texto: j.texto ?? '', caracteres: j.caracteres ?? 0 };
+}
+
+
 /** Lo que el motor propone para cada problema, antes de que el secretario decida. */
 export interface PropuestaDeSolucion {
     problema: string;
@@ -236,11 +257,12 @@ export interface RespuestaPropuesta {
  * es como nacían las sentencias incongruentes.
  */
 export async function proponerSolucion(
-    numero: string, userEmail: string,
+    numero: string, userEmail: string, contexto?: string,
 ): Promise<RespuestaPropuesta> {
     const fd = new FormData();
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
+    if (contexto) fd.append('contexto', contexto);
     const res = await fetch(`${BASE}/taller/proponer`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
@@ -257,7 +279,7 @@ export async function proponerSolucion(
 /** La sentencia, con el criterio del secretario dentro. */
 export async function resolverConCriterio(
     numero: string, userEmail: string, criterio: Criterio | null,
-    criteriosJson?: string,
+    criteriosJson?: string, contexto?: string,
 ): Promise<ResultadoProyecto> {
     const fd = new FormData();
     fd.append('numero', numero);
@@ -271,6 +293,7 @@ export async function resolverConCriterio(
         fd.append('problema', criterio.problema ?? '');
         fd.append('razonamiento', criterio.razonamiento ?? '');
     }
+    if (contexto) fd.append('contexto', contexto);
     const res = await fetch(`${BASE}/taller/resolver`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
 
