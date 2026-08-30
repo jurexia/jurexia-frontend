@@ -80,11 +80,20 @@ export async function GET(request: NextRequest) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sub = subscription as any;
 
+        // `cancelAt` y `pausedUntil` salen de aquí porque el diálogo de
+        // cancelación los necesita para saber qué pantalla enseñar (30-ago-2026).
+        // Sin ellos no se distinguía «aún no ha cancelado» de «ya canceló y no
+        // se lo hemos dicho», y un cliente recorrió el diálogo cinco veces
+        // creyendo que no funcionaba.
         return NextResponse.json({
             plan: planId,
             status: subscription.status,
             currentPeriodEnd: new Date(sub.current_period_end * 1000).toISOString(),
             cancelAtPeriodEnd: sub.cancel_at_period_end,
+            cancelAt: sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
+            pausedUntil: sub.pause_collection?.resumes_at
+                ? new Date(sub.pause_collection.resumes_at * 1000).toISOString()
+                : null,
         });
     } catch (error) {
         console.error('Subscription fetch error:', error);

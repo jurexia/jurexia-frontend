@@ -41,7 +41,8 @@ import { createPortal } from 'react-dom';
 import { AlertTriangle, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-type Paso = 'motivo' | 'oferta' | 'pausada' | 'procesando' | 'cancelada' | 'error';
+type Paso = 'cargando' | 'motivo' | 'oferta' | 'pausada' | 'procesando'
+    | 'cancelada' | 'ya_cancelada' | 'error';
 
 const MOTIVOS: [string, string][] = [
     ['precio', 'El precio no me conviene'],
@@ -59,7 +60,7 @@ export default function DialogoRetencion({
     subscriptionId?: string | null;
     nombrePlan?: string;
 }) {
-    const [paso, setPaso] = useState<Paso>('motivo');
+    const [paso, setPaso] = useState<Paso>('cargando');
     const [motivo, setMotivo] = useState('');
     const [texto, setTexto] = useState('');
     const [enviado, setEnviado] = useState(false);
@@ -67,16 +68,59 @@ export default function DialogoRetencion({
     const [aviso, setAviso] = useState('');
     const [reanuda, setReanuda] = useState('');
     const [fechaFin, setFechaFin] = useState('');
+    const [yaPausada, setYaPausada] = useState(false);
 
     // El portal necesita el DOM montado; en el primer render del servidor no
     // existe `document`.
     const [montado, setMontado] = useState(false);
     useEffect(() => setMontado(true), []);
 
+    // EL DIÁLOGO MIRA EL ESTADO ANTES DE HABLAR (30-ago-2026)
+    // -------------------------------------------------------
+    // Antes abría siempre en «Antes de cancelar», dijera lo que dijera Stripe.
+    // Un cliente canceló, cerró el diálogo, y como ni el diálogo ni la página
+    // de perfil dejaban rastro de la cancelación, volvió a abrirlo y se
+    // encontró la misma pantalla de siempre: concluyó que no había funcionado.
+    // Lo recorrió cinco veces en cinco minutos —aceptando de paso una pausa
+    // que no quería— y terminó reportando el motivo «algo no funcionó».
+    // Su cancelación SÍ estaba registrada desde el segundo intento.
+    //
+    // Preguntar el estado cuesta una llamada y ahorra esa escena entera. Si la
+    // llamada falla se sigue al paso normal: no saber el estado no puede
+    // impedirle cancelar (art. 76 bis fr. VII LFPC).
+    useEffect(() => {
+        if (!abierto) return;
+        let vivo = true;
+        (async () => {
+            setPaso('cargando');
+            try {
+                const tk = (await supabase.auth.getSession()).data.session?.access_token;
+                const r = await fetch('/api/stripe/subscription', {
+                    headers: tk ? { Authorization: `Bearer ${tk}` } : undefined,
+                });
+                if (!vivo) return;
+                const j = r.ok ? await r.json() : null;
+                const fmt = (iso: string) => new Date(iso).toLocaleDateString('es-MX',
+                    { day: 'numeric', month: 'long', year: 'numeric' });
+                if (j?.pausedUntil) { setYaPausada(true); setReanuda(fmt(j.pausedUntil)); }
+                if (j?.cancelAtPeriodEnd) {
+                    setFechaFin(fmt(j.cancelAt || j.currentPeriodEnd));
+                    setPaso('ya_cancelada');
+                    return;
+                }
+            } catch { /* sin estado se sigue igual: cancelar nunca se bloquea */ }
+            if (vivo) setPaso('motivo');
+        })();
+        return () => { vivo = false; };
+    }, [abierto]);
+
     if (!abierto || !montado) return null;
 
     const cerrar = () => {
-        setPaso('motivo'); setMotivo(''); setTexto('');
+        // Se vuelve a 'cargando', no a 'motivo': al reabrir se consulta el
+        // estado otra vez. Si acaba de cancelar, lo que verá es su
+        // cancelación, no la invitación a cancelar de nuevo.
+        setPaso('cargando'); setMotivo(''); setTexto('');
         setEnviado(false); setAviso('');
         onCerrar();
     };
@@ -113,6 +157,7 @@ export default function DialogoRetencion({
             else {
                 setReanuda(new Date(j.reanuda).toLocaleDateString('es-MX',
                     { day: 'numeric', month: 'long', year: 'numeric' }));
+                setYaPausada(true);
                 setPaso('pausada');
             }
         } catch {
@@ -151,6 +196,37 @@ export default function DialogoRetencion({
                 style={{ maxHeight: 'calc(100vh - 2rem)' }}>
 
                 <div className="overflow-y-auto px-6 pt-6">
+                    {paso === 'cargando' && (
+                        <div className="text-center py-8">
+                            <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-charcoal-400" />
+                            <p className="text-sm text-charcoal-600">Consultando su suscripción…</p>
+                        </div>
+                    )}
+
+                    {/* Ya canceló. Se le dice, y no se le vuelve a pedir el
+                        motivo ni se le ofrece nada: eso es lo que le hizo creer
+                        que no había funcionado. */}
+                    {paso === 'ya_cancelada' && (
+                        <div className="text-center pb-2">
+                            <div className="w-14 h-14 bg-cream-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Check className="w-7 h-7 text-charcoal-700" />
+                            </div>
+                            <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                                Su cancelación ya está registrada
+                            </h3>
+                            <p className="text-sm text-charcoal-600 mb-5 leading-relaxed">
+                                No habrá más cargos. Conserva su acceso completo
+                                {nombrePlan ? <> a <strong className="text-charcoal-900">{nombrePlan}</strong></> : null}
+                                {' '}hasta el <strong className="text-charcoal-900">{fechaFin}</strong>, y su cuenta,
+                                sus conversaciones y sus carpetas se mantienen después.
+                            </p>
+                            <p className="text-sm text-charcoal-600 mb-5">
+                                Si quiere reactivarla o tiene dudas, escríbanos a{' '}
+                                <a href="mailto:soporte@iurexia.com" className="underline text-accent-brown">soporte@iurexia.com</a>.
+                            </p>
+                        </div>
+                    )}
+
                     {paso === 'motivo' && (
                         <>
                             <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
@@ -174,7 +250,18 @@ export default function DialogoRetencion({
 
                     {paso === 'oferta' && (
                         <>
-                            {(motivo === 'precio' || motivo === 'poco_uso') && (
+                            {/* La pausa sólo se ofrece si de verdad se puede dar.
+                                Ofrecerla a quien ya la usó devolvía un 409 —«esta
+                                suscripción ya usó su pausa»— que el cliente lee
+                                como un fallo nuestro cuando no hizo nada mal. */}
+                            {yaPausada && (
+                                <p className="text-sm text-charcoal-600 mb-4 leading-relaxed bg-cream-100 border border-cream-400 rounded-lg px-3 py-2">
+                                    Su suscripción ya está <strong className="text-charcoal-900">en pausa</strong>
+                                    {reanuda ? <> hasta el {reanuda}</> : null}: no se le está cobrando y conserva
+                                    su acceso. Si aun así quiere cancelar, el botón sigue abajo.
+                                </p>
+                            )}
+                            {!yaPausada && (motivo === 'precio' || motivo === 'poco_uso') && (
                                 <>
                                     <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
                                         {motivo === 'precio' ? 'Una alternativa antes de irse' : '¿Y si lo pausamos?'}
