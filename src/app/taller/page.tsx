@@ -203,13 +203,29 @@ export default function TallerDeSentencias() {
     const pedirProyecto = useCallback(async () => {
         setError(''); setCorriendo(true);
         try {
-            const p0 = problemas.find((p) => p.sentido) ?? problemas[0];
-            const r = await resolverConCriterio(encargo.numero, correo, {
-                sentido: p0?.sentido ?? 'infundado',
-                problema: p0?.pregunta ?? '',
-                razonamiento: problemas.filter((p) => p.criterio)
-                    .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
-            });
+            // SE MANDAN TODOS LOS SENTIDOS, NO EL PRIMERO. Antes se tomaba
+            // `problemas.find(p => p.sentido)` y los demás se perdían: el
+            // secretario calificaba seis problemas y el estudio recibía uno.
+            // Con varios criterios el resolutivo sale mixto donde debe salir
+            // mixto, que es lo que hace que concuerde con el estudio.
+            const conSentido = problemas.filter((p) => p.sentido);
+            const criteriosJson = conSentido.length
+                ? JSON.stringify(conSentido.map((p) => ({
+                      problema: p.pregunta,
+                      sentido: p.sentido,
+                      razonamiento: p.criterio ?? '',
+                  })))
+                : undefined;
+            const r = await resolverConCriterio(
+                encargo.numero, correo,
+                criteriosJson ? null : {
+                    sentido: problemas[0]?.sentido ?? 'infundado',
+                    problema: problemas[0]?.pregunta ?? '',
+                    razonamiento: problemas.filter((p) => p.criterio)
+                        .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
+                },
+                criteriosJson,
+            );
             setProyecto(r);
             descargarProyecto(r);
             setPaso('proyecto');

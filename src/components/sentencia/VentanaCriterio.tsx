@@ -58,7 +58,15 @@ export default function VentanaCriterio({
                   avisos: string[] } | null;
 }) {
     const fuerza = useMemo(() => fuerzaDelCriterio(problemas), [problemas]);
-    const listo = fuerza.conSentido === fuerza.total && fuerza.total > 0;
+    // BASTA UN SENTIDO PARA PODER GENERAR. Exigirlos todos dejaba al
+    // secretario encerrado: cuando el motor no alcanza a proponer —«SIN
+    // PROPUESTA» en cinco de seis, porque el acervo no lo sostiene— la puerta
+    // no se abría nunca y no había forma de avanzar salvo teclear seis
+    // criterios a mano. Yair se quedó ahí. Con uno se puede resolver: los
+    // demás se estudian igual, y el aviso dice cuántos faltan por si prefiere
+    // fijarlos antes.
+    const listo = fuerza.conSentido > 0;
+    const completo = fuerza.conSentido === fuerza.total && fuerza.total > 0;
 
     const tono = fuerza.pct >= 70 ? 'bg-emerald-400' : fuerza.pct >= 35 ? 'bg-accent-gold' : 'bg-amber-400';
     const dictamen =
@@ -215,8 +223,14 @@ export default function VentanaCriterio({
             </button>
             {!listo && (
                 <p className="mt-2 text-center text-[11px] text-white/30">
-                    Falta elegir el sentido de {fuerza.total - fuerza.conSentido} problema
-                    {fuerza.total - fuerza.conSentido === 1 ? '' : 's'}.
+                    Elige el sentido de al menos un problema, o pide la propuesta al motor.
+                </p>
+            )}
+            {listo && !completo && (
+                <p className="mt-2 text-center text-[11px] text-white/40">
+                    Quedan {fuerza.total - fuerza.conSentido} problema
+                    {fuerza.total - fuerza.conSentido === 1 ? '' : 's'} sin sentido:
+                    se estudiarán igual, pero fijarlos alinea mejor la sentencia.
                 </p>
             )}
         </Tarjeta>
