@@ -6,9 +6,13 @@ import {
     updateUserSubscription,
     downgradeToFree,
     resetUserQueries,
+    suspenderPorImpago,
+    levantarSuspension,
+    DIAS_HASTA_SUSPENDER,
     PlanType,
     PLAN_CONFIG,
 } from '@/lib/supabase-admin';
+import { PALETA, envolver, rotulo, esc, boton } from '@/lib/correo/plantilla';
 import { Resend } from 'resend';
 
 // Disable body parsing, we need the raw body for webhook verification
@@ -576,6 +580,55 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         console.log(`📧 Resetting query + draft count for ${email} (subscription renewal)`);
         await resetUserQueries(email);
     }
+
+    // Y si estaba suspendido por impago, el pago lo reactiva EN EL ACTO. No se
+    // le hace esperar al barrido diario: acaba de pagar y está delante de la
+    // pantalla que le pidió actualizar su tarjeta.
+    if (email) {
+        try {
+            await levantarSuspension(email);
+        } catch (e) {
+            console.error(`⚠️ Entró el pago de ${email} pero no pude levantar su suspensión:`, e);
+        }
+    }
+}
+
+/**
+ * El aviso de suspensión. Lo que NO puede pasar es que el cliente descubra por
+ * su cuenta que no puede consultar: eso es como se pierde a alguien que sólo
+ * tenía la tarjeta vencida.
+ *
+ * El botón lleva a la factura alojada de Stripe, que se paga sin iniciar
+ * sesión y sin que nosotros toquemos una tarjeta. Pagar ahí dispara
+ * `invoice.payment_succeeded`, y ese webhook levanta la suspensión solo.
+ */
+async function avisarSuspension(email: string, invoice: Stripe.Invoice) {
+    const clave = process.env.RESEND_API_KEY;
+    if (!clave) {
+        console.warn('⚠️ RESEND_API_KEY sin configurar — no sale el aviso de suspensión');
+        return;
+    }
+
+    const url = invoice.hosted_invoice_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.iurexia.com'}/cuenta/suscripcion`;
+    const monto = `$${((invoice.amount_due ?? 0) / 100).toLocaleString('es-MX')} MXN`;
+
+    const cuerpo = `
+${rotulo('Su cuenta está en pausa')}
+<p style="margin:0 0 20px 0;">Le escribimos porque <strong style="color:${PALETA.tinta};">no hemos podido cobrar su mensualidad</strong> de ${esc(monto)}. Lo intentamos varias veces durante ${DIAS_HASTA_SUSPENDER} días, casi siempre por una tarjeta vencida o sin fondos en ese momento.</p>
+<p style="margin:0 0 20px 0;">Mientras tanto su acceso queda en pausa. <strong style="color:${PALETA.tinta};">No ha perdido nada</strong>: su plan, sus conversaciones, sus carpetas y sus documentos siguen intactos y le esperan.</p>
+${boton('Pagar y reactivar ahora', url)}
+<p style="margin:16px 0 20px 0;">El pago reactiva su cuenta <strong style="color:${PALETA.tinta};">de inmediato</strong>, sin que tenga que avisarnos ni esperar a nadie.</p>
+<p style="margin:0 0 20px 0;">Si prefiere no continuar, puede cancelar cuando quiera desde su perfil y no se le cobrará nada más. Y si esto es un error o algo no cuadra, respóndanos a este correo: lo revisa una persona.</p>
+<p style="margin:0;color:${PALETA.tinta};"><strong style="color:${PALETA.tinta};">Equipo de Iurexia</strong></p>
+`;
+
+    await new Resend(clave).emails.send({
+        from: process.env.FROM_EMAIL_REPORTES || 'Iurexia <soporte@iurexia.com>',
+        to: email,
+        subject: 'Su cuenta de Iurexia está en pausa — no pudimos cobrar su mensualidad',
+        html: envolver({ cuerpo, pie: 'Este aviso se envía una sola vez, cuando la cuenta entra en pausa por un cobro que no pudo completarse.' }),
+    });
+    console.log(`📧 Aviso de suspensión enviado a ${email}`);
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
@@ -593,10 +646,22 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
         return;
     }
 
-    if (attemptCount >= 4) {
-        // After final failed attempts, proactively downgrade to prevent continued usage
-        // Stripe will eventually cancel the subscription, but this is a safety net
-        console.warn(`🚨 Payment failed ${attemptCount} times for ${email} — proactive downgrade`);
+    // ¿CUÁNTOS DÍAS LLEVA SIN PAGAR? (31-ago-2026)
+    //
+    // Antes se cortaba con `attemptCount >= 4`, y ese número engaña: el
+    // contador es POR FACTURA y se reinicia cada ciclo, así que una factura
+    // vieja puede llevar nueve intentos y la del mes en curso ir por el
+    // primero. Medido ese día: los diez morosos llevaban de 1 a 7 días de
+    // retraso, Stripe seguía reintentando en los diez, y una de las facturas
+    // que se revisó acabó pagándose al octavo intento. Cortar por intentos
+    // corta a quien iba a pagar.
+    //
+    // Ahora manda el calendario: catorce días desde que se emitió la factura
+    // que no entró. Es la misma vara que usa el barrido diario.
+    const diasDeImpago = Math.floor((Date.now() / 1000 - (invoice.created ?? 0)) / 86400);
+
+    if (diasDeImpago >= DIAS_HASTA_SUSPENDER) {
+        console.warn(`🚨 ${email} lleva ${diasDeImpago} días sin pagar (${attemptCount} intentos) — se suspende`);
         // `invoice.subscription` DESAPARECIÓ de la API en la versión que usamos
         // (2026-01-28.clover): Stripe lo movió a `parent.subscription_details`.
         // Leerlo del sitio viejo devolvía siempre undefined, y eso no fallaba
@@ -620,12 +685,22 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
             ?? facturaConPadre.subscription;
         const failedSubId = typeof refSub === 'string' ? refSub : refSub?.id;
         if (!failedSubId) {
-            console.warn(`⚠️ Sin id de suscripción en la factura de ${email}: `
-                + 'el candado anti-degradación no puede verificar si ya tiene un plan más nuevo');
+            console.warn(`⚠️ Sin id de suscripción en la factura de ${email}`);
         }
-        await downgradeToFree(email, failedSubId || undefined);
+
+        // SUSPENDER, NO DEGRADAR. La suscripción de Stripe se queda como está
+        // —viva y cobrable— y el plan del cliente también: lo único que cambia
+        // es que no puede consultar hasta que el pago entre. Ver
+        // `suspenderPorImpago`, que explica por qué degradar era peor.
+        await suspenderPorImpago(email, `${diasDeImpago} días de impago`);
+
+        try {
+            await avisarSuspension(email, invoice);
+        } catch (e) {
+            console.error(`⚠️ Suspendido ${email} pero no salió el aviso:`, e);
+        }
     } else {
-        console.log(`⚠️ Payment failed for ${email} (attempt ${attemptCount}) — awaiting retry and sending email`);
+        console.log(`⚠️ Payment failed for ${email} (attempt ${attemptCount}, ${diasDeImpago} días) — awaiting retry and sending email`);
 
         try {
             // Get user's name for personalization

@@ -289,6 +289,10 @@ export async function downgradeToFree(email: string, canceledSubscriptionId?: st
             stripe_subscription_id: null,
             // Sigue activa si le queda un regalo corriendo; si no, se apaga.
             is_active: planDestino !== 'gratuito',
+            // La suspensión por impago muere aquí: cuando la suscripción se
+            // acaba de verdad ya no hay nada que cobrar, y dejar la fecha
+            // puesta le cerraría hasta el nivel gratuito a quien ya no debe nada.
+            suspendido_at: null,
             updated_at: new Date().toISOString(),
         } as any)
         .eq('email', normalizedEmail)
@@ -304,6 +308,78 @@ export async function downgradeToFree(email: string, canceledSubscriptionId?: st
     } else {
         console.log(`✅ Downgraded ${normalizedEmail} to free plan`, { updatedRow: data[0] });
     }
+}
+
+/** Cuántos días de impago se aguantan antes de cortar el servicio. */
+export const DIAS_HASTA_SUSPENDER = Number(process.env.DIAS_HASTA_SUSPENDER || 14);
+
+/**
+ * Cortar el servicio por impago SIN romper nada (31-ago-2026).
+ *
+ * POR QUÉ NO SE DEGRADA A GRATUITO, que es lo que se hacía antes:
+ *
+ *   · gratuito NO frena. Deja cinco consultas al mes, y un cliente ya
+ *     degradado por impago hizo 43 preguntas en 30 días.
+ *   · degradar borra `stripe_subscription_id`, o sea el vínculo con la
+ *     suscripción que TODAVÍA se quiere cobrar. Tiraba a la basura la
+ *     posibilidad de seguir cobrando mientras el cliente no cancelara.
+ *   · y era mudo: el cliente se quedaba con cinco consultas sin que nadie le
+ *     dijera por qué ni le ofreciera actualizar su tarjeta.
+ *
+ * Suspender es una fecha. El plan, el cupo y el vínculo con Stripe siguen
+ * exactamente donde estaban, así que reactivar es poner esa fecha en NULL.
+ *
+ * EL UMBRAL SON 14 DÍAS desde la factura impagada, no un número de intentos.
+ * Medido el 31-ago-2026: los diez morosos de ese día llevaban de 1 a 7 días,
+ * Stripe seguía reintentando en los diez, y una factura que se revisó acabó
+ * pagándose al octavo intento. Cortar antes es cortarle a quien iba a pagar.
+ */
+export async function suspenderPorImpago(email: string, motivo = 'impago') {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const { data, error } = await getSupabaseAdmin()
+        .from('user_profiles')
+        .update({ suspendido_at: new Date().toISOString(), updated_at: new Date().toISOString() } as any)
+        .eq('email', normalizedEmail)
+        .is('suspendido_at', null)   // a quien ya está suspendido no se le toca la fecha
+        .select();
+
+    if (error) {
+        console.error(`❌ No pude suspender a ${normalizedEmail}:`, error);
+        throw error;
+    }
+    if (!data || data.length === 0) {
+        console.log(`ℹ️ ${normalizedEmail} ya estaba suspendido (o no existe) — sin cambios`);
+        return false;
+    }
+    console.log(`⛔ SUSPENDIDO ${normalizedEmail} por ${motivo}. Conserva su plan `
+        + `${data[0].subscription_type} y su suscripción de Stripe.`);
+    return true;
+}
+
+/**
+ * Levantar la suspensión. Se llama en cuanto entra un pago: el cliente vuelve
+ * a su plan intacto, sin que nadie tenga que hacer nada a mano.
+ */
+export async function levantarSuspension(email: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const { data, error } = await getSupabaseAdmin()
+        .from('user_profiles')
+        .update({ suspendido_at: null, updated_at: new Date().toISOString() } as any)
+        .eq('email', normalizedEmail)
+        .not('suspendido_at', 'is', null)
+        .select();
+
+    if (error) {
+        console.error(`❌ No pude reactivar a ${normalizedEmail}:`, error);
+        throw error;
+    }
+    if (data && data.length > 0) {
+        console.log(`✅ REACTIVADO ${normalizedEmail}: entró el pago y recupera ${data[0].subscription_type}`);
+        return true;
+    }
+    return false;
 }
 
 /**

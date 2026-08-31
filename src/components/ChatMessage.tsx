@@ -221,6 +221,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             content = content.replace(/\n*<!-- CITATION_META:\{[\s\S]*?\} -->/g, '').trim();
         }
 
+        // La marca de cuenta en pausa se quita aquí para que nunca se vea como
+        // texto; quien la pinta es el propio componente, más abajo.
+        content = content.replace(/\n*<!--\s*SUSCRIPCION_SUSPENDIDA\s*-->/g, '').trim();
+
         // Parse and strip <!-- PRECEDENTES_META:[...] --> from content
         let precedentesMeta: Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string; pdf_url?:string|null}> | null = null;
         const precMatch = content.match(/<!-- PRECEDENTES_META:(\[[\s\S]*?\]) -->/);
@@ -279,6 +283,16 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing, precedentesMeta };
     }, [message.content, isUser]);
+
+    // ── CUENTA EN PAUSA POR UN COBRO QUE NO ENTRÓ (31-ago-2026) ───────────
+    //
+    // El backend manda `<!-- SUSCRIPCION_SUSPENDIDA -->` cuando la mensualidad
+    // no se pudo cobrar en catorce días. Aquí se cambia por un aviso con el
+    // botón de pagar: decirle a un abogado que no pudimos cobrarle y no
+    // enseñarle dónde arreglarlo es media respuesta, y acaba en soporte —o en
+    // una cancelación— por algo que casi siempre es una tarjeta vencida.
+    const enPausaPorImpago = !isUser
+        && (message.content || '').includes('<!-- SUSCRIPCION_SUSPENDIDA -->');
 
     // ── CLEAN CONTENT FOR EXPORT ──────────────────────────────────────
     // Strips ALL citation artifacts so downloaded PDF/DOCX are clean legal prose
@@ -1078,6 +1092,44 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }, [message.content]);
+
+    // La pausa no es una respuesta del asistente: es un aviso de la casa. Va
+    // antes de todo lo demás y sin barra de acciones —copiar o descargar esto
+    // no tiene sentido—.
+    if (enPausaPorImpago) {
+        return (
+            <div className="flex gap-4 justify-start animate-slide-up">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center">
+                    <span className="text-amber-800 text-sm font-serif">!</span>
+                </div>
+                <div className="max-w-[85%] rounded-xl border border-amber-300 bg-amber-50 p-5">
+                    <h4 className="font-serif text-lg font-medium text-charcoal-900 mb-2">
+                        Su cuenta está en pausa
+                    </h4>
+                    <p className="text-sm leading-relaxed text-charcoal-700 mb-3">
+                        No pudimos cobrar su mensualidad. Suele ser una tarjeta vencida o sin
+                        fondos en el momento del cargo.
+                    </p>
+                    <p className="text-sm leading-relaxed text-charcoal-700 mb-4">
+                        <strong className="text-charcoal-900">No ha perdido nada:</strong> su plan,
+                        sus conversaciones, sus carpetas y sus documentos siguen intactos. En cuanto
+                        entre el pago, su acceso vuelve solo.
+                    </p>
+                    <a
+                        href="/cuenta/suscripcion"
+                        className="inline-block rounded-lg bg-charcoal-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-charcoal-800"
+                    >
+                        Actualizar mi forma de pago
+                    </a>
+                    <p className="mt-3 text-xs text-charcoal-500">
+                        ¿Cree que es un error? Escríbanos a{' '}
+                        <a href="mailto:soporte@iurexia.com" className="underline">soporte@iurexia.com</a>{' '}
+                        y lo revisamos el mismo día.
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'} animate-slide-up`}>
