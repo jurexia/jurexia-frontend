@@ -103,7 +103,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
                     cuyo corpus alimentó las fórmulas. Es lo que hace que esto
                     sirva a un secretario de cualquier circuito. */}
                 <Campo etiqueta="Autoridad responsable"
-                       ayuda="Quien dictó el acto reclamado. Obligatorio: aparece en la competencia, en los efectos y en el resolutivo">
+                       ayuda="Se lee de la sentencia reclamada. Escríbela sólo si quieres corregir lo que se lea">
                     <input className={campo} value={valor.responsable ?? ''}
                            placeholder="Junta Especial Número Uno de la Federal de Conciliación y Arbitraje"
                            onChange={(e) => set('responsable', e.target.value)} />
@@ -178,10 +178,9 @@ export function faltaEnEncargo(e: Encargo): string[] {
     if (!e.quejoso.trim()) falta.push('la parte quejosa');
     if (!e.notificacion) falta.push('la fecha de notificación');
     if (!e.presentacion) falta.push('la fecha de presentación');
-    // Sin la responsable el proyecto sale con cuatro huecos en la parte que se
-    // ejecuta: la competencia, la existencia del acto, los efectos y el
-    // resolutivo. Es un dato de sello y pedirlo cuesta un segundo.
-    if (!(e.responsable ?? '').trim()) falta.push('la autoridad responsable');
+    // La autoridad NO se exige: el pipeline la lee de la sentencia reclamada,
+    // que es donde viene. Pedir lo que el sistema puede deducir es hacerle
+    // teclear al secretario lo que ya tiene delante.
     if (e.notificacion && e.presentacion && e.presentacion < e.notificacion) {
         falta.push('una presentación posterior a la notificación');
     }
