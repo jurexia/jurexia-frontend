@@ -108,6 +108,8 @@ interface Movimiento { email: string; importe: number; periodo: string }
 
 interface DatosStripe {
     altas: Movimiento[];
+    /** De las altas, cuántas son de clientes que YA habían pagado antes. */
+    altas_que_vuelven: number;
     bajas: Movimiento[];
     bajas_anunciadas: number;
     cobros_fallidos: number;
@@ -143,9 +145,23 @@ async function leerStripe(v: Ventana): Promise<DatosStripe> {
     const gte = Math.floor(v.inicio.getTime() / 1000);
     const lte = Math.floor(v.fin.getTime() / 1000);
 
+    // ALTAS. Se descartan las `incomplete`: una pasarela abierta que nunca se
+    // pagó no es un alta, y contarla infla la cifra que más se mira.
+    //
+    // Y no todas son clientes nuevos: hay quien vuelve y quien cambia de plan,
+    // y Stripe crea una suscripción nueva en los tres casos. Se distingue
+    // preguntando si ese cliente tenía alguna anterior —comprobado el
+    // 30-ago-2026: de 17 altas de la semana, 7 eran de gente que ya había
+    // pagado antes—. Son 17 llamadas más, una vez por semana: nada.
     const altas: Movimiento[] = [];
+    let vuelven = 0;
     for await (const s of stripe.subscriptions.list({ created: { gte, lte }, status: 'all', limit: 100 })) {
+        if (s.status === 'incomplete' || s.status === 'incomplete_expired') continue;
         altas.push({ email: correoDe(s), importe: aMensual(s.items.data[0]?.price, s.items.data[0]?.quantity ?? 1), periodo: etiquetaPlan(s) });
+        try {
+            const previas = await stripe.subscriptions.list({ customer: s.customer as string, status: 'all', limit: 100 });
+            if (previas.data.some(p => p.id !== s.id && p.created < s.created)) vuelven++;
+        } catch { /* si no se puede comprobar, cuenta como cliente nuevo */ }
     }
 
     // La base viva y su MRR. `cancel_at_period_end` es un stock, no un flujo:
@@ -170,7 +186,8 @@ async function leerStripe(v: Ventana): Promise<DatosStripe> {
     for await (const _e of stripe.events.list({ type: 'invoice.payment_failed', created: { gte, lte }, limit: 100 })) fallidos++;
 
     return {
-        altas, bajas, bajas_anunciadas: anunciadas, cobros_fallidos: fallidos,
+        altas, altas_que_vuelven: vuelven, bajas,
+        bajas_anunciadas: anunciadas, cobros_fallidos: fallidos,
         suscriptores_activos: activos, mrr_total: Math.round(mrr * 100) / 100,
     };
 }
@@ -300,6 +317,7 @@ ${tarjetas([
 <h3 style="font-family:Georgia,serif;font-size:17px;font-weight:600;color:${PALETA.tinta};margin:0 0 12px 0;">Dinero</h3>
 ${filas([
     ['Pagaron esta semana', `${st.altas.length} &nbsp;·&nbsp; ${pesos(mrrAlta)}/mes`],
+    ['De ésos, clientes que vuelven', `${st.altas_que_vuelven} &nbsp;·&nbsp; nuevos: ${st.altas.length - st.altas_que_vuelven}`],
     ['Dejaron de pagar', `${st.bajas.length} &nbsp;·&nbsp; ${mrrBaja > 0 ? '−' + pesos(mrrBaja) + '/mes' : '—'}`],
     ['Cancelación anunciada (aún activos)', String(st.bajas_anunciadas)],
     ['Cobros fallidos', String(st.cobros_fallidos)],
@@ -359,7 +377,8 @@ export interface Resultado {
  * medición de la semana ya está en la tabla y no se pierde.
  */
 export async function generarReporteSalud(
-    { ahora = new Date(), enviar = true }: { ahora?: Date; enviar?: boolean } = {},
+    { ahora = new Date(), enviar = true, guardar = true }:
+    { ahora?: Date; enviar?: boolean; guardar?: boolean } = {},
 ): Promise<Resultado> {
     const v = ventanaSemana(ahora);
     const sb = admin();
@@ -376,8 +395,9 @@ export async function generarReporteSalud(
     const mrrAlta = Math.round(st.altas.reduce((a, m) => a + m.importe, 0) * 100) / 100;
     const mrrBaja = Math.round(st.bajas.reduce((a, m) => a + m.importe, 0) * 100) / 100;
 
-    // 1. La medición, primero.
-    const { error: eGuardar } = await sb.from('reportes_salud').upsert({
+    // 1. La medición, primero. Un ensayo (`guardar: false`) no toca la tabla:
+    //    lo que se llama ensayo no puede dejar rastro.
+    const { error: eGuardar } = guardar ? await sb.from('reportes_salud').upsert({
         semana_inicio: v.lunes,
         semana_fin: v.domingo,
         generado_at: new Date().toISOString(),
@@ -395,8 +415,11 @@ export async function generarReporteSalud(
         usuarios_activos: b.usuarios_activos,
         consultas: b.consultas,
         uso: { ...b.uso, otros: b.otros },
-        detalle: { sin_pago: b.sin_pago, en_el_muro: b.en_el_muro, altas: st.altas, bajas: st.bajas },
-    }, { onConflict: 'semana_inicio' });
+        detalle: {
+            sin_pago: b.sin_pago, en_el_muro: b.en_el_muro,
+            altas: st.altas, bajas: st.bajas, altas_que_vuelven: st.altas_que_vuelven,
+        },
+    }, { onConflict: 'semana_inicio' }) : { error: null };
 
     const html = componerCorreo(v, b, st);
     const resumen = {
@@ -406,7 +429,7 @@ export async function generarReporteSalud(
     };
 
     if (!enviar) {
-        return { ok: !eGuardar, semana: v.lunes, guardado: !eGuardar, enviado: false, error: eGuardar?.message, resumen, html };
+        return { ok: !eGuardar, semana: v.lunes, guardado: guardar && !eGuardar, enviado: false, error: eGuardar?.message, resumen, html };
     }
 
     // 2. Y luego el correo.

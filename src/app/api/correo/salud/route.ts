@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     const conHtml = req.nextUrl.searchParams.get('html') === '1';
 
     try {
-        const r = await generarReporteSalud({ enviar: !ensayo });
+        const r = await generarReporteSalud({ enviar: !ensayo, guardar: !ensayo });
         if (!r.ok) console.error('salud: el parte no salió limpio', r.error);
         return NextResponse.json(conHtml ? r : { ...r, html: undefined }, { status: r.ok ? 200 : 500 });
     } catch (e) {
