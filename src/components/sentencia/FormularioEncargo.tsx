@@ -29,6 +29,9 @@ export interface Encargo {
      *  documento hereda la identidad de otro circuito. */
     tribunal?: string;
     ciudad?: string;
+    /** LA AUTORIDAD RESPONSABLE ES OBLIGATORIA: sin ella la competencia, los
+     *  efectos y el resolutivo salen con hueco, y es dato de sello. */
+    responsable?: string;
 }
 
 export const ENCARGO_VACIO: Encargo = {
@@ -99,6 +102,13 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
                     incompleta y el documento hereda la identidad del tribunal
                     cuyo corpus alimentó las fórmulas. Es lo que hace que esto
                     sirva a un secretario de cualquier circuito. */}
+                <Campo etiqueta="Autoridad responsable"
+                       ayuda="Quien dictó el acto reclamado. Obligatorio: aparece en la competencia, en los efectos y en el resolutivo">
+                    <input className={campo} value={valor.responsable ?? ''}
+                           placeholder="Junta Especial Número Uno de la Federal de Conciliación y Arbitraje"
+                           onChange={(e) => set('responsable', e.target.value)} />
+                </Campo>
+
                 <Campo etiqueta="Tribunal que resuelve"
                        ayuda="Como aparece en tus sentencias: «Primer Tribunal Colegiado en Materia Civil del Décimo Cuarto Circuito»">
                     <input className={campo} value={valor.tribunal ?? ''}
@@ -168,6 +178,10 @@ export function faltaEnEncargo(e: Encargo): string[] {
     if (!e.quejoso.trim()) falta.push('la parte quejosa');
     if (!e.notificacion) falta.push('la fecha de notificación');
     if (!e.presentacion) falta.push('la fecha de presentación');
+    // Sin la responsable el proyecto sale con cuatro huecos en la parte que se
+    // ejecuta: la competencia, la existencia del acto, los efectos y el
+    // resolutivo. Es un dato de sello y pedirlo cuesta un segundo.
+    if (!(e.responsable ?? '').trim()) falta.push('la autoridad responsable');
     if (e.notificacion && e.presentacion && e.presentacion < e.notificacion) {
         falta.push('una presentación posterior a la notificación');
     }
