@@ -111,7 +111,8 @@ function SelectorTipo({ tipos, valor, onElegir }: {
                             'rounded-2xl border px-4 py-3 text-left transition-all duration-200',
                             activo
                                 ? 'border-accent-gold/45 bg-accent-gold/[0.07] shadow-[0_0_30px_-14px_rgba(201,169,98,0.5)]'
-                                : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]',
+                                : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 '
+                                  + 'hover:bg-white/[0.05] hover:-translate-y-px',
                         )}
                     >
                         <span className={cn(
@@ -180,9 +181,13 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
                                   })} />
                 </Campo>
 
-                {/* NADA MÁS SE PINTA HASTA QUE HAY TIPO. */}
+                {/* NADA MÁS SE PINTA HASTA QUE HAY TIPO. Y cuando se pinta,
+                    entra escalonado de arriba abajo: la vista sigue el orden en
+                    que hay que llenar los campos. `key` fuerza el remontaje al
+                    cambiar de asunto, así que la animación se repite y se ve
+                    que la ficha ES OTRA, no la misma con etiquetas cambiadas. */}
                 {tipo && (
-                <>
+                <div key={tipo.clave} className="ficha-entra grid gap-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                     <Campo etiqueta="Expediente" ayuda="Como «174/2026»">
                         <input className={campo} value={valor.numero} placeholder="174/2026"
@@ -307,7 +312,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
                     «{tipo.combate}», no otra cosa. Medido sobre {tipo.medido_sobre} adelantos
                     reales de esta clase de asunto.
                 </p>
-                </>
+                </div>
                 )}
             </fieldset>
         </Tarjeta>

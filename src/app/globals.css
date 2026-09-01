@@ -1417,8 +1417,35 @@ h6 {
 }
 .insignia-vuela { animation: insigniaVuela 1s cubic-bezier(0.5, 0, 0.75, 0) both; }
 
+/* ── La ficha que se despliega al elegir el asunto ────────────────────────
+   El secretario elige qué va a proyectar y la ficha aparece debajo. Que
+   aparezca de golpe se siente como un salto; que suba tres pixeles mientras
+   entra se siente como que la pantalla le responde. El escalonado —cada bloque
+   entra 40 ms después del anterior— guía la vista de arriba abajo en el orden
+   en que hay que llenarlos.
+
+   Nada de rebotes ni de escalas: la curva es la de salida suave que ya usa el
+   resto del taller. Esto es una herramienta de trabajo, no una presentación. */
+@keyframes fichaEntra {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.ficha-entra > * {
+    animation: fichaEntra 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ficha-entra > *:nth-child(1) { animation-delay: 0.02s; }
+.ficha-entra > *:nth-child(2) { animation-delay: 0.06s; }
+.ficha-entra > *:nth-child(3) { animation-delay: 0.10s; }
+.ficha-entra > *:nth-child(4) { animation-delay: 0.14s; }
+.ficha-entra > *:nth-child(5) { animation-delay: 0.18s; }
+.ficha-entra > *:nth-child(6) { animation-delay: 0.22s; }
+.ficha-entra > *:nth-child(7) { animation-delay: 0.26s; }
+.ficha-entra > *:nth-child(n+8) { animation-delay: 0.30s; }
+
 @media (prefers-reduced-motion: reduce) {
     .insignia-viva .insignia-barrido,
     .insignia-aparece, .insignia-vuela, .ceremonia-fondo { animation: none; }
     .insignia-vuela { opacity: 0; }
+    /* Quien pidió menos movimiento recibe la ficha entera, sin transición. */
+    .ficha-entra > * { animation: none; }
 }
