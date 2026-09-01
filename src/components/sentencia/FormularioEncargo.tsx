@@ -61,6 +61,14 @@ export interface Encargo {
      *  de la Ley de Amparo, los sábados y domingos y los periodos vacacionales
      *  del PJF; lo que no puede saber es que ESTE tribunal suspendió labores
      *  un martes. Eso lo declara quien estuvo ahí. */
+    /** LAS DOS FECHAS DE LA SESIÓN. Son el único dato del proyecto que no
+     *  está en ningún documento: se redacta ANTES de que la sesión ocurra.
+     *  Salían como dos comodines de asteriscos en los cinco proyectos de la
+     *  última medición, y bastaba preguntarlas. Opcionales: sin ellas el
+     *  párrafo sale con el hueco visible, que es mejor que una fecha
+     *  inventada. */
+    fechaLista?: string;
+    fechaSesion?: string;
     /** Tercero interesado, o parte actora en la revisión fiscal. */
     tercero?: string;
     diasInhabilesExtra?: string[];
@@ -263,6 +271,19 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
                     <Campo etiqueta={`Presentación: ${tipo.escrito}`}>
                         <input type="date" className={campo} value={valor.presentacion}
                                onChange={(e) => set('presentacion', e.target.value)} />
+                    </Campo>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <Campo etiqueta="Se listó el"
+                           ayuda="Opcional. Sin las dos, el párrafo de la sesión sale con el hueco a la vista">
+                        <input type="date" className={campo} value={valor.fechaLista || ''}
+                               onChange={(e) => set('fechaLista', e.target.value)} />
+                    </Campo>
+                    <Campo etiqueta="Para la sesión de"
+                           ayuda="La sesión en que se verá el proyecto">
+                        <input type="date" className={campo} value={valor.fechaSesion || ''}
+                               onChange={(e) => set('fechaSesion', e.target.value)} />
                     </Campo>
                 </div>
 

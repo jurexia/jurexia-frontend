@@ -27,6 +27,11 @@ export interface EncargoAdelanto {
      *  suspendió labores por una contingencia. Los del artículo 19, los fines
      *  de semana y las vacaciones del Poder Judicial ya los trae el servidor. */
     diasInhabilesExtra?: string[];
+    /** Las dos fechas de la sesión, opcionales. Sin ellas el párrafo del
+     *  resultando sale con el hueco a la vista, que es lo correcto: nadie
+     *  puede saberlas cuando el proyecto se escribe. */
+    fechaLista?: string;
+    fechaSesion?: string;
     /** Familia del asunto: decide el esqueleto del documento. */
     tipoAsunto?: string;
     responsable?: string;
@@ -87,6 +92,8 @@ export async function generarAdelanto(
     // fines de semana y las vacaciones del Poder Judicial; el día que ESTE
     // tribunal suspendió labores no lo sabe nadie más que quien estuvo ahí, y
     // sin él el plazo sale corto. Viajan separados por coma, en ISO.
+    if (encargo.fechaLista) fd.append('fecha_lista', encargo.fechaLista);
+    if (encargo.fechaSesion) fd.append('fecha_sesion', encargo.fechaSesion);
     if (encargo.diasInhabilesExtra?.length) {
         fd.append('dias_inhabiles_extra', encargo.diasInhabilesExtra.join(','));
     }
