@@ -20,9 +20,14 @@ export interface EncargoAdelanto {
     presentacion: string;
     reglaSurtimiento?: string;
     plazo?: number;
+    /** La excepción de plazo declarada, si el tipo tiene alguna: en la queja,
+     *  «suspension» (dos días) u «omision_tramite» (en cualquier tiempo). */
+    excepcionPlazo?: string;
     /** Familia del asunto: decide el esqueleto del documento. */
     tipoAsunto?: string;
     responsable?: string;
+    /** Ya no se manda: lo dice el tipo de asunto. Se conserva la clave para no
+     *  romper llamadas viejas, pero el servidor la ignora. */
     esRecurso?: boolean;
     /** EL TRIBUNAL QUE RESUELVE. Sin él la competencia sale incompleta: es el
      *  dato que hace que esto sirva fuera de un solo circuito. */
@@ -63,10 +68,18 @@ export async function generarAdelanto(
     fd.append('notificacion', encargo.notificacion);
     fd.append('presentacion', encargo.presentacion);
     fd.append('user_email', userEmail);
-    fd.append('regla_surtimiento', encargo.reglaSurtimiento ?? 'tja_qro_boletin');
-    fd.append('plazo', String(encargo.plazo ?? 15));
+    // LA OMISIÓN NO PUEDE SER LA REGLA DE UN TRIBUNAL. `tja_qro_boletin` es el
+    // Boletín Jurisdiccional del Tribunal de Justicia Administrativa de
+    // QUERÉTARO, y esto lo usan secretarios de toda la república: el cómputo de
+    // uno de Yucatán se hacía con la regla de otro estado. La general es la
+    // notificación personal, artículo 31, fracción I, de la Ley de Amparo.
+    fd.append('regla_surtimiento', encargo.reglaSurtimiento ?? 'personal');
+    // EL PLAZO NO SE MANDA SI NO SE DECLARA: cero significa «el que la ley da a
+    // este tipo de asunto», y el servidor lo resuelve con el catálogo. Antes se
+    // mandaban quince para todo, y una queja tiene cinco.
+    fd.append('plazo', String(encargo.plazo ?? 0));
+    if (encargo.excepcionPlazo) fd.append('excepcion_plazo', encargo.excepcionPlazo);
     if (encargo.responsable) fd.append('responsable', encargo.responsable);
-    fd.append('es_recurso', String(!!encargo.esRecurso));
     fd.append('tipo_asunto', encargo.tipoAsunto ?? 'amparo_directo');
     // EL DOCUMENTO SE ESCRIBE ENTERO, NO SE RELLENA UNA PLANTILLA AJENA. Sin
     // este campo el taller cae en la ruta vieja: encabezado con el expediente
@@ -321,4 +334,44 @@ export function descargarProyecto(r: ResultadoProyecto): void {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EL CATÁLOGO DE TIPOS DE ASUNTO
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «lo primero sería preguntarle al usuario qué tipo de asunto va a
+   proyectar; una vez que seleccione, desplegar los campos que lleva cada uno».
+
+   La pantalla no necesita saber derecho —ni qué plazo tiene una queja, ni que
+   una revisión fiscal no lleva «existencia del acto reclamado»—. Lo pregunta al
+   servidor, donde vive la tabla, y lo pinta. Si mañana cambia un plazo se
+   cambia en un sitio y la pantalla se entera sola. */
+
+export interface ExcepcionPlazo {
+    clave: string;
+    cuando: string;
+    dias: number | null;
+    fundamento: string;
+    en_cualquier_tiempo: boolean;
+}
+
+export interface TipoAsunto {
+    clave: string;
+    nombre: string;
+    promovente: string;      // «quejoso» o «recurrente»
+    combate: string;         // «conceptos de violación» o «agravios»
+    recurrido: string;
+    escrito: string;         // lo que el secretario sube
+    plazo: { dias: number; fundamento: string };
+    excepciones_de_plazo: ExcepcionPlazo[];
+    apartados: { resultandos: string[]; considerandos: string[] };
+    medido_sobre: number;
+}
+
+export async function obtenerTipos(): Promise<TipoAsunto[]> {
+    const r = await fetch(`${BASE}/taller/tipos`, { cache: 'force-cache' });
+    if (!r.ok) throw new Error('No se pudo leer el catálogo de asuntos.');
+    const d = await r.json();
+    return (d.tipos ?? []) as TipoAsunto[];
 }

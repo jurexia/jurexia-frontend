@@ -124,7 +124,15 @@ export default function TallerDeSentencias() {
         try {
             const r = await generarAdelanto(
                 { ...encargo, reglaSurtimiento: encargo.reglaSurtimiento,
-                  tipoAsunto: encargo.esRecurso ? 'amparo_revision' : 'amparo_directo',
+                  // EL TIPO LO ELIGE EL SECRETARIO, NO SE DEDUCE DE UN
+                  // INTERRUPTOR. Esta línea decía
+                  // `encargo.esRecurso ? 'amparo_revision' : 'amparo_directo'`,
+                  // así que una QUEJA o una REVISIÓN FISCAL eran imposibles de
+                  // pedir desde la pantalla: el interruptor sólo alternaba
+                  // entre amparo directo y amparo en revisión. Todo el trabajo
+                  // hecho para esos dos tipos era inalcanzable para un
+                  // secretario y sólo existía desde una petición a mano.
+                  tipoAsunto: encargo.tipoAsunto,
                   // El documento se escribe entero. La ruta de plantilla queda
                   // sólo para quien suba la suya a propósito.
                   modo: ficheros.plantilla ? 'plantilla' : 'generado' },
@@ -260,7 +268,7 @@ export default function TallerDeSentencias() {
 
     const asunto: Asunto = useMemo(() => ({
         numero: encargo.numero || '—',
-        tipo: encargo.esRecurso ? 'amparo_revision' : 'amparo_directo',
+        tipo: (encargo.tipoAsunto || 'amparo_directo') as Asunto['tipo'],
         quejoso: encargo.quejoso || '—',
         magistrado: encargo.magistrado, secretario: encargo.secretario,
         autoridades: [], actoReclamado: '',
