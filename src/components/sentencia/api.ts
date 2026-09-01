@@ -23,6 +23,10 @@ export interface EncargoAdelanto {
     /** La excepción de plazo declarada, si el tipo tiene alguna: en la queja,
      *  «suspension» (dos días) u «omision_tramite» (en cualquier tiempo). */
     excepcionPlazo?: string;
+    /** Los inhábiles que sólo conoce quien estuvo en el tribunal: el día que
+     *  suspendió labores por una contingencia. Los del artículo 19, los fines
+     *  de semana y las vacaciones del Poder Judicial ya los trae el servidor. */
+    diasInhabilesExtra?: string[];
     /** Familia del asunto: decide el esqueleto del documento. */
     tipoAsunto?: string;
     responsable?: string;
@@ -79,6 +83,13 @@ export async function generarAdelanto(
     // mandaban quince para todo, y una queja tiene cinco.
     fd.append('plazo', String(encargo.plazo ?? 0));
     if (encargo.excepcionPlazo) fd.append('excepcion_plazo', encargo.excepcionPlazo);
+    // LOS INHÁBILES DE ESTE TRIBUNAL. El servidor trae los del artículo 19, los
+    // fines de semana y las vacaciones del Poder Judicial; el día que ESTE
+    // tribunal suspendió labores no lo sabe nadie más que quien estuvo ahí, y
+    // sin él el plazo sale corto. Viajan separados por coma, en ISO.
+    if (encargo.diasInhabilesExtra?.length) {
+        fd.append('dias_inhabiles_extra', encargo.diasInhabilesExtra.join(','));
+    }
     if (encargo.responsable) fd.append('responsable', encargo.responsable);
     fd.append('tipo_asunto', encargo.tipoAsunto ?? 'amparo_directo');
     // EL DOCUMENTO SE ESCRIBE ENTERO, NO SE RELLENA UNA PLANTILLA AJENA. Sin

@@ -57,12 +57,17 @@ export interface Encargo {
     ciudad?: string;
     /** LA AUTORIDAD RESPONSABLE se lee del acto; esto sólo la corrige. */
     responsable?: string;
+    /** LOS INHÁBILES QUE EL SISTEMA NO PUEDE SABER. Trae los del artículo 19
+     *  de la Ley de Amparo, los sábados y domingos y los periodos vacacionales
+     *  del PJF; lo que no puede saber es que ESTE tribunal suspendió labores
+     *  un martes. Eso lo declara quien estuvo ahí. */
+    diasInhabilesExtra?: string[];
 }
 
 export const ENCARGO_VACIO: Encargo = {
     tipoAsunto: '', numero: '', encabezado: '', quejoso: '', magistrado: '',
     secretario: '', notificacion: '', presentacion: '',
-    reglaSurtimiento: 'personal', plazo: 0,
+    reglaSurtimiento: 'personal', plazo: 0, diasInhabilesExtra: [],
 };
 
 /** Las reglas de surtimiento que el pipeline sabe computar. */
@@ -257,6 +262,31 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
                             <option key={v} value={v} className="bg-charcoal-900">{t}</option>
                         ))}
                     </select>
+                </Campo>
+
+                <Campo etiqueta="Días inhábiles adicionales"
+                       ayuda="Los del artículo 19, sábados y domingos y las vacaciones del Poder Judicial ya van contados. Aquí sólo los de tu tribunal.">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {(valor.diasInhabilesExtra ?? []).map((d) => (
+                            <span key={d}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-accent-gold/25 bg-accent-gold/10 px-2.5 py-1 text-[12px] text-accent-gold">
+                                {d}
+                                <button type="button" aria-label={`Quitar ${d}`}
+                                        className="text-accent-gold/60 transition hover:text-accent-gold"
+                                        onClick={() => set('diasInhabilesExtra',
+                                            (valor.diasInhabilesExtra ?? []).filter((x) => x !== d))}>
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                        <input type="date" className={`${campo} w-auto`} value=""
+                               onChange={(e) => {
+                                   const d = e.target.value;
+                                   if (!d) return;
+                                   const ya = valor.diasInhabilesExtra ?? [];
+                                   if (!ya.includes(d)) set('diasInhabilesExtra', [...ya, d].sort());
+                               }} />
+                    </div>
                 </Campo>
 
                 {/* EL PLAZO SE MUESTRA, NO SE PIDE. Es la ley. */}
