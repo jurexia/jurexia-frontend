@@ -1104,25 +1104,25 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                 </div>
                 <div className="max-w-[85%] rounded-xl border border-amber-300 bg-amber-50 p-5">
                     <h4 className="font-serif text-lg font-medium text-charcoal-900 mb-2">
-                        Su cuenta está en pausa
+                        Cuenta suspendida por falta de pago
                     </h4>
                     <p className="text-sm leading-relaxed text-charcoal-700 mb-3">
-                        No pudimos cobrar su mensualidad. Suele ser una tarjeta vencida o sin
-                        fondos en el momento del cargo.
+                        Para reactivar, actualiza tu método de pago. Tu cuenta permanecerá
+                        suspendida hasta que se cubra el adeudo.
                     </p>
                     <p className="text-sm leading-relaxed text-charcoal-700 mb-4">
-                        <strong className="text-charcoal-900">No ha perdido nada:</strong> su plan,
-                        sus conversaciones, sus carpetas y sus documentos siguen intactos. En cuanto
-                        entre el pago, su acceso vuelve solo.
+                        <strong className="text-charcoal-900">No has perdido nada:</strong> tu plan,
+                        tus conversaciones, tus carpetas y tus documentos siguen intactos. En cuanto
+                        entre el pago, tu acceso vuelve solo.
                     </p>
                     <a
                         href="/cuenta/suscripcion"
                         className="inline-block rounded-lg bg-charcoal-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-charcoal-800"
                     >
-                        Actualizar mi forma de pago
+                        Actualizar mi método de pago
                     </a>
                     <p className="mt-3 text-xs text-charcoal-500">
-                        ¿Cree que es un error? Escríbanos a{' '}
+                        ¿Crees que es un error? Escríbenos a{' '}
                         <a href="mailto:soporte@iurexia.com" className="underline">soporte@iurexia.com</a>{' '}
                         y lo revisamos el mismo día.
                     </p>

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Scale, ArrowLeft } from 'lucide-react';
 
 export default function TerminosPage() {
-    const fechaActualizacion = "22 de agosto de 2026";
+    const fechaActualizacion = "31 de agosto de 2026";
 
     return (
         <main className="min-h-screen bg-cream-300">
@@ -217,6 +217,49 @@ export default function TerminosPage() {
                                 Al existir esta vía de solución directa, sencilla y sin costo, el usuario se
                                 obliga a acudir a ella antes de iniciar cualquier reclamación ante su
                                 institución bancaria.
+                            </p>
+
+                            <h3 className="font-serif text-lg font-medium text-charcoal-900 mt-6 mb-2">
+                                7.5 Suspensión de la cuenta por falta de pago
+                            </h3>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Cuando un cargo de renovación no pueda procesarse, Iurexia reintentará el
+                                cobro durante un <strong>plazo de gracia de catorce (14) días naturales</strong>,
+                                contados desde la fecha de la factura no cubierta. Durante ese plazo la cuenta
+                                conserva su acceso íntegro y el usuario recibe avisos con el enlace para
+                                actualizar su método de pago.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Transcurrido ese plazo sin que el adeudo se cubra, la cuenta pasa
+                                automáticamente al estado de <strong>suspensión por falta de pago</strong>. La
+                                cuenta suspendida <strong>no permite el uso de ninguna función de la
+                                plataforma</strong> —consultas, redacción de documentos, análisis de
+                                expedientes ni acceso al historial— y así permanecerá hasta que el adeudo sea
+                                cubierto.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>La suspensión no es una cancelación.</strong> El usuario conserva su
+                                plan contratado, su tarifa vigente —incluida, en su caso, la tarifa preferente
+                                de socio fundador—, sus conversaciones, sus carpetas y sus documentos, así como
+                                el vínculo con su método de pago. La suscripción continúa devengándose y
+                                facturándose <strong>hasta que el propio usuario la cancele</strong> por las
+                                vías previstas en la cláusula 7.2, por lo que el hecho de no cancelar y dejar de
+                                pagar no extingue la obligación de pago ni el adeudo acumulado.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>La reactivación es automática e inmediata al cubrirse el adeudo.</strong>{' '}
+                                En cuanto el pago se confirma, la cuenta recupera su plan y la totalidad de su
+                                contenido en el estado en que quedó, sin gestión alguna por parte del usuario.
+                                La única vía de reactivación es el pago de las cantidades pendientes.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed">
+                                Esta medida se aplica de manera general y uniforme a todo usuario con
+                                suscripción de pago cuyo adeudo rebase el plazo de gracia señalado. Si el
+                                usuario considera que la suspensión obedece a un error, o atraviesa una
+                                circunstancia que le impide cubrir el pago, puede escribir a{' '}
+                                <a href="mailto:soporte@iurexia.com" className="underline">soporte@iurexia.com</a>,
+                                donde su caso será revisado; la dispensa prevista en la cláusula 7.4 sigue
+                                estando disponible.
                             </p>
                         </section>
 

@@ -93,7 +93,7 @@ export async function revisarMorosos({ ensayo = false } = {}): Promise<Resultado
     // cliente que pagó y sigue fuera es peor que un moroso dentro.
     const { data: suspendidos, error } = await admin()
         .from('user_profiles')
-        .select('email, stripe_subscription_id')
+        .select('email, stripe_subscription_id, stripe_customer_id')
         .not('suspendido_at', 'is', null);
 
     if (error) {
@@ -106,8 +106,28 @@ export async function revisarMorosos({ ensayo = false } = {}): Promise<Resultado
         const correo = (u.email || '').toLowerCase().trim();
         try {
             if (!u.stripe_subscription_id) {
-                // Sin suscripción que consultar, la suspensión no se sostiene.
-                if (!ensayo && await levantarSuspension(correo)) r.reactivados.push(`${correo} (sin suscripción)`);
+                // Sin suscripción que consultar NO significa sin deuda. Aquí
+                // caen dos poblaciones muy distintas y confundirlas costaba
+                // caro: el que nunca debió nada, y el que fue degradado por la
+                // lógica vieja —que ponía `stripe_subscription_id` a null— o
+                // canceló dejando facturas abiertas.
+                //
+                // Levantar la suspensión a ciegas, como se hacía, deshacía al
+                // día siguiente cualquier suspensión de este segundo grupo: el
+                // barrido corre a las 08:00 y los devolvía a la calle sin que
+                // hubieran pagado un peso. La regla es que sólo se sale
+                // pagando, así que aquí se pregunta por el adeudo, no por la
+                // suscripción.
+                if (!u.stripe_customer_id) {
+                    if (!ensayo && await levantarSuspension(correo)) r.reactivados.push(`${correo} (sin cliente en Stripe)`);
+                    continue;
+                }
+                const abiertas = await stripe.invoices.list({
+                    customer: u.stripe_customer_id, status: 'open', limit: 1,
+                });
+                if (abiertas.data.length > 0) continue;   // debe: se queda fuera
+                if (ensayo) { r.reactivados.push(`${correo} (ensayo, sin adeudo)`); continue; }
+                if (await levantarSuspension(correo)) r.reactivados.push(`${correo} (sin adeudo)`);
                 continue;
             }
             const sub = await stripe.subscriptions.retrieve(u.stripe_subscription_id);

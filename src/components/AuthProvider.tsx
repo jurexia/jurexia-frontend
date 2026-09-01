@@ -1,8 +1,27 @@
 'use client';
 
 import { createContext, useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { supabase, getUserProfile, UserProfile } from '@/lib/supabase';
+import { CuentaSuspendida } from '@/components/CuentaSuspendida';
 import type { User, Session } from '@supabase/supabase-js';
+
+/**
+ * Las rutas que un suspendido SÍ puede ver. Son las que llevan a la caja y
+ * las que le permiten salir: encerrarlo sin dejarle pagar sería cobrarle a
+ * puerta cerrada. Todo lo demás queda detrás del muro.
+ */
+const RUTAS_ABIERTAS_EN_SUSPENSION = [
+    '/cuenta/suscripcion',
+    '/checkout',
+    '/precios',
+    '/entrar',
+    '/login',
+    '/registro',
+    '/auth',
+    '/terminos',
+    '/privacidad',
+];
 
 export interface AuthContextType {
     user: User | null;
@@ -136,9 +155,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, [loadProfile]);
 
+    // ── EL MURO DE LA SUSPENSIÓN (31-ago-2026) ───────────────────────────
+    //
+    // `consume_query` ya impedía preguntar, pero no impedía ENTRAR: el moroso
+    // navegaba su cuenta y sólo chocaba con el freno al escribir. Aquí se
+    // corta la sesión entera en cuanto el perfil trae `suspendido_at`.
+    //
+    // El muro se pinta ENCIMA de `children`, no en su lugar: la aplicación
+    // sigue montada detrás, así que al levantar la suspensión el usuario
+    // vuelve a lo que estaba haciendo sin recargar ni perder el hilo.
+    const rutaActual = usePathname() || '';
+    const enRutaDePago = RUTAS_ABIERTAS_EN_SUSPENSION.some((r) => rutaActual.startsWith(r));
+    const suspendido = !!authState.profile?.suspendido_at && !enRutaDePago;
+
     return (
         <AuthContext.Provider value={authState}>
             {children}
+            {suspendido && <CuentaSuspendida email={authState.profile?.email} />}
         </AuthContext.Provider>
     );
 }

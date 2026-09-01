@@ -159,6 +159,10 @@ export interface UserProfile {
     insignia_vista: 'gratuito' | 'basico' | 'pro' | 'platinum' | null;
     /** Parte del grupo fundador que probó la app de Android antes del lanzamiento. */
     beta_android_invitado: boolean;
+    /** Fecha en que se suspendió por impago. NULL = al corriente. Mientras
+     *  tenga valor, el muro de `CuentaSuspendida` cubre toda la aplicación y
+     *  `consume_query` rechaza cualquier consulta. */
+    suspendido_at: string | null;
     created_at: string;
     updated_at: string;
 }
