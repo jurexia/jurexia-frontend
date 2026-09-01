@@ -78,9 +78,20 @@ export interface ProblemaJuridico {
     candidatos: Candidato[];
     /** Si el pipeline advierte un impedimento técnico que llevaría a inoperancia. */
     impedimento?: { motivo: string; explicacion: string };
+    /** Lo que el planteamiento tiene A SU FAVOR. Va emparejado con el
+     *  impedimento: un cuestionario que sólo pregunta por lo que descalifica
+     *  produce un expediente lleno de razones para no entrar. */
+    apoyo?: { motivo: string; explicacion: string };
+    /** «principal» es aquel del que dependen los demás: si prospera, el
+     *  estudio de los otros queda sin materia. */
+    jerarquia?: 'principal' | 'accesorio';
+    /** Cómo resolvió el acervo esta misma cuestión. No es un pronóstico de lo
+     *  que hará este tribunal, y no se escribe en la sentencia. */
+    prediccion?: { sentido: string; porcentaje: number; n: number;
+                   confianza: string; frase: string };
     /** El criterio que escribe el secretario para este problema. */
     criterio: string;
-    sentido?: 'fundado' | 'infundado' | 'inoperante' | 'ineficaz';
+    sentido?: 'fundado' | 'infundado' | 'inoperante' | 'ineficaz' | 'innecesario';
 }
 
 export interface Asunto {

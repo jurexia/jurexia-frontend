@@ -35,6 +35,7 @@ import { Tarjeta, Rotulo, cn } from '@/components/sentencia/primitivas';
 import type { Asunto, Documento, Fase, ProblemaJuridico, RolDocumento } from '@/components/sentencia/tipos';
 import {
     generarAdelanto, descargar, consultarAcervo, resolverConCriterio,
+    resolverConSentidoGlobal,
     proponerSolucion, aportarContexto, type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
 } from '@/components/sentencia/api';
@@ -75,6 +76,10 @@ export default function TallerDeSentencias() {
 
     const [paso, setPaso] = useState<Paso>('ficha');
     const [propuesta, setPropuesta] = useState<RespuestaPropuesta | null>(null);
+    // CÓMO DECIDE EL SECRETARIO. Por omisión, problema por problema, que es
+    // como funcionaba: nadie se encuentra con un flujo distinto sin pedirlo.
+    const [modo, setModo] = useState<'acervo' | 'global' | 'por_problema'>('por_problema');
+    const [sentidoGlobal, setSentidoGlobal] = useState('');
     // Lo que el secretario aporta porque el acervo no lo tenía. Vive aquí y
     // viaja con cada petición: el servidor no lo guarda.
     const [contexto, setContexto] = useState('');
@@ -193,6 +198,7 @@ export default function TallerDeSentencias() {
         try {
             const p = await proponerSolucion(encargo.numero, correo, contexto);
             setPropuesta(p);
+            setModo('acervo');
             // Se vuelca sobre los problemas para que se vean y se puedan editar.
             setProblemas((prev) => prev.map((q, i) => {
                 const s = p.propuestas[i];
@@ -200,9 +206,16 @@ export default function TallerDeSentencias() {
                 // valida antes de entrar, no se castea a ciegas.
                 const valido = (['fundado', 'infundado', 'inoperante', 'ineficaz'] as const)
                     .find((x) => x === s?.sentido);
+                // LA PREDICCIÓN Y LA JERARQUÍA SE VUELCAN SIEMPRE, alcance o
+                // no la propuesta: son lo que el secretario necesita para
+                // decidir, y perderlas aquí dejaría la tabla a medias —es el
+                // fallo que ya costó una ronda en el servidor—.
+                const base = { ...q, prediccion: s?.prediccion ?? q.prediccion,
+                               jerarquia: (s?.jerarquia as 'principal' | 'accesorio')
+                                          ?? q.jerarquia };
                 return s && s.alcanza && valido
-                    ? { ...q, sentido: valido, criterio: q.criterio || s.razon }
-                    : q;
+                    ? { ...base, sentido: valido, criterio: q.criterio || s.razon }
+                    : base;
             }));
             if (!p.propuestas.length) {
                 setError('El motor no propuso ningún sentido. Dicta tu criterio.');
@@ -240,12 +253,38 @@ export default function TallerDeSentencias() {
             // secretario calificaba seis problemas y el estudio recibía uno.
             // Con varios criterios el resolutivo sale mixto donde debe salir
             // mixto, que es lo que hace que concuerde con el estudio.
+            // EL MODO GLOBAL NO PASA POR AQUÍ. El secretario dictó un sentido
+            // para el proyecto entero y el servidor lo reparte: mandar además
+            // los criterios por problema sería dar dos órdenes distintas.
+            if (modo === 'global') {
+                if (!sentidoGlobal) {
+                    setError('Elige el sentido del problema principal.');
+                    setCorriendo(false);
+                    return;
+                }
+                const rg = await resolverConSentidoGlobal(
+                    encargo.numero, correo, sentidoGlobal, contexto);
+                setProyecto(rg);
+                descargarProyecto(rg);
+                setPaso('proyecto');
+                setCorriendo(false);
+                return;
+            }
             const conSentido = problemas.filter((p) => p.sentido);
             const criteriosJson = conSentido.length
                 ? JSON.stringify(conSentido.map((p) => ({
                       problema: p.pregunta,
                       sentido: p.sentido,
                       razonamiento: p.criterio ?? '',
+                      // LO QUE SE SEMBRÓ TIENE QUE VOLVER. Este objeto se
+                      // reconstruía con tres campos y perdía la jerarquía y la
+                      // predicción, que es lo que ordena el estudio por
+                      // prelación lógica y lo que avisa de ir contra la
+                      // corriente del acervo. Es el gemelo exacto del fallo que
+                      // ya costó una ronda en el servidor: un arreglo
+                      // reconstruye una lista y descarta lo que otro sembró.
+                      jerarquia: p.jerarquia ?? 'accesorio',
+                      prediccion: p.prediccion ?? {},
                   })))
                 : undefined;
             const r = await resolverConCriterio(
@@ -264,7 +303,7 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
         } finally { setCorriendo(false); }
-    }, [problemas, encargo.numero, correo, contexto]);
+    }, [problemas, encargo.numero, correo, contexto, modo, sentidoGlobal]);
 
     const asunto: Asunto = useMemo(() => ({
         numero: encargo.numero || '—',
@@ -405,6 +444,9 @@ export default function TallerDeSentencias() {
                                          onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo'}
                                          onProponer={pedirPropuesta} propuesta={propuesta}
                                          onAportar={aportarYProponer} aportando={aportando}
+                                         modo={modo} onModo={setModo}
+                                         sentidoGlobal={sentidoGlobal}
+                                         onSentidoGlobal={setSentidoGlobal}
                                          contextoAportado={contexto.length} />
                     )}
 

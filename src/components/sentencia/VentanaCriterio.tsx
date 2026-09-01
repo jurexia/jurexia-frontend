@@ -32,6 +32,22 @@ const SENTIDOS: { id: NonNullable<ProblemaJuridico['sentido']>; etiqueta: string
 /** Palabras con las que un texto deja de ser un veredicto y pasa a ser una razón. */
 const MARCAS_DE_RAZON = /\bporque\b|\bya que\b|\bpuesto que\b|\bdebido a\b|\btoda vez que\b|\ben virtud de\b|\bdado que\b|\bpues\b|\bal (?:haber|no|ser|resultar)\b/i;
 
+/** A FAVOR o EN CONTRA de quien promueve, que es lo único comparable: el
+ *  acervo habla del FALLO —concede, niega, confirma— y el criterio del
+ *  PLANTEAMIENTO —fundado, infundado—. Comparándolos como cadenas, el aviso de
+ *  «vas contra la corriente» saltaba siempre. Misma tabla que el servidor. */
+const A_FAVOR = new Set(['CONCEDE', 'concede', 'revoca', 'fundado']);
+const EN_CONTRA = new Set(['NIEGA', 'niega', 'confirma', 'infundado',
+                           'inoperante', 'ineficaz', 'SOBRESEE', 'sobresee']);
+
+function mismaDireccion(a: string, b: string): boolean {
+    if (!a || !b) return true;
+    if (A_FAVOR.has(a) && A_FAVOR.has(b)) return true;
+    if (EN_CONTRA.has(a) && EN_CONTRA.has(b)) return true;
+    return !((A_FAVOR.has(a) && EN_CONTRA.has(b)) ||
+             (EN_CONTRA.has(a) && A_FAVOR.has(b)));
+}
+
 export function fuerzaDelCriterio(problemas: ProblemaJuridico[]) {
     const total = problemas.length || 1;
     const conSentido = problemas.filter((p) => !!p.sentido).length;
@@ -46,15 +62,26 @@ export function fuerzaDelCriterio(problemas: ProblemaJuridico[]) {
 
 export default function VentanaCriterio({
     problemas, onCambiar, onGenerar, generando, onProponer, propuesta,
+    modo = 'por_problema', onModo, sentidoGlobal = '', onSentidoGlobal,
     onAportar, aportando, contextoAportado,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
     onGenerar: () => void;
     generando?: boolean;
+    /** EL MODO DE DECIDIR. «acervo» acepta lo que propone la máquina con los
+     *  holdings y la jurimetría; «global» dicta un sentido para el proyecto
+     *  entero y deja los accesorios sin materia; «por_problema» es uno a uno.
+     *  Los tres llegan al mismo sitio: una lista de criterios. */
+    modo?: 'acervo' | 'global' | 'por_problema';
+    onModo?: (m: 'acervo' | 'global' | 'por_problema') => void;
+    sentidoGlobal?: string;
+    onSentidoGlobal?: (s: string) => void;
     /** Pide al motor que proponga el sentido de cada problema. */
     onProponer?: () => void;
     propuesta?: { propuestas: { sentido: string; razon: string; apoyos: string[];
+        prediccion?: { frase: string; confianza: string; sentido: string };
+        jerarquia?: string; problema?: string;
                                 confianza: string; alcanza: boolean }[];
                   avisos: string[] } | null;
     /** Sube el documento que el motor echó en falta, o escribe el contexto. */
@@ -115,18 +142,93 @@ export default function VentanaCriterio({
                 </span>
             </div>
 
+            {/* ═══ CÓMO SE DECIDE ═══
+                Tres caminos al mismo sitio, y el secretario elige cuál. Antes
+                sólo existía el de uno en uno, así que un asunto con una sola
+                cuestión toral obligaba a contestar cinco preguntas para decir
+                una cosa. */}
+            {onModo && (
+                <div className="mb-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5">
+                    <p className="mb-2.5 text-[11px] font-medium uppercase tracking-wide text-white/45">
+                        Cómo vas a decidir
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {([
+                            ['acervo', 'Con el acervo', 'La máquina propone con los holdings y la jurimetría; tú corriges'],
+                            ['global', 'Un sentido global', 'Lo dictas para el proyecto entero; los accesorios quedan sin materia'],
+                            ['por_problema', 'Problema por problema', 'Uno a uno, como hasta ahora'],
+                        ] as const).map(([id, etiqueta, ayuda]) => (
+                            <button key={id} type="button" onClick={() => onModo(id)}
+                                    title={ayuda}
+                                    className={cn(
+                                        'rounded-lg border px-3 py-1.5 text-[12px] transition-colors duration-200',
+                                        modo === id
+                                            ? 'border-accent-gold/45 bg-accent-gold/10 text-accent-gold'
+                                            : 'border-white/[0.09] text-white/55 hover:border-white/20')}>
+                                {etiqueta}
+                            </button>
+                        ))}
+                    </div>
+
+                    {modo === 'global' && onSentidoGlobal && (
+                        <div className="mt-3">
+                            <p className="mb-2 text-[12px] leading-relaxed text-white/55">
+                                El sentido del <span className="text-white/80">problema principal</span>.
+                                Si resulta fundado, el estudio de los accesorios queda sin
+                                materia y el proyecto lo dice —salvo que alguno pida algo que
+                                dé más de lo concedido, que ésos se estudian igual—.
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {SENTIDOS.map((sd) => (
+                                    <Pastilla key={sd.id} activa={sentidoGlobal === sd.id}
+                                              onClick={() => onSentidoGlobal(sd.id)}>
+                                        {sd.etiqueta}
+                                    </Pastilla>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Un bloque por problema */}
             <div className="space-y-4">
                 {problemas.map((p, i) => {
                     const razonado = p.criterio.trim().split(/\s+/).length >= 25 && MARCAS_DE_RAZON.test(p.criterio);
                     return (
                         <div key={p.id} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-                            <p className="mb-3 text-[13px] leading-relaxed text-white/80">
+                            <p className="mb-2 text-[13px] leading-relaxed text-white/80">
                                 <span className="mr-2 text-[11px] font-semibold text-accent-gold">
                                     {String(i + 1).padStart(2, '0')}
                                 </span>
+                                {p.jerarquia === 'principal' && (
+                                    <span className="mr-2 rounded border border-accent-gold/30 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-gold/90">
+                                        principal
+                                    </span>
+                                )}
                                 {p.pregunta}
                             </p>
+
+                            {/* LA JURIMETRÍA, AL LADO DEL PROBLEMA. Es la columna que
+                                faltaba: cómo resolvió el acervo esta misma cuestión.
+                                No es un pronóstico de lo que hará este tribunal —por
+                                eso la frase dice cuántas sentencias hay detrás— y no
+                                se escribe en la sentencia: el criterio no se vota. */}
+                            {p.prediccion?.frase && (
+                                <p className={cn(
+                                    'mb-3 flex items-center gap-1.5 text-[11.5px]',
+                                    p.prediccion.confianza === 'baja'
+                                        ? 'text-white/35' : 'text-white/55')}>
+                                    <span className="text-white/30">El acervo:</span>
+                                    <span className="text-white/75">{p.prediccion.frase}</span>
+                                    {p.sentido && p.prediccion.sentido &&
+                                     !mismaDireccion(p.prediccion.sentido, p.sentido) && (
+                                        <span className="ml-1 rounded border border-amber-400/30 px-1.5 py-0.5 text-[10px] text-amber-300/80">
+                                            vas contra la corriente
+                                        </span>
+                                    )}
+                                </p>
+                            )}
 
                             <div className="mb-3 flex flex-wrap gap-1.5">
                                 {SENTIDOS.map((s) => (

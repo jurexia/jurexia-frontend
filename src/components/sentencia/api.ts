@@ -256,6 +256,17 @@ export async function aportarContexto(
 
 
 /** Lo que el motor propone para cada problema, antes de que el secretario decida. */
+/** La predicción del acervo sobre UN problema. No es un pronóstico de lo que
+ *  este tribunal hará: es la distribución de lo que hicieron otros sobre el
+ *  mismo tema, y por eso la frase dice cuántas sentencias hay detrás. */
+export interface PrediccionAcervo {
+    sentido: string;
+    porcentaje: number;
+    n: number;
+    confianza: 'alta' | 'media' | 'baja';
+    frase: string;
+}
+
 export interface PropuestaDeSolucion {
     problema: string;
     sentido: string;
@@ -263,7 +274,15 @@ export interface PropuestaDeSolucion {
     apoyos: string[];
     confianza: string;
     alcanza: boolean;
+    /** La jurimetría de ESTE problema. Vacía si el acervo no dio base. */
+    prediccion?: PrediccionAcervo;
+    /** «principal» es aquel del que dependen los demás: si prospera, el
+     *  estudio de los otros queda sin materia. */
+    jerarquia?: 'principal' | 'accesorio';
 }
+
+/** Los tres modos de decidir el sentido. */
+export type ModoDecision = 'acervo' | 'global' | 'por_problema';
 
 export interface RespuestaPropuesta {
     propuestas: PropuestaDeSolucion[];
@@ -301,16 +320,39 @@ export async function proponerSolucion(
 
 
 /** La sentencia, con el criterio del secretario dentro. */
+/** EL SENTIDO GLOBAL. El secretario dicta uno para el proyecto entero y el
+ *  servidor lo reparte; si el problema PRINCIPAL resulta fundado, los
+ *  accesorios quedan sin materia y el proyecto lo DICE en una frase en vez de
+ *  contestarlos uno por uno. Los frenos —lo que pide mayor beneficio no se
+ *  declara innecesario— viven en el servidor, que es donde se pueden probar. */
+export async function resolverConSentidoGlobal(
+    numero: string, userEmail: string, sentidoGlobal: string, contexto = '',
+): Promise<ResultadoProyecto> {
+    return resolverConCriterio(numero, userEmail, null, undefined, contexto,
+                               sentidoGlobal);
+}
+
 export async function resolverConCriterio(
     numero: string, userEmail: string, criterio: Criterio | null,
     criteriosJson?: string, contexto?: string,
+    // TRES CAMINOS, UN SOLO ENDPOINT. El modo global no es una llamada aparte:
+    // es el mismo /taller/resolver con otro campo. Duplicar la función habría
+    // duplicado también el manejo de las cabeceras y de los avisos, que es
+    // donde vive todo lo que el secretario tiene que leer.
+    sentidoGlobal?: string,
 ): Promise<ResultadoProyecto> {
     const fd = new FormData();
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
+    if (sentidoGlobal) {
+        fd.append('modo_decision', 'global');
+        fd.append('sentido_global', sentidoGlobal);
+    }
     // DOS CAMINOS Y NINGUNO ES «QUE SIGA COMO ESTÉ»: o el secretario dicta su
     // criterio, o devuelve la propuesta que acaba de leer —editada o no—.
-    if (criteriosJson) {
+    if (sentidoGlobal) {
+        // ya va dictado arriba: no se manda criterio por problema
+    } else if (criteriosJson) {
         fd.append('criterios_json', criteriosJson);
     } else if (criterio) {
         fd.append('sentido', criterio.sentido);
