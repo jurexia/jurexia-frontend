@@ -61,6 +61,8 @@ export interface Encargo {
      *  de la Ley de Amparo, los sábados y domingos y los periodos vacacionales
      *  del PJF; lo que no puede saber es que ESTE tribunal suspendió labores
      *  un martes. Eso lo declara quien estuvo ahí. */
+    /** Tercero interesado, o parte actora en la revisión fiscal. */
+    tercero?: string;
     diasInhabilesExtra?: string[];
 }
 
@@ -205,18 +207,28 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
                     </Campo>
                 </div>
 
-                <Campo etiqueta={`Parte ${promovente}`}
-                       ayuda="El representado, no quien promueve por él">
-                    <input className={campo} value={valor.quejoso}
-                           onChange={(e) => set('quejoso', e.target.value)} />
-                </Campo>
-
-                <Campo etiqueta="Autoridad responsable"
-                       ayuda={`Se lee ${deRecurrido}. Escríbela sólo si quieres corregir lo que se lea`}>
-                    <input className={campo} value={valor.responsable ?? ''}
-                           placeholder="Juez Segundo de Distrito en Materia Civil"
-                           onChange={(e) => set('responsable', e.target.value)} />
-                </Campo>
+                {/* LAS FIGURAS SON DEL TIPO, Y LAS DICE EL SERVIDOR. Estaban
+                    escritas aquí: «Autoridad responsable», con un Juez de
+                    Distrito de ejemplo, en los cuatro. En un recurso no hay
+                    autoridad responsable —hay un órgano cuya resolución se
+                    recurre— y pedir el dato con el nombre equivocado hace que
+                    el secretario teclee una cosa y firme otra. */}
+                {(tipo.caratula ?? [
+                    { etiqueta: 'QUEJOSO', clave: 'quejoso', obligatoria: true },
+                    { etiqueta: 'AUTORIDAD RESPONSABLE', clave: 'responsable', obligatoria: true },
+                ]).map((f) => (
+                    <Campo key={f.clave}
+                           etiqueta={f.etiqueta.charAt(0) + f.etiqueta.slice(1).toLowerCase()}
+                           ayuda={f.clave === 'quejoso'
+                               ? 'El representado, no quien promueve por él'
+                               : f.clave === 'responsable'
+                                   ? `Se lee ${deRecurrido}. Escríbelo sólo para corregir lo que se lea`
+                                   : 'Si no consta, déjalo vacío'}>
+                        <input className={campo}
+                               value={(valor as unknown as Record<string, string>)[f.clave] ?? ''}
+                               onChange={(e) => set(f.clave as keyof Encargo, e.target.value)} />
+                    </Campo>
+                ))}
 
                 {/* EL TRIBUNAL QUE RESUELVE. Es lo que hace que esto sirva a un
                     secretario de cualquier circuito y no herede la identidad

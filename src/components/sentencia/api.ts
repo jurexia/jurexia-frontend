@@ -377,6 +377,11 @@ export interface TipoAsunto {
     plazo: { dias: number; fundamento: string };
     excepciones_de_plazo: ExcepcionPlazo[];
     apartados: { resultandos: string[]; considerandos: string[] };
+    /** LAS FIGURAS DE PARTE DE ESTE TIPO. En un recurso no hay autoridad
+     *  responsable: hay un órgano cuya resolución se recurre. Si la pantalla
+     *  lo sigue pidiendo con el nombre del amparo, el secretario teclea una
+     *  cosa y firma otra. */
+    caratula?: { etiqueta: string; clave: string; obligatoria: boolean }[];
     medido_sobre: number;
 }
 
