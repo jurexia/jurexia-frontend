@@ -74,9 +74,25 @@ export default function ChatPage() {
     const isPro = _PRO_PLUS.includes(profile?.subscription_type || '');
     const isProPlus = isPro && !isAdmin(user?.email);
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com' || profile?.can_access_sentencia === true;
-    // Secretario del PJF: SÓLO Platinum. Misma regla que tenía en la caja de
-    // consulta, ahora en la barra superior. El backend la vuelve a comprobar.
+    /* Secretario del PJF: Platinum, MÁS la excepción declarada en el perfil.
+     *
+     * Este botón es la ÚNICA puerta al taller desde el chat —lleva a
+     * /tcc-beta, que es `export { default } from '../taller/page'`, o sea la
+     * misma pantalla— y era la única de las cuatro que no miraba
+     * `can_access_sentencia`. Las otras tres —la barra, la barra lateral y la
+     * página del chat— sí la miran desde siempre.
+     *
+     * Se vio con una cuenta Pro a la que se le habilitó el taller por
+     * excepción: el servidor la dejaba pasar —`/taller/estado` devolvía
+     * `tiene_acceso: true`— y ella seguía viendo el candado y el aviso de
+     * «exclusivo del plan Platinum» que la mandaba a planes. Una excepción que
+     * el servidor concede y la pantalla niega no es una excepción: es una
+     * puerta cerrada con la llave puesta por dentro.
+     *
+     * El backend lo vuelve a comprobar, y con la misma regla: `_taller_puerta`
+     * llama a `_can_access_redactor_tcc`, que honra la bandera. */
     const canAccessSecretarioPJF = isAdmin(user?.email)
+        || profile?.can_access_sentencia === true
         || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
 
     // States
