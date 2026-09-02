@@ -80,9 +80,20 @@ export async function GET(
                 { status: 200 }
             );
         }
+        // El `detalle` es para nosotros, no para el usuario: la interfaz sigue
+        // enseñando el mismo aviso. Sin él, un rechazo del servidor de la Corte
+        // y una excepción de red se veían idénticos desde fuera. El 2-sep-2026
+        // costó media hora distinguirlos: cinco registros respondían 200 desde
+        // una laptop y fallaban los cinco desde Vercel, sin forma de saber por
+        // qué.
         if (!r.ok) {
             return NextResponse.json(
-                { verificada: false, motivo: 'semanario_no_disponible', registro },
+                {
+                    verificada: false,
+                    motivo: 'semanario_no_disponible',
+                    detalle: `upstream_${r.status}`,
+                    registro,
+                },
                 { status: 200 }
             );
         }
@@ -117,11 +128,16 @@ export async function GET(
             publicacion: aTextoPlano(d.textoPublicacion),
             url: `${BASE}/detalle/tesis/${d.ius}`,
         });
-    } catch {
+    } catch (e) {
         // Que el Semanario esté caído no debe romper el panel: se avisa y el
         // usuario conserva el enlace para comprobarlo él mismo.
+        const causa = e instanceof Error
+            ? `${e.name}: ${e.message}${(e as { cause?: { code?: string } }).cause?.code
+                ? ` (${(e as { cause?: { code?: string } }).cause?.code})` : ''}`
+            : String(e);
+        console.error(`[tesis/${registro}] el Semanario no respondió →`, causa);
         return NextResponse.json(
-            { verificada: false, motivo: 'semanario_no_disponible', registro },
+            { verificada: false, motivo: 'semanario_no_disponible', detalle: causa, registro },
             { status: 200 }
         );
     }
