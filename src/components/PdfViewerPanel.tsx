@@ -522,6 +522,7 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, urlParaVisor, hasPd
                             <VisorArticulo
                                 url={urlParaVisor}
                                 articulo={parsed.articuloLabel}
+                                textoArticulo={parsed.articuloTexto}
                                 alto={440}
                             />
                         </div>
