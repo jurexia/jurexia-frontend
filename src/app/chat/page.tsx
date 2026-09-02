@@ -441,8 +441,9 @@ export default function ChatPage() {
         const userMsg: Message = { role: 'user', content };
         lastSentUserMsgRef.current = userMsg;
 
-        // Send the message (streaming)
-        await sendMessage(content, enableReasoning);
+        // Send the message (streaming). Devuelve el texto final de la
+        // respuesta: es la fuente de verdad para el historial.
+        const respuesta = await sendMessage(content, enableReasoning);
 
         // ── DIRECT SAVE: Save user+assistant pair AFTER streaming completes ──
         // FIX 2026-05-22: Use Promise-based state reading to get the ACTUAL latest
@@ -460,19 +461,34 @@ export default function ChatPage() {
                     });
                 });
 
-                if (latestMessages.length >= 2) {
-                    const lastMsg = latestMessages[latestMessages.length - 1];
-                    const secondLastMsg = latestMessages[latestMessages.length - 2];
+                // EL HISTORIAL SE GUARDA CON LO QUE DEVOLVIÓ EL STREAM, no con
+                // lo que quede en el estado (2-sep-2026).
+                //
+                // Antes esto exigía que el ÚLTIMO mensaje del estado fuera
+                // exactamente el del asistente. Cuando no lo era —porque el
+                // marcador final llega en su propio trozo, o porque React aún
+                // no había aplicado la última actualización— caía al respaldo
+                // y guardaba SÓLO la pregunta. Resultado: conversaciones de un
+                // solo mensaje. Se detectaron tres seguidas en la cuenta de
+                // David el 2-sep, y sueltas cada día desde antes.
+                //
+                // `respuesta` viene del propio `sendMessage`, que sabe qué
+                // generó. El estado se conserva como respaldo por si algún
+                // camino viejo devolviera null teniendo la respuesta a la vista.
+                const delEstado = latestMessages.length >= 1
+                    ? latestMessages[latestMessages.length - 1]
+                    : null;
+                const textoAsistente = (respuesta && respuesta.trim())
+                    || (delEstado?.role === 'assistant' ? delEstado.content.trim() : '');
 
-                    if (secondLastMsg.role === 'user' && lastMsg.role === 'assistant'
-                        && lastMsg.content.trim().length > 0) {
-                        await addMessageBatch(convId, secondLastMsg, lastMsg);
-                    } else {
-                        // Fallback: save at least the user message
-                        await addMessageToConversation(convId, userMsg);
-                    }
-                } else if (latestMessages.length >= 1) {
-                    // Only user message present (streaming produced no content)
+                if (textoAsistente) {
+                    await addMessageBatch(convId, userMsg, {
+                        ...(delEstado?.role === 'assistant' ? delEstado : {}),
+                        role: 'assistant',
+                        content: textoAsistente,
+                    } as Message);
+                } else {
+                    // El stream no produjo nada: al menos queda la pregunta.
                     await addMessageToConversation(convId, userMsg);
                 }
 

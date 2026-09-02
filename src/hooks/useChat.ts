@@ -21,7 +21,12 @@ interface UseChatReturn {
     messages: Message[];
     isLoading: boolean;
     error: string | null;
-    sendMessage: (content: string, enableReasoning?: boolean) => Promise<void>;
+    /** Devuelve el texto FINAL de la respuesta, o null si no llegó ninguna.
+     *  Quien guarda el historial usa este valor y no el estado de React: leer
+     *  el estado después del stream dependía de que el último mensaje fuera
+     *  exactamente el del asistente, y cuando no lo era el historial se
+     *  quedaba con la pregunta y sin la respuesta. */
+    sendMessage: (content: string, enableReasoning?: boolean) => Promise<string | null>;
     stopGeneration: () => void;
     clearMessages: () => void;
     setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
@@ -171,9 +176,13 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         abortControllerRef.current?.abort();
     }, []);
 
-    const sendMessage = useCallback(async (content: string, _enableReasoning = true) => {
+    const sendMessage = useCallback(async (content: string, _enableReasoning = true): Promise<string | null> => {
+        // El texto que acabe teniendo la respuesta. Se devuelve al final pase
+        // lo que pase: si el stream se corta a medias, quien guarda decide qué
+        // hacer con lo que hubiera, en vez de perderlo.
+        let respuestaFinal: string | null = null;
         const enableReasoning = false; // Disabled: Query Expansion was diluting BM25 precision
-        if (!content.trim() || isLoading || sendingRef.current) return;
+        if (!content.trim() || isLoading || sendingRef.current) return null;
         sendingRef.current = true;
 
         // Cancel any in-flight request before starting a new one
@@ -215,7 +224,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     setMessages(messages);
                     setIsLoading(false);
                     options.onQuotaExceeded?.(remaining);
-                    return;
+                    return null;
                 }
             }
 
@@ -445,6 +454,10 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             // Clear retry message after successful response
             setRetryMessage(null);
 
+            // Lo que de verdad se generó, para que el historial no tenga que
+            // adivinarlo releyendo el estado de React.
+            respuestaFinal = assistantMessageAdded ? finalDisplay : null;
+
             // ── Sync UI counter with real DB values (backend already consumed the query) ──
             if (userId && !isAdminUser) {
                 try {
@@ -460,7 +473,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             // User stopped the generation — clean exit, no error shown
             if ((err as Error)?.name === 'AbortError') {
                 setRetryMessage(null);
-                return;
+                return null;
             }
             const errMsg = err instanceof Error ? err.message : 'Error desconocido';
             setError(errMsg);
@@ -488,6 +501,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             setIsLoading(false);
             sendingRef.current = false;
         }
+        return respuestaFinal;
     }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.materia, options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive]);
 
     const clearMessages = useCallback(() => {
