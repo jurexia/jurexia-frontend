@@ -810,7 +810,52 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                 abogado ya no tiene que salir a comprobar la
                                 cita, la comprobación viene hecha — y si el
                                 registro no existe, se dice. */}
-                            {registroNumber && scjnUrl ? (
+                            {/* EL PDF OFICIAL, SERVIDO POR NOSOTROS (2-sep-2026)
+                                
+                                Hasta hoy esta rama no pintaba ningún PDF: el
+                                visor sólo existía en la vista de leyes, y la
+                                tesis se quedaba en la ficha del Semanario. Y
+                                esa ficha lleva días diciendo «El Semanario no
+                                respondió», porque la Corte puso Incapsula
+                                delante y reta a las IP de centro de datos: ni
+                                Vercel ni Render pueden preguntarle nada.
+
+                                Las 63,172 tesis del corpus están ahora en
+                                nuestro bucket y su dirección viaja en el
+                                payload, así que `resolvedPdfUrl` ya la trae. El
+                                documento oficial ES la comprobación: si el
+                                registro no existiera, no habría PDF que
+                                mostrar. Por eso cuando lo tenemos se enseña el
+                                documento y se deja de interrogar al Semanario;
+                                sólo cuando no lo tenemos se recurre a él. */}
+                            {urlParaVisor ? (
+                                <div className="rounded-2xl border border-cream-400 bg-white p-3 shadow-sm">
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-charcoal-700">
+                                            Documento oficial del Semanario
+                                        </span>
+                                        {scjnUrl && (
+                                            <a href={scjnUrl} target="_blank" rel="noopener noreferrer"
+                                               className="inline-flex items-center gap-1 text-[11px] text-charcoal-600 underline">
+                                                <ExternalLink className="h-3 w-3" />
+                                                Ver en la Corte
+                                            </a>
+                                        )}
+                                    </div>
+                                    <div className="overflow-hidden rounded-xl border border-cream-400 bg-cream-200"
+                                         style={{ height: '460px' }}>
+                                        <VisorArticulo
+                                            url={urlParaVisor}
+                                            articulo={tesisMeta?.tesis || null}
+                                            textoArticulo={tesisMeta?.rubro || null}
+                                            alto={460}
+                                        />
+                                    </div>
+                                    <p className="mt-2 text-center text-[10px] text-charcoal-500">
+                                        Gaceta del Semanario Judicial de la Federación · Reg. {tesisMeta?.registro || registroNumber}
+                                    </p>
+                                </div>
+                            ) : registroNumber && scjnUrl ? (
                                 <TesisVerificada registro={registroNumber} urlSemanario={scjnUrl} />
                             ) : (
                                 <div className="bg-cream-200 rounded-2xl p-4 text-xs text-charcoal-600 text-center">
