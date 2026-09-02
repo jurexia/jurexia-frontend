@@ -1,6 +1,7 @@
 'use client';
 
 import { TesisVerificada } from '@/components/TesisVerificada';
+import { VisorArticulo } from '@/components/VisorArticulo';
 
 import { useEffect, useRef, useMemo } from 'react';
 import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel } from 'lucide-react';
@@ -511,15 +512,24 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, urlParaVisor, hasPd
                                 Abrir PDF completo
                             </a>
                         </div>
+                        {/* El visor nativo del navegador sólo entiende `#page=N`:
+                            abría la ley en la página 1 y dejaba al abogado
+                            bajando a mano hasta el artículo citado, en
+                            documentos de cientos de páginas. `VisorArticulo`
+                            dibuja el PDF con pdf.js, salta a la página del
+                            artículo y lo pinta de amarillo. */}
                         <div className="hidden md:block rounded-xl overflow-hidden border border-cream-400 bg-cream-200" style={{ height: '440px' }}>
-                            <iframe
-                                src={`${urlParaVisor}#toolbar=1&navpanes=0&scrollbar=1`}
-                                className="w-full h-full"
-                                title={`PDF: ${displayLey}`}
-                                loading="lazy"
+                            <VisorArticulo
+                                url={urlParaVisor}
+                                articulo={parsed.articuloLabel}
+                                alto={440}
                             />
                         </div>
-                        <p className="mt-2 text-[10px] text-charcoal-500 text-center">Fuente oficial verificada · iurexia.com</p>
+                        <p className="mt-2 text-[10px] text-charcoal-500 text-center">
+                            {parsed.articuloLabel
+                                ? `Abierto en el ${parsed.articuloLabel} · fuente oficial verificada`
+                                : 'Fuente oficial verificada · iurexia.com'}
+                        </p>
                     </div>
                 </div>
             ) : (

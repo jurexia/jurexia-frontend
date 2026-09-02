@@ -6,3 +6,8 @@ out/
 *.log
 .DS_Store
 tsconfig.tsbuildinfo
+
+# El worker de pdf.js se copia desde node_modules en 'prebuild': versionarlo
+# aquí sería tener 1 MB duplicado y desincronizado con el paquete.
+public/pdf.worker.min.mjs
+public/cmaps/
