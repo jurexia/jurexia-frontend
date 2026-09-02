@@ -21,6 +21,66 @@ import { NextRequest, NextResponse } from 'next/server';
 const BASE = 'https://sjf2.scjn.gob.mx';
 const API = `${BASE}/services/sjftesismicroservice/api/public/tesis`;
 
+/**
+ * La petición al Semanario va con `node:https` y no con `fetch`, y la razón es
+ * concreta: **`Referer` es una cabecera prohibida en la especificación de
+ * Fetch**, así que el cliente la descarta en silencio. Y el cortafuegos de la
+ * Corte exige `Referer` Y un `User-Agent` de navegador **a la vez**.
+ *
+ * Medido el 2-sep-2026 contra su servidor, mismo registro:
+ *
+ *     sin cabeceras ................... 403
+ *     sólo Referer .................... 403
+ *     sólo User-Agent de navegador .... 403
+ *     Referer + User-Agent ............ 200
+ *
+ * Por eso los cinco registros que se probaron respondían 200 desde una laptop
+ * con curl y fallaban los cinco desde Vercel: no era la IP ni el servidor de
+ * la Corte, era la cabecera que nunca salía. `https.request` la manda tal cual.
+ *
+ * Se pierde el caché de `next: { revalidate }`, que sólo existe para `fetch`.
+ * No es pérdida: la llamada tarda menos de medio segundo y una verificación
+ * que devuelve un dato viejo es peor que una que tarda 400 ms.
+ */
+async function pedirAlSemanario(
+    url: string,
+    registro: string
+): Promise<{ status: number; ok: boolean; texto: string }> {
+    const { request } = await import('node:https');
+
+    return new Promise((resolve, reject) => {
+        const req = request(
+            url,
+            {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json, text/plain, */*',
+                    'Accept-Language': 'es-MX,es;q=0.9',
+                    Referer: `${BASE}/detalle/tesis/${registro}`,
+                    'User-Agent':
+                        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                },
+                timeout: 12_000,
+            },
+            (res) => {
+                const trozos: Buffer[] = [];
+                res.on('data', (c: Buffer) => trozos.push(c));
+                res.on('end', () => {
+                    const status = res.statusCode ?? 0;
+                    resolve({
+                        status,
+                        ok: status >= 200 && status < 300,
+                        texto: Buffer.concat(trozos).toString('utf8'),
+                    });
+                });
+            }
+        );
+        req.on('timeout', () => req.destroy(new Error('ETIMEDOUT')));
+        req.on('error', reject);
+        req.end();
+    });
+}
+
 /** El Semanario responde con HTML dentro de sus campos; aquí sólo hace falta el texto. */
 function aTextoPlano(html: string | null | undefined): string {
     if (!html) return '';
@@ -54,19 +114,9 @@ export async function GET(
     }
 
     try {
-        const r = await fetch(
+        const r = await pedirAlSemanario(
             `${API}/${registro}?isSemanal=false&hostName=${BASE}`,
-            {
-                headers: {
-                    Accept: 'application/json, text/plain, */*',
-                    Referer: `${BASE}/detalle/tesis/${registro}`,
-                    'User-Agent':
-                        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                },
-                // El Semanario cambia poco; una hora de caché evita golpear su
-                // servidor en cada clic y hace instantánea la segunda consulta.
-                next: { revalidate: 3600 },
-            }
+            registro
         );
 
         // Sólo un 404 prueba que la tesis NO existe. Cualquier otro fallo
@@ -98,7 +148,7 @@ export async function GET(
             );
         }
 
-        const d = await r.json();
+        const d = JSON.parse(r.texto);
 
         // Sin `ius` no hay tesis: el Semanario devuelve un objeto de error con
         // forma de problema JHipster, no un 404.
