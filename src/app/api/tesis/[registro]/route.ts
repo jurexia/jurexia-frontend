@@ -44,11 +44,15 @@ const API = `${BASE}/services/sjftesismicroservice/api/public/tesis`;
  */
 async function pedirAlSemanario(
     url: string,
-    registro: string
+    registro: string,
+    saltos = 0,
+    galleta = ''
 ): Promise<{ status: number; ok: boolean; texto: string }> {
     const { request } = await import('node:https');
 
-    return new Promise((resolve, reject) => {
+    const res = await new Promise<{
+        status: number; texto: string; destino?: string; galletas: string[];
+    }>((resolve, reject) => {
         const req = request(
             url,
             {
@@ -59,26 +63,47 @@ async function pedirAlSemanario(
                     Referer: `${BASE}/detalle/tesis/${registro}`,
                     'User-Agent':
                         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                    ...(galleta ? { Cookie: galleta } : {}),
                 },
                 timeout: 12_000,
             },
-            (res) => {
+            (r) => {
                 const trozos: Buffer[] = [];
-                res.on('data', (c: Buffer) => trozos.push(c));
-                res.on('end', () => {
-                    const status = res.statusCode ?? 0;
+                r.on('data', (c: Buffer) => trozos.push(c));
+                r.on('end', () =>
                     resolve({
-                        status,
-                        ok: status >= 200 && status < 300,
+                        status: r.statusCode ?? 0,
                         texto: Buffer.concat(trozos).toString('utf8'),
-                    });
-                });
+                        destino: (r.headers.location as string) || undefined,
+                        galletas: (r.headers['set-cookie'] as string[]) || [],
+                    })
+                );
             }
         );
         req.on('timeout', () => req.destroy(new Error('ETIMEDOUT')));
         req.on('error', reject);
         req.end();
     });
+
+    // `fetch` seguía las redirecciones solo; `https.request` no. El Semanario
+    // contesta 302 en la primera petición de cada sesión —planta una cookie y
+    // reenvía a la misma URL—, así que sin esto la verificación fallaba
+    // siempre con `upstream_302`. Se arrastran las cookies, que es lo que la
+    // redirección viene a entregar, y se topa en tres saltos para que un bucle
+    // del servidor de la Corte no se convierta en uno nuestro.
+    if (res.status >= 300 && res.status < 400 && res.destino && saltos < 3) {
+        const siguiente = new URL(res.destino, url).toString();
+        const acumulada = [galleta, ...res.galletas.map((c) => c.split(';')[0])]
+            .filter(Boolean)
+            .join('; ');
+        return pedirAlSemanario(siguiente, registro, saltos + 1, acumulada);
+    }
+
+    return {
+        status: res.status,
+        ok: res.status >= 200 && res.status < 300,
+        texto: res.texto,
+    };
 }
 
 /** El Semanario responde con HTML dentro de sus campos; aquí sólo hace falta el texto. */
