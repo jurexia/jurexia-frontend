@@ -74,27 +74,30 @@ type Trozo = { inicio: number; fin: number; indice: number };
 type Objetivo = { pagina: number; desde: number; hasta: number; certeza: 'texto' | 'rotulo' };
 
 /**
- * Las huellas con las que se intentará localizar el artículo, de la más
- * específica a la más laxa. Devolver varias y probarlas en orden es lo que
- * evita marcar una remisión en vez del precepto.
+ * El artículo despojado de sus adornos.
+ *
+ * El texto que llega del corpus NO es sólo el precepto: viene envuelto en
+ * corchetes de metadatos, y uno de ellos es el NOMBRE DE LA LEY.
+ *
+ *     [MATERIA: procesal_civil]
+ *     [Código Nacional de Procedimientos Civiles y Familiares | Capítulo II…]
+ *     Artículo 148. En el Poder Judicial respectivo estarán disponibles…
+ *
+ * Ese envoltorio es exactamente lo que hizo fallar la versión anterior: la
+ * huella se construía con las primeras palabras del texto, o sea con el
+ * nombre de la ley, que es el ENCABEZADO IMPRESO EN CADA PÁGINA. El visor
+ * abría el Código en la página 2 y pintaba de amarillo su propio título.
+ * Comprobado el 2-sep-2026 sobre el PDF real de 279 páginas.
  */
-function huellas(articulo: string | null | undefined, texto: string | null | undefined): string[] {
-    const fuera: string[] = [];
-    const cuerpo = normalizar(texto || '')
-        // El propio rótulo suele venir al principio del texto citado; quitarlo
-        // deja la frase que de verdad identifica al precepto.
-        .replace(/^articulo\s+\d+(?:\s+(?:bis|ter|quater|quinquies))?\s*/, '');
+function cuerpoLimpio(texto: string | null | undefined): string {
+    const sinCorchetes = (texto || '').replace(/\[[^\]]*\]/g, ' ');
+    return normalizar(sinCorchetes)
+        .replace(/^\s*articulo\s+\d+(?:\s+(?:bis|ter|quater|quinquies))?\s*/, '');
+}
 
-    const palabras = cuerpo.split(' ').filter(Boolean);
-    if (palabras.length >= 12) fuera.push(palabras.slice(0, 12).join(' '));
-    if (palabras.length >= 7) fuera.push(palabras.slice(0, 7).join(' '));
-    // Una frase del medio: si el PDF trae el encabezado maquetado de otra
-    // forma, el cuerpo sigue siendo idéntico.
-    if (palabras.length >= 24) {
-        const centro = Math.floor(palabras.length / 2) - 4;
-        fuera.push(palabras.slice(centro, centro + 8).join(' '));
-    }
-    return fuera.filter((f) => f.length >= 25);
+/** Las palabras del cuerpo que sirven para confirmar: las cortas no distinguen. */
+function palabrasClave(cuerpo: string): string[] {
+    return cuerpo.split(' ').filter((w) => w.length > 3).slice(0, 24);
 }
 
 export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Props) {
@@ -230,51 +233,76 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
                     return;
                 }
 
-                // ── La búsqueda ─────────────────────────────────────────
-                const frases = huellas(rotulo, textoArticulo);
+                // ── La búsqueda: anclar en el rótulo, CONFIRMAR con el cuerpo ──
+                //
+                // Buscar sólo por el número marca cualquier cosa —el índice,
+                // los transitorios, cada remisión de otro artículo—. Buscar
+                // sólo por el texto marcaba el encabezado, porque el texto que
+                // recibimos empieza con el nombre de la ley.
+                //
+                // La señal buena es la conjunción: «Artículo 148.» SEGUIDO de
+                // su propio texto. Así que se recorren todas las apariciones
+                // del rótulo en el documento y gana la que trae más cuerpo
+                // detrás. Verificado contra el PDF real del Código Nacional:
+                // el 148 cae en la 37, que es la única página donde el rótulo
+                // aparece, y lo mismo el 147 y el 145.
+                const cuerpo = cuerpoLimpio(textoArticulo);
+                const claves = palabrasClave(cuerpo);
                 const num = numeroDe(rotulo);
-                // Frontera de palabra a los dos lados: sin esto «articulo 19»
-                // casa dentro de «articulo 190» y se marca el precepto vecino.
                 const rxRotulo = num
-                    ? new RegExp(`(?:^|\\s)articulo ${num.replace(/\s+/g, '\\s+')}(?![\\d])`)
+                    ? new RegExp(`(?:^|\\s)articulo ${num.replace(/\s+/g, '\\s+')}(?![\\d])`, 'g')
                     : null;
 
                 let hallado: Objetivo | null = null;
+                let mejorPuntos = 0;
                 const tope = Math.min(doc.numPages, 500);
 
-                for (let n = 1; n <= tope && !hallado; n++) {
+                for (let n = 1; n <= tope; n++) {
                     if (!vivo) return;
                     const page = await doc.getPage(n);
                     const { plano } = await planoDe(page);
 
-                    // 1) Por el texto del artículo: es la huella específica.
-                    for (const f of frases) {
-                        const p = plano.indexOf(f);
-                        if (p !== -1) {
-                            hallado = { pagina: n, desde: p, hasta: p + f.length, certeza: 'texto' };
-                            break;
-                        }
-                    }
-                    if (hallado) break;
-
-                    // 2) Por el rótulo, pero exigiendo que detrás haya cuerpo y
-                    //    no una remisión: un «artículo 190» seguido de menos de
-                    //    120 caracteres es un índice o una cita cruzada.
                     if (rxRotulo) {
-                        const m = rxRotulo.exec(plano);
-                        if (m && m.index >= 0) {
-                            const cola = plano.slice(m.index + m[0].length);
-                            if (cola.trim().length > 120) {
+                        rxRotulo.lastIndex = 0;
+                        let m: RegExpExecArray | null;
+                        while ((m = rxRotulo.exec(plano)) !== null) {
+                            const desplaz = m[0].startsWith(' ') ? 1 : 0;
+                            const cola = plano.slice(m.index + m[0].length,
+                                                     m.index + m[0].length + 600);
+                            const puntos = claves.filter((w) => cola.includes(w)).length;
+                            if (puntos > mejorPuntos) {
+                                mejorPuntos = puntos;
                                 hallado = {
                                     pagina: n,
-                                    desde: m.index + (m[0].startsWith(' ') ? 1 : 0),
+                                    desde: m.index + desplaz,
                                     hasta: m.index + m[0].length,
-                                    certeza: 'rotulo',
+                                    certeza: puntos >= 3 ? 'texto' : 'rotulo',
                                 };
                             }
                         }
+                        // Con media docena de palabras del cuerpo detrás del
+                        // rótulo ya no hay duda razonable: se deja de buscar en
+                        // vez de recorrer trescientas páginas por deporte.
+                        if (mejorPuntos >= 6) break;
+                    }
+
+                    // Sin rótulo utilizable —o sin ninguna aparición— queda la
+                    // frase literal del cuerpo, ya sin el nombre de la ley.
+                    if (!rxRotulo && claves.length >= 7) {
+                        const frase = claves.slice(0, 7).join(' ');
+                        const pos = plano.indexOf(frase);
+                        if (pos !== -1) {
+                            hallado = { pagina: n, desde: pos,
+                                        hasta: pos + frase.length, certeza: 'texto' };
+                            break;
+                        }
                     }
                 }
+
+                // Un rótulo sin NADA de su cuerpo detrás es una remisión o una
+                // línea de índice, no el precepto. Antes que llevar al abogado
+                // a un sitio equivocado, se admite no haberlo encontrado.
+                if (hallado && mejorPuntos === 0 && claves.length > 0) hallado = null;
 
                 if (!vivo) return;
                 objetivo.current = hallado;
