@@ -61,14 +61,12 @@ export interface Encargo {
      *  de la Ley de Amparo, los sábados y domingos y los periodos vacacionales
      *  del PJF; lo que no puede saber es que ESTE tribunal suspendió labores
      *  un martes. Eso lo declara quien estuvo ahí. */
-    /** LAS DOS FECHAS DE LA SESIÓN. Son el único dato del proyecto que no
-     *  está en ningún documento: se redacta ANTES de que la sesión ocurra.
-     *  Salían como dos comodines de asteriscos en los cinco proyectos de la
-     *  última medición, y bastaba preguntarlas. Opcionales: sin ellas el
-     *  párrafo sale con el hueco visible, que es mejor que una fecha
-     *  inventada. */
-    fechaLista?: string;
-    fechaSesion?: string;
+    /* LAS FECHAS DE SESIÓN SE FUERON. Las añadí por la mañana y David las
+     * retiró por la tarde: «no me sirven porque estas, al final, quedarán
+     * hasta el momento en que se revisen por los magistrados. Son campos
+     * innecesarios». Un campo que sólo se puede rellenar inventando no es un
+     * campo. El párrafo del resultando sale con sus dos huecos y su aviso, y
+     * se completan al engrosar. */
     /** Tercero interesado, o parte actora en la revisión fiscal. */
     tercero?: string;
     diasInhabilesExtra?: string[];
@@ -274,19 +272,6 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
                     </Campo>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                    <Campo etiqueta="Se listó el"
-                           ayuda="Opcional. Sin las dos, el párrafo de la sesión sale con el hueco a la vista">
-                        <input type="date" className={campo} value={valor.fechaLista || ''}
-                               onChange={(e) => set('fechaLista', e.target.value)} />
-                    </Campo>
-                    <Campo etiqueta="Para la sesión de"
-                           ayuda="La sesión en que se verá el proyecto">
-                        <input type="date" className={campo} value={valor.fechaSesion || ''}
-                               onChange={(e) => set('fechaSesion', e.target.value)} />
-                    </Campo>
-                </div>
-
                 <Campo etiqueta="Cómo se notificó"
                        ayuda="No se adivina: mueve el cómputo un día entero">
                     <select className={campo} value={valor.reglaSurtimiento}
@@ -389,9 +374,14 @@ export function faltaEnEncargo(e: Encargo): string[] {
     // apartados, el vocabulario y el plazo.
     if (!e.tipoAsunto) falta.push('el tipo de asunto');
     if (!/^\d{1,4}\s*\/\s*\d{4}$/.test(e.numero.trim())) falta.push('el número de expediente');
-    if (!e.quejoso.trim()) falta.push('la parte promovente');
+    /* LA PARTE PROMOVENTE YA NO SE EXIGE: el pipeline la lee de los
+     * documentos —3 de 5 exacta y 2 parcial sobre los expedientes reales, con
+     * cero invenciones— y la propone con su aviso para que se confirme. Si el
+     * secretario la escribe, manda él. */
     if (!e.notificacion) falta.push('la fecha de notificación');
     if (!e.presentacion) falta.push('la fecha de presentación');
-    if (!(e.tribunal ?? '').trim()) falta.push('el tribunal que resuelve');
+    /* EL TRIBUNAL, EL MAGISTRADO Y EL SECRETARIO se toman del último asunto
+     * de este secretario. Sólo se exigen la primera vez, y de eso se encarga
+     * el servidor, que es quien sabe si hay asunto anterior. */
     return falta;
 }
