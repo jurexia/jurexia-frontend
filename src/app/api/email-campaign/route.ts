@@ -95,7 +95,7 @@ function buildConversionEmail(firstName: string): string {
                                     </td>
                                     <td style="padding:8px 0;color:#ccc;font-size:14px;line-height:1.5;">
                                         <strong style="color:#fff;">Genios Jurídicos (IA Especializada)</strong><br>
-                                        Asistentes expertos por materia (Amparo, Civil, Mercantil, Penal, Fiscal, Laboral, etc.) que tienen leyes completas y tratados en su ventana de contexto (Gemini Context Cache) para respuestas híper-precisas y sin alucinaciones.
+                                        Asistentes expertos por materia (Amparo, Civil, Mercantil, Penal, Fiscal, Laboral, etc.) que tienen leyes completas y tratados en su ventana de contexto (Gemini Context Cache) para respuestas híper-precisas y verificadas contra su fuente.
                                     </td>
                                 </tr>
                                 <tr>

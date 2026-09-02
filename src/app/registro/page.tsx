@@ -244,7 +244,6 @@ export default function RegistroPage() {
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <Link href="/" className="flex items-center justify-center gap-3 mb-8 group">
-                    <img src="/logo-iurexia.png" alt="Iurexia Logo" className="h-12 w-auto object-contain transition-transform group-hover:scale-105" />
                     <span className="font-serif text-3xl font-semibold text-charcoal-900 tracking-tight">
                         Iurex<span className="text-accent-gold">ia</span>
                     </span>

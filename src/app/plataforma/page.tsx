@@ -169,8 +169,8 @@ export default function PlataformaPage() {
             {/* Zero Hallucinations Section */}
             <section className="py-16 bg-charcoal-900 text-white">
                 <div className="max-w-5xl mx-auto px-4 text-center">
-                    <p className="text-accent-brown font-medium mb-4 tracking-wide">ARQUITECTURA VERIFICADA</p>
-                    <h3 className="font-serif text-3xl md:text-4xl font-medium mb-6">Cero <span className="text-accent-gold">alucinaciones.</span></h3>
+                    <p className="text-accent-brown font-medium mb-4 tracking-wide">ARQUITECTURA TRAZABLE</p>
+                    <h3 className="font-serif text-3xl md:text-4xl font-medium mb-6">Genera respuestas <span className="text-accent-gold">verificadas.</span></h3>
                     <p className="text-xl text-gray-400 max-w-3xl mx-auto">
                         Iurexia opera con <strong>Security by Design (Blindaje de Datos)</strong>, protegiendo el secreto profesional de los litigios. Todas las respuestas proceden de <strong className="text-white">fuentes jurídicas públicas</strong>, y a diferencia de los modelos de IA tradicionales, en Iurexia <strong className="text-accent-gold">jamás usamos la información confidencial de tus casos o clientes para entrenar nuestros modelos</strong> compartidos.
                     </p>
@@ -188,7 +188,7 @@ export default function PlataformaPage() {
                     "Comprensión contextual: Entiende el significado de tu consulta, no solo palabras aisladas",
                     "Precisión técnica: Captura términos jurídicos exactos con alta fidelidad",
                     "Ranking inteligente: Los mejores resultados primero",
-                    "Sin alucinaciones: si la fuente no existe, Iurexia lo indica y solicita el dato faltante"
+                    "Verificado: si la fuente no existe, Iurexia lo indica y solicita el dato faltante"
                 ]}
                 visual={<HybridSearchVisual />}
                 bgColor="bg-cream-300"
@@ -206,7 +206,7 @@ export default function PlataformaPage() {
                     "Detección de debilidades y contradicciones argumentativas",
                     "Identificación de fortalezas y puntos clave",
                     "Sugerencias de mejora con fundamento legal",
-                    "Sin alucinaciones: cada sugerencia se apoya en material del repositorio jurídico"
+                    "Verificado: cada sugerencia se apoya en material del repositorio jurídico"
                 ]}
                 visual={<SentinelAgentVisual />}
                 bgColor="bg-white"
@@ -225,7 +225,7 @@ export default function PlataformaPage() {
                     "Aislamiento perfecto entre jurisdicciones",
                     "Sin contaminación de resultados de otros estados",
                     "Leyes federales siempre disponibles",
-                    "Sin alucinaciones: todo resultado se limita a fuentes verificadas y filtradas por jurisdicción"
+                    "Trazable: todo resultado se limita a fuentes verificadas y filtradas por jurisdicción"
                 ]}
                 visual={<JurisdictionalFiltersVisual />}
                 bgColor="bg-cream-300"
