@@ -22,36 +22,46 @@ const BASE = 'https://sjf2.scjn.gob.mx';
 const API = `${BASE}/services/sjftesismicroservice/api/public/tesis`;
 
 /**
- * La petición al Semanario va con `node:https` y no con `fetch`, y la razón es
- * concreta: **`Referer` es una cabecera prohibida en la especificación de
- * Fetch**, así que el cliente la descarta en silencio. Y el cortafuegos de la
- * Corte exige `Referer` Y un `User-Agent` de navegador **a la vez**.
+ * QUÉ SE ROMPIÓ, Y NO FUE NUESTRO CÓDIGO (2-sep-2026)
+ * ---------------------------------------------------
+ * Esta función y la del PDF se escribieron entre el 3 y el 7 de agosto de
+ * 2026 y funcionaron. No se han tocado desde entonces. Lo que cambió está al
+ * otro lado: **el Semanario puso Incapsula delante y ahora reta a las IP de
+ * centro de datos.** Medido contra su servidor con el mismo registro:
  *
- * Medido el 2-sep-2026 contra su servidor, mismo registro:
+ *                          desde una laptop     desde Render / Vercel
+ *   sin cabeceras .......... 403                 403
+ *   sólo User-Agent ........ 403                 302 → 403
+ *   Referer + User-Agent ... 200                 302 → 403
  *
- *     sin cabeceras ................... 403
- *     sólo Referer .................... 403
- *     sólo User-Agent de navegador .... 403
- *     Referer + User-Agent ............ 200
+ * Desde una conexión doméstica pasa a la primera; desde un servidor recibe un
+ * 302 de reto que acaba en 403 se siga o no. No hay combinación de cabeceras
+ * que lo salve: se probó la matriz entera.
  *
- * Por eso los cinco registros que se probaron respondían 200 desde una laptop
- * con curl y fallaban los cinco desde Vercel: no era la IP ni el servidor de
- * la Corte, era la cabecera que nunca salía. `https.request` la manda tal cual.
+ * Y OJO CON LA COOKIE, que es lo contrario de lo que parece: llevar el
+ * `incap_ses_*` que planta la redirección da 403, y con el tarro vacío da
+ * 200. La cookie no abre la puerta, la cierra. Por eso las redirecciones se
+ * siguen SIN arrastrar cookies.
  *
- * Se pierde el caché de `next: { revalidate }`, que sólo existe para `fetch`.
- * No es pérdida: la llamada tarda menos de medio segundo y una verificación
- * que devuelve un dato viejo es peor que una que tarda 400 ms.
+ * Se usa `node:https` y no `fetch` por una razón menor pero real: permite ver
+ * el código de estado de cada salto y decidir sobre la redirección, que con
+ * `fetch` queda oculta. Se pierde el caché de `next: { revalidate }`, que sólo
+ * existe para fetch; no es pérdida, porque una verificación que devuelve un
+ * dato viejo es peor que una que tarda 400 ms.
+ *
+ * LA SALIDA no está aquí: hay que servir la tesis desde nuestro propio
+ * almacenamiento, como ya se hace con las leyes y las sentencias, en vez de
+ * pedírsela a la Corte en cada clic desde un servidor que tiene vetado.
  */
 async function pedirAlSemanario(
     url: string,
     registro: string,
-    saltos = 0,
-    galleta = ''
+    saltos = 0
 ): Promise<{ status: number; ok: boolean; texto: string }> {
     const { request } = await import('node:https');
 
     const res = await new Promise<{
-        status: number; texto: string; destino?: string; galletas: string[];
+        status: number; texto: string; destino?: string;
     }>((resolve, reject) => {
         const req = request(
             url,
@@ -63,7 +73,6 @@ async function pedirAlSemanario(
                     Referer: `${BASE}/detalle/tesis/${registro}`,
                     'User-Agent':
                         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                    ...(galleta ? { Cookie: galleta } : {}),
                 },
                 timeout: 12_000,
             },
@@ -75,7 +84,6 @@ async function pedirAlSemanario(
                         status: r.statusCode ?? 0,
                         texto: Buffer.concat(trozos).toString('utf8'),
                         destino: (r.headers.location as string) || undefined,
-                        galletas: (r.headers['set-cookie'] as string[]) || [],
                     })
                 );
             }
@@ -85,18 +93,13 @@ async function pedirAlSemanario(
         req.end();
     });
 
-    // `fetch` seguía las redirecciones solo; `https.request` no. El Semanario
-    // contesta 302 en la primera petición de cada sesión —planta una cookie y
-    // reenvía a la misma URL—, así que sin esto la verificación fallaba
-    // siempre con `upstream_302`. Se arrastran las cookies, que es lo que la
-    // redirección viene a entregar, y se topa en tres saltos para que un bucle
-    // del servidor de la Corte no se convierta en uno nuestro.
+    // `fetch` seguía las redirecciones solo; `https.request` no, y hay que
+    // seguirlas. Pero SIN arrastrar las cookies, que es lo contrario de lo que
+    // parecía: medido el 2-sep-2026 contra el Semanario, la misma petición
+    // responde 200 con el tarro vacío y 403 llevando el `incap_ses_*` que
+    // planta la redirección. La cookie no abre la puerta, la cierra.
     if (res.status >= 300 && res.status < 400 && res.destino && saltos < 3) {
-        const siguiente = new URL(res.destino, url).toString();
-        const acumulada = [galleta, ...res.galletas.map((c) => c.split(';')[0])]
-            .filter(Boolean)
-            .join('; ');
-        return pedirAlSemanario(siguiente, registro, saltos + 1, acumulada);
+        return pedirAlSemanario(new URL(res.destino, url).toString(), registro, saltos + 1);
     }
 
     return {
