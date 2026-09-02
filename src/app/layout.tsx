@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
+import { AvisoCookies } from '@/components/AvisoCookies'
 import { WakeUpProvider } from '@/components/WakeUpProvider'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 
@@ -94,6 +95,11 @@ export default function RootLayout({
                     <WakeUpProvider>
                         {children}
                     </WakeUpProvider>
+                    {/* Va fuera del árbol de la aplicación y dentro del
+                        proveedor: se pinta sobre cualquier página, también
+                        sobre el acceso, que es justo donde llega el visitante
+                        que aún no ha decidido nada. */}
+                    <AvisoCookies />
                 </AuthProvider>
             </body>
         </html>
