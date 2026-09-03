@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Search, Zap, HelpCircle, HardDrive, FolderOpen } from 'lucide-react'
 
 import Navbar from '@/components/Navbar'
+import SeguimientoPanel from '@/components/SeguimientoPanel'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { CarpetaIcono } from '@/components/CarpetaIcono'
 import NuevaCarpetaModal from '@/components/NuevaCarpetaModal'
@@ -45,6 +46,7 @@ function Escritorio() {
 
     const [carpetas, setCarpetas] = useState<Expediente[]>([])
     const [cargando, setCargando] = useState(true)
+    const [pestana, setPestana] = useState<'carpetas' | 'seguimiento'>('carpetas')
     const [error, setError] = useState<string | null>(null)
     const [busqueda, setBusqueda] = useState('')
     const [nuevaAbierta, setNuevaAbierta] = useState(false)
@@ -101,6 +103,34 @@ function Escritorio() {
             <Navbar />
 
             <main className="mx-auto max-w-6xl px-4 pb-20 pt-24 sm:px-6">
+                {/*
+                  Dos cosas distintas, y conviene que se noten distintas: las
+                  carpetas son el archivo del despacho («¿qué tengo yo de este
+                  asunto?») y el seguimiento es una vigilancia («¿qué ha hecho
+                  el juzgado?»). Se vinculan, no se funden.
+                */}
+                <div role="tablist" className="mb-6 flex gap-1 border-b border-charcoal-900/[0.08]">
+                    {([['carpetas', 'Mis carpetas inteligentes'],
+                       ['seguimiento', 'Seguimiento ante órganos jurisdiccionales']] as const).map(([clave, rotulo]) => (
+                        <button
+                            key={clave}
+                            role="tab"
+                            aria-selected={pestana === clave}
+                            onClick={() => setPestana(clave)}
+                            className={`relative px-4 py-3 text-sm font-medium transition-colors ${
+                                pestana === clave
+                                    ? 'text-charcoal-900'
+                                    : 'text-charcoal-500 hover:text-charcoal-800'}`}
+                        >
+                            {rotulo}
+                            <span className={`absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-accent-gold transition-opacity ${
+                                pestana === clave ? 'opacity-100' : 'opacity-0'}`} />
+                        </button>
+                    ))}
+                </div>
+
+                {pestana === 'seguimiento' ? <SeguimientoPanel /> : <>
+
                 {/* ── Barra superior ───────────────────────────────────────── */}
                 <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
                     <div>
@@ -215,6 +245,8 @@ function Escritorio() {
                         </div>
                     </div>
                 ) : null}
+                            </>}
+
             </main>
 
             <NuevaCarpetaModal
