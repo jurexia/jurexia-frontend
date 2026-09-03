@@ -855,6 +855,43 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                         Gaceta del Semanario Judicial de la Federación · Reg. {tesisMeta?.registro || registroNumber}
                                     </p>
                                 </div>
+                            ) : (tesisMeta.rubro || tesisMeta.textoBody) ? (
+                                /* SIN PDF, SE ENSEÑA LO QUE SÍ TENEMOS (3-sep-2026)
+                                
+                                   Aquí caen las 8,483 tesis que el cortafuegos de
+                                   la Corte no nos dejó descargar. Antes esta rama
+                                   llamaba al Semanario, que desde hace días
+                                   rechaza a cualquier servidor, así que el abogado
+                                   pedía una jurisprudencia y recibía un aviso de
+                                   error: ni el PDF, ni los datos, ni el texto.
+                                   Un fallo ajeno presentado como fallo nuestro.
+                                
+                                   Y era absurdo, porque el rubro y el texto de la
+                                   tesis están en nuestro corpus —de ahí salió la
+                                   cita— y sólo hacía falta pintarlos. El enlace al
+                                   Semanario se conserva como lo que es: una
+                                   comprobación opcional en la fuente oficial, no
+                                   un requisito para leer lo que ya tenemos. */
+                                <div className="rounded-2xl border border-cream-400 bg-white p-4 shadow-sm">
+                                    {tesisMeta.rubro && (
+                                        <h3 className="mb-3 font-serif text-[0.95rem] font-semibold leading-snug text-charcoal-900">
+                                            {tesisMeta.rubro}
+                                        </h3>
+                                    )}
+                                    {tesisMeta.textoBody && <TesisBodyText text={tesisMeta.textoBody} />}
+                                    <div className="mt-4 flex items-center justify-between border-t border-cream-400 pt-3">
+                                        <span className="text-[10px] uppercase tracking-widest text-charcoal-500">
+                                            Texto del criterio · repositorio Iurexia
+                                        </span>
+                                        {scjnUrl && (
+                                            <a href={scjnUrl} target="_blank" rel="noopener noreferrer"
+                                               className="inline-flex items-center gap-1 text-[11px] text-charcoal-600 underline hover:text-charcoal-900">
+                                                <ExternalLink className="h-3 w-3" />
+                                                Ver en el Semanario
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
                             ) : registroNumber && scjnUrl ? (
                                 <TesisVerificada registro={registroNumber} urlSemanario={scjnUrl} />
                             ) : (
