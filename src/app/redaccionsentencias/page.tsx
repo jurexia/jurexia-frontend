@@ -4,6 +4,23 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
 
+/**
+ * El redactor de sentencias de primera instancia, APARTADO (3-sep-2026).
+ *
+ * Se esconde de todos mientras se rehace. Esconder el botón no basta: una URL
+ * que sigue viva es una función viva, y alguien con el enlace guardado —o un
+ * buscador— acabaría entrando a algo que no está listo para verse.
+ *
+ * El código NO se borra. El trabajo se retomará, y lo que se borra hay que
+ * reescribirlo. Para volver a encenderlo:
+ *
+ *     NEXT_PUBLIC_REDACTOR_SENTENCIAS=1
+ *
+ * Nada que ver con «Sentencia» del Secretario del PJF, que vive en /tcc-beta
+ * y sigue disponible para Platinum.
+ */
+const VISIBLE = process.env.NEXT_PUBLIC_REDACTOR_SENTENCIAS === '1';
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -81,6 +98,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default function RedaccionSentenciasPage() {
+    const enrutador = useRouter();
+    useEffect(() => {
+        if (!VISIBLE) enrutador.replace('/chat');
+    }, [enrutador]);
+    if (!VISIBLE) return null;
+
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
 

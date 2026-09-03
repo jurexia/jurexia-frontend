@@ -73,6 +73,9 @@ export default function ChatPage() {
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const isPro = _PRO_PLUS.includes(profile?.subscription_type || '');
     const isProPlus = isPro && !isAdmin(user?.email);
+    // Apagado para todos desde el 3-sep-2026; se enciende con la variable de
+    // entorno cuando se retome el redactor de primera instancia.
+    const REDACTOR_SENTENCIAS_VISIBLE = process.env.NEXT_PUBLIC_REDACTOR_SENTENCIAS === '1';
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com' || profile?.can_access_sentencia === true;
     /* Secretario del PJF: Platinum, MÁS la excepción declarada en el perfil.
      *
@@ -964,8 +967,22 @@ export default function ChatPage() {
                                         }
                                     `}</style>
 
-                                    {/* Admin-only: Link to DeepSeek sentence drafting chat */}
-                                    {canAccessRedactor && (
+                                    {/* EL REDACTOR DE SENTENCIAS DE PRIMERA INSTANCIA,
+                                        APARTADO (3-sep-2026).
+
+                                        Se retira de la vista de todos —también de
+                                        los administradores— mientras se rehace. El
+                                        código de `/redaccionsentencias` se conserva
+                                        intacto porque el trabajo se retomará: no es
+                                        una función descartada, es una función en
+                                        pausa, y borrarla obligaría a reescribirla.
+
+                                        Para volver a encenderla basta poner
+                                        NEXT_PUBLIC_REDACTOR_SENTENCIAS=1 en Vercel;
+                                        no hay que tocar una línea. El «Sentencia»
+                                        del Secretario del PJF —que va a /tcc-beta—
+                                        es otra cosa y sigue donde estaba. */}
+                                    {REDACTOR_SENTENCIAS_VISIBLE && canAccessRedactor && (
                                         <div className="mt-3">
                                             <Link
                                                 href="/redaccionsentencias"
