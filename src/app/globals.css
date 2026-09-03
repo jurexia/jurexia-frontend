@@ -1449,3 +1449,60 @@ h6 {
     /* Quien pidió menos movimiento recibe la ficha entera, sin transición. */
     .ficha-entra > * { animation: none; }
 }
+
+/* ── Los fondos de las tarjetas de Pro y Platinum ─────────────────────────
+   Pro no se mueve: su retícula de cubos es geometría quieta y ahí se queda.
+   Lo que sigue es sólo de Platinum, y todo obedece la misma regla —ciclos
+   largos, opacidades bajas—: es un fondo detrás de una lista de precios, y
+   nadie compra por el fondo. Si parpadea, estorba.
+
+   El pulso recorre la traza de punta a punta. `pathLength="100"` normaliza
+   todos los trazados, así el mismo tramo de 14 unidades se ve igual de largo
+   en la traza corta y en la que cruza la tarjeta entera. Se enciende al salir
+   y se apaga al llegar, que es lo que esconde el salto del ciclo. */
+@keyframes trazaPulso {
+    0%        { stroke-dashoffset: 100; opacity: 0; }
+    10%, 88%  { opacity: 1; }
+    100%      { stroke-dashoffset: 0; opacity: 0; }
+}
+.traza-pulso {
+    stroke-dasharray: 14 86;
+    animation: trazaPulso 6s linear infinite;
+}
+
+/* Los contactos son el circuito en reposo: nunca se apagan del todo. */
+@keyframes contactoOro {
+    0%, 100% { opacity: 0.2; }
+    50%      { opacity: 0.75; }
+}
+.contacto-oro { animation: contactoOro 3.6s ease-in-out infinite; }
+
+/* La neurona late con la escala, no con el radio: `r` como propiedad CSS no
+   está en todos los navegadores, `transform` sí. `transform-box: fill-box`
+   es lo que hace que el origen sea el centro del círculo y no el del SVG. */
+@keyframes neuronaLatido {
+    0%, 100% { opacity: 0.28; transform: scale(0.84); }
+    50%      { opacity: 0.8;  transform: scale(1.12); }
+}
+.neurona {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: neuronaLatido 3.4s ease-in-out infinite;
+}
+
+/* Las sinapsis se encienden desfasadas. Todas a la vez sería un latido; así
+   parece que la señal atraviesa la red. */
+@keyframes sinapsisEncendida {
+    0%, 100% { opacity: 0.05; }
+    45%      { opacity: 0.32; }
+}
+.sinapsis { animation: sinapsisEncendida 4.6s ease-in-out infinite; }
+
+/* Quien pidió menos movimiento recibe la placa entera, encendida y quieta:
+   el dibujo es el fondo, la animación era la cortesía. */
+@media (prefers-reduced-motion: reduce) {
+    .traza-pulso { animation: none; opacity: 0; }
+    .contacto-oro { animation: none; opacity: 0.45; }
+    .neurona { animation: none; opacity: 0.55; }
+    .sinapsis { animation: none; opacity: 0.16; }
+}

@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Check, Zap, Crown, Star, Calendar, Loader2, AlertTriangle, ShieldCheck, Lock, CreditCard } from 'lucide-react';
-import { useState } from 'react';
+import { Scale, ArrowRight, Check, Calendar, Loader2, AlertTriangle, ShieldCheck, Lock, CreditCard } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
 import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import { PLANS } from '@/lib/stripe';
+import { RejillaCubos, CircuitoNeuronal } from '@/components/FondosDePlan';
 
 export default function PreciosPage() {
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
@@ -84,7 +85,6 @@ export default function PreciosPage() {
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch pt-8">
                         <AnimateOnScroll delay={0} className="h-full">
                             <PricingCard
-                                icon={<Zap className="w-6 h-6" />}
                                 name="Plan Gratuito"
                                 price="$0"
                                 originalPrice={null}
@@ -108,7 +108,6 @@ export default function PreciosPage() {
 
                         <AnimateOnScroll delay={0.1} className="h-full">
                             <PricingCard
-                                icon={<ShieldCheck className="w-6 h-6" />}
                                 name="Plan Básico"
                                 price={isAnnual ? '$790' : '$79'}
                                 originalPrice={isAnnual ? '$1,548' : '$129'}
@@ -135,7 +134,6 @@ export default function PreciosPage() {
 
                         <AnimateOnScroll delay={0.2} className="h-full">
                             <PricingCard
-                                icon={<Star className="w-6 h-6" />}
                                 name="Plan Pro"
                                 price={isAnnual ? '$1,490' : '$149'}
                                 originalPrice={isAnnual ? '$2,988' : '$249'}
@@ -144,12 +142,12 @@ export default function PreciosPage() {
                                 description={isAnnual ? 'Un solo pago, todo el año cubierto' : 'Para el litigante que trabaja solo'}
                                 savingsBadge={isAnnual ? 'Ahorras $298 MXN' : undefined}
                                 features={[
-                                    <span className="font-semibold text-charcoal-900">140 consultas/mes</span>,
+                                    <span className="font-semibold text-white">140 consultas/mes</span>,
                                     "IA Jurídica Avanzada (análisis complejo y deducción)",
                                     "Arquitectura Multi-Genio",
                                     "Análisis de documentos (auditoría y mejoras)",
-                                    <>Lee documentos de hasta <span className="font-semibold text-charcoal-900">100 hojas</span></>,
-                                    <>Precedentes Judiciales por Circuito <span className="text-charcoal-500">· 6 circuitos activos</span></>,
+                                    <>Lee documentos de hasta <span className="font-semibold text-white">100 hojas</span></>,
+                                    <>Precedentes Judiciales por Circuito <span className="text-gray-500">· 6 circuitos activos</span></>,
                                     "Redacción Pro — motor de razonamiento profundo",
                                     "Registra tu cédula para conectar clientes",
                                     "Filtros por entidad federativa y marco federal",
@@ -158,13 +156,13 @@ export default function PreciosPage() {
                                 buttonText={isAnnual ? 'Elegir Pro Anual' : 'Elegir Plan Pro'}
                                 priceId={isAnnual ? PLANS.pro_annual.priceId || undefined : PLANS.pro_monthly.priceId || undefined}
                                 highlighted={false}
+                                fondo="cubos"
                                 badge="MÁS ELEGIDO"
                             />
                         </AnimateOnScroll>
 
                         <AnimateOnScroll delay={0.3} className="h-full">
                             <PricingCard
-                                icon={<Crown className="w-6 h-6" />}
                                 name="Plan Platinum"
                                 price={isAnnual ? '$5,990' : '$599'}
                                 originalPrice={isAnnual ? '$9,588' : '$799'}
@@ -191,6 +189,7 @@ export default function PreciosPage() {
                                 buttonText={isAnnual ? 'Elegir Platinum Anual' : 'Elegir Platinum'}
                                 priceId={isAnnual ? PLANS.platinum_annual.priceId || undefined : PLANS.platinum_monthly.priceId || undefined}
                                 highlighted={true}
+                                fondo="circuitos"
                                 badge="RECOMENDADO"
                             />
                         </AnimateOnScroll>
@@ -450,8 +449,91 @@ export default function PreciosPage() {
     );
 }
 
+/* ─── El precio cuenta al cambiar de periodo ──────────────────────────────
+   Pasar de mensual a anual cambiaba $149 por $1,490 de un fotograma al otro.
+   El salto se ve, pero no se lee: el ojo registra que algo parpadeó y sigue.
+   Contando, la cifra obliga a mirarla el tiempo suficiente para entender que
+   se está viendo el precio de un año entero, no el de un mes.
+
+   Sube por las tres cifras a la vez —el precio, el tachado y el precio por
+   consulta— y con la misma duración, así el bloque entero se asienta de una
+   vez en lugar de en tres tiempos. */
+const DURACION_CONTEO = 700;
+
+/* Del texto salen tres cosas: lo que va delante ("$"), el número, y lo que va
+   detrás (" por consulta"). Sólo el número se anima; lo demás se copia tal
+   cual, que es lo que evita tener que mantener aquí una lista de formatos. */
+function desmenuza(texto: string) {
+    const m = texto.match(/^(.*?)([\d.,]+)(.*)$/);
+    if (!m) return { prefijo: texto, numero: NaN, decimales: 0, sufijo: '' };
+    const crudo = m[2].replace(/,/g, '');
+    const punto = crudo.indexOf('.');
+    return {
+        prefijo: m[1],
+        numero: parseFloat(crudo),
+        decimales: punto === -1 ? 0 : crudo.length - punto - 1,
+        sufijo: m[3],
+    };
+}
+
+/* El formato se arma a mano en vez de con `toLocaleString`: el servidor y el
+   navegador tienen que escribir exactamente lo mismo en el primer render, y
+   la biblioteca de locales no siempre coincide entre los dos. */
+function formatea(n: number, decimales: number) {
+    const [entero, dec] = n.toFixed(decimales).split('.');
+    const conMiles = entero.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return dec ? `${conMiles}.${dec}` : conMiles;
+}
+
+function PrecioAnimado({ valor }: { valor: string }) {
+    const partes = useMemo(() => desmenuza(valor), [valor]);
+    const [mostrado, setMostrado] = useState(partes.numero);
+    const anterior = useRef(partes.numero);
+    const cuadro = useRef<number | null>(null);
+
+    useEffect(() => {
+        const desde = anterior.current;
+        const hasta = partes.numero;
+        anterior.current = hasta;
+
+        /* En el primer render no hay nada que contar, y quien pidió menos
+           movimiento recibe la cifra puesta. Con la pestaña en segundo plano
+           el navegador no entrega cuadros: sin este corte la animación se
+           quedaría a medias y el precio se leería viejo al volver. */
+        if (!Number.isFinite(hasta) || desde === hasta || document.hidden ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setMostrado(hasta);
+            return;
+        }
+
+        const inicio = performance.now();
+        const paso = (ahora: number) => {
+            const t = Math.min((ahora - inicio) / DURACION_CONTEO, 1);
+            // Salida cúbica: arranca rápido y frena al llegar. Lineal parece
+            // un marcador de gasolinera; con freno parece que la cifra aterriza.
+            const suave = 1 - Math.pow(1 - t, 3);
+            setMostrado(desde + (hasta - desde) * suave);
+            if (t < 1) cuadro.current = requestAnimationFrame(paso);
+        };
+        cuadro.current = requestAnimationFrame(paso);
+
+        return () => {
+            if (cuadro.current !== null) cancelAnimationFrame(cuadro.current);
+        };
+    }, [partes.numero]);
+
+    if (!Number.isFinite(partes.numero)) return <>{valor}</>;
+
+    /* `tabular-nums` es lo que impide que la cifra tiemble: sin él cada dígito
+       tiene su propio ancho y el número entero se agita mientras cuenta. */
+    return (
+        <span className="tabular-nums">
+            {partes.prefijo}{formatea(mostrado, partes.decimales)}{partes.sufijo}
+        </span>
+    );
+}
+
 function PricingCard({
-    icon,
     name,
     price,
     originalPrice,
@@ -464,13 +546,13 @@ function PricingCard({
     highlighted = false,
     isBasic = false,
     badge,
+    fondo,
     savingsBadge,
     unitPrice,
     exclusives,
     note,
     upgradePriceId
 }: {
-    icon: React.ReactNode;
     name: string;
     price: string;
     originalPrice: string | null;
@@ -483,6 +565,10 @@ function PricingCard({
     highlighted?: boolean;
     isBasic?: boolean;
     badge?: string;
+    /** Textura de fondo. Sólo la llevan los dos planes que la página vende:
+        cubos isométricos en Pro, circuito y red neuronal en Platinum. Las dos
+        oscurecen la tarjeta, así que también deciden el color de la tinta. */
+    fondo?: 'cubos' | 'circuitos';
     savingsBadge?: string;
     /** Precio por consulta. Se calcula del precio y el cupo; va bajo el precio
         porque es el dato con el que de verdad se comparan dos planes. */
@@ -494,6 +580,7 @@ function PricingCard({
         el aviso: la llamada a la acción principal no llevaba a ninguna parte. */
     upgradePriceId?: string;
 }) {
+    const oscura = highlighted || fondo !== undefined;
     const [loading, setLoading] = useState(false);
     const [showWarning, setShowWarning] = useState(false);
     const { user } = useAuth();
@@ -545,60 +632,72 @@ function PricingCard({
        también. Ahora el negro, el anillo dorado y el relieve son de Platinum, y
        Pro pasa a tarjeta blanca con su distintivo honesto —«MÁS ELEGIDO», que
        es cierto: 177 de 219 suscriptores de pago están en Pro—. */
-    const cardStyles = highlighted
-        ? 'bg-charcoal-900 text-white ring-1 ring-accent-gold/35 shadow-[0_30px_80px_-32px_rgba(0,0,0,0.6)] relative z-10 lg:-mt-5 lg:-mb-5'
-        : 'bg-white border border-black/[0.06] hover:shadow-lg';
+    /* `oscura` es lo único que decide el color de la tinta. Platinum ya lo
+       era; Pro lo es desde que el gris de los cubos le entró de fondo. El
+       destacado sigue siendo uno solo y sigue siendo Platinum: el anillo
+       dorado, el relieve y el botón en oro no se comparten.
 
+       `isolate` no es adorno: crea el contexto de apilamiento sin el que el
+       fondo —que va en z negativo— se metería detrás de la propia tarjeta y
+       no se vería. */
+    const cardStyles = highlighted
+        ? 'isolate bg-charcoal-900 text-white ring-1 ring-accent-gold/35 shadow-[0_30px_80px_-32px_rgba(0,0,0,0.6)] relative z-10 lg:-mt-5 lg:-mb-5'
+        : fondo
+            ? 'isolate bg-charcoal-900 text-white ring-1 ring-white/10 shadow-[0_24px_60px_-34px_rgba(0,0,0,0.55)]'
+            : 'bg-white border border-black/[0.06] hover:shadow-lg';
+
+    /* Sobre el gris de Pro el distintivo negro se perdía. En blanco se lee, y
+       sigue sin disputarle el oro a Platinum. */
     const badgeStyles = highlighted
         ? 'bg-accent-gold text-charcoal-900'
-        : 'bg-charcoal-900 text-white';
+        : fondo
+            ? 'bg-white text-charcoal-900'
+            : 'bg-charcoal-900 text-white';
 
     const buttonBaseStyles = `block w-full text-center py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`;
     /* En la destacada el botón va en oro: es la única llamada a la acción de
        la fila que no es negro sobre blanco, y por eso se ve primero. */
     const buttonColorStyles = highlighted
         ? 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90 font-semibold'
-        : 'bg-charcoal-900 text-white hover:bg-charcoal-800';
+        : fondo
+            ? 'bg-white text-charcoal-900 hover:bg-white/90 font-semibold'
+            : 'bg-charcoal-900 text-white hover:bg-charcoal-800';
 
     return (
-        <div className={`relative rounded-3xl p-8 transition-all duration-300 flex flex-col h-full ${cardStyles}`}>
+        <div className={`relative rounded-3xl p-8 pt-10 transition-all duration-300 flex flex-col h-full ${cardStyles}`}>
+            {fondo === 'cubos' && <RejillaCubos />}
+            {fondo === 'circuitos' && <CircuitoNeuronal />}
+
             {badge && (
                 <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide shadow-sm ${badgeStyles}`}>
                     {badge}
                 </div>
             )}
 
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${highlighted
-                ? 'bg-accent-gold/15 text-accent-gold'
-                : 'bg-accent-brown/10 text-accent-brown'
-                }`}>
-                {icon}
-            </div>
-
-            <h3 className={`font-serif text-2xl font-medium mb-2 ${highlighted ? 'text-white' : 'text-charcoal-900'
+            <h3 className={`font-serif text-2xl font-medium mb-2 ${oscura ? 'text-white' : 'text-charcoal-900'
                 }`}>
                 {name}
             </h3>
 
             <div className="mb-4">
                 <div className="flex items-baseline gap-2">
-                    <span className={`text-4xl font-bold ${highlighted ? 'text-white' : 'text-charcoal-900'
+                    <span className={`text-4xl font-bold ${oscura ? 'text-white' : 'text-charcoal-900'
                         }`}>
-                        {price}
+                        <PrecioAnimado valor={price} />
                     </span>
-                    <span className={highlighted ? 'text-gray-400' : 'text-charcoal-500'}>
+                    <span className={oscura ? 'text-gray-400' : 'text-charcoal-500'}>
                         {period}
                     </span>
                 </div>
                 {originalPrice && (
-                    <p className={`text-sm line-through ${highlighted ? 'text-gray-500' : 'text-charcoal-400'
+                    <p className={`text-sm line-through ${highlighted ? 'text-gray-500' : oscura ? 'text-gray-400' : 'text-charcoal-400'
                         }`}>
-                        {originalPrice} {period}
+                        <PrecioAnimado valor={originalPrice} /> {period}
                     </p>
                 )}
                 {unitPrice && (
-                    <p className={`mt-1 text-xs font-medium ${highlighted ? 'text-accent-gold' : 'text-charcoal-500'}`}>
-                        {unitPrice}
+                    <p className={`mt-1 text-xs font-medium ${highlighted ? 'text-accent-gold' : oscura ? 'text-gray-300' : 'text-charcoal-500'}`}>
+                        <PrecioAnimado valor={unitPrice} />
                     </p>
                 )}
                 {savingsBadge && (
@@ -608,7 +707,7 @@ function PricingCard({
                 )}
             </div>
 
-            <p className={`text-sm mb-6 ${highlighted ? 'text-gray-400' : 'text-charcoal-600'
+            <p className={`text-sm mb-6 ${oscura ? 'text-gray-400' : 'text-charcoal-600'
                 }`}>
                 {description}
             </p>
@@ -639,7 +738,7 @@ function PricingCard({
                 {features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-3">
                         <Check className="w-5 h-5 flex-shrink-0 mt-0.5 text-accent-gold" />
-                        <span className={`text-sm ${highlighted ? 'text-gray-300' : 'text-charcoal-700'
+                        <span className={`text-sm ${oscura ? 'text-gray-300' : 'text-charcoal-700'
                             }`}>
                             {feature}
                         </span>
@@ -648,7 +747,7 @@ function PricingCard({
             </ul>
 
             {note && (
-                <p className={`mb-6 text-xs leading-relaxed ${highlighted ? 'text-gray-400' : 'text-charcoal-500'}`}>
+                <p className={`mb-6 text-xs leading-relaxed ${oscura ? 'text-gray-400' : 'text-charcoal-500'}`}>
                     {note}
                 </p>
             )}
