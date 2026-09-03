@@ -81,7 +81,7 @@ export default function PreciosPage() {
             {/* Pricing Cards - Row 1: Gratuito, Pro Mensual, Pro Anual */}
             <section className="py-8 px-4 overflow-hidden">
                 <div className="max-w-7xl mx-auto">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch pt-8">
                         <AnimateOnScroll delay={0} className="h-full">
                             <PricingCard
                                 icon={<Zap className="w-6 h-6" />}
@@ -113,6 +113,7 @@ export default function PreciosPage() {
                                 price={isAnnual ? '$790' : '$79'}
                                 originalPrice={isAnnual ? '$1,548' : '$129'}
                                 period={isAnnual ? 'MXN/año' : 'MXN/mes'}
+                                unitPrice={isAnnual ? '$0.94 por consulta' : '$1.13 por consulta'}
                                 description={isAnnual ? 'Un solo pago, búsqueda garantizada todo el año' : 'Búsqueda rápida en la base de datos de Iurexia'}
                                 savingsBadge={isAnnual ? 'Ahorras $158 MXN' : undefined}
                                 features={[
@@ -128,85 +129,69 @@ export default function PreciosPage() {
                                 priceId={isAnnual ? PLANS.basico_annual?.priceId || undefined : PLANS.basico_monthly?.priceId || undefined}
                                 highlighted={false}
                                 isBasic={true}
+                                upgradePriceId={isAnnual ? PLANS.pro_annual.priceId || undefined : PLANS.pro_monthly.priceId || undefined}
                             />
                         </AnimateOnScroll>
 
                         <AnimateOnScroll delay={0.2} className="h-full">
                             <PricingCard
-                                icon={<Crown className="w-6 h-6" />}
+                                icon={<Star className="w-6 h-6" />}
                                 name="Plan Pro"
                                 price={isAnnual ? '$1,490' : '$149'}
                                 originalPrice={isAnnual ? '$2,988' : '$249'}
                                 period={isAnnual ? 'MXN/año' : 'MXN/mes'}
-                                description={isAnnual ? 'Un solo pago, todo el año cubierto' : 'Para profesionales que necesitan potencia'}
+                                unitPrice={isAnnual ? '$0.89 por consulta' : '$1.06 por consulta'}
+                                description={isAnnual ? 'Un solo pago, todo el año cubierto' : 'Para el litigante que trabaja solo'}
                                 savingsBadge={isAnnual ? 'Ahorras $298 MXN' : undefined}
                                 features={[
-                                    <span className="text-accent-gold font-bold">140 consultas/mes</span>,
-                                    <span className="text-accent-gold font-bold">IA Jurídica Avanzada (Análisis complejo y deducción)</span>,
-                                    <span className="text-accent-gold font-medium">Arquitectura Multi-Genio (IA avanzada)</span>,
-                                    <span className="text-accent-gold font-medium">Análisis de documentos (auditoría y mejoras)</span>,
-                                    <span className="text-accent-gold font-medium">Lee documentos de hasta <span className="font-bold">100 hojas</span></span>,
-                                    <span className="text-accent-gold font-medium">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-white bg-gradient-to-r from-accent-gold/20 to-accent-brown/10 border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-accent-gold text-base leading-none">✦</span>
-                                        <span className="text-accent-gold">Redacción Pro — Motor de razonamiento profundo</span>
-                                        <span className="ml-auto text-[9px] bg-accent-gold text-charcoal-900 px-1.5 py-0.5 rounded-lg font-bold shrink-0">NUEVO</span>
-                                    </span>,
+                                    <span className="font-semibold text-charcoal-900">140 consultas/mes</span>,
+                                    "IA Jurídica Avanzada (análisis complejo y deducción)",
+                                    "Arquitectura Multi-Genio",
+                                    "Análisis de documentos (auditoría y mejoras)",
+                                    <>Lee documentos de hasta <span className="font-semibold text-charcoal-900">100 hojas</span></>,
+                                    <>Precedentes Judiciales por Circuito <span className="text-charcoal-500">· 6 circuitos activos</span></>,
+                                    "Redacción Pro — motor de razonamiento profundo",
                                     "Registra tu cédula para conectar clientes",
-                                    "Búsqueda con IA verificado en constante actualización",
-                                    "Filtros por entidad federativa + marco federal",
-                                    <span className="text-accent-gold font-medium">Mensaje de bienvenida con instrucciones para sacar el máximo provecho</span>,
+                                    "Filtros por entidad federativa y marco federal",
                                     "Soporte prioritario"
                                 ]}
                                 buttonText={isAnnual ? 'Elegir Pro Anual' : 'Elegir Plan Pro'}
                                 priceId={isAnnual ? PLANS.pro_annual.priceId || undefined : PLANS.pro_monthly.priceId || undefined}
-                                highlighted={true}
-                                badge="MÁS POPULAR"
+                                highlighted={false}
+                                badge="MÁS ELEGIDO"
                             />
                         </AnimateOnScroll>
 
                         <AnimateOnScroll delay={0.3} className="h-full">
                             <PricingCard
-                                icon={<Star className="w-6 h-6" />}
+                                icon={<Crown className="w-6 h-6" />}
                                 name="Plan Platinum"
                                 price={isAnnual ? '$5,990' : '$599'}
                                 originalPrice={isAnnual ? '$9,588' : '$799'}
                                 period={isAnnual ? 'MXN/año' : 'MXN/mes'}
-                                description={isAnnual ? 'Máximo poder para tu despacho, todo el año' : 'Ideal para despachos y corporativos'}
+                                unitPrice={isAnnual ? '$0.89 por consulta' : '$1.07 por consulta'}
+                                description={isAnnual ? 'Máximo poder para tu despacho, todo el año' : 'Para despachos y litigio de volumen'}
                                 savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
                                 features={[
-                                    <span className="text-charcoal-900 font-bold">560 consultas/mes — ideal para despachos</span>,
-                                    <span className="text-charcoal-900 font-bold">IA Jurídica de Élite (Máxima precisión argumentativa)</span>,
-                                    <span className="text-charcoal-900 font-bold">Arquitectura Multi-Genio (IA avanzada)</span>,
-                                    <span className="text-charcoal-900 font-bold">Análisis de documentos y auditoría</span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-accent-gold/10 border border-accent-gold/40 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-accent-gold text-base leading-none">✦</span>
-                                        <span className="text-charcoal-900 font-bold">Expedientes completos — lee documentos de hasta 600 hojas</span>
-                                    </span>,
-                                    <span className="text-charcoal-900 font-bold">Precedentes Judiciales por Circuito — <span className="text-[10px] font-semibold">6 circuitos activos, creciendo</span></span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-accent-gold/10 border border-accent-gold/40 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-accent-gold text-base leading-none">✦</span>
-                                        <span className="text-charcoal-900 font-bold">Redacción Pro — Motor de razonamiento profundo</span>
-                                    </span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-accent-gold/10 border border-accent-gold/40 rounded-lg px-3 py-2 -mx-1">
-                                        <span className="text-accent-gold text-base leading-none">✦</span>
-                                        <span className="text-charcoal-900 font-bold">Jurimetría — Predicción de sentido</span>
-                                    </span>,
-                                    <span className="flex items-center gap-1.5 font-bold text-charcoal-900 bg-accent-gold/[0.07] border border-accent-gold/30 rounded-lg px-3 py-2 -mx-1">
-                                        
-                                        <span className="text-charcoal-900 font-bold">Redactor de Sentencias TCC</span>
-                                        <span className="ml-auto text-[9px] border border-accent-gold/40 text-accent-brown px-1.5 py-0.5 rounded font-bold shrink-0">BETA</span>
-                                    </span>,
-                                    <span className="text-charcoal-900 font-bold">Registra tu cédula para conectar clientes</span>,
-                                    <span className="text-charcoal-900 font-bold">Consulta personalizada con equipo legal de Iurexia (vía correo)</span>,
-                                    <span className="text-charcoal-900 font-bold">Mensaje de bienvenida con instrucciones premium</span>,
-                                    <span className="text-charcoal-900 font-bold">Soporte VIP dedicado</span>
+                                    <span className="font-semibold text-white">560 consultas/mes — cuatro veces el volumen de Pro</span>,
+                                    <span className="font-semibold text-white">IA Jurídica de Élite (máxima precisión argumentativa)</span>,
+                                    "Arquitectura Multi-Genio",
+                                    "Análisis de documentos y auditoría",
+                                    <>Precedentes Judiciales por Circuito <span className="text-gray-500">· 6 circuitos activos</span></>,
+                                    "Redacción Pro — motor de razonamiento profundo",
+                                    "Registra tu cédula para conectar clientes",
+                                    "Consulta con el equipo legal de Iurexia",
+                                    "Soporte VIP dedicado"
                                 ]}
+                                exclusives={[
+                                    ['Expedientes completos', 'Hasta 600 hojas en un solo documento — el expediente entero, no un fragmento'],
+                                    ['Jurimetría', 'Predicción de sentido a partir de los precedentes del circuito'],
+                                ]}
+                                note={<>El mismo precio por consulta que Pro. Lo que cambia es el techo: expedientes de 600 hojas y jurimetría <span className="text-accent-gold font-semibold">no se venden en Pro a ningún precio</span>.</>}
                                 buttonText={isAnnual ? 'Elegir Platinum Anual' : 'Elegir Platinum'}
                                 priceId={isAnnual ? PLANS.platinum_annual.priceId || undefined : PLANS.platinum_monthly.priceId || undefined}
-                                highlighted={false}
-                                isPlatinum={true}
-                                badge="PREMIUM"
+                                highlighted={true}
+                                badge="RECOMENDADO"
                             />
                         </AnimateOnScroll>
                     </div>
@@ -339,19 +324,14 @@ export default function PreciosPage() {
                                         feature={
                                             <span className="flex items-center gap-1.5 font-semibold text-charcoal-400">
                                                 Redactor de Sentencias TCC
-                                                <span className="text-[9px] border border-accent-gold/40 text-accent-brown px-1.5 py-0.5 rounded font-bold">BETA</span>
+                                                <span className="text-[9px] border border-charcoal-300 text-charcoal-500 px-1.5 py-0.5 rounded font-bold">EN DESARROLLO</span>
                                             </span>
                                         }
                                         free="—"
                                         basico="—"
                                         pro="—"
-                                        platinum={
-                                            <span className="flex flex-col items-center">
-                                                <span className="text-charcoal-400 font-bold">✓ (Beta)</span>
-                                                <span className="text-[9px] text-gray-400 leading-none mt-0.5 font-normal">10 cons/gen</span>
-                                            </span>
-                                        }
-                                        goldFeature={true}
+                                        platinum={<span className="text-gray-400 text-xs font-normal">Próximamente</span>}
+                                        goldFeature={false}
                                         isLast={true}
                                     />
                                 </tbody>
@@ -379,7 +359,7 @@ export default function PreciosPage() {
                             { question: '¿Qué es Jurimetría y en qué plan está disponible?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Está disponible exclusivamente en el plan Platinum.' },
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
                             { question: '¿Qué son los Genios Especializados y por qué son exclusivos PRO?', answer: 'Los Genios son una capa de inteligencia artificial avanzada especializada en materias específicas (Amparo, CIDH, Civil, Penal, etc.). Se activan con un clic dentro del chat (pudiendo usar hasta 2 al mismo tiempo) y utilizan un modelo de IA más potente para generar razonamientos jurídicos interdisciplinarios con fundamento verificado. Debido al alto costo computacional de este procesamiento complejo simultáneo, los Genios están disponibles exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },
-                            { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro con capacidades premium máximas (incluyendo el Redactor de Sentencias TCC Beta y Jurimetría avanzada), bajo nuestra política de uso justo, y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan la máxima potencia y volumen.' },
+                            { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro con capacidades premium máximas (jurimetría avanzada y expedientes completos de hasta 600 hojas), bajo nuestra política de uso justo, y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan la máxima potencia y volumen.' },
                             { question: '¿De qué tamaño pueden ser los documentos que subo?', answer: 'Cada plan lee documentos hasta cierto número de hojas: Gratuito 20, Básico 50, Pro 100 y Platinum 600. El límite existe porque leer un documento —sobre todo escaneado, que exige reconocimiento de texto página por página— es la operación más costosa de la plataforma. Si un documento supera el límite de tu plan te lo decimos ANTES de procesarlo, sin consumirte ninguna consulta, y te indicamos qué plan sí lo cubre. También puedes dividirlo y subirlo por partes: dentro de una carpeta, Iurexia lo analiza todo junto.' },
                             { question: '¿Puedo cambiar de plan en cualquier momento?', answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación.' },
                             { question: '¿Qué métodos de pago aceptan?', answer: 'Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) a través de Stripe, la plataforma de pagos más segura del mundo.' },
@@ -482,10 +462,13 @@ function PricingCard({
     buttonHref,
     priceId,
     highlighted = false,
-    isPlatinum = false,
     isBasic = false,
     badge,
-    savingsBadge
+    savingsBadge,
+    unitPrice,
+    exclusives,
+    note,
+    upgradePriceId
 }: {
     icon: React.ReactNode;
     name: string;
@@ -498,10 +481,18 @@ function PricingCard({
     buttonHref?: string;
     priceId?: string;
     highlighted?: boolean;
-    isPlatinum?: boolean;
     isBasic?: boolean;
     badge?: string;
     savingsBadge?: string;
+    /** Precio por consulta. Se calcula del precio y el cupo; va bajo el precio
+        porque es el dato con el que de verdad se comparan dos planes. */
+    unitPrice?: string;
+    /** Lo que este plan tiene y ninguno inferior ofrece, a ningún precio. */
+    exclusives?: [string, string][];
+    note?: React.ReactNode;
+    /** Plan al que empuja el aviso del Básico. Sin esto el botón sólo cerraba
+        el aviso: la llamada a la acción principal no llevaba a ninguna parte. */
+    upgradePriceId?: string;
 }) {
     const [loading, setLoading] = useState(false);
     const [showWarning, setShowWarning] = useState(false);
@@ -549,38 +540,37 @@ function PricingCard({
         }
     };
 
-    const cardStyles = isPlatinum
-        ? 'bg-cream-200 border-2 border-accent-gold/30 hover:shadow-xl hover:border-accent-gold/40'
-        : highlighted
-            ? 'bg-charcoal-900 text-white shadow-2xl relative z-10'
-            : 'bg-white border border-black/5 hover:shadow-lg';
+    /* La tarjeta destacada es la que la página recomienda. Antes lo era Pro y
+       Platinum quedaba en crema, al margen: la vista iba al negro y la compra
+       también. Ahora el negro, el anillo dorado y el relieve son de Platinum, y
+       Pro pasa a tarjeta blanca con su distintivo honesto —«MÁS ELEGIDO», que
+       es cierto: 177 de 219 suscriptores de pago están en Pro—. */
+    const cardStyles = highlighted
+        ? 'bg-charcoal-900 text-white ring-1 ring-accent-gold/35 shadow-[0_30px_80px_-32px_rgba(0,0,0,0.6)] relative z-10 lg:-mt-5 lg:-mb-5'
+        : 'bg-white border border-black/[0.06] hover:shadow-lg';
 
-    const badgeStyles = isPlatinum
+    const badgeStyles = highlighted
         ? 'bg-accent-gold text-charcoal-900'
-        : highlighted
-            ? 'bg-accent-brown text-white'
-            : 'bg-charcoal-900 text-white';
+        : 'bg-charcoal-900 text-white';
 
     const buttonBaseStyles = `block w-full text-center py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`;
-    const buttonColorStyles = isPlatinum
-        ? 'bg-charcoal-900 text-white hover:bg-charcoal-800'
-        : highlighted
-            ? 'bg-white text-charcoal-900 hover:bg-gray-100'
-            : 'bg-charcoal-900 text-white hover:bg-charcoal-800';
+    /* En la destacada el botón va en oro: es la única llamada a la acción de
+       la fila que no es negro sobre blanco, y por eso se ve primero. */
+    const buttonColorStyles = highlighted
+        ? 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90 font-semibold'
+        : 'bg-charcoal-900 text-white hover:bg-charcoal-800';
 
     return (
         <div className={`relative rounded-3xl p-8 transition-all duration-300 flex flex-col h-full ${cardStyles}`}>
             {badge && (
-                <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide ${badgeStyles}`}>
+                <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide shadow-sm ${badgeStyles}`}>
                     {badge}
                 </div>
             )}
 
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${isPlatinum
-                ? 'bg-accent-gold/10 text-white'
-                : highlighted
-                    ? 'bg-white/10 text-white'
-                    : 'bg-accent-brown/10 text-accent-brown'
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${highlighted
+                ? 'bg-accent-gold/15 text-accent-gold'
+                : 'bg-accent-brown/10 text-accent-brown'
                 }`}>
                 {icon}
             </div>
@@ -606,6 +596,11 @@ function PricingCard({
                         {originalPrice} {period}
                     </p>
                 )}
+                {unitPrice && (
+                    <p className={`mt-1 text-xs font-medium ${highlighted ? 'text-accent-gold' : 'text-charcoal-500'}`}>
+                        {unitPrice}
+                    </p>
+                )}
                 {savingsBadge && (
                     <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30">
                         <span className="text-xs font-bold text-accent-gold">{savingsBadge}</span>
@@ -618,15 +613,32 @@ function PricingCard({
                 {description}
             </p>
 
-            <ul className="space-y-3 mb-8">
+            {/* Lo exclusivo va ARRIBA de la lista y separado. Enterrado entre
+                trece viñetas iguales, «600 hojas» y «jurimetría» se leen como
+                una más; aquí son el motivo de la tarjeta. */}
+            {exclusives && exclusives.length > 0 && (
+                <div className="mb-6 rounded-xl border border-accent-gold/30 bg-accent-gold/[0.07] p-4">
+                    <p className="text-[10px] font-bold tracking-widest text-accent-gold mb-3">
+                        SOLO EN PLATINUM
+                    </p>
+                    <ul className="space-y-3">
+                        {exclusives.map(([titulo, detalle]) => (
+                            <li key={titulo} className="flex items-start gap-2.5">
+                                <span className="text-accent-gold text-sm leading-5 shrink-0">✦</span>
+                                <span>
+                                    <span className="block text-sm font-bold text-white">{titulo}</span>
+                                    <span className="block text-xs leading-snug text-gray-400">{detalle}</span>
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            <ul className="space-y-3 mb-6">
                 {features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-3">
-                        <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isPlatinum
-                            ? 'text-accent-gold'
-                            : highlighted
-                                ? 'text-accent-gold'
-                                : 'text-accent-gold'
-                            }`} />
+                        <Check className="w-5 h-5 flex-shrink-0 mt-0.5 text-accent-gold" />
                         <span className={`text-sm ${highlighted ? 'text-gray-300' : 'text-charcoal-700'
                             }`}>
                             {feature}
@@ -635,7 +647,13 @@ function PricingCard({
                 ))}
             </ul>
 
-            <div className="mt-auto pt-6">
+            {note && (
+                <p className={`mb-6 text-xs leading-relaxed ${highlighted ? 'text-gray-400' : 'text-charcoal-500'}`}>
+                    {note}
+                </p>
+            )}
+
+            <div className="mt-auto pt-2">
                 {priceId ? (
                     <button
                         onClick={handleSubscribe}
@@ -679,13 +697,23 @@ function PricingCard({
 
                         <div className="flex flex-col gap-3">
                             <button
-                                onClick={() => {
-                                    setShowWarning(false);
+                                onClick={async () => {
+                                    if (!upgradePriceId || !user?.email) {
+                                        setShowWarning(false);
+                                        return;
+                                    }
+                                    setLoading(true);
+                                    try {
+                                        await redirectToCheckout(upgradePriceId, user.email);
+                                    } catch (error: any) {
+                                        alert(`Error al procesar el pago: ${error?.message || 'Error desconocido'}.`);
+                                        setLoading(false);
+                                    }
                                 }}
                                 disabled={loading}
                                 className="w-full px-4 py-3 bg-charcoal-900 text-white rounded-xl hover:bg-black transition-colors font-bold disabled:opacity-70"
                             >
-                                Cambiar a Plan Pro — El favorito
+                                {loading ? 'Procesando...' : 'Cambiar a Plan Pro — El favorito'}
                             </button>
                             <button
                                 onClick={handleSubscribe}
