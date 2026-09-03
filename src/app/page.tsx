@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import { Suspense } from 'react';
 import HeroVideo from '@/components/HeroVideo';
 import DespachosVitrina from '@/components/DespachosVitrina';
+import DemoEnVivo from '@/components/DemoEnVivo';
 import ChatInput from '@/components/ChatInput';
 import Link from 'next/link';
 import { HeroCTA } from '@/components/HeroCTA';
@@ -44,6 +45,11 @@ export default function HomePage() {
             <Suspense fallback={null}>
                 <DespachosVitrina />
             </Suspense>
+
+            {/* La demostración, justo debajo de la vitrina: es la segunda
+                pregunta de quien llega —qué hace exactamente— y se responde
+                mejor enseñándolo que contándolo. */}
+            <DemoEnVivo />
 
             {/* Rehecha el 3-ago-2026 (paso 2 de la estrategia de la home):
                 titular en la paleta de la casa, franja de números verificables
