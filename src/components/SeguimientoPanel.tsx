@@ -24,8 +24,9 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
 import {
     AlertTriangle, ArrowUpRight, Building2, CheckCircle2, Clock,
-    Loader2, Plus, Scale,
+    FolderClosed, Loader2, Plus, Scale,
 } from 'lucide-react';
+import SeguirExpediente from '@/components/SeguirExpediente';
 
 type Organo = {
     id: number;
@@ -118,6 +119,7 @@ export default function SeguimientoPanel() {
     const [filas, setFilas] = useState<Seguimiento[]>([]);
     const [revisiones, setRevisiones] = useState<Record<string, Revision>>({});
     const [cargando, setCargando] = useState(true);
+    const [alta, setAlta] = useState(false);
 
     const traer = useCallback(async () => {
         if (!user) return;
@@ -173,7 +175,8 @@ export default function SeguimientoPanel() {
     if (!filas.length) {
         return (
             <div className="rounded-2xl border border-cream-400 bg-white px-8 py-14 text-center">
-                <Scale className="mx-auto mb-4 h-8 w-8 text-accent-gold" />
+                <FolderClosed className="mx-auto mb-4 h-10 w-10 text-charcoal-900"
+                              strokeWidth={1.25} />
                 <h3 className="font-serif text-xl font-semibold text-charcoal-900">
                     Todavía no sigue ningún expediente
                 </h3>
@@ -183,10 +186,13 @@ export default function SeguimientoPanel() {
                     nuevo — y también si un día no pudo revisar.
                 </p>
                 <button
+                    onClick={() => setAlta(true)}
                     className="mt-6 inline-flex items-center gap-2 rounded-lg bg-charcoal-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-charcoal-800"
                 >
                     <Plus className="h-4 w-4" /> Seguir un expediente
                 </button>
+                <SeguirExpediente abierto={alta} cerrar={() => setAlta(false)}
+                                  alGuardar={traer} />
             </div>
         );
     }
@@ -202,7 +208,9 @@ export default function SeguimientoPanel() {
                         : <>Hoy todavía no se ha corrido la revisión. Se hace cada día
                             laborable a las 9:10, hora de la Ciudad de México.</>}
                 </p>
-                <button className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-charcoal-900/12 px-3 py-1.5 text-xs font-semibold text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]">
+                <button
+                    onClick={() => setAlta(true)}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-charcoal-900/12 px-3 py-1.5 text-xs font-semibold text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]">
                     <Plus className="h-3.5 w-3.5" /> Seguir otro
                 </button>
             </div>
@@ -252,6 +260,9 @@ export default function SeguimientoPanel() {
                     );
                 })}
             </ul>
+
+            <SeguirExpediente abierto={alta} cerrar={() => setAlta(false)}
+                              alGuardar={traer} />
 
             <p className="mt-5 text-xs leading-relaxed text-charcoal-400">
                 La información procede de los portales oficiales y es de carácter
