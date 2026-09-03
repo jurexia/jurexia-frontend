@@ -64,9 +64,22 @@ function normalizar(t: string): string {
         .trim();
 }
 
-/** El número del artículo, ya normalizado: «190», «190 bis», «17». */
+/**
+ * El número del artículo: «190», «190 bis», «17».
+ *
+ * SE TOMA EL NÚMERO QUE SIGUE A «ARTÍCULO», no el último de la cadena.
+ * Parece un detalle y era el fallo entero: la etiqueta real que llega no
+ * siempre es «Artículo 148.», también viene «Art. 19 CPEUM (parte 2)». Con la
+ * versión anterior —que anclaba al final— eso daba **2**, así que el visor
+ * buscaba «artículo 2», lo encontraba en «artículo 2o. de la Ley
+ * Reglamentaria» dentro de los TRANSITORIOS, y abría la Constitución en la
+ * página 206 en vez de en el 19.
+ *
+ * Medido sobre las etiquetas que produce el panel: cinco de siete salían mal.
+ */
 function numeroDe(etiqueta: string): string {
-    const m = normalizar(etiqueta).match(/(\d+(?:\s+(?:bis|ter|quater|quinquies))?)\s*$/);
+    const m = normalizar(etiqueta)
+        .match(/\bart(?:iculo)?\s+(\d+(?:\s+(?:bis|ter|quater|quinquies))?)/);
     return m ? m[1] : '';
 }
 
