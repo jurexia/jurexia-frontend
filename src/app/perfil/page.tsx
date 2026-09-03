@@ -166,6 +166,11 @@ export default function PerfilPage() {
     const [newName, setNewName] = useState('');
     const [saving, setSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
+    // El aviso se pintaba SIEMPRE en verde, así que «Error al guardar» salía
+    // con color de éxito: el usuario leía un fallo vestido de acierto.
+    const [saveOk, setSaveOk] = useState(true);
+    const [subiendoAvatar, setSubiendoAvatar] = useState(false);
+    const [avatarPropio, setAvatarPropio] = useState<string | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState('');
     const [loadingPortal, setLoadingPortal] = useState(false);
@@ -356,22 +361,91 @@ export default function PerfilPage() {
         : (profile.queries_used / profile.queries_limit) * 100;
     const isPro = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual'].includes(profile.subscription_type);
 
+    /**
+     * Subir la foto de perfil.
+     *
+     * El bucket `avatars` ya existía —público, tope de 5 MB, sólo imágenes, y
+     * con políticas que acotan cada carpeta a su dueño—, pero la pantalla
+     * nunca lo usó: el avatar se leía de `user_metadata.avatar_url`, que es lo
+     * que trae Google al entrar, y no había forma de cambiarlo. Quien entrara
+     * con correo se quedaba con sus iniciales para siempre.
+     *
+     * El archivo va a `<uid>/avatar.<ext>` porque la política de storage exige
+     * que la primera carpeta sea el id del usuario. Se sobrescribe en vez de
+     * acumular versiones, y la URL lleva un sello de tiempo para que el
+     * navegador no siga enseñando la anterior desde su caché.
+     */
+    const handleAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const archivo = e.target.files?.[0];
+        if (!archivo || !user) return;
+
+        if (!/^image\/(jpeg|png|webp|heic)$/.test(archivo.type)) {
+            setSaveMessage('Formato no admitido: usa JPG, PNG o WebP');
+            setSaveOk(false);
+            return;
+        }
+        if (archivo.size > 5 * 1024 * 1024) {
+            setSaveMessage('La imagen pesa más de 5 MB');
+            setSaveOk(false);
+            return;
+        }
+
+        setSubiendoAvatar(true);
+        setSaveMessage('');
+        try {
+            const ext = archivo.name.split('.').pop()?.toLowerCase() || 'jpg';
+            const ruta = `${user.id}/avatar.${ext}`;
+
+            const { error: errSubida } = await supabase.storage
+                .from('avatars')
+                .upload(ruta, archivo, { upsert: true, contentType: archivo.type });
+            if (errSubida) throw errSubida;
+
+            const { data } = supabase.storage.from('avatars').getPublicUrl(ruta);
+            const url = `${data.publicUrl}?v=${Date.now()}`;
+
+            const { error: errPerfil } = await supabase
+                .from('user_profiles')
+                .update({ avatar_url: url })
+                .eq('id', user.id);
+            if (errPerfil) throw errPerfil;
+
+            setAvatarPropio(url);
+            setSaveMessage('Foto actualizada ✓');
+            setSaveOk(true);
+            setTimeout(() => setSaveMessage(''), 3000);
+        } catch (err) {
+            console.error('Error subiendo el avatar:', err);
+            setSaveMessage('No se pudo subir la imagen');
+            setSaveOk(false);
+        } finally {
+            setSubiendoAvatar(false);
+            e.target.value = '';
+        }
+    };
+
     const handleSaveName = async () => {
         if (!newName.trim()) return;
 
         setSaving(true);
         setSaveMessage('');
 
+        // `.eq('id', …)` y no `user_id`: esa columna NO EXISTE en
+        // `user_profiles`, cuya clave primaria es el propio `id` del usuario de
+        // auth. La consulta fallaba siempre con «column does not exist», así
+        // que editar el nombre nunca funcionó desde que existe esta pantalla.
         const { error } = await supabase
             .from('user_profiles')
             .update({ full_name: newName.trim() })
-            .eq('user_id', user.id);
+            .eq('id', user.id);
 
         if (error) {
             setSaveMessage('Error al guardar');
+            setSaveOk(false);
             console.error('Error updating name:', error);
         } else {
             setSaveMessage('Guardado ✓');
+            setSaveOk(true);
             setEditingName(false);
             setTimeout(() => setSaveMessage(''), 3000);
         }
@@ -636,24 +710,42 @@ export default function PerfilPage() {
                     descripcion="Cómo aparece en la plataforma">
 
                     <div className="space-y-4">
-                        {/* Avatar */}
+                        {/* Avatar. La foto propia manda sobre la de Google: si el
+                            usuario se molestó en subir una, es la que quiere ver. */}
                         <div className="flex items-center gap-4">
-                            <div className="w-20 h-20 rounded-full bg-charcoal-900 flex items-center justify-center text-white font-medium text-2xl">
-                                {user.user_metadata?.avatar_url ? (
+                            <div className="relative w-20 h-20 rounded-full bg-charcoal-900 flex items-center justify-center text-white font-medium text-2xl overflow-hidden">
+                                {(avatarPropio || profile.avatar_url || user.user_metadata?.avatar_url) ? (
                                     <img
-                                        src={user.user_metadata.avatar_url}
+                                        src={avatarPropio || profile.avatar_url || user.user_metadata.avatar_url}
                                         alt={profile.full_name || 'Usuario'}
                                         className="w-full h-full rounded-full object-cover"
                                     />
                                 ) : (
                                     getInitials()
                                 )}
+                                {subiendoAvatar && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-xs">
+                                        …
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <p className="text-sm text-charcoal-600">Avatar</p>
-                                <p className="text-xs text-charcoal-400 mt-1">
-                                    {user.user_metadata?.avatar_url ? 'Desde Google' : 'Iniciales'}
+                                <p className="text-xs text-charcoal-400 mt-1 mb-2">
+                                    {avatarPropio || profile.avatar_url
+                                        ? 'Tu foto'
+                                        : user.user_metadata?.avatar_url ? 'Desde Google' : 'Iniciales'}
                                 </p>
+                                <label className={`inline-block cursor-pointer rounded-lg border border-charcoal-300 px-3 py-1.5 text-xs font-medium text-charcoal-800 transition-colors hover:bg-cream-300 ${subiendoAvatar ? 'pointer-events-none opacity-60' : ''}`}>
+                                    {subiendoAvatar ? 'Subiendo…' : 'Cambiar foto'}
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp,image/heic"
+                                        onChange={handleAvatar}
+                                        className="hidden"
+                                    />
+                                </label>
+                                <p className="mt-1 text-[11px] text-charcoal-400">JPG, PNG o WebP · hasta 5 MB</p>
                             </div>
                         </div>
 
@@ -699,7 +791,9 @@ export default function PerfilPage() {
                                 )}
                             </div>
                             {saveMessage && (
-                                <p className="text-sm text-green-600 mt-2">{saveMessage}</p>
+                                <p className={`text-sm mt-2 ${saveOk ? 'text-green-600' : 'text-red-600'}`}>
+                                    {saveMessage}
+                                </p>
                             )}
                         </div>
 
