@@ -15,6 +15,10 @@
     {
       "path": "/api/suscripciones/revisar",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/noticias/dof",
+      "schedule": "0 15 * * 1-5"
     }
   ]
 }

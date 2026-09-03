@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Message, fuentesWebActivas } from '@/lib/api';
-import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Loader2 as Loader2Icon } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import ChatInput from '@/components/ChatInput';
@@ -100,6 +100,9 @@ export default function ChatPage() {
 
     // States
     const [showPlatinumSentencia, setShowPlatinumSentencia] = useState(false);
+    // En móvil no caben las cuatro herramientas: las dos menos usadas
+    // pasan a este menú en vez de quedarse fuera de la pantalla.
+    const [menuMas, setMenuMas] = useState(false);
     const [quotaExceeded, setQuotaExceeded] = useState(false);
     const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(false);
     const [showPrecedentesTour, setShowPrecedentesTour] = useState(false);
@@ -744,83 +747,146 @@ export default function ChatPage() {
                     píldoras ni degradados. Sálvame conserva su rojo por ser el
                     módulo de urgencia; el resto vive en la paleta de la casa. */}
                 <header className="fixed top-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 h-14">
-                    <div className="h-full flex items-center justify-end gap-1.5 px-4 min-w-0">
-                        <Link
-                            href="/salvame"
-                            className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-red-700/25 bg-red-50/60 px-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-red-700 transition-colors hover:bg-red-50"
-                        >
-                            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                            <span className="hidden sm:inline">Sálvame</span>
-                        </Link>
+                    {/* Dos grupos, no una fila apelotonada a la derecha
+                        (3-sep-2026). A la izquierda las cuatro herramientas de
+                        trabajo, con el mismo peso entre ellas; a la derecha el
+                        estado y la cuenta. Antes todo colgaba del borde derecho
+                        y «Sálvame» abría la fila, que le daba una jerarquía que
+                        no le toca: es el módulo de urgencia, no el de diario.
 
-                        {/* Secretario del PJF — exclusivo Platinum.
-                            Bajó de la caja de consulta a la barra superior
-                            (6-ago-2026): es trabajo largo con su propia
-                            pantalla, no una opción más del chat. Quien no
-                            tenga Platinum ve el candado y la invitación. */}
-                        <button
-                            data-guide="tcc-beta"
-                            onClick={() => {
-                                if (canAccessSecretarioPJF) router.push('/tcc-beta');
-                                else setShowPlatinumSentencia(true);
-                            }}
-                            title={canAccessSecretarioPJF
-                                ? 'Secretario del PJF — crea un borrador de sentencia'
-                                : 'Borrador de sentencia — exclusivo del plan Platinum'}
-                            className={`inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors ${canAccessSecretarioPJF
-                                ? 'border border-accent-gold/45 bg-accent-gold/10 text-charcoal-900 hover:bg-accent-gold/20'
-                                : 'border border-charcoal-900/10 text-charcoal-500 hover:border-accent-gold/40 hover:text-charcoal-800'
-                                }`}
-                        >
-                            <Gavel className={`w-3.5 h-3.5 ${canAccessSecretarioPJF ? 'text-accent-gold' : 'text-charcoal-400'}`} />
-                            <span className="hidden md:inline">Sentencia</span>
-                            {!canAccessSecretarioPJF && <Lock className="w-2.5 h-2.5 opacity-60" />}
-                        </button>
+                        En móvil no caben las cuatro: Normativa y Sentencia se
+                        recogen en un menú. Se eligieron esas dos por ser las de
+                        uso más esporádico —una es consulta puntual y la otra es
+                        trabajo largo con su propia pantalla—. */}
+                    <div className="h-full flex items-center justify-between gap-2 px-3 sm:px-4 min-w-0">
 
-                        {/* Mi trabajo: la puerta a las carpetas inteligentes.
-                            Es la pieza que conecta el chat con el espacio de
-                            trabajo del abogado, como en la app. */}
-                        <Link
-                            href="/carpetas"
-                            data-guide="mi-trabajo"
-                            className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800"
-                        >
-                            <FileText className="w-3.5 h-3.5 text-accent-gold" />
-                            <span className="hidden sm:inline">Mi trabajo</span>
-                        </Link>
+                        {/* ── Herramientas ── */}
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <Link
+                                href="/carpetas"
+                                data-guide="mi-trabajo"
+                                className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800"
+                            >
+                                <FileText className="w-3.5 h-3.5 text-accent-gold" />
+                                <span className="hidden sm:inline">Mi trabajo</span>
+                            </Link>
 
-                        <Link
-                            href="/normativa"
-                            className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]"
-                        >
-                            <BookOpen className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Normativa</span>
-                        </Link>
+                            {/* Lo último: comunicados de la Corte, tesis de la
+                                semana, Diario Oficial y lo que se mueve en IA. */}
+                            <Link
+                                href="/ultimo"
+                                data-guide="lo-ultimo"
+                                title="Lo último — Corte, tesis de la semana, Diario Oficial e IA"
+                                className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-accent-gold/20"
+                            >
+                                <Newspaper className="w-3.5 h-3.5 text-accent-gold" />
+                                <span className="hidden sm:inline">Lo último</span>
+                            </Link>
 
-                        <button
-                            data-guide="jurisdiccion"
-                            onClick={() => setShowConfigModal(true)}
-                            className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-3 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-accent-gold/20"
-                        >
-                            <MapPin className="w-3.5 h-3.5 text-accent-gold" />
-                            <span className="max-w-[110px] truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
-                        </button>
+                            <Link
+                                href="/normativa"
+                                className="hidden md:inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]"
+                            >
+                                <BookOpen className="w-3.5 h-3.5" />
+                                Normativa
+                            </Link>
 
-                        <div
-                            className={`hidden lg:flex h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
-                            title={`Consultas usadas este mes: ${queriesUsed} de ${queriesLimit}`}
-                        >
-                            <span className={`font-semibold tabular-nums ${queriesRemaining <= 1 ? 'text-red-700' : 'text-charcoal-900'}`}>
-                                {queriesUsed}<span className="font-normal text-charcoal-500">/{queriesLimit}</span>
-                            </span>
-                            <span className="h-1 w-10 overflow-hidden rounded-full bg-charcoal-900/10">
-                                <span
-                                    className={`block h-full rounded-full transition-all duration-500 ease-out ${queriesRemaining <= 1 ? 'bg-red-600' : 'bg-accent-gold'}`}
-                                    style={{ width: `${Math.min(100, (queriesUsed / Math.max(1, queriesLimit)) * 100)}%` }}
-                                />
-                            </span>
+                            <button
+                                data-guide="tcc-beta"
+                                onClick={() => {
+                                    if (canAccessSecretarioPJF) router.push('/tcc-beta');
+                                    else setShowPlatinumSentencia(true);
+                                }}
+                                title={canAccessSecretarioPJF
+                                    ? 'Secretario del PJF — crea un borrador de sentencia'
+                                    : 'Borrador de sentencia — exclusivo del plan Platinum'}
+                                className={`hidden md:inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors ${canAccessSecretarioPJF
+                                    ? 'border border-accent-gold/45 bg-accent-gold/10 text-charcoal-900 hover:bg-accent-gold/20'
+                                    : 'border border-charcoal-900/10 text-charcoal-500 hover:border-accent-gold/40 hover:text-charcoal-800'
+                                    }`}
+                            >
+                                <Gavel className={`w-3.5 h-3.5 ${canAccessSecretarioPJF ? 'text-accent-gold' : 'text-charcoal-400'}`} />
+                                Sentencia
+                                {!canAccessSecretarioPJF && <Lock className="w-2.5 h-2.5 opacity-60" />}
+                            </button>
+
+                            {/* Lo que no cabe en móvil */}
+                            <div className="relative md:hidden">
+                                <button
+                                    onClick={() => setMenuMas(v => !v)}
+                                    aria-label="Más herramientas"
+                                    aria-expanded={menuMas}
+                                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-charcoal-900/10 text-charcoal-600 transition-colors hover:bg-charcoal-900/[0.04]"
+                                >
+                                    <MoreHorizontal className="w-4 h-4" />
+                                </button>
+
+                                {menuMas && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setMenuMas(false)} />
+                                        <div className="absolute left-0 top-9 z-50 w-52 overflow-hidden rounded-xl border border-charcoal-900/10 bg-white shadow-lg">
+                                            <Link
+                                                href="/normativa"
+                                                onClick={() => setMenuMas(false)}
+                                                className="flex items-center gap-2.5 px-3.5 py-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]"
+                                            >
+                                                <BookOpen className="w-4 h-4 text-charcoal-400" />
+                                                Normativa
+                                            </Link>
+                                            <button
+                                                onClick={() => {
+                                                    setMenuMas(false);
+                                                    if (canAccessSecretarioPJF) router.push('/tcc-beta');
+                                                    else setShowPlatinumSentencia(true);
+                                                }}
+                                                className="flex w-full items-center gap-2.5 border-t border-charcoal-900/[0.06] px-3.5 py-3 text-left text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]"
+                                            >
+                                                <Gavel className={`w-4 h-4 ${canAccessSecretarioPJF ? 'text-accent-gold' : 'text-charcoal-400'}`} />
+                                                Sentencia
+                                                {!canAccessSecretarioPJF && <Lock className="ml-auto w-3 h-3 text-charcoal-400" />}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
-                        <UserAvatar />
+
+                        {/* ── Estado y cuenta ── */}
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <Link
+                                href="/salvame"
+                                title="Sálvame — ayuda urgente"
+                                className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-red-700/25 bg-red-50/60 px-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-red-700 transition-colors hover:bg-red-50"
+                            >
+                                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                                <span className="hidden lg:inline">Sálvame</span>
+                            </Link>
+
+                            <button
+                                data-guide="jurisdiccion"
+                                onClick={() => setShowConfigModal(true)}
+                                className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]"
+                            >
+                                <MapPin className="w-3.5 h-3.5 text-accent-gold" />
+                                <span className="max-w-[90px] truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
+                            </button>
+
+                            <div
+                                className={`hidden lg:flex h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
+                                title={`Consultas usadas este mes: ${queriesUsed} de ${queriesLimit}`}
+                            >
+                                <span className={`font-semibold tabular-nums ${queriesRemaining <= 1 ? 'text-red-700' : 'text-charcoal-900'}`}>
+                                    {queriesUsed}<span className="font-normal text-charcoal-500">/{queriesLimit}</span>
+                                </span>
+                                <span className="h-1 w-10 overflow-hidden rounded-full bg-charcoal-900/10">
+                                    <span
+                                        className={`block h-full rounded-full transition-all duration-500 ease-out ${queriesRemaining <= 1 ? 'bg-red-600' : 'bg-accent-gold'}`}
+                                        style={{ width: `${Math.min(100, (queriesUsed / Math.max(1, queriesLimit)) * 100)}%` }}
+                                    />
+                                </span>
+                            </div>
+                            <UserAvatar />
+                        </div>
                     </div>
                 </header>
 
