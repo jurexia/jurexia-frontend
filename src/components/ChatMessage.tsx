@@ -328,11 +328,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const cleanContentForExport = useCallback((raw: string): string => {
         let clean = raw;
 
-        // 1. Remove <!-- CITATION_META:{...} --> blocks (including multiline)
-        clean = clean.replace(/\n*<!--\s*CITATION_META:\{[\s\S]*?\}\s*-->/g, '');
-
-        // 1b. Remove <!-- PRECEDENTES_META:[...] --> blocks
-        clean = clean.replace(/\n*<!--\s*PRECEDENTES_META:\[[\s\S]*?\]\s*-->/g, '');
+        // 1. Fuera TODOS los comentarios HTML, no sólo los que se conocían.
+        //
+        // Antes se listaban uno a uno —CITATION_META, PRECEDENTES_META— y al
+        // añadir FUENTES_PREVIAS al stream nadie tocó esta función: el marcador
+        // acabó impreso dentro del Word que descarga el abogado, con su JSON a
+        // la vista en la primera página. Enumerar marcadores es una lista que
+        // se queda corta cada vez que se añade uno; quitarlos todos no.
+        clean = clean.replace(/<!--[\s\S]*?-->/g, '');
 
         // 2. Replace [Doc ID: uuid] with bracketed citation number ⟦N⟧ using docIdMap.
         // Using ⟦⟧ as sentinel so downstream cleanup doesn't strip them.
