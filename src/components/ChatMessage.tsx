@@ -221,6 +221,29 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             content = content.replace(/\n*<!-- CITATION_META:\{[\s\S]*?\} -->/g, '').trim();
         }
 
+        // LAS FUENTES QUE LLEGAN ANTES DE ESCRIBIR (3-sep-2026).
+        //
+        // `CITATION_META` viaja al final del stream. Durante los treinta o
+        // cuarenta segundos que tarda la respuesta, las citas estaban pintadas
+        // pero vacías por dentro: el abogado pulsaba [4] y se abría un panel
+        // sin nada. Tenía que esperar a que terminara todo para cotejar la
+        // primera línea, que es justo cuando ya no le hace falta.
+        //
+        // El backend manda ahora `FUENTES_PREVIAS` en cuanto recupera, antes de
+        // generar. Sirve de respaldo mientras dura el stream y el mapa final lo
+        // sustituye al cerrar, porque ése trae el texto íntegro y los alias de
+        // las citas reparadas.
+        const previasMatch = content.match(/<!-- FUENTES_PREVIAS:(\{[\s\S]*?\}) -->/);
+        if (previasMatch) {
+            try {
+                const previas = JSON.parse(previasMatch[1]);
+                citationMeta = citationMeta
+                    ? { ...citationMeta, sources: { ...previas, ...(citationMeta.sources || {}) } }
+                    : { valid: 0, invalid: 0, total: 0, invalid_ids: [], sources: previas };
+            } catch { /* si no parsea, se sigue esperando al mapa final */ }
+            content = content.replace(/\n*<!-- FUENTES_PREVIAS:\{[\s\S]*?\} -->\n*/g, '').trim();
+        }
+
         // La marca de cuenta en pausa se quita aquí para que nunca se vea como
         // texto; quien la pinta es el propio componente, más abajo.
         content = content.replace(/\n*<!--\s*SUSCRIPCION_SUSPENDIDA\s*-->/g, '').trim();
@@ -283,6 +306,12 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing, precedentesMeta };
     }, [message.content, isUser]);
+
+    // El HTML se rehacía en CADA render, y durante el stream eso son cientos:
+    // todo el árbol del mensaje se destruía y se volvía a crear con cada trozo,
+    // así que un clic podía caer sobre un nodo que dejaba de existir a mitad de
+    // camino. Memorizado, sólo se recalcula cuando el texto cambia de verdad.
+    const htmlFormateado = useMemo(() => formatMarkdown(processedContent), [processedContent]);
 
     // ── CUENTA EN PAUSA POR UN COBRO QUE NO ENTRÓ (31-ago-2026) ───────────
     //
@@ -1226,7 +1255,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                         <div
                             ref={contentRef}
                             className="prose-legal text-sm sm:text-base px-4 py-3"
-                            dangerouslySetInnerHTML={{ __html: formatMarkdown(processedContent) }}
+                            dangerouslySetInnerHTML={{ __html: htmlFormateado }}
                             onClick={(e) => {
                                 const target = e.target as HTMLElement;
                                 if (target.classList.contains('citation-badge') && target.dataset.docId) {

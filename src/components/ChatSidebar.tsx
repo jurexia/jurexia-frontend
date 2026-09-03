@@ -408,7 +408,11 @@ function ChatSidebar({
                     <button
                         type="button"
                         onClick={() => { onToggleGuide?.(); setIsMobileOpen(false); }}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors duration-200 group animate-shine-gold"
+                        /* Sin `animate-shine-gold`: el brillo dorado recorría el botón en
+                           bucle, y una barra lateral que se mueve sola compite con lo
+                           único que debe moverse aquí, que es la respuesta. El botón
+                           sigue destacando por su borde dorado, quieto. */
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors duration-200 group"
                         style={{
                             background: 'rgba(255,255,255,0.06)',
                             border: '1px solid rgba(201, 169, 98, 0.15)',
@@ -432,7 +436,18 @@ function ChatSidebar({
         </div>
     );
 
-    const fondo = 'linear-gradient(180deg, #1a1a1a 0%, #222222 50%, #1a1a1a 100%)';
+    // EL NEGRO, Y EL DEGRADADO DONDE SE VE (3-sep-2026).
+    //
+    // Antes el degradado iba en el relleno —#1a1a1a a #222222 y vuelta—, que
+    // sobre una superficie tan grande no se percibe: sólo ensucia el negro y lo
+    // deja lechoso. Ahora el fondo es negro plano y limpio, y el degradado se
+    // mueve al CONTORNO, que es donde el ojo sí lo lee: arranca gris claro
+    // arriba y se apaga hacia abajo, de modo que la barra parece iluminada
+    // desde el encabezado.
+    const fondo = '#0b0b0c';
+    const contorno = 'linear-gradient(180deg, rgba(255,255,255,0.22) 0%, '
+        + 'rgba(255,255,255,0.10) 35%, rgba(255,255,255,0.04) 70%, '
+        + 'rgba(255,255,255,0.015) 100%)';
 
     return (
         <>
@@ -461,7 +476,11 @@ function ChatSidebar({
                 style={{
                     width: isCollapsed ? '4.5rem' : '18rem',
                     background: fondo,
-                    borderRight: '1px solid rgba(201, 169, 98, 0.1)',
+                    // Un borde no admite degradado, así que la línea de la
+                    // derecha se pinta como una capa de un píxel.
+                    borderRight: '1px solid transparent',
+                    borderImage: `${contorno} 1`,
+                    boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.03)',
                 }}
             >
                 {contenido}
@@ -470,7 +489,11 @@ function ChatSidebar({
             {/* Cajón en móvil */}
             <aside
                 className={`fixed top-0 left-0 h-full w-72 z-50 transform transition-transform duration-300 md:hidden ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
-                style={{ background: fondo, borderRight: '1px solid rgba(201, 169, 98, 0.1)' }}
+                style={{
+                    background: fondo,
+                    borderRight: '1px solid transparent',
+                    borderImage: `${contorno} 1`,
+                }}
             >
                 {contenido}
             </aside>
