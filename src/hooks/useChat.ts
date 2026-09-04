@@ -158,6 +158,17 @@ class ThinkingParser {
 }
 
 
+/**
+ * Quita el mapa de fuentes que el backend adelanta durante el stream.
+ *
+ * `CITATION_META` SÍ se conserva: es el mapa definitivo y sin él, al reabrir
+ * una conversación vieja, las citas se quedan sin panel.
+ */
+function quitarFuentesPrevias(texto: string): string {
+    if (!texto.includes('<!-- FUENTES_PREVIAS:')) return texto;
+    return texto.replace(/\n*<!-- FUENTES_PREVIAS:[\s\S]*?-->\n*/g, '\n\n').trim();
+}
+
 export function useChat(options: UseChatOptions = {}): UseChatReturn {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -437,6 +448,27 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             // `registrosFuera` se pasa explícitamente porque su marcador llega
             // en un trozo propio al final del stream: la rama que lo lee hace
             // `continue` y nunca alcanza el setMessages de dentro del bucle.
+            // El mapa previo de fuentes sale del mensaje EN CUANTO termina el
+            // stream, y sale del ESTADO, no sólo de lo que se guarda.
+            //
+            // `FUENTES_PREVIAS` es el acervo que el backend adelanta para que
+            // las citas se puedan abrir mientras la respuesta se escribe. Al
+            // cerrar el stream llega `CITATION_META` con el texto íntegro y los
+            // alias, y la pantalla ya prefiere ése: a partir de aquí el previo
+            // es peso muerto por duplicado.
+            //
+            // Limpiarlo sólo al persistir no bastaba. Lo que se ENVÍA en el
+            // turno siguiente se arma con `[...messages, userMessage]`, y
+            // `messages` es este estado: dentro de una misma sesión el
+            // navegador seguía subiendo el acervo entero en cada petición
+            // —1.3 MB por turno— aunque en la base ya no quedara. Por eso se
+            // limpia aquí, una sola vez, y de aquí salen las dos cosas.
+            //
+            // Durante el stream NO se toca: el contenido en vuelo conserva el
+            // marcador y por eso las citas siguen abriéndose antes de que
+            // termine la respuesta, que es para lo que se mandó.
+            const finalLimpio = quitarFuentesPrevias(finalDisplay);
+
             if (assistantMessageAdded) {
                 setMessages(prev => {
                     const newMessages = [...prev];
@@ -444,7 +476,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     newMessages[newMessages.length - 1] = {
                         ...ultimo,
                         role: 'assistant',
-                        content: finalDisplay,
+                        content: finalLimpio,
                         registrosFuera,
                     };
                     return newMessages;
@@ -456,7 +488,20 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
             // Lo que de verdad se generó, para que el historial no tenga que
             // adivinarlo releyendo el estado de React.
-            respuestaFinal = assistantMessageAdded ? finalDisplay : null;
+            //
+            // `FUENTES_PREVIAS` NO se guarda. Es el mapa de fuentes que el
+            // backend adelanta para que las citas se puedan abrir mientras la
+            // respuesta se escribe; cuando el stream termina llega
+            // `CITATION_META` con el texto íntegro y los alias, y la pantalla
+            // ya prefiere ése. Guardar los dos significaba arrastrar el mismo
+            // acervo por duplicado: el mensaje medio del asistente pasó de
+            // 10-70 mil caracteres a 201,655, y ese peso volvía al servidor
+            // como historial en cada turno hasta reventar la ventana del
+            // modelo (3-sep-2026, catorce abogados sin servicio en un día).
+            //
+            // `CITATION_META` SÍ se guarda: sin él, al reabrir una
+            // conversación vieja las citas se quedan sin panel.
+            respuestaFinal = assistantMessageAdded ? finalLimpio : null;
 
             // ── Sync UI counter with real DB values (backend already consumed the query) ──
             if (userId && !isAdminUser) {
