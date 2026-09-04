@@ -92,6 +92,84 @@ export type Entrada = {
     acuerdos_del: string | null; pagina: number; texto: string;
 };
 
+/**
+ * Lo que pdfjs da por hecho que existe y en un servidor no existe.
+ *
+ * POR QUÉ HACE FALTA. `pdf.mjs` evalúa `const SCALE_MATRIX = new DOMMatrix()`
+ * a nivel de módulo. En una máquina de desarrollo eso funciona por accidente:
+ * pdfjs intenta un `require('@napi-rs/canvas')` y de ahí saca la clase. En el
+ * empaquetado de Vercel ese require no resuelve, y el import entero revienta
+ * con «DOMMatrix is not defined» ANTES de leer un solo byte. Eso es lo que
+ * llevaba fallando el seguimiento de la Ciudad de México en producción: los
+ * cuatro pases de cada día, siempre, con el mismo mensaje. Nunca funcionó allí.
+ *
+ * La alternativa era arrastrar el canvas nativo hasta el servidor —cincuenta
+ * megas de binario por plataforma— para no dibujar nada: aquí sólo se extrae
+ * texto, y el lienzo no se toca. Así que se define lo mínimo, que además es
+ * determinista y no depende de qué binario haya en la máquina.
+ */
+function prepararEntorno() {
+    const g = globalThis as Record<string, unknown>;
+    if (typeof g.DOMMatrix === 'undefined') {
+        class MatrizMinima {
+            a = 1; b = 0; c = 0; d = 1; e = 0; f = 0;
+            constructor(init?: number[] | Float32Array | string) {
+                if (init && typeof init !== 'string' && 'length' in init && init.length >= 6) {
+                    [this.a, this.b, this.c, this.d, this.e, this.f] =
+                        Array.from(init as ArrayLike<number>);
+                }
+            }
+            private static de(m: MatrizMinima) {
+                const n = new MatrizMinima();
+                n.a = m.a; n.b = m.b; n.c = m.c; n.d = m.d; n.e = m.e; n.f = m.f;
+                return n;
+            }
+            multiplySelf(o: MatrizMinima) {
+                const { a, b, c, d, e, f } = this;
+                this.a = a * o.a + c * o.b;   this.b = b * o.a + d * o.b;
+                this.c = a * o.c + c * o.d;   this.d = b * o.c + d * o.d;
+                this.e = a * o.e + c * o.f + e;
+                this.f = b * o.e + d * o.f + f;
+                return this;
+            }
+            preMultiplySelf(o: MatrizMinima) {
+                const n = MatrizMinima.de(o).multiplySelf(this);
+                this.a = n.a; this.b = n.b; this.c = n.c;
+                this.d = n.d; this.e = n.e; this.f = n.f;
+                return this;
+            }
+            translateSelf(x = 0, y = 0) { this.e += this.a * x + this.c * y;
+                                          this.f += this.b * x + this.d * y; return this; }
+            scaleSelf(x = 1, y = x) { this.a *= x; this.b *= x; this.c *= y; this.d *= y; return this; }
+            translate(x = 0, y = 0) { return MatrizMinima.de(this).translateSelf(x, y); }
+            scale(x = 1, y = x) { return MatrizMinima.de(this).scaleSelf(x, y); }
+            invertSelf() {
+                const det = this.a * this.d - this.b * this.c;
+                if (!det) { this.a = this.b = this.c = this.d = this.e = this.f = NaN; return this; }
+                const { a, b, c, d, e, f } = this;
+                this.a = d / det;  this.b = -b / det;
+                this.c = -c / det; this.d = a / det;
+                this.e = (c * f - d * e) / det;
+                this.f = (b * e - a * f) / det;
+                return this;
+            }
+        }
+        g.DOMMatrix = MatrizMinima;
+    }
+    if (typeof g.ImageData === 'undefined') {
+        g.ImageData = class {
+            data: Uint8ClampedArray; width: number; height: number;
+            constructor(w: number, h: number) {
+                this.width = w; this.height = h;
+                this.data = new Uint8ClampedArray(w * h * 4);
+            }
+        };
+    }
+    if (typeof g.Path2D === 'undefined') {
+        g.Path2D = class { addPath() { /* no se dibuja nada */ } };
+    }
+}
+
 /** Descarga el PDF y lo indexa por (juzgado, expediente). */
 export async function indexar(url: string) {
     const r = await fetch(url, {
@@ -104,7 +182,10 @@ export async function indexar(url: string) {
         throw new ErrorBoletin('lo descargado no es un PDF');
     }
 
-    // El build «legacy» es el que corre en Node sin canvas ni worker.
+    // El build «legacy» es el que corre en Node sin canvas ni worker, pero da
+    // por hecho unas cuantas clases del navegador: hay que ponerlas ANTES del
+    // import, porque las usa al evaluar el módulo.
+    prepararEntorno();
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
     const doc = await pdfjs.getDocument({
         data: datos, password: '', isEvalSupported: false, useSystemFonts: true,
@@ -202,13 +283,54 @@ export async function indexar(url: string) {
     // para expedientes que sí lo tuvieron, y el silencio del correo es una
     // promesa. Si se pierde más de una de cada diez etiquetas, mejor declararse
     // ciego y que el barrido lo apunte como fallo.
-    const total = [...entradas.values()].reduce((n, v) => n + v.length, 0);
+    // Sin desestructurar el iterador: el objetivo de compilación del proyecto
+    // no lo recorre.
+    let total = 0;
+    entradas.forEach(v => { total += v.length; });
     if (etiquetas > 100 && total < etiquetas * 0.9) {
         throw new ErrorBoletin(
             `sólo se indexaron ${total} de ${etiquetas} acuerdos anunciados: `
             + 'el formato del boletín cambió');
     }
     return { entradas, juzgados: Array.from(juzgados), paginas: doc.numPages };
+}
+
+/**
+ * ¿Se puede abrir el boletín desde donde corremos?
+ *
+ * Indexar las 638 páginas tarda demasiado para una comprobación, así que esto
+ * hace lo mínimo que demuestra que la cadena entera funciona: baja el PDF, lo
+ * abre y lee el texto de la primera página. Si el entorno no tiene lo que pdfjs
+ * da por hecho, revienta aquí —que es donde queremos enterarnos— y no en el
+ * barrido de las nueve de la mañana.
+ */
+export async function sondeo() {
+    const t0 = Date.now();
+    const lista = await indice();
+    const b = lista[0];
+    const r = await fetch(b.url, {
+        headers: { 'User-Agent': AGENTE }, cache: 'no-store',
+        signal: AbortSignal.timeout(90_000),
+    });
+    if (!r.ok) throw new ErrorBoletin(`el PDF respondió HTTP ${r.status}`);
+    const datos = new Uint8Array(await r.arrayBuffer());
+
+    prepararEntorno();
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const doc = await pdfjs.getDocument({
+        data: datos, password: '', isEvalSupported: false, useSystemFonts: true,
+    }).promise;
+    const pagina = await doc.getPage(1);
+    const contenido = await pagina.getTextContent();
+    const texto = (contenido.items as { str: string }[])
+        .map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+
+    return {
+        fecha: b.fecha, url: b.url, bytes: datos.length,
+        paginas: doc.numPages, ms: Date.now() - t0,
+        primera_pagina: texto.slice(0, 180),
+        boletines_en_indice: lista.length,
+    };
 }
 
 export function buscar(idx: { entradas: Map<string, Entrada[]> },

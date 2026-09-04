@@ -183,6 +183,12 @@ async function barrerPJF(db: SupabaseClient, seguimientos: Seg[],
             await db.from('seg_revisiones').upsert({
                 ...base,
                 resultado: nuevas.length ? 'ok_con_novedad' : 'ok_sin_novedad',
+                // Se limpia a propósito: la fila es un upsert por
+                // (seguimiento, fecha, intento), así que si un intento anterior
+                // la escribió como fallo, su `detalle` sobrevivía a la buena y
+                // quedaba un «revisado, sin novedad · fetch failed» que no se
+                // puede leer sin dudar de todo lo demás.
+                detalle: null,
                 http_status: lectura.http, bytes: lectura.bytes,
                 hash_respuesta: lectura.hash_respuesta,
                 n_actuaciones_vistas: lectura.acuerdos.length,
@@ -277,6 +283,7 @@ async function barrerCDMX(db: SupabaseClient, seguimientos: Seg[],
             corrida_id: corridaId, seguimiento_id: seg.id, user_id: seg.user_id,
             fecha_local: fecha, intento: pase,
             resultado: nuevas.length ? 'ok_con_novedad' : 'ok_sin_novedad',
+            detalle: null,          // que no sobreviva el de un intento fallido
             n_actuaciones_vistas: acuerdos.length,
             terminada_en: new Date().toISOString(),
         }, { onConflict: 'seguimiento_id,fecha_local,intento' });
