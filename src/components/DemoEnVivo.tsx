@@ -233,7 +233,9 @@ export default function DemoEnVivo(props: Partial<DemoProps> = {}) {
                             </div>
                         </div>
 
-                        <figcaption className="mt-6 grid gap-3 sm:grid-cols-3">
+                        <figcaption className={`mt-6 grid gap-3 ${
+                            rotulos.length === 4 ? 'grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'
+                        }`}>
                             {rotulos.map(([t, texto], i) => {
                                 const puesto = !!conTiempo.length && i === paso;
                                 return (

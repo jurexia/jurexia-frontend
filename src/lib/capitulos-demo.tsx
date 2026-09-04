@@ -55,15 +55,16 @@ export const REDACCION: Capitulo = {
         </>
     ),
     entradilla:
-        'Dices qué escrito quieres y de qué asunto. Iurexia lo redacta completo, con sus fundamentos citados y trazados al acervo. Y termina donde trabajas: un .docx que abres y sigues escribiendo.',
+        'Le cuentas el asunto como se lo contarías a un pasante: partes, acto reclamado, fechas y los agravios que quieres desarrollar. Iurexia redacta la demanda entera, con sus fundamentos citados y trazados al acervo. Y termina donde trabajas: el .docx abierto en tu Word.',
     src: '/demo/redaccion.mp4',
     poster: '/demo/redaccion-poster.jpg',
     descripcion:
-        'Demostración: se elige amparo directo, se describe el caso —una absolución del pago de una pena convencional—, Iurexia redacta la demanda completa y se exporta a Word con un botón.',
+        'Demostración: en el modo de redacción profesional se describe un amparo directo laboral con sus cuatro conceptos de violación, Iurexia redacta la demanda completa con sus citas trazadas al acervo, se exporta a DOCX y el documento se abre en Word.',
     rotulos: [
-        ['El caso', 'Qué escrito, contra qué acto y con qué agravio.', 0],
-        ['La demanda', 'Completa, con sus fundamentos y sus citas verificadas.', 15],
-        ['Tu Word', 'DOCX, PDF o directo a la carpeta del asunto.', 23],
+        ['El encargo', 'Partes, acto reclamado, fechas y los agravios a desarrollar.', 0],
+        ['La demanda', 'Entera: proemio, oportunidad, conceptos y petitorios.', 6.6],
+        ['Las citas', 'Nueve trazadas al acervo, y la que no se pudo comprobar, dicha.', 18.2],
+        ['En tu Word', 'El .docx que abres y sigues escribiendo.', 24.7],
     ],
     url: 'iurexia.com/chat',
 };
