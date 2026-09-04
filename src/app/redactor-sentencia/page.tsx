@@ -233,8 +233,27 @@ export default function RedactorSentenciaPage() {
     const { user, profile, loading: authLoading, isAuthenticated } = useRequireAuth();
     const router = useRouter();
 
-    // Access gate: only admin or ultra_secretarios
-    const canAccess = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
+    /* Quién entra: admin, Ultra Secretarios, o la excepción declarada en el
+     * perfil.
+     *
+     * `can_access_sentencia` faltaba aquí y la página se contradecía con las
+     * dos piezas que la rodean:
+     *
+     *   · LA BARRA QUE ENLAZA A ESTA PÁGINA ya la miraba (Navbar.tsx:42), así
+     *     que a un usuario con la excepción se le MOSTRABA el enlace y al
+     *     pulsarlo se le negaba la entrada.
+     *   · Y EL SERVIDOR QUE LA SIRVE también la mira: `/redactor/v2/analyze`
+     *     llama a `_can_access_sentencia`, cuyo propio docstring dice «OR has
+     *     been manually granted access via can_access_sentencia flag».
+     *
+     * Es el mismo fallo que el del botón «Sentencia» del chat, en la otra
+     * dirección: allí la puerta era más estrecha que el servidor, aquí es más
+     * estrecha que el enlace que lleva hasta ella. Una excepción sólo sirve si
+     * la respetan TODAS las puertas; basta una que no para que el usuario vea
+     * un candado y piense que no le funciona. */
+    const canAccess = isAdmin(user?.email)
+        || profile?.can_access_sentencia === true
+        || profile?.subscription_type === 'ultra_secretarios';
 
     // State Machine V4: 'select' → 'upload' → 'analyzing' → 'generating' → 'result'
     const [phase, setPhase] = useState<'select' | 'upload' | 'analyzing' | 'estrategia' | 'solving' | 'prompt_review' | 'generating' | 'result'>('select');

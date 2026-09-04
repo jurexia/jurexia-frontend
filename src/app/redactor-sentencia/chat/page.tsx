@@ -91,8 +91,13 @@ export default function ChatSentenciaPage() {
     const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
     const router = useRouter();
 
-    // Access gate: only admin or ultra_secretarios can use this page
-    const canAccess = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios';
+    /* Misma puerta que la página que enlaza aquí (`/redactor-sentencia`, que
+     * pone el enlace en su propio cuerpo), y por tanto la misma regla: admin,
+     * Ultra Secretarios o la excepción del perfil. Tenerlas distintas dejaba
+     * pasar a la primera y cerraba la segunda al mismo usuario. */
+    const canAccess = isAdmin(user?.email)
+        || profile?.can_access_sentencia === true
+        || profile?.subscription_type === 'ultra_secretarios';
 
     useEffect(() => {
         // Wait until profile is loaded before checking access
