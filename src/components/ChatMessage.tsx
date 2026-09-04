@@ -378,6 +378,24 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // 11. Remove <!-- SYNTHESIS --> markers
         clean = clean.replace(/<!--SYNTHESIS:\w+-->/g, '');
 
+        // 11b. LAS TARJETAS QUE LLEGAN EN HTML.
+        //
+        // El backend adjunta al final de la respuesta la tarjeta de doctrina
+        // consultada como HTML —doctrina.py, bloque_doctrina_html—. En pantalla
+        // se pinta bien, pero el exportador a Word escapa lo que no entiende, y
+        // el abogado se encontraba «&lt;/div&gt;&lt;/div&gt;» impreso al final
+        // de su demanda. Mismo tipo de fallo que el marcador FUENTES_PREVIAS
+        // que ya se coló una vez: algo que el chat entiende y el .docx no.
+        //
+        // No se borra el bloque —la referencia doctrinal es útil en el
+        // documento— sino sus etiquetas: queda el texto, que es lo que el
+        // abogado necesita leer.
+        clean = clean.replace(/<br\s*\/?>/gi, '\n');
+        clean = clean.replace(/<\/(div|p|li)>/gi, '\n');
+        clean = clean.replace(/<\/?(?:div|span|a|ul|ol|li|p|section|figure)\b[^>]*>/gi, ' ');
+        clean = clean.replace(/&#8599;|&nbsp;|&#160;/g, ' ');
+        clean = clean.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+
         // 12. Clean up double spaces and excessive blank lines left by removals
         clean = clean.replace(/  +/g, ' ');
         clean = clean.replace(/\n{3,}/g, '\n\n');
