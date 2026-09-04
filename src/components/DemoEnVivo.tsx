@@ -106,10 +106,9 @@ export default function DemoEnVivo(props: Partial<DemoProps> = {}) {
         const obs = new IntersectionObserver(([e]) => {
             if (e.isIntersecting) {
                 v.currentTime = 0;
-                v.play().then(() => setEnMarcha(true)).catch(() => { /* queda el póster */ });
+                v.play().catch(() => { /* queda el póster */ });
             } else {
                 v.pause();
-                setEnMarcha(false);
             }
         }, { threshold: 0.55 });
 
@@ -133,12 +132,8 @@ export default function DemoEnVivo(props: Partial<DemoProps> = {}) {
     const alternar = () => {
         const v = videoRef.current;
         if (!v) return;
-        if (v.paused) {
-            v.play().then(() => setEnMarcha(true)).catch(() => {});
-        } else {
-            v.pause();
-            setEnMarcha(false);
-        }
+        if (v.paused) v.play().catch(() => {});
+        else v.pause();
     };
 
     const activo = rotulos[paso];
@@ -191,6 +186,13 @@ export default function DemoEnVivo(props: Partial<DemoProps> = {}) {
                                     poster={poster}
                                     aria-label={descripcion}
                                     onTimeUpdate={alAvanzar}
+                                    // El estado del botón lo dice el vídeo, no
+                                    // la promesa de play(): si el navegador lo
+                                    // arranca por su cuenta, o lo pausa al
+                                    // ocultarse la pestaña, la promesa no se
+                                    // entera y el icono se queda mintiendo.
+                                    onPlay={() => setEnMarcha(true)}
+                                    onPause={() => setEnMarcha(false)}
                                     key={src}
                                 >
                                     {/* Sólo H.264. Se probó VP9 y salía MÁS pesado
