@@ -257,6 +257,51 @@ export default function PreciosPage() {
                                     </p>
                                 </div>
                             </div>
+
+                            {/* La prueba. Un plan de 999 al mes no se vende con una
+                                viñeta: se vende enseñando el taller trabajando un
+                                asunto de principio a fin. Todos los datos del vídeo
+                                son inventados —tribunal, magistrada, partes,
+                                expediente—; los criterios que cita son registros
+                                reales del Semanario. */}
+                            <div className="mt-8 border-t border-white/10 pt-7">
+                                <p className="text-[10px] font-bold tracking-widest text-accent-gold/80">
+                                    EL TALLER, DE PRINCIPIO A FIN
+                                </p>
+                                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
+                                    Entra un amparo directo con su ficha, el acto reclamado y los
+                                    conceptos de violación. Sale un proyecto redactado sobre el
+                                    criterio que fijó el secretario, con sus criterios trazados.
+                                    Datos ficticios.
+                                </p>
+                                <div className="mt-5 overflow-hidden rounded-xl border border-white/10 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.7)]">
+                                    <video
+                                        className="block w-full"
+                                        autoPlay
+                                        loop
+                                        muted
+                                        playsInline
+                                        preload="metadata"
+                                        poster="/demo/sentencia-poster.jpg"
+                                        aria-label="Demostración con datos ficticios: un amparo directo laboral entra al taller de sentencias, se genera el adelanto, se consulta el acervo, el secretario fija su criterio en cinco problemas jurídicos y el taller devuelve el proyecto de sentencia."
+                                    >
+                                        <source src="/demo/sentencia.mp4" type="video/mp4" />
+                                    </video>
+                                </div>
+                                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                                    {[
+                                        ['El adelanto', 'Oportunidad, ratio, conceptos y problemas jurídicos.'],
+                                        ['Tu criterio', 'El sentido de cada problema, y el porqué, lo pones tú.'],
+                                        ['La sentencia', 'El proyecto redactado sobre tu razonamiento.'],
+                                    ].map(([titulo, texto], i) => (
+                                        <div key={titulo} className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-3.5 py-2.5">
+                                            <p className="font-mono text-[10px] tracking-wide text-accent-gold/70">0{i + 1}</p>
+                                            <p className="mt-0.5 font-serif text-[13px] font-bold text-white">{titulo}</p>
+                                            <p className="mt-0.5 text-[12px] leading-snug text-gray-400">{texto}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </AnimateOnScroll>
                 </div>
