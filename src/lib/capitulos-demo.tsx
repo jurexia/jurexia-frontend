@@ -1,8 +1,8 @@
 /* Los capítulos de la sala de demostraciones.
 
-   Viven fuera de la página porque los usan dos: /plataforma los enseña los
-   cuatro y /precios enseña sólo el del taller, junto al plan que lo incluye.
-   Duplicarlos sería garantizar que un día digan cosas distintas.
+   Viven fuera de la página porque los usan dos sitios: /plataforma enseña los
+   de la plataforma general y /precios enseña el del taller, junto al plan que
+   lo incluye. Duplicarlos sería garantizar que un día digan cosas distintas.
 
    LOS TÍTULOS PROMETEN EN SEGUNDA PERSONA. Es la lección de iudex.mx: no
    «Función de redacción», sino «Redacta el amparo y llévatelo a tu Word». El
@@ -107,4 +107,8 @@ export const SENTENCIAS: Capitulo = {
     url: 'iurexia.com/taller',
 };
 
-export const CAPITULOS: Capitulo[] = [CONSULTA, REDACCION, CARPETAS, SENTENCIAS];
+/* El taller NO va aquí. Vive sólo en la tarjeta del plan Ultra, en /precios,
+   porque es la herramienta que ese plan vende y porque enseñarlo en la página
+   general de la plataforma promete a cualquier visitante algo que su plan no
+   incluye. */
+export const CAPITULOS: Capitulo[] = [CONSULTA, REDACCION, CARPETAS];

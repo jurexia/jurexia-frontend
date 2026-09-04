@@ -46,7 +46,10 @@ export default function DemoCapitulos({
             <div
                 role="tablist"
                 aria-label="Funciones de Iurexia en vídeo"
-                className="mx-auto grid max-w-5xl grid-cols-2 gap-2 px-4 sm:px-6 lg:grid-cols-4"
+                className={`mx-auto grid max-w-5xl grid-cols-2 gap-2 px-4 sm:px-6 ${
+                    capitulos.length === 3 ? 'lg:grid-cols-3'
+                        : capitulos.length === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-4'
+                }`}
             >
                 {capitulos.map((c, i) => {
                     const puesto = i === activo;
