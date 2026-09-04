@@ -204,6 +204,120 @@ export async function revisarFallosDeChat(): Promise<string> {
 }
 
 /**
+ * El tercer vigía: cuántas veces la plataforma tuvo que recuperarse sola.
+ *
+ * POR QUÉ HACE FALTA (4-sep-2026)
+ * -------------------------------
+ * El mismo día que se arregló el rechazo de caché se abrió un punto ciego, y
+ * lo abrió el arreglo. Cuando Google rechaza la petición con corpus cacheado,
+ * el servidor repite por otro camino y responde: la consulta sale, no se
+ * escribe ningún error, y `revisarFallosDeChat` —que cuenta consultas SIN
+ * respuesta— ve cero. Mientras tanto el genio contesta sin sus leyes
+ * precargadas. Una avería ruidosa se había convertido en una degradación
+ * silenciosa, que es la clase de avería que dura meses.
+ *
+ * Así que se mide lo que ya no se ve: cada recuperación deja una fila en
+ * `incidencias_modelo`, y aquí se cuenta.
+ *
+ * Los dos disparos son los mismos que arriba y por la misma razón: el volumen
+ * ve la rotura general, y la persona ve al abogado concreto que está
+ * recibiendo respuestas peores sin que nadie lo note. Del 2 al 4 de septiembre
+ * hubo 15 rechazos en total, así que ocho en una hora es claramente otra cosa.
+ */
+const DISPARO_CACHES = 8;
+const DISPARO_CACHES_POR_PERSONA = 3;
+const HORAS_ENTRE_AVISOS_CACHE = 3;
+const ASUNTO_CACHE = 'caches-rechazadas';
+
+export async function revisarCachesRechazadas(): Promise<string> {
+    const sb = admin();
+    const desde = new Date(Date.now() - MINUTOS * 60_000).toISOString();
+
+    const { data, error } = await sb
+        .from('incidencias_modelo')
+        .select('genio, user_id, detalle')
+        .eq('tipo', 'cache_rechazada')
+        .gte('ocurrido_at', desde);
+    if (error) return `caches-rechazadas: no pude leer las incidencias (${error.message})`;
+
+    const filas = data ?? [];
+    if (filas.length === 0) return 'caches-rechazadas: bien — 0 recuperaciones en la última hora';
+
+    const porAbogado = new Map<string, number>();
+    const porGenio = new Map<string, number>();
+    for (const f of filas) {
+        if (f.user_id) porAbogado.set(f.user_id, (porAbogado.get(f.user_id) ?? 0) + 1);
+        const g = (f.genio as string | null) ?? '—';
+        porGenio.set(g, (porGenio.get(g) ?? 0) + 1);
+    }
+    const peorRacha = Math.max(0, ...Array.from(porAbogado.values()));
+    const resumen = `${filas.length} recuperaciones · ${porAbogado.size} abogado(s)`;
+
+    const motivos: string[] = [];
+    if (filas.length >= DISPARO_CACHES) motivos.push(`${filas.length} recuperaciones en una hora`);
+    if (peorRacha >= DISPARO_CACHES_POR_PERSONA) {
+        motivos.push(`un mismo abogado se recuperó ${peorRacha} veces`);
+    }
+    if (motivos.length === 0) return `caches-rechazadas: ${resumen} — por debajo de umbral`;
+
+    if (await seAvisoHacePoco(sb, ASUNTO_CACHE, HORAS_ENTRE_AVISOS_CACHE)) {
+        return `caches-rechazadas: DISPARADO (${resumen}) pero ya se avisó hace menos de ${HORAS_ENTRE_AVISOS_CACHE} h`;
+    }
+
+    const { data: perfiles } = await sb
+        .from('user_profiles').select('id, email, subscription_type')
+        .in('id', Array.from(porAbogado.keys()));
+    const quien = new Map((perfiles ?? []).map(p => [p.id, p]));
+
+    const filasGenio = Array.from(porGenio.entries()).sort((a, b) => b[1] - a[1])
+        .map(([g, n]) => `<tr><td style="padding:4px 14px 4px 0;color:#8a8578">${g}</td>` +
+            `<td style="padding:4px 0"><b>${n}</b></td></tr>`).join('');
+
+    const filasAbogado = Array.from(porAbogado.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8)
+        .map(([id, n]) => {
+            const p = quien.get(id);
+            const plan = (p?.subscription_type ?? '—').replace('_monthly', '').replace('_annual', ' anual');
+            return `<tr><td style="padding:4px 14px 4px 0;color:#8a8578">${p?.email ?? id.slice(0, 8)}</td>` +
+                `<td style="padding:4px 14px 4px 0;color:#8a6d2f">${plan}</td>` +
+                `<td style="padding:4px 0"><b>${n}</b></td></tr>`;
+        }).join('');
+
+    const html = `<div style="${CAJA}">
+  <p style="margin:0 0 6px;color:#8a8578;font-size:11.5px;letter-spacing:4px">AVISO DE SERVICIO</p>
+  <p style="margin:0 0 6px;font-size:21px"><b>Las cachés de los genios están siendo rechazadas</b></p>
+  <p style="margin:0 0 20px;color:#8a8578;font-size:14px">${motivos.join(' · ')}</p>
+  <p style="margin:0 0 18px">Nadie se ha quedado sin respuesta: el servidor repite por otro camino y
+  contesta. Pero <b>contesta sin el corpus precargado</b>, con lo recuperado y su propio conocimiento.
+  Es una respuesta peor, y sin este aviso no se vería en ninguna parte.</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14.5px;margin:0 0 22px">
+    <tr><td style="padding:5px 14px 5px 0;color:#8a8578">Recuperaciones</td>
+        <td style="padding:5px 0"><b>${filas.length}</b> en los últimos ${MINUTOS} min</td></tr>
+    <tr><td style="padding:5px 14px 5px 0;color:#8a8578">Peor racha</td>
+        <td style="padding:5px 0">${peorRacha} de una misma persona</td></tr>
+  </table>
+  <p style="margin:0 0 8px;font-size:11.5px;color:#8a8578;letter-spacing:2px">POR GENIO</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 18px">${filasGenio}</table>
+  <p style="margin:0 0 8px;font-size:11.5px;color:#8a8578;letter-spacing:2px">A QUIÉN LE ESTÁ PASANDO</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 22px">${filasAbogado}</table>
+  <p style="margin:0 0 18px"><b>Dónde mirar:</b> los registros de Render, línea
+  <code>Se repite sin caché</code>. Si el rechazo es de todos los genios a la vez, mira si las
+  cachés de Vertex siguen vivas; si es de uno solo, mira esa caché.</p>
+  <p style="margin:0;font-size:13px;color:#8a8578">Este aviso no se repetirá en ${HORAS_ENTRE_AVISOS_CACHE} h.
+  Umbrales: ${DISPARO_CACHES} recuperaciones en la ventana, o ${DISPARO_CACHES_POR_PERSONA} de una misma persona.</p>
+</div>`;
+
+    try {
+        const ok = await mandar(sb, ASUNTO_CACHE,
+            `${filas.length} cachés rechazadas en la última hora`, html,
+            { recuperaciones: filas.length, abogados: porAbogado.size, peor_racha: peorRacha, motivos });
+        return ok ? `caches-rechazadas: AVISO ENVIADO — ${resumen}`
+                  : `caches-rechazadas: DISPARADO (${resumen}) pero falta RESEND_API_KEY`;
+    } catch (e) {
+        return `caches-rechazadas: no se pudo enviar (${e instanceof Error ? e.message : e})`;
+    }
+}
+
+/**
  * El otro lado del punto ciego: que no haya dejado de haber respuestas.
  *
  * Contar fallos no ve la caída total —sin API no se escribe ningún mensaje y

@@ -14,7 +14,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { revisarFallosDeChat, revisarSilencioDeChat } from '@/lib/correo/alerta-fallos-chat';
+import {
+    revisarFallosDeChat,
+    revisarSilencioDeChat,
+    revisarCachesRechazadas,
+} from '@/lib/correo/alerta-fallos-chat';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -39,15 +43,21 @@ export async function GET(req: NextRequest) {
         // Las dos comprobaciones son independientes y ninguna puede tumbar a la
         // otra: si contar fallos revienta, el detector de silencio —que es el
         // que ve la caída total— tiene que seguir corriendo igual.
-        const [fallos, silencio] = await Promise.allSettled([
+        const [fallos, silencio, caches] = await Promise.allSettled([
             ensayo ? Promise.resolve('(ensayo: no se comprueba)') : revisarFallosDeChat(),
             ensayo ? Promise.resolve('(ensayo: no se comprueba)') : revisarSilencioDeChat(),
+            ensayo ? Promise.resolve('(ensayo: no se comprueba)') : revisarCachesRechazadas(),
         ]);
         const leer = (r: PromiseSettledResult<string>) =>
             r.status === 'fulfilled' ? r.value : `error: ${r.reason}`;
 
-        const salida = { ok: true, fallos: leer(fallos), silencio: leer(silencio) };
-        console.log('alarma de servicio:', salida.fallos, '|', salida.silencio);
+        const salida = {
+            ok: true,
+            fallos: leer(fallos),
+            silencio: leer(silencio),
+            caches: leer(caches),
+        };
+        console.log('alarma de servicio:', salida.fallos, '|', salida.silencio, '|', salida.caches);
         return NextResponse.json(salida);
     } catch (e) {
         console.error('alarma de servicio: falló la revisión', e);
