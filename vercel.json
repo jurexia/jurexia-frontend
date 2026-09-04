@@ -5,6 +5,10 @@
       "schedule": "*/10 * * * *"
     },
     {
+      "path": "/api/correo/fallos",
+      "schedule": "*/30 * * * *"
+    },
+    {
       "path": "/api/correo/diario",
       "schedule": "0 16 * * 1-5"
     },
