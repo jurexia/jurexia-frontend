@@ -8,10 +8,17 @@
    «Función de redacción», sino «Redacta el amparo y llévatelo a tu Word». El
    vídeo que va debajo es la prueba de la promesa; el título, la promesa.
 
+   EL TERCER ELEMENTO DE CADA RÓTULO ES EL SEGUNDO EN QUE EMPIEZA ESE MOMENTO.
+   Con él, el reproductor enciende la tarjeta que toca y escribe el rótulo sobre
+   la imagen. Iudex no rotula nada: sus dos clips, de 58 y 62 segundos, se
+   explican con una frase de doce palabras y el lector no sabe dónde mirar.
+
    TODO LO QUE SE VE EN EL VÍDEO DEL TALLER ES FICTICIO —tribunal, magistrada,
    partes, expediente— salvo los criterios del acervo, que son registros reales
    del Semanario. Se grabó así a propósito: enseñar el motor sin enseñar el
-   asunto de nadie. */
+   asunto de nadie. En el del seguimiento, en cambio, el expediente es real y
+   público: es la lista de acuerdos tal como la publica el propio Consejo de la
+   Judicatura Federal. */
 
 import type { Capitulo } from '@/components/DemoCapitulos';
 
@@ -52,11 +59,11 @@ export const REDACCION: Capitulo = {
     src: '/demo/redaccion.mp4',
     poster: '/demo/redaccion-poster.jpg',
     descripcion:
-        'Demostración: se elige «demanda de amparo», se describen los hechos, Iurexia redacta el escrito completo y se exporta a Word con un botón.',
+        'Demostración: se elige amparo directo, se describe el caso —una absolución del pago de una pena convencional—, Iurexia redacta la demanda completa y se exporta a Word con un botón.',
     rotulos: [
-        ['El caso', 'Qué escrito, contra qué acto y con qué hechos.'],
-        ['El escrito', 'La demanda completa, con sus citas verificadas.'],
-        ['Tu Word', 'DOCX, PDF o directo a la carpeta del asunto.'],
+        ['El caso', 'Qué escrito, contra qué acto y con qué agravio.', 0],
+        ['La demanda', 'Completa, con sus fundamentos y sus citas verificadas.', 15],
+        ['Tu Word', 'DOCX, PDF o directo a la carpeta del asunto.', 23],
     ],
     url: 'iurexia.com/chat',
 };
@@ -77,9 +84,33 @@ export const CARPETAS: Capitulo = {
     descripcion:
         'Demostración: se crea una carpeta con su objetivo, se suben los documentos del asunto y la carpeta responde con el porcentaje de avance y la lista de lo que falta.',
     rotulos: [
-        ['El objetivo', 'La carpeta nace sabiendo qué hay que conseguir.'],
-        ['El expediente', 'Se sube lo que haya: escritos, acuerdos, pruebas.'],
-        ['Lo que falta', 'El avance acreditado y la lista de lo pendiente.'],
+        ['El objetivo', 'La carpeta nace sabiendo qué hay que conseguir.', 0],
+        ['El expediente', 'Se sube lo que haya: escritos, acuerdos, pruebas.', 16],
+        ['Lo que falta', 'El avance acreditado y la lista de lo pendiente.', 22.8],
+    ],
+    url: 'iurexia.com/carpetas',
+};
+
+export const SEGUIMIENTO: Capitulo = {
+    id: 'seguimiento',
+    funcion: 'Seguimiento de expedientes',
+    gancho: 'El juzgado se mueve y te llega un correo.',
+    titulo: (
+        <>
+            Deja de entrar cada mañana.{' '}
+            <span className="text-accent-gold">Te avisamos nosotros</span>
+        </>
+    ),
+    entradilla:
+        'Das de alta el número y el órgano, y cada día laborable a las 9:10 Iurexia consulta el portal del Consejo por ti. Te escribe sólo cuando hay una actuación nueva — y también el día en que no pudo revisar, que es la otra mitad de la promesa.',
+    src: '/demo/seguimiento.mp4',
+    poster: '/demo/seguimiento-poster.jpg',
+    descripcion:
+        'Demostración: se busca el tribunal, se escribe el número de expediente, Iurexia prueba los tipos de asunto hasta dar con él y devuelve la carátula real del portal con su NEUN y sus últimos acuerdos.',
+    rotulos: [
+        ['El tribunal', 'Se busca por nombre. Están los 949 órganos del Poder Judicial de la Federación.', 0],
+        ['El número', 'Y el tipo de asunto: si no lo sabes, Iurexia los prueba todos.', 8.3],
+        ['La carátula', 'La que devuelve el portal, con su NEUN y su historial. Sólo entonces se guarda.', 12.3],
     ],
     url: 'iurexia.com/carpetas',
 };
@@ -90,7 +121,8 @@ export const SENTENCIAS: Capitulo = {
     gancho: 'El proyecto se arma sobre tu criterio.',
     titulo: (
         <>
-            Proyecta la sentencia. <span className="text-accent-gold">El criterio sigue siendo tuyo</span>
+            Proyecta la sentencia.{' '}
+            <span className="text-accent-gold">El criterio sigue siendo tuyo</span>
         </>
     ),
     entradilla:
@@ -108,7 +140,7 @@ export const SENTENCIAS: Capitulo = {
 };
 
 /* El taller NO va aquí. Vive sólo en la tarjeta del plan Ultra, en /precios,
-   porque es la herramienta que ese plan vende y porque enseñarlo en la página
+   porque es la herramienta que ese plan vende y porque enseñarla en la página
    general de la plataforma promete a cualquier visitante algo que su plan no
    incluye. */
-export const CAPITULOS: Capitulo[] = [CONSULTA, REDACCION, CARPETAS];
+export const CAPITULOS: Capitulo[] = [CONSULTA, REDACCION, CARPETAS, SEGUIMIENTO];

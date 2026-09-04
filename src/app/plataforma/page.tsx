@@ -157,7 +157,7 @@ export default function PlataformaPage() {
                 de mentira; ahora son cuatro grabaciones de la plataforma real,
                 una por función, y el visitante elige cuál ver. */}
             <section id="demos" className="scroll-mt-24 py-16 bg-cream-300">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 mb-8">
+                <div className="max-w-[1100px] mx-auto px-4 sm:px-6 mb-8">
                     <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-center text-charcoal-900 mb-3 sm:mb-4">
                         Mira cómo <span className="text-accent-gold">funciona</span>
                     </h2>
