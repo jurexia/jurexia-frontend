@@ -17,6 +17,18 @@ const nextConfig = {
     // Fuera del bundle carga como módulo de Node y funciona.
     experimental: {
         serverComponentsExternalPackages: ['pdfjs-dist'],
+
+        // Y ADEMÁS HAY QUE LLEVARSE EL WORKER. Dejar pdfjs fuera del bundle
+        // hace que Next lo copie por rastreo de dependencias, y el rastreador
+        // no ve `pdf.worker.mjs` porque pdfjs lo importa con una ruta que
+        // construye en tiempo de ejecución. Resultado en producción: «Setting
+        // up fake worker failed: Cannot find module …/pdf.worker.mjs», los
+        // cuatro pases de todos los días. En local no pasa porque el archivo
+        // está en node_modules.
+        outputFileTracingIncludes: {
+            '/api/seguimiento/salud': ['./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'],
+            '/api/cron/seguimiento': ['./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'],
+        },
     },
 
     // Environment variables accessible client-side
