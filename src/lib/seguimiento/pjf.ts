@@ -70,6 +70,11 @@ export const AGENTE =
 const COLUMNAS = ['no.', 'fecha del auto', 'tipo cuaderno',
     'fecha de publicacion', 'resumen', 'ver sintesis completa'];
 
+/** Las señas de que lo que llegó es, efectivamente, la página del Consejo:
+ *  el WebForm de ASP.NET, la tabla de acuerdos o el propio nombre del reporte.
+ *  Sin alguna de las tres, no estamos mirando el portal. */
+const ES_LA_PAGINA = /__VIEWSTATE|grvAcuerdos|VerCaptura|lblNombreOrgano/i;
+
 export class ErrorFormato extends Error {}
 export class ErrorNoEncontrado extends Error {}
 
@@ -155,6 +160,20 @@ export function huellaTexto(resumen: string, completo?: string | null) {
 
 // ── Petición ──────────────────────────────────────────────────────────
 
+/**
+ * El número tal como lo espera el portal.
+ *
+ * «71 / 2026» pasaba la validación del formulario y llegaba a la URL con los
+ * espacios dentro, y el portal contestaba, palabra por palabra, «No existe el
+ * número de expediente 71 / 2026». El abogado leía que su expediente no existe
+ * cuando lo único que sobraba eran dos espacios. Se normaliza aquí, que es por
+ * donde pasan todos los caminos.
+ */
+export function normalizaExpediente(n: string) {
+    const m = (n || '').trim().match(/^0*(\d{1,6})\s*\/\s*(\d{4})$/);
+    return m ? `${m[1]}/${m[2]}` : (n || '').replace(/\s+/g, '');
+}
+
 export function urlDe(organismo: string | number, expediente: string,
                       tipoAsunto: string | number = 1,
                       tipoProcedimiento: string | number = 0) {
@@ -224,6 +243,22 @@ export function parsear(s: string, expedientePedido: string, organismo: string) 
     const asignado = span(s, 'lblNoExpedienteAsignado');
 
     if (!organo && !asignado) {
+        // AQUÍ ESTABA EL PEOR DEFECTO DEL SEGUIMIENTO. Cualquier 200 que no
+        // fuera la página esperada —un muro de WAF, una página de
+        // mantenimiento, un error de ASP.NET, una respuesta truncada— salía
+        // como «el expediente no existe», y el abogado leía que se había
+        // inventado su propio número. Peor todavía: el barrido diario lo
+        // apuntaba como revisión buena, así que el silencio del correo seguía
+        // significando «no hubo movimiento» cuando en realidad no se vio nada.
+        //
+        // Sólo se puede afirmar que no existe si la respuesta ES la página del
+        // portal. Si no lo es, no sabemos nada, y decirlo es la única respuesta
+        // honesta.
+        if (!ES_LA_PAGINA.test(s)) {
+            throw new ErrorFormato(
+                'la respuesta no es la página del portal: llegaron '
+                + `${s.length} bytes que no traen ni el formulario ni la tabla`);
+        }
         throw new ErrorNoEncontrado('la página no trae carátula');
     }
     // La comprobación que impide leer el expediente del vecino.

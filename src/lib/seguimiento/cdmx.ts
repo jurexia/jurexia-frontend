@@ -116,6 +116,11 @@ export async function indexar(url: string) {
 
     const entradas = new Map<string, Entrada[]>();
     const juzgados = new Set<string>();
+    /** Cuántas veces aparece la etiqueta «Núm. Exp.» en todo el boletín. Es la
+     *  cota de cuántos acuerdos hay: si se indexan muchos menos, el lector se
+     *  está comiendo entradas y hay que enterarse aquí, no dentro de tres meses
+     *  por un abogado que no recibió su aviso. */
+    let etiquetas = 0;
     let juzgado: string | null = null;
     let secretaria: string | null = null;
     let acuerdosDel: string | null = null;
@@ -156,22 +161,52 @@ export async function indexar(url: string) {
             if (ma) { acuerdosDel = ma[1].replace(/\s+/g, ' ').replace(/[.\s]+$/, ''); buffer = []; continue; }
 
             buffer.push(l);
-            const me = RE_EXP.exec(l);
-            if (me && juzgado) {
+            etiquetas += (l.match(/Núm\.\s*Exp\./gi) || []).length;
+
+            // EL NÚMERO SE BUSCA SOBRE EL BUFFER UNIDO, NO SOBRE LA LÍNEA.
+            //
+            // El boletín va en columna justificada y 2.489 veces al día parte
+            // la etiqueta del número: el renglón acaba en «… 1 Acdo. Núm. Exp.»
+            // y el «2163/2024» empieza en el siguiente. Buscando línea a línea
+            // no casaba, y como el buffer tampoco se vaciaba, el texto seguía
+            // acumulándose hasta el número del asunto de al lado. Dos daños a la
+            // vez: 4.934 expedientes (36% del boletín) no se indexaban nunca, y
+            // 2.435 acuerdos quedaban colgados de la clave del vecino — que es
+            // peor, porque eso sí manda correos, y del asunto equivocado.
+            //
+            // El `while` recoge además el caso de un renglón que trae el final
+            // de una entrada y el número de la siguiente; lo que sobra tras el
+            // número queda de semilla para la que viene.
+            let unido = buffer.join(' ').replace(/\s+/g, ' ');
+            let me: RegExpExecArray | null;
+            while (juzgado && (me = RE_EXP.exec(unido)) !== null) {
+                const fin = me.index + me[0].length;
                 // El «Tomo II.» que cierra la entrada anterior cae al principio
                 // de ésta, porque va detrás del número en la misma línea.
-                const texto = buffer.join(' ').replace(/\s+/g, ' ')
+                const texto = unido.slice(0, fin)
+                    .replace(/^[.\s]+/, '')
                     .replace(/^(Tomo\s+[IVXLC]+\.?\s*)+/, '').trim();
                 const clave = `${llano(juzgado)}|${Number(me[1])}/${me[2]}`;
                 entradas.set(clave, [...(entradas.get(clave) || []),
                     { juzgado, secretaria, acuerdos_del: acuerdosDel, pagina: n, texto }]);
-                buffer = [];
+                unido = unido.slice(fin).trim();
             }
+            buffer = unido ? [unido] : [];
         }
     }
 
     if (!entradas.size) {
         throw new ErrorBoletin('no se reconoció ninguna entrada: ¿cambió el formato?');
+    }
+    // Un índice mutilado es peor que ninguno: devuelve «hoy no hubo acuerdo»
+    // para expedientes que sí lo tuvieron, y el silencio del correo es una
+    // promesa. Si se pierde más de una de cada diez etiquetas, mejor declararse
+    // ciego y que el barrido lo apunte como fallo.
+    const total = [...entradas.values()].reduce((n, v) => n + v.length, 0);
+    if (etiquetas > 100 && total < etiquetas * 0.9) {
+        throw new ErrorBoletin(
+            `sólo se indexaron ${total} de ${etiquetas} acuerdos anunciados: `
+            + 'el formato del boletín cambió');
     }
     return { entradas, juzgados: Array.from(juzgados), paginas: doc.numPages };
 }

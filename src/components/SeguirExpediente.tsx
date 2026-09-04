@@ -28,9 +28,20 @@ type Tipo = { clave_externa: string; nombre: string };
 type Caratula = {
     caratula: { organo: string | null; neun: string | null; expediente: string | null };
     organo: string;
+    expediente: string;
+    /** El tipo con el que el portal SÍ lo encontró, que puede no ser el que
+     *  eligió el abogado: el servidor prueba los demás si el primero falla. */
+    tipo_asunto: string;
+    tipo_asunto_nombre: string;
+    corregido: boolean;
+    pedido_nombre: string | null;
     n_acuerdos: number;
     ultimos: { fecha_auto: string | null; cuaderno: string | null; resumen: string }[];
 };
+
+/** Lo que se enseña cuando el portal no lo trae: el porqué, dónde se buscó y
+ *  el enlace para que el abogado lo compruebe con sus propios ojos. */
+type Fallo = { texto: string; detalle?: string; url?: string };
 
 export default function SeguirExpediente(
     { abierto, cerrar, alGuardar }:
@@ -46,7 +57,7 @@ export default function SeguirExpediente(
     const [alias, setAlias] = useState('');
     const [caratula, setCaratula] = useState<Caratula | null>(null);
     const [ocupado, setOcupado] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<Fallo | null>(null);
     const peticion = useRef(0);
 
     const reiniciar = useCallback(() => {
@@ -84,7 +95,10 @@ export default function SeguirExpediente(
                 .order('orden');
             const lista = (data ?? []) as Tipo[];
             setTipos(lista);
-            setTipo(lista[0]?.clave_externa || '1');
+            // Vacío a propósito: «no lo sé» es una respuesta legítima y el
+            // servidor sabe barrer. Antes se ponía '1' —Amparo Indirecto— y en
+            // un colegiado eso garantizaba un «no existe» que no era verdad.
+            setTipo('');
         })();
     }, [organo]);
 
@@ -101,12 +115,16 @@ export default function SeguirExpediente(
                     tipo_asunto: tipo }),
             });
             const d = await r.json();
-            if (!r.ok) { setError(d.error || 'No se pudo consultar'); return; }
+            if (!r.ok) {
+                setError({ texto: d.error || 'No se pudo consultar',
+                           detalle: d.detalle, url: d.url });
+                return;
+            }
             setCaratula(d);
-            if (!alias.trim()) setAlias(`${numero.trim()} · ${d.organo}`.slice(0, 60));
+            if (!alias.trim()) setAlias(`${d.expediente} · ${d.organo}`.slice(0, 60));
             setPaso(3);
         } catch {
-            setError('No se pudo hablar con el portal. Inténtalo en un momento.');
+            setError({ texto: 'No se pudo hablar con el portal. Inténtalo en un momento.' });
         } finally { setOcupado(false); }
     }
 
@@ -119,15 +137,17 @@ export default function SeguirExpediente(
                 headers: { 'Content-Type': 'application/json',
                            Authorization: `Bearer ${session?.access_token}` },
                 body: JSON.stringify({ accion: 'confirmar',
-                    organismo: organo!.clave_externa, expediente: numero.trim(),
-                    tipo_asunto: tipo, alias: alias.trim() }),
+                    organismo: organo!.clave_externa,
+                    expediente: caratula!.expediente,
+                    // El que encontró el portal, no el que se eligió al azar.
+                    tipo_asunto: caratula!.tipo_asunto, alias: alias.trim() }),
             });
             const d = await r.json();
-            if (!r.ok) { setError(d.error || 'No se pudo guardar'); return; }
+            if (!r.ok) { setError({ texto: d.error || 'No se pudo guardar' }); return; }
             alGuardar();
             cerrar();
         } catch {
-            setError('No se pudo guardar. Inténtalo en un momento.');
+            setError({ texto: 'No se pudo guardar. Inténtalo en un momento.' });
         } finally { setOcupado(false); }
     }
 
@@ -215,26 +235,52 @@ export default function SeguirExpediente(
                                 className="h-10 w-full rounded-lg border border-cream-500 px-3 font-mono text-sm focus:border-accent-gold focus:outline-none focus:ring-2 focus:ring-accent-gold/20"
                             />
                             <label className="mb-1.5 mt-4 block text-sm font-medium text-charcoal-800">
-                                Tipo de asunto
+                                Tipo de asunto{' '}
+                                <span className="font-normal text-charcoal-400">
+                                    — si lo sabes
+                                </span>
                             </label>
                             <select
                                 value={tipo} onChange={e => setTipo(e.target.value)}
                                 className="h-10 w-full rounded-lg border border-cream-500 bg-white px-3 text-sm focus:border-accent-gold focus:outline-none"
                             >
+                                {/* «No lo sé» es la opción por defecto a propósito.
+                                    El portal indexa por tipo y el abogado no tiene
+                                    por qué saberse la taxonomía del Consejo: si no
+                                    lo elige, se prueban todos. */}
+                                <option value="">No lo sé — búscalo en todos</option>
                                 {tipos.map(t => (
                                     <option key={t.clave_externa} value={t.clave_externa}>
                                         {t.nombre}
                                     </option>
                                 ))}
                             </select>
-                            {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
+                            {error && (
+                                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5">
+                                    <p className="text-sm text-red-800">{error.texto}</p>
+                                    {error.detalle && (
+                                        <p className="mt-1 text-xs leading-snug text-red-700/80">
+                                            {error.detalle}
+                                        </p>
+                                    )}
+                                    {error.url && (
+                                        <a href={error.url} target="_blank" rel="noopener noreferrer"
+                                           className="mt-1.5 inline-block text-xs font-semibold text-red-800 underline underline-offset-2">
+                                            Compruébalo en el portal del Consejo
+                                        </a>
+                                    )}
+                                </div>
+                            )}
                             <button
                                 onClick={consultar}
                                 disabled={ocupado || !/^\d{1,6}\s*\/\s*\d{4}$/.test(numero.trim())}
                                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-charcoal-900 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-charcoal-800 disabled:opacity-50"
                             >
                                 {ocupado && <Loader2 className="h-4 w-4 animate-spin" />}
-                                {ocupado ? 'Consultando el portal…' : 'Buscar el expediente'}
+                                {ocupado
+                                    ? (tipo ? 'Consultando el portal…'
+                                            : 'Probando los tipos de asunto…')
+                                    : 'Buscar el expediente'}
                             </button>
                         </>
                     )}
@@ -245,6 +291,13 @@ export default function SeguirExpediente(
                             <p className="mb-3 text-sm text-charcoal-700">
                                 Esto es lo que devuelve el portal. ¿Es tu expediente?
                             </p>
+                            {caratula.corregido && (
+                                <p className="mb-3 rounded-lg border border-accent-gold/40 bg-accent-gold/[0.08] px-3 py-2 text-xs leading-snug text-accent-brown">
+                                    No aparece como <strong>{caratula.pedido_nombre}</strong>.
+                                    En ese órgano, el {caratula.expediente} está registrado
+                                    como <strong>{caratula.tipo_asunto_nombre}</strong>.
+                                </p>
+                            )}
                             <div className="rounded-xl border border-cream-400 bg-cream-50 p-4">
                                 <p className="font-mono text-sm font-bold text-charcoal-900">
                                     {caratula.caratula.expediente}
@@ -279,7 +332,9 @@ export default function SeguirExpediente(
                                 className="h-10 w-full rounded-lg border border-cream-500 px-3 text-sm focus:border-accent-gold focus:outline-none focus:ring-2 focus:ring-accent-gold/20"
                             />
 
-                            {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
+                            {error && (
+                                <p className="mt-3 text-sm text-red-700">{error.texto}</p>
+                            )}
 
                             <button
                                 onClick={confirmar} disabled={ocupado}
