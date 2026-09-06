@@ -658,7 +658,20 @@ export default function ChatPage() {
             if (err?.name === 'AbortError' || errMsg.includes('abort')) {
                 userMessage = '⏱️ **El análisis tardó demasiado.**\n\nEl documento es muy extenso o complejo para procesarse en este momento. Intenta con un archivo más pequeño o con menos páginas.';
             } else if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('ERR_CONNECTION')) {
-                userMessage = '📄 **No se pudo procesar el documento.**\n\nEsto puede ocurrir porque:\n- El archivo es demasiado grande o está corrupto\n- El documento escaneado tiene baja calidad y no se puede leer\n- Hubo un problema de conexión temporal\n\nIntenta con un archivo más ligero o en mejor calidad.';
+                // ESTA RAMA ES SÓLO RED, y el mensaje decía otra cosa.
+                //
+                // Aquí se entra únicamente con Failed to fetch / NetworkError /
+                // ERR_CONNECTION: la petición no llegó o se cortó. El texto
+                // anterior le echaba la culpa al archivo del abogado —«es
+                // demasiado grande o está corrupto», «el escaneado tiene baja
+                // calidad»— cuando su documento estaba perfectamente. Un
+                // abogado con un PDF limpio de 22 páginas leyó que su archivo
+                // era malo, lo volvió a subir sin cambiar nada y funcionó. Lo
+                // que se rompió fue la conexión, y decirlo es lo mínimo.
+                userMessage = '🔌 **Se cortó la conexión al enviar el documento.**\n\n'
+                    + 'No es tu archivo: la petición no llegó a completarse. '
+                    + 'Vuelve a adjuntarlo — normalmente entra al segundo intento.\n\n'
+                    + 'Si se repite, avísanos en soporte@iurexia.com y lo revisamos.';
             } else if (errMsg.includes('Formato no soportado')) {
                 userMessage = `📋 **Formato no soportado.**\n\nSolo se aceptan archivos PDF, DOCX y DOC. Convierte tu documento a uno de estos formatos e intenta de nuevo.`;
             } else if (errMsg.includes('muy grande') || errMsg.includes('too large') || errMsg.includes('25MB')) {

@@ -61,10 +61,16 @@ interface Props {
      * consultó.
      */
     fueraDelAcervo?: string[];
+    /**
+     * Tesis citadas SIN registro digital. No se pueden comprobar: no hay
+     * número que consultar. Se dicen igual, porque callarlas fue justo lo que
+     * dejó pasar cinco tesis inventadas el 4-sep-2026.
+     */
+    sinRegistro?: string[];
     onVerTesis?: (registro: string) => void;
 }
 
-export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAcervo, onVerTesis }: Props) {
+export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAcervo, sinRegistro, onVerTesis }: Props) {
     const [fase, setFase] = useState<Estado>(registros.length ? 'comprobando' : 'listo');
     const [resultados, setResultados] = useState<Resultado[]>([]);
 
@@ -109,15 +115,18 @@ export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAc
         return () => { vigente = false; };
     }, [registros.join(','), (fueraDelAcervo ?? []).join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Sin nada que sellar, no se pinta un adorno vacío.
-    if (!trazadas && !noTrazadas && !registros.length) return null;
+    const sinReg = sinRegistro ?? [];
+
+    // Sin nada que sellar, no se pinta un adorno vacío. Pero una tesis sin
+    // registro SÍ es algo que sellar: es precisamente lo que antes salía mudo.
+    if (!trazadas && !noTrazadas && !registros.length && !sinReg.length) return null;
 
     const inventadas = resultados.filter(r => r.estado === 'no_existe');
     const desviadas = resultados.filter(r => r.estado === 'no_corresponde');
     const confirmadas = resultados.filter(r => r.estado === 'existe');
     const dudosas = resultados.filter(r => r.estado === 'sin_comprobar');
 
-    const hayProblema = noTrazadas > 0 || inventadas.length > 0 || desviadas.length > 0;
+    const hayProblema = noTrazadas > 0 || inventadas.length > 0 || desviadas.length > 0 || sinReg.length > 0;
     const comprobando = fase === 'comprobando';
 
     const partes: string[] = [];
@@ -129,6 +138,11 @@ export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAc
         if (desviadas.length) partes.push(
             `${desviadas.length} ${desviadas.length === 1 ? 'registro que NO corresponde' : 'registros que NO corresponden'} al rubro citado`);
         if (dudosas.length) partes.push(`${dudosas.length} sin comprobar`);
+    }
+    if (sinReg.length) {
+        partes.push(`${sinReg.length} ${sinReg.length === 1
+            ? 'tesis citada sin registro digital: NO se pudo comprobar'
+            : 'tesis citadas sin registro digital: NO se pudieron comprobar'}`);
     }
 
     const color = hayProblema ? '#b45309' : '#1f7a4d';
@@ -209,6 +223,43 @@ export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAc
             </div>
         </div>
     );
+}
+
+/**
+ * Citas de tesis SIN registro digital: el punto ciego que costó un cliente.
+ *
+ * EL CASO. El 4-sep-2026 una respuesta le dio a un abogado cinco tesis con su
+ * Época, su Instancia, su Fuente y su rubro —«Tesis: I.3o.C.493 C», «1a./J.
+ * 82/2014»— y ninguna existía. El sello no dijo nada, y no por un fallo: por
+ * diseño. Sólo comprobaba lo escrito como «Registro digital: NNNNNNN», y esas
+ * citas no llevaban ninguno. Peor todavía, sin registros el sello ni siquiera
+ * se pintaba, así que la respuesta salió limpia, sin insignia y sin aviso.
+ *
+ * Una cita sin registro NO se puede comprobar: no hay número que consultar en
+ * el Semanario. Y lo que no se puede comprobar hay que decirlo, no callarlo.
+ *
+ * Se buscan las dos formas en que se numeran las tesis mexicanas:
+ *   · Salas y Pleno .... 1a./J. 82/2014 · 2a./J. 8/2020 · P./J. 20/2014
+ *   · Colegiados ....... I.3o.C.493 C · VI.2o.C. J/207 · I.11o.C.145 C
+ * y se da por buena la que lleve un «Registro digital» a menos de 400
+ * caracteres: ésa ya la comprueba el resto del sello.
+ */
+const PATRON_TESIS = new RegExp(
+    '(?:(?:1a|2a|3a|4a|P|PC)\\.?\\s*\\/\\s*J\\.?\\s*\\d{1,4}\\/\\d{4})'
+    + '|(?:[IVXLC]{1,7}\\.\\d{0,3}[oa]?\\.[A-ZÁÉÍÓÚ]{1,5}\\.\\s*(?:J\\/)?\\s*\\d{1,4}(?:\\s*[A-Z]{1,3})?)',
+    'g');
+
+export function citasSinRegistro(texto: string): string[] {
+    const fuera = new Set<string>();
+    const patron = new RegExp(PATRON_TESIS.source, 'g');
+    let m: RegExpExecArray | null;
+    while ((m = patron.exec(texto)) !== null) {
+        const cerca = texto.slice(Math.max(0, m.index - 400), m.index + 400);
+        if (!/[Rr]egistro(?:\s+digital)?\s*(?:n[úu]m(?:ero)?\.?)?\s*[:.]?\s*\d{6,8}/.test(cerca)) {
+            fuera.add(m[0].replace(/\s+/g, ' ').trim());
+        }
+    }
+    return Array.from(fuera);
 }
 
 /**
