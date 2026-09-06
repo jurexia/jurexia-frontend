@@ -36,21 +36,60 @@ export interface Veredicto {
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
 
 /**
- * ¿Existe este registro en el Semanario, y con qué rubro?
- * Devuelve null cuando no se pudo consultar — que NO es lo mismo que «no
- * existe». Confundir esas dos cosas acusaría a la plataforma de inventar una
- * tesis cada vez que se cae la red.
+ * ¿Están estos registros en el acervo, y con qué rubro?
+ *
+ * NO SE PREGUNTA A LA CORTE EN VIVO, Y ES DELIBERADO   (6-sep-2026)
+ * -----------------------------------------------------------------
+ * La primera versión llamaba a `/semanario/tesis/{registro}`, que consulta
+ * al microservicio de la Corte. La Corte está detrás de Incapsula: desde
+ * Render devuelve 403 SIEMPRE, lo mismo para un registro auténtico que para
+ * uno inventado. Y lo devuelve envuelto en un HTTP 200 con `ok:false`.
+ *
+ * Aquel código hacía `if (!r.ok) return null` — y `r.ok` era **true**. Daba
+ * todo registro por existente con rubro vacío, y con rubro vacío la
+ * comparación no acusa. El veredicto habría sido «no reproducible»: decirle
+ * a un abogado que reportó bien una tesis inventada que su queja no se pudo
+ * comprobar. Exonerar a la plataforma con un endpoint roto.
+ *
+ * Se pregunta al acervo propio, que además es la pregunta correcta: si el
+ * registro no está indexado, el modelo no lo leyó — lo inventó.
+ *
+ * FAIL-CLOSED. `null` significa «no se pudo mirar», y no se parece en nada a
+ * «no existe». Confundirlas acusa a la plataforma de inventar una tesis cada
+ * vez que se cae la red, y al revés la exonera cada vez que falla el acervo.
  */
-async function consultarRegistro(registro: string): Promise<{ existe: boolean; rubro: string } | null> {
+async function consultarAcervo(
+    registros: string[],
+): Promise<Record<string, { existe: boolean; rubro: string }> | null> {
+    if (!registros.length) return {};
     try {
-        const r = await fetch(`${API}/semanario/tesis/${encodeURIComponent(registro)}`, {
-            signal: AbortSignal.timeout(15000),
+        const r = await fetch(`${API}/acervo/registros`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ registros: registros.slice(0, 100) }),
+            signal: AbortSignal.timeout(20000),
         });
-        if (r.status === 404) return { existe: false, rubro: '' };
         if (!r.ok) return null;
         const d = await r.json();
-        const rubro = String(d?.rubro ?? d?.titulo ?? d?.tesis?.rubro ?? '');
-        return { existe: true, rubro };
+
+        // Las dos llaves. `ok` dice que el endpoint respondió; `consultado`
+        // dice que llegó a mirar el acervo de verdad. Sin la segunda, un fallo
+        // interno de Qdrant devolvería todo como no verificado y esto lo leería
+        // como «el modelo se inventó las diez citas».
+        if (d?.ok !== true || d?.consultado !== true) return null;
+
+        const filas = d.registros as Record<string, { valid: boolean; rubro_real: string | null }>;
+        if (!filas || typeof filas !== 'object') return null;
+
+        const salida: Record<string, { existe: boolean; rubro: string }> = {};
+        for (const reg of registros) {
+            const f = filas[reg];
+            // Un registro que ni siquiera viene en la respuesta no se da por
+            // inexistente: se omite, y arriba cuenta como no consultable.
+            if (!f) continue;
+            salida[reg] = { existe: f.valid === true, rubro: f.rubro_real ?? '' };
+        }
+        return salida;
     } catch {
         return null;
     }
@@ -89,9 +128,24 @@ async function verificarTesis(texto: string, contexto: string | null): Promise<V
     const rubroAjeno: Array<{ registro: string; citado: string; real: string }> = [];
     const noConsultables: string[] = [];
 
-    for (const reg of registros.slice(0, 12)) {
-        const ficha = await consultarRegistro(reg);
-        if (ficha === null) { noConsultables.push(reg); continue; }
+    // Una sola llamada para todos: el acervo resuelve el lote entero, y así
+    // no hay estados a medias si la red se corta a la mitad de un bucle.
+    const fichas = await consultarAcervo(registros);
+
+    if (fichas === null) {
+        // No se pudo mirar el acervo. NO se concluye nada — ni a favor ni en
+        // contra. Ésta es la rama que antes exoneraba a la plataforma.
+        return {
+            desenlace: 'sin_medios',
+            prueba: { registros_hallados: registros.length, motivo: 'no se pudo consultar el acervo' },
+            diagnostico: 'El acervo no respondió; la queja queda sin comprobar, no desmentida.',
+            correccion: null,
+        };
+    }
+
+    for (const reg of registros) {
+        const ficha = fichas[reg];
+        if (!ficha) { noConsultables.push(reg); continue; }
         if (!ficha.existe) { inexistentes.push(reg); continue; }
         const citado = rubros[reg] ?? '';
         if (citado && !rubroCorresponde(citado, ficha.rubro)) {
@@ -108,13 +162,13 @@ async function verificarTesis(texto: string, contexto: string | null): Promise<V
     if (inexistentes.length || rubroAjeno.length) {
         const partes: string[] = [];
         if (inexistentes.length)
-            partes.push(`${inexistentes.length} registro(s) no existen en el Semanario: ${inexistentes.join(', ')}`);
+            partes.push(`${inexistentes.length} registro(s) no están en el acervo (el modelo no los leyó, los inventó): ${inexistentes.join(', ')}`);
         if (rubroAjeno.length)
             partes.push(`${rubroAjeno.length} registro(s) existen pero con OTRO rubro del que se les atribuyó`);
         return {
             desenlace: 'confirmada',
             prueba,
-            diagnostico: `Confirmado contra el Semanario. ${partes.join('. ')}.`,
+            diagnostico: `Confirmado contra el acervo. ${partes.join('. ')}.`,
             // Corrección de DATOS: se indexa lo que falta para que el buscador
             // encuentre la tesis buena en lugar de que el modelo la invente.
             correccion: 'Indexar en el acervo las tesis del rubro consultado y añadir el caso a '
@@ -133,11 +187,26 @@ async function verificarTesis(texto: string, contexto: string | null): Promise<V
         };
     }
 
-    if (noConsultables.length === registros.length && registros.length > 0) {
+    // CUALQUIER registro sin comprobar impide desmentir la queja. Antes hacía
+    // falta que fallaran TODOS para no concluir; con eso, tres de cinco sin
+    // mirar y dos correctos bastaban para darle la espalda a quien reportó.
+    // Un hallazgo positivo sí vale con datos parciales —encontrar un fallo es
+    // prueba— pero una absolución, no.
+    if (noConsultables.length) {
         return {
             desenlace: 'sin_medios',
             prueba,
-            diagnostico: 'No se pudo consultar el Semanario en esta vuelta; no se concluye nada.',
+            diagnostico: `${noConsultables.length} de ${registros.length} registro(s) no se `
+                + 'pudieron comprobar; no se desmiente nada con datos incompletos.',
+            correccion: null,
+        };
+    }
+
+    if (!registros.length) {
+        return {
+            desenlace: 'sin_medios',
+            prueba,
+            diagnostico: 'La respuesta no traía ningún registro que comprobar.',
             correccion: null,
         };
     }
@@ -145,8 +214,8 @@ async function verificarTesis(texto: string, contexto: string | null): Promise<V
     return {
         desenlace: 'no_reproducible',
         prueba,
-        diagnostico: `Se comprobaron ${registros.length} registro(s) contra el Semanario y todos `
-            + 'existen con el rubro que se les atribuyó.',
+        diagnostico: `Se comprobaron ${registros.length} registro(s) contra el acervo: todos `
+            + 'están indexados y con el rubro que se les atribuyó.',
         correccion: null,
     };
 }
