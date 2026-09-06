@@ -39,6 +39,10 @@
     {
       "path": "/api/cron/seguimiento",
       "schedule": "0 17 * * 1-5"
+    },
+    {
+      "path": "/api/cron/incidencias",
+      "schedule": "30 13 * * *"
     }
   ]
 }
