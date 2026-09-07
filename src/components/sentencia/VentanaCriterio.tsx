@@ -60,9 +60,168 @@ export function fuerzaDelCriterio(problemas: ProblemaJuridico[]) {
     return { pct, conSentido, conRazon, total: problemas.length };
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   LA SOLUCIÓN GLOBAL, EXPLICADA
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «me gustaría que en la solución global permitas que el modelo proponga
+   la solución global con un botón como "Inserta la solución propuesta" y que el
+   secretario pueda editarla o agregar aspectos. Pero hay que hacerlo más
+   ilustrativo para que el secretario entienda que está haciendo y pueda razonar
+   con toda claridad lo que esta haciendo porque al final es él quien tomará la
+   decisión».
+
+   Lo que había eran cuatro pastillas —Fundado, Infundado, Inoperante,
+   Ineficaz— y una frase explicando la sustracción de materia. Eso pide una
+   decisión sin enseñar sus consecuencias: el secretario elige «fundado» y no
+   ve hasta el .docx que con eso acaba de dejar sin estudio otros cuatro
+   problemas.
+
+   Ahora se ve ANTES: qué problema manda, qué dice el acervo de él, qué le pasa
+   a cada uno de los demás con el sentido elegido, y cómo va a quedar el
+   resolutivo. Y la propuesta del motor se INSERTA —no se aplica sola—, porque
+   quien decide es él: el botón la trae, y a partir de ahí es suya para
+   corregirla.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
+                        razonGlobal, onRazonGlobal }: {
+    problemas: ProblemaJuridico[];
+    propuesta?: { propuestas: { sentido: string; razon: string;
+        prediccion?: { frase: string; confianza: string; sentido: string };
+        jerarquia?: string; problema?: string; alcanza: boolean }[] } | null;
+    sentidoGlobal: string;
+    onSentidoGlobal: (s: string) => void;
+    razonGlobal?: string;
+    onRazonGlobal?: (t: string) => void;
+}) {
+    /* EL PRINCIPAL ES EL QUE MANDA, y si nadie lo marcó, el primero. La
+       sustracción de materia cuelga de él: sin saber cuál es, el secretario no
+       puede prever qué deja fuera. */
+    const iPrincipal = Math.max(0, problemas.findIndex((p) => p.jerarquia === 'principal'));
+    const principal = problemas[iPrincipal];
+    const sugerido = propuesta?.propuestas?.[iPrincipal];
+    const prospera = sentidoGlobal.startsWith('fundad');
+
+    /* LO QUE PASA CON CADA UNO. Es la regla del servidor —`modos_decision`—
+       dicha en pantalla: si el principal prospera, los accesorios quedan sin
+       materia; si no, se estudian todos con el mismo sentido. */
+    const consecuencia = (p: ProblemaJuridico, i: number) =>
+        i === iPrincipal ? 'decide el proyecto'
+            : prospera ? 'queda sin materia'
+            : 'se estudia con el mismo sentido';
+
+    return (
+        <div className="mt-3 space-y-3">
+            {/* 1 · DE QUÉ CUELGA TODO */}
+            <div className="rounded-xl border border-accent-gold/25 bg-accent-gold/[0.05] p-3">
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-accent-gold/80">
+                    El problema que decide el proyecto
+                </p>
+                <p className="text-[12.5px] leading-relaxed text-white/85">
+                    {principal?.pregunta || '—'}
+                </p>
+                {sugerido?.prediccion?.frase && (
+                    <p className="mt-2 text-[11.5px] text-white/45">
+                        El acervo: {sugerido.prediccion.frase}
+                    </p>
+                )}
+            </div>
+
+            {/* 2 · LA DECISIÓN */}
+            <div>
+                <p className="mb-2 text-[12px] leading-relaxed text-white/55">
+                    Elige el sentido. Debajo verás qué le pasa a cada problema
+                    con esa elección, antes de generar nada.
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                    {SENTIDOS.map((sd) => (
+                        <Pastilla key={sd.id} activa={sentidoGlobal === sd.id}
+                                  onClick={() => onSentidoGlobal(sd.id)}>
+                            {sd.etiqueta}
+                        </Pastilla>
+                    ))}
+                    {/* EL BOTÓN QUE TRAE LA PROPUESTA. No decide: rellena. */}
+                    {sugerido?.sentido && (
+                        <button type="button"
+                                onClick={() => {
+                                    onSentidoGlobal(sugerido.sentido);
+                                    if (onRazonGlobal && sugerido.razon && !razonGlobal?.trim()) {
+                                        onRazonGlobal(sugerido.razon);
+                                    }
+                                }}
+                                className="ml-auto rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-3 py-1.5 text-[11.5px] font-medium text-accent-gold transition-colors hover:bg-accent-gold/20">
+                            Insertar la solución propuesta
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* 3 · LA CONSECUENCIA, PROBLEMA A PROBLEMA */}
+            {sentidoGlobal && (
+                <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                        Con ese sentido, el proyecto queda así
+                    </p>
+                    <ul className="space-y-1.5">
+                        {problemas.map((p, i) => (
+                            <li key={p.id} className="flex gap-2 text-[11.5px] leading-snug">
+                                <span className="shrink-0 tabular-nums text-white/30">
+                                    {String(i + 1).padStart(2, '0')}
+                                </span>
+                                <span className="min-w-0 flex-1 text-white/60">
+                                    {p.pregunta.length > 92
+                                        ? p.pregunta.slice(0, 92) + '…' : p.pregunta}
+                                </span>
+                                <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-[10px]',
+                                    i === iPrincipal
+                                        ? 'bg-accent-gold/15 text-accent-gold'
+                                        : prospera
+                                            ? 'bg-white/[0.06] text-white/40'
+                                            : 'bg-white/[0.06] text-white/55')}>
+                                    {consecuencia(p, i)}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                    {prospera && problemas.length > 1 && (
+                        <p className="mt-2 border-t border-white/[0.06] pt-2 text-[11px] leading-relaxed text-white/40">
+                            Los accesorios no se contestan: el proyecto dirá que
+                            quedaron sin materia. Si alguno pide algo que dé MÁS de
+                            lo que concede el principal, ése se estudia igual —el
+                            motor lo detecta y te lo dice—.
+                        </p>
+                    )}
+                </div>
+            )}
+
+            {/* 4 · LA RAZÓN, QUE ES SUYA */}
+            {onRazonGlobal && (
+                <div>
+                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/40">
+                        Por qué. Esto alinea todo el estudio
+                    </label>
+                    <textarea
+                        value={razonGlobal}
+                        onChange={(e) => onRazonGlobal(e.target.value)}
+                        rows={4}
+                        placeholder="La razón por la que el proyecto se resuelve en ese sentido. Si insertaste la propuesta, corrígela y añade lo que falte: el estudio se construye sobre esto."
+                        className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/85 outline-none transition-colors placeholder:text-white/25 focus:border-accent-gold/40" />
+                    {sugerido?.razon && razonGlobal?.trim() === sugerido.razon.trim() && (
+                        <p className="mt-1.5 text-[11px] text-white/35">
+                            Es la propuesta del motor, tal cual. Léela y hazla tuya:
+                            quien firma eres tú.
+                        </p>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+
 export default function VentanaCriterio({
     problemas, onCambiar, onGenerar, generando, onProponer, propuesta,
     modo = 'por_problema', onModo, sentidoGlobal = '', onSentidoGlobal,
+    razonGlobal = '', onRazonGlobal,
     onAportar, aportando, contextoAportado,
 }: {
     problemas: ProblemaJuridico[];
@@ -77,6 +236,11 @@ export default function VentanaCriterio({
     onModo?: (m: 'acervo' | 'global' | 'por_problema') => void;
     sentidoGlobal?: string;
     onSentidoGlobal?: (s: string) => void;
+    /** La razón de la solución global, que el secretario escribe o edita
+     *  después de insertar la que propone el motor. Es lo que alinea el
+     *  estudio: sin ella el proyecto tiene un sentido y ninguna explicación. */
+    razonGlobal?: string;
+    onRazonGlobal?: (t: string) => void;
     /** Pide al motor que proponga el sentido de cada problema. */
     onProponer?: () => void;
     propuesta?: { propuestas: { sentido: string; razon: string; apoyos: string[];
@@ -171,22 +335,11 @@ export default function VentanaCriterio({
                     </div>
 
                     {modo === 'global' && onSentidoGlobal && (
-                        <div className="mt-3">
-                            <p className="mb-2 text-[12px] leading-relaxed text-white/55">
-                                El sentido del <span className="text-white/80">problema principal</span>.
-                                Si resulta fundado, el estudio de los accesorios queda sin
-                                materia y el proyecto lo dice —salvo que alguno pida algo que
-                                dé más de lo concedido, que ésos se estudian igual—.
-                            </p>
-                            <div className="flex flex-wrap gap-1.5">
-                                {SENTIDOS.map((sd) => (
-                                    <Pastilla key={sd.id} activa={sentidoGlobal === sd.id}
-                                              onClick={() => onSentidoGlobal(sd.id)}>
-                                        {sd.etiqueta}
-                                    </Pastilla>
-                                ))}
-                            </div>
-                        </div>
+                        <BloqueGlobal problemas={problemas} propuesta={propuesta}
+                                      sentidoGlobal={sentidoGlobal}
+                                      onSentidoGlobal={onSentidoGlobal}
+                                      razonGlobal={razonGlobal}
+                                      onRazonGlobal={onRazonGlobal} />
                     )}
                 </div>
             )}

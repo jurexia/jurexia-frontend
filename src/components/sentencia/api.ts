@@ -327,9 +327,10 @@ export async function proponerSolucion(
  *  declara innecesario— viven en el servidor, que es donde se pueden probar. */
 export async function resolverConSentidoGlobal(
     numero: string, userEmail: string, sentidoGlobal: string, contexto = '',
+    razonGlobal = '',
 ): Promise<ResultadoProyecto> {
     return resolverConCriterio(numero, userEmail, null, undefined, contexto,
-                               sentidoGlobal);
+                               sentidoGlobal, razonGlobal);
 }
 
 export async function resolverConCriterio(
@@ -340,6 +341,12 @@ export async function resolverConCriterio(
     // duplicado también el manejo de las cabeceras y de los avisos, que es
     // donde vive todo lo que el secretario tiene que leer.
     sentidoGlobal?: string,
+    /* LA RAZÓN DEL SENTIDO GLOBAL. Viaja por el mismo campo `razonamiento` que
+     * el criterio por problema: el servidor la pone sobre el problema
+     * PRINCIPAL, que es del que cuelga todo lo demás. Sin ella el proyecto
+     * salía con un sentido dictado y ninguna explicación detrás, y el estudio
+     * se la inventaba. */
+    razonGlobal?: string,
 ): Promise<ResultadoProyecto> {
     const fd = new FormData();
     fd.append('numero', numero);
@@ -351,7 +358,9 @@ export async function resolverConCriterio(
     // DOS CAMINOS Y NINGUNO ES «QUE SIGA COMO ESTÉ»: o el secretario dicta su
     // criterio, o devuelve la propuesta que acaba de leer —editada o no—.
     if (sentidoGlobal) {
-        // ya va dictado arriba: no se manda criterio por problema
+        // ya va dictado arriba: no se manda criterio por problema, sólo la
+        // razón, que es la que alinea el estudio entero.
+        if (razonGlobal?.trim()) fd.append('razonamiento', razonGlobal.trim());
     } else if (criteriosJson) {
         fd.append('criterios_json', criteriosJson);
     } else if (criterio) {

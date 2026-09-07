@@ -80,6 +80,12 @@ export default function TallerDeSentencias() {
     // como funcionaba: nadie se encuentra con un flujo distinto sin pedirlo.
     const [modo, setModo] = useState<'acervo' | 'global' | 'por_problema'>('por_problema');
     const [sentidoGlobal, setSentidoGlobal] = useState('');
+    /* LA RAZÓN DE LA SOLUCIÓN GLOBAL. El sentido dice QUÉ se resuelve y esto,
+     * POR QUÉ: es lo que alinea el estudio entero. Se insertaba la propuesta
+     * del motor en el modo «acervo» —problema por problema— y en el global no
+     * había dónde ponerla, así que el proyecto salía con un sentido dictado y
+     * ninguna explicación detrás. */
+    const [razonGlobal, setRazonGlobal] = useState('');
     // Lo que el secretario aporta porque el acervo no lo tenía. Vive aquí y
     // viaja con cada petición: el servidor no lo guarda.
     const [contexto, setContexto] = useState('');
@@ -263,7 +269,7 @@ export default function TallerDeSentencias() {
                     return;
                 }
                 const rg = await resolverConSentidoGlobal(
-                    encargo.numero, correo, sentidoGlobal, contexto);
+                    encargo.numero, correo, sentidoGlobal, contexto, razonGlobal);
                 setProyecto(rg);
                 descargarProyecto(rg);
                 setPaso('proyecto');
@@ -303,7 +309,7 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
         } finally { setCorriendo(false); }
-    }, [problemas, encargo.numero, correo, contexto, modo, sentidoGlobal]);
+    }, [problemas, encargo.numero, correo, contexto, modo, sentidoGlobal, razonGlobal]);
 
     const asunto: Asunto = useMemo(() => ({
         numero: encargo.numero || '—',
@@ -384,13 +390,31 @@ export default function TallerDeSentencias() {
                                     : <FileText className="h-4 w-4" />}
                                 Generar adelanto
                             </button>
-                            <button className={cn(boton, 'border border-white/12 bg-white/[0.05] text-white/85 hover:bg-white/[0.08]')}
+            {/* ═══ EL PASO QUE SE PERDÍA ═══
+                David: «después del adelanto viene la parte de consultar
+                acervo. Sin embargo, el secretario se pierde».
+
+                Dos motivos, y los dos eran de la pantalla. El botón se llamaba
+                «Consultar el acervo», que dice lo que hace la máquina por
+                dentro y no lo que el secretario viene a buscar; y estaba en
+                gris de segunda acción, al lado de uno dorado, así que después
+                de generar el adelanto la vista no tenía a dónde ir.
+
+                Ahora dice a qué sirve —buscar la solución jurídica— y late
+                mientras es EL paso que toca. El latido para en cuanto se pulsa:
+                una animación que no se apaga deja de ser una guía y pasa a ser
+                un adorno molesto. */}
+                            <button className={cn(
+                                        boton,
+                                        paso === 'adelanto' && !corriendo
+                                            ? 'bg-red-600 text-white hover:bg-red-500 shadow-[0_0_0_0_rgba(220,38,38,0.7)] animate-[latido_1.8s_ease-out_infinite]'
+                                            : 'border border-white/12 bg-white/[0.05] text-white/85 hover:bg-white/[0.08]')}
                                     disabled={corriendo || paso === 'ficha'}
                                     onClick={pedirAcervo}>
                                 {corriendo && paso === 'adelanto'
                                     ? <Loader2 className="h-4 w-4 animate-spin" />
                                     : <Search className="h-4 w-4" />}
-                                Consultar el acervo
+                                Buscar solución jurídica
                             </button>
                         </div>
 
@@ -446,6 +470,8 @@ export default function TallerDeSentencias() {
                                          onAportar={aportarYProponer} aportando={aportando}
                                          modo={modo} onModo={setModo}
                                          sentidoGlobal={sentidoGlobal}
+                                         razonGlobal={razonGlobal}
+                                         onRazonGlobal={setRazonGlobal}
                                          onSentidoGlobal={setSentidoGlobal}
                                          contextoAportado={contexto.length} />
                     )}

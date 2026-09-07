@@ -1506,3 +1506,29 @@ h6 {
     .neurona { animation: none; opacity: 0.55; }
     .sinapsis { animation: none; opacity: 0.16; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EL LATIDO DEL PASO QUE TOCA
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «que aparezca pulsando en rojo (así el secretario no se pierde)».
+
+   Es un halo que se expande y se apaga, no un parpadeo: el parpadeo cansa la
+   vista en una pantalla que se mira media hora seguida, y en cuanto cansa se
+   deja de ver, que es lo contrario de lo que se busca. El halo llama sin
+   interrumpir la lectura.
+
+   Y RESPETA A QUIEN PIDE QUE NADA SE MUEVA. Hay personas a las que el
+   movimiento en pantalla les produce mareo o migraña, y el sistema operativo
+   tiene una casilla para decirlo. Cuando está puesta, el botón se queda rojo y
+   quieto: sigue siendo el que destaca, sin animación. */
+@keyframes latido {
+    0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.65); }
+    70%  { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-\[latido_1\.8s_ease-out_infinite\] {
+        animation: none !important;
+    }
+}
