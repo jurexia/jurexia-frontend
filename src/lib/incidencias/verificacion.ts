@@ -221,6 +221,197 @@ async function verificarTesis(texto: string, contexto: string | null): Promise<V
 }
 
 /**
+ * Quejas sobre un ARTÍCULO mal citado.
+ *
+ * Es el fallo dominante y el más difícil de ver: el número existe y la ley
+ * existe, así que la cita parece impecable. Sólo falla en el fondo — pertenece
+ * a otro ordenamiento, o no dice lo que se le atribuye.
+ *
+ * Se comprueba en dos tiempos, y el primero es gratis:
+ *
+ *   1. ¿Está ese artículo en ESA ley, dentro del acervo? Si no está, se acabó:
+ *      el modelo no lo leyó. Es determinista, no cuesta una llamada al modelo
+ *      y es el caso de «ese artículo pertenece a otra ley».
+ *
+ *   2. Si está, hay que leer las dos cosas: lo que la respuesta dice del
+ *      artículo y lo que el artículo dice. Ahí sí entra el modelo, y con una
+ *      instrucción sesgada a ABSOLVER: sólo acusa si la contradicción es
+ *      evidente. Un verificador que ve fallos donde no los hay llena la cola
+ *      de trabajo falso y acaba ignorado, que es como se murió la cola vieja.
+ */
+async function verificarArticulos(
+    texto: string, contexto: string | null, estado: string | null,
+): Promise<Veredicto> {
+    const respuesta = contexto ?? '';
+    if (!respuesta.trim()) {
+        return {
+            desenlace: 'sin_medios',
+            prueba: { motivo: 'la queja no trae la respuesta que la provocó' },
+            diagnostico: 'No se guardó la respuesta señalada, así que no hay nada que comprobar.',
+            correccion: null,
+        };
+    }
+
+    let datos: {
+        ok: boolean; consultado: boolean; buscado_en?: string[];
+        citas: Array<{ ley: string; articulo: string; existe: boolean; texto_real: string | null }>;
+    };
+    try {
+        const r = await fetch(`${API}/acervo/articulos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // El estado abre el silo de leyes de su entidad. Sin el, un articulo
+            // del codigo de Sonora sale como inexistente aunque este indexado, y
+            // el circuito acusaria a la plataforma de inventarselo.
+            body: JSON.stringify({ texto: respuesta, estado }),
+            signal: AbortSignal.timeout(25000),
+        });
+        if (!r.ok) throw new Error(`acervo ${r.status}`);
+        datos = await r.json();
+    } catch {
+        return {
+            desenlace: 'sin_medios',
+            prueba: { motivo: 'no se pudo consultar el acervo de leyes' },
+            diagnostico: 'El acervo no respondió; la queja queda sin comprobar, no desmentida.',
+            correccion: null,
+        };
+    }
+
+    if (datos?.consultado !== true) {
+        return {
+            desenlace: 'sin_medios',
+            prueba: { motivo: 'el acervo no llegó a consultarse' },
+            diagnostico: 'El acervo no llegó a consultarse; no se concluye nada.',
+            correccion: null,
+        };
+    }
+
+    const citas = datos.citas ?? [];
+    if (!citas.length) {
+        return {
+            desenlace: 'sin_medios',
+            prueba: { motivo: 'la respuesta no cita ningún artículo con su ley' },
+            diagnostico: 'La respuesta guardada no contiene ninguna cita de artículo con su ley '
+                + 'identificable. Puede estar cortada.',
+            correccion: null,
+        };
+    }
+
+    // ── Primer tiempo: los que no están donde se dijo ───────────────────
+    const ausentes = citas.filter(c => !c.existe);
+    if (ausentes.length) {
+        const lista = ausentes.map(c => `art. ${c.articulo} de ${c.ley}`).slice(0, 6);
+        return {
+            desenlace: 'confirmada',
+            prueba: { citas, ausentes: ausentes.length, buscado_en: datos.buscado_en },
+            diagnostico: `${ausentes.length} de ${citas.length} artículo(s) citados no están en `
+                + `la ley a la que se les atribuyó: ${lista.join('; ')}.`,
+            correccion: 'Indexar en el acervo los artículos ausentes o corregir el metadato `ley` '
+                + 'de los que estén mal clasificados, y añadir el caso a la batería de regresión.',
+        };
+    }
+
+    // ── Segundo tiempo: están, pero ¿dicen lo que se les atribuye? ──────
+    const juicio = await contrastarSentido(respuesta, citas);
+    if (juicio === null) {
+        return {
+            desenlace: 'sin_medios',
+            prueba: { citas, motivo: 'no se pudo contrastar el sentido' },
+            diagnostico: `Los ${citas.length} artículos citados existen en su ley. No se pudo `
+                + 'contrastar si la respuesta los interpretó bien.',
+            correccion: null,
+        };
+    }
+
+    if (juicio.contradice) {
+        return {
+            desenlace: 'confirmada',
+            prueba: { citas, contraste: juicio },
+            diagnostico: `Los artículos existen, pero la respuesta le atribuye a ${juicio.cual} `
+                + `algo que su texto no dice: ${juicio.porque}`,
+            correccion: 'Revisar el troceado y el texto indexado de ese artículo, y añadir el '
+                + 'caso a la batería de regresión con el texto correcto como referencia.',
+        };
+    }
+
+    return {
+        desenlace: 'no_reproducible',
+        prueba: { citas, contraste: juicio },
+        diagnostico: `Se comprobaron ${citas.length} artículo(s) contra el acervo: todos están en `
+            + 'la ley que se les atribuyó y su texto respalda lo que dice la respuesta.',
+        correccion: null,
+    };
+}
+
+/**
+ * ¿La respuesta le hace decir a algún artículo lo que no dice?
+ *
+ * Sesgado a absolver a propósito. Devuelve null si no se pudo juzgar — que no
+ * es «no contradice», y por eso arriba se trata como `sin_medios`.
+ */
+async function contrastarSentido(
+    respuesta: string,
+    citas: Array<{ ley: string; articulo: string; texto_real: string | null }>,
+): Promise<{ contradice: boolean; cual: string; porque: string } | null> {
+    const clave = process.env.OPENROUTER_API_KEY;
+    if (!clave) return null;
+
+    const conTexto = citas.filter(c => c.texto_real).slice(0, 6);
+    if (!conTexto.length) return null;
+
+    const dossier = conTexto
+        .map(c => `--- Artículo ${c.articulo} de ${c.ley} (TEXTO OFICIAL):\n${(c.texto_real ?? '').slice(0, 1800)}`)
+        .join('\n\n');
+
+    const instruccion = `Eres un revisor jurídico mexicano. Se te da una respuesta que dio un asistente legal y el TEXTO OFICIAL de los artículos que citó.
+
+Tu única tarea: decir si la respuesta le atribuye a algún artículo algo que su texto NO dice.
+
+Devuelve SOLO un JSON: {"contradice":false,"cual":"","porque":""}
+
+REGLAS, en orden de importancia:
+1. Ante la duda, contradice=false. Sólo acusa si la contradicción es EVIDENTE al comparar los dos textos: la respuesta dice que el artículo regula X y el artículo regula otra cosa, o le atribuye un supuesto, un plazo o un sujeto que no aparece.
+2. Que la respuesta resuma, parafrasee o cite sólo una parte NO es contradicción.
+3. Que la respuesta añada razonamiento propio alrededor de la cita NO es contradicción.
+4. Si el artículo viene cortado y no puedes comparar, contradice=false.
+
+En "cual" pon «artículo N de LEY». En "porque", una frase: qué dice la respuesta frente a qué dice el artículo.`;
+
+    try {
+        const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${clave}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://www.iurexia.com',
+                'X-Title': 'Iurexia Verificacion',
+            },
+            body: JSON.stringify({
+                model: process.env.TRIAJE_MODELO || 'google/gemini-2.5-flash-lite',
+                max_tokens: 250,
+                temperature: 0,
+                response_format: { type: 'json_object' },
+                messages: [
+                    { role: 'system', content: instruccion },
+                    { role: 'user', content: `RESPUESTA DEL ASISTENTE:\n${respuesta.slice(0, 9000)}\n\n${dossier}` },
+                ],
+            }),
+        });
+        if (!r.ok) return null;
+        const d = await r.json();
+        const crudo = (d?.choices?.[0]?.message?.content || '').trim();
+        const j = JSON.parse(crudo.replace(/^```json\s*|\s*```$/g, ''));
+        return {
+            contradice: j.contradice === true,
+            cual: String(j.cual || '').slice(0, 120),
+            porque: String(j.porque || '').slice(0, 400),
+        };
+    } catch {
+        return null;
+    }
+}
+
+/**
  * Qué clases sabe verificar el circuito hoy, y cuáles no.
  *
  * Esta lista se queda corta a propósito. Una clase que no está aquí sale como
@@ -229,10 +420,16 @@ async function verificarTesis(texto: string, contexto: string | null): Promise<V
  */
 export async function verificar(inc: {
     clase: string | null; texto: string; contexto: string | null;
+    estado_usuario?: string | null;
 }): Promise<Veredicto> {
     switch (inc.clase) {
         case 'calidad/tesis-falsa':
             return verificarTesis(inc.texto, inc.contexto);
+
+        // El fallo dominante: cinco de las nueve correcciones reales.
+        case 'calidad/articulo-mal-citado':
+        case 'calidad/respuesta-erronea':
+            return verificarArticulos(inc.texto, inc.contexto, inc.estado_usuario ?? null);
 
         // Estas se detectan por su rastro en el propio texto, sin red.
         case 'defecto/error-crudo': {

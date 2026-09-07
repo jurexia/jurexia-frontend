@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     // mejora, ni buzón equivocado: ésas no son fallos que reproducir.
     const { data: porVerificar } = await cliente
         .from('incidencias')
-        .select('id, clase, texto, contexto, requiere_vb')
+        .select('id, clase, texto, contexto, requiere_vb, estado_usuario')
         .eq('estado', 'triada')
         .in('familia', ['defecto', 'calidad'])
         .order('creado_at', { ascending: true })
@@ -86,7 +86,10 @@ export async function GET(req: NextRequest) {
     const verificadas = { confirmadas: 0, no_reproducibles: 0, sin_medios: 0 };
 
     for (const inc of porVerificar ?? []) {
-        const v = await verificar(inc as { clase: string | null; texto: string; contexto: string | null });
+        const v = await verificar(inc as {
+            clase: string | null; texto: string; contexto: string | null;
+            estado_usuario: string | null;
+        });
 
         // Un `sin_medios` NO avanza de estado: se queda en `triada` con la
         // razón anotada, y lo recoge el bucle asistido. Si avanzara, el

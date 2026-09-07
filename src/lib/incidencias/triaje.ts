@@ -70,6 +70,14 @@ const REGLAS: Array<[RegExp, Familia, string]> = [
     [/(art[íi]culos.*(muchos|todos|s[óo]lo n[úu]meros|solo numeros|pone ))|pone muchos numeros|todos los que integran/,
         'calidad', 'calidad/enumera-articulos'],
     [/(tesis|jurisprudencia|precedent).*(invent|no existe|falsa)/, 'calidad', 'calidad/tesis-falsa'],
+    // EL FALLO DOMINANTE, y no lo supimos hasta leer las correcciones reales:
+    // cinco de nueve se quejan de un ARTÍCULO, no de una tesis. «El artículo
+    // 903 que citas es para juicios ante jueces locales», «ese artículo
+    // pertenece a otra ley», «el artículo 371 que citas no dice eso». Es más
+    // difícil de ver que una tesis inventada —el número existe, la ley
+    // existe— y por eso llega hasta el abogado.
+    [/art[íi]culo[^.]{0,60}(que citas|pertenece a otra|no dice eso|no regula|es para juicios|no es aplicable)|(?:citas|citaste)[^.]{0,40}art[íi]culo/,
+        'calidad', 'calidad/articulo-mal-citado'],
     [/tergivers|incoherent|no se configura|s[óo]lo ubica|solo ubica|no satisfactori|no tiene acceso a sus ordenamientos|no tiene capacidad/,
         'calidad', 'calidad/respuesta-erronea'],
     [/muy corta|no me dio la repuesta completa|no ofreces/, 'calidad', 'calidad/respuesta-pobre'],
@@ -102,7 +110,8 @@ Clases posibles:
 - defecto/cancelacion, defecto/cobra-consulta-fallida, defecto/historial, defecto/subida,
   defecto/error-crudo, defecto/plan-no-aplicado, defecto/funcion-prometida,
   defecto/acceso-movil, defecto/error-generico, defecto/interfaz
-- calidad/enumera-articulos, calidad/tesis-falsa, calidad/respuesta-erronea, calidad/respuesta-pobre
+- calidad/enumera-articulos, calidad/tesis-falsa, calidad/articulo-mal-citado,
+  calidad/respuesta-erronea, calidad/respuesta-pobre
 - soporte/cancelacion, soporte/planes-y-cobro, soporte/uso, soporte/sin-respuesta
 - mejora
 - buzon-equivocado
@@ -111,6 +120,11 @@ DISTINCIÓN CLAVE — «defecto» frente a «calidad»:
 · defecto = la plataforma no funcionó (error, pantalla en blanco, no respondió, cobró de más).
 · calidad = la plataforma SÍ respondió, pero la respuesta estaba mal (ley equivocada,
   tesis inventada, transcripción tergiversada, enumeró artículos sin venir a cuento).
+
+«calidad/articulo-mal-citado» es el caso más frecuente y merece cajón propio: la
+respuesta citó un artículo que pertenece a otra ley, o le atribuyó un contenido que
+no tiene. Señales: «el artículo N que citas», «ese artículo pertenece a otra ley»,
+«no dice eso», «no regula eso».
 
 «buzon-equivocado» es la clase más frecuente y la más fácil de fallar: es gente que
 escribió su CONSULTA JURÍDICA aquí creyendo que era el chat. Textos como «amparo»,
@@ -202,6 +216,7 @@ export function requiereVistoBueno(clase: string): boolean {
     const AUTOMATICAS = new Set([
         'calidad/tesis-falsa',        // → indexar/corregir el acervo
         'calidad/respuesta-erronea',  // → corregir la norma o su metadato
+        'calidad/articulo-mal-citado', // → indexar/corregir la ley y su metadato
         'calidad/enumera-articulos',  // → sólo si la causa resulta ser de datos
     ]);
     return !AUTOMATICAS.has(clase);

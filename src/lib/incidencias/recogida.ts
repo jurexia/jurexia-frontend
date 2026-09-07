@@ -43,6 +43,8 @@ interface Entrada {
     texto: string;
     contexto: string | null;
     creado_at: string;
+    /** Sin esto la verificacion de articulos no abre el silo del estado. */
+    estado_usuario: string | null;
 }
 
 /** Reportes de la plataforma que aún no están en el libro. */
@@ -62,6 +64,7 @@ async function deReportes(cliente: ReturnType<typeof admin>): Promise<Entrada[]>
         user_id: (r.user_id as string) ?? null,
         texto: String(r.message ?? ''),
         contexto: null,
+        estado_usuario: null,
         creado_at: String(r.created_at),
     }));
 }
@@ -76,7 +79,7 @@ async function deReportes(cliente: ReturnType<typeof admin>): Promise<Entrada[]>
 async function deCorrecciones(cliente: ReturnType<typeof admin>): Promise<Entrada[]> {
     const { data, error } = await cliente
         .from('correcciones_usuario')
-        .select('id, correo, user_id, texto, respuesta_previa, senal, creado_at')
+        .select('id, correo, user_id, texto, respuesta_previa, senal, estado, creado_at')
         .order('creado_at', { ascending: true })
         .limit(200);
     if (error) throw new Error(`correcciones: ${error.message}`);
@@ -88,6 +91,7 @@ async function deCorrecciones(cliente: ReturnType<typeof admin>): Promise<Entrad
         user_id: (r.user_id as string) ?? null,
         texto: [r.senal ? `[${r.senal}] ` : '', String(r.texto ?? '')].join(''),
         contexto: (r.respuesta_previa as string) ?? null,
+        estado_usuario: (r.estado as string) ?? null,
         creado_at: String(r.creado_at),
     }));
 }
@@ -129,6 +133,7 @@ export async function recoger(): Promise<Recogida> {
                 origen: c.origen, origen_id: c.origen_id, folio: c.folio,
                 user_email: c.user_email, user_id: c.user_id,
                 texto: c.texto, contexto: c.contexto, creado_at: c.creado_at,
+                estado_usuario: c.estado_usuario,
                 familia: cl.familia, clase: cl.clase,
                 triaje_por: cl.por, confianza: cl.confianza,
                 estado: 'triada',
