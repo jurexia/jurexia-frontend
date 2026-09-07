@@ -204,7 +204,20 @@ export default function TallerDeSentencias() {
         try {
             const p = await proponerSolucion(encargo.numero, correo, contexto);
             setPropuesta(p);
-            setModo('acervo');
+            /* SE ENTRA DIRECTO A LA DECISIÓN, con la propuesta del motor ya
+               puesta. Es lo que automatiza el trabajo: el caso frecuente es
+               seguirla, y el secretario llega a una pantalla que ya dice cómo
+               se resuelve, por qué, y qué pasa con cada tema. Si no está de
+               acuerdo, la vía contraria está a un clic.
+               Antes caía en 'acervo', que es el volcado de tesis: la pantalla
+               donde se perdía. */
+            if (p.global?.alcanza) {
+                setModo('global');
+                setSentidoGlobal(p.global.sentido || '');
+                setRazonGlobal(p.global.razon || '');
+            } else {
+                setModo('acervo');
+            }
             // Se vuelca sobre los problemas para que se vean y se puedan editar.
             setProblemas((prev) => prev.map((q, i) => {
                 const s = p.propuestas[i];
@@ -425,16 +438,27 @@ export default function TallerDeSentencias() {
                         )}
                     </Tarjeta>
 
+                    {/* EL ACERVO, PLEGADO. Antes se desplegaba entero al pulsar
+                        el botón rojo y era donde el secretario se perdía: ocho
+                        tesis y treinta preceptos como pantalla de decisión.
+                        No sobra —es lo que impide citar de memoria— pero es
+                        material de FUNDAR, no de DECIDIR, así que va detrás de
+                        un pliegue y se abre cuando se quiere comprobar algo. */}
                     {material && (
                         <Tarjeta>
-                            <Rotulo accion={
+                          <details className="group">
+                            <summary className="-m-1 cursor-pointer list-none rounded-lg p-1 transition-colors hover:bg-white/[0.02]">
+                              <Rotulo accion={
                                 <span className="text-[11px] text-white/30">
                                     {material.tesis.filter((t) => t.obligatoria).length} obligatorias
                                     {' · '}{material.tesis.length} en total
+                                    {' · '}<span className="text-white/45 group-open:hidden">ver</span>
+                                    <span className="hidden text-white/45 group-open:inline">ocultar</span>
                                 </span>
-                            }>
-                                Lo que dice el acervo
-                            </Rotulo>
+                              }>
+                                En qué se apoya
+                              </Rotulo>
+                            </summary>
                             <ul className="grid gap-2">
                                 {material.tesis.slice(0, 12).map((t) => (
                                     <li key={t.registro}
@@ -460,6 +484,7 @@ export default function TallerDeSentencias() {
                                     {material.normas.slice(0, 6).map((n) => `art. ${n.articulo}`).join(' · ')}
                                 </p>
                             )}
+                          </details>
                         </Tarjeta>
                     )}
 

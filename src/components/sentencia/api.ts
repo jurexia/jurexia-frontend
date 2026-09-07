@@ -304,6 +304,34 @@ export interface SolucionGlobal {
     /** false = el motor no alcanzó a proponerla. Se declara el hueco; no se
      *  rellena con la del problema principal. */
     alcanza: boolean;
+    /** EL CONTEXTO EN PROSA. Cuatro párrafos que sustituyen al volcado del
+     *  acervo: es lo primero que lee el secretario y con lo que forma su
+     *  criterio, sin volver al expediente. */
+    contexto: {
+        hechos: string;
+        resolvio: string;
+        combate: string;
+        tema_principal: string;
+    };
+    /** LA VÍA CONTRARIA, YA ESCRITA. Si el secretario no está de acuerdo,
+     *  marca lo contrario y aparece en el acto —no espera otra llamada—.
+     *  No es la propuesta negada: es cómo se sostendría la solución opuesta. */
+    alternativa: {
+        sentido: string;
+        razon: string;
+        efecto: string;
+        apoyos: string[];
+    };
+    /** LA LISTA DE COMPROBACIÓN. Todos los temas con su suerte en las DOS
+     *  vías. El servidor la completa contra los problemas reales: si el modelo
+     *  omitió uno, aparece con la suerte SIN DETERMINAR. */
+    checklist: {
+        tema: string;
+        papel: string;
+        con_propuesta: string;
+        con_alternativa: string;
+        tema_distinto?: boolean;
+    }[];
 }
 
 export interface RespuestaPropuesta {

@@ -20,7 +20,9 @@
 import React, { useMemo, useState } from 'react';
 import { PenLine, Lightbulb, ArrowRight } from 'lucide-react';
 import { Tarjeta, Pastilla, cn } from './primitivas';
+import SolucionDelAsunto from './SolucionDelAsunto';
 import type { ProblemaJuridico } from './tipos';
+import type { SolucionGlobal } from './api';
 
 const SENTIDOS: { id: NonNullable<ProblemaJuridico['sentido']>; etiqueta: string }[] = [
     { id: 'fundado', etiqueta: 'Fundado' },
@@ -321,6 +323,10 @@ export default function VentanaCriterio({
         prediccion?: { frase: string; confianza: string; sentido: string };
         jerarquia?: string; problema?: string;
                                 confianza: string; alcanza: boolean }[];
+        /* LA SOLUCIÓN DEL ASUNTO, con su contexto, su vía contraria y la lista
+           de comprobación. Se declara con el tipo del cliente para no
+           mantener dos copias de la misma forma. */
+        global?: SolucionGlobal | null;
                   avisos: string[] } | null;
     /** Sube el documento que el motor echó en falta, o escribe el contexto. */
     onAportar?: (documento: File | null, texto: string) => void;
@@ -328,6 +334,27 @@ export default function VentanaCriterio({
     contextoAportado?: number;
 }) {
     const fuerza = useMemo(() => fuerzaDelCriterio(problemas), [problemas]);
+    /* CUÁL DE LAS DOS VÍAS. Por omisión la propuesta del motor: ése es el
+       caso frecuente y es lo que automatiza el trabajo. La contraria está a un
+       clic. */
+    const [via, setVia] = useState<'propuesta' | 'alternativa'>('propuesta');
+
+    /* CAMBIAR DE VÍA SUSTITUYE LA RAZÓN, aunque el secretario la hubiera
+       editado. No es un descuido: son resoluciones OPUESTAS, y quedarse con la
+       razón de conceder en un proyecto que niega es exactamente la
+       incongruencia que este utillaje existe para evitar —ya pasó, y costó un
+       engrose con efectos de concesión y un resolutivo que negaba—.
+       Se avisa en pantalla antes de que ocurra, y el texto del motor siempre
+       está a un clic con «Volver a la del motor». */
+    const elegirVia = React.useCallback((v: 'propuesta' | 'alternativa') => {
+        setVia(v);
+        const g = propuesta?.global;
+        if (!g) return;
+        const fuente = v === 'alternativa' ? g.alternativa : g;
+        onSentidoGlobal?.(fuente?.sentido || '');
+        onRazonGlobal?.(fuente?.razon || '');
+    }, [propuesta, onSentidoGlobal, onRazonGlobal]);
+
     const [contexto, setContexto] = useState('');
     const [fichero, setFichero] = useState<File | null>(null);
     // BASTA UN SENTIDO PARA PODER GENERAR. Exigirlos todos dejaba al
@@ -409,11 +436,27 @@ export default function VentanaCriterio({
                     </div>
 
                     {modo === 'global' && onSentidoGlobal && (
-                        <BloqueGlobal problemas={problemas} propuesta={propuesta}
-                                      sentidoGlobal={sentidoGlobal}
-                                      onSentidoGlobal={onSentidoGlobal}
-                                      razonGlobal={razonGlobal}
-                                      onRazonGlobal={onRazonGlobal} />
+                        propuesta?.global ? (
+                            /* LA PANTALLA DE DECISIÓN. Sustituye a BloqueGlobal:
+                               contexto en prosa, dos vías —la propuesta y la
+                               contraria, ya escritas— y la lista de
+                               comprobación de todos los temas.
+                               BloqueGlobal se conserva abajo para cuando el
+                               motor no alcanzó a proponer nada: entonces no hay
+                               dos vías que ofrecer y el secretario fija el
+                               sentido a mano, como siempre. */
+                            <SolucionDelAsunto
+                                global={propuesta.global} via={via}
+                                onVia={elegirVia}
+                                razon={razonGlobal ?? ''}
+                                onRazon={(t) => onRazonGlobal?.(t)} />
+                        ) : (
+                            <BloqueGlobal problemas={problemas} propuesta={propuesta}
+                                          sentidoGlobal={sentidoGlobal}
+                                          onSentidoGlobal={onSentidoGlobal}
+                                          razonGlobal={razonGlobal}
+                                          onRazonGlobal={onRazonGlobal} />
+                        )
                     )}
                 </div>
             )}
