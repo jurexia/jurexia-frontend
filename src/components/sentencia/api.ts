@@ -386,6 +386,130 @@ export async function resolverConSentidoGlobal(
                                globalJson);
 }
 
+const TIPO_DOCX = 'application/vnd.openxmlformats-officedocument'
+                + '.wordprocessingml.document';
+
+
+/** LA RESOLUCIÓN POR FLUJO, que es la que debe usarse.
+ *
+ *  POR QUÉ EXISTE ESTE CAMINO. El servidor lo tenía escrito y probado desde
+ *  hacía tiempo y la pantalla no lo llamaba nunca: todo salía por
+ *  /taller/resolver, que devuelve el .docx en una sola respuesta al cabo de
+ *  varios minutos. Medido el 7-sep-2026 sobre la revisión 410/2026: dos veces
+ *  seguidas el servidor TERMINÓ el trabajo —«POST /taller/resolver 200 · 4,031
+ *  palabras», sin `WORKER TIMEOUT` ni traza en los registros— y la respuesta no
+ *  llegó nunca. El proyecto existía y era inalcanzable.
+ *
+ *  El flujo no deja ese hueco largo: va emitiendo el estudio según se escribe,
+ *  y al final manda el documento dentro del propio flujo. Además el secretario
+ *  ve trabajar al sistema en vez de mirar cuatro minutos de pantalla quieta,
+ *  que es lo que se siente como una avería.
+ *
+ *  `onTexto` recibe cada trozo del estudio según llega. */
+export async function resolverEnVivo(
+    numero: string, userEmail: string,
+    opciones: {
+        criterio?: Criterio | null; criteriosJson?: string; contexto?: string;
+        sentidoGlobal?: string; razonGlobal?: string;
+        resolvioDeclarado?: string; globalJson?: string;
+    },
+    onTexto?: (trozo: string) => void,
+    onComponiendo?: () => void,
+): Promise<ResultadoProyecto> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    const o = opciones || {};
+    if (o.sentidoGlobal) {
+        fd.append('modo_decision', 'global');
+        fd.append('sentido_global', o.sentidoGlobal);
+        if (o.razonGlobal?.trim()) fd.append('razonamiento', o.razonGlobal.trim());
+    } else if (o.criteriosJson) {
+        fd.append('criterios_json', o.criteriosJson);
+    } else if (o.criterio) {
+        fd.append('sentido', o.criterio.sentido);
+        fd.append('problema', o.criterio.problema ?? '');
+        fd.append('razonamiento', o.criterio.razonamiento ?? '');
+    }
+    if (o.contexto) fd.append('contexto', o.contexto);
+    if (o.resolvioDeclarado?.trim())
+        fd.append('resolvio_declarado', o.resolvioDeclarado.trim());
+    if (o.globalJson?.trim()) fd.append('global_json', o.globalJson.trim());
+
+    const res = await fetch(`${BASE}/taller/resolver/stream`,
+                            { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    if (!res.body) throw new Error('El servidor no devolvió un flujo.');
+
+    const lector = res.body.getReader();
+    const dec = new TextDecoder();
+    let resto = '';
+    let listo: Record<string, unknown> | null = null;
+
+    for (;;) {
+        const { done, value } = await lector.read();
+        if (done) break;
+        resto += dec.decode(value, { stream: true });
+        /* Los eventos van separados por una línea en blanco. Se guarda lo que
+           quede a medias: un trozo puede cortar un evento por la mitad. */
+        const partes = resto.split('\n\n');
+        resto = partes.pop() ?? '';
+        for (const bruto of partes) {
+            const linea = bruto.trim();
+            if (!linea.startsWith('data:')) continue;
+            let ev: Record<string, unknown>;
+            try {
+                ev = JSON.parse(linea.slice(5).trim());
+            } catch {
+                continue;               // un evento ilegible no tumba la corrida
+            }
+            if (ev.tipo === 'texto' && typeof ev.dato === 'string') {
+                onTexto?.(ev.dato);
+            } else if (ev.tipo === 'componiendo') {
+                onComponiendo?.();
+            } else if (ev.tipo === 'error') {
+                throw new Error(String(ev.mensaje || 'Falló la generación.'));
+            } else if (ev.tipo === 'listo') {
+                listo = ev;
+            }
+        }
+    }
+    if (!listo) {
+        throw new Error('El flujo terminó sin entregar el proyecto. '
+                        + 'Puedes recuperarlo con «Descargar de nuevo».');
+    }
+
+    /* EL DOCUMENTO VIENE DENTRO DEL FLUJO, en base64. Si por lo que sea no
+       viniera, se pide por /taller/descargar, que ahora lo busca también en el
+       almacén y no sólo en el disco del proceso que lo generó. */
+    let documento: Blob;
+    const b64 = String(listo.docx_b64 || '');
+    if (b64) {
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        documento = new Blob([bytes], { type: TIPO_DOCX });
+    } else {
+        const r2 = await fetch(
+            `${BASE}/taller/descargar?numero=${encodeURIComponent(numero)}`
+            + `&user_email=${encodeURIComponent(userEmail)}`);
+        if (!r2.ok) return _fallo(r2);
+        documento = await r2.blob();
+    }
+    const avisos = Array.isArray(listo.avisos) ? listo.avisos : [];
+    const huecos = Array.isArray(listo.huecos) ? listo.huecos : [];
+    return {
+        documento,
+        nombre: String(listo.nombre || `${numero.replace('/', '-')}.docx`),
+        esBorrador: true,
+        palabras: Number(listo.palabras || 0),
+        avisos: avisos.length,
+        huecos: huecos.length,
+        tieneAdvertencias: Boolean(listo.advertencias),
+    };
+}
+
+
 export async function resolverConCriterio(
     numero: string, userEmail: string, criterio: Criterio | null,
     criteriosJson?: string, contexto?: string,

@@ -36,7 +36,8 @@ import type { Asunto, Documento, Fase, ProblemaJuridico, RolDocumento } from '@/
 import {
     generarAdelanto, descargar, consultarAcervo, resolverConCriterio,
     resolverConSentidoGlobal,
-    proponerSolucion, aportarContexto, type RespuestaPropuesta,
+    proponerSolucion, aportarContexto, resolverEnVivo,
+    type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
 } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -86,6 +87,10 @@ export default function TallerDeSentencias() {
      * había dónde ponerla, así que el proyecto salía con un sentido dictado y
      * ninguna explicación detrás. */
     const [razonGlobal, setRazonGlobal] = useState('');
+    /* EL ESTUDIO, SEGÚN SE ESCRIBE. Cuatro minutos de pantalla quieta se
+       sienten como una avería; viéndose escribir se sienten como trabajo. Y de
+       paso el secretario va leyendo y puede parar si ve que va mal encaminado. */
+    const [avance, setAvance] = useState('');
     // Lo que el secretario aporta porque el acervo no lo tenía. Vive aquí y
     // viaja con cada petición: el servidor no lo guarda.
     const [contexto, setContexto] = useState('');
@@ -281,13 +286,26 @@ export default function TallerDeSentencias() {
                     setCorriendo(false);
                     return;
                 }
-                const rg = await resolverConSentidoGlobal(
-                    encargo.numero, correo, sentidoGlobal, contexto, razonGlobal,
-                    // Qué resolvió el órgano recurrido, del contexto que
-                    // escribió el motor. Decide el verbo del resolutivo.
-                    propuesta?.global?.contexto?.resolvio ?? '',
-                    // Y la propuesta global entera, para el estudio.
-                    propuesta?.global ? JSON.stringify(propuesta.global) : '');
+                // POR EL FLUJO, NO POR LA LLAMADA BLOQUEANTE. El servidor
+                // tenía este camino escrito y nadie lo llamaba: todo salía por
+                // /taller/resolver, que devuelve el .docx en una sola respuesta
+                // al cabo de varios minutos. Medido el 7-sep-2026 en la
+                // revisión 410/2026: el servidor TERMINÓ el trabajo dos veces
+                // —«200 · 4,031 palabras», sin timeout ni traza— y la respuesta
+                // no llegó. El proyecto existía y era inalcanzable.
+                setAvance('');
+                const rg = await resolverEnVivo(
+                    encargo.numero, correo, {
+                        sentidoGlobal, contexto, razonGlobal,
+                        // Qué resolvió el órgano recurrido, del contexto que
+                        // escribió el motor. Decide el verbo del resolutivo.
+                        resolvioDeclarado: propuesta?.global?.contexto?.resolvio ?? '',
+                        // Y la propuesta global entera, para el estudio.
+                        globalJson: propuesta?.global
+                            ? JSON.stringify(propuesta.global) : '',
+                    },
+                    (t) => setAvance((x) => x + t),
+                    () => setAvance((x) => x + '\n\n… componiendo el documento'));
                 setProyecto(rg);
                 descargarProyecto(rg);
                 setPaso('proyecto');
@@ -311,16 +329,19 @@ export default function TallerDeSentencias() {
                       prediccion: p.prediccion ?? {},
                   })))
                 : undefined;
-            const r = await resolverConCriterio(
-                encargo.numero, correo,
-                criteriosJson ? null : {
-                    sentido: problemas[0]?.sentido ?? 'infundado',
-                    problema: problemas[0]?.pregunta ?? '',
-                    razonamiento: problemas.filter((p) => p.criterio)
-                        .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
+            setAvance('');
+            const r = await resolverEnVivo(
+                encargo.numero, correo, {
+                    criterio: criteriosJson ? null : {
+                        sentido: problemas[0]?.sentido ?? 'infundado',
+                        problema: problemas[0]?.pregunta ?? '',
+                        razonamiento: problemas.filter((p) => p.criterio)
+                            .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
+                    },
+                    criteriosJson, contexto,
                 },
-                criteriosJson, contexto,
-            );
+                (t) => setAvance((x) => x + t),
+                () => setAvance((x) => x + '\n\n… componiendo el documento'));
             setProyecto(r);
             descargarProyecto(r);
             setPaso('proyecto');
@@ -504,6 +525,29 @@ export default function TallerDeSentencias() {
                                          onRazonGlobal={setRazonGlobal}
                                          onSentidoGlobal={setSentidoGlobal}
                                          contextoAportado={contexto.length} />
+                    )}
+
+                    {/* EL ESTUDIO, VIÉNDOSE ESCRIBIR. Antes aquí no había nada
+                        durante cuatro minutos y el secretario no sabía si el
+                        sistema trabajaba o se había caído. Ahora lee mientras
+                        se escribe: si ve que va mal encaminado, no espera al
+                        final para saberlo. */}
+                    {corriendo && avance && (
+                        <Tarjeta>
+                            <Rotulo accion={
+                                <span className="text-[11px] tabular-nums text-white/30">
+                                    {avance.trim().split(/\s+/).length} palabras
+                                </span>
+                            }>
+                                Escribiendo el estudio
+                            </Rotulo>
+                            <div className="max-h-[26rem] overflow-y-auto rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+                                <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-white/70">
+                                    {avance}
+                                    <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-accent-gold align-middle" />
+                                </p>
+                            </div>
+                        </Tarjeta>
                     )}
 
                     {proyecto && (
