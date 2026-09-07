@@ -379,10 +379,10 @@ export async function proponerSolucion(
  *  declara innecesario— viven en el servidor, que es donde se pueden probar. */
 export async function resolverConSentidoGlobal(
     numero: string, userEmail: string, sentidoGlobal: string, contexto = '',
-    razonGlobal = '',
+    razonGlobal = '', resolvioDeclarado = '',
 ): Promise<ResultadoProyecto> {
     return resolverConCriterio(numero, userEmail, null, undefined, contexto,
-                               sentidoGlobal, razonGlobal);
+                               sentidoGlobal, razonGlobal, resolvioDeclarado);
 }
 
 export async function resolverConCriterio(
@@ -399,6 +399,19 @@ export async function resolverConCriterio(
      * salía con un sentido dictado y ninguna explicación detrás, y el estudio
      * se la inventaba. */
     razonGlobal?: string,
+    /* QUÉ RESOLVIÓ EL ÓRGANO RECURRIDO —«sobreseyó», «negó», «concedió»—, tal
+     * como lo resumió el motor al preparar la propuesta.
+     *
+     * Viaja de vuelta como `criteriosJson` y por la misma razón: el servidor
+     * corre con dos workers y lo que guardó el que atendió /taller/proponer
+     * puede no existir en el que atienda esto.
+     *
+     * Decide el VERBO DEL RESOLUTIVO cuando los antecedentes no llegan a
+     * decirlo. En la revisión 410/2026 salió «Se ********* la sentencia
+     * recurrida» tres párrafos después de que el estudio dijera «se confirma
+     * la sentencia recurrida» y «debe mantener el sobreseimiento decretado»:
+     * el dato estaba, pero no llegaba hasta aquí. */
+    resolvioDeclarado?: string,
 ): Promise<ResultadoProyecto> {
     const fd = new FormData();
     fd.append('numero', numero);
@@ -421,6 +434,9 @@ export async function resolverConCriterio(
         fd.append('razonamiento', criterio.razonamiento ?? '');
     }
     if (contexto) fd.append('contexto', contexto);
+    if (resolvioDeclarado?.trim()) {
+        fd.append('resolvio_declarado', resolvioDeclarado.trim());
+    }
     const res = await fetch(`${BASE}/taller/resolver`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
 

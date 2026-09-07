@@ -282,7 +282,10 @@ export default function TallerDeSentencias() {
                     return;
                 }
                 const rg = await resolverConSentidoGlobal(
-                    encargo.numero, correo, sentidoGlobal, contexto, razonGlobal);
+                    encargo.numero, correo, sentidoGlobal, contexto, razonGlobal,
+                    // Qué resolvió el órgano recurrido, del contexto que
+                    // escribió el motor. Decide el verbo del resolutivo.
+                    propuesta?.global?.contexto?.resolvio ?? '');
                 setProyecto(rg);
                 descargarProyecto(rg);
                 setPaso('proyecto');
