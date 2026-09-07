@@ -379,10 +379,11 @@ export async function proponerSolucion(
  *  declara innecesario— viven en el servidor, que es donde se pueden probar. */
 export async function resolverConSentidoGlobal(
     numero: string, userEmail: string, sentidoGlobal: string, contexto = '',
-    razonGlobal = '', resolvioDeclarado = '',
+    razonGlobal = '', resolvioDeclarado = '', globalJson = '',
 ): Promise<ResultadoProyecto> {
     return resolverConCriterio(numero, userEmail, null, undefined, contexto,
-                               sentidoGlobal, razonGlobal, resolvioDeclarado);
+                               sentidoGlobal, razonGlobal, resolvioDeclarado,
+                               globalJson);
 }
 
 export async function resolverConCriterio(
@@ -412,6 +413,16 @@ export async function resolverConCriterio(
      * la sentencia recurrida» y «debe mantener el sobreseimiento decretado»:
      * el dato estaba, pero no llegaba hasta aquí. */
     resolvioDeclarado?: string,
+    /* LA PROPUESTA GLOBAL ENTERA, para que la vea el ESTUDIO —no sólo la
+     * pantalla—. De qué problema cuelga el resultado, qué les pasa a los
+     * demás, y la objeción más seria a la solución.
+     *
+     * Hasta ahora se calculaba, se enseñaba aquí y ahí se moría: en el
+     * servidor `Global.bloque()` no lo llamaba nadie. El estudio escribía el
+     * razonamiento sin saber cuál era la objeción que tenía que vencer, y por
+     * eso declaraba los accesorios inoperantes con una etiqueta en vez de con
+     * una razón. */
+    globalJson?: string,
 ): Promise<ResultadoProyecto> {
     const fd = new FormData();
     fd.append('numero', numero);
@@ -437,6 +448,7 @@ export async function resolverConCriterio(
     if (resolvioDeclarado?.trim()) {
         fd.append('resolvio_declarado', resolvioDeclarado.trim());
     }
+    if (globalJson?.trim()) fd.append('global_json', globalJson.trim());
     const res = await fetch(`${BASE}/taller/resolver`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
 

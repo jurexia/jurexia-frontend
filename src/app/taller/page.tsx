@@ -285,7 +285,9 @@ export default function TallerDeSentencias() {
                     encargo.numero, correo, sentidoGlobal, contexto, razonGlobal,
                     // Qué resolvió el órgano recurrido, del contexto que
                     // escribió el motor. Decide el verbo del resolutivo.
-                    propuesta?.global?.contexto?.resolvio ?? '');
+                    propuesta?.global?.contexto?.resolvio ?? '',
+                    // Y la propuesta global entera, para el estudio.
+                    propuesta?.global ? JSON.stringify(propuesta.global) : '');
                 setProyecto(rg);
                 descargarProyecto(rg);
                 setPaso('proyecto');
