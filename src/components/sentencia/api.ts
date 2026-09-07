@@ -284,8 +284,31 @@ export interface PropuestaDeSolucion {
 /** Los tres modos de decidir el sentido. */
 export type ModoDecision = 'acervo' | 'global' | 'por_problema';
 
+/** La propuesta del ASUNTO ENTERO, no la de un problema.
+ *  Antes no existía: la pantalla enseñaba la propuesta del problema principal
+ *  con la etiqueta «solución global», que no es lo mismo —con tres problemas,
+ *  el secretario veía el sentido de uno solo—. */
+export interface SolucionGlobal {
+    sentido: string;
+    razon: string;
+    /** De qué problema cuelga el resultado del asunto. */
+    problema_que_decide: string;
+    /** Qué les pasa a los demás problemas si ése se resuelve así. */
+    efecto: string;
+    apoyos: string[];
+    confianza: string;
+    /** El mejor argumento de quien resolvería al revés. Va en pantalla:
+     *  quien lee es quien firma, y una propuesta sin su contra se acepta por
+     *  inercia. */
+    en_contra: string;
+    /** false = el motor no alcanzó a proponerla. Se declara el hueco; no se
+     *  rellena con la del problema principal. */
+    alcanza: boolean;
+}
+
 export interface RespuestaPropuesta {
     propuestas: PropuestaDeSolucion[];
+    global?: SolucionGlobal | null;
     resumen: string;
     avisos: string[];
     /** Esto se devuelve tal cual —o editado— para resolver con ella. */
@@ -311,6 +334,7 @@ export async function proponerSolucion(
     const j = await res.json();
     return {
         propuestas: j.propuestas ?? [],
+        global: j.global?.alcanza ? (j.global as SolucionGlobal) : null,
         resumen: j.resumen ?? '',
         avisos: j.avisos ?? [],
         criteriosJson: j.criterios_json ?? '',

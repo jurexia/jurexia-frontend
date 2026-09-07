@@ -87,7 +87,11 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
     problemas: ProblemaJuridico[];
     propuesta?: { propuestas: { sentido: string; razon: string;
         prediccion?: { frase: string; confianza: string; sentido: string };
-        jerarquia?: string; problema?: string; alcanza: boolean }[] } | null;
+        jerarquia?: string; problema?: string; alcanza: boolean }[];
+        /* LA PROPUESTA DEL ASUNTO, que ahora sí existe. Ver abajo. */
+        global?: { sentido: string; razon: string; problema_que_decide: string;
+                   efecto: string; apoyos: string[]; confianza: string;
+                   en_contra: string; alcanza: boolean } | null } | null;
     sentidoGlobal: string;
     onSentidoGlobal: (s: string) => void;
     razonGlobal?: string;
@@ -98,7 +102,16 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
        puede prever qué deja fuera. */
     const iPrincipal = Math.max(0, problemas.findIndex((p) => p.jerarquia === 'principal'));
     const principal = problemas[iPrincipal];
-    const sugerido = propuesta?.propuestas?.[iPrincipal];
+    /* LA SOLUCIÓN GLOBAL VIENE DEL MOTOR, no de reciclar la de un problema.
+       Antes esta línea era `propuesta?.propuestas?.[iPrincipal]`: se cogía la
+       propuesta del problema principal y se enseñaba con la etiqueta «solución
+       global». Con tres problemas, el secretario veía el sentido de uno solo.
+       Ahora el modelo propone la del asunto entero —de qué problema cuelga,
+       qué arrastra, y el mejor argumento en contra— en la misma llamada. */
+    const global = propuesta?.global ?? null;
+    /* La predicción del acervo sigue siendo la del problema principal: es una
+       cifra por problema, no del asunto. */
+    const predPrincipal = propuesta?.propuestas?.[iPrincipal]?.prediccion;
     const prospera = sentidoGlobal.startsWith('fundad');
 
     /* LO QUE PASA CON CADA UNO. Es la regla del servidor —`modos_decision`—
@@ -119,12 +132,73 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
                 <p className="text-[12.5px] leading-relaxed text-white/85">
                     {principal?.pregunta || '—'}
                 </p>
-                {sugerido?.prediccion?.frase && (
+                {predPrincipal?.frase && (
                     <p className="mt-2 text-[11.5px] text-white/45">
-                        El acervo: {sugerido.prediccion.frase}
+                        El acervo: {predPrincipal.frase}
                     </p>
                 )}
             </div>
+
+            {/* 1-bis · LO QUE PROPONE EL MOTOR, Y POR DÓNDE SE CAE.
+                 Esto es lo que faltaba para que el secretario pueda RAZONAR en
+                 vez de aceptar. No basta con enseñarle el sentido propuesto:
+                 hay que enseñarle de qué cuelga, qué arrastra consigo, en qué
+                 se apoya, y el mejor argumento de quien resolvería al revés.
+                 Una propuesta sin su contra se acepta por inercia, y quien
+                 firma es él. */}
+            {global && (
+                <div className="rounded-xl border border-white/[0.09] bg-white/[0.02] p-3">
+                    <div className="mb-2 flex items-baseline gap-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                            Lo que propone el motor
+                        </p>
+                        <span className="rounded bg-accent-gold/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-gold">
+                            {global.sentido}
+                        </span>
+                        {global.confianza && (
+                            <span className="text-[10px] text-white/30">
+                                confianza {global.confianza}
+                            </span>
+                        )}
+                    </div>
+
+                    <p className="text-[12.5px] leading-relaxed text-white/75">
+                        {global.razon}
+                    </p>
+
+                    {global.problema_que_decide && (
+                        <p className="mt-2 text-[11.5px] leading-relaxed text-white/45">
+                            <span className="text-white/30">Cuelga de: </span>
+                            {global.problema_que_decide}
+                        </p>
+                    )}
+                    {global.efecto && (
+                        <p className="mt-1 text-[11.5px] leading-relaxed text-white/45">
+                            <span className="text-white/30">Con los demás: </span>
+                            {global.efecto}
+                        </p>
+                    )}
+
+                    {/* LA OBJECIÓN. Es lo que convierte esto en una decisión
+                        razonada y no en un botón que se pulsa. */}
+                    {global.en_contra && (
+                        <div className="mt-2.5 rounded-lg border-l-2 border-amber-400/40 bg-amber-400/[0.04] py-1.5 pl-2.5 pr-2">
+                            <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/70">
+                                Por dónde se cae
+                            </p>
+                            <p className="text-[11.5px] leading-relaxed text-white/60">
+                                {global.en_contra}
+                            </p>
+                        </div>
+                    )}
+
+                    {global.apoyos?.length > 0 && (
+                        <p className="mt-2 border-t border-white/[0.06] pt-2 text-[11px] leading-relaxed text-white/35">
+                            Se apoya en: {global.apoyos.join(' · ')}
+                        </p>
+                    )}
+                </div>
+            )}
 
             {/* 2 · LA DECISIÓN */}
             <div>
@@ -140,12 +214,12 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
                         </Pastilla>
                     ))}
                     {/* EL BOTÓN QUE TRAE LA PROPUESTA. No decide: rellena. */}
-                    {sugerido?.sentido && (
+                    {global?.sentido && (
                         <button type="button"
                                 onClick={() => {
-                                    onSentidoGlobal(sugerido.sentido);
-                                    if (onRazonGlobal && sugerido.razon && !razonGlobal?.trim()) {
-                                        onRazonGlobal(sugerido.razon);
+                                    onSentidoGlobal(global.sentido);
+                                    if (onRazonGlobal && global.razon && !razonGlobal?.trim()) {
+                                        onRazonGlobal(global.razon);
                                     }
                                 }}
                                 className="ml-auto rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-3 py-1.5 text-[11.5px] font-medium text-accent-gold transition-colors hover:bg-accent-gold/20">
@@ -205,7 +279,7 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
                         rows={4}
                         placeholder="La razón por la que el proyecto se resuelve en ese sentido. Si insertaste la propuesta, corrígela y añade lo que falte: el estudio se construye sobre esto."
                         className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/85 outline-none transition-colors placeholder:text-white/25 focus:border-accent-gold/40" />
-                    {sugerido?.razon && razonGlobal?.trim() === sugerido.razon.trim() && (
+                    {global?.razon && razonGlobal?.trim() === global.razon.trim() && (
                         <p className="mt-1.5 text-[11px] text-white/35">
                             Es la propuesta del motor, tal cual. Léela y hazla tuya:
                             quien firma eres tú.
