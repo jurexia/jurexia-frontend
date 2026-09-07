@@ -2,6 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { ShieldCheck, ShieldAlert, Loader2, Shield } from 'lucide-react';
+/* SE IMPORTA, ADEMÁS DE REEXPORTARSE. Abajo hay un `export { rubroCorresponde }
+ * from '@/lib/citas'`, y una REEXPORTACIÓN no mete el nombre en el ámbito de
+ * este módulo: lo pasa de largo hacia quien importe de aquí. Así que la línea
+ * que la llama lanzaba un ReferenceError… que el `catch` de al lado convertía
+ * en `estado: 'sin_comprobar'`.
+ *
+ * O sea que la comprobación del RUBRO —la que caza la tesis citada con un
+ * rubro que no es el suyo, que es el caso de la cita inventada— no corría
+ * NUNCA, y en vez de fallar decía «no se pudo comprobar». Un error tragado por
+ * un `catch` que devuelve el estado inocuo: el mismo patrón que ya costó dos
+ * hallazgos esta semana. */
+import { rubroCorresponde } from '@/lib/citas';
 
 /**
  * El sello de verificación de una respuesta.
