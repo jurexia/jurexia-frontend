@@ -321,7 +321,7 @@ export default function VentanaCriterio({
     problemas, onCambiar, onGenerar, generando, onProponer, propuesta,
     modo = 'por_problema', onModo, sentidoGlobal = '', onSentidoGlobal,
     razonGlobal = '', onRazonGlobal,
-    onAportar, aportando, contextoAportado,
+    onAportar, aportando, contextoAportado, proponiendo,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -354,6 +354,9 @@ export default function VentanaCriterio({
     /** Sube el documento que el motor echó en falta, o escribe el contexto. */
     onAportar?: (documento: File | null, texto: string) => void;
     aportando?: boolean;
+    /** El motor está proponiendo —no generando—. Sin esto el botón de generar
+     *  decía «Redactando la sentencia…» mientras corría la propuesta. */
+    proponiendo?: boolean;
     contextoAportado?: number;
 }) {
     const fuerza = useMemo(() => fuerzaDelCriterio(problemas), [problemas]);
@@ -724,8 +727,10 @@ export default function VentanaCriterio({
                         : 'cursor-not-allowed border border-white/[0.08] bg-white/[0.03] text-white/30',
                 )}
             >
-                {generando ? 'Redactando la sentencia…' : 'Generar la sentencia completa'}
-                {!generando && <ArrowRight className="h-4 w-4" />}
+                {proponiendo ? 'El motor está proponiendo…'
+                  : generando ? 'Redactando la sentencia…'
+                  : 'Generar la sentencia completa'}
+                {!generando && !proponiendo && <ArrowRight className="h-4 w-4" />}
             </button>
             {!listo && (
                 <p className="mt-2 text-center text-[11px] text-white/30">

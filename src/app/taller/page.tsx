@@ -92,6 +92,36 @@ export default function TallerDeSentencias() {
        sienten como una avería; viéndose escribir se sienten como trabajo. Y de
        paso el secretario va leyendo y puede parar si ve que va mal encaminado. */
     const [avance, setAvance] = useState('');
+    /* PROPONER Y GENERAR NO SON LO MISMO, y el botón decía «Redactando la
+       sentencia…» mientras lo que corría era la PROPUESTA. Los dos comparten
+       `corriendo`, así que hacía falta distinguirlos: un rótulo que miente
+       sobre lo que está pasando hace que el secretario espere lo que no va a
+       llegar. */
+    const [proponiendo, setProponiendo] = useState(false);
+
+    /* LLEVAR AL SECRETARIO ADONDE ACABA DE PASAR ALGO.
+     *
+     * David: «no se sabe en qué momento puede hacer scrolling. Si el
+     * secretario no baja, no se percata de todo el pipeline existente».
+     *
+     * Es exacto, y se nota conduciendo la pantalla: cada paso deja lo nuevo
+     * fuera de vista. Quien no baje no ve las dos vías, ni la lista de
+     * comprobación, ni el estudio escribiéndose — y no tiene forma de saber
+     * que están ahí.
+     *
+     * Se mueve la pantalla SOLA, y sólo cuando aparece algo que hay que leer o
+     * decidir. Nunca mientras el secretario escribe: eso es arrebatarle el
+     * cursor. */
+    const irA = useCallback((id: string, retraso = 350) => {
+        window.setTimeout(() => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const activo = document.activeElement;
+            // Si está escribiendo, no se le mueve el suelo bajo los pies.
+            if (activo && /INPUT|TEXTAREA/.test(activo.tagName)) return;
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, retraso);
+    }, []);
     // Lo que el secretario aporta porque el acervo no lo tenía. Vive aquí y
     // viaja con cada petición: el servidor no lo guarda.
     const [contexto, setContexto] = useState('');
@@ -202,6 +232,8 @@ export default function TallerDeSentencias() {
                 })),
             ]);
             setPaso('acervo');
+            // El adelanto está: lo siguiente es el botón rojo.
+            irA('recorrido');
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo consultar el acervo.');
         } finally { setCorriendo(false); }
@@ -216,7 +248,7 @@ export default function TallerDeSentencias() {
     // cual, la edita o dicta el suyo. Sin este paso el proyecto salía con la
     // calificación que trajera la plantilla, y así nacían las incongruencias.
     const pedirPropuesta = useCallback(async () => {
-        setError(''); setCorriendo(true);
+        setError(''); setCorriendo(true); setProponiendo(true);
         try {
             const p = await proponerSolucion(encargo.numero, correo, contexto);
             setPropuesta(p);
@@ -227,6 +259,8 @@ export default function TallerDeSentencias() {
                acuerdo, la vía contraria está a un clic.
                Antes caía en 'acervo', que es el volcado de tesis: la pantalla
                donde se perdía. */
+            // La propuesta llegó: ahí es donde toca leer y decidir.
+            irA('criterio', 500);
             if (p.global?.alcanza) {
                 setModo('global');
                 setSentidoGlobal(p.global.sentido || '');
@@ -264,7 +298,7 @@ export default function TallerDeSentencias() {
             }
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo obtener la propuesta.');
-        } finally { setCorriendo(false); }
+        } finally { setCorriendo(false); setProponiendo(false); }
     }, [encargo.numero, correo, contexto]);
 
     const aportarYProponer = useCallback(async (doc: File | null, texto: string) => {
@@ -325,11 +359,19 @@ export default function TallerDeSentencias() {
                         globalJson: propuesta?.global
                             ? JSON.stringify(propuesta.global) : '',
                     },
-                    (t) => setAvance((x) => x + t),
+                    (t) => setAvance((x) => {
+                        // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
+                        // pantalla temblaría durante los dos minutos que dura el estudio.
+                        if (!x) irA('estudio', 120);
+                        return x + t;
+                    }),
                     () => setAvance((x) => x + '\n\n… componiendo el documento'));
                 setProyecto(rg);
                 descargarProyecto(rg);
                 setPaso('proyecto');
+                // Terminó: al aviso de borrador, que es lo que hay que leer
+                // ANTES de abrir el documento.
+                irA('proyecto', 400);
                 setCorriendo(false);
                 return;
             }
@@ -361,10 +403,16 @@ export default function TallerDeSentencias() {
                     },
                     criteriosJson, contexto,
                 },
-                (t) => setAvance((x) => x + t),
+                (t) => setAvance((x) => {
+                    // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
+                    // pantalla temblaría durante los dos minutos que dura el estudio.
+                    if (!x) irA('estudio', 120);
+                    return x + t;
+                }),
                 () => setAvance((x) => x + '\n\n… componiendo el documento'));
             setProyecto(r);
             descargarProyecto(r);
+            irA('proyecto', 400);
             setPaso('proyecto');
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
@@ -439,6 +487,7 @@ export default function TallerDeSentencias() {
                         <Rotulo accion={<span className="text-[11px] text-white/30">se detiene una sola vez</span>}>
                             Recorrido del asunto
                         </Rotulo>
+                        <span id="recorrido" />
                         <LineaDeFases fases={fasesSegun(paso, corriendo)} />
 
                         <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.08] pt-4">
@@ -535,10 +584,12 @@ export default function TallerDeSentencias() {
                         </Tarjeta>
                     )}
 
+                    <span id="criterio" />
                     {problemas.length > 0 && (
                         <VentanaCriterio problemas={problemas} onCambiar={cambiarCriterio}
                                          onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo'}
                                          onProponer={pedirPropuesta} propuesta={propuesta}
+                                         proponiendo={proponiendo}
                                          onAportar={aportarYProponer} aportando={aportando}
                                          modo={modo} onModo={setModo}
                                          sentidoGlobal={sentidoGlobal}
@@ -553,6 +604,7 @@ export default function TallerDeSentencias() {
                         sistema trabajaba o se había caído. Ahora lee mientras
                         se escribe: si ve que va mal encaminado, no espera al
                         final para saberlo. */}
+                    <span id="estudio" />
                     {corriendo && avance && (
                         <Tarjeta>
                             <Rotulo accion={
@@ -571,6 +623,7 @@ export default function TallerDeSentencias() {
                         </Tarjeta>
                     )}
 
+                    <span id="proyecto" />
                     {proyecto && (
                         <>
                             <AvisoBorrador datos={{
