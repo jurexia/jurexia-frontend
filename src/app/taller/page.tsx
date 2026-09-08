@@ -29,6 +29,7 @@ import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
 import LineaDeFases from '@/components/sentencia/LineaDeFases';
 import VentanaCriterio from '@/components/sentencia/VentanaCriterio';
 import FormularioEncargo, { ENCARGO_VACIO, faltaEnEncargo } from '@/components/sentencia/FormularioEncargo';
+import type { TipoAsunto } from '@/components/sentencia/api';
 import type { Encargo } from '@/components/sentencia/FormularioEncargo';
 import AvisoBorrador, { AvisoPiloto } from '@/components/sentencia/AvisoBorrador';
 import { Tarjeta, Rotulo, cn } from '@/components/sentencia/primitivas';
@@ -100,6 +101,13 @@ export default function TallerDeSentencias() {
     const [piloto, setPiloto] = useState<EstadoPiloto | null>(null);
 
     const [encargo, setEncargo] = useState<Encargo>(ENCARGO_VACIO);
+    /* EL TIPO ELEGIDO, que gobierna cómo se llama cada cosa en pantalla. */
+    const [tipoSel, setTipoSel] = useState<TipoAsunto | undefined>(undefined);
+    const voz = useMemo(() => tipoSel ? {
+        recurrido: tipoSel.recurrido,
+        combate: tipoSel.combate,
+        esRecurso: /revision|queja/i.test(tipoSel.clave),
+    } : undefined, [tipoSel]);
     const [documentos, setDocumentos] = useState<Documento[]>([]);
     const [ficheros, setFicheros] = useState<Partial<Record<RolDocumento | 'plantilla', File>>>({});
     const [material, setMaterial] = useState<MaterialDelCaso | null>(null);
@@ -130,10 +138,13 @@ export default function TallerDeSentencias() {
     const falta = useMemo(() => {
         const f = faltaEnEncargo(encargo);
         // La plantilla NO se exige: hay una precargada por familia de asunto.
-        if (!ficheros.acto) f.push('el acto reclamado');
-        if (!ficheros.conceptos) f.push('los conceptos de violación');
+        // CON EL NOMBRE DEL TIPO. Decía «falta el acto reclamado» aunque el
+        // secretario estuviera proyectando una revisión, donde lo que falta es
+        // la sentencia recurrida.
+        if (!ficheros.acto) f.push(voz?.recurrido ?? 'el acto reclamado');
+        if (!ficheros.conceptos) f.push(`los ${voz?.combate ?? 'conceptos de violación'}`);
         return f;
-    }, [encargo, ficheros]);
+    }, [encargo, ficheros, voz]);
 
     const pedirAdelanto = useCallback(async () => {
         setError(''); setCorriendo(true);
@@ -221,7 +232,11 @@ export default function TallerDeSentencias() {
                 setSentidoGlobal(p.global.sentido || '');
                 setRazonGlobal(p.global.razon || '');
             } else {
-                setModo('acervo');
+                // SIN PROPUESTA GLOBAL NO HAY CAMINO GLOBAL QUE OFRECER: se cae
+                // al de problema por problema, que es el que siempre funciona.
+                // Antes caía en «acervo», que era el volcado de tesis y ya no
+                // existe como modo.
+                setModo('por_problema');
             }
             // Se vuelca sobre los problemas para que se vean y se puedan editar.
             setProblemas((prev) => prev.map((q, i) => {
@@ -380,10 +395,10 @@ export default function TallerDeSentencias() {
             <main className="relative mx-auto grid max-w-[1500px] gap-4 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(320px,400px)_1fr]">
                 <div className="flex flex-col gap-4 lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)] lg:overflow-y-auto lg:pr-1">
                     {piloto && <AvisoPiloto secretarios={piloto.secretarios} cupo={piloto.cupo} />}
-                    <FormularioEncargo valor={encargo} onCambiar={setEncargo}
+                    <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
                                        deshabilitado={corriendo || paso !== 'ficha'} />
                     <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
-                                     extractos={[]} />
+                                     extractos={[]} vocabulario={voz} />
                     <label className={cn('block cursor-pointer rounded-xl border border-dashed',
                         'border-white/15 bg-white/[0.02] px-4 py-3 text-[12px] text-white/50',
                         'transition hover:border-accent-gold/30 hover:text-white/70')}>

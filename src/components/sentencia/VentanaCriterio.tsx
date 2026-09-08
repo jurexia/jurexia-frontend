@@ -18,7 +18,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { PenLine, Lightbulb, ArrowRight } from 'lucide-react';
+import { PenLine, Lightbulb, ArrowRight, Check, AlertTriangle } from 'lucide-react';
 import { Tarjeta, Pastilla, cn } from './primitivas';
 import SolucionDelAsunto from './SolucionDelAsunto';
 import type { ProblemaJuridico } from './tipos';
@@ -414,25 +414,64 @@ export default function VentanaCriterio({
                 una cosa. */}
             {onModo && (
                 <div className="mb-4 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5">
-                    <p className="mb-2.5 text-[11px] font-medium uppercase tracking-wide text-white/45">
-                        Cómo vas a decidir
+                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-white/45">
+                        Cómo vas a resolver
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <p className="mb-3 text-[12px] leading-relaxed text-white/50">
+                        Dos caminos. En los dos puedes escribir tú el criterio o
+                        pedirle al motor que lo proponga, y en los dos puedes
+                        corregir lo que proponga antes de generar nada.
+                    </p>
+
+                    {/* DOS CAMINOS, NO TRES. Había un tercero —«Con el acervo»—
+                        que no era una forma distinta de decidir sino la misma
+                        decisión global tomada por la máquina: el secretario
+                        tenía que distinguir entre «un sentido global» y «con el
+                        acervo» sin que la diferencia estuviera en ninguna
+                        parte. Ahora la máquina propone DENTRO de cada camino,
+                        que es donde tiene sentido. */}
+                    <div className="grid gap-2 sm:grid-cols-2">
                         {([
-                            ['acervo', 'Con el acervo', 'La máquina propone con los holdings y la jurimetría; tú corriges'],
-                            ['global', 'Un sentido global', 'Lo dictas para el proyecto entero; los accesorios quedan sin materia'],
-                            ['por_problema', 'Problema por problema', 'Uno a uno, como hasta ahora'],
-                        ] as const).map(([id, etiqueta, ayuda]) => (
+                            ['global', 'Resolver todo el asunto',
+                             'Un solo sentido gobierna el proyecto. El tema principal decide y '
+                             + 'los demás siguen su suerte, salvo los que sean tema distinto.',
+                             'Es el camino corto y el más frecuente.'],
+                            ['por_problema', 'Resolver problema por problema',
+                             'Cada problema jurídico lleva su propia calificación y su propia '
+                             + 'razón. El resolutivo sale mixto donde deba salir mixto.',
+                             'Para cuando los temas no siguen la misma suerte.'],
+                        ] as const).map(([id, titulo, que, cuando]) => (
                             <button key={id} type="button" onClick={() => onModo(id)}
-                                    title={ayuda}
-                                    className={cn(
-                                        'rounded-lg border px-3 py-1.5 text-[12px] transition-colors duration-200',
+                                    className={cn('rounded-xl border p-3 text-left transition-colors',
                                         modo === id
-                                            ? 'border-accent-gold/45 bg-accent-gold/10 text-accent-gold'
-                                            : 'border-white/[0.09] text-white/55 hover:border-white/20')}>
-                                {etiqueta}
+                                            ? 'border-accent-gold/50 bg-accent-gold/[0.07]'
+                                            : 'border-white/[0.09] bg-white/[0.02] hover:bg-white/[0.04]')}>
+                                <div className="mb-1 flex items-center gap-2">
+                                    <span className={cn('flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
+                                        modo === id ? 'border-accent-gold bg-accent-gold text-charcoal-900'
+                                                    : 'border-white/25')}>
+                                        {modo === id && <Check className="h-3 w-3" strokeWidth={3} />}
+                                    </span>
+                                    <span className="text-[12.5px] font-medium text-white/85">{titulo}</span>
+                                </div>
+                                <p className="text-[11.5px] leading-snug text-white/50">{que}</p>
+                                <p className="mt-1 text-[11px] leading-snug text-white/30">{cuando}</p>
                             </button>
                         ))}
+                    </div>
+
+                    {/* QUIEN FIRMA ES ÉL. No es un descargo legal: es lo que
+                        impide que la propuesta se acepte por inercia. Va aquí,
+                        antes de elegir, y no en un aviso al final que nadie
+                        lee. */}
+                    <div className="mt-3 flex gap-2 rounded-lg border-l-2 border-amber-400/40 bg-amber-400/[0.04] py-2 pl-2.5 pr-3">
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300/70" />
+                        <p className="text-[11.5px] leading-relaxed text-white/60">
+                            El motor propone; <span className="text-white/85">el criterio es
+                            tuyo</span>. Lee la razón antes de generar y corrígela si no es la
+                            que sostendrías: el proyecto sale con tu nombre y la
+                            responsabilidad de que el sentido sea el correcto es tuya.
+                        </p>
                     </div>
 
                     {modo === 'global' && onSentidoGlobal && (
@@ -556,7 +595,15 @@ export default function VentanaCriterio({
                         generando ? 'cursor-not-allowed opacity-50' : 'hover:bg-white/[0.08]',
                     )}
                 >
-                    {propuesta ? 'Volver a proponer' : 'Proponer solución con el acervo'}
+                    {/* SIN «EL ACERVO» EN EL RÓTULO. Al secretario no le dice
+                        nada de qué va a pasar: le dice de dónde sale el dato.
+                        Lo que necesita saber es que el motor va a proponer una
+                        solución y que él la va a poder cambiar. */}
+                    {propuesta
+                        ? 'Volver a proponer'
+                        : modo === 'global'
+                            ? 'Que el motor proponga la solución'
+                            : 'Que el motor proponga cada calificación'}
                 </button>
             )}
             {/* SI EL MOTOR DIJO QUÉ LE FALTA, QUE SE LE PUEDA DAR. Aparece

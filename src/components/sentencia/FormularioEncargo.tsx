@@ -148,10 +148,13 @@ function SelectorTipo({ tipos, valor, onElegir }: {
     );
 }
 
-export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
+export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onTipo }: {
     valor: Encargo;
     onCambiar: (e: Encargo) => void;
     deshabilitado?: boolean;
+    /** El tipo elegido, para que la pantalla rotule los documentos con el
+     *  vocabulario que le corresponde. */
+    onTipo?: (t: TipoAsunto | undefined) => void;
 }) {
     const [tipos, setTipos] = React.useState<TipoAsunto[]>([]);
     const [errorCatalogo, setErrorCatalogo] = React.useState('');
@@ -165,6 +168,12 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado }: {
         onCambiar({ ...valor, [k]: v });
 
     const tipo = tipos.find((t) => t.clave === valor.tipoAsunto);
+    /* EL TIPO SUBE. La pantalla de arriba lo necesita para rotular los dos
+       documentos con el nombre que les corresponde: en un recurso no se sube
+       «el acto reclamado» sino la SENTENCIA RECURRIDA, y no se suben
+       «conceptos de violación» sino AGRAVIOS. Pedir un papel con el nombre
+       equivocado es la manera más barata de que suban el papel equivocado. */
+    React.useEffect(() => { onTipo?.(tipo); }, [tipo, onTipo]);
     // EL VOCABULARIO SALE DEL TIPO. Mientras no se elija, la ficha no se pinta:
     // pedir «la parte quejosa» antes de saber si hay quejoso o recurrente es
     // exactamente la lógica que había que quitar.

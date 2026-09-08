@@ -16,6 +16,43 @@ import {
 import { Tarjeta, Pastilla, Rotulo, cn } from './primitivas';
 import type { Documento, RolDocumento } from './tipos';
 
+/** CÓMO SE LLAMAN LOS DOS DOCUMENTOS EN ESTE TIPO DE ASUNTO.
+ *
+ *  Estaban escritos a mano —«Acto reclamado» y «Conceptos de violación»— en
+ *  los cuatro tipos. En un recurso eso es pedir el papel con el nombre
+ *  equivocado: lo que se sube es la SENTENCIA RECURRIDA y los AGRAVIOS, y de
+ *  la propia sentencia recurrida sale el acto reclamado, que no hay que
+ *  teclear en ninguna parte.
+ *
+ *  El servidor ya manda este vocabulario por tipo (`recurrido`, `combate`);
+ *  sólo faltaba usarlo. */
+export interface VocabularioDocumentos {
+    /** «la sentencia recurrida», «el acto reclamado»… */
+    recurrido: string;
+    /** «agravios», «conceptos de violación» */
+    combate: string;
+    esRecurso: boolean;
+}
+
+const mayus = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
+
+function ranurasDe(v?: VocabularioDocumentos) {
+    if (!v) return RANURAS;
+    /* El artículo estorba en un rótulo: «la sentencia recurrida» se rotula
+       «Sentencia recurrida». */
+    const rec = mayus(v.recurrido.replace(/^(la|el|los|las)\s+/i, ''));
+    return [
+        { ...RANURAS[0], titulo: rec,
+          ayuda: v.esRecurso
+              ? `De aquí sale lo que resolvió el órgano recurrido Y el acto `
+                + `reclamado: no hace falta teclearlo en ninguna parte.`
+              : `El acto que se combate. De aquí sale la ratio decidendi.` },
+        { ...RANURAS[1], titulo: mayus(v.combate),
+          ayuda: `Lo que ${v.esRecurso ? 'el recurrente' : 'la parte quejosa'} `
+               + `alega en su contra. De aquí salen los problemas jurídicos.` },
+    ];
+}
+
 const RANURAS: { rol: RolDocumento; titulo: string; ayuda: string; icono: React.ComponentType<{ className?: string }> }[] = [
     {
         rol: 'acto',
@@ -136,13 +173,17 @@ function Ranura({
 }
 
 export default function PanelDocumentos({
-    documentos, onSoltar, onQuitar, extractos,
+    documentos, onSoltar, onQuitar, extractos, vocabulario,
 }: {
     documentos: Documento[];
     onSoltar: (rol: RolDocumento, f: File) => void;
     onQuitar: (id: string) => void;
     /** Fragmentos clave que el pipeline ya localizó, para cotejar sin releer. */
     extractos?: { etiqueta: string; texto: string; pagina: number }[];
+    /** Cómo se llaman los dos documentos en ESTE tipo de asunto. Sin esto se
+     *  le pide «el acto reclamado» a quien va a subir una sentencia
+     *  recurrida. */
+    vocabulario?: VocabularioDocumentos;
 }) {
     const [abierto, setAbierto] = useState(true);
 
@@ -151,7 +192,7 @@ export default function PanelDocumentos({
             <Tarjeta>
                 <Rotulo contador={documentos.length}>Documentos del asunto</Rotulo>
                 <div className="space-y-3">
-                    {RANURAS.map((r) => (
+                    {ranurasDe(vocabulario).map((r) => (
                         <Ranura
                             key={r.rol} {...r}
                             doc={documentos.find((d) => d.rol === r.rol)}
