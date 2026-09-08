@@ -98,8 +98,14 @@ export interface ProblemaJuridico {
      * —el caso frecuente: se recurre la negativa de la suspensión provisional
      * y antes de resolver se dicta la definitiva—. Medido en el circuito: 644
      * expedientes, 434 de ellos quejas. No prospera ni se desestima. */
-    sentido?: 'fundado' | 'esencialmente_fundado' | 'infundado' | 'inoperante'
-            | 'ineficaz' | 'sin_materia' | 'innecesario';
+    /* LAS DIEZ DEL CATÁLOGO, medidas sobre 65,282 agravios del circuito.
+     * Ojo con «fundado_insuficiente»: lleva «fundado» en el nombre y NO
+     * prospera —12% de apariciones en asuntos favorables, igual que el
+     * infundado—. Por eso `prospera` no puede ser un `startsWith`. */
+    sentido?: 'fundado' | 'esencialmente_fundado' | 'sustancialmente_fundado'
+            | 'parcialmente_fundado' | 'fundado_insuficiente' | 'infundado'
+            | 'inoperante' | 'inatendible' | 'ineficaz' | 'sin_materia'
+            | 'innecesario';
 }
 
 export interface Asunto {

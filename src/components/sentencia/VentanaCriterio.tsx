@@ -27,8 +27,14 @@ import type { SolucionGlobal } from './api';
 const SENTIDOS: { id: NonNullable<ProblemaJuridico['sentido']>; etiqueta: string }[] = [
     { id: 'fundado', etiqueta: 'Fundado' },
     { id: 'esencialmente_fundado', etiqueta: 'Esencialmente fundado' },
+    { id: 'sustancialmente_fundado', etiqueta: 'Sustancialmente fundado' },
+    { id: 'parcialmente_fundado', etiqueta: 'Parcialmente fundado' },
+    /* TIENE RAZÓN Y NO ALCANZA. Medido: aparece en asuntos favorables el 12%
+       de las veces, igual que el infundado. NO prospera, aunque lo parezca. */
+    { id: 'fundado_insuficiente', etiqueta: 'Fundado pero insuficiente' },
     { id: 'infundado', etiqueta: 'Infundado' },
     { id: 'inoperante', etiqueta: 'Inoperante' },
+    { id: 'inatendible', etiqueta: 'Inatendible' },
     { id: 'ineficaz', etiqueta: 'Ineficaz' },
     /* El recurso perdió su objeto por un hecho posterior. No prospera ni se
        desestima: no hay nada que estudiar. */
@@ -43,7 +49,8 @@ const MARCAS_DE_RAZON = /\bporque\b|\bya que\b|\bpuesto que\b|\bdebido a\b|\btod
  *  PLANTEAMIENTO —fundado, infundado—. Comparándolos como cadenas, el aviso de
  *  «vas contra la corriente» saltaba siempre. Misma tabla que el servidor. */
 const A_FAVOR = new Set(['CONCEDE', 'concede', 'revoca', 'fundado',
-                         'esencialmente_fundado']);
+                         'esencialmente_fundado', 'sustancialmente_fundado',
+                         'parcialmente_fundado']);
 const EN_CONTRA = new Set(['NIEGA', 'niega', 'confirma', 'infundado',
                            'inoperante', 'ineficaz', 'SOBRESEE', 'sobresee']);
 
@@ -124,7 +131,13 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
        accesorios se estudian cuando en realidad quedan sin materia. En el
        servidor esto vive en `tipos_asunto.prospera`; aquí se replica la regla
        porque la pantalla decide antes de preguntar. */
-    const prospera = /fundad/.test(sentidoGlobal);
+    /* NO BASTA CON «LLEVA FUNDAD DENTRO». «fundado_insuficiente» lo lleva y no
+       prospera: tiene razón y aun así no mueve el sentido, porque subsisten
+       otras consideraciones. Medido: 12% de apariciones en asuntos
+       favorables, contra el 11% del infundado. En el servidor esto vive en
+       `tipos_asunto.prospera`. */
+    const prospera = /fundad/.test(sentidoGlobal)
+                  && !/insuficien/.test(sentidoGlobal);
 
     /* LO QUE PASA CON CADA UNO. Es la regla del servidor —`modos_decision`—
        dicha en pantalla: si el principal prospera, los accesorios quedan sin
