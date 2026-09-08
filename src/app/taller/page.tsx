@@ -244,7 +244,7 @@ export default function TallerDeSentencias() {
                 // El sentido es una unión cerrada: lo que venga de fuera se
                 // valida antes de entrar, no se castea a ciegas.
                 const valido = (['fundado', 'esencialmente_fundado', 'infundado',
-                                 'inoperante', 'ineficaz'] as const)
+                                 'inoperante', 'ineficaz', 'sin_materia'] as const)
                     .find((x) => x === s?.sentido);
                 // LA PREDICCIÓN Y LA JERARQUÍA SE VUELCAN SIEMPRE, alcance o
                 // no la propuesta: son lo que el secretario necesita para
@@ -275,7 +275,7 @@ export default function TallerDeSentencias() {
             setProblemas((prev) => prev.map((q, i) => {
                 const s2 = p.propuestas[i];
                 const valido = (['fundado', 'esencialmente_fundado', 'infundado',
-                                 'inoperante', 'ineficaz'] as const)
+                                 'inoperante', 'ineficaz', 'sin_materia'] as const)
                     .find((x) => x === s2?.sentido);
                 return s2 && s2.alcanza && valido
                     ? { ...q, sentido: valido, criterio: q.criterio || s2.razon }

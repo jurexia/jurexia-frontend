@@ -94,8 +94,12 @@ export interface ProblemaJuridico {
     /* «esencialmente fundado» es el 23% de los agravios en las revisiones que
      * revocan de este circuito, medido sobre su acervo. Prospera igual que el
      * fundado; lo que cambia es que el proyecto acota en qué medida. */
+    /* «sin_materia» es el recurso que perdió su objeto por un hecho posterior
+     * —el caso frecuente: se recurre la negativa de la suspensión provisional
+     * y antes de resolver se dicta la definitiva—. Medido en el circuito: 644
+     * expedientes, 434 de ellos quejas. No prospera ni se desestima. */
     sentido?: 'fundado' | 'esencialmente_fundado' | 'infundado' | 'inoperante'
-            | 'ineficaz' | 'innecesario';
+            | 'ineficaz' | 'sin_materia' | 'innecesario';
 }
 
 export interface Asunto {

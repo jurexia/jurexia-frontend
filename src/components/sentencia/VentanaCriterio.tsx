@@ -30,6 +30,9 @@ const SENTIDOS: { id: NonNullable<ProblemaJuridico['sentido']>; etiqueta: string
     { id: 'infundado', etiqueta: 'Infundado' },
     { id: 'inoperante', etiqueta: 'Inoperante' },
     { id: 'ineficaz', etiqueta: 'Ineficaz' },
+    /* El recurso perdió su objeto por un hecho posterior. No prospera ni se
+       desestima: no hay nada que estudiar. */
+    { id: 'sin_materia', etiqueta: 'Sin materia' },
 ];
 
 /** Palabras con las que un texto deja de ser un veredicto y pasa a ser una razón. */
