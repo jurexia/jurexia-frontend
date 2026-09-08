@@ -641,7 +641,17 @@ export interface TipoAsunto {
 }
 
 export async function obtenerTipos(): Promise<TipoAsunto[]> {
-    const r = await fetch(`${BASE}/taller/tipos`, { cache: 'force-cache' });
+    // NO «force-cache». El catálogo de asuntos CAMBIA: cuando se le añadió
+    // `caratula` —las figuras de parte de cada tipo—, los navegadores que ya
+    // tenían la respuesta guardada siguieron sirviendo la versión vieja, sin
+    // ese campo. Efecto visible: en un amparo en REVISIÓN la ficha seguía
+    // pidiendo «Quejoso» y «Autoridad responsable» —el respaldo escrito a
+    // mano— en vez de «Recurrente» y «Recurrente adhesivo», y el secretario
+    // tecleaba una figura que no existe en su asunto.
+    //
+    // Lo caro no es la petición —es un JSON pequeño— sino servir un catálogo
+    // viejo sin que nadie se entere: no falla, sólo miente.
+    const r = await fetch(`${BASE}/taller/tipos`, { cache: 'no-cache' });
     if (!r.ok) throw new Error('No se pudo leer el catálogo de asuntos.');
     const d = await r.json();
     return (d.tipos ?? []) as TipoAsunto[];
