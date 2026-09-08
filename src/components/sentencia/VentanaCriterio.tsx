@@ -26,6 +26,7 @@ import type { SolucionGlobal } from './api';
 
 const SENTIDOS: { id: NonNullable<ProblemaJuridico['sentido']>; etiqueta: string }[] = [
     { id: 'fundado', etiqueta: 'Fundado' },
+    { id: 'esencialmente_fundado', etiqueta: 'Esencialmente fundado' },
     { id: 'infundado', etiqueta: 'Infundado' },
     { id: 'inoperante', etiqueta: 'Inoperante' },
     { id: 'ineficaz', etiqueta: 'Ineficaz' },
@@ -38,7 +39,8 @@ const MARCAS_DE_RAZON = /\bporque\b|\bya que\b|\bpuesto que\b|\bdebido a\b|\btod
  *  acervo habla del FALLO —concede, niega, confirma— y el criterio del
  *  PLANTEAMIENTO —fundado, infundado—. Comparándolos como cadenas, el aviso de
  *  «vas contra la corriente» saltaba siempre. Misma tabla que el servidor. */
-const A_FAVOR = new Set(['CONCEDE', 'concede', 'revoca', 'fundado']);
+const A_FAVOR = new Set(['CONCEDE', 'concede', 'revoca', 'fundado',
+                         'esencialmente_fundado']);
 const EN_CONTRA = new Set(['NIEGA', 'niega', 'confirma', 'infundado',
                            'inoperante', 'ineficaz', 'SOBRESEE', 'sobresee']);
 
@@ -114,7 +116,12 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
     /* La predicción del acervo sigue siendo la del problema principal: es una
        cifra por problema, no del asunto. */
     const predPrincipal = propuesta?.propuestas?.[iPrincipal]?.prediccion;
-    const prospera = sentidoGlobal.startsWith('fundad');
+    /* PROSPERA NO ES «EMPIEZA POR FUNDAD». «esencialmente_fundado» empieza por
+       «esencialmente» y devolvía false, así que la pantalla decía que los
+       accesorios se estudian cuando en realidad quedan sin materia. En el
+       servidor esto vive en `tipos_asunto.prospera`; aquí se replica la regla
+       porque la pantalla decide antes de preguntar. */
+    const prospera = /fundad/.test(sentidoGlobal);
 
     /* LO QUE PASA CON CADA UNO. Es la regla del servidor —`modos_decision`—
        dicha en pantalla: si el principal prospera, los accesorios quedan sin

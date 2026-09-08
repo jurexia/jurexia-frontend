@@ -91,7 +91,11 @@ export interface ProblemaJuridico {
                    confianza: string; frase: string };
     /** El criterio que escribe el secretario para este problema. */
     criterio: string;
-    sentido?: 'fundado' | 'infundado' | 'inoperante' | 'ineficaz' | 'innecesario';
+    /* «esencialmente fundado» es el 23% de los agravios en las revisiones que
+     * revocan de este circuito, medido sobre su acervo. Prospera igual que el
+     * fundado; lo que cambia es que el proyecto acota en qué medida. */
+    sentido?: 'fundado' | 'esencialmente_fundado' | 'infundado' | 'inoperante'
+            | 'ineficaz' | 'innecesario';
 }
 
 export interface Asunto {
