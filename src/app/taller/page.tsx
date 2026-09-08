@@ -88,6 +88,10 @@ export default function TallerDeSentencias() {
      * había dónde ponerla, así que el proyecto salía con un sentido dictado y
      * ninguna explicación detrás. */
     const [razonGlobal, setRazonGlobal] = useState('');
+    /* LOS CONCEPTOS DE VIOLACIÓN, cuando el recurso levanta un sobreseimiento
+       y el tribunal asume jurisdicción. No están en el expediente del recurso:
+       los pega el secretario. */
+    const [conceptosViolacion, setConceptosViolacion] = useState('');
     /* EL ESTUDIO, SEGÚN SE ESCRIBE. Cuatro minutos de pantalla quieta se
        sienten como una avería; viéndose escribir se sienten como trabajo. Y de
        paso el secretario va leyendo y puede parar si ve que va mal encaminado. */
@@ -358,6 +362,10 @@ export default function TallerDeSentencias() {
                         // Y la propuesta global entera, para el estudio.
                         globalJson: propuesta?.global
                             ? JSON.stringify(propuesta.global) : '',
+                        // Y los conceptos de violación, si el secretario los
+                        // aportó: sin ellos el proyecto levanta el
+                        // sobreseimiento y deja el estudio pendiente.
+                        conceptosViolacion,
                     },
                     (t) => setAvance((x) => {
                         // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
@@ -596,6 +604,8 @@ export default function TallerDeSentencias() {
                                          razonGlobal={razonGlobal}
                                          onRazonGlobal={setRazonGlobal}
                                          onSentidoGlobal={setSentidoGlobal}
+                                         conceptosViolacion={conceptosViolacion}
+                                         onConceptosViolacion={setConceptosViolacion}
                                          contextoAportado={contexto.length} />
                     )}
 

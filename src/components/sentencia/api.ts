@@ -342,6 +342,10 @@ export interface RespuestaPropuesta {
     /** Esto se devuelve tal cual —o editado— para resolver con ella. */
     criteriosJson: string;
     modelo: string;
+    /** El recurso levanta un sobreseimiento y hay que estudiar los conceptos
+     *  de violación por primera vez, pero no constan. El servidor ya daba el
+     *  aviso; esto es lo que hace que la pantalla ofrezca DÓNDE pegarlos. */
+    necesitaConceptos: boolean;
 }
 
 /** Pide al motor que proponga el sentido de cada problema.
@@ -367,6 +371,7 @@ export async function proponerSolucion(
         avisos: j.avisos ?? [],
         criteriosJson: j.criterios_json ?? '',
         modelo: j.modelo ?? '',
+        necesitaConceptos: Boolean(j.necesita_conceptos),
     };
 }
 
@@ -412,6 +417,11 @@ export async function resolverEnVivo(
         criterio?: Criterio | null; criteriosJson?: string; contexto?: string;
         sentidoGlobal?: string; razonGlobal?: string;
         resolvioDeclarado?: string; globalJson?: string;
+        /* Los conceptos de violación, que el secretario pega cuando el
+           recurso levanta un sobreseimiento: no constan en el expediente del
+           recurso, y sin ellos el proyecto levanta el sobreseimiento sin
+           resolver lo único que quedaba por resolver. */
+        conceptosViolacion?: string;
     },
     onTexto?: (trozo: string) => void,
     onComponiendo?: () => void,
@@ -435,6 +445,8 @@ export async function resolverEnVivo(
     if (o.resolvioDeclarado?.trim())
         fd.append('resolvio_declarado', o.resolvioDeclarado.trim());
     if (o.globalJson?.trim()) fd.append('global_json', o.globalJson.trim());
+    if (o.conceptosViolacion?.trim())
+        fd.append('conceptos_violacion', o.conceptosViolacion.trim());
 
     const res = await fetch(`${BASE}/taller/resolver/stream`,
                             { method: 'POST', body: fd });

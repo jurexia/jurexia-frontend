@@ -45,12 +45,18 @@ function Parrafo({ rotulo, texto }: { rotulo: string; texto: string }) {
 
 export default function SolucionDelAsunto({
     global, via, onVia, razon, onRazon,
+    necesitaConceptos, conceptos, onConceptos,
 }: {
     global: SolucionGlobal;
     via: Via;
     onVia: (v: Via) => void;
     razon: string;
     onRazon: (t: string) => void;
+    /* El recurso levanta un sobreseimiento: hay que estudiar los conceptos de
+       violación por primera vez y no constan en el expediente del recurso. */
+    necesitaConceptos?: boolean;
+    conceptos?: string;
+    onConceptos?: (t: string) => void;
 }) {
     const alt = global.alternativa;
     /* La vía contraria sólo se ofrece si el motor la escribió Y de verdad es
@@ -227,6 +233,49 @@ export default function SolucionDelAsunto({
                     —no el del motor— el que alinea todo el estudio.
                 </p>
             </section>
+
+            {/* ── 3B · LOS CONCEPTOS DE VIOLACIÓN, CUANDO HACEN FALTA ─────
+                 Si la propuesta prospera y el juzgado había sobreseído, el
+                 tribunal asume jurisdicción (artículo 93, fracción I) y
+                 resuelve él lo que el juzgado no resolvió. Los conceptos de
+                 violación son de la DEMANDA DE AMPARO: no están en el
+                 expediente del recurso y sólo el secretario puede aportarlos.
+
+                 El aviso ya se daba. Lo que faltaba era el sitio donde
+                 pegarlos: avisar de una falta sin ofrecer cómo repararla deja
+                 el problema entero en manos de quien lo lee. */}
+            {necesitaConceptos && (
+                <section className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.04] p-4">
+                    <div className="mb-1.5 flex items-baseline gap-2">
+                        <label className="text-[11px] font-semibold uppercase tracking-wide text-amber-300/80">
+                            Conceptos de violación
+                        </label>
+                        {conceptos?.trim() && (
+                            <span className="text-[10px] text-accent-gold/70">aportados</span>
+                        )}
+                    </div>
+                    <p className="mb-2 text-[11.5px] leading-relaxed text-white/55">
+                        Con este sentido se levanta el sobreseimiento, y el
+                        tribunal asume jurisdicción: tiene que estudiar los
+                        conceptos de violación por primera vez, en un
+                        considerando propio. No constan en el expediente del
+                        recurso —son de la demanda de amparo—, así que hay que
+                        pegarlos aquí.
+                    </p>
+                    <textarea
+                        value={conceptos ?? ''}
+                        onChange={(e) => onConceptos?.(e.target.value)}
+                        rows={7}
+                        placeholder="Pega aquí los conceptos de violación de la demanda de amparo, tal como se plantearon."
+                        className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/85 outline-none transition-colors placeholder:text-white/25 focus:border-accent-gold/40" />
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-white/30">
+                        Si los dejas en blanco el proyecto levanta el
+                        sobreseimiento y advierte que el estudio queda
+                        pendiente. No se inventan a partir de los agravios: son
+                        escritos distintos.
+                    </p>
+                </section>
+            )}
 
             {/* ── 4 · LA LISTA DE COMPROBACIÓN ────────────────────────────── */}
             {global.checklist?.length > 0 && (

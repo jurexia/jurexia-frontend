@@ -322,6 +322,7 @@ export default function VentanaCriterio({
     modo = 'por_problema', onModo, sentidoGlobal = '', onSentidoGlobal,
     razonGlobal = '', onRazonGlobal,
     onAportar, aportando, contextoAportado, proponiendo,
+    conceptosViolacion = '', onConceptosViolacion,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -340,12 +341,21 @@ export default function VentanaCriterio({
      *  estudio: sin ella el proyecto tiene un sentido y ninguna explicación. */
     razonGlobal?: string;
     onRazonGlobal?: (t: string) => void;
+    /** LOS CONCEPTOS DE VIOLACIÓN que aporta el secretario cuando el recurso
+     *  levanta un sobreseimiento: el tribunal asume jurisdicción y tiene que
+     *  estudiarlos por primera vez, y no constan en el expediente del recurso.
+     *  El servidor dice cuándo hacen falta (`necesitaConceptos`). */
+    conceptosViolacion?: string;
+    onConceptosViolacion?: (t: string) => void;
     /** Pide al motor que proponga el sentido de cada problema. */
     onProponer?: () => void;
     propuesta?: { propuestas: { sentido: string; razon: string; apoyos: string[];
         prediccion?: { frase: string; confianza: string; sentido: string };
         jerarquia?: string; problema?: string;
                                 confianza: string; alcanza: boolean }[];
+        /** El servidor detectó que el recurso levanta un sobreseimiento y los
+         *  conceptos de violación no constan. */
+        necesitaConceptos?: boolean;
         /* LA SOLUCIÓN DEL ASUNTO, con su contexto, su vía contraria y la lista
            de comprobación. Se declara con el tipo del cliente para no
            mantener dos copias de la misma forma. */
@@ -514,7 +524,10 @@ export default function VentanaCriterio({
                                 global={propuesta.global} via={via}
                                 onVia={elegirVia}
                                 razon={razonGlobal ?? ''}
-                                onRazon={(t) => onRazonGlobal?.(t)} />
+                                onRazon={(t) => onRazonGlobal?.(t)}
+                                necesitaConceptos={propuesta.necesitaConceptos}
+                                conceptos={conceptosViolacion}
+                                onConceptos={onConceptosViolacion} />
                         ) : (
                             <BloqueGlobal problemas={problemas} propuesta={propuesta}
                                           sentidoGlobal={sentidoGlobal}
