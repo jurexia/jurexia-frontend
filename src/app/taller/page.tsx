@@ -41,7 +41,7 @@ import {
     type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
     sisePendiente, generarDesdeExpediente, NecesitaNotificacion,
-    URL_EXTENSION, URL_COMPLEMENTO,
+    URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
 } from '@/components/sentencia/api';
 import type { PendienteSISE, FaltaLaFecha } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -159,6 +159,10 @@ export default function TallerDeSentencias() {
        la extemporaneidad; suponerla es lo que dejó dos proyectos vacíos. */
     const [fechaNotif, setFechaNotif] = useState('');
     const [sabemos, setSabemos] = useState<FaltaLaFecha | null>(null);
+    /* BORRAR PIDE CONFIRMACIÓN, pero no un modal: el mismo botón cambia de
+       texto. Borrar tira las constancias y hay que volver a traerlas de SISE,
+       así que un clic despistado cuesta trabajo de verdad. */
+    const [confirmaBorrar, setConfirmaBorrar] = useState(false);
     const [ficheros, setFicheros] = useState<Partial<Record<RolDocumento | 'plantilla', File>>>({});
     const [material, setMaterial] = useState<MaterialDelCaso | null>(null);
     const [problemas, setProblemas] = useState<ProblemaJuridico[]>([]);
@@ -252,6 +256,24 @@ export default function TallerDeSentencias() {
             }
         } finally { setCorriendo(false); }
     }, [elegido, correo, fechaNotif]);
+
+    const borrarYOtro = useCallback(async () => {
+        if (!confirmaBorrar) { setConfirmaBorrar(true); return; }
+        setError('');
+        try {
+            if (elegido) await descartarPendiente(elegido, correo);
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo borrar el expediente.');
+            setConfirmaBorrar(false);
+            return;
+        }
+        setPendientes((ps) => ps.filter((p) => p.numero !== elegido));
+        setElegido('');
+        setSabemos(null);
+        setConfirmaBorrar(false);
+        // Y SIEMPRE SE VUELVE A SISE, que es de donde se toma el siguiente.
+        window.open(URL_SISE, '_blank', 'noopener');
+    }, [confirmaBorrar, elegido, correo]);
 
     const pedirAdelanto = useCallback(async () => {
         setError(''); setCorriendo(true);
@@ -770,6 +792,37 @@ export default function TallerDeSentencias() {
                                 Generar desde SISE
                             </button>
                         </div>
+
+                        {/* CAMBIAR DE ASUNTO. David: «si ya no quiero trabajar en ese
+                            sino en otro, agrega botón borrar y trabajar en otro
+                            expediente. Al dar click siempre redirigir a SISE». */}
+                        <div className="mt-3 flex flex-wrap items-center gap-3">
+                            <button type="button" onClick={borrarYOtro} disabled={corriendo}
+                                    className={cn(
+                                        'text-[12px] underline underline-offset-2 transition',
+                                        confirmaBorrar
+                                            ? 'font-medium text-red-300 hover:text-red-200'
+                                            : 'text-white/40 hover:text-white/70',
+                                        corriendo && 'opacity-40')}>
+                                {confirmaBorrar
+                                    ? 'Sí, borrar este expediente y abrir SISE'
+                                    : 'Borrar y trabajar en otro expediente'}
+                            </button>
+                            {confirmaBorrar && (
+                                <button type="button" onClick={() => setConfirmaBorrar(false)}
+                                        className="text-[12px] text-white/40 underline
+                                                   underline-offset-2 hover:text-white/70">
+                                    no, dejarlo
+                                </button>
+                            )}
+                        </div>
+                        {confirmaBorrar && (
+                            <p className="mt-1.5 text-[11px] leading-relaxed text-white/35">
+                                Se borran las constancias del {elegido || 'expediente'} y se abre SISE
+                                para que tomes otro. Si luego lo necesitas, habrá que traerlo otra vez
+                                desde el visor.
+                            </p>
+                        )}
                         <p className="mt-2 text-[11px] leading-relaxed text-white/35">
                             El número, el tipo, el órgano, el ponente y el secretario salen de los
                             autos. La fecha de notificación es la única que no está en los escaneos

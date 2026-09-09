@@ -824,3 +824,26 @@ export async function generarDesdeExpediente(
 export const URL_EXTENSION = '/api/complemento';
 /** La página con los pasos y la política, por si prefiere leer antes. */
 export const URL_COMPLEMENTO = '/complemento';
+
+/** A dónde se vuelve para tomar otro asunto. */
+export const URL_SISE =
+    'https://sise.cjf.gob.mx/Sise/ExpedienteElectronico/PanelCentralDeConsultas/PanelCentralDeConsultas.aspx';
+
+/**
+ * Borra el expediente que esperaba, para trabajar en otro.
+ *
+ * Borra la fila entera, no sólo los PDF: cuando el secretario dice que ese
+ * asunto ya no le interesa, no queda nada que auditar y sí un expediente ajeno
+ * del que Iurexia no tiene por qué conservar el rastro.
+ */
+export async function descartarPendiente(numero: string, userEmail: string): Promise<void> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    const res = await fetch(`${BASE}/taller/sise-descartar`, { method: 'POST', body: fd });
+    if (!res.ok) {
+        let detalle = `Error ${res.status}`;
+        try { detalle = (await res.json())?.detail ?? detalle; } catch { /* no JSON */ }
+        throw new Error(String(detalle));
+    }
+}
