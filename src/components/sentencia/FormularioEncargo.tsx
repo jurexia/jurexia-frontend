@@ -158,11 +158,22 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
 }) {
     const [tipos, setTipos] = React.useState<TipoAsunto[]>([]);
     const [errorCatalogo, setErrorCatalogo] = React.useState('');
+    const [cargandoCatalogo, setCargandoCatalogo] = React.useState(true);
 
-    React.useEffect(() => {
-        obtenerTipos().then(setTipos).catch(() =>
-            setErrorCatalogo('No se pudo leer el catálogo de asuntos.'));
+    /* Y SI AUN ASÍ FALLA, HAY POR DÓNDE SALIR. Un mensaje que sólo dice que
+       algo salió mal, en la pantalla donde se empieza a trabajar, deja al
+       secretario sin nada que hacer más que recargar y esperar acertar. */
+    const cargarCatalogo = React.useCallback(() => {
+        setCargandoCatalogo(true);
+        setErrorCatalogo('');
+        obtenerTipos()
+            .then((ts) => { setTipos(ts); setErrorCatalogo(''); })
+            .catch((e) => setErrorCatalogo(
+                e instanceof Error ? e.message : 'No se pudo leer el catálogo de asuntos.'))
+            .finally(() => setCargandoCatalogo(false));
     }, []);
+
+    React.useEffect(() => { cargarCatalogo(); }, [cargarCatalogo]);
 
     const set = <K extends keyof Encargo>(k: K, v: Encargo[K]) =>
         onCambiar({ ...valor, [k]: v });
@@ -196,7 +207,21 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
 
             <fieldset disabled={deshabilitado} className="grid gap-4 disabled:opacity-50">
                 <Campo etiqueta="¿Qué vas a proyectar?"
-                       ayuda={errorCatalogo || 'Cada asunto lleva sus apartados, su vocabulario y su plazo'}>
+                       ayuda={errorCatalogo
+                           ? ''
+                           : cargandoCatalogo && !tipos.length
+                               ? 'Cargando los tipos de asunto…'
+                               : 'Cada asunto lleva sus apartados, su vocabulario y su plazo'}>
+                {errorCatalogo && (
+                    <div className="mb-3 rounded-lg border border-red-400/30 bg-red-400/[0.06] px-3 py-2.5">
+                        <p className="text-[12px] leading-relaxed text-red-100">{errorCatalogo}</p>
+                        <button type="button" onClick={cargarCatalogo} disabled={cargandoCatalogo}
+                                className="mt-1.5 text-[12px] font-medium text-red-200 underline
+                                           underline-offset-2 hover:text-red-100 disabled:opacity-40">
+                            {cargandoCatalogo ? 'reintentando…' : 'Reintentar'}
+                        </button>
+                    </div>
+                )}
                     <SelectorTipo tipos={tipos} valor={valor.tipoAsunto}
                                   onElegir={(clave) => onCambiar({
                                       ...valor, tipoAsunto: clave, excepcionPlazo: '', plazo: 0,

@@ -663,10 +663,32 @@ export async function obtenerTipos(): Promise<TipoAsunto[]> {
     //
     // Lo caro no es la petición —es un JSON pequeño— sino servir un catálogo
     // viejo sin que nadie se entere: no falla, sólo miente.
-    const r = await fetch(`${BASE}/taller/tipos`, { cache: 'no-cache' });
-    if (!r.ok) throw new Error('No se pudo leer el catálogo de asuntos.');
-    const d = await r.json();
-    return (d.tipos ?? []) as TipoAsunto[];
+    // SE REINTENTA, PORQUE EL SERVIDOR ARRANCA EN FRÍO. Se pedía una sola vez
+    // y, si fallaba, la ficha se quedaba muerta: sin tipos que elegir y sin
+    // manera de volver a intentarlo. A David le pasó en mitad de una tarde de
+    // despliegues —cada uno reinicia el servidor, y una petición que cae en ese
+    // hueco falla—, y lo que vio fue su barra de trabajo de siempre sin nada
+    // dentro. Un arranque en frío puede tardar cerca de un minuto: tres
+    // intentos con esperas crecientes lo cubren de sobra.
+    const esperas = [0, 2000, 5000, 12000];
+    let ultimo = '';
+    for (const espera of esperas) {
+        if (espera) await new Promise((r) => setTimeout(r, espera));
+        try {
+            const r = await fetch(`${BASE}/taller/tipos`, { cache: 'no-cache' });
+            if (r.ok) {
+                const d = await r.json();
+                const tipos = (d.tipos ?? []) as TipoAsunto[];
+                if (tipos.length) return tipos;
+                ultimo = 'el catálogo vino vacío';
+            } else {
+                ultimo = `el servidor respondió ${r.status}`;
+            }
+        } catch (e) {
+            ultimo = e instanceof Error ? e.message : 'no hubo respuesta';
+        }
+    }
+    throw new Error(`No se pudo leer el catálogo de asuntos (${ultimo}).`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
