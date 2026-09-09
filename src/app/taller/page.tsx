@@ -197,18 +197,34 @@ export default function TallerDeSentencias() {
 
     /* Se mira UNA VEZ, al entrar. Si no hay nada esperando, la tarjeta no
        aparece y la pantalla queda exactamente como estaba. */
-    useEffect(() => {
+    /* SE VUELVE A MIRAR AL REGRESAR A LA PESTAÑA.
+       Mirarlo sólo al cargar era un fallo de verdad: el secretario abre el
+       taller, se va a SISE, manda las constancias y vuelve… a la misma
+       pantalla vacía, porque nadie preguntó otra vez. Le pasó a David con las
+       constancias del 91/2025 ya enviadas. */
+    const [mirando, setMirando] = useState(false);
+    const mirarPendientes = useCallback(async () => {
         if (!correo) return;
-        let vivo = true;
-        sisePendiente(correo)
-            .then((ps) => {
-                if (!vivo) return;
-                setPendientes(ps);
-                if (ps.length === 1) setElegido(ps[0].numero);
-            })
-            .catch(() => { /* que no haya expedientes no es un error */ });
-        return () => { vivo = false; };
+        setMirando(true);
+        try {
+            const ps = await sisePendiente(correo);
+            setPendientes(ps);
+            setElegido((e) => e || (ps.length === 1 ? ps[0].numero : ''));
+        } catch { /* que no haya expedientes no es un error */ }
+        finally { setMirando(false); }
     }, [correo]);
+
+    useEffect(() => { void mirarPendientes(); }, [mirarPendientes]);
+
+    useEffect(() => {
+        const alVolver = () => { if (!document.hidden) void mirarPendientes(); };
+        window.addEventListener('focus', alVolver);
+        document.addEventListener('visibilitychange', alVolver);
+        return () => {
+            window.removeEventListener('focus', alVolver);
+            document.removeEventListener('visibilitychange', alVolver);
+        };
+    }, [mirarPendientes]);
 
     const pedirDesdeSISE = useCallback(async () => {
         if (!elegido) return;
@@ -579,6 +595,16 @@ export default function TallerDeSentencias() {
                             </a>
                             <span className="text-[12px] text-white/35">Chrome · en tu computadora</span>
                         </div>
+                        {/* LO QUE PASA DESPUÉS, dicho antes. Sin esto el
+                            secretario instala, manda las constancias y no sabe
+                            que tiene que volver aquí. */}
+                        <p className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5
+                                      text-[12px] leading-relaxed text-white/60">
+                            Una vez que instales el complemento y, desde la vista del expediente
+                            electrónico, selecciones las constancias,{' '}
+                            <span className="text-white/85">este módulo se actualizará</span> y podrás
+                            empezar con la elaboración del proyecto.
+                        </p>
                         <ol className="mt-3 space-y-1.5 text-[12px] leading-relaxed text-white/45">
                             <li><span className="text-white/70">1.</span> Descomprime el archivo.</li>
                             <li><span className="text-white/70">2.</span> En Chrome, entra a
@@ -588,11 +614,47 @@ export default function TallerDeSentencias() {
                                 <span className="text-white/70"> Cargar descomprimida</span> y elige la
                                 carpeta <span className="text-white/70">iurexia-sise</span>.</li>
                         </ol>
+                        {/* EL CORREO, A LA VISTA. La extensión pide un correo escrito a
+                            mano, y una letra cambiada manda las constancias a un sitio
+                            donde nadie las busca: le pasó a David —jmd en vez de jdm— y
+                            el envío dijo «Listo» igualmente. Enseñar aquí con qué cuenta
+                            está mirando el taller hace visible ese desajuste. */}
+                        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1
+                                        border-t border-white/[0.08] pt-3">
+                            <span className="text-[12px] text-white/40">
+                                Este taller mira las constancias de{' '}
+                                <span className="text-white/80">{correo}</span>
+                            </span>
+                            <button type="button" onClick={() => void mirarPendientes()}
+                                    disabled={mirando}
+                                    className="text-[12px] text-accent-gold underline
+                                               underline-offset-2 hover:text-accent-gold/80
+                                               disabled:opacity-40">
+                                {mirando ? 'buscando…' : 'buscar ahora'}
+                            </button>
+                        </div>
+                        <p className="mt-1 text-[11px] leading-relaxed text-white/30">
+                            En las Opciones del complemento tiene que estar{' '}
+                            <span className="text-white/50">ese mismo correo</span>, el de tu cuenta de
+                            Iurexia. Si escribes otro, las constancias llegan pero no aparecen aquí.
+                        </p>
+
                         <p className="mt-3 text-[11px] leading-relaxed text-white/30">
                             Son tres pasos y no uno porque Chrome sólo instala de un clic lo que viene
-                            de su tienda, y publicar ahí exige revisión. El complemento no guarda ni
-                            envía tu usuario, tu contraseña ni tu sesión del Consejo: usa la que ya
-                            tienes abierta, y a Iurexia sólo viajan los PDF que marques.
+                            de su tienda, y publicar ahí exige revisión.
+                        </p>
+                        {/* PRIVACIDAD, DICHA COMO ES. Se escribió después de comprobar en
+                            el código qué se guarda de verdad y de añadir el borrado: antes
+                            no había ninguno, y prometerlo habría sido falso sobre datos de
+                            terceros que no eligieron estar ahí. */}
+                        <p className="mt-2 text-[11px] leading-relaxed text-white/30">
+                            <span className="text-white/50">Privacidad.</span> Iurexia no guarda tu
+                            usuario, tu contraseña ni tu sesión del Consejo: el complemento usa la que
+                            ya tienes abierta en tu navegador y sólo para pedirle al propio Consejo los
+                            documentos que marques. Las constancias se usan para preparar tu proyecto y
+                            se borran en cuanto el taller las toma; lo que no se llegue a usar se borra
+                            a las 48 horas. No se comparten con nadie, no se usan para entrenar nada y
+                            los nombres de las partes no viajan a ningún otro servidor.
                         </p>
                     </Tarjeta>
                     )}
