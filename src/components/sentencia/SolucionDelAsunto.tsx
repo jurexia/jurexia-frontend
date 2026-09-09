@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Check, AlertTriangle, RefreshCw } from 'lucide-react';
 import { cn } from './primitivas';
 import type { SolucionGlobal } from './api';
@@ -46,6 +47,7 @@ function Parrafo({ rotulo, texto }: { rotulo: string; texto: string }) {
 export default function SolucionDelAsunto({
     global, via, onVia, razon, onRazon,
     necesitaConceptos, conceptos, onConceptos,
+    problemas = [], grupos = {}, onGrupos,
 }: {
     global: SolucionGlobal;
     via: Via;
@@ -57,7 +59,36 @@ export default function SolucionDelAsunto({
     necesitaConceptos?: boolean;
     conceptos?: string;
     onConceptos?: (t: string) => void;
+    /* LOS PROBLEMAS, aquí y no sólo abajo. David: «sería bueno en ese mismo
+       recuadro bajar los problemas jurídicos como "de lo anterior derivan
+       estos problemas jurídicos"». El contexto explica el asunto; los
+       problemas son lo que de él se deriva, y leerlos juntos es leer el
+       razonamiento completo de una sola vez. */
+    problemas?: { id: string; pregunta: string; jerarquia?: string }[];
+    /** id del problema → letra del grupo con el que se estudia. */
+    grupos?: Record<string, string>;
+    onGrupos?: (g: Record<string, string>) => void;
 }) {
+    const [marcados, setMarcados] = React.useState<string[]>([]);
+    const letras = 'ABCDEFGH';
+    const siguienteLetra = () => {
+        const usadas = new Set(Object.values(grupos));
+        return letras.split('').find((l) => !usadas.has(l)) || 'A';
+    };
+    const agrupar = () => {
+        if (marcados.length < 2 || !onGrupos) return;
+        const l = siguienteLetra();
+        const g = { ...grupos };
+        marcados.forEach((id) => { g[id] = l; });
+        onGrupos(g);
+        setMarcados([]);
+    };
+    const desagrupar = (letra: string) => {
+        if (!onGrupos) return;
+        const g = { ...grupos };
+        Object.keys(g).forEach((k) => { if (g[k] === letra) delete g[k]; });
+        onGrupos(g);
+    };
     const alt = global.alternativa;
     /* La vía contraria sólo se ofrece si el motor la escribió Y de verdad es
        contraria. Un botón que promete una alternativa y entrega la misma
@@ -95,6 +126,72 @@ export default function SolucionDelAsunto({
                                 {ctx.tema_principal}
                             </p>
                         </div>
+                    )}
+                </section>
+            )}
+
+            {/* ── 1B · LOS PROBLEMAS QUE DE AHÍ SE DERIVAN ────────────────
+                 David: «darle la posibilidad al secretario de englobarlo con
+                 otro (por su estrecha relación) para que, en una sola línea
+                 argumentativa, se resuelvan dos o más problemas jurídicos
+                 vinculados».
+
+                 No es un capricho de interfaz: la arquitectura del estudio ya
+                 prohíbe resolver dos planteamientos con una calificación
+                 conjunta «salvo que declares que se estudian juntos y por
+                 qué». Faltaba quién lo declarara, y ése es el secretario. */}
+            {problemas.length > 0 && (
+                <section className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-4">
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                        De lo anterior derivan estos problemas jurídicos
+                    </p>
+                    <p className="mb-3 text-[11px] leading-relaxed text-white/30">
+                        Marca dos o más si están tan ligados que se resuelven con
+                        una sola línea argumentativa: el estudio los tratará
+                        juntos y dirá por qué.
+                    </p>
+                    <div className="space-y-1.5">
+                        {problemas.map((p, i) => {
+                            const g = grupos[p.id];
+                            const sel = marcados.includes(p.id);
+                            return (
+                                <div key={p.id}
+                                     className={`flex items-start gap-2 rounded-xl border px-2.5 py-2 transition-colors ${
+                                         g ? 'border-accent-gold/30 bg-accent-gold/[0.05]'
+                                           : sel ? 'border-white/25 bg-white/[0.05]'
+                                                 : 'border-white/[0.07] bg-white/[0.02]'}`}>
+                                    <button type="button"
+                                            onClick={() => setMarcados((m) =>
+                                                m.includes(p.id) ? m.filter((x) => x !== p.id) : [...m, p.id])}
+                                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[9px] ${
+                                                sel ? 'border-accent-gold bg-accent-gold/30 text-white'
+                                                    : 'border-white/25 text-transparent'}`}
+                                            aria-label={`Marcar el problema ${i + 1}`}>✓</button>
+                                    <p className="flex-1 text-[12.5px] leading-relaxed text-white/80">
+                                        <span className="text-white/35">{i + 1}. </span>
+                                        {p.pregunta}
+                                    </p>
+                                    {p.jerarquia === 'principal' && (
+                                        <span className="mt-0.5 shrink-0 rounded bg-white/[0.08] px-1.5 py-0.5 text-[9.5px] uppercase text-white/50">
+                                            principal
+                                        </span>
+                                    )}
+                                    {g && (
+                                        <button type="button" onClick={() => desagrupar(g)}
+                                                className="mt-0.5 shrink-0 rounded bg-accent-gold/20 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase text-accent-gold/90"
+                                                title="Separar este grupo">
+                                            juntos · {g} ✕
+                                        </button>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {marcados.length >= 2 && (
+                        <button type="button" onClick={agrupar}
+                                className="mt-2.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-3 py-1.5 text-[11.5px] font-medium text-accent-gold/90 transition-colors hover:bg-accent-gold/20">
+                            Estudiar juntos los {marcados.length} marcados
+                        </button>
                     )}
                 </section>
             )}

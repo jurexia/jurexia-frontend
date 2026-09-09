@@ -92,6 +92,10 @@ export default function TallerDeSentencias() {
        y el tribunal asume jurisdicción. No están en el expediente del recurso:
        los pega el secretario. */
     const [conceptosViolacion, setConceptosViolacion] = useState('');
+    /* PROBLEMAS QUE SE ESTUDIAN JUNTOS: id del problema → letra del grupo. Lo
+       decide el secretario, porque es quien ve que dos planteamientos se
+       resuelven con una sola línea argumentativa. */
+    const [grupos, setGrupos] = useState<Record<string, string>>({});
     /* EL ESTUDIO, SEGÚN SE ESCRIBE. Cuatro minutos de pantalla quieta se
        sienten como una avería; viéndose escribir se sienten como trabajo. Y de
        paso el secretario va leyendo y puede parar si ve que va mal encaminado. */
@@ -353,6 +357,11 @@ export default function TallerDeSentencias() {
                 // —«200 · 4,031 palabras», sin timeout ni traza— y la respuesta
                 // no llegó. El proyecto existía y era inalcanzable.
                 setAvance('');
+                // SE BAJA AL ESTUDIO AL ARRANCAR. Estaba en el primer trozo,
+                // que llega a los 61 segundos: el secretario se quedaba
+                // mirando la pantalla anterior sin saber que ya se estaba
+                // trabajando.
+                irA('estudio', 200);
                 const rg = await resolverEnVivo(
                     encargo.numero, correo, {
                         sentidoGlobal, contexto, razonGlobal,
@@ -367,12 +376,7 @@ export default function TallerDeSentencias() {
                         // sobreseimiento y deja el estudio pendiente.
                         conceptosViolacion,
                     },
-                    (t) => setAvance((x) => {
-                        // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
-                        // pantalla temblaría durante los dos minutos que dura el estudio.
-                        if (!x) irA('estudio', 120);
-                        return x + t;
-                    }),
+                    (t) => setAvance((x) => x + t),
                     () => setAvance((x) => x + '\n\n… componiendo el documento'));
                 setProyecto(rg);
                 descargarProyecto(rg);
@@ -389,6 +393,11 @@ export default function TallerDeSentencias() {
                       problema: p.pregunta,
                       sentido: p.sentido,
                       razonamiento: p.criterio ?? '',
+                      // EL GRUPO VIAJA CON EL CRITERIO. Si el secretario marcó
+                      // dos planteamientos como una sola línea argumentativa,
+                      // el estudio tiene que saberlo: es lo único que autoriza
+                      // resolverlos con una calificación conjunta.
+                      grupo: grupos[p.id] ?? '',
                       // LO QUE SE SEMBRÓ TIENE QUE VOLVER. Este objeto se
                       // reconstruía con tres campos y perdía la jerarquía y la
                       // predicción, que es lo que ordena el estudio por
@@ -604,6 +613,7 @@ export default function TallerDeSentencias() {
                                          razonGlobal={razonGlobal}
                                          onRazonGlobal={setRazonGlobal}
                                          onSentidoGlobal={setSentidoGlobal}
+                                         grupos={grupos} onGrupos={setGrupos}
                                          conceptosViolacion={conceptosViolacion}
                                          onConceptosViolacion={setConceptosViolacion}
                                          contextoAportado={contexto.length} />
@@ -615,18 +625,28 @@ export default function TallerDeSentencias() {
                         se escribe: si ve que va mal encaminado, no espera al
                         final para saberlo. */}
                     <span id="estudio" />
-                    {corriendo && avance && (
+                    {/* LA TARJETA SE ABRE AL EMPEZAR, NO AL PRIMER TROZO.
+                        David: «tampoco existe el streaming de la generación de
+                        la sentencia». Existe —medido en producción: 4,659
+                        eventos de texto—, pero el PRIMER TROZO LLEGA A LOS 61
+                        SEGUNDOS, y la tarjeta se pintaba con `corriendo &&
+                        avance`: durante ese minuto la pantalla no decía nada
+                        del estudio y parecía que no pasaba nada.
+                        Ahora se abre en cuanto arranca, diciendo qué está
+                        haciendo, y el texto la va llenando. */}
+                    {corriendo && paso === 'criterio' && (
                         <Tarjeta>
                             <Rotulo accion={
                                 <span className="text-[11px] tabular-nums text-white/30">
-                                    {avance.trim().split(/\s+/).length} palabras
+                                    {avance ? `${avance.trim().split(/\s+/).length} palabras`
+                                            : 'leyendo el acervo'}
                                 </span>
                             }>
-                                Escribiendo el estudio
+                                {avance ? 'Escribiendo el estudio' : 'Preparando el estudio'}
                             </Rotulo>
                             <div className="max-h-[26rem] overflow-y-auto rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
                                 <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-white/70">
-                                    {avance}
+                                    {avance || 'El motor está leyendo las tesis y las normas del acervo y fijando la premisa. El texto empieza a aparecer aquí en cuanto escribe la primera línea; suele tardar alrededor de un minuto.'}
                                     <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-accent-gold align-middle" />
                                 </p>
                             </div>

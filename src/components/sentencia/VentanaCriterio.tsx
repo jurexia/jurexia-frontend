@@ -323,6 +323,7 @@ export default function VentanaCriterio({
     razonGlobal = '', onRazonGlobal,
     onAportar, aportando, contextoAportado, proponiendo,
     conceptosViolacion = '', onConceptosViolacion,
+    grupos = {}, onGrupos,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -347,6 +348,9 @@ export default function VentanaCriterio({
      *  El servidor dice cuándo hacen falta (`necesitaConceptos`). */
     conceptosViolacion?: string;
     onConceptosViolacion?: (t: string) => void;
+    /** Problemas que el secretario decidió estudiar juntos: id → letra. */
+    grupos?: Record<string, string>;
+    onGrupos?: (g: Record<string, string>) => void;
     /** Pide al motor que proponga el sentido de cada problema. */
     onProponer?: () => void;
     propuesta?: { propuestas: { sentido: string; razon: string; apoyos: string[];
@@ -527,7 +531,12 @@ export default function VentanaCriterio({
                                 onRazon={(t) => onRazonGlobal?.(t)}
                                 necesitaConceptos={propuesta.necesitaConceptos}
                                 conceptos={conceptosViolacion}
-                                onConceptos={onConceptosViolacion} />
+                                onConceptos={onConceptosViolacion}
+                                problemas={problemas.map((p) => ({
+                                    id: p.id, pregunta: p.pregunta,
+                                    jerarquia: p.jerarquia }))}
+                                grupos={grupos}
+                                onGrupos={onGrupos} />
                         ) : (
                             <BloqueGlobal problemas={problemas} propuesta={propuesta}
                                           sentidoGlobal={sentidoGlobal}
