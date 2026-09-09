@@ -668,3 +668,148 @@ export async function obtenerTipos(): Promise<TipoAsunto[]> {
     const d = await r.json();
     return (d.tipos ?? []) as TipoAsunto[];
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DESDE SISE · el expediente que ya está esperando
+//
+// David, mirando la pantalla después de que todo el servidor estuviera hecho:
+// «no veo cómo generar el proyecto desde tcc-beta utilizando sise. No hay nada
+// desplegado para conectar con SISE. Debería tener algún botón que diga
+// "Generar desde SISE"».
+//
+// Tenía razón. La extensión dejaba el expediente en Iurexia, el servidor lo
+// depuraba y lo sabía leer, y la pantalla no se había enterado de nada. Un
+// camino al que no se puede entrar no existe.
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface DocumentoDepurado {
+    que: string;
+    paginas: string;
+    n: number;
+    caracteres: number;
+}
+
+export interface PendienteSISE {
+    numero: string;
+    tipoSise: string;
+    organo: string;
+    /** dd/mm/aaaa, tal como lo escribió SISE. Es una PISTA, no el dato. */
+    presentacion: string;
+    documentos: DocumentoDepurado[];
+    /** Cuántas actuaciones traía el índice del Expediente Electrónico. */
+    actuaciones: number;
+    creadoEn: string;
+}
+
+/** Lo que el secretario tiene esperando, traído por la extensión. */
+export async function sisePendiente(userEmail: string): Promise<PendienteSISE[]> {
+    const url = `${BASE}/taller/sise-pendiente?user_email=${encodeURIComponent(userEmail)}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const j = await res.json().catch(() => ({}));
+    return ((j?.pendientes ?? []) as Record<string, unknown>[]).map((p) => ({
+        numero: String(p.numero ?? ''),
+        tipoSise: String(p.tipo_sise ?? ''),
+        organo: String(p.organo ?? ''),
+        presentacion: String(p.presentacion_sise ?? ''),
+        actuaciones: Array.isArray(p.actuaciones) ? p.actuaciones.length : 0,
+        creadoEn: String(p.creado_en ?? ''),
+        documentos: (Array.isArray(p.inventario) ? p.inventario : [])
+            .map((d) => {
+                const x = d as Record<string, unknown>;
+                return {
+                    que: String(x.tipo ?? x.que ?? ''),
+                    paginas: x.desde ? `${x.desde}-${x.hasta}` : '',
+                    n: Number(x.paginas ?? 0),
+                    caracteres: Number(x.caracteres ?? 0),
+                };
+            }),
+    }));
+}
+
+/** Lo que el servidor ya sabe cuando todavía le falta la fecha. */
+export interface FaltaLaFecha {
+    dice: string;
+    yaSabemos: Record<string, string>;
+    documentos: DocumentoDepurado[];
+}
+
+export class NecesitaNotificacion extends Error {
+    readonly datos: FaltaLaFecha;
+    constructor(datos: FaltaLaFecha) {
+        super(datos.dice);
+        this.name = 'NecesitaNotificacion';
+        this.datos = datos;
+    }
+}
+
+export interface AdelantoDesdeSISE extends ResultadoAdelanto {
+    /** Lo que se leyó de los autos, con su procedencia. */
+    leido: string;
+    /** El mapa del tomo: qué páginas son qué. */
+    depuracion: string;
+}
+
+/**
+ * Del expediente al adelanto sin formulario.
+ *
+ * La única fecha que se pide es la de notificación: no está en los escaneos y
+ * es la que decide la extemporaneidad. Cuando falta, el servidor no la supone
+ * —contesta 422 diciendo qué falta y enseñando todo lo que ya sabe—, y eso es
+ * lo que `NecesitaNotificacion` trae de vuelta a la pantalla.
+ */
+export async function generarDesdeExpediente(
+    numero: string,
+    userEmail: string,
+    notificacion: string,
+    extra?: { magistrado?: string; secretario?: string; reglaSurtimiento?: string },
+): Promise<AdelantoDesdeSISE> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    fd.append('notificacion', notificacion);
+    if (extra?.magistrado) fd.append('magistrado', extra.magistrado);
+    if (extra?.secretario) fd.append('secretario', extra.secretario);
+    if (extra?.reglaSurtimiento) fd.append('regla_surtimiento', extra.reglaSurtimiento);
+
+    const res = await fetch(`${BASE}/taller/desde-expediente`, { method: 'POST', body: fd });
+
+    if (res.status === 422) {
+        // El 422 de la fecha viaja como JSON DENTRO de `detail`, porque así lo
+        // empaqueta HTTPException. Si no es ése, se propaga tal cual.
+        const j = await res.json().catch(() => ({}));
+        try {
+            const d = JSON.parse(String(j?.detail ?? ''));
+            if (d?.falta === 'notificacion') {
+                throw new NecesitaNotificacion({
+                    dice: String(d.dice ?? ''),
+                    yaSabemos: (d.ya_sabemos ?? {}) as Record<string, string>,
+                    documentos: (d.documentos ?? []) as DocumentoDepurado[],
+                });
+            }
+        } catch (e) {
+            if (e instanceof NecesitaNotificacion) throw e;
+        }
+        throw new Error(String(j?.detail ?? 'Faltan datos del expediente.'));
+    }
+    if (!res.ok) {
+        let detalle = `Error ${res.status}`;
+        try { detalle = (await res.json())?.detail ?? detalle; } catch { /* no JSON */ }
+        throw new Error(String(detalle));
+    }
+
+    const c = res.headers;
+    const disp = c.get('content-disposition') || '';
+    const nombre = /filename="?([^";]+)"?/.exec(disp)?.[1]
+        ?? `${numero.replace('/', '-')} ADELANTO.docx`;
+    return {
+        documento: await res.blob(),
+        nombre,
+        oportunidad: (c.get('X-Oportunidad') as ResultadoAdelanto['oportunidad']) ?? null,
+        problemas: Number(c.get('X-Problemas') ?? 0),
+        huecos: Number(c.get('X-Huecos') ?? 0),
+        avisos: Number(c.get('X-Avisos') ?? 0),
+        leido: c.get('X-Leido') ?? '',
+        depuracion: c.get('X-Depuracion') ?? '',
+    };
+}

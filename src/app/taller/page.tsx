@@ -40,7 +40,9 @@ import {
     proponerSolucion, aportarContexto, resolverEnVivo,
     type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
+    sisePendiente, generarDesdeExpediente, NecesitaNotificacion,
 } from '@/components/sentencia/api';
+import type { PendienteSISE, FaltaLaFecha } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
 
 type Paso = 'ficha' | 'adelanto' | 'acervo' | 'criterio' | 'proyecto';
@@ -147,6 +149,15 @@ export default function TallerDeSentencias() {
         esRecurso: /revision|queja/i.test(tipoSel.clave),
     } : undefined, [tipoSel]);
     const [documentos, setDocumentos] = useState<Documento[]>([]);
+    /* EL EXPEDIENTE QUE YA ESTÁ ESPERANDO. La extensión lo deja aquí desde el
+       Expediente Electrónico; sin esto la pantalla no se enteraba y todo el
+       camino era inalcanzable para el secretario. */
+    const [pendientes, setPendientes] = useState<PendienteSISE[]>([]);
+    const [elegido, setElegido] = useState<string>('');
+    /* LA ÚNICA FECHA QUE SE TECLEA. No está en los escaneos y es la que decide
+       la extemporaneidad; suponerla es lo que dejó dos proyectos vacíos. */
+    const [fechaNotif, setFechaNotif] = useState('');
+    const [sabemos, setSabemos] = useState<FaltaLaFecha | null>(null);
     const [ficheros, setFicheros] = useState<Partial<Record<RolDocumento | 'plantilla', File>>>({});
     const [material, setMaterial] = useState<MaterialDelCaso | null>(null);
     const [problemas, setProblemas] = useState<ProblemaJuridico[]>([]);
@@ -183,6 +194,47 @@ export default function TallerDeSentencias() {
         if (!ficheros.conceptos) f.push(`los ${voz?.combate ?? 'conceptos de violación'}`);
         return f;
     }, [encargo, ficheros, voz]);
+
+    /* Se mira UNA VEZ, al entrar. Si no hay nada esperando, la tarjeta no
+       aparece y la pantalla queda exactamente como estaba. */
+    useEffect(() => {
+        if (!correo) return;
+        let vivo = true;
+        sisePendiente(correo)
+            .then((ps) => {
+                if (!vivo) return;
+                setPendientes(ps);
+                if (ps.length === 1) setElegido(ps[0].numero);
+            })
+            .catch(() => { /* que no haya expedientes no es un error */ });
+        return () => { vivo = false; };
+    }, [correo]);
+
+    const pedirDesdeSISE = useCallback(async () => {
+        if (!elegido) return;
+        setError(''); setCorriendo(true);
+        try {
+            const r = await generarDesdeExpediente(elegido, correo, fechaNotif);
+            descargar(r);
+            if (r.oportunidad === 'EXTEMPORANEA') {
+                setError('El cómputo da EXTEMPORÁNEA. Compruébalo antes de seguir: '
+                       + 'si es correcto, el asunto no se resuelve en el fondo.');
+            }
+            // El encargo se rellena con lo leído para que los pasos siguientes
+            // —y el documento final— lleven el número y la ponencia correctos.
+            setEncargo((e) => ({ ...e, numero: elegido }));
+            setSabemos(null);
+            setPaso('adelanto');
+        } catch (e) {
+            if (e instanceof NecesitaNotificacion) {
+                // No es un fallo: es el servidor diciendo qué falta y
+                // enseñando todo lo que ya sabe. Se pinta, no se tira.
+                setSabemos(e.datos);
+            } else {
+                setError(e instanceof Error ? e.message : 'No se pudo generar desde SISE.');
+            }
+        } finally { setCorriendo(false); }
+    }, [elegido, correo, fechaNotif]);
 
     const pedirAdelanto = useCallback(async () => {
         setError(''); setCorriendo(true);
@@ -498,6 +550,117 @@ export default function TallerDeSentencias() {
                                 <p className="text-[13px] leading-relaxed text-red-100">{error}</p>
                             </div>
                         </Tarjeta>
+                    )}
+
+                    {/* ═══ DESDE SISE ═══
+                        David, con todo el servidor ya hecho: «no veo cómo
+                        generar el proyecto desde tcc-beta utilizando sise. No
+                        hay nada desplegado para conectar con SISE. Debería
+                        tener algún botón que diga "Generar desde SISE"».
+
+                        Tenía razón. La extensión dejaba el expediente, el
+                        servidor lo depuraba y sabía leerlo, y la pantalla no se
+                        había enterado. Un camino al que no se puede entrar no
+                        existe. */}
+                    {pendientes.length > 0 && paso === 'ficha' && (
+                    <Tarjeta className="border-accent-gold/30 bg-accent-gold/[0.05]">
+                        <Rotulo accion={<span className="text-[11px] text-white/30">
+                            {pendientes.length === 1 ? 'traído por la extensión'
+                                                     : `${pendientes.length} esperando`}
+                        </span>}>
+                            Tienes un expediente esperando
+                        </Rotulo>
+
+                        {pendientes.length > 1 && (
+                            <select value={elegido} onChange={(ev) => setElegido(ev.target.value)}
+                                    className="mt-3 w-full rounded-lg border border-white/12 bg-white/[0.05]
+                                               px-3 py-2 text-[13px] text-white/90">
+                                <option value="">Elige el expediente…</option>
+                                {pendientes.map((p) => (
+                                    <option key={p.numero} value={p.numero}>
+                                        {p.numero} · {p.tipoSise}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+
+                        {(() => {
+                            const p = pendientes.find((x) => x.numero === elegido);
+                            if (!p) return null;
+                            return (
+                                <div className="mt-3 space-y-2">
+                                    <p className="text-[13px] text-white/85">
+                                        <span className="font-medium">{p.numero}</span>
+                                        {p.tipoSise && <span className="text-white/55"> · {p.tipoSise}</span>}
+                                    </p>
+                                    {p.organo && <p className="text-[12px] text-white/40">{p.organo}</p>}
+                                    {p.documentos.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 pt-1">
+                                            {p.documentos.map((d, i) => (
+                                                <span key={i} className="rounded-md border border-white/10
+                                                        bg-white/[0.04] px-2 py-1 text-[11px] text-white/60">
+                                                    {d.que.replace(/_/g, ' ')}
+                                                    {d.n > 0 && <span className="text-white/35"> · {d.n} pág</span>}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {p.presentacion && (
+                                        <p className="text-[12px] text-white/40">
+                                            Presentación según SISE: {p.presentacion}
+                                            <span className="text-white/25"> — se confirma con la portada</span>
+                                        </p>
+                                    )}
+                                </div>
+                            );
+                        })()}
+
+                        {/* LO QUE EL SERVIDOR YA SABE, cuando sólo le falta la
+                            fecha. Se enseña para que el secretario vea que no
+                            hay que teclear nada más. */}
+                        {sabemos && (
+                            <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                                <p className="text-[12px] leading-relaxed text-white/70">{sabemos.dice}</p>
+                                <dl className="mt-2.5 grid gap-x-4 gap-y-1 text-[12px] sm:grid-cols-2">
+                                    {Object.entries(sabemos.yaSabemos)
+                                        .filter(([, v]) => v)
+                                        .map(([k, v]) => (
+                                        <div key={k} className="flex gap-2">
+                                            <dt className="shrink-0 text-white/35">
+                                                {k.replace(/_/g, ' ')}
+                                            </dt>
+                                            <dd className="text-white/75">{String(v)}</dd>
+                                        </div>
+                                    ))}
+                                </dl>
+                            </div>
+                        )}
+
+                        <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-white/[0.08] pt-4">
+                            <label className="flex flex-col gap-1">
+                                <span className="text-[11px] text-white/45">
+                                    Notificación de la recurrida
+                                </span>
+                                <input type="date" value={fechaNotif}
+                                       onChange={(ev) => setFechaNotif(ev.target.value)}
+                                       className="rounded-lg border border-white/12 bg-white/[0.05]
+                                                  px-3 py-2 text-[13px] text-white/90" />
+                            </label>
+                            <button className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
+                                    disabled={corriendo || !elegido || !!sinAcceso}
+                                    onClick={pedirDesdeSISE}>
+                                {corriendo
+                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                    : <FileText className="h-4 w-4" />}
+                                Generar desde SISE
+                            </button>
+                        </div>
+                        <p className="mt-2 text-[11px] leading-relaxed text-white/35">
+                            El número, el tipo, el órgano, el ponente y el secretario salen de los
+                            autos. La fecha de notificación es la única que no está en los escaneos
+                            y de ella depende el cómputo: por eso se pregunta.
+                        </p>
+                    </Tarjeta>
                     )}
 
                     <Tarjeta>
