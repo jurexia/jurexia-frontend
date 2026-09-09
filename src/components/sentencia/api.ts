@@ -813,3 +813,7 @@ export async function generarDesdeExpediente(
         depuracion: c.get('X-Depuracion') ?? '',
     };
 }
+
+/** De dónde se baja el complemento. Se empaqueta en el servidor al vuelo, así
+ *  que siempre es la versión desplegada. */
+export const URL_EXTENSION = `${BASE}/taller/extension`;

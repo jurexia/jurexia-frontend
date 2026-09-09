@@ -40,7 +40,7 @@ import {
     proponerSolucion, aportarContexto, resolverEnVivo,
     type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
-    sisePendiente, generarDesdeExpediente, NecesitaNotificacion,
+    sisePendiente, generarDesdeExpediente, NecesitaNotificacion, URL_EXTENSION,
 } from '@/components/sentencia/api';
 import type { PendienteSISE, FaltaLaFecha } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -550,6 +550,51 @@ export default function TallerDeSentencias() {
                                 <p className="text-[13px] leading-relaxed text-red-100">{error}</p>
                             </div>
                         </Tarjeta>
+                    )}
+
+                    {/* ═══ EL COMPLEMENTO, ANTES DE PODER USARLO ═══
+                        David: «si voy a instalar el complemento de Chrome dame
+                        la opción de descargar o con un click que me lleve a
+                        instalarlo, sino no servirá».
+
+                        Sólo se enseña mientras no haya llegado ningún
+                        expediente: en cuanto la extensión funciona, esta
+                        tarjeta sobra y deja el sitio a la del expediente. */}
+                    {pendientes.length === 0 && paso === 'ficha' && (
+                    <Tarjeta>
+                        <Rotulo accion={<span className="text-[11px] text-white/30">se instala una vez</span>}>
+                            Trae el expediente desde SISE
+                        </Rotulo>
+                        <p className="mt-2 text-[13px] leading-relaxed text-white/60">
+                            Con el complemento instalado, abres tu expediente en SISE, pulsas
+                            <span className="text-white/85"> Vista Expediente Electrónico</span> y desde
+                            ahí mandas las constancias al taller. No hace falta que teclees el número,
+                            el tipo ni la ponencia: salen de los autos.
+                        </p>
+                        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-white/[0.08] pt-4">
+                            <a href={URL_EXTENSION} download
+                               className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}>
+                                <Download className="h-4 w-4" />
+                                Descargar el complemento
+                            </a>
+                            <span className="text-[12px] text-white/35">Chrome · en tu computadora</span>
+                        </div>
+                        <ol className="mt-3 space-y-1.5 text-[12px] leading-relaxed text-white/45">
+                            <li><span className="text-white/70">1.</span> Descomprime el archivo.</li>
+                            <li><span className="text-white/70">2.</span> En Chrome, entra a
+                                <code className="mx-1 rounded bg-white/[0.06] px-1.5 py-0.5 text-white/75">chrome://extensions</code>
+                                y enciende <span className="text-white/70">Modo de desarrollador</span>.</li>
+                            <li><span className="text-white/70">3.</span> Pulsa
+                                <span className="text-white/70"> Cargar descomprimida</span> y elige la
+                                carpeta <span className="text-white/70">iurexia-sise</span>.</li>
+                        </ol>
+                        <p className="mt-3 text-[11px] leading-relaxed text-white/30">
+                            Son tres pasos y no uno porque Chrome sólo instala de un clic lo que viene
+                            de su tienda, y publicar ahí exige revisión. El complemento no guarda ni
+                            envía tu usuario, tu contraseña ni tu sesión del Consejo: usa la que ya
+                            tienes abierta, y a Iurexia sólo viajan los PDF que marques.
+                        </p>
+                    </Tarjeta>
                     )}
 
                     {/* ═══ DESDE SISE ═══
