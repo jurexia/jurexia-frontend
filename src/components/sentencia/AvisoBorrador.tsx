@@ -25,6 +25,9 @@ export interface DatosBorrador {
     huecos: number;
     tieneAdvertencias: boolean;
     conceptos?: number;
+    /** El texto de cada aviso, no sólo cuántos son. */
+    textoAvisos?: string[];
+    textoHuecos?: string[];
 }
 
 const PUNTOS = [
@@ -62,6 +65,33 @@ export default function AvisoBorrador({ datos, className }: {
                             </span></>
                         )}
                     </p>
+
+                    {/* QUÉ DICEN LOS AVISOS, no cuántos son.
+                        Se contaban y se tiraban los textos, y entre ellos venía
+                        el único que de verdad importa: «El criterio pedía X y
+                        esa calificación no aparece en el estudio». El
+                        secretario veía «3 avisos» y un recuadro genérico, sin
+                        forma de saber que el sistema no le había hecho caso. */}
+                    {(datos.textoAvisos?.length ?? 0) > 0 && (
+                        <ul className="mt-3 space-y-1.5 border-t border-amber-400/20 pt-3">
+                            {(datos.textoAvisos ?? []).map((a, i) => (
+                                <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-amber-100/90">
+                                    <span className="shrink-0 text-amber-300/70">·</span>
+                                    <span>{a}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    {(datos.textoHuecos?.length ?? 0) > 0 && (
+                        <ul className="mt-2 space-y-1.5">
+                            {(datos.textoHuecos ?? []).map((h, i) => (
+                                <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-white/55">
+                                    <span className="shrink-0 text-white/30">·</span>
+                                    <span>{h}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
 
                     <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                         {PUNTOS.map(({ icono: Icono, titulo, texto }) => (

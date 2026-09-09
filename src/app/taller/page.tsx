@@ -338,8 +338,18 @@ export default function TallerDeSentencias() {
         } finally { setCorriendo(false); }
     }, [encargo.numero, correo]);
 
+    /* LO QUE EL SECRETARIO TOCA A MANO NO SE PISA NUNCA MÁS.
+       Sin esta lista no había forma de distinguir un sentido que él eligió de
+       uno que rellenó la propuesta, y por eso se perdía el suyo: David marcó
+       INFUNDADO el concepto de la pericial declarada desierta y el proyecto
+       salió FUNDADO. */
+    const [tocados, setTocados] = useState<Set<string>>(new Set());
+
     const cambiarCriterio = useCallback((id: string, campo: 'criterio' | 'sentido', valor: string) => {
         setProblemas((prev) => prev.map((p) => p.id === id ? { ...p, [campo]: valor } : p));
+        if (campo === 'sentido' && valor) {
+            setTocados((prev) => new Set(prev).add(id));
+        }
     }, []);
 
     // LA PROPUESTA DE SOLUCIÓN. El motor sugiere el sentido de cada problema
@@ -388,6 +398,12 @@ export default function TallerDeSentencias() {
                 const base = { ...q, prediccion: s?.prediccion ?? q.prediccion,
                                jerarquia: (s?.jerarquia as 'principal' | 'accesorio')
                                           ?? q.jerarquia };
+                // SI ÉL YA LO DECIDIÓ, LA PROPUESTA NO LO TOCA. Antes se
+                // volcaba encima sin mirar, y «volver a proponer» borraba en
+                // silencio lo que el secretario acababa de marcar.
+                if (tocados.has(q.id)) {
+                    return { ...base, criterio: q.criterio || s?.razon || '' };
+                }
                 return s && s.alcanza && valido
                     ? { ...base, sentido: valido, criterio: q.criterio || s.razon }
                     : base;
@@ -440,6 +456,17 @@ export default function TallerDeSentencias() {
                     setCorriendo(false);
                     return;
                 }
+                /* LO QUE ÉL MARCÓ VIAJA TAMBIÉN AQUÍ, y manda.
+                   Este camino decía «mandar además los criterios por problema
+                   sería dar dos órdenes distintas» y por eso los tiraba. El
+                   razonamiento daba por hecho que el sentido global era la
+                   palabra del secretario, y no lo es: lo pone la propuesta del
+                   modelo en cuanto llega. Así que se tiraba lo único que él
+                   había dicho de verdad.
+                   Ahora el global RELLENA los problemas que no tocó, y donde
+                   marcó algo gana su marca. El servidor aplica esa regla en
+                   modos_decision.repartir y lo dice en un aviso. */
+                const suyos = problemas.filter((p) => tocados.has(p.id) && p.sentido);
                 // POR EL FLUJO, NO POR LA LLAMADA BLOQUEANTE. El servidor
                 // tenía este camino escrito y nadie lo llamaba: todo salía por
                 // /taller/resolver, que devuelve el .docx en una sola respuesta
@@ -456,6 +483,19 @@ export default function TallerDeSentencias() {
                 const rg = await resolverEnVivo(
                     encargo.numero, correo, {
                         sentidoGlobal, contexto, razonGlobal,
+                        // LO QUE ÉL MARCÓ, con su razón y su grupo. Va junto al
+                        // sentido global, no en lugar de él: el servidor usa el
+                        // global de relleno y respeta cada marca expresa.
+                        criteriosJson: suyos.length
+                            ? JSON.stringify(suyos.map((p) => ({
+                                  problema: p.pregunta,
+                                  sentido: p.sentido,
+                                  razonamiento: p.criterio ?? '',
+                                  grupo: grupos[p.id] ?? '',
+                                  jerarquia: p.jerarquia ?? 'accesorio',
+                                  prediccion: p.prediccion ?? {},
+                              })))
+                            : undefined,
                         // Qué resolvió el órgano recurrido, del contexto que
                         // escribió el motor. Decide el verbo del resolutivo.
                         resolvioDeclarado: propuesta?.global?.contexto?.resolvio ?? '',
@@ -990,6 +1030,8 @@ export default function TallerDeSentencias() {
                             <AvisoBorrador datos={{
                                 palabras: proyecto.palabras, avisos: proyecto.avisos,
                                 huecos: proyecto.huecos, tieneAdvertencias: proyecto.tieneAdvertencias,
+                                textoAvisos: proyecto.textoAvisos,
+                                textoHuecos: proyecto.textoHuecos,
                             }} />
                             <button className={cn(boton, 'self-start bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
                                     onClick={() => descargarProyecto(proyecto)}>

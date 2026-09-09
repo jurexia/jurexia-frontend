@@ -232,6 +232,15 @@ export interface ResultadoProyecto {
     huecos: number;
     /** El sistema encontró un obstáculo al sentido dictado y lo dice aparte. */
     tieneAdvertencias: boolean;
+    /** QUÉ dicen esos avisos, no cuántos son.
+     *
+     *  Se contaban y se tiraban los textos. Entre ellos venía el único que
+     *  importaba de verdad —«El criterio pedía X y esa calificación no aparece
+     *  en el estudio»—, así que el secretario recibía «3 avisos» y un recuadro
+     *  genérico de «no es firmable», sin manera de saber que el sistema había
+     *  desobedecido su instrucción. */
+    textoAvisos: string[];
+    textoHuecos: string[];
 }
 
 /** Lo que el acervo no tiene y el secretario sí.
@@ -434,6 +443,14 @@ export async function resolverEnVivo(
         fd.append('modo_decision', 'global');
         fd.append('sentido_global', o.sentidoGlobal);
         if (o.razonGlobal?.trim()) fd.append('razonamiento', o.razonGlobal.trim());
+        // Y LO QUE ÉL MARCÓ POR PROBLEMA VIAJA IGUAL. Este `else if` era el
+        // último eslabón de la cadena que se tragaba la instrucción del
+        // secretario: con un sentido global presente, `criterios_json` no se
+        // mandaba nunca. El servidor usa el global de relleno y respeta cada
+        // marca expresa, así que mandar los dos no son «dos órdenes
+        // distintas»: es una orden con excepciones, que es como se decide un
+        // asunto de verdad.
+        if (o.criteriosJson) fd.append('criterios_json', o.criteriosJson);
     } else if (o.criteriosJson) {
         fd.append('criterios_json', o.criteriosJson);
     } else if (o.criterio) {
@@ -518,6 +535,8 @@ export async function resolverEnVivo(
         avisos: avisos.length,
         huecos: huecos.length,
         tieneAdvertencias: Boolean(listo.advertencias),
+        textoAvisos: avisos.map(String),
+        textoHuecos: huecos.map(String),
     };
 }
 
@@ -599,6 +618,11 @@ export async function resolverConCriterio(
         avisos: Number(h.get('X-Avisos') ?? 0),
         huecos: Number(h.get('X-Huecos') ?? 0),
         tieneAdvertencias: h.get('X-Advertencias') === '1',
+        // Los textos, no sólo el número. Viajan en cabecera, separados por
+        // « | », con el saneado latin-1 que usa el resto de los avisos.
+        textoAvisos: (h.get('X-Avisos-Detalle') || '')
+            .split(' | ').map((x) => x.trim()).filter(Boolean),
+        textoHuecos: [],
     };
 }
 
