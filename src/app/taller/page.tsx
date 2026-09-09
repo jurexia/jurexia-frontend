@@ -40,7 +40,8 @@ import {
     proponerSolucion, aportarContexto, resolverEnVivo,
     type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
-    sisePendiente, generarDesdeExpediente, NecesitaNotificacion, URL_EXTENSION,
+    sisePendiente, generarDesdeExpediente, NecesitaNotificacion,
+    URL_EXTENSION, URL_COMPLEMENTO,
 } from '@/components/sentencia/api';
 import type { PendienteSISE, FaltaLaFecha } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -592,6 +593,11 @@ export default function TallerDeSentencias() {
                                className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}>
                                 <Download className="h-4 w-4" />
                                 Descargar el complemento
+                            </a>
+                            <a href={URL_COMPLEMENTO} target="_blank" rel="noopener"
+                               className="text-[12px] text-white/45 underline underline-offset-2
+                                          hover:text-white/70">
+                                ver los pasos y la política
                             </a>
                             <span className="text-[12px] text-white/35">Chrome · en tu computadora</span>
                         </div>

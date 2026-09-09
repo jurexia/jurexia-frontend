@@ -814,6 +814,13 @@ export async function generarDesdeExpediente(
     };
 }
 
-/** De dónde se baja el complemento. Se empaqueta en el servidor al vuelo, así
- *  que siempre es la versión desplegada. */
-export const URL_EXTENSION = `${BASE}/taller/extension`;
+/** De dónde se baja el complemento.
+ *
+ *  Va por Iurexia, no por la URL del API. A un secretario se le está pidiendo
+ *  que cargue en su navegador un programa que leerá el expediente de un
+ *  particular: que el enlace sea del sitio que ya conoce no es cosmética, es lo
+ *  que permite reconocer de quién viene. La ruta hace de puente al API, que lo
+ *  empaqueta al vuelo; no hay copia que se quede vieja. */
+export const URL_EXTENSION = '/api/complemento';
+/** La página con los pasos y la política, por si prefiere leer antes. */
+export const URL_COMPLEMENTO = '/complemento';
