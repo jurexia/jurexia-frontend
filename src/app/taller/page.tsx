@@ -601,9 +601,10 @@ export default function TallerDeSentencias() {
                         <p className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5
                                       text-[12px] leading-relaxed text-white/60">
                             Una vez que instales el complemento y, desde la vista del expediente
-                            electrónico, selecciones las constancias,{' '}
-                            <span className="text-white/85">este módulo se actualizará</span> y podrás
-                            empezar con la elaboración del proyecto.
+                            electrónico, selecciones las constancias y pulses{' '}
+                            <span className="text-white/85">Mandar constancias seleccionadas al
+                            taller</span>, este módulo se actualizará y podrás empezar con la
+                            elaboración del proyecto.
                         </p>
                         <ol className="mt-3 space-y-1.5 text-[12px] leading-relaxed text-white/45">
                             <li><span className="text-white/70">1.</span> Descomprime el archivo.</li>
@@ -634,9 +635,9 @@ export default function TallerDeSentencias() {
                             </button>
                         </div>
                         <p className="mt-1 text-[11px] leading-relaxed text-white/30">
-                            En las Opciones del complemento tiene que estar{' '}
-                            <span className="text-white/50">ese mismo correo</span>, el de tu cuenta de
-                            Iurexia. Si escribes otro, las constancias llegan pero no aparecen aquí.
+                            No hay que configurar nada: el complemento reconoce tu sesión de Iurexia
+                            desde este mismo navegador. Si te dice que no la encuentra, entra aquí con
+                            tu cuenta y vuelve a pulsar en el visor.
                         </p>
 
                         <p className="mt-3 text-[11px] leading-relaxed text-white/30">
@@ -651,7 +652,8 @@ export default function TallerDeSentencias() {
                             <span className="text-white/50">Privacidad.</span> Iurexia no guarda tu
                             usuario, tu contraseña ni tu sesión del Consejo: el complemento usa la que
                             ya tienes abierta en tu navegador y sólo para pedirle al propio Consejo los
-                            documentos que marques. Las constancias se usan para preparar tu proyecto y
+                            documentos que marques. No se manda ningún correo a nadie: las constancias
+                            viajan cifradas de esa pestaña al servidor y quedan sólo en tu taller. Las constancias se usan para preparar tu proyecto y
                             se borran en cuanto el taller las toma; lo que no se llegue a usar se borra
                             a las 48 horas. No se comparten con nadie, no se usan para entrenar nada y
                             los nombres de las partes no viajan a ningún otro servidor.
