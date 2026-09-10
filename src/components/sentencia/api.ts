@@ -204,11 +204,16 @@ export async function estadoPiloto(userEmail: string): Promise<EstadoPiloto> {
 /** Lo que el acervo dice sobre los problemas de ESTE asunto. */
 export async function consultarAcervo(
     numero: string, userEmail: string, coleccionEstatal = 'leyes_queretaro',
+    /** LO QUE EL SECRETARIO YA SABE, ANTES DE BUSCAR.
+     *  Va aquí, en la llamada que consulta el acervo, y no sólo en la que
+     *  propone: el servidor lo usa como ancla propia de la búsqueda. */
+    contexto = '',
 ): Promise<MaterialDelCaso> {
     const fd = new FormData();
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
     fd.append('coleccion_estatal', coleccionEstatal);
+    if (contexto.trim()) fd.append('contexto', contexto.trim());
     const res = await fetch(`${BASE}/taller/consultar`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     return res.json();
@@ -252,11 +257,15 @@ export interface ResultadoProyecto {
  */
 export async function aportarContexto(
     userEmail: string, documento: File | null, texto: string,
+    /** Contra qué expediente. Sin esto el servidor no puede guardarlo,
+     *  y entonces la BÚSQUEDA no se entera de lo que el secretario sabe. */
+    numero = ''
 ): Promise<{ texto: string; caracteres: number }> {
     const fd = new FormData();
     fd.append('user_email', userEmail);
     if (texto.trim()) fd.append('texto', texto.trim());
     if (documento) fd.append('documento', documento);
+    if (numero) fd.append('numero', numero);
     const res = await fetch(`${BASE}/taller/contexto`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();

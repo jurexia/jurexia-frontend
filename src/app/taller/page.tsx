@@ -308,7 +308,18 @@ export default function TallerDeSentencias() {
     const pedirAcervo = useCallback(async () => {
         setError(''); setCorriendo(true);
         try {
-            const m = await consultarAcervo(encargo.numero, correo);
+            /* EL CONTEXTO VA EN LA BÚSQUEDA, no después de ella.
+               David: «primero debe presentarse todo el contexto jurídico y
+               después buscar la solución; así el sistema va a tener mejor
+               capacidad de buscar jurisprudencia o las normas aplicables».
+               Hasta ahora este texto sólo se pedía DESPUÉS de proponer, y sólo
+               si alguna propuesta no alcanzaba. */
+            if (contexto.trim()) {
+                await aportarContexto(correo, null, contexto, encargo.numero)
+                    .catch(() => { /* si no se pudo guardar, igual viaja abajo */ });
+            }
+            const m = await consultarAcervo(encargo.numero, correo,
+                                            'leyes_queretaro', contexto);
             setMaterial(m);
             const candidatos = m.tesis.slice(0, 4).map((t) => ({
                 tipo: 'tesis' as const, registro: t.registro, rubro: t.rubro,
@@ -919,6 +930,44 @@ export default function TallerDeSentencias() {
                             <p className="mt-3 text-[12px] text-white/40">
                                 Falta {falta.join(', ')}.
                             </p>
+                        )}
+
+                        {/* ═══ LO QUE TÚ SABES, ANTES DE BUSCAR ═══
+                            David: «primero debe presentarse todo el contexto
+                            jurídico y después buscar la solución jurídica. Me
+                            parece que así el sistema va a tener mejor capacidad
+                            de buscar jurisprudencia o las normas aplicables al
+                            caso para resolver con mayor precisión».
+
+                            Estaba al revés: este recuadro sólo aparecía DESPUÉS
+                            de proponer, y sólo si alguna propuesta no alcanzaba.
+                            Aquí entra en la búsqueda como ancla propia. */}
+                        {paso === 'adelanto' && (
+                            <div className="mt-4 border-t border-white/[0.08] pt-4">
+                                <label htmlFor="ctx-previo"
+                                       className="block text-[12px] font-medium text-white/70">
+                                    Lo que sabes del asunto y no está en los papeles
+                                </label>
+                                <p className="mt-1 text-[11.5px] leading-relaxed text-white/40">
+                                    Opcional. Lo que escribas aquí se usa para BUSCAR: entra en el
+                                    acervo como una consulta propia, además de las preguntas de los
+                                    problemas. Cuanto más preciso el concepto jurídico, mejor la
+                                    jurisprudencia que vuelve.
+                                </p>
+                                <textarea id="ctx-previo" rows={3} value={contexto}
+                                          onChange={(e) => setContexto(e.target.value)}
+                                          placeholder="p. ej.: la pericial se declaró desierta porque la oferente no presentó a su perito en la fecha señalada, pese a estar notificada"
+                                          className="mt-2 w-full rounded-lg border border-white/12
+                                                     bg-white/[0.04] px-3 py-2.5 text-[13px]
+                                                     leading-relaxed text-white/90
+                                                     placeholder:text-white/25" />
+                                {contexto.trim().length > 0 && (
+                                    <p className="mt-1.5 text-[11px] text-white/35">
+                                        {contexto.trim().length.toLocaleString('es-MX')} caracteres ·
+                                        entran en la búsqueda al pulsar el botón de arriba
+                                    </p>
+                                )}
+                            </div>
                         )}
                     </Tarjeta>
 
