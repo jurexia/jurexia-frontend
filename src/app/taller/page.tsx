@@ -1033,6 +1033,7 @@ export default function TallerDeSentencias() {
                                          razonGlobal={razonGlobal}
                                          onRazonGlobal={setRazonGlobal}
                                          onSentidoGlobal={setSentidoGlobal}
+                                         tocados={tocados}
                                          grupos={grupos} onGrupos={setGrupos}
                                          conceptosViolacion={conceptosViolacion}
                                          onConceptosViolacion={setConceptosViolacion}

@@ -323,7 +323,7 @@ export default function VentanaCriterio({
     razonGlobal = '', onRazonGlobal,
     onAportar, aportando, contextoAportado, proponiendo,
     conceptosViolacion = '', onConceptosViolacion,
-    grupos = {}, onGrupos,
+    grupos = {}, onGrupos, tocados,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -372,8 +372,47 @@ export default function VentanaCriterio({
      *  decía «Redactando la sentencia…» mientras corría la propuesta. */
     proponiendo?: boolean;
     contextoAportado?: number;
+    /** Los problemas cuyo sentido marcó el secretario a mano. Sirve para
+     *  distinguir en la tabla final lo que decidió él de lo que rellenó el
+     *  motor: sin eso, las dos cosas se ven igual y no se sabe qué manda. */
+    tocados?: Set<string>;
 }) {
     const fuerza = useMemo(() => fuerzaDelCriterio(problemas), [problemas]);
+
+    /* LA DECISIÓN, CALCULADA EN VIVO.
+       Misma precedencia que `modos_decision.repartir` en el servidor: primero
+       lo que marcó el secretario, luego lo que el motor propuso para ESE
+       problema, y sólo al final el sentido global. Si las dos tablas no
+       calculan igual, la pantalla miente sobre lo que va a salir. */
+    const decision = useMemo(() => {
+        const porProblema = new Map<string, string>();
+        for (const q of (propuesta?.propuestas ?? [])) {
+            if (q.problema && q.alcanza && q.sentido) porProblema.set(q.problema, q.sentido);
+        }
+        const principal = problemas.find((p) => (p.jerarquia ?? '') === 'principal') ?? problemas[0];
+        const prosperan = ['fundado', 'esencialmente_fundado', 'sustancialmente_fundado',
+                           'parcialmente_fundado', 'fundado_insuficiente'];
+        const sentidoDe = (p: ProblemaJuridico) =>
+            p.sentido || porProblema.get(p.pregunta) || (modo === 'global' ? sentidoGlobal : '');
+        const principalProspera = principal
+            ? prosperan.includes(sentidoDe(principal) || '') : false;
+        return problemas.map((p) => {
+            const suyo = tocados?.has(p.id) && p.sentido;
+            let sentido = sentidoDe(p);
+            let de: 'tuyo' | 'motor' | 'global' | 'sin_materia' =
+                suyo ? 'tuyo' : porProblema.has(p.pregunta) ? 'motor' : 'global';
+            // LA SUSTRACCIÓN DE MATERIA, como la aplica el servidor: si el
+            // principal prospera, los accesorios que el secretario NO tocó
+            // quedan sin materia. Enseñarlo aquí evita la sorpresa de abrir el
+            // proyecto y encontrar «innecesario» donde se esperaba un estudio.
+            if (modo === 'global' && !suyo && principalProspera
+                && p !== principal && (p.jerarquia ?? 'accesorio') !== 'principal') {
+                sentido = 'innecesario';
+                de = 'sin_materia';
+            }
+            return { id: p.id, pregunta: p.pregunta, sentido, de };
+        });
+    }, [problemas, propuesta, modo, sentidoGlobal, tocados]);
     /* CUÁL DE LAS DOS VÍAS. Por omisión la propuesta del motor: ése es el
        caso frecuente y es lo que automatiza el trabajo. La contraria está a un
        clic. */
@@ -711,28 +750,58 @@ export default function VentanaCriterio({
                 </div>
             )}
 
-            {propuesta && propuesta.propuestas.length > 0 && (
-                <div className="mt-3 space-y-2 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
-                    <p className="text-[11px] uppercase tracking-wide text-white/40">
-                        Propuesta del motor · la decides tú
-                    </p>
-                    {propuesta.propuestas.map((p, i) => (
-                        <div key={i} className="text-[12px] leading-relaxed text-white/70">
-                            <span className="font-semibold text-white/90">
-                                {p.alcanza ? p.sentido.toUpperCase() : 'SIN PROPUESTA'}
-                            </span>
-                            {p.alcanza && p.confianza && (
-                                <span className="ml-1 text-white/40">({p.confianza})</span>
-                            )}
-                            <span className="ml-1">{p.razon}</span>
-                            {p.apoyos?.length > 0 && (
-                                <span className="ml-1 text-white/35">
-                                    Se apoya en: {p.apoyos.join(', ')}
+            {/* ═══ LO QUE SE VA A RESOLVER ═══
+                David: «cuando le digo que resuelva en otro sentido no cambia la
+                propuesta que marca en la parte inferior. Tengo que volver a
+                generar. Si yo hago cambios en el taller, estos deben reflejarse
+                sin necesidad de volver a generar nada. Marca o destaca esa
+                última tabla porque es la que decidirá el proyecto.»
+
+                Tenía razón y la causa era literal: este bloque pintaba
+                `propuesta.propuestas` —el objeto CRUDO del motor, que no cambia
+                nunca— mientras sus marcas viven en `problemas`. Enseñaba una
+                foto vieja encima del botón de generar.
+
+                Ahora se calcula en vivo con la MISMA precedencia que aplica el
+                servidor en `modos_decision.repartir`: lo que él marcó, si no lo
+                que el motor propuso para ESE problema, y sólo al final el
+                sentido global. Y se dice de dónde viene cada uno. */}
+            {decision.length > 0 && (
+                <div className="mt-4 space-y-2 rounded-2xl border-2 border-accent-gold/40
+                                bg-accent-gold/[0.06] p-3.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-accent-gold">
+                            Así se va a resolver
+                        </p>
+                        <span className="text-[10.5px] text-white/40">
+                            esto es lo que decide el proyecto
+                        </span>
+                    </div>
+                    {decision.map((d) => (
+                        <div key={d.id} className="border-t border-white/[0.07] pt-2 first:border-0 first:pt-0">
+                            <div className="flex flex-wrap items-baseline gap-x-2">
+                                <span className={cn(
+                                    'text-[12px] font-semibold',
+                                    d.de === 'tuyo' ? 'text-accent-gold' : 'text-white/85')}>
+                                    {d.sentido ? d.sentido.replace(/_/g, ' ').toUpperCase() : 'SIN DECIDIR'}
                                 </span>
-                            )}
+                                <span className={cn(
+                                    'rounded px-1.5 py-0.5 text-[10px]',
+                                    d.de === 'tuyo'
+                                        ? 'bg-accent-gold/20 text-accent-gold'
+                                        : 'bg-white/[0.07] text-white/45')}>
+                                    {d.de === 'tuyo' ? 'tu criterio'
+                                        : d.de === 'motor' ? 'del motor'
+                                        : d.de === 'global' ? 'del sentido global'
+                                        : 'sin materia'}
+                                </span>
+                            </div>
+                            <p className="mt-0.5 text-[11.5px] leading-relaxed text-white/55">
+                                {d.pregunta}
+                            </p>
                         </div>
                     ))}
-                    {propuesta.avisos?.map((a, i) => (
+                    {propuesta?.avisos?.map((a, i) => (
                         <p key={i} className="text-[11px] text-amber-300/70">{a}</p>
                     ))}
                 </div>
