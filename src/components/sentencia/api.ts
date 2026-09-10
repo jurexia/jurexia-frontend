@@ -444,6 +444,8 @@ export async function resolverEnVivo(
            recurso, y sin ellos el proyecto levanta el sobreseimiento sin
            resolver lo único que quedaba por resolver. */
         conceptosViolacion?: string;
+        /** La autoridad corregida a mano, cuando la leída salió mal o en hueco. */
+        responsable?: string;
     },
     onTexto?: (trozo: string) => void,
     onComponiendo?: () => void,
@@ -478,6 +480,7 @@ export async function resolverEnVivo(
     if (o.globalJson?.trim()) fd.append('global_json', o.globalJson.trim());
     if (o.conceptosViolacion?.trim())
         fd.append('conceptos_violacion', o.conceptosViolacion.trim());
+    if (o.responsable?.trim()) fd.append('responsable', o.responsable.trim());
 
     const res = await fetch(`${BASE}/taller/resolver/stream`,
                             { method: 'POST', body: fd });

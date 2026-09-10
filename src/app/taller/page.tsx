@@ -584,6 +584,8 @@ export default function TallerDeSentencias() {
                         // aportó: sin ellos el proyecto levanta el
                         // sobreseimiento y deja el estudio pendiente.
                         conceptosViolacion,
+                        // Y la autoridad, si la corrigió después del adelanto.
+                        responsable: encargo.responsable,
                     },
                     (t) => setAvance((x) => x + t),
                     () => setAvance((x) => x + '\n\n… componiendo el documento'));
@@ -628,6 +630,8 @@ export default function TallerDeSentencias() {
                             .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
                     },
                     criteriosJson, contexto,
+                    // También por este camino: los dos componen el documento.
+                    responsable: encargo.responsable,
                 },
                 (t) => setAvance((x) => {
                     // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
@@ -643,7 +647,7 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
         } finally { setCorriendo(false); }
-    }, [problemas, encargo.numero, correo, contexto, modo, sentidoGlobal, razonGlobal]);
+    }, [problemas, encargo.numero, encargo.responsable, correo, contexto, modo, sentidoGlobal, razonGlobal]);
 
     const asunto: Asunto = useMemo(() => ({
         numero: encargo.numero || '—',
@@ -1063,6 +1067,36 @@ export default function TallerDeSentencias() {
                                         </p>
                                     </details>
                                 )}
+
+                                {/* ═══ LA AUTORIDAD, CORREGIBLE HASTA EL FINAL ═══
+                                    Este nombre se lee del acto reclamado y acaba en
+                                    doce sitios del documento, cuatro de ellos puntos
+                                    resolutivos. Cuando el OCR rompe la carátula, el
+                                    lector prefiere el hueco al nombre equivocado —«un
+                                    nombre equivocado en el resolutivo es peor que un
+                                    hueco, porque el hueco se ve»—, pero el campo del
+                                    encargo se congela al arrancar el adelanto y el
+                                    hueco quedaba sin puerta. Aquí sigue abierto, y
+                                    está donde se lee el asunto, que es cuando se
+                                    nota que el nombre no es el bueno. */}
+                                <div>
+                                    <label htmlFor="autoridad-resp"
+                                           className="block text-[12px] font-medium text-white/70">
+                                        Autoridad responsable
+                                    </label>
+                                    <input id="autoridad-resp" value={encargo.responsable ?? ''}
+                                           onChange={(e) => setEncargo(
+                                               (x) => ({ ...x, responsable: e.target.value }))}
+                                           placeholder="No se pudo leer del acto: escríbela"
+                                           className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03]
+                                                      px-3 py-2 text-[12.5px] text-white/80
+                                                      placeholder:text-white/25 focus:border-accent-gold/40
+                                                      focus:outline-none" />
+                                    <p className="mt-1 text-[11.5px] leading-relaxed text-white/40">
+                                        Se leyó del acto reclamado. Compruébala contra la carátula:
+                                        de aquí sale el resolutivo. Si la corriges, manda lo que escribas.
+                                    </p>
+                                </div>
 
                                 {delAsunto.problemas.length > 0 && (
                                     <div>
