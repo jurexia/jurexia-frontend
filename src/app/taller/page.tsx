@@ -360,11 +360,15 @@ export default function TallerDeSentencias() {
                     : 'Tesis orientadora: ilustra, no vincula.',
                 verificado: true,
             }));
+            /* LA PREGUNTA GLOBAL NO ES UN PLANTEAMIENTO MÁS.
+               Se colaba al frente de la lista como el «01» y el secretario
+               tenía que calificarla junto a los temas reales: trabajo doble, y
+               dos marcas que podían contradecirse —global infundado con un
+               tema fundado— sin que la pantalla dijera cuál mandaba. Además
+               inflaba el contador («1 de 4 sin calificar») y con ello retenía
+               la tarjeta final por una pregunta que no se califica aquí.
+               La vía global viaja por su cuenta: sentido global y su razón. */
             setProblemas([
-                ...(m.problema_global ? [{
-                    id: 'global', pregunta: m.problema_global, resolvio: '', combate: '',
-                    candidatos, criterio: '',
-                }] : []),
                 ...m.problemas.map((p, i) => ({
                     id: `p${i}`, pregunta: p.pregunta, resolvio: p.resolvio,
                     combate: p.combate,
@@ -1011,14 +1015,21 @@ export default function TallerDeSentencias() {
                             «Síntesis de conceptos» en verde y no había manera de
                             leerlas: estaban dentro del .docx. Se le pedía formar
                             criterio sobre un asunto que no había visto. */}
-                        {paso === 'adelanto' && delAsunto && (
+                        {/* SIGUE EN PANTALLA MIENTRAS DECIDE. Estaba atado a
+                            `paso === 'adelanto'`, así que al pulsar «Buscar
+                            solución jurídica» el asunto entero desaparecía y el
+                            secretario formaba criterio de memoria. Se queda: al
+                            llegar la propuesta los desplegables se cierran solos
+                            —para no empujar la decisión fuera de la vista— y él
+                            los reabre cuando quiera comprobar algo. */}
+                        {paso !== 'ficha' && delAsunto && (
                             <div className="mt-4 space-y-3 border-t border-white/[0.08] pt-4">
                                 <p className="text-[11px] uppercase tracking-wide text-accent-gold">
                                     El asunto, en corto
                                 </p>
 
                                 {delAsunto.antecedentes && (
-                                    <details className="group" open>
+                                    <details className="group" open={paso === 'adelanto'}>
                                         <summary className="cursor-pointer list-none text-[12px] font-medium text-white/70
                                                             hover:text-white/90">
                                             Antecedentes
@@ -1030,7 +1041,7 @@ export default function TallerDeSentencias() {
                                 )}
 
                                 {delAsunto.resumenActo && (
-                                    <details className="group" open>
+                                    <details className="group" open={paso === 'adelanto'}>
                                         <summary className="cursor-pointer list-none text-[12px] font-medium text-white/70
                                                             hover:text-white/90">
                                             Qué resolvió {delAsunto.voz.organo}
