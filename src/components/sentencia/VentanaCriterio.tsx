@@ -470,6 +470,28 @@ export default function VentanaCriterio({
     const listo = fuerza.conSentido > 0;
     const completo = fuerza.conSentido === fuerza.total && fuerza.total > 0;
 
+    /* «CADA SENTIDO CON SU RAZÓN», Y ENTONCES LA TARJETA.
+       David: «con cada calificación el LLM debe darle una posible razón. Sólo
+       cuando llene todo eso, es decir, cada sentido con su razón, podrá ver el
+       recuadro final».
+
+       Estaba a medias: la tarjeta salía en cuanto todos los planteamientos
+       tenían calificativa, aunque alguno tuviera el porqué en blanco. Se vio
+       en el 91/2025 —el planteamiento 02 calificado y su recuadro vacío— y esa
+       es justamente la puerta por la que el estudio acaba inventándose el
+       motivo de una calificación que él sí decidió.
+
+       Se pide que haya algo escrito, no que esté bien escrito: una razón de
+       tres líneas suya vale, y la barra de fuerza sigue midiendo la calidad
+       aparte. Exigir el listón de la barra habría encerrado al secretario. */
+    const porque = (id: string) =>
+        (problemas.find((p) => p.id === id)?.criterio || '').trim().length > 0;
+    const sinPorque = modo === 'global'
+        ? (sentidoGlobal && !razonGlobal.trim() ? ['el sentido global'] : [])
+        : decision.filter((d) => d.sentido && !porque(d.id)).map((d) => d.pregunta);
+    const todoDecidido = decision.length > 0
+        && decision.every((d) => d.sentido) && sinPorque.length === 0;
+
     const tono = fuerza.pct >= 70 ? 'bg-emerald-400' : fuerza.pct >= 35 ? 'bg-accent-gold' : 'bg-amber-400';
     const dictamen =
         fuerza.pct >= 70 ? 'Criterio sólido: la sentencia se va a parecer a lo que piensas.'
@@ -827,7 +849,7 @@ export default function VentanaCriterio({
                 porque él ingrese texto— podrá ver el recuadro final con la
                 manera en que se resolverá».
                 Enseñarlo a medias invita a generar a medias. */}
-            {decision.length > 0 && decision.every((d) => d.sentido) && (
+            {todoDecidido && (
                 <div className="mt-4 space-y-2 rounded-2xl border-2 border-accent-gold/40
                                 bg-accent-gold/[0.06] p-3.5">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -868,16 +890,27 @@ export default function VentanaCriterio({
                 </div>
             )}
 
-            {decision.length > 0 && !decision.every((d) => d.sentido) && (
+            {decision.length > 0 && !todoDecidido && (
                 <div className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3.5">
                     <p className="text-[11px] uppercase tracking-wide text-white/35">
                         Falta por decidir
                     </p>
-                    <p className="mt-1 text-[12px] leading-relaxed text-white/50">
-                        {decision.filter((d) => !d.sentido).length} de {decision.length}{' '}
-                        planteamientos sin calificar. Cuando estén todos verás aquí cómo
-                        va a resolverse el asunto.
-                    </p>
+                    {decision.some((d) => !d.sentido) ? (
+                        <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                            {decision.filter((d) => !d.sentido).length} de {decision.length}{' '}
+                            planteamientos sin calificar. Cuando estén todos —cada uno con
+                            su porqué— verás aquí cómo va a resolverse el asunto.
+                        </p>
+                    ) : (
+                        <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                            Están todos calificados, pero {sinPorque.length === 1
+                                ? 'uno se quedó sin el porqué'
+                                : `${sinPorque.length} se quedaron sin el porqué`}. Un
+                            recuadro en blanco lo rellena la redacción por su cuenta, y
+                            entonces el motivo no es el tuyo. Escríbelo o pídeselo al
+                            motor volviendo a marcar la calificativa.
+                        </p>
+                    )}
                 </div>
             )}
 
