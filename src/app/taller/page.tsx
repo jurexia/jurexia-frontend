@@ -40,7 +40,7 @@ import {
     proponerSolucion, aportarContexto, resolverEnVivo,
     type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
-    sisePendiente, generarDesdeExpediente, NecesitaNotificacion,
+    sisePendiente, generarDesdeExpediente, NecesitaNotificacion, razonarSentido,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
 } from '@/components/sentencia/api';
 import type { PendienteSISE, FaltaLaFecha } from '@/components/sentencia/api';
@@ -360,6 +360,26 @@ export default function TallerDeSentencias() {
        cosas es lo que hizo que David dictara «infundado global» y recibiera un
        proyecto que amparaba. */
     const [globalDictado, setGlobalDictado] = useState(false);
+    /* Los problemas cuya razón está redactando el motor ahora mismo. */
+    const [razonando, setRazonando] = useState<Set<string>>(new Set());
+
+    /* CON CADA CALIFICACIÓN, SU RAZÓN.
+       No sustituye lo que el secretario haya escrito: sólo rellena el cuadro
+       cuando está vacío. Si él ya razonó, manda lo suyo. */
+    const pedirRazon = useCallback(async (id: string, pregunta: string, sentido: string) => {
+        if (!encargo.numero || !sentido) return;
+        setRazonando((prev) => new Set(prev).add(id));
+        try {
+            const r = await razonarSentido(encargo.numero, correo, pregunta, sentido);
+            if (r) {
+                setProblemas((prev) => prev.map((p) =>
+                    p.id === id && !p.criterio.trim() ? { ...p, criterio: r } : p));
+            }
+        } catch { /* si no sale, el secretario la escribe */ }
+        finally {
+            setRazonando((prev) => { const n = new Set(prev); n.delete(id); return n; });
+        }
+    }, [encargo.numero, correo]);
 
     const elegirGlobal = useCallback((s: string) => {
         setSentidoGlobal(s);
@@ -1047,6 +1067,7 @@ export default function TallerDeSentencias() {
                                          onSentidoGlobal={elegirGlobal}
                                          tocados={tocados}
                                          globalDictado={globalDictado}
+                                         onRazonar={pedirRazon} razonando={razonando}
                                          grupos={grupos} onGrupos={setGrupos}
                                          conceptosViolacion={conceptosViolacion}
                                          onConceptosViolacion={setConceptosViolacion}

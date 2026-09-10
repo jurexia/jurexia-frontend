@@ -907,3 +907,24 @@ export async function descartarPendiente(numero: string, userEmail: string): Pro
         throw new Error(String(detalle));
     }
 }
+
+/**
+ * La razón para el sentido que el secretario acaba de marcar.
+ *
+ * No propone otro ni discute el suyo: escribe la mejor demostración de ESE
+ * sentido con el acervo delante. Antes, marcar un sentido dejaba un cuadro en
+ * blanco y, si no se rellenaba, el estudio se inventaba el porqué.
+ */
+export async function razonarSentido(
+    numero: string, userEmail: string, problema: string, sentido: string,
+): Promise<string> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    fd.append('problema', problema);
+    fd.append('sentido', sentido);
+    const res = await fetch(`${BASE}/taller/razonar`, { method: 'POST', body: fd });
+    if (!res.ok) return '';
+    const j = await res.json().catch(() => ({}));
+    return String(j?.razon ?? '');
+}

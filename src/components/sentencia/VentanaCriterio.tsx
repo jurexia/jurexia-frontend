@@ -324,6 +324,7 @@ export default function VentanaCriterio({
     onAportar, aportando, contextoAportado, proponiendo,
     conceptosViolacion = '', onConceptosViolacion,
     grupos = {}, onGrupos, tocados, globalDictado = false,
+    onRazonar, razonando,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -379,6 +380,11 @@ export default function VentanaCriterio({
     /** Si el sentido global lo eligió el secretario a propósito. Decide si
      *  manda sobre las propuestas por problema, igual que en el servidor. */
     globalDictado?: boolean;
+    /** Pide al motor una razón para el sentido que el secretario acaba de
+     *  marcar. No propone otro: sostiene el que él eligió. */
+    onRazonar?: (id: string, pregunta: string, sentido: string) => void;
+    /** Los problemas cuya razón se está redactando ahora mismo. */
+    razonando?: Set<string>;
 }) {
     const fuerza = useMemo(() => fuerzaDelCriterio(problemas), [problemas]);
 
@@ -599,7 +605,26 @@ export default function VentanaCriterio({
                 </div>
             )}
 
-            {/* Un bloque por problema */}
+            {/* ═══ EN GLOBAL, LOS PROBLEMAS DESAPARECEN ═══
+                David: «si resuelve global no hay despliegue de problemas
+                jurídicos ni de temas. El sistema da una solución única a todo
+                que puede cambiar de un sentido a otro. Los accesorios son
+                consecuencia de lo infundado del o los principales.»
+
+                Tenía razón y era una incoherencia de bulto: en modo global las
+                pastillas por problema seguían ahí, clicables, y su valor se
+                descartaba. Se le pedía decidir dos veces cosas que se excluyen
+                y sólo una contaba. */}
+            {modo === 'global' ? (
+                <p className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3
+                              text-[12px] leading-relaxed text-white/45">
+                    Estás resolviendo el asunto entero de una vez. Los{' '}
+                    {problemas.length} planteamientos no se califican uno a uno: el
+                    principal decide, y los accesorios quedan como consecuencia suya.
+                    Si prefieres calificarlos por separado, cambia arriba a{' '}
+                    <span className="text-white/70">tema por tema</span>.
+                </p>
+            ) : (
             <div className="space-y-4">
                 {problemas.map((p, i) => {
                     const razonado = p.criterio.trim().split(/\s+/).length >= 25 && MARCAS_DE_RAZON.test(p.criterio);
@@ -643,11 +668,23 @@ export default function VentanaCriterio({
                                     <Pastilla
                                         key={s.id}
                                         activa={p.sentido === s.id}
-                                        onClick={() => onCambiar(p.id, 'sentido', s.id)}
+                                        onClick={() => {
+                                            onCambiar(p.id, 'sentido', s.id);
+                                            // Y CON LA CALIFICACIÓN, SU RAZÓN.
+                                            // Antes quedaba un cuadro en blanco
+                                            // y, si no se rellenaba, el estudio
+                                            // se inventaba el porqué.
+                                            onRazonar?.(p.id, p.pregunta, s.id);
+                                        }}
                                     >
                                         {s.etiqueta}
                                     </Pastilla>
                                 ))}
+                                {razonando?.has(p.id) && (
+                                    <Pastilla tono="ambar">
+                                        redactando la razón…
+                                    </Pastilla>
+                                )}
                                 {p.impedimento && (
                                     <Pastilla tono="ambar" icono={Lightbulb}>
                                         se advierte {p.impedimento.motivo}
@@ -679,6 +716,7 @@ export default function VentanaCriterio({
                     );
                 })}
             </div>
+            )}
 
             {/* LA PROPUESTA VA ANTES DEL BOTÓN DE GENERAR, y se ve que es una
                 sugerencia: el criterio sigue siendo del secretario. Sin este
@@ -778,7 +816,12 @@ export default function VentanaCriterio({
                 servidor en `modos_decision.repartir`: lo que él marcó, si no lo
                 que el motor propuso para ESE problema, y sólo al final el
                 sentido global. Y se dice de dónde viene cada uno. */}
-            {decision.length > 0 && (
+            {/* SÓLO CUANDO TODO ESTÁ RESUELTO.
+                David: «solo cuando llene todo eso —ya sea automáticamente o
+                porque él ingrese texto— podrá ver el recuadro final con la
+                manera en que se resolverá».
+                Enseñarlo a medias invita a generar a medias. */}
+            {decision.length > 0 && decision.every((d) => d.sentido) && (
                 <div className="mt-4 space-y-2 rounded-2xl border-2 border-accent-gold/40
                                 bg-accent-gold/[0.06] p-3.5">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -816,6 +859,19 @@ export default function VentanaCriterio({
                     {propuesta?.avisos?.map((a, i) => (
                         <p key={i} className="text-[11px] text-amber-300/70">{a}</p>
                     ))}
+                </div>
+            )}
+
+            {decision.length > 0 && !decision.every((d) => d.sentido) && (
+                <div className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3.5">
+                    <p className="text-[11px] uppercase tracking-wide text-white/35">
+                        Falta por decidir
+                    </p>
+                    <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                        {decision.filter((d) => !d.sentido).length} de {decision.length}{' '}
+                        planteamientos sin calificar. Cuando estén todos verás aquí cómo
+                        va a resolverse el asunto.
+                    </p>
                 </div>
             )}
 
