@@ -159,6 +159,12 @@ export default function TallerDeSentencias() {
        la extemporaneidad; suponerla es lo que dejó dos proyectos vacíos. */
     const [fechaNotif, setFechaNotif] = useState('');
     const [sabemos, setSabemos] = useState<FaltaLaFecha | null>(null);
+    /* EL ERROR SE PINTA DONDE SE PULSÓ.
+       Probándolo en Chrome: el 409 llegaba, `setError` lo guardaba y el mensaje
+       se pintaba en la columna IZQUIERDA, fuera de la vista. Se pulsaba
+       «Generar desde SISE» y no cambiaba nada en pantalla. Un error que
+       aparece a dos columnas del botón es un error invisible. */
+    const [errorSise, setErrorSise] = useState('');
     /* BORRAR PIDE CONFIRMACIÓN, pero no un modal: el mismo botón cambia de
        texto. Borrar tira las constancias y hay que volver a traerlas de SISE,
        así que un clic despistado cuesta trabajo de verdad. */
@@ -233,7 +239,7 @@ export default function TallerDeSentencias() {
 
     const pedirDesdeSISE = useCallback(async () => {
         if (!elegido) return;
-        setError(''); setCorriendo(true);
+        setError(''); setErrorSise(''); setCorriendo(true);
         try {
             const r = await generarDesdeExpediente(elegido, correo, fechaNotif);
             descargar(r);
@@ -252,7 +258,7 @@ export default function TallerDeSentencias() {
                 // enseñando todo lo que ya sabe. Se pinta, no se tira.
                 setSabemos(e.datos);
             } else {
-                setError(e instanceof Error ? e.message : 'No se pudo generar desde SISE.');
+                setErrorSise(e instanceof Error ? e.message : 'No se pudo generar desde SISE.');
             }
         } finally { setCorriendo(false); }
     }, [elegido, correo, fechaNotif]);
@@ -834,6 +840,12 @@ export default function TallerDeSentencias() {
                                 </div>
                             );
                         })()}
+
+                        {errorSise && (
+                            <div className="mt-3 rounded-lg border border-red-400/30 bg-red-400/[0.08] px-3 py-2.5">
+                                <p className="text-[12px] leading-relaxed text-red-100">{errorSise}</p>
+                            </div>
+                        )}
 
                         {/* LO QUE EL SERVIDOR YA SABE, cuando sólo le falta la
                             fecha. Se enseña para que el secretario vea que no
