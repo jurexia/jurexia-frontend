@@ -323,7 +323,7 @@ export default function VentanaCriterio({
     razonGlobal = '', onRazonGlobal,
     onAportar, aportando, contextoAportado, proponiendo,
     conceptosViolacion = '', onConceptosViolacion,
-    grupos = {}, onGrupos, tocados,
+    grupos = {}, onGrupos, tocados, globalDictado = false,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -376,6 +376,9 @@ export default function VentanaCriterio({
      *  distinguir en la tabla final lo que decidió él de lo que rellenó el
      *  motor: sin eso, las dos cosas se ven igual y no se sabe qué manda. */
     tocados?: Set<string>;
+    /** Si el sentido global lo eligió el secretario a propósito. Decide si
+     *  manda sobre las propuestas por problema, igual que en el servidor. */
+    globalDictado?: boolean;
 }) {
     const fuerza = useMemo(() => fuerzaDelCriterio(problemas), [problemas]);
 
@@ -392,15 +395,24 @@ export default function VentanaCriterio({
         const principal = problemas.find((p) => (p.jerarquia ?? '') === 'principal') ?? problemas[0];
         const prosperan = ['fundado', 'esencialmente_fundado', 'sustancialmente_fundado',
                            'parcialmente_fundado', 'fundado_insuficiente'];
-        const sentidoDe = (p: ProblemaJuridico) =>
-            p.sentido || porProblema.get(p.pregunta) || (modo === 'global' ? sentidoGlobal : '');
+        /* MISMO ORDEN QUE EL SERVIDOR. Si él dictó el global, éste manda sobre
+           lo que el motor propuso por problema; si lo puso la pantalla al
+           llegar la propuesta, es un eco del motor y vale menos que ella. */
+        const sentidoDe = (p: ProblemaJuridico) => {
+            if (p.sentido) return p.sentido;
+            if (modo === 'global' && globalDictado && sentidoGlobal) return sentidoGlobal;
+            return porProblema.get(p.pregunta)
+                || (modo === 'global' ? sentidoGlobal : '');
+        };
         const principalProspera = principal
             ? prosperan.includes(sentidoDe(principal) || '') : false;
         return problemas.map((p) => {
             const suyo = tocados?.has(p.id) && p.sentido;
             let sentido = sentidoDe(p);
             let de: 'tuyo' | 'motor' | 'global' | 'sin_materia' =
-                suyo ? 'tuyo' : porProblema.has(p.pregunta) ? 'motor' : 'global';
+                suyo ? 'tuyo'
+                : (modo === 'global' && globalDictado && sentidoGlobal) ? 'global'
+                : porProblema.has(p.pregunta) ? 'motor' : 'global';
             // LA SUSTRACCIÓN DE MATERIA, como la aplica el servidor: si el
             // principal prospera, los accesorios que el secretario NO tocó
             // quedan sin materia. Enseñarlo aquí evita la sorpresa de abrir el
@@ -412,7 +424,7 @@ export default function VentanaCriterio({
             }
             return { id: p.id, pregunta: p.pregunta, sentido, de };
         });
-    }, [problemas, propuesta, modo, sentidoGlobal, tocados]);
+    }, [problemas, propuesta, modo, sentidoGlobal, tocados, globalDictado]);
     /* CUÁL DE LAS DOS VÍAS. Por omisión la propuesta del motor: ése es el
        caso frecuente y es lo que automatiza el trabajo. La contraria está a un
        clic. */

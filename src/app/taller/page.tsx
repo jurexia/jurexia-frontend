@@ -355,6 +355,16 @@ export default function TallerDeSentencias() {
        INFUNDADO el concepto de la pericial declarada desierta y el proyecto
        salió FUNDADO. */
     const [tocados, setTocados] = useState<Set<string>>(new Set());
+    /* Y SI EL SENTIDO GLOBAL LO ELIGIÓ ÉL. La pantalla también lo fija sola al
+       llegar la propuesta —con el sentido del MODELO—, y confundir las dos
+       cosas es lo que hizo que David dictara «infundado global» y recibiera un
+       proyecto que amparaba. */
+    const [globalDictado, setGlobalDictado] = useState(false);
+
+    const elegirGlobal = useCallback((s: string) => {
+        setSentidoGlobal(s);
+        setGlobalDictado(!!s);
+    }, []);
 
     const cambiarCriterio = useCallback((id: string, campo: 'criterio' | 'sentido', valor: string) => {
         setProblemas((prev) => prev.map((p) => p.id === id ? { ...p, [campo]: valor } : p));
@@ -384,6 +394,8 @@ export default function TallerDeSentencias() {
             if (p.global?.alcanza) {
                 setModo('global');
                 setSentidoGlobal(p.global.sentido || '');
+                // Lo pone la pantalla, no él: es un eco del motor.
+                setGlobalDictado(false);
                 setRazonGlobal(p.global.razon || '');
             } else {
                 // SIN PROPUESTA GLOBAL NO HAY CAMINO GLOBAL QUE OFRECER: se cae
@@ -493,7 +505,7 @@ export default function TallerDeSentencias() {
                 irA('estudio', 200);
                 const rg = await resolverEnVivo(
                     encargo.numero, correo, {
-                        sentidoGlobal, contexto, razonGlobal,
+                        sentidoGlobal, contexto, razonGlobal, globalDictado,
                         // LO QUE ÉL MARCÓ, con su razón y su grupo. Va junto al
                         // sentido global, no en lugar de él: el servidor usa el
                         // global de relleno y respeta cada marca expresa.
@@ -1032,8 +1044,9 @@ export default function TallerDeSentencias() {
                                          sentidoGlobal={sentidoGlobal}
                                          razonGlobal={razonGlobal}
                                          onRazonGlobal={setRazonGlobal}
-                                         onSentidoGlobal={setSentidoGlobal}
+                                         onSentidoGlobal={elegirGlobal}
                                          tocados={tocados}
+                                         globalDictado={globalDictado}
                                          grupos={grupos} onGrupos={setGrupos}
                                          conceptosViolacion={conceptosViolacion}
                                          onConceptosViolacion={setConceptosViolacion}

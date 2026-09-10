@@ -434,6 +434,10 @@ export async function resolverEnVivo(
     opciones: {
         criterio?: Criterio | null; criteriosJson?: string; contexto?: string;
         sentidoGlobal?: string; razonGlobal?: string;
+        /** Si el secretario eligió ese sentido global a propósito. La pantalla
+         *  también lo fija sola al llegar la propuesta, y ése es un eco del
+         *  motor, no su palabra. */
+        globalDictado?: boolean;
         resolvioDeclarado?: string; globalJson?: string;
         /* Los conceptos de violación, que el secretario pega cuando el
            recurso levanta un sobreseimiento: no constan en el expediente del
@@ -452,6 +456,7 @@ export async function resolverEnVivo(
         fd.append('modo_decision', 'global');
         fd.append('sentido_global', o.sentidoGlobal);
         if (o.razonGlobal?.trim()) fd.append('razonamiento', o.razonGlobal.trim());
+        if (o.globalDictado) fd.append('global_dictado', '1');
         // Y LO QUE ÉL MARCÓ POR PROBLEMA VIAJA IGUAL. Este `else if` era el
         // último eslabón de la cadena que se tragaba la instrucción del
         // secretario: con un sentido global presente, `criterios_json` no se
