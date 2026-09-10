@@ -404,20 +404,26 @@ export default function VentanaCriterio({
         /* MISMO ORDEN QUE EL SERVIDOR. Si él dictó el global, éste manda sobre
            lo que el motor propuso por problema; si lo puso la pantalla al
            llegar la propuesta, es un eco del motor y vale menos que ella. */
+        /* EL GLOBAL QUE DICTÓ ÉL VA POR DELANTE DE LAS MARCAS VIEJAS.
+           En esta vía las pastillas por tema ni se enseñan, así que una marca
+           por tema aquí es un resto de la otra: lo último que dijo es el
+           global. Si el global lo puso la pantalla —eco del motor— la marca
+           por tema conserva la preferencia, que es la lección del 536/2025. */
+        const dictado = modo === 'global' && globalDictado && !!sentidoGlobal;
         const sentidoDe = (p: ProblemaJuridico) => {
+            if (dictado) return sentidoGlobal;
             if (p.sentido) return p.sentido;
-            if (modo === 'global' && globalDictado && sentidoGlobal) return sentidoGlobal;
             return porProblema.get(p.pregunta)
                 || (modo === 'global' ? sentidoGlobal : '');
         };
         const principalProspera = principal
             ? prosperan.includes(sentidoDe(principal) || '') : false;
         return problemas.map((p) => {
-            const suyo = tocados?.has(p.id) && p.sentido;
+            const suyo = !dictado && tocados?.has(p.id) && p.sentido;
             let sentido = sentidoDe(p);
             let de: 'tuyo' | 'motor' | 'global' | 'sin_materia' =
-                suyo ? 'tuyo'
-                : (modo === 'global' && globalDictado && sentidoGlobal) ? 'global'
+                dictado ? 'global'
+                : suyo ? 'tuyo'
                 : porProblema.has(p.pregunta) ? 'motor' : 'global';
             // LA SUSTRACCIÓN DE MATERIA, como la aplica el servidor: si el
             // principal prospera, los accesorios que el secretario NO tocó
