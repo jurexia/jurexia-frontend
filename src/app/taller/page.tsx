@@ -41,9 +41,10 @@ import {
     type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
     sisePendiente, generarDesdeExpediente, NecesitaNotificacion, razonarSentido,
+    contextoDelAsunto,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
 } from '@/components/sentencia/api';
-import type { PendienteSISE, FaltaLaFecha } from '@/components/sentencia/api';
+import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
 
 type Paso = 'ficha' | 'adelanto' | 'acervo' | 'criterio' | 'proyecto';
@@ -165,6 +166,28 @@ export default function TallerDeSentencias() {
        «Generar desde SISE» y no cambiaba nada en pantalla. Un error que
        aparece a dos columnas del botón es un error invisible. */
     const [errorSise, setErrorSise] = useState('');
+    /* EL ASUNTO, PARA LEERLO. Se trae en cuanto hay adelanto y se enseña ANTES
+       de buscar: el recorrido marcaba «Ratio del acto reclamado» en verde y el
+       secretario no podía leerla. Se le pedía formar criterio sobre un asunto
+       que no había visto. */
+    const [delAsunto, setDelAsunto] = useState<ContextoDelAsunto | null>(null);
+
+    const traerContexto = useCallback(async (num: string) => {
+        if (!num || !correo) return;
+        try {
+            const c = await contextoDelAsunto(num, correo);
+            if (c) {
+                setDelAsunto(c);
+                // Y EL TIPO SE SINCRONIZA. Venía del expediente de SISE y la
+                // pantalla seguía diciendo «Amparo directo» sobre una revisión
+                // fiscal: el servidor resolvía una cosa y el rótulo decía otra.
+                if (c.tipoAsunto) {
+                    setEncargo((e) => e.tipoAsunto === c.tipoAsunto
+                        ? e : { ...e, tipoAsunto: c.tipoAsunto });
+                }
+            }
+        } catch { /* si no llega, la pantalla sigue como antes */ }
+    }, [correo]);
     /* BORRAR PIDE CONFIRMACIÓN, pero no un modal: el mismo botón cambia de
        texto. Borrar tira las constancias y hay que volver a traerlas de SISE,
        así que un clic despistado cuesta trabajo de verdad. */
@@ -252,6 +275,7 @@ export default function TallerDeSentencias() {
             setEncargo((e) => ({ ...e, numero: elegido }));
             setSabemos(null);
             setPaso('adelanto');
+            void traerContexto(elegido);
         } catch (e) {
             if (e instanceof NecesitaNotificacion) {
                 // No es un fallo: es el servidor diciendo qué falta y
@@ -306,6 +330,7 @@ export default function TallerDeSentencias() {
                 setError('El cómputo da EXTEMPORÁNEA. Compruébalo antes de seguir: si es correcto, el asunto no se resuelve en el fondo.');
             }
             setPaso('adelanto');
+            void traerContexto(encargo.numero);
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo generar el adelanto.');
         } finally { setCorriendo(false); }
@@ -974,6 +999,84 @@ export default function TallerDeSentencias() {
                             <p className="mt-3 text-[12px] text-white/40">
                                 Falta {falta.join(', ')}.
                             </p>
+                        )}
+
+                        {/* ═══ EL ASUNTO, PARA LEERLO ═══
+                            David, repetidas veces: «el secretario está sentado
+                            frente a la pantalla y primero quiere entender el
+                            asunto (por eso el contexto), luego con la posible
+                            solución puede formar un criterio».
+
+                            El recorrido marcaba «Ratio del acto reclamado» y
+                            «Síntesis de conceptos» en verde y no había manera de
+                            leerlas: estaban dentro del .docx. Se le pedía formar
+                            criterio sobre un asunto que no había visto. */}
+                        {paso === 'adelanto' && delAsunto && (
+                            <div className="mt-4 space-y-3 border-t border-white/[0.08] pt-4">
+                                <p className="text-[11px] uppercase tracking-wide text-accent-gold">
+                                    El asunto, en corto
+                                </p>
+
+                                {delAsunto.antecedentes && (
+                                    <details className="group" open>
+                                        <summary className="cursor-pointer list-none text-[12px] font-medium text-white/70
+                                                            hover:text-white/90">
+                                            Antecedentes
+                                        </summary>
+                                        <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-relaxed text-white/55">
+                                            {delAsunto.antecedentes}
+                                        </p>
+                                    </details>
+                                )}
+
+                                {delAsunto.resumenActo && (
+                                    <details className="group" open>
+                                        <summary className="cursor-pointer list-none text-[12px] font-medium text-white/70
+                                                            hover:text-white/90">
+                                            Qué resolvió {delAsunto.voz.organo}
+                                        </summary>
+                                        <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-relaxed text-white/55">
+                                            {delAsunto.resumenActo}
+                                        </p>
+                                    </details>
+                                )}
+
+                                {delAsunto.resumenConceptos && (
+                                    <details className="group">
+                                        <summary className="cursor-pointer list-none text-[12px] font-medium text-white/70
+                                                            hover:text-white/90">
+                                            Qué alega quien promueve · {delAsunto.voz.combate}
+                                        </summary>
+                                        <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-relaxed text-white/55">
+                                            {delAsunto.resumenConceptos}
+                                        </p>
+                                    </details>
+                                )}
+
+                                {delAsunto.problemas.length > 0 && (
+                                    <div>
+                                        <p className="text-[12px] font-medium text-white/70">
+                                            De lo anterior derivan estos problemas jurídicos
+                                        </p>
+                                        <ol className="mt-1.5 space-y-1.5">
+                                            {delAsunto.problemas.map((q, i) => (
+                                                <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-white/60">
+                                                    <span className="shrink-0 text-white/30">{i + 1}.</span>
+                                                    <span>
+                                                        {q.pregunta}
+                                                        {q.jerarquia === 'principal' && (
+                                                            <span className="ml-1.5 rounded border border-accent-gold/30 px-1 py-0.5
+                                                                             text-[10px] uppercase text-accent-gold/80">
+                                                                principal
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    </div>
+                                )}
+                            </div>
                         )}
 
                         {/* ═══ LO QUE TÚ SABES, ANTES DE BUSCAR ═══

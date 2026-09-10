@@ -928,3 +928,44 @@ export async function razonarSentido(
     const j = await res.json().catch(() => ({}));
     return String(j?.razon ?? '');
 }
+
+export interface ContextoDelAsunto {
+    numero: string;
+    tipoAsunto: string;
+    voz: { combate: string; recurrido: string; promovente: string; organo: string };
+    antecedentes: string;
+    resumenActo: string;
+    resumenConceptos: string;
+    problemaGlobal: string;
+    problemas: { pregunta: string; resolvio: string; combate: string; jerarquia: string }[];
+    avisos: string[];
+}
+
+/** El asunto, para leerlo antes de decidir nada. */
+export async function contextoDelAsunto(
+    numero: string, userEmail: string,
+): Promise<ContextoDelAsunto | null> {
+    const u = `${BASE}/taller/contexto-del-asunto`
+        + `?numero=${encodeURIComponent(numero)}`
+        + `&user_email=${encodeURIComponent(userEmail)}`;
+    const res = await fetch(u);
+    if (!res.ok) return null;
+    const j = await res.json().catch(() => null);
+    if (!j) return null;
+    return {
+        numero: String(j.numero ?? numero),
+        tipoAsunto: String(j.tipo_asunto ?? ''),
+        voz: {
+            combate: String(j.voz?.combate ?? 'conceptos de violación'),
+            recurrido: String(j.voz?.recurrido ?? 'la sentencia reclamada'),
+            promovente: String(j.voz?.promovente ?? 'quejoso'),
+            organo: String(j.voz?.organo ?? 'la responsable'),
+        },
+        antecedentes: String(j.antecedentes ?? ''),
+        resumenActo: String(j.resumen_acto ?? ''),
+        resumenConceptos: String(j.resumen_conceptos ?? ''),
+        problemaGlobal: String(j.problema_global ?? ''),
+        problemas: (j.problemas ?? []) as ContextoDelAsunto['problemas'],
+        avisos: (j.avisos ?? []) as string[],
+    };
+}
