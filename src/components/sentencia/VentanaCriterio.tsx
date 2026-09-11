@@ -542,11 +542,13 @@ export default function VentanaCriterio({
                     <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-white/45">
                         Cómo vas a resolver
                     </p>
-                    <p className="mb-3 text-[12px] leading-relaxed text-white/50">
-                        Dos caminos. En los dos puedes escribir tú el criterio o
-                        pedirle al motor que lo proponga, y en los dos puedes
-                        corregir lo que proponga antes de generar nada.
-                    </p>
+                    {/* SE QUITÓ EL PÁRRAFO DE ENTRADA. Decía «dos caminos, en
+                        los dos puedes escribir tú el criterio o pedírselo al
+                        motor», y las dos tarjetas de abajo ya lo explican cada
+                        una en su sitio. Eran tres renglones que el secretario
+                        lee una vez y recorre con la rueda cada día, empujando
+                        la decisión —que es lo único que tiene que hacer aquí—
+                        más abajo de la pantalla. */}
 
                     {/* DOS CAMINOS, NO TRES. Había un tercero —«Con el acervo»—
                         que no era una forma distinta de decidir sino la misma
@@ -734,6 +736,40 @@ export default function VentanaCriterio({
                                         : 'border-white/[0.09] focus:border-accent-gold/45',
                                 )}
                             />
+                            {/* ═══ UNA RAZÓN TUYA, ESCRITA PARA OTRO SENTIDO ═══
+                                Lo que redacta el motor se borra solo al cambiar
+                                de pastilla. Lo que escribe él NO se destruye
+                                nunca —es suyo—, pero tampoco puede quedarse
+                                callando que argumenta lo contrario de lo que
+                                ahora está marcado. Se dice, y se le da el botón
+                                para reemplazarla si quiere. */}
+                            {p.razonDe && !p.razonDe.delMotor && p.razonDe.sentido
+                             && p.sentido && p.razonDe.sentido !== p.sentido
+                             && p.criterio.trim().length > 0 && (
+                                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg
+                                                border border-amber-400/25 bg-amber-400/[0.06] px-3 py-2">
+                                    <span className="text-[11.5px] leading-relaxed text-amber-200/80">
+                                        Esta razón la escribiste tú para{' '}
+                                        <span className="font-medium">
+                                            {p.razonDe.sentido.replace(/_/g, ' ')}
+                                        </span>
+                                        , y ahora el planteamiento está marcado{' '}
+                                        <span className="font-medium">
+                                            {p.sentido.replace(/_/g, ' ')}
+                                        </span>. No se ha tocado: decide tú.
+                                    </span>
+                                    <button type="button"
+                                            onClick={() => {
+                                                onCambiar(p.id, 'criterio', '');
+                                                onRazonar?.(p.id, p.pregunta, p.sentido || '');
+                                            }}
+                                            className="rounded-md border border-amber-400/30 px-2 py-1
+                                                       text-[11px] text-amber-200/90 transition-colors
+                                                       hover:bg-amber-400/10">
+                                        Escribir la de «{p.sentido.replace(/_/g, ' ')}»
+                                    </button>
+                                </div>
+                            )}
                             {!razonado && p.criterio.trim().length > 0 && (
                                 <p className="mt-1.5 text-[11px] text-amber-300/70">
                                     Falta el porqué. Una razón explícita aquí vale más que tres

@@ -91,6 +91,16 @@ export interface ProblemaJuridico {
                    confianza: string; frase: string };
     /** El criterio que escribe el secretario para este problema. */
     criterio: string;
+    /** PARA QUÉ SENTIDO SE ESCRIBIÓ LA RAZÓN QUE HAY AHORA EN `criterio`, y si
+     *  la escribió el motor o él.
+     *
+     *  Sin esto no se puede distinguir «este texto lo redactó la máquina para
+     *  el sentido anterior» de «esto lo escribí yo». Y esa distinción decide
+     *  qué hacer al cambiar de pastilla: lo de la máquina se tira, lo suyo
+     *  jamás. Faltaba, y el resultado era que al cambiar de sentido se
+     *  conservaba una razón que argumentaba lo contrario —y sobre ella se
+     *  construía el estudio—. */
+    razonDe?: { sentido: string; delMotor: boolean };
     /* «esencialmente fundado» es el 23% de los agravios en las revisiones que
      * revocan de este circuito, medido sobre su acervo. Prospera igual que el
      * fundado; lo que cambia es que el proyecto acota en qué medida. */

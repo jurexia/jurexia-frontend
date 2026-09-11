@@ -76,6 +76,53 @@ function fasesSegun(paso: Paso, corriendo: boolean): Fase[] {
 const boton = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 ' +
     'text-[13px] font-medium transition disabled:cursor-not-allowed disabled:opacity-40';
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   UN PLIEGUE QUE SE VE QUE ES UN PLIEGUE
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «debería poder ser visibles los botones para desplegar el resumen, o
+   los problemas jurídicos del caso».
+
+   Tenía razón y el motivo estaba en el CSS: los cuatro <summary> llevaban
+   `list-none`, que quita el triángulo que el navegador dibuja solo, y no se
+   ponía nada en su lugar. El único indicio era que el cursor cambiaba al pasar
+   por encima —y eso sólo lo descubre quien ya sabe que hay algo debajo—.
+
+   Aquí el rótulo es un botón con todas las señales: galón que gira, la palabra
+   que dice qué va a pasar, y una línea a la derecha con el tamaño de lo que
+   hay dentro, para decidir si vale la pena abrirlo. */
+function Pliegue({ titulo, nota, abierto, children }: {
+    titulo: string;
+    nota?: string;
+    abierto?: boolean;
+    children: React.ReactNode;
+}) {
+    return (
+        <details className="group rounded-xl border border-white/[0.07] bg-white/[0.02]"
+                 open={abierto}>
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl px-3 py-2.5
+                                transition-colors hover:bg-white/[0.03]">
+                <svg viewBox="0 0 24 24" aria-hidden="true"
+                     className="h-3.5 w-3.5 shrink-0 text-accent-gold/70 transition-transform
+                                duration-200 group-open:rotate-90"
+                     fill="none" stroke="currentColor" strokeWidth="2.5"
+                     strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18l6-6-6-6" />
+                </svg>
+                <span className="text-[12.5px] font-medium text-white/80">{titulo}</span>
+                {nota && (
+                    <span className="ml-auto shrink-0 text-[11px] text-white/35">{nota}</span>
+                )}
+                <span className="shrink-0 text-[11px] text-white/40">
+                    <span className="group-open:hidden">ver</span>
+                    <span className="hidden group-open:inline">ocultar</span>
+                </span>
+            </summary>
+            <div className="px-3 pb-3 pt-0.5">{children}</div>
+        </details>
+    );
+}
+
+
 export default function TallerDeSentencias() {
     const { user, loading: authLoading } = useRequireAuth();
     const correo = user?.email ?? '';
@@ -407,8 +454,20 @@ export default function TallerDeSentencias() {
         try {
             const r = await razonarSentido(encargo.numero, correo, pregunta, sentido);
             if (r) {
-                setProblemas((prev) => prev.map((p) =>
-                    p.id === id && !p.criterio.trim() ? { ...p, criterio: r } : p));
+                setProblemas((prev) => prev.map((p) => {
+                    if (p.id !== id) return p;
+                    // LA RESPUESTA PUEDE LLEGAR TARDE. Si mientras se redactaba
+                    // él marcó otra pastilla, esta razón ya no es de este
+                    // sentido y no se escribe: llegar con retraso no da derecho
+                    // a pisar lo que decidió después.
+                    if (p.sentido !== sentido) return p;
+                    // Y no se pisa lo suyo. El guardia de antes era
+                    // `!p.criterio.trim()`, que además tiraba la razón nueva
+                    // cuando había una vieja de la máquina.
+                    if (p.criterio.trim() && p.razonDe && !p.razonDe.delMotor) return p;
+                    return { ...p, criterio: r,
+                             razonDe: { sentido, delMotor: true } };
+                }));
             }
         } catch { /* si no sale, el secretario la escribe */ }
         finally {
@@ -422,7 +481,34 @@ export default function TallerDeSentencias() {
     }, []);
 
     const cambiarCriterio = useCallback((id: string, campo: 'criterio' | 'sentido', valor: string) => {
-        setProblemas((prev) => prev.map((p) => p.id === id ? { ...p, [campo]: valor } : p));
+        setProblemas((prev) => prev.map((p) => {
+            if (p.id !== id) return p;
+            if (campo !== 'sentido') {
+                // Lo teclea él: desde ahora la razón es suya y no se toca.
+                return { ...p, criterio: valor,
+                         razonDe: { sentido: p.sentido || '', delMotor: false } };
+            }
+            /* ═══ AL CAMBIAR DE SENTIDO, LA RAZÓN DEL MOTOR SE VA ═══
+               David: «si cambia de sentido debe borrarse lo generado y ser
+               visible lo generado en otro sentido».
+
+               Tenía toda la razón y era peor de lo que parecía: al marcar otra
+               pastilla se pedía la razón nueva PERO no se borraba la vieja, y
+               `pedirRazon` sólo escribía «si el criterio está vacío», así que
+               la nueva se tiraba. El secretario se quedaba con un porqué que
+               argumentaba lo contrario de lo que acababa de marcar, y el
+               estudio se construía sobre ése.
+
+               Lo que escribió la máquina se borra en el acto —antes de que
+               llegue la razón nueva, para que no haya un segundo en que la
+               pantalla diga una cosa y la pastilla otra—. Lo que escribió ÉL
+               no se destruye nunca: se conserva y la ventana avisa de que se
+               redactó para otro sentido, con un botón para reemplazarla. */
+            const _s = valor as ProblemaJuridico['sentido'];
+            const suya = p.criterio.trim() && p.razonDe && !p.razonDe.delMotor;
+            if (suya) return { ...p, sentido: _s };
+            return { ...p, sentido: _s, criterio: '', razonDe: undefined };
+        }));
         if (campo === 'sentido' && valor) {
             setTocados((prev) => new Set(prev).add(id));
         }
@@ -1033,39 +1119,31 @@ export default function TallerDeSentencias() {
                                 </p>
 
                                 {delAsunto.antecedentes && (
-                                    <details className="group" open={paso === 'adelanto'}>
-                                        <summary className="cursor-pointer list-none text-[12px] font-medium text-white/70
-                                                            hover:text-white/90">
-                                            Antecedentes
-                                        </summary>
-                                        <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-relaxed text-white/55">
+                                    <Pliegue titulo="Antecedentes" abierto={paso === 'adelanto'}
+                                             nota={`${delAsunto.antecedentes.split(/\s+/).length} palabras`}>
+                                        <p className="whitespace-pre-line text-[12.5px] leading-relaxed text-white/60">
                                             {delAsunto.antecedentes}
                                         </p>
-                                    </details>
+                                    </Pliegue>
                                 )}
 
                                 {delAsunto.resumenActo && (
-                                    <details className="group" open={paso === 'adelanto'}>
-                                        <summary className="cursor-pointer list-none text-[12px] font-medium text-white/70
-                                                            hover:text-white/90">
-                                            Qué resolvió {delAsunto.voz.organo}
-                                        </summary>
-                                        <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-relaxed text-white/55">
+                                    <Pliegue titulo={`Qué resolvió ${delAsunto.voz.organo}`}
+                                             abierto={paso === 'adelanto'}
+                                             nota={`${delAsunto.resumenActo.split(/\s+/).length} palabras`}>
+                                        <p className="whitespace-pre-line text-[12.5px] leading-relaxed text-white/60">
                                             {delAsunto.resumenActo}
                                         </p>
-                                    </details>
+                                    </Pliegue>
                                 )}
 
                                 {delAsunto.resumenConceptos && (
-                                    <details className="group">
-                                        <summary className="cursor-pointer list-none text-[12px] font-medium text-white/70
-                                                            hover:text-white/90">
-                                            Qué alega quien promueve · {delAsunto.voz.combate}
-                                        </summary>
-                                        <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-relaxed text-white/55">
+                                    <Pliegue titulo={`Qué alega quien promueve · ${delAsunto.voz.combate}`}
+                                             nota={`${delAsunto.resumenConceptos.split(/\s+/).length} palabras`}>
+                                        <p className="whitespace-pre-line text-[12.5px] leading-relaxed text-white/60">
                                             {delAsunto.resumenConceptos}
                                         </p>
-                                    </details>
+                                    </Pliegue>
                                 )}
 
                                 {/* ═══ LA AUTORIDAD, CORREGIBLE HASTA EL FINAL ═══
@@ -1098,12 +1176,20 @@ export default function TallerDeSentencias() {
                                     </p>
                                 </div>
 
+                                {/* LOS PROBLEMAS, PLEGABLES. Con once —el ADC
+                                    393/2025 tiene once— la lista abierta es un
+                                    muro que empuja la decisión fuera de la
+                                    pantalla. Se abre sola mientras se lee el
+                                    asunto y se cierra al pasar a decidir, con
+                                    el número a la vista para saber qué hay
+                                    dentro sin abrirla. */}
                                 {delAsunto.problemas.length > 0 && (
-                                    <div>
-                                        <p className="text-[12px] font-medium text-white/70">
-                                            De lo anterior derivan estos problemas jurídicos
-                                        </p>
-                                        <ol className="mt-1.5 space-y-1.5">
+                                    <Pliegue titulo="Problemas jurídicos del caso"
+                                             abierto={paso === 'adelanto'}
+                                             nota={`${delAsunto.problemas.length} ${
+                                                 delAsunto.problemas.length === 1
+                                                     ? 'planteamiento' : 'planteamientos'}`}>
+                                        <ol className="space-y-1.5">
                                             {delAsunto.problemas.map((q, i) => (
                                                 <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-white/60">
                                                     <span className="shrink-0 text-white/30">{i + 1}.</span>
@@ -1119,7 +1205,7 @@ export default function TallerDeSentencias() {
                                                 </li>
                                             ))}
                                         </ol>
-                                    </div>
+                                    </Pliegue>
                                 )}
                             </div>
                         )}
@@ -1169,21 +1255,27 @@ export default function TallerDeSentencias() {
                         No sobra —es lo que impide citar de memoria— pero es
                         material de FUNDAR, no de DECIDIR, así que va detrás de
                         un pliegue y se abre cuando se quiere comprobar algo. */}
+                    {/* ═══ EL POSIBLE MARCO DE RESOLUCIÓN ═══
+                        Se llamaba «En qué se apoya» y era un pliegue sin
+                        galón, con las tesis dentro y los preceptos reducidos a
+                        una nota al pie de una línea. David lo pidió por su
+                        nombre: «visible un botón para desplegar lo que entrega
+                        el RAG (posible marco de resolución)».
+
+                        Sigue plegado a propósito —es material de FUNDAR, no de
+                        DECIDIR, y abierto era donde el secretario se perdía—
+                        pero ahora el rótulo dice qué hay dentro y cuánto, para
+                        decidir si merece abrirlo sin tener que abrirlo. */}
                     {material && (
                         <Tarjeta>
-                          <details className="group">
-                            <summary className="-m-1 cursor-pointer list-none rounded-lg p-1 transition-colors hover:bg-white/[0.02]">
-                              <Rotulo accion={
-                                <span className="text-[11px] text-white/30">
-                                    {material.tesis.filter((t) => t.obligatoria).length} obligatorias
-                                    {' · '}{material.tesis.length} en total
-                                    {' · '}<span className="text-white/45 group-open:hidden">ver</span>
-                                    <span className="hidden text-white/45 group-open:inline">ocultar</span>
-                                </span>
-                              }>
-                                En qué se apoya
-                              </Rotulo>
-                            </summary>
+                          <Pliegue titulo="Posible marco de resolución"
+                                   nota={`${material.tesis.length} tesis · ${
+                                       material.tesis.filter((t) => t.obligatoria).length
+                                   } obligatorias · ${material.normas.length} preceptos`}>
+                            <p className="mb-2.5 text-[11.5px] leading-relaxed text-white/40">
+                                Lo que el acervo dice sobre tus planteamientos. No decide nada:
+                                es con lo que se funda una vez decidido.
+                            </p>
                             <ul className="grid gap-2">
                                 {material.tesis.slice(0, 12).map((t) => (
                                     <li key={t.registro}
@@ -1203,13 +1295,36 @@ export default function TallerDeSentencias() {
                                     </li>
                                 ))}
                             </ul>
-                            {material.normas.length > 0 && (
-                                <p className="mt-3 text-[11px] text-white/35">
-                                    Y {material.normas.length} preceptos:{' '}
-                                    {material.normas.slice(0, 6).map((n) => `art. ${n.articulo}`).join(' · ')}
+                            {material.tesis.length > 12 && (
+                                <p className="mt-2 text-[11px] text-white/30">
+                                    Y {material.tesis.length - 12} tesis más, todas en el proyecto.
                                 </p>
                             )}
-                          </details>
+                            {/* LOS PRECEPTOS, COMO LISTA Y NO COMO COLETILLA. Eran
+                                una línea con seis artículos sueltos y sin ley:
+                                «art. 14 · art. 16» no le dice a nadie de qué
+                                ordenamiento, y son la mitad de lo que funda. */}
+                            {material.normas.length > 0 && (
+                                <div className="mt-3 border-t border-white/[0.07] pt-2.5">
+                                    <p className="mb-1.5 text-[11px] uppercase tracking-wide text-white/35">
+                                        Preceptos recuperados
+                                    </p>
+                                    <ul className="grid gap-1">
+                                        {material.normas.slice(0, 14).map((n, i) => (
+                                            <li key={i} className="text-[11.5px] leading-snug text-white/55">
+                                                <span className="text-white/75">art. {n.articulo}</span>
+                                                {n.cuerpo_legal ? ` · ${n.cuerpo_legal}` : ''}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    {material.normas.length > 14 && (
+                                        <p className="mt-1 text-[11px] text-white/30">
+                                            Y {material.normas.length - 14} más.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                          </Pliegue>
                         </Tarjeta>
                     )}
 
