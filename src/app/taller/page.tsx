@@ -842,6 +842,16 @@ export default function TallerDeSentencias() {
                             taller</span>, este módulo se actualizará y podrás empezar con la
                             elaboración del proyecto.
                         </p>
+                        {/* ═══ EL MANUAL, PLEGADO ═══
+                            Los tres pasos de instalación y la letra pequeña
+                            ocupaban la primera pantalla ENTERA, todos los días,
+                            y empujaban el recorrido del asunto fuera de vista:
+                            lo primero que veía el secretario no era su trabajo,
+                            era un manual. Se instala una vez; se lee una vez.
+                            Fuera queda lo que hace falta siempre —el botón de
+                            descarga y con qué cuenta mira el taller—. */}
+                        <div className="mt-3">
+                          <Pliegue titulo="Cómo se instala" nota="3 pasos, una sola vez">
                         <ol className="mt-3 space-y-1.5 text-[12px] leading-relaxed text-white/45">
                             <li><span className="text-white/70">1.</span> Descomprime el archivo.</li>
                             <li><span className="text-white/70">2.</span> En Chrome, entra a
@@ -856,6 +866,8 @@ export default function TallerDeSentencias() {
                             donde nadie las busca: le pasó a David —jmd en vez de jdm— y
                             el envío dijo «Listo» igualmente. Enseñar aquí con qué cuenta
                             está mirando el taller hace visible ese desajuste. */}
+                          </Pliegue>
+                        </div>
                         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1
                                         border-t border-white/[0.08] pt-3">
                             <span className="text-[12px] text-white/40">
@@ -1146,36 +1158,6 @@ export default function TallerDeSentencias() {
                                     </Pliegue>
                                 )}
 
-                                {/* ═══ LA AUTORIDAD, CORREGIBLE HASTA EL FINAL ═══
-                                    Este nombre se lee del acto reclamado y acaba en
-                                    doce sitios del documento, cuatro de ellos puntos
-                                    resolutivos. Cuando el OCR rompe la carátula, el
-                                    lector prefiere el hueco al nombre equivocado —«un
-                                    nombre equivocado en el resolutivo es peor que un
-                                    hueco, porque el hueco se ve»—, pero el campo del
-                                    encargo se congela al arrancar el adelanto y el
-                                    hueco quedaba sin puerta. Aquí sigue abierto, y
-                                    está donde se lee el asunto, que es cuando se
-                                    nota que el nombre no es el bueno. */}
-                                <div>
-                                    <label htmlFor="autoridad-resp"
-                                           className="block text-[12px] font-medium text-white/70">
-                                        Autoridad responsable
-                                    </label>
-                                    <input id="autoridad-resp" value={encargo.responsable ?? ''}
-                                           onChange={(e) => setEncargo(
-                                               (x) => ({ ...x, responsable: e.target.value }))}
-                                           placeholder="No se pudo leer del acto: escríbela"
-                                           className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03]
-                                                      px-3 py-2 text-[12.5px] text-white/80
-                                                      placeholder:text-white/25 focus:border-accent-gold/40
-                                                      focus:outline-none" />
-                                    <p className="mt-1 text-[11.5px] leading-relaxed text-white/40">
-                                        Se leyó del acto reclamado. Compruébala contra la carátula:
-                                        de aquí sale el resolutivo. Si la corriges, manda lo que escribas.
-                                    </p>
-                                </div>
-
                                 {/* LOS PROBLEMAS, PLEGABLES. Con once —el ADC
                                     393/2025 tiene once— la lista abierta es un
                                     muro que empuja la decisión fuera de la
@@ -1207,6 +1189,37 @@ export default function TallerDeSentencias() {
                                         </ol>
                                     </Pliegue>
                                 )}
+
+                                {/* ═══ LA AUTORIDAD, CORREGIBLE HASTA EL FINAL ═══
+                                    Este nombre se lee del acto reclamado y acaba en
+                                    doce sitios del documento, cuatro de ellos puntos
+                                    resolutivos. Cuando el OCR rompe la carátula, el
+                                    lector prefiere el hueco al nombre equivocado —«un
+                                    nombre equivocado en el resolutivo es peor que un
+                                    hueco, porque el hueco se ve»—, pero el campo del
+                                    encargo se congela al arrancar el adelanto y el
+                                    hueco quedaba sin puerta. Aquí sigue abierto, y
+                                    está donde se lee el asunto, que es cuando se
+                                    nota que el nombre no es el bueno. */}
+                                <div>
+                                    <label htmlFor="autoridad-resp"
+                                           className="block text-[12px] font-medium text-white/70">
+                                        Autoridad responsable
+                                    </label>
+                                    <input id="autoridad-resp" value={encargo.responsable ?? ''}
+                                           onChange={(e) => setEncargo(
+                                               (x) => ({ ...x, responsable: e.target.value }))}
+                                           placeholder="No se pudo leer del acto: escríbela"
+                                           className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03]
+                                                      px-3 py-2 text-[12.5px] text-white/80
+                                                      placeholder:text-white/25 focus:border-accent-gold/40
+                                                      focus:outline-none" />
+                                    <p className="mt-1 text-[11.5px] leading-relaxed text-white/40">
+                                        Se leyó del acto reclamado. Compruébala contra la carátula:
+                                        de aquí sale el resolutivo. Si la corriges, manda lo que escribas.
+                                    </p>
+                                </div>
+
                             </div>
                         )}
 
