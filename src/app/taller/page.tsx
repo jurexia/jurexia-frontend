@@ -43,6 +43,7 @@ import {
     sisePendiente, generarDesdeExpediente, NecesitaNotificacion, razonarSentido,
     contextoDelAsunto,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
+    fichaDesdeAdmision,
 } from '@/components/sentencia/api';
 import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -185,6 +186,46 @@ export default function TallerDeSentencias() {
     // viaja con cada petición: el servidor no lo guarda.
     const [contexto, setContexto] = useState('');
     const [aportando, setAportando] = useState(false);
+    /* ═══ LA FICHA, DEL AUTO DE ADMISIÓN ═══
+       David: «basta con subir el auto de admisión y de allí derivar qué
+       expediente, qué tribunal resolverá, la autoridad responsable, el o los
+       terceros interesados. Pero sólo déjalo como posibilidad optativa».
+
+       OPTATIVO DE VERDAD: no crea sesión, no gasta cuota y no obliga a nada.
+       Lo que vuelve es una PROPUESTA que se pone en los campos y él corrige;
+       lo que ya hubiera escrito NO se pisa, porque lo suyo manda sobre lo
+       leído. El auto de admisión es el único papel del expediente que dice
+       quién es quién en su primera página. */
+    const [fichando, setFichando] = useState(false);
+    const [fichado, setFichado] = useState<string[]>([]);
+    const leerAdmision = useCallback(async (archivo: File) => {
+        setError(''); setFichando(true); setFichado([]);
+        try {
+            const { ficha, leidos, avisos } = await fichaDesdeAdmision(correo, archivo);
+            setEncargo((prev) => {
+                const x = { ...prev };
+                const poner = (k: keyof Encargo, v?: string) => {
+                    if (v && !String((x as unknown as Record<string, string>)[k] ?? '').trim()) {
+                        (x as unknown as Record<string, string>)[k] = v;
+                    }
+                };
+                poner('numero', ficha.numero);
+                poner('quejoso', ficha.quejoso);
+                poner('responsable', ficha.responsable);
+                poner('tercero', ficha.tercero_interesado);
+                poner('tribunal', ficha.tribunal);
+                poner('ciudad', ficha.ciudad);
+                poner('magistrado', ficha.magistrado);
+                return x;
+            });
+            if (ficha.tipo_asunto) setTipoSel((t) => t ?? undefined);
+            setFichado(leidos);
+            if (avisos.length) setError(avisos[0]);
+        } catch (e) {
+            setError(e instanceof Error ? e.message
+                : 'No se pudo fichar el asunto desde el auto de admisión.');
+        } finally { setFichando(false); }
+    }, [correo]);
     const [corriendo, setCorriendo] = useState(false);
     const [error, setError] = useState('');
     const [piloto, setPiloto] = useState<EstadoPiloto | null>(null);
@@ -765,6 +806,54 @@ export default function TallerDeSentencias() {
             <main className="relative mx-auto grid max-w-[1500px] gap-4 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(320px,400px)_1fr]">
                 <div className="flex flex-col gap-4 lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)] lg:overflow-y-auto lg:pr-1">
                     {piloto && <AvisoPiloto secretarios={piloto.secretarios} cupo={piloto.cupo} />}
+                    {/* ═══ LA FICHA, SIN TECLEARLA ═══
+                        Optativo y dicho como tal: quien no lo use no pierde
+                        nada, y quien lo use no queda atado —lo leído entra
+                        como propuesta en campos que siguen siendo suyos—.
+                        El auto de admisión es el único papel del expediente
+                        que dice, en su primera página, cómo se llama el
+                        asunto y quién es cada quien. */}
+                    {paso === 'ficha' && (
+                        <label className={cn(
+                            'block cursor-pointer rounded-2xl border border-dashed px-4 py-3 transition',
+                            fichando
+                                ? 'border-accent-gold/40 bg-accent-gold/[0.05]'
+                                : 'border-white/15 bg-white/[0.02] hover:border-accent-gold/30')}>
+                            <input type="file" accept=".pdf" className="hidden"
+                                   disabled={fichando}
+                                   onChange={(e) => {
+                                       const f = e.target.files?.[0];
+                                       e.target.value = '';
+                                       if (f) void leerAdmision(f);
+                                   }} />
+                            <span className="flex items-center gap-2 text-[12.5px] font-medium text-white/75">
+                                {fichando
+                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin text-accent-gold" />
+                                    : <FileText className="h-3.5 w-3.5 text-accent-gold/70" />}
+                                {fichando ? 'Leyendo el auto…' : '¿Tienes el auto de admisión?'}
+                            </span>
+                            <span className="mt-1 block text-[11.5px] leading-relaxed text-white/45">
+                                Súbelo y se rellenan solos el expediente, el tribunal, la autoridad
+                                responsable, el tercero interesado y quien promueve. Es opcional:
+                                puedes teclear la ficha como siempre, y lo que ya hayas escrito no
+                                se toca.
+                            </span>
+                            {fichado.length > 0 && (
+                                <span className="mt-2 flex flex-wrap gap-1.5">
+                                    {fichado.map((k) => (
+                                        <span key={k}
+                                              className="rounded-md border border-emerald-400/30 bg-emerald-400/[0.08]
+                                                         px-1.5 py-0.5 text-[10.5px] text-emerald-300/90">
+                                            {k.replace(/_/g, ' ')}
+                                        </span>
+                                    ))}
+                                    <span className="text-[11px] text-white/40">
+                                        leídos del auto · compruébalos
+                                    </span>
+                                </span>
+                            )}
+                        </label>
+                    )}
                     <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
                                        deshabilitado={corriendo || paso !== 'ficha'} />
                     <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}

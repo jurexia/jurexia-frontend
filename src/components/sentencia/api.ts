@@ -972,3 +972,44 @@ export async function contextoDelAsunto(
         avisos: (j.avisos ?? []) as string[],
     };
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LA FICHA, LEÍDA DEL AUTO DE ADMISIÓN
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «basta con subir el auto de admisión y de allí derivar qué
+   expediente, qué tribunal resolverá, la autoridad responsable, el o los
+   terceros interesados. Pero sólo déjalo como posibilidad optativa».
+
+   No crea sesión, no guarda nada y no gasta cuota: devuelve una PROPUESTA que
+   la pantalla pone en los campos y el secretario corrige. Es el único papel
+   del expediente que dice quién es quién en su primera página. */
+export interface FichaLeida {
+    numero?: string;
+    tipo_asunto?: string;
+    tribunal?: string;
+    ciudad?: string;
+    quejoso?: string;
+    responsable?: string;
+    responsable_ejecutora?: string;
+    tercero_interesado?: string;
+    expediente_origen?: string;
+    magistrado?: string;
+}
+
+export async function fichaDesdeAdmision(
+    userEmail: string, archivo: File,
+): Promise<{ ficha: FichaLeida; leidos: string[]; avisos: string[] }> {
+    const fd = new FormData();
+    fd.append('user_email', userEmail);
+    fd.append('admision', archivo);
+    const res = await fetch(`${BASE}/taller/desde-admision`,
+                            { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    const j = await res.json();
+    return {
+        ficha: (j.ficha ?? {}) as FichaLeida,
+        leidos: (j.leidos ?? []) as string[],
+        avisos: (j.avisos ?? []) as string[],
+    };
+}
