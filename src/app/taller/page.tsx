@@ -725,7 +725,10 @@ export default function TallerDeSentencias() {
     }, [correo, encargo.numero]);
 
     const pedirProyecto = useCallback(async () => {
-        setError(''); setCorriendo(true);
+        // EL AVANCE ARRANCA LIMPIO. Si se genera dos veces —cambiando el
+        // criterio, que es lo normal—, lo que se veía escribirse era el
+        // estudio nuevo pegado detrás del viejo.
+        setError(''); setAvance(''); setCorriendo(true);
         try {
             // SE MANDAN TODOS LOS SENTIDOS, NO EL PRIMERO. Antes se tomaba
             // `problemas.find(p => p.sentido)` y los demás se perdían: el
@@ -1705,7 +1708,27 @@ export default function TallerDeSentencias() {
                         del estudio y parecía que no pasaba nada.
                         Ahora se abre en cuanto arranca, diciendo qué está
                         haciendo, y el texto la va llenando. */}
-                    {corriendo && paso === 'criterio' && (
+                    {/* ═══ LA TARJETA QUE NO PODÍA APARECER ═══
+                        Estaba condicionada a `paso === 'criterio'`, y ESE PASO
+                        NO SE FIJA NUNCA: `setPaso` sólo se llama con 'ficha',
+                        'adelanto', 'acervo' y 'proyecto'. La comprobación era
+                        imposible de cumplir, así que el panel entero —el
+                        estudio viéndose escribir, las palabras contadas, el
+                        cursor— era código muerto y la pantalla se quedaba muda
+                        los dos a cuatro minutos que tarda la redacción, que es
+                        la espera más larga de la herramienta.
+
+                        Es exactamente lo que David había reclamado —«tampoco
+                        existe el streaming de la generación de la sentencia»—:
+                        se arregló el momento en que la tarjeta se abre y se
+                        quedó sin arreglar que no se abría nunca.
+
+                        Mientras se redacta, el paso real es 'acervo'. Se
+                        excluye `proponiendo` porque esa llamada también levanta
+                        `corriendo` con el mismo paso, y entonces la tarjeta
+                        diría «preparando el estudio» mientras el motor propone
+                        el sentido, que es otra cosa. */}
+                    {corriendo && !proponiendo && paso === 'acervo' && (
                         <Tarjeta>
                             <Rotulo accion={
                                 <span className="text-[11px] tabular-nums text-white/30">
@@ -1733,11 +1756,28 @@ export default function TallerDeSentencias() {
                                 textoAvisos: proyecto.textoAvisos,
                                 textoHuecos: proyecto.textoHuecos,
                             }} />
-                            <button className={cn(boton, 'self-start bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
-                                    onClick={() => descargarProyecto(proyecto)}>
-                                <Download className="h-4 w-4" />
-                                Descargar de nuevo
-                            </button>
+                            {/* EL FINAL DEL CAMINO DECÍA «DE NUEVO» SIN HABER
+                                DICHO NADA LA PRIMERA VEZ. El .docx se descarga
+                                solo al terminar —y bien, porque es lo que el
+                                secretario viene a buscar—, pero si el navegador
+                                lo guarda sin avisar, lo único que queda en
+                                pantalla es un botón que ofrece repetir algo que
+                                nunca se vio. Ahora se dice qué documento es y
+                                que ya está bajado; el botón sigue ahí para
+                                quien no lo encuentre. */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <button className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
+                                        onClick={() => descargarProyecto(proyecto)}>
+                                    <Download className="h-4 w-4" />
+                                    Descargar de nuevo
+                                </button>
+                                <p className="text-[12px] leading-relaxed text-white/45">
+                                    <span className="text-white/70">{proyecto.nombre}</span>
+                                    {' '}ya se descargó a tu carpeta de descargas al terminar.
+                                    Es un .docx sobre la plantilla del tribunal: se abre y se
+                                    edita como cualquier proyecto tuyo.
+                                </p>
+                            </div>
                         </>
                     )}
                 </div>
