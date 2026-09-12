@@ -229,6 +229,11 @@ export default function TallerDeSentencias() {
        worker que resuelve no es el que leyó—, y la pantalla nunca la
        preguntaba: recargar en mitad del asunto tiraba cuatro minutos de motor. */
     const [enCurso, setEnCurso] = useState<AsuntoEnCurso[]>([]);
+    /* EL MARCO, ENTERO CUANDO SE PIDE. La lista se corta en doce tesis y
+       catorce preceptos y lo decía —«y 6 más»—, pero decirlo no es enseñarlo:
+       este panel existe para COMPROBAR con qué se va a fundar, y seis tesis que
+       no se pueden leer son seis que no se pueden comprobar. */
+    const [marcoEntero, setMarcoEntero] = useState(false);
     const [pasoArchivos, setPasoArchivos] = useState<PasoArchivos | null>(null);
     const [fichando, setFichando] = useState(false);
     const [fichado, setFichado] = useState<string[]>([]);
@@ -1534,7 +1539,8 @@ export default function TallerDeSentencias() {
                                 </p>
                             )}
                             <ul className="grid gap-2">
-                                {material.tesis.slice(0, 12).map((t) => (
+                                {(marcoEntero ? material.tesis
+                                               : material.tesis.slice(0, 12)).map((t) => (
                                     <li key={t.registro}
                                         className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
                                         <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -1552,10 +1558,14 @@ export default function TallerDeSentencias() {
                                     </li>
                                 ))}
                             </ul>
-                            {material.tesis.length > 12 && (
-                                <p className="mt-2 text-[11px] text-white/30">
-                                    Y {material.tesis.length - 12} tesis más, todas en el proyecto.
-                                </p>
+                            {material.tesis.length > 12 && !marcoEntero && (
+                                <button type="button" onClick={() => setMarcoEntero(true)}
+                                        className="mt-2 text-[11px] text-white/35 underline
+                                                   decoration-white/20 underline-offset-2
+                                                   transition-colors hover:text-white/70">
+                                    Y {material.tesis.length - 12} tesis más, todas en el
+                                    proyecto · verlas
+                                </button>
                             )}
                             {/* LOS PRECEPTOS, COMO LISTA Y NO COMO COLETILLA. Eran
                                 una línea con seis artículos sueltos y sin ley:
@@ -1567,17 +1577,28 @@ export default function TallerDeSentencias() {
                                         Preceptos recuperados
                                     </p>
                                     <ul className="grid gap-1">
-                                        {material.normas.slice(0, 14).map((n, i) => (
+                                        {(marcoEntero ? material.normas
+                                                       : material.normas.slice(0, 14)).map((n, i) => (
                                             <li key={i} className="text-[11.5px] leading-snug text-white/55">
                                                 <span className="text-white/75">art. {n.articulo}</span>
                                                 {n.cuerpo_legal ? ` · ${n.cuerpo_legal}` : ''}
                                             </li>
                                         ))}
                                     </ul>
-                                    {material.normas.length > 14 && (
-                                        <p className="mt-1 text-[11px] text-white/30">
-                                            Y {material.normas.length - 14} más.
-                                        </p>
+                                    {material.normas.length > 14 && !marcoEntero && (
+                                        <button type="button" onClick={() => setMarcoEntero(true)}
+                                                className="mt-1 text-[11px] text-white/35 underline
+                                                           decoration-white/20 underline-offset-2
+                                                           transition-colors hover:text-white/70">
+                                            Y {material.normas.length - 14} más · verlos
+                                        </button>
+                                    )}
+                                    {marcoEntero && (
+                                        <button type="button" onClick={() => setMarcoEntero(false)}
+                                                className="mt-2 text-[11px] text-white/30
+                                                           transition-colors hover:text-white/60">
+                                            volver a la lista corta
+                                        </button>
                                     )}
                                 </div>
                             )}

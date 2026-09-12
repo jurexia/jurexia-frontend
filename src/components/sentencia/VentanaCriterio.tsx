@@ -18,7 +18,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { PenLine, Lightbulb, ArrowRight, Check, AlertTriangle } from 'lucide-react';
+import { PenLine, Lightbulb, ArrowRight, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { Tarjeta, Pastilla, cn } from './primitivas';
 import SolucionDelAsunto from './SolucionDelAsunto';
 import type { ProblemaJuridico } from './tipos';
@@ -892,26 +892,36 @@ export default function VentanaCriterio({
             {/* LA PROPUESTA VA ANTES DEL BOTÓN DE GENERAR, y se ve que es una
                 sugerencia: el criterio sigue siendo del secretario. Sin este
                 paso el proyecto salía con la calificación de la plantilla. */}
+            {/* EL BOTÓN QUE SE PULSA ES EL QUE TIENE QUE DECIR QUE TRABAJA.
+                Medido en el 93/2026: la propuesta tarda entre minuto y medio y
+                tres minutos, y este botón se quedaba entero y pulsable mientras
+                tanto; el único «El motor está proponiendo…» aparecía cien
+                píxeles más abajo, en OTRO botón. Se pulsaba, no pasaba nada
+                visible donde estaba el dedo, y se volvía a pulsar. */}
             {onProponer && (
                 <button
                     onClick={onProponer}
-                    disabled={generando}
+                    disabled={generando || proponiendo}
                     className={cn(
                         'mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-2xl',
                         'border border-white/[0.12] bg-white/[0.04] text-[12.5px] font-medium',
                         'text-white/75 transition-all duration-200',
-                        generando ? 'cursor-not-allowed opacity-50' : 'hover:bg-white/[0.08]',
+                        (generando || proponiendo)
+                            ? 'cursor-not-allowed opacity-50' : 'hover:bg-white/[0.08]',
                     )}
                 >
+                    {proponiendo && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                     {/* SIN «EL ACERVO» EN EL RÓTULO. Al secretario no le dice
                         nada de qué va a pasar: le dice de dónde sale el dato.
                         Lo que necesita saber es que el motor va a proponer una
                         solución y que él la va a poder cambiar. */}
-                    {propuesta
-                        ? 'Volver a proponer'
-                        : modo === 'global'
-                            ? 'Que el motor proponga la solución'
-                            : 'Que el motor proponga cada calificación'}
+                    {proponiendo
+                        ? 'El motor está proponiendo…'
+                        : propuesta
+                            ? 'Volver a proponer'
+                            : modo === 'global'
+                                ? 'Que el motor proponga la solución'
+                                : 'Que el motor proponga cada calificación'}
                 </button>
             )}
             {/* SI EL MOTOR DIJO QUÉ LE FALTA, QUE SE LE PUEDA DAR. Aparece
