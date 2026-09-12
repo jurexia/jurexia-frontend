@@ -51,22 +51,87 @@ interface Entrada {
 async function deReportes(cliente: ReturnType<typeof admin>): Promise<Entrada[]> {
     const { data, error } = await cliente
         .from('user_feedback')
-        .select('id, folio, user_email, user_id, message, created_at')
+        .select('id, folio, user_email, user_id, message, created_at, contexto_soporte, conversation_id')
         .eq('status', 'pendiente')
         .order('created_at', { ascending: true })
         .limit(200);
     if (error) throw new Error(`reportes: ${error.message}`);
-    return (data ?? []).map((r: Record<string, unknown>) => ({
-        origen: 'reporte' as const,
-        origen_id: String(r.id),
-        folio: (r.folio as string) ?? null,
-        user_email: (r.user_email as string) ?? null,
-        user_id: (r.user_id as string) ?? null,
-        texto: String(r.message ?? ''),
-        contexto: null,
-        estado_usuario: null,
-        creado_at: String(r.created_at),
-    }));
+
+    const filas = data ?? [];
+
+    // LA RESPUESTA QUE PROVOCÓ LA QUEJA.
+    //
+    // Sin esto el verificador no tiene nada que comprobar y se abstiene: 15
+    // verificaciones seguidas terminaron en «sin medios», siete de ellas
+    // porque «la queja no trae la respuesta que la provocó». Una queja sin la
+    // respuesta sólo se puede creer.
+    //
+    // Se traen los ÚLTIMOS turnos del asistente en esa conversación, no sólo
+    // el último: cuando alguien dice «el artículo que citas no dice eso», la
+    // cita puede estar dos respuestas atrás.
+    const conversaciones = [...new Set(
+        filas.map((r: Record<string, unknown>) => r.conversation_id).filter(Boolean),
+    )] as string[];
+
+    const respuestas = new Map<string, string>();
+    if (conversaciones.length) {
+        const { data: msgs } = await cliente
+            .from('messages')
+            .select('conversation_id, role, content, created_at')
+            .in('conversation_id', conversaciones.slice(0, 100))
+            .eq('role', 'assistant')
+            .order('created_at', { ascending: false })
+            .limit(400);
+        for (const m of (msgs ?? []) as Array<Record<string, unknown>>) {
+            const cid = String(m.conversation_id);
+            const previo = respuestas.get(cid) ?? '';
+            // Hasta 12.000: el mismo tope que `respuesta_previa` en las
+            // correcciones, porque los fundamentos van al final y con 2.500 se
+            // quedaban fuera justo las citas que hay que comprobar.
+            if (previo.length < 12000) {
+                respuestas.set(cid, (previo + '\n\n' + String(m.content ?? '')).slice(0, 12000));
+            }
+        }
+    }
+
+    // Y de qué entidad es cada quien. Sin esto la verificación de artículos
+    // no abre el silo de su estado y da por inexistente una norma que sí está
+    // indexada — acusaría a la plataforma de inventarse la cita. Es justo el
+    // caso del folio 1946-02: «los artículos no corresponden a la legislación
+    // del Estado de Puebla».
+    const correos = [...new Set(
+        filas.map((r: Record<string, unknown>) => (r.user_email as string || '').toLowerCase())
+             .filter(Boolean),
+    )];
+    const estados = new Map<string, string>();
+    if (correos.length) {
+        const { data: perfiles } = await cliente
+            .from('user_profiles').select('email, estado').in('email', correos.slice(0, 200));
+        for (const p of (perfiles ?? []) as Array<Record<string, unknown>>) {
+            if (p.estado) estados.set(String(p.email).toLowerCase(), String(p.estado));
+        }
+    }
+
+    return filas.map((r: Record<string, unknown>) => {
+        const cid = r.conversation_id ? String(r.conversation_id) : null;
+        const respuesta = cid ? respuestas.get(cid) : undefined;
+        const soporte = (r.contexto_soporte as string) || '';
+        // La respuesta va PRIMERO: es lo que el verificador lee. El hilo de
+        // soporte va detrás, como contexto para quien lo mire a mano.
+        const contexto = [respuesta, soporte && `--- hilo de soporte ---\n${soporte}`]
+            .filter(Boolean).join('\n\n') || null;
+        return {
+            origen: 'reporte' as const,
+            origen_id: String(r.id),
+            folio: (r.folio as string) ?? null,
+            user_email: (r.user_email as string) ?? null,
+            user_id: (r.user_id as string) ?? null,
+            texto: String(r.message ?? ''),
+            contexto,
+            estado_usuario: estados.get((r.user_email as string || '').toLowerCase()) ?? null,
+            creado_at: String(r.created_at),
+        };
+    });
 }
 
 /**

@@ -211,13 +211,40 @@ export async function POST(req: NextRequest) {
         if (!cuerpo.userId) return null;
         try {
             const sb = admin();
-            const [{ data: perfil }, { count }] = await Promise.all([
+            const [{ data: perfil }, { count }, { data: ultimaConv }] = await Promise.all([
                 sb.from('user_profiles').select('numero_usuario').eq('id', cuerpo.userId).single(),
                 sb.from('user_feedback').select('id', { count: 'exact', head: true }).eq('user_id', cuerpo.userId),
+                // LA PRUEBA DEL DELITO, que hasta hoy no se guardaba.
+                //
+                // Nadie abre el soporte por gusto: se abre desde la consulta
+                // que acaba de fallar. Esa conversación es lo único que
+                // convierte «la respuesta estaba mal» en algo comprobable, y
+                // el circuito de incidencias murió catorce veces sin ella —15
+                // verificaciones, 15 «sin medios», la mitad por no tener
+                // delante la respuesta que provocó la queja.
+                //
+                // El chat de soporte no la conoce, pero el servidor sí: es la
+                // última que tocó este usuario. Se acota a media hora porque
+                // pasada esa ventana ya no es «lo que acaba de pasarme», y
+                // adjuntar una conversación de anteayer sería peor que no
+                // adjuntar ninguna: daría por probada una relación inventada.
+                sb.from('conversations').select('id, updated_at')
+                    .eq('user_id', cuerpo.userId)
+                    .gte('updated_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
+                    .order('updated_at', { ascending: false }).limit(1).maybeSingle(),
             ]);
             const folio = perfil?.numero_usuario
                 ? `${perfil.numero_usuario}-${String((count || 0) + 1).padStart(2, '0')}`
                 : null;
+
+            // Y los turnos del propio soporte. Hasta hoy sobrevivía UNA línea,
+            // por eso la cola tiene reportes que dicen «pro» o «uno por uno»:
+            // el hilo que los hacía comprensibles se tiraba al guardar.
+            const hilo = (cuerpo.conversacion || []).slice(-8)
+                .map((t: { rol: string; texto: string }) =>
+                    `${t.rol === 'usuario' ? 'Usuario' : 'Soporte'}: ${(t.texto || '').slice(0, 700)}`)
+                .join('\n');
+
             await sb.from('user_feedback').insert({
                 user_id: cuerpo.userId,
                 user_email: cuerpo.email || null,
@@ -225,6 +252,8 @@ export async function POST(req: NextRequest) {
                 category: categoria,
                 message: texto,
                 folio,
+                contexto_soporte: hilo || null,
+                conversation_id: ultimaConv?.id ?? null,
             });
             return folio;
         } catch (e) {
