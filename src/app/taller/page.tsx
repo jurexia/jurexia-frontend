@@ -25,6 +25,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2, Download, Search, FileText, AlertCircle } from 'lucide-react';
 import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
+import EntradaTaller from '@/components/sentencia/EntradaTaller';
+import type { ViaEntrada, PasoArchivos } from '@/components/sentencia/EntradaTaller';
 import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
 import LineaDeFases from '@/components/sentencia/LineaDeFases';
 import VentanaCriterio from '@/components/sentencia/VentanaCriterio';
@@ -213,6 +215,15 @@ export default function TallerDeSentencias() {
     const [extemporanea, setExtemporanea] = useState(false);
     const [decision, setDecision] = useState<'' | 'oportuna' | 'reserva'>('');
     const [motivoDecision, setMotivoDecision] = useState('');
+    /* ═══ POR DÓNDE SE EMPIEZA ═══
+       Al entrar había VEINTIDÓS botones visibles a la vez y ninguno propuesto:
+       el manual de SISE ocupaba la esquina de más peso aunque sea el camino
+       secundario, el auto de admisión se ofrecía en un recuadro de puntos en
+       la otra columna, y la rejilla de tipos y los dos soltadores de PDF
+       competían por la mirada. Todo estaba disponible y nada estaba dicho.
+       Ahora se elige primero —dos caminos— y cada uno despliega lo suyo. */
+    const [via, setVia] = useState<ViaEntrada | null>(null);
+    const [pasoArchivos, setPasoArchivos] = useState<PasoArchivos | null>(null);
     const [fichando, setFichando] = useState(false);
     const [fichado, setFichado] = useState<string[]>([]);
     const leerAdmision = useCallback(async (archivo: File) => {
@@ -848,7 +859,7 @@ export default function TallerDeSentencias() {
                         El auto de admisión es el único papel del expediente
                         que dice, en su primera página, cómo se llama el
                         asunto y quién es cada quien. */}
-                    {paso === 'ficha' && (
+                    {paso === 'ficha' && via === 'archivos' && pasoArchivos === 'admision' && (
                         <label className={cn(
                             'block cursor-pointer rounded-2xl border border-dashed px-4 py-3 transition',
                             fichando
@@ -889,10 +900,18 @@ export default function TallerDeSentencias() {
                             )}
                         </label>
                     )}
-                    <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
-                                       deshabilitado={corriendo || paso !== 'ficha'} />
-                    <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
-                                     extractos={[]} vocabulario={voz} />
+                    {/* LA FICHA Y LOS DOCUMENTOS APARECEN CUANDO HAY CAMINO.
+                        Antes estaban siempre, y con ellos la rejilla de cuatro
+                        tipos y los dos soltadores de PDF: tres decisiones
+                        encima de la mesa antes de haber tomado la primera. */}
+                    {(paso !== 'ficha' || via) && (
+                        <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
+                                           deshabilitado={corriendo || paso !== 'ficha'} />
+                    )}
+                    {(paso !== 'ficha' || via) && (
+                        <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
+                                         extractos={[]} vocabulario={voz} />
+                    )}
                     <label className={cn('block cursor-pointer rounded-xl border border-dashed',
                         'border-white/15 bg-white/[0.02] px-4 py-3 text-[12px] text-white/50',
                         'transition hover:border-accent-gold/30 hover:text-white/70')}>
@@ -931,7 +950,17 @@ export default function TallerDeSentencias() {
                         Sólo se enseña mientras no haya llegado ningún
                         expediente: en cuanto la extensión funciona, esta
                         tarjeta sobra y deja el sitio a la del expediente. */}
-                    {pendientes.length === 0 && paso === 'ficha' && (
+                    {/* ═══ POR DÓNDE EMPEZAMOS ═══ Lo primero que se ve, y lo
+                        único hasta que se elige. */}
+                    {paso === 'ficha' && pendientes.length === 0 && (
+                        <EntradaTaller via={via} onVia={setVia}
+                                       pasoArchivos={pasoArchivos}
+                                       onPasoArchivos={setPasoArchivos}
+                                       hayDocumentos={documentos.length >= 2}
+                                       hayFicha={!!encargo.numero && !!encargo.tipoAsunto} />
+                    )}
+
+                    {pendientes.length === 0 && paso === 'ficha' && via === 'sise' && (
                     <Tarjeta>
                         <Rotulo accion={<span className="text-[11px] text-white/30">se instala una vez</span>}>
                             Trae el expediente desde SISE
@@ -1181,6 +1210,11 @@ export default function TallerDeSentencias() {
                     </Tarjeta>
                     )}
 
+                    {/* EL RECORRIDO, DESPUÉS DE ELEGIR CAMINO. Es el mapa de
+                        los ocho pasos y vale mucho, pero puesto ANTES de la
+                        primera decisión es una cosa más que leer cuando lo que
+                        toca es escoger por dónde se entra. */}
+                    {(paso !== 'ficha' || via || pendientes.length > 0) && (
                     <Tarjeta>
                         <Rotulo accion={<span className="text-[11px] text-white/30">se detiene una sola vez</span>}>
                             Recorrido del asunto
@@ -1385,6 +1419,7 @@ export default function TallerDeSentencias() {
                             </div>
                         )}
                     </Tarjeta>
+                    )}
 
                     {/* EL ACERVO, PLEGADO. Antes se desplegaba entero al pulsar
                         el botón rojo y era donde el secretario se perdía: ocho

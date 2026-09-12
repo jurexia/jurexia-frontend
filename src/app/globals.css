@@ -1532,3 +1532,52 @@ h6 {
         animation: none !important;
     }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LA ENTRADA DEL TALLER — las letras que se encienden
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «dos botones iniciales muy profesionales y elegantes, emergiendo en
+   fondo negro con letras resplandecientes blancas animadas al inicio».
+
+   Se enciende UNA VEZ al entrar y se queda quieto: una animación que no para
+   deja de ser una guía y pasa a ser un adorno molesto. El resplandor es blanco
+   y no dorado a propósito —el oro es el acento de la marca y aquí compite con
+   el rótulo—, y el barrido de luz cruza el texto una sola vez. */
+@keyframes entradaResplandor {
+  0%   { opacity: 0; transform: translateY(6px);
+         text-shadow: 0 0 0 rgba(255,255,255,0); }
+  45%  { opacity: 1; transform: translateY(0);
+         text-shadow: 0 0 18px rgba(255,255,255,0.55), 0 0 38px rgba(255,255,255,0.22); }
+  100% { opacity: 1; transform: translateY(0);
+         text-shadow: 0 0 6px rgba(255,255,255,0.16); }
+}
+
+@keyframes entradaAparece {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.entrada-titulo {
+  animation: entradaResplandor 1500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.entrada-tarjeta {
+  animation: entradaAparece 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* EL FONDO NEGRO DEL QUE EMERGEN. Un velo radial por detrás de las dos
+   tarjetas: oscurece el centro y deja que el borde de la tarjeta sea lo único
+   que brilla. */
+.entrada-fondo {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.42) 45%, rgba(0,0,0,0) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entrada-titulo,
+  .entrada-tarjeta {
+    animation: none;
+  }
+  .entrada-titulo { text-shadow: 0 0 6px rgba(255,255,255,0.16); }
+}
