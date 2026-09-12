@@ -226,6 +226,14 @@ export default function TallerDeSentencias() {
                         (x as unknown as Record<string, string>)[k] = v;
                     }
                 };
+                /* EL TIPO PRIMERO, porque de él cuelga todo lo demás: el
+                   formulario deriva sus apartados, su vocabulario y su plazo de
+                   `tipoAsunto`, y mientras esté vacío NO PINTA NI UN CAMPO.
+                   Se leía del auto y no se ponía —había aquí una línea que no
+                   hacía nada—, así que el secretario subía el auto, veía ocho
+                   etiquetas verdes y seguía delante de la rejilla de tipos con
+                   la ficha en blanco: lo leído estaba, pero no se veía. */
+                poner('tipoAsunto', ficha.tipo_asunto);
                 poner('numero', ficha.numero);
                 poner('quejoso', ficha.quejoso);
                 poner('responsable', ficha.responsable);
@@ -235,7 +243,6 @@ export default function TallerDeSentencias() {
                 poner('magistrado', ficha.magistrado);
                 return x;
             });
-            if (ficha.tipo_asunto) setTipoSel((t) => t ?? undefined);
             setFichado(leidos);
             if (avisos.length) setError(avisos[0]);
         } catch (e) {
