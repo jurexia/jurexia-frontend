@@ -14,6 +14,8 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Distinto de `error`: no impide continuar, avisa de lo que quedó fuera.
+    const [aviso, setAviso] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const allowedTypes = [
@@ -47,23 +49,53 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
         setIsDragging(false);
     }, []);
 
-    const handleDrop = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
+    /**
+     * EL DESCARTE SILENCIOSO (folios 1835-01 a 1835-08, 9-sep-2026)
+     * -------------------------------------------------------------
+     * Una abogada Pro escribió OCHO veces en seis minutos: «no me deja subir
+     * varios documentos», «sólo sube el último», «solo sube uno, y no me
+     * indica nada más». Esa última frase es el fallo entero.
+     *
+     * Aquí se analiza un documento por consulta, y eso es una limitación
+     * legítima. Lo que no es legítimo es cómo se comportaba: al soltar cinco
+     * archivos se tomaba `files[0]` y los otros cuatro desaparecían sin una
+     * palabra. Si alguien arrastra una demanda con sus anexos, recibe un
+     * análisis de la demanda sola creyendo que se leyeron los anexos — una
+     * respuesta segura de sí misma sobre un expediente incompleto, que es
+     * peor que un error.
+     *
+     * Ahora se toma el primero y SE DICE: cuál entró, cuántos quedaron fuera
+     * y qué hacer con ellos.
+     */
+    const recibirArchivos = useCallback((lista: FileList | null) => {
         setError(null);
+        setAviso(null);
+        const archivos = Array.from(lista || []);
+        if (!archivos.length) return;
 
-        const file = e.dataTransfer.files[0];
-        if (file && validateFile(file)) {
-            setSelectedFile(file);
+        const primero = archivos[0];
+        if (!validateFile(primero)) return;
+        setSelectedFile(primero);
+
+        if (archivos.length > 1) {
+            const resto = archivos.length - 1;
+            setAviso(
+                `Se analizará «${primero.name}». Los otros ${resto} ` +
+                `${resto === 1 ? 'archivo no se ha enviado' : 'archivos no se han enviado'}: ` +
+                `aquí se revisa un documento por consulta. Envíalos de uno en uno, o ` +
+                `únelos en un solo PDF si forman parte del mismo escrito.`
+            );
         }
     }, []);
 
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        recibirArchivos(e.dataTransfer.files);
+    }, [recibirArchivos]);
+
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setError(null);
-        const file = e.target.files?.[0];
-        if (file && validateFile(file)) {
-            setSelectedFile(file);
-        }
+        recibirArchivos(e.target.files);
     };
 
     const extractTextFromPDF = async (file: File): Promise<string> => {
@@ -197,6 +229,7 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
                             ref={fileInputRef}
                             type="file"
                             accept=".pdf,.doc,.docx"
+                            multiple
                             onChange={handleFileSelect}
                             className="hidden"
                         />
@@ -249,6 +282,16 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
                         <div className="mt-4 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                             <AlertCircle className="w-4 h-4 flex-shrink-0" />
                             {error}
+                        </div>
+                    )}
+
+                    {/* Lo que quedó fuera. Ámbar y no rojo: no ha fallado nada,
+                        pero hay algo que el abogado TIENE que saber antes de
+                        leer la respuesta — que sus otros archivos no van. */}
+                    {aviso && (
+                        <div className="mt-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <span>{aviso}</span>
                         </div>
                     )}
 
