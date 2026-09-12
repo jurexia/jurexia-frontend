@@ -1470,7 +1470,8 @@ export default function TallerDeSentencias() {
                         <Tarjeta>
                           <Pliegue titulo="Posible marco de resolución"
                                    nota={`${material.tesis.length} tesis · ${
-                                       material.normas.length} preceptos${
+                                       material.tesis.filter((t) => t.obligatoria).length
+                                       } obligatorias · ${material.normas.length} preceptos${
                                        material.materia ? ` · acervo ${material.materia}` : ''}`}>
                             <p className="mb-2.5 text-[11.5px] leading-relaxed text-white/40">
                                 Lo que el acervo dice sobre tus planteamientos. No decide nada:

@@ -357,6 +357,9 @@ export interface SolucionGlobal {
      *  vías. El servidor la completa contra los problemas reales: si el modelo
      *  omitió uno, aparece con la suerte SIN DETERMINAR. */
     checklist: {
+        /** El número del problema en la lista de la fase 3, 1-based. Es por
+         *  donde se empareja: el `tema` viene resumido en una línea. */
+        numero?: number;
         tema: string;
         papel: string;
         con_propuesta: string;

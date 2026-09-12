@@ -24,22 +24,78 @@ import SolucionDelAsunto from './SolucionDelAsunto';
 import type { ProblemaJuridico } from './tipos';
 import type { SolucionGlobal } from './api';
 
-const SENTIDOS: { id: NonNullable<ProblemaJuridico['sentido']>; etiqueta: string }[] = [
-    { id: 'fundado', etiqueta: 'Fundado' },
-    { id: 'esencialmente_fundado', etiqueta: 'Esencialmente fundado' },
-    { id: 'sustancialmente_fundado', etiqueta: 'Sustancialmente fundado' },
-    { id: 'parcialmente_fundado', etiqueta: 'Parcialmente fundado' },
+/* ═══ LAS DIEZ CALIFICATIVAS, POR LO QUE HACEN ═══
+   Estaban en una fila corrida de diez pastillas idénticas. Es la decisión más
+   consecuente de toda la herramienta —de aquí sale el resolutivo— y se leía
+   como una lista de palabras: «Fundado» y «Fundado pero insuficiente» a un
+   centímetro una de otra, con el mismo borde y el mismo peso, llevando a
+   resolutivos opuestos.
+
+   El grupo no es adorno: es el dato. Lo único que el secretario necesita ver
+   antes de leer la etiqueta es de qué lado cae. Y la línea depende del efecto,
+   no de la palabra: «fundado pero insuficiente» le da la razón al quejoso y
+   aun así NO prospera, que es justo la que se presta a confusión. */
+const SENTIDOS: {
+    id: NonNullable<ProblemaJuridico['sentido']>; etiqueta: string;
+    grupo: 'prospera' | 'no_prospera';
+}[] = [
+    { id: 'fundado', etiqueta: 'Fundado', grupo: 'prospera' },
+    { id: 'esencialmente_fundado', etiqueta: 'Esencialmente fundado', grupo: 'prospera' },
+    { id: 'sustancialmente_fundado', etiqueta: 'Sustancialmente fundado', grupo: 'prospera' },
+    { id: 'parcialmente_fundado', etiqueta: 'Parcialmente fundado', grupo: 'prospera' },
     /* TIENE RAZÓN Y NO ALCANZA. Medido: aparece en asuntos favorables el 12%
        de las veces, igual que el infundado. NO prospera, aunque lo parezca. */
-    { id: 'fundado_insuficiente', etiqueta: 'Fundado pero insuficiente' },
-    { id: 'infundado', etiqueta: 'Infundado' },
-    { id: 'inoperante', etiqueta: 'Inoperante' },
-    { id: 'inatendible', etiqueta: 'Inatendible' },
-    { id: 'ineficaz', etiqueta: 'Ineficaz' },
+    { id: 'fundado_insuficiente', etiqueta: 'Fundado pero insuficiente', grupo: 'no_prospera' },
+    { id: 'infundado', etiqueta: 'Infundado', grupo: 'no_prospera' },
+    { id: 'inoperante', etiqueta: 'Inoperante', grupo: 'no_prospera' },
+    { id: 'inatendible', etiqueta: 'Inatendible', grupo: 'no_prospera' },
+    { id: 'ineficaz', etiqueta: 'Ineficaz', grupo: 'no_prospera' },
     /* El recurso perdió su objeto por un hecho posterior. No prospera ni se
        desestima: no hay nada que estudiar. */
-    { id: 'sin_materia', etiqueta: 'Sin materia' },
+    { id: 'sin_materia', etiqueta: 'Sin materia', grupo: 'no_prospera' },
 ];
+
+/** Las diez calificativas, partidas en los dos montones que importan.
+ *  `nota` explica el caso tramposo, y se enseña UNA vez: repetida debajo de
+ *  cada uno de diecisiete planteamientos deja de leerse. */
+function Calificativas({ elegido, onElegir, nota }: {
+    elegido?: string | null;
+    onElegir: (id: NonNullable<ProblemaJuridico['sentido']>) => void;
+    nota?: boolean;
+}) {
+    const grupos = [
+        { id: 'prospera' as const, titulo: 'Prospera' },
+        { id: 'no_prospera' as const, titulo: 'No prospera' },
+    ];
+    return (
+        <div>
+            <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
+                {grupos.map((g) => (
+                    <div key={g.id} className="min-w-0">
+                        <p className="mb-1.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white/30">
+                            {g.titulo}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {SENTIDOS.filter((s) => s.grupo === g.id).map((s) => (
+                                <Pastilla key={s.id} activa={elegido === s.id}
+                                          onClick={() => onElegir(s.id)}>
+                                    {s.etiqueta}
+                                </Pastilla>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            {nota && (
+                <p className="mt-2 text-[11px] leading-relaxed text-white/35">
+                    «Fundado pero insuficiente» le da la razón a quien promueve y aun
+                    así no prospera: por eso está de ese lado. En los engroses medidos
+                    acaba en resolutivo desfavorable tan seguido como el infundado.
+                </p>
+            )}
+        </div>
+    );
+}
 
 /** Palabras con las que un texto deja de ser un veredicto y pasa a ser una razón. */
 const MARCAS_DE_RAZON = /\bporque\b|\bya que\b|\bpuesto que\b|\bdebido a\b|\btoda vez que\b|\ben virtud de\b|\bdado que\b|\bpues\b|\bal (?:haber|no|ser|resultar)\b/i;
@@ -62,16 +118,45 @@ function mismaDireccion(a: string, b: string): boolean {
              (EN_CONTRA.has(a) && A_FAVOR.has(b)));
 }
 
+/** ¿Es esto una razón —y no un veredicto de una línea? Mismo listón en los
+ *  dos caminos: veinticinco palabras y una marca de causa. */
+function esRazon(t: string): boolean {
+    const x = (t || '').trim();
+    return x.split(/\s+/).length >= 25 && MARCAS_DE_RAZON.test(x);
+}
+
 export function fuerzaDelCriterio(problemas: ProblemaJuridico[]) {
     const total = problemas.length || 1;
     const conSentido = problemas.filter((p) => !!p.sentido).length;
-    const conRazon = problemas.filter(
-        (p) => p.criterio.trim().split(/\s+/).length >= 25 && MARCAS_DE_RAZON.test(p.criterio),
-    ).length;
+    const conRazon = problemas.filter((p) => esRazon(p.criterio)).length;
     // El sentido vale un tercio; la razón, dos. Decidir es la mitad del trabajo;
     // explicar por qué es la otra mitad y media.
     const pct = Math.round(((conSentido / total) * 33 + (conRazon / total) * 67));
-    return { pct, conSentido, conRazon, total: problemas.length };
+    return { pct, conSentido, conRazon, total: problemas.length, via: 'tema' as const };
+}
+
+/* ═══ EL MEDIDOR MEDÍA EL CAMINO QUE NO SE ESTABA ANDANDO ═══
+   Medido en el 93/2026: el secretario resolvió el asunto entero por la vía
+   global, con su sentido y su razón escrita —y su consecuencia por tema—, y
+   arriba seguía leyéndose «33% · 0/2 razonados». La cuenta sólo miraba
+   `p.sentido` y `p.criterio`, que en esta vía están vacíos a propósito: en el
+   camino global las pastillas por tema ni se enseñan.
+
+   Un indicador que acusa al trabajo bien hecho es peor que no tenerlo: enseña
+   a no hacerle caso, y entonces tampoco avisa el día que falta algo de verdad.
+   Así que mide lo que gobierna: si la vía es la global, el sentido global y la
+   razón global. */
+export function fuerzaGlobal(sentido: string, razon: string, temas: number) {
+    const hay = !!sentido;
+    const razonada = esRazon(razon);
+    const pct = Math.round((hay ? 33 : 0) + (razonada ? 67 : 0));
+    return {
+        pct,
+        conSentido: hay ? temas : 0,
+        conRazon: razonada ? temas : 0,
+        total: temas,
+        via: 'global' as const,
+    };
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -231,13 +316,9 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
                     Elige el sentido. Debajo verás qué le pasa a cada problema
                     con esa elección, antes de generar nada.
                 </p>
-                <div className="flex flex-wrap items-center gap-1.5">
-                    {SENTIDOS.map((sd) => (
-                        <Pastilla key={sd.id} activa={sentidoGlobal === sd.id}
-                                  onClick={() => onSentidoGlobal(sd.id)}>
-                            {sd.etiqueta}
-                        </Pastilla>
-                    ))}
+                <Calificativas elegido={sentidoGlobal} nota
+                               onElegir={(id) => onSentidoGlobal(id)} />
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
                     {/* EL BOTÓN QUE TRAE LA PROPUESTA. No decide: rellena. */}
                     {global?.sentido && (
                         <button type="button"
@@ -386,7 +467,11 @@ export default function VentanaCriterio({
     /** Los problemas cuya razón se está redactando ahora mismo. */
     razonando?: Set<string>;
 }) {
-    const fuerza = useMemo(() => fuerzaDelCriterio(problemas), [problemas]);
+    const fuerza = useMemo(
+        () => (modo === 'global'
+            ? fuerzaGlobal(sentidoGlobal, razonGlobal, problemas.length)
+            : fuerzaDelCriterio(problemas)),
+        [modo, sentidoGlobal, razonGlobal, problemas]);
 
     /* LA DECISIÓN, CALCULADA EN VIVO.
        Misma precedencia que `modos_decision.repartir` en el servidor: primero
@@ -399,6 +484,22 @@ export default function VentanaCriterio({
             if (q.problema && q.alcanza && q.sentido) porProblema.set(q.problema, q.sentido);
         }
         const principal = problemas.find((p) => (p.jerarquia ?? '') === 'principal') ?? problemas[0];
+        /* LOS TEMAS QUE EL MOTOR MARCÓ AJENOS AL PRINCIPAL, emparejados por
+           número —el `tema` de la lista viene resumido y no coincide con la
+           pregunta—, con caída al texto cuando el número no venga. */
+        const distintos = new Set<string>();
+        for (const c of (propuesta?.global?.checklist ?? [])) {
+            if (!c?.tema_distinto) continue;
+            const n = Number(c.numero);
+            if (Number.isInteger(n) && n >= 1 && n <= problemas.length) {
+                distintos.add(problemas[n - 1].pregunta);
+                continue;
+            }
+            const tema = String(c.tema ?? '').trim().toLowerCase().slice(0, 60);
+            if (!tema) continue;
+            const igual = problemas.find((p) => p.pregunta.toLowerCase().includes(tema));
+            if (igual) distintos.add(igual.pregunta);
+        }
         const prosperan = ['fundado', 'esencialmente_fundado', 'sustancialmente_fundado',
                            'parcialmente_fundado', 'fundado_insuficiente'];
         /* MISMO ORDEN QUE EL SERVIDOR. Si él dictó el global, éste manda sobre
@@ -429,8 +530,14 @@ export default function VentanaCriterio({
             // principal prospera, los accesorios que el secretario NO tocó
             // quedan sin materia. Enseñarlo aquí evita la sorpresa de abrir el
             // proyecto y encontrar «innecesario» donde se esperaba un estudio.
+            /* SALVO EL TEMA DISTINTO. Mismo escape que aplica el servidor
+               en `modos_decision.repartir`: si el propio motor marcó que ese
+               planteamiento no cuelga del principal, declararlo innecesario
+               contradice la suerte que él mismo le escribió dos renglones más
+               arriba, en «qué pasa con cada tema». Se vio en el 93/2026. */
             if (modo === 'global' && !suyo && principalProspera
-                && p !== principal && (p.jerarquia ?? 'accesorio') !== 'principal') {
+                && p !== principal && (p.jerarquia ?? 'accesorio') !== 'principal'
+                && !distintos.has(p.pregunta)) {
                 sentido = 'innecesario';
                 de = 'sin_materia';
             }
@@ -528,7 +635,11 @@ export default function VentanaCriterio({
             <div className="mb-5 flex items-center justify-between gap-3 text-[11px]">
                 <span className="text-white/40">{dictamen}</span>
                 <span className="shrink-0 tabular-nums text-white/30">
-                    {fuerza.conSentido}/{fuerza.total} con sentido · {fuerza.conRazon}/{fuerza.total} razonados
+                    {fuerza.via === 'global'
+                        ? `${fuerza.conSentido ? 'sentido dictado' : 'sin sentido'} · ${
+                              fuerza.conRazon ? 'razón escrita' : 'falta el porqué'}`
+                        : `${fuerza.conSentido}/${fuerza.total} con sentido · ${
+                              fuerza.conRazon}/${fuerza.total} razonados`}
                 </span>
             </div>
 
@@ -693,23 +804,19 @@ export default function VentanaCriterio({
                                 </p>
                             )}
 
-                            <div className="mb-3 flex flex-wrap gap-1.5">
-                                {SENTIDOS.map((s) => (
-                                    <Pastilla
-                                        key={s.id}
-                                        activa={p.sentido === s.id}
-                                        onClick={() => {
-                                            onCambiar(p.id, 'sentido', s.id);
-                                            // Y CON LA CALIFICACIÓN, SU RAZÓN.
-                                            // Antes quedaba un cuadro en blanco
-                                            // y, si no se rellenaba, el estudio
-                                            // se inventaba el porqué.
-                                            onRazonar?.(p.id, p.pregunta, s.id);
-                                        }}
-                                    >
-                                        {s.etiqueta}
-                                    </Pastilla>
-                                ))}
+                            <div className="mb-3 flex flex-wrap items-end gap-x-3 gap-y-2">
+                                <Calificativas
+                                    elegido={p.sentido}
+                                    nota={i === 0}
+                                    onElegir={(s) => {
+                                        onCambiar(p.id, 'sentido', s);
+                                        // Y CON LA CALIFICACIÓN, SU RAZÓN.
+                                        // Antes quedaba un cuadro en blanco
+                                        // y, si no se rellenaba, el estudio
+                                        // se inventaba el porqué.
+                                        onRazonar?.(p.id, p.pregunta, s);
+                                    }}
+                                />
                                 {razonando?.has(p.id) && (
                                     <Pastilla tono="ambar">
                                         redactando la razón…
