@@ -31,6 +31,8 @@ export interface EncargoAdelanto {
      *  donde el escrito se presenta ante ella: amparo directo y revisión
      *  fiscal (P./J. 4/2022, registro 2024494). */
     inhabilesResponsable?: string;
+    /** La materia, que decide en qué acervo se busca la ley. */
+    materia?: string;
     /** Familia del asunto: decide el esqueleto del documento. */
     tipoAsunto?: string;
     responsable?: string;
@@ -99,6 +101,8 @@ export async function generarAdelanto(
     }
     if (encargo.responsable) fd.append('responsable', encargo.responsable);
     fd.append('tipo_asunto', encargo.tipoAsunto ?? 'amparo_directo');
+    // LA MATERIA, que elige el acervo con el que se funda. Vacía = dedúcela.
+    if (encargo.materia) fd.append('materia', encargo.materia);
     // EL DOCUMENTO SE ESCRIBE ENTERO, NO SE RELLENA UNA PLANTILLA AJENA. Sin
     // este campo el taller cae en la ruta vieja: encabezado con el expediente
     // de otro asunto, catorce huecos y la estructura de un tribunal que no es
@@ -183,6 +187,8 @@ export interface MaterialDelCaso {
     problemas: ProblemaDelCaso[];
     tesis: TesisDelAcervo[];
     normas: { cuerpo_legal: string; articulo: string; texto: string }[];
+    /** En qué acervo se buscó. Decide con qué ley se funda el proyecto. */
+    materia?: string;
     avisos: string[];
 }
 

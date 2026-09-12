@@ -1470,12 +1470,28 @@ export default function TallerDeSentencias() {
                         <Tarjeta>
                           <Pliegue titulo="Posible marco de resolución"
                                    nota={`${material.tesis.length} tesis · ${
-                                       material.tesis.filter((t) => t.obligatoria).length
-                                   } obligatorias · ${material.normas.length} preceptos`}>
+                                       material.normas.length} preceptos${
+                                       material.materia ? ` · acervo ${material.materia}` : ''}`}>
                             <p className="mb-2.5 text-[11.5px] leading-relaxed text-white/40">
                                 Lo que el acervo dice sobre tus planteamientos. No decide nada:
                                 es con lo que se funda una vez decidido.
                             </p>
+                            {/* EN QUÉ ACERVO SE BUSCÓ. La materia elige la ley con la
+                                que se funda el proyecto, y se deducía en silencio: un
+                                asunto fiscal enrutado a civil recibe el Código Federal
+                                de Procedimientos Civiles y el estudio se funda con el
+                                código equivocado sin que nada lo diga. Aquí se ve, y
+                                se corrige en la ficha. */}
+                            {material.materia && (
+                                <p className="mb-2.5 rounded-lg border border-white/[0.07]
+                                              bg-white/[0.02] px-3 py-2 text-[11.5px]
+                                              leading-relaxed text-white/50">
+                                    Se buscó en el acervo de materia{' '}
+                                    <span className="text-white/80">{material.materia}</span>.
+                                    Si el asunto no es de esa materia, cámbialo en la ficha y
+                                    vuelve a buscar: de ahí sale la ley con la que se funda.
+                                </p>
+                            )}
                             <ul className="grid gap-2">
                                 {material.tesis.slice(0, 12).map((t) => (
                                     <li key={t.registro}

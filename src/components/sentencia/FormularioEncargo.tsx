@@ -84,13 +84,26 @@ export interface Encargo {
      *  fabricar: lo declara quien lo sabe. Tramos y días sueltos, separados
      *  por coma: «2025-12-16..2026-01-05, 2026-02-12». */
     inhabilesResponsable?: string;
+    /** LA MATERIA, QUE DECIDE CON QUÉ LEY SE FUNDA EL PROYECTO.
+     *
+     *  Vacía significa «dedúcela»: el sistema la saca del nombre del tribunal
+     *  y del encabezado. Eso acierta casi siempre —un colegiado de trabajo no
+     *  ve otra cosa— y falla justo en un tribunal MIXTO, donde el nombre trae
+     *  dos materias y decide la palabra del encabezado.
+     *
+     *  Medido en el ADC 93/2026: el encabezado decía «AMPARO DIRECTO CIVIL» en
+     *  un asunto regido por la Ley Federal de Procedimiento Contencioso
+     *  Administrativo, y el acervo le entregó el Código Federal de
+     *  Procedimientos Civiles. El proyecto se fundó con la ley equivocada sin
+     *  que nada lo dijera. */
+    materia?: string;
 }
 
 export const ENCARGO_VACIO: Encargo = {
     tipoAsunto: '', numero: '', encabezado: '', quejoso: '', magistrado: '',
     secretario: '', notificacion: '', presentacion: '',
     reglaSurtimiento: 'personal', plazo: 0, diasInhabilesExtra: [],
-    inhabilesResponsable: '',
+    inhabilesResponsable: '', materia: '',
 };
 
 /** Las reglas de surtimiento que el pipeline sabe computar. */
@@ -284,6 +297,26 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                                onChange={(e) => set(f.clave as keyof Encargo, e.target.value)} />
                     </Campo>
                 ))}
+
+                {/* ═══ LA MATERIA, QUE ES LO QUE ELIGE EL ACERVO ═══
+                    Es el campo que decide CON QUÉ LEY se funda el proyecto, y
+                    no estaba: se deducía del nombre del tribunal, que en uno
+                    mixto trae dos materias y no decide nada. */}
+                <Campo etiqueta="Materia"
+                       ayuda="Decide en qué acervo se busca la ley. En un tribunal mixto no se puede adivinar del nombre: si el asunto es fiscal o administrativo y aquí queda «civil», el proyecto se funda con el código equivocado y nada lo avisa.">
+                    <select className={campo} value={valor.materia ?? ''}
+                            onChange={(e) => set('materia', e.target.value)}>
+                        <option value="" className="bg-charcoal-900">
+                            Dedúcela del asunto
+                        </option>
+                        <option value="administrativa" className="bg-charcoal-900">
+                            Administrativa y fiscal
+                        </option>
+                        <option value="civil" className="bg-charcoal-900">Civil y mercantil</option>
+                        <option value="laboral" className="bg-charcoal-900">Laboral</option>
+                        <option value="penal" className="bg-charcoal-900">Penal</option>
+                    </select>
+                </Campo>
 
                 {/* EL TRIBUNAL QUE RESUELVE. Es lo que hace que esto sirva a un
                     secretario de cualquier circuito y no herede la identidad
