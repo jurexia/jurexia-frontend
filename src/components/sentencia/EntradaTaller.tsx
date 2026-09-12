@@ -122,7 +122,9 @@ export default function EntradaTaller({
     /* ── Nada elegido: los dos caminos ──────────────────────────────────── */
     if (!via) {
         return (
-            <div className="entrada-fondo rounded-3xl p-1 sm:p-2">
+            /* Centrada y con un ancho de lectura: estirada a mil quinientos
+               píxeles, dos tarjetas se convierten en dos pancartas. */
+            <div className="entrada-fondo mx-auto w-full max-w-3xl rounded-3xl p-1 pt-6 sm:p-2 sm:pt-10">
                 <p className="px-4 pb-1 pt-3 text-[11px] uppercase tracking-[0.14em] text-white/30">
                     Por dónde empezamos
                 </p>

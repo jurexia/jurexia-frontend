@@ -849,7 +849,14 @@ export default function TallerDeSentencias() {
 
             <BarraSuperior asunto={asunto} />
 
-            <main className="relative mx-auto grid max-w-[1500px] gap-4 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(320px,400px)_1fr]">
+            <main className={cn(
+                'relative mx-auto grid max-w-[1500px] gap-4 px-4 py-5 sm:px-6',
+                /* SIN CAMINO ELEGIDO NO HAY DOS COLUMNAS QUE REPARTIR: la
+                   elección ocupa el ancho y se lee de una vez. En cuanto se
+                   elige, vuelve la retícula de trabajo de siempre. */
+                (paso !== 'ficha' || via || pendientes.length > 0)
+                    ? 'lg:grid-cols-[minmax(320px,400px)_1fr]'
+                    : 'lg:grid-cols-1')}>
                 <div className="flex flex-col gap-4 lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)] lg:overflow-y-auto lg:pr-1">
                     {piloto && <AvisoPiloto secretarios={piloto.secretarios} cupo={piloto.cupo} />}
                     {/* ═══ LA FICHA, SIN TECLEARLA ═══
@@ -912,6 +919,10 @@ export default function TallerDeSentencias() {
                         <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
                                          extractos={[]} vocabulario={voz} />
                     )}
+                    {/* La plantilla propia tampoco pinta nada antes de elegir
+                        camino: es el último detalle de un trabajo que aún no
+                        ha empezado. */}
+                    {(paso !== 'ficha' || via) && (
                     <label className={cn('block cursor-pointer rounded-xl border border-dashed',
                         'border-white/15 bg-white/[0.02] px-4 py-3 text-[12px] text-white/50',
                         'transition hover:border-accent-gold/30 hover:text-white/70')}>
@@ -922,6 +933,7 @@ export default function TallerDeSentencias() {
                             ? <>Plantilla propia: <span className="text-white/80">{ficheros.plantilla.name}</span></>
                             : <>Se usará la plantilla del tribunal ya cargada. Sube una .docx sólo si quieres otra.</>}
                     </label>
+                    )}
                 </div>
 
                 <div className="flex min-w-0 flex-col gap-4">
