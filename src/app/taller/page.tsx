@@ -27,6 +27,7 @@ import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
 import EntradaTaller from '@/components/sentencia/EntradaTaller';
 import type { ViaEntrada, PasoArchivos } from '@/components/sentencia/EntradaTaller';
+import type { AsuntoEnCurso } from '@/components/sentencia/api';
 import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
 import LineaDeFases from '@/components/sentencia/LineaDeFases';
 import VentanaCriterio from '@/components/sentencia/VentanaCriterio';
@@ -43,7 +44,7 @@ import {
     type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
     sisePendiente, generarDesdeExpediente, NecesitaNotificacion, razonarSentido,
-    contextoDelAsunto,
+    contextoDelAsunto, asuntosEnCurso,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
     fichaDesdeAdmision,
 } from '@/components/sentencia/api';
@@ -223,6 +224,11 @@ export default function TallerDeSentencias() {
        competían por la mirada. Todo estaba disponible y nada estaba dicho.
        Ahora se elige primero —dos caminos— y cada uno despliega lo suyo. */
     const [via, setVia] = useState<ViaEntrada | null>(null);
+    /* LOS ASUNTOS A MEDIAS. La sesión del taller vive en `taller_sesiones`
+       desde el primer adelanto —hay que serializarla igual, porque con -w 2 el
+       worker que resuelve no es el que leyó—, y la pantalla nunca la
+       preguntaba: recargar en mitad del asunto tiraba cuatro minutos de motor. */
+    const [enCurso, setEnCurso] = useState<AsuntoEnCurso[]>([]);
     const [pasoArchivos, setPasoArchivos] = useState<PasoArchivos | null>(null);
     const [fichando, setFichando] = useState(false);
     const [fichado, setFichado] = useState<string[]>([]);
@@ -323,6 +329,38 @@ export default function TallerDeSentencias() {
     useEffect(() => {
         if (!correo) return;
         estadoPiloto(correo).then(setPiloto).catch(() => setPiloto(null));
+        asuntosEnCurso(correo).then(setEnCurso).catch(() => setEnCurso([]));
+    }, [correo]);
+
+    /* VOLVER A UN ASUNTO SIN REHACERLO. Se recupera lo caro —la ficha, los
+       resúmenes y los planteamientos, que son los dos PDF leídos— y se deja al
+       secretario en el mismo sitio donde estaría al terminar un adelanto: con
+       el botón rojo pendiente. La búsqueda en el acervo se rehace porque el
+       material no viaja por esta puerta, y son cuarenta segundos frente a los
+       cuatro minutos de volver a leer el expediente. */
+    const reanudar = useCallback(async (numero: string) => {
+        if (!numero || !correo) return;
+        setError(''); setCorriendo(true);
+        try {
+            const c = await contextoDelAsunto(numero, correo);
+            if (!c) {
+                setError(`No se pudo recuperar el ${numero}: la sesión ya no está `
+                       + 'en la base. Vuelve a generar el adelanto con sus documentos.');
+                return;
+            }
+            setDelAsunto(c);
+            setEncargo((e) => ({ ...e, numero,
+                                 tipoAsunto: c.tipoAsunto || e.tipoAsunto }));
+            setVia('archivos');
+            setPasoArchivos('formulario');
+            setMaterial(null);
+            setProblemas([]);
+            setProyecto(null);
+            setPaso('adelanto');
+            irA('recorrido');
+        } catch (e) {
+            setError(e instanceof Error ? e.message : `No se pudo abrir el ${numero}.`);
+        } finally { setCorriendo(false); }
     }, [correo]);
 
     const soltar = useCallback((rol: RolDocumento, f: File) => {
@@ -975,7 +1013,9 @@ export default function TallerDeSentencias() {
                                        pasoArchivos={pasoArchivos}
                                        onPasoArchivos={setPasoArchivos}
                                        hayDocumentos={documentos.length >= 2}
-                                       hayFicha={!!encargo.numero && !!encargo.tipoAsunto} />
+                                       hayFicha={!!encargo.numero && !!encargo.tipoAsunto}
+                                       enCurso={enCurso}
+                                       onReanudar={reanudar} />
                     )}
 
                     {pendientes.length === 0 && paso === 'ficha' && via === 'sise' && (

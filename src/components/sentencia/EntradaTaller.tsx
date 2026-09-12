@@ -24,8 +24,9 @@
    un clic y con su nombre escrito. */
 
 import React from 'react';
-import { FileText, Download, ArrowLeft, Check } from 'lucide-react';
+import { FileText, Download, ArrowLeft, Check, RotateCcw } from 'lucide-react';
 import { cn } from './primitivas';
+import type { AsuntoEnCurso } from './api';
 
 export type ViaEntrada = 'archivos' | 'sise';
 export type PasoArchivos = 'admision' | 'formulario';
@@ -109,8 +110,67 @@ export function Paso({
     );
 }
 
+/* ═══ EL ASUNTO QUE SE QUEDÓ A MEDIAS ═══
+   Visto recargando la pantalla en mitad del 93/2026: los dos PDF leídos, los
+   resúmenes, los problemas y el acervo buscado —cuatro minutos de motor— y el
+   taller volvía a la casilla de salida con el número en blanco. No se había
+   perdido nada: `taller_sesiones` guarda la sesión entera desde el primer
+   adelanto. Lo que faltaba era preguntarla.
+
+   Va DEBAJO de los dos caminos, no encima: quien entra a empezar un asunto
+   nuevo es la mayoría, y una lista de expedientes antiguos en el sitio de más
+   peso convertiría la entrada en un archivador. */
+function Reanudar({ asuntos, onAbrir }: {
+    asuntos: AsuntoEnCurso[];
+    onAbrir: (numero: string) => void;
+}) {
+    if (!asuntos.length) return null;
+    return (
+        <div className="mt-5 border-t border-white/[0.06] px-4 pb-4 pt-4">
+            <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-white/30">
+                O vuelve a uno que dejaste a medias
+            </p>
+            <div className="flex flex-col gap-1.5">
+                {asuntos.map((a) => (
+                    <button key={a.numero} type="button" onClick={() => onAbrir(a.numero)}
+                            className="group flex items-center gap-3 rounded-xl border
+                                       border-white/[0.07] bg-white/[0.02] px-3 py-2 text-left
+                                       transition-colors hover:border-accent-gold/35
+                                       hover:bg-white/[0.045]">
+                        <RotateCcw className="h-3.5 w-3.5 shrink-0 text-white/30
+                                              transition-colors group-hover:text-accent-gold/70" />
+                        <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[12.5px] font-medium text-white/80">
+                                {a.numero}
+                                <span className="ml-2 font-normal text-white/35">
+                                    {a.tipoAsunto.replace(/_/g, ' ')}
+                                </span>
+                            </span>
+                            {a.quejoso && (
+                                <span className="block truncate text-[11px] text-white/35">
+                                    {a.quejoso}
+                                </span>
+                            )}
+                        </span>
+                        <span className="shrink-0 text-[11px] text-white/30">
+                            {a.problemas > 0
+                                ? `${a.problemas} planteamiento${a.problemas === 1 ? '' : 's'}`
+                                : 'sin adelanto'}
+                        </span>
+                    </button>
+                ))}
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-white/30">
+                Se recuperan la ficha, los resúmenes y los planteamientos, que es lo que
+                cuesta leer el expediente. La búsqueda en el acervo se vuelve a hacer.
+            </p>
+        </div>
+    );
+}
+
 export default function EntradaTaller({
     via, onVia, pasoArchivos, onPasoArchivos, hayDocumentos, hayFicha,
+    enCurso = [], onReanudar,
 }: {
     via: ViaEntrada | null;
     onVia: (v: ViaEntrada | null) => void;
@@ -118,6 +178,8 @@ export default function EntradaTaller({
     onPasoArchivos: (p: PasoArchivos | null) => void;
     hayDocumentos?: boolean;
     hayFicha?: boolean;
+    enCurso?: AsuntoEnCurso[];
+    onReanudar?: (numero: string) => void;
 }) {
     /* ── Nada elegido: los dos caminos ──────────────────────────────────── */
     if (!via) {
@@ -147,6 +209,9 @@ export default function EntradaTaller({
                         onClick={() => onVia('sise')}
                     />
                 </div>
+                {onReanudar && (
+                    <Reanudar asuntos={enCurso} onAbrir={onReanudar} />
+                )}
             </div>
         );
     }

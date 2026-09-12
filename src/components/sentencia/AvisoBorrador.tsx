@@ -30,6 +30,24 @@ export interface DatosBorrador {
     textoHuecos?: string[];
 }
 
+/* ═══ TRECE AVISOS EN UNA SOLA MANCHA ═══
+   Medido sobre el proyecto del ADC 536/2025: trece avisos seguidos, todos del
+   mismo color y del mismo peso, y entre ellos «CANTIDADES QUE NO CONSTAN EN
+   LAS FUENTES … en una condena, una cifra que no viene de autos es un error
+   grave», encajado entre dos notas de estilo.
+
+   No se clasifican aquí —decidir cuál es grave a base de buscar palabras en
+   prosa falla en silencio, que es la peor manera de fallar—. Se aprovecha la
+   forma que los textos YA tienen: casi todos abren con su asunto y dos puntos.
+   Ese encabezado se destaca y el resto queda como cuerpo, así el ojo recorre
+   trece encabezados en vez de trece párrafos. Si un aviso no trae dos puntos
+   al principio, se pinta entero como antes. */
+function partirAviso(t: string): [string, string] {
+    const i = t.indexOf(':');
+    if (i <= 0 || i > 90) return ['', t];
+    return [t.slice(0, i), t.slice(i + 1).trim()];
+}
+
 const PUNTOS = [
     { icono: Users, titulo: 'Partes',
       texto: 'Compruebe quién es quién en cada hecho probatorio. El sistema puede atribuir una prueba a la parte equivocada.' },
@@ -74,12 +92,22 @@ export default function AvisoBorrador({ datos, className }: {
                         forma de saber que el sistema no le había hecho caso. */}
                     {(datos.textoAvisos?.length ?? 0) > 0 && (
                         <ul className="mt-3 space-y-1.5 border-t border-amber-400/20 pt-3">
-                            {(datos.textoAvisos ?? []).map((a, i) => (
-                                <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-amber-100/90">
-                                    <span className="shrink-0 text-amber-300/70">·</span>
-                                    <span>{a}</span>
-                                </li>
-                            ))}
+                            {(datos.textoAvisos ?? []).map((a, i) => {
+                                const [cabeza, cuerpo] = partirAviso(a);
+                                return (
+                                    <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-amber-100/75">
+                                        <span className="shrink-0 text-amber-300/70">·</span>
+                                        <span>
+                                            {cabeza && (
+                                                <span className="font-medium text-amber-100">
+                                                    {cabeza}:{' '}
+                                                </span>
+                                            )}
+                                            {cuerpo}
+                                        </span>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
                     {(datos.textoHuecos?.length ?? 0) > 0 && (

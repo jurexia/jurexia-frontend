@@ -971,6 +971,40 @@ export interface ContextoDelAsunto {
     avisos: string[];
 }
 
+/* ═══ LO QUE SE QUEDÓ A MEDIAS ═══
+   La sesión del taller vive en `taller_sesiones` desde el primer adelanto —hay
+   que serializarla de todos modos, porque con -w 2 el worker que resuelve no
+   es el que leyó—, y la pantalla nunca la preguntaba: una recarga en mitad del
+   asunto tiraba cuatro minutos de motor y volvía a la casilla de salida. */
+export interface AsuntoEnCurso {
+    numero: string;
+    tipoAsunto: string;
+    quejoso: string;
+    problemas: number;
+    consultado: boolean;
+    actualizadoEn: string;
+}
+
+export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]> {
+    if (!userEmail) return [];
+    try {
+        const res = await fetch(
+            `${BASE}/taller/en-curso?user_email=${encodeURIComponent(userEmail)}`);
+        if (!res.ok) return [];
+        const j = await res.json().catch(() => null);
+        return ((j?.asuntos ?? []) as Record<string, unknown>[]).map((a) => ({
+            numero: String(a.numero ?? ''),
+            tipoAsunto: String(a.tipo_asunto ?? 'amparo_directo'),
+            quejoso: String(a.quejoso ?? ''),
+            problemas: Number(a.problemas ?? 0),
+            consultado: !!a.consultado,
+            actualizadoEn: String(a.actualizado_en ?? ''),
+        })).filter((a) => a.numero);
+    } catch {
+        return [];
+    }
+}
+
 /** El asunto, para leerlo antes de decidir nada. */
 export async function contextoDelAsunto(
     numero: string, userEmail: string,
