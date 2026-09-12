@@ -911,18 +911,24 @@ export default function TallerDeSentencias() {
                         Antes estaban siempre, y con ellos la rejilla de cuatro
                         tipos y los dos soltadores de PDF: tres decisiones
                         encima de la mesa antes de haber tomado la primera. */}
-                    {(paso !== 'ficha' || via) && (
+                    {/* EN EL CAMINO DE SISE NO SE OFRECE LA FICHA A MANO ni
+                        los soltadores de PDF: el sentido de ese camino es
+                        justamente que el número, el tipo y la ponencia salen de
+                        los autos. Enseñarlos ahí es contradecir lo que la propia
+                        tarjeta acaba de prometer. Vuelven en cuanto llega el
+                        expediente y hay algo que comprobar. */}
+                    {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
                         <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
                                            deshabilitado={corriendo || paso !== 'ficha'} />
                     )}
-                    {(paso !== 'ficha' || via) && (
+                    {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
                         <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
                                          extractos={[]} vocabulario={voz} />
                     )}
                     {/* La plantilla propia tampoco pinta nada antes de elegir
                         camino: es el último detalle de un trabajo que aún no
                         ha empezado. */}
-                    {(paso !== 'ficha' || via) && (
+                    {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
                     <label className={cn('block cursor-pointer rounded-xl border border-dashed',
                         'border-white/15 bg-white/[0.02] px-4 py-3 text-[12px] text-white/50',
                         'transition hover:border-accent-gold/30 hover:text-white/70')}>
@@ -1053,6 +1059,14 @@ export default function TallerDeSentencias() {
                             tu cuenta y vuelve a pulsar en el visor.
                         </p>
 
+                        {/* EL PORQUÉ DE LOS TRES PASOS Y LA PRIVACIDAD, PLEGADOS.
+                            Son dos párrafos largos en gris que se leen una vez y
+                            se recorren siempre. Plegados siguen estando —y con su
+                            nombre en el rótulo, que es lo que importa en un texto
+                            de privacidad: que se sepa que está y dónde—. */}
+                        <div className="mt-3">
+                          <Pliegue titulo="Por qué tres pasos, y qué pasa con tus datos"
+                                   nota="privacidad">
                         <p className="mt-3 text-[11px] leading-relaxed text-white/30">
                             Son tres pasos y no uno porque Chrome sólo instala de un clic lo que viene
                             de su tienda, y publicar ahí exige revisión.
@@ -1071,6 +1085,8 @@ export default function TallerDeSentencias() {
                             a las 48 horas. No se comparten con nadie, no se usan para entrenar nada y
                             los nombres de las partes no viajan a ningún otro servidor.
                         </p>
+                          </Pliegue>
+                        </div>
                     </Tarjeta>
                     )}
 
