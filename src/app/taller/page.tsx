@@ -196,6 +196,23 @@ export default function TallerDeSentencias() {
        lo que ya hubiera escrito NO se pisa, porque lo suyo manda sobre lo
        leído. El auto de admisión es el único papel del expediente que dice
        quién es quién en su primera página. */
+    /* ═══ LO QUE EL SECRETARIO RESUELVE SOBRE UN CÓMPUTO EXTEMPORÁNEO ═══
+       David: «si el cómputo es extemporáneo sólo avisar, pero nunca impedir el
+       estudio de fondo si el secretario decide generar proyecto de fondo.
+       Recuerda que la tarjeta final gobierna el proyecto».
+
+       Dos vías, y no caben en una casilla, porque son dos afirmaciones
+       jurídicas distintas y el artículo 74, fracción VI, de la Ley de Amparo
+       exige congruencia entre considerandos y resolutivos:
+         · «oportuna» — él rectifica el cómputo, su razón va literal al
+           considerando y la ejecutoria entra al fondo;
+         · «reserva»  — la ejecutoria resuelve la improcedencia y el estudio va
+           DETRÁS de los resolutivos, en un anexo que dice que no forma parte
+           de ella.
+       Nunca deshabilita el botón de generar: avisa, no impide. */
+    const [extemporanea, setExtemporanea] = useState(false);
+    const [decision, setDecision] = useState<'' | 'oportuna' | 'reserva'>('');
+    const [motivoDecision, setMotivoDecision] = useState('');
     const [fichando, setFichando] = useState(false);
     const [fichado, setFichado] = useState<string[]>([]);
     const leerAdmision = useCallback(async (archivo: File) => {
@@ -354,9 +371,11 @@ export default function TallerDeSentencias() {
         try {
             const r = await generarDesdeExpediente(elegido, correo, fechaNotif);
             descargar(r);
+            setExtemporanea(r.oportunidad === 'EXTEMPORANEA');
             if (r.oportunidad === 'EXTEMPORANEA') {
                 setError('El cómputo da EXTEMPORÁNEA. Compruébalo antes de seguir: '
-                       + 'si es correcto, el asunto no se resuelve en el fondo.');
+                       + 'si es correcto, el asunto no se resuelve en el fondo, '
+                       + 'salvo que tú resuelvas otra cosa abajo.');
             }
             // El encargo se rellena con lo leído para que los pasos siguientes
             // —y el documento final— lleven el número y la ponencia correctos.
@@ -713,6 +732,11 @@ export default function TallerDeSentencias() {
                         conceptosViolacion,
                         // Y la autoridad, si la corrigió después del adelanto.
                         responsable: encargo.responsable,
+                        // Lo que él resolvió sobre la oportunidad. Viaja en la
+                        // petición y no en memoria: con -w 2 el worker que
+                        // compone no es el que leyó el expediente.
+                        oportunidadDecision: decision,
+                        oportunidadMotivo: motivoDecision,
                     },
                     (t) => setAvance((x) => x + t),
                     () => setAvance((x) => x + '\n\n… componiendo el documento'));
@@ -759,6 +783,9 @@ export default function TallerDeSentencias() {
                     criteriosJson, contexto,
                     // También por este camino: los dos componen el documento.
                     responsable: encargo.responsable,
+                    // Por este camino también: los dos componen el documento.
+                    oportunidadDecision: decision,
+                    oportunidadMotivo: motivoDecision,
                 },
                 (t) => setAvance((x) => {
                     // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
@@ -774,7 +801,8 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
         } finally { setCorriendo(false); }
-    }, [problemas, encargo.numero, encargo.responsable, correo, contexto, modo, sentidoGlobal, razonGlobal]);
+    }, [problemas, encargo.numero, encargo.responsable, correo, contexto, modo,
+        sentidoGlobal, razonGlobal, decision, motivoDecision]);
 
     const asunto: Asunto = useMemo(() => ({
         numero: encargo.numero || '—',
@@ -1431,8 +1459,71 @@ export default function TallerDeSentencias() {
                     )}
 
                     <span id="criterio" />
+                    {/* ═══ EL CÓMPUTO DICE EXTEMPORÁNEA. DECIDES TÚ. ═══
+                    Avisa, no impide: el botón de generar nunca se
+                    deshabilita. Y son DOS vías, no una casilla, porque son
+                    dos afirmaciones jurídicas distintas y el artículo 74,
+                    fracción VI, de la Ley de Amparo exige congruencia entre
+                    los considerandos y los resolutivos. */}
+                {extemporanea && (
+                    <Tarjeta>
+                        <p className="text-[11px] uppercase tracking-wide text-amber-300/80">
+                            El cómputo da extemporánea
+                        </p>
+                        <p className="mt-1.5 text-[12.5px] leading-relaxed text-white/60">
+                            Sin decidir nada, el proyecto resuelve la improcedencia y no
+                            entra al fondo. Si tú sostienes otra cosa, dilo aquí: el
+                            proyecto lo obedece.
+                        </p>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                            {([
+                                ['', 'Dejarlo así',
+                                 'La ejecutoria resuelve la improcedencia. Es lo que pasa hoy.'],
+                                ['oportuna', 'Fue oportuna',
+                                 'Rectificas el cómputo. Tu razón va literal al considerando y se entra al fondo.'],
+                                ['reserva', 'Estudio en reserva',
+                                 'La ejecutoria no cambia, y el estudio de fondo va detrás de los resolutivos.'],
+                            ] as const).map(([id, titulo, que]) => (
+                                <button key={id || 'nada'} type="button"
+                                        onClick={() => setDecision(id)}
+                                        className={cn('rounded-xl border p-3 text-left transition-colors',
+                                            decision === id
+                                                ? 'border-accent-gold/50 bg-accent-gold/[0.07]'
+                                                : 'border-white/[0.09] bg-white/[0.02] hover:bg-white/[0.04]')}>
+                                    <span className="block text-[12.5px] font-medium text-white/85">
+                                        {titulo}
+                                    </span>
+                                    <span className="mt-1 block text-[11.5px] leading-snug text-white/50">
+                                        {que}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                        {decision !== '' && (
+                            <div className="mt-3">
+                                <label htmlFor="motivo-oportunidad"
+                                       className="block text-[12px] font-medium text-white/70">
+                                    Por qué
+                                </label>
+                                <textarea id="motivo-oportunidad" rows={2}
+                                          value={motivoDecision}
+                                          onChange={(e) => setMotivoDecision(e.target.value)}
+                                          placeholder="p. ej.: la Junta Especial Número Dos suspendió labores del catorce al veinticinco de agosto"
+                                          className="mt-1.5 w-full resize-y rounded-xl border border-white/[0.09]
+                                                     bg-black/20 px-3.5 py-2.5 text-[13px] leading-relaxed
+                                                     text-white/90 placeholder:text-white/25 outline-none
+                                                     focus:border-accent-gold/45" />
+                                <p className="mt-1 text-[11px] leading-relaxed text-white/35">
+                                    Va LITERAL al considerando de oportunidad. Sin razón escrita, la
+                                    rectificación no se sostiene en revisión.
+                                </p>
+                            </div>
+                        )}
+                    </Tarjeta>
+                )}
+
                     {problemas.length > 0 && (
-                        <VentanaCriterio problemas={problemas} onCambiar={cambiarCriterio}
+                    <VentanaCriterio problemas={problemas} onCambiar={cambiarCriterio}
                                          onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo'}
                                          onProponer={pedirPropuesta} propuesta={propuesta}
                                          proponiendo={proponiendo}

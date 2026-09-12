@@ -70,12 +70,27 @@ export interface Encargo {
     /** Tercero interesado, o parte actora en la revisión fiscal. */
     tercero?: string;
     diasInhabilesExtra?: string[];
+    /** LOS DÍAS EN QUE NO LABORÓ LA AUTORIDAD RESPONSABLE.
+     *
+     *  En amparo directo la demanda se presenta POR SU CONDUCTO (artículo 176
+     *  de la Ley de Amparo), así que del plazo se excluyen DOS listas que se
+     *  suman: los inhábiles del artículo 19 y los días en que ella suspendió
+     *  actividades — P./J. 4/2022 (11a.), registro digital 2024494. En la
+     *  revisión fiscal vale lo mismo, porque el recurso se presenta ante la
+     *  Sala (artículo 63 de la LFPCA). En amparo en revisión y en queja NO:
+     *  ahí el escrito se presenta ante órgano federal.
+     *
+     *  No hay catálogo nacional de calendarios de responsables y no se puede
+     *  fabricar: lo declara quien lo sabe. Tramos y días sueltos, separados
+     *  por coma: «2025-12-16..2026-01-05, 2026-02-12». */
+    inhabilesResponsable?: string;
 }
 
 export const ENCARGO_VACIO: Encargo = {
     tipoAsunto: '', numero: '', encabezado: '', quejoso: '', magistrado: '',
     secretario: '', notificacion: '', presentacion: '',
     reglaSurtimiento: 'personal', plazo: 0, diasInhabilesExtra: [],
+    inhabilesResponsable: '',
 };
 
 /** Las reglas de surtimiento que el pipeline sabe computar. */
@@ -316,8 +331,10 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                     </select>
                 </Campo>
 
-                <Campo etiqueta="Días inhábiles adicionales"
-                       ayuda="Los del artículo 19, sábados y domingos y las vacaciones del Poder Judicial ya van contados. Aquí sólo los de tu tribunal.">
+                <Campo etiqueta="Días inhábiles adicionales de TU tribunal"
+                       ayuda={['amparo_directo', 'revision_fiscal'].includes(valor.tipoAsunto)
+                           ? 'Los del artículo 19, sábados y domingos y las vacaciones del Poder Judicial ya van contados. Aquí sólo los de tu propio tribunal; los de la responsable van en el campo de abajo.'
+                           : 'Los del artículo 19, sábados y domingos y las vacaciones del Poder Judicial ya van contados. Aquí sólo los de tu tribunal.'}>
                     <div className="flex flex-wrap items-center gap-2">
                         {(valor.diasInhabilesExtra ?? []).map((d) => (
                             <span key={d}
@@ -340,6 +357,27 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                                }} />
                     </div>
                 </Campo>
+
+                {/* ═══ LOS DÍAS EN QUE NO LABORÓ LA RESPONSABLE ═══
+                    Sólo se pinta en los dos tipos donde el escrito se presenta
+                    ANTE ELLA. Un campo que no se puede aplicar es una trampa:
+                    el secretario lo rellena, no pasa nada, y no sabe por qué. */}
+                {['amparo_directo', 'revision_fiscal'].includes(valor.tipoAsunto) && (
+                    <Campo etiqueta="Días en que NO laboró la autoridad responsable"
+                           ayuda={valor.tipoAsunto === 'revision_fiscal'
+                               ? 'El recurso se presenta ante la Sala responsable (artículo 63 de la LFPCA) y son hábiles los días en que sus oficinas están abiertas al público. Sus periodos vacacionales no se computan.'
+                               : 'La demanda se presenta por conducto de la responsable (artículo 176 de la Ley de Amparo), así que sus vacaciones y suspensiones tampoco cuentan — P./J. 4/2022, registro 2024494.'}>
+                        <input className={campo}
+                               value={valor.inhabilesResponsable ?? ''}
+                               placeholder="2025-12-16..2026-01-05, 2026-02-12"
+                               onChange={(e) => set('inhabilesResponsable', e.target.value)} />
+                        <p className="mt-1 text-[11px] leading-relaxed text-white/35">
+                            Un periodo es un tramo con dos puntos; un día suelto va solo.
+                            Se suman a los inhábiles del artículo 19, no los sustituyen, y
+                            sólo pueden alargar el plazo, nunca acortarlo.
+                        </p>
+                    </Campo>
+                )}
 
                 {/* EL PLAZO SE MUESTRA, NO SE PIDE. Es la ley. */}
                 <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-3">

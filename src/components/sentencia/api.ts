@@ -27,6 +27,10 @@ export interface EncargoAdelanto {
      *  suspendió labores por una contingencia. Los del artículo 19, los fines
      *  de semana y las vacaciones del Poder Judicial ya los trae el servidor. */
     diasInhabilesExtra?: string[];
+    /** Los días en que NO laboró la responsable, en tramos. Sólo se aplican
+     *  donde el escrito se presenta ante ella: amparo directo y revisión
+     *  fiscal (P./J. 4/2022, registro 2024494). */
+    inhabilesResponsable?: string;
     /** Familia del asunto: decide el esqueleto del documento. */
     tipoAsunto?: string;
     responsable?: string;
@@ -89,6 +93,9 @@ export async function generarAdelanto(
     // sin él el plazo sale corto. Viajan separados por coma, en ISO.
     if (encargo.diasInhabilesExtra?.length) {
         fd.append('dias_inhabiles_extra', encargo.diasInhabilesExtra.join(','));
+    // Y los de la RESPONSABLE, que son otra lista y se fundan en otro artículo.
+    if (encargo.inhabilesResponsable?.trim())
+        fd.append('inhabiles_responsable', encargo.inhabilesResponsable.trim());
     }
     if (encargo.responsable) fd.append('responsable', encargo.responsable);
     fd.append('tipo_asunto', encargo.tipoAsunto ?? 'amparo_directo');
@@ -446,6 +453,13 @@ export async function resolverEnVivo(
         conceptosViolacion?: string;
         /** La autoridad corregida a mano, cuando la leída salió mal o en hueco. */
         responsable?: string;
+        /** Lo que el secretario resolvió sobre un cómputo extemporáneo:
+         *  'oportuna' rectifica y entra al fondo; 'reserva' deja la ejecutoria
+         *  resolviendo la improcedencia y pone el estudio detrás de los
+         *  resolutivos. Vacío = no hay nada que decidir. */
+        oportunidadDecision?: string;
+        /** Su razón, que va LITERAL al considerando cuando rectifica. */
+        oportunidadMotivo?: string;
     },
     onTexto?: (trozo: string) => void,
     onComponiendo?: () => void,
@@ -481,6 +495,10 @@ export async function resolverEnVivo(
     if (o.conceptosViolacion?.trim())
         fd.append('conceptos_violacion', o.conceptosViolacion.trim());
     if (o.responsable?.trim()) fd.append('responsable', o.responsable.trim());
+    if (o.oportunidadDecision?.trim())
+        fd.append('oportunidad_decision', o.oportunidadDecision.trim());
+    if (o.oportunidadMotivo?.trim())
+        fd.append('oportunidad_motivo', o.oportunidadMotivo.trim());
 
     const res = await fetch(`${BASE}/taller/resolver/stream`,
                             { method: 'POST', body: fd });
