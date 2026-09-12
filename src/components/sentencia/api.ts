@@ -189,7 +189,36 @@ export interface MaterialDelCaso {
     normas: { cuerpo_legal: string; articulo: string; texto: string }[];
     /** En qué acervo se buscó. Decide con qué ley se funda el proyecto. */
     materia?: string;
+    /** ═══ EL ESPEJO DEL PROPIO TRIBUNAL ═══
+     *  Las sentencias del tribunal que redacta sobre este mismo punto. No es
+     *  un recuento y no acusa: son seis sentencias suyas que puede abrir.
+     *  Llega vacío cuando el tribunal no ha visto el punto, cuando el asunto
+     *  es de un circuito sin mapa de tribunales, o cuando el API es anterior
+     *  a esta función: en los tres casos la tarjeta no se pinta. */
+    espejo?: EspejoDelTribunal[];
     avisos: string[];
+}
+
+export interface EspejoDelTribunal {
+    /** El planteamiento al que corresponden estas sentencias. */
+    problema: string;
+    /** El nombre largo del tribunal, para leerlo. */
+    tribunal: string;
+    filas: {
+        tipo_asunto: string;
+        expediente: string;
+        /** ISO. Puede venir vacía: hay sentencias sin fecha en el acervo. */
+        fecha: string;
+        /** La palabra que el acervo guardó, sin traducir. */
+        sentido: string;
+        tema: string;
+        score: number;
+        pdf_url: string;
+    }[];
+    /** El renglón que describe las filas. Vacío cuando no se puede resumir sin
+     *  mentir: tipos de asunto mezclados, o etiqueta que ya trae el resultado. */
+    resumen: string;
+    cobertura: string;
 }
 
 export interface EstadoPiloto {

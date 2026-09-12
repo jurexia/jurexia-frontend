@@ -1609,6 +1609,109 @@ export default function TallerDeSentencias() {
                         </Tarjeta>
                     )}
 
+                    {/* ═══ EL ESPEJO DEL PROPIO TRIBUNAL ═══
+                        David preguntó qué implementar para superar a un
+                        secretario. La respuesta medida: no se le supera en
+                        criterio, se le supera en MEMORIA. Recuerda lo que él
+                        trabajó; el acervo tiene 3,585 sentencias de su tribunal
+                        —de 2019 a 2026— incluidas las de las ponencias que no
+                        son la suya y las anteriores a su llegada.
+
+                        VA ANTES DE «TU CRITERIO» Y DESPUÉS DEL MARCO. Es
+                        material de DECIDIR, no de fundar, así que no se pliega
+                        entero como el marco; pero cada planteamiento sí, porque
+                        tres planteamientos por seis sentencias son dieciocho
+                        renglones y eso ya no se lee.
+
+                        NO ACUSA, Y ESO ES EL DISEÑO. La calificación del
+                        proyecto es del planteamiento —fundado, infundado— y el
+                        sentido del acervo es del resolutivo —concede, niega,
+                        confirma—: no son la misma escala. Cruzarlas producía el
+                        error medido del 45% en el grupo tributario del propio
+                        tribunal, donde «confirma» confirmaba una CONCESIÓN. Se
+                        enseñan las sentencias y compara el secretario. */}
+                    {(material?.espejo?.length ?? 0) > 0 && (
+                        <Tarjeta>
+                            <Rotulo accion={
+                                <span className="text-[11px] text-white/30">
+                                    no es un recuento: son sentencias que puede abrir
+                                </span>
+                            }>
+                                Su propio tribunal
+                            </Rotulo>
+                            <p className="mb-3 text-[11.5px] leading-relaxed text-white/45">
+                                Del acervo de{' '}
+                                <span className="text-white/70">
+                                    {material!.espejo![0].tribunal}
+                                </span>
+                                : las sentencias suyas más cercanas a cada planteamiento.
+                                No dicen cómo debe resolver — dicen qué ha resuelto antes
+                                el tribunal que firma.
+                            </p>
+                            <div className="grid gap-2">
+                                {material!.espejo!.map((e, i) => (
+                                    <Pliegue key={i} abierto={i === 0}
+                                             titulo={e.problema.length > 92
+                                                 ? e.problema.slice(0, 92) + '…'
+                                                 : e.problema}
+                                             nota={`${e.filas.length} sentencias propias`}>
+                                        <ul className="grid gap-1.5">
+                                            {e.filas.map((f, j) => (
+                                                <li key={j}
+                                                    className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5
+                                                               rounded-lg border border-white/[0.07]
+                                                               bg-white/[0.02] px-3 py-2 text-[11.5px]">
+                                                    <span className="font-medium text-white/80">
+                                                        {f.tipo_asunto} {f.expediente}
+                                                    </span>
+                                                    {f.fecha && (
+                                                        <span className="tabular-nums text-white/35">
+                                                            {f.fecha.slice(0, 10)}
+                                                        </span>
+                                                    )}
+                                                    <span className="rounded-md border border-white/10
+                                                                     bg-white/[0.05] px-1.5 py-0.5
+                                                                     text-[10px] uppercase tracking-wide
+                                                                     text-white/60">
+                                                        {f.sentido || 'sin sentido'}
+                                                    </span>
+                                                    {f.pdf_url && (
+                                                        <a href={f.pdf_url} target="_blank"
+                                                           rel="noopener noreferrer"
+                                                           className="ml-auto text-[11px] text-accent-gold/80
+                                                                      underline decoration-accent-gold/30
+                                                                      underline-offset-2 transition-colors
+                                                                      hover:text-accent-gold">
+                                                            abrir
+                                                        </a>
+                                                    )}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        {/* El resumen viene vacío cuando no se puede
+                                            resumir sin mentir: tipos de asunto
+                                            mezclados, o etiqueta que ya contiene el
+                                            resultado —«inoperancia_…», donde todas
+                                            niegan porque la etiqueta ES la negativa—. */}
+                                        {e.resumen && (
+                                            <p className="mt-2 text-[11.5px] leading-relaxed text-white/60">
+                                                {e.resumen}
+                                            </p>
+                                        )}
+                                    </Pliegue>
+                                ))}
+                            </div>
+                            {/* LA COBERTURA VA EN EL CUERPO, NO AL PIE. Al acervo
+                                propio le falta el 85% de 2025: si el tribunal cambió
+                                de criterio ese año, aquí no aparece, y quien lea esto
+                                tiene que saberlo antes de darle peso. */}
+                            <p className="mt-3 border-t border-white/[0.08] pt-2.5
+                                          text-[11px] leading-relaxed text-white/35">
+                                {material!.espejo![0].cobertura}
+                            </p>
+                        </Tarjeta>
+                    )}
+
                     <span id="criterio" />
                     {/* ═══ EL CÓMPUTO DICE EXTEMPORÁNEA. DECIDES TÚ. ═══
                     Avisa, no impide: el botón de generar nunca se
