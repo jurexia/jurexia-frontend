@@ -128,7 +128,7 @@ function Reanudar({ asuntos, onAbrir }: {
     return (
         <div className="mt-5 border-t border-white/[0.06] px-4 pb-4 pt-4">
             <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-white/30">
-                O vuelve a uno que dejaste a medias
+                O vuelve a uno tuyo
             </p>
             <div className="flex flex-col gap-1.5">
                 {asuntos.map((a) => (
@@ -152,17 +152,42 @@ function Reanudar({ asuntos, onAbrir }: {
                                 </span>
                             )}
                         </span>
-                        <span className="shrink-0 text-[11px] text-white/30">
-                            {a.problemas > 0
-                                ? `${a.problemas} planteamiento${a.problemas === 1 ? '' : 's'}`
-                                : 'sin adelanto'}
-                        </span>
+                        {/* ═══ TERMINADO O A MEDIAS ═══
+                            David: «hay que tener un historial de proyectos
+                            elaborados». No hace falta una segunda lista: el
+                            asunto es el mismo y lo que cambia es hasta dónde
+                            llegó. El que ya tiene sentencia escrita lo dice, con
+                            sus palabras y su fecha, y al abrirlo se aterriza en
+                            su pantalla terminada en vez de en el adelanto. */}
+                        {a.proyecto ? (
+                            <span className="shrink-0 text-right">
+                                <span className="block text-[11px] font-medium text-accent-gold/85">
+                                    proyecto listo
+                                </span>
+                                <span className="block text-[10.5px] tabular-nums text-white/30">
+                                    {a.proyecto.palabras.toLocaleString('es-MX')} palabras
+                                    {a.proyecto.generadoEn
+                                        ? ' · ' + new Date(a.proyecto.generadoEn)
+                                            .toLocaleDateString('es-MX',
+                                                { day: 'numeric', month: 'short' })
+                                        : ''}
+                                </span>
+                            </span>
+                        ) : (
+                            <span className="shrink-0 text-[11px] text-white/30">
+                                {a.problemas > 0
+                                    ? `${a.problemas} planteamiento${a.problemas === 1 ? '' : 's'}`
+                                    : 'sin adelanto'}
+                            </span>
+                        )}
                     </button>
                 ))}
             </div>
             <p className="mt-2 text-[11px] leading-relaxed text-white/30">
-                Se recuperan la ficha, los resúmenes y los planteamientos, que es lo que
-                cuesta leer el expediente. La búsqueda en el acervo se vuelve a hacer.
+                Los que ya tienen proyecto se abren en su pantalla terminada, con sus
+                avisos y su descarga, y desde ahí puedes cambiar el sentido y volver a
+                generarlo. En los demás se recuperan la ficha, los resúmenes y los
+                planteamientos; la búsqueda en el acervo se vuelve a hacer.
             </p>
         </div>
     );

@@ -27,7 +27,7 @@ import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
 import EntradaTaller from '@/components/sentencia/EntradaTaller';
 import type { ViaEntrada, PasoArchivos } from '@/components/sentencia/EntradaTaller';
-import type { AsuntoEnCurso } from '@/components/sentencia/api';
+import type { AsuntoEnCurso, FichaProyecto } from '@/components/sentencia/api';
 import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
 import LineaDeFases from '@/components/sentencia/LineaDeFases';
 import VentanaCriterio from '@/components/sentencia/VentanaCriterio';
@@ -44,7 +44,7 @@ import {
     type RespuestaPropuesta,
     estadoPiloto, descargarProyecto,
     sisePendiente, generarDesdeExpediente, NecesitaNotificacion, razonarSentido,
-    contextoDelAsunto, asuntosEnCurso,
+    contextoDelAsunto, asuntosEnCurso, descargarDelAlmacen,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
     fichaDesdeAdmision,
 } from '@/components/sentencia/api';
@@ -229,6 +229,11 @@ export default function TallerDeSentencias() {
        worker que resuelve no es el que leyó—, y la pantalla nunca la
        preguntaba: recargar en mitad del asunto tiraba cuatro minutos de motor. */
     const [enCurso, setEnCurso] = useState<AsuntoEnCurso[]>([]);
+    /* EL PROYECTO YA ESCRITO, cuando se vuelve a un asunto terminado. Es
+       distinto de `proyecto`: aquél trae el .docx en memoria porque se acaba de
+       generar; éste es la FICHA de uno anterior, y su documento vive en el
+       almacén. Se separan a propósito para no fingir un fichero que no está. */
+    const [previo, setPrevio] = useState<FichaProyecto | null>(null);
     /* EL MARCO, ENTERO CUANDO SE PIDE. La lista se corta en doce tesis y
        catorce preceptos y lo decía —«y 6 más»—, pero decirlo no es enseñarlo:
        este panel existe para COMPROBAR con qué se va a fundar, y seis tesis que
@@ -354,15 +359,48 @@ export default function TallerDeSentencias() {
                 return;
             }
             setDelAsunto(c);
-            setEncargo((e) => ({ ...e, numero,
-                                 tipoAsunto: c.tipoAsunto || e.tipoAsunto }));
+            /* LA FICHA VUELVE ENTERA. Antes sólo se restauraban el número y el
+               tipo: el secretario veía el quejoso y la responsable vacíos sobre
+               un asunto que sí los tenía. El documento salía bien porque el
+               servidor usa su propia copia, pero la pantalla mentía — y si él
+               tocaba uno de esos campos, se mandaba vacío encima del bueno. */
+            const en = c.encargo || {};
+            setEncargo((e) => ({
+                ...e,
+                numero,
+                tipoAsunto: c.tipoAsunto || e.tipoAsunto,
+                encabezado: en.encabezado || e.encabezado,
+                quejoso: en.quejoso || e.quejoso,
+                responsable: en.responsable || e.responsable,
+                tribunal: en.tribunal || e.tribunal,
+                ciudad: en.ciudad || e.ciudad,
+                magistrado: en.magistrado || e.magistrado,
+                secretario: en.secretario || e.secretario,
+                materia: en.materia || e.materia,
+                reglaSurtimiento: en.regla_surtimiento || e.reglaSurtimiento,
+                inhabilesResponsable: en.inhabiles_responsable || e.inhabilesResponsable,
+                // Las fechas llegan en ISO con hora; el campo es un date.
+                notificacion: (en.notificacion || '').slice(0, 10) || e.notificacion,
+                presentacion: (en.presentacion || '').slice(0, 10) || e.presentacion,
+            }));
             setVia('archivos');
             setPasoArchivos('formulario');
             setMaterial(null);
             setProblemas([]);
             setProyecto(null);
-            setPaso('adelanto');
-            irA('recorrido');
+            /* ¿TERMINADO O A MEDIAS? Si el asunto ya tiene proyecto escrito se
+               aterriza en SU PANTALLA —el aviso de borrador con sus avisos y su
+               descarga—, que es lo que David pidió; si no, en el adelanto, con
+               el botón rojo pendiente. */
+            if (c.proyecto) {
+                setPrevio(c.proyecto);
+                setPaso('proyecto');
+                irA('proyecto');
+            } else {
+                setPrevio(null);
+                setPaso('adelanto');
+                irA('recorrido');
+            }
         } catch (e) {
             setError(e instanceof Error ? e.message : `No se pudo abrir el ${numero}.`);
         } finally { setCorriendo(false); }
@@ -1851,6 +1889,114 @@ export default function TallerDeSentencias() {
                     )}
 
                     <span id="proyecto" />
+                    {/* ═══ LA PANTALLA TERMINADA, DESDE EL HISTORIAL ═══
+                        David: «cada usuario podrá acceder a su pantalla
+                        terminada y, si lo desea, cambiar de sentido el proyecto
+                        y volver a generarlo».
+
+                        Se pinta sólo cuando NO hay proyecto recién generado: si
+                        el secretario acaba de resolver, manda lo que tiene en la
+                        mano, con su .docx en memoria. Ésta es la de volver, y su
+                        documento vive en el almacén.
+
+                        DICE CON QUÉ CRITERIO SALIÓ, que es la mitad del encargo:
+                        sin verlo, «cambiar de sentido» es cambiar a ciegas. */}
+                    {!proyecto && previo && (
+                        <>
+                            <Tarjeta>
+                                <Rotulo accion={
+                                    <span className="text-[11px] text-white/30">
+                                        {previo.generadoEn
+                                            ? new Date(previo.generadoEn).toLocaleString('es-MX', {
+                                                dateStyle: 'long', timeStyle: 'short' })
+                                            : 'sin fecha'}
+                                    </span>
+                                }>
+                                    Proyecto ya generado
+                                </Rotulo>
+                                <p className="text-[12.5px] leading-relaxed text-white/60">
+                                    Este asunto ya tiene sentencia escrita:{' '}
+                                    <span className="text-white/85">
+                                        {previo.palabras.toLocaleString('es-MX')} palabras
+                                    </span>
+                                    {previo.avisos.length > 0 && <>, {previo.avisos.length} avisos</>}
+                                    {previo.huecos.length > 0 && <> y {previo.huecos.length} huecos de tu criterio</>}.
+                                </p>
+
+                                {/* CON QUÉ SE RESOLVIÓ */}
+                                {(previo.sentidoGlobal || previo.criterios.length > 0) && (
+                                    <div className="mt-3 rounded-xl border border-white/[0.07]
+                                                    bg-white/[0.02] p-3">
+                                        <p className="mb-1.5 text-[10px] font-semibold uppercase
+                                                      tracking-wide text-white/40">
+                                            Con qué criterio salió
+                                        </p>
+                                        {previo.sentidoGlobal && (
+                                            <p className="text-[12px] text-white/70">
+                                                Todo el asunto:{' '}
+                                                <span className="font-medium text-white/90">
+                                                    {previo.sentidoGlobal.replace(/_/g, ' ')}
+                                                </span>
+                                            </p>
+                                        )}
+                                        {previo.criterios.length > 0 && (
+                                            <ul className="mt-1.5 grid gap-1">
+                                                {previo.criterios.map((c, i) => (
+                                                    <li key={i} className="text-[11.5px] leading-snug text-white/55">
+                                                        <span className="font-medium text-white/80">
+                                                            {c.sentido.replace(/_/g, ' ')}
+                                                        </span>
+                                                        {' · '}{c.problema}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    <button className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
+                                            onClick={() => descargarDelAlmacen(encargo.numero, correo)}>
+                                        <Download className="h-4 w-4" />
+                                        Descargar el proyecto
+                                    </button>
+                                    {/* CAMBIAR DE SENTIDO ES VOLVER AL ACERVO, no
+                                        saltar al criterio: los planteamientos y el
+                                        material se cargan ahí, y sin ellos la
+                                        ventana de criterio no tiene qué calificar.
+                                        Son unos cuarenta segundos y se dicen. */}
+                                    <button className={cn(boton, 'border border-white/12 bg-white/[0.05] text-white/85 hover:bg-white/[0.08]')}
+                                            disabled={corriendo}
+                                            onClick={() => { setPrevio(null); void pedirAcervo(); }}>
+                                        {corriendo
+                                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                                            : <Search className="h-4 w-4" />}
+                                        Cambiar el sentido y volver a generar
+                                    </button>
+                                </div>
+                                <p className="mt-2 text-[11.5px] leading-relaxed text-white/40">
+                                    Volver a generar reescribe el documento de este expediente:
+                                    se guarda el último, no todos los intentos. Descarga el
+                                    actual antes si quieres conservarlo.
+                                </p>
+                            </Tarjeta>
+
+                            {/* EL AVISO DE BORRADOR, IGUAL QUE EL DÍA QUE SE GENERÓ.
+                                Los textos de los avisos y de los huecos se guardaron
+                                con la ficha: sin ellos esta pantalla diría «12 avisos»
+                                y el secretario no sabría cuáles, que es exactamente el
+                                fallo que este recuadro vino a cerrar. */}
+                            <AvisoBorrador datos={{
+                                palabras: previo.palabras,
+                                avisos: previo.avisos.length,
+                                huecos: previo.huecos.length,
+                                tieneAdvertencias: previo.advertencias,
+                                textoAvisos: previo.avisos,
+                                textoHuecos: previo.huecos,
+                            }} />
+                        </>
+                    )}
+
                     {proyecto && (
                         <>
                             <AvisoBorrador datos={{

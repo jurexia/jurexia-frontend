@@ -998,6 +998,12 @@ export interface ContextoDelAsunto {
     problemaGlobal: string;
     problemas: { pregunta: string; resolvio: string; combate: string; jerarquia: string }[];
     avisos: string[];
+    /** LA FICHA, PARA QUE LA PANTALLA NO VUELVA EN BLANCO. Al retomar un asunto
+     *  se restauraba el contexto y no el encargo: el quejoso y la responsable
+     *  salían vacíos sobre un asunto que sí los tenía. */
+    encargo?: Record<string, string> | null;
+    /** El proyecto ya generado, si lo hay. Null mientras no se haya resuelto. */
+    proyecto?: FichaProyecto | null;
 }
 
 /* ═══ LO QUE SE QUEDÓ A MEDIAS ═══
@@ -1005,6 +1011,28 @@ export interface ContextoDelAsunto {
    que serializarla de todos modos, porque con -w 2 el worker que resuelve no
    es el que leyó—, y la pantalla nunca la preguntaba: una recarga en mitad del
    asunto tiraba cuatro minutos de motor y volvía a la casilla de salida. */
+/** ═══ LA FICHA DE UN PROYECTO YA GENERADO ═══
+ *  David: «hay que tener un historial de proyectos elaborados; cada usuario
+ *  podrá acceder a su pantalla terminada y, si lo desea, cambiar de sentido el
+ *  proyecto y volver a generarlo».
+ *
+ *  UNA FICHA POR EXPEDIENTE, y se sobrescribe, igual que el .docx del almacén.
+ *  Quien resuelve cinco veces el mismo asunto deja una ficha, no cinco: el
+ *  historial que sirve es «mis asuntos», no «mis intentos». */
+export interface FichaProyecto {
+    generadoEn: string;
+    palabras: number;
+    avisos: string[];
+    huecos: string[];
+    advertencias: boolean;
+    nombre: string;
+    /** Con qué criterio salió. Es lo que permite cambiarlo con conocimiento:
+     *  sin esto la pantalla no puede decir de qué se está cambiando. */
+    modo: string;
+    sentidoGlobal: string;
+    criterios: { problema: string; sentido: string; jerarquia: string }[];
+}
+
 export interface AsuntoEnCurso {
     numero: string;
     tipoAsunto: string;
@@ -1012,6 +1040,11 @@ export interface AsuntoEnCurso {
     problemas: number;
     consultado: boolean;
     actualizadoEn: string;
+    /** Null mientras el asunto no tenga proyecto escrito. */
+    proyecto: {
+        generadoEn: string; palabras: number; avisos: number;
+        huecos: number; sentidoGlobal: string; modo: string;
+    } | null;
 }
 
 export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]> {
@@ -1028,10 +1061,35 @@ export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]
             problemas: Number(a.problemas ?? 0),
             consultado: !!a.consultado,
             actualizadoEn: String(a.actualizado_en ?? ''),
+            proyecto: a.proyecto
+                ? {
+                    generadoEn: String((a.proyecto as Record<string, unknown>).generado_en ?? ''),
+                    palabras: Number((a.proyecto as Record<string, unknown>).palabras ?? 0),
+                    avisos: Number((a.proyecto as Record<string, unknown>).avisos ?? 0),
+                    huecos: Number((a.proyecto as Record<string, unknown>).huecos ?? 0),
+                    sentidoGlobal: String((a.proyecto as Record<string, unknown>).sentido_global ?? ''),
+                    modo: String((a.proyecto as Record<string, unknown>).modo ?? ''),
+                }
+                : null,
         })).filter((a) => a.numero);
     } catch {
         return [];
     }
+}
+
+/* ═══ LA DESCARGA DESDE EL ALMACÉN ═══
+   Cuando el proyecto se acaba de generar, el .docx viene en la respuesta y se
+   guarda como Blob. Desde el HISTORIAL no hay Blob: el documento vive en el
+   almacén y se pide por su número. El servidor lo busca primero en el disco de
+   su proceso y luego en el almacén, así que funciona con los dos workers. */
+export function descargarDelAlmacen(numero: string, userEmail: string): void {
+    const u = `${BASE}/taller/descargar`
+        + `?numero=${encodeURIComponent(numero)}`
+        + `&user_email=${encodeURIComponent(userEmail)}`;
+    // Se navega en una pestaña nueva en vez de pedirlo con fetch: así el
+    // navegador hace su descarga de siempre y un 404 se ve como un 404, no
+    // como un botón que no hace nada.
+    window.open(u, '_blank', 'noopener');
 }
 
 /** El asunto, para leerlo antes de decidir nada. */
@@ -1059,6 +1117,20 @@ export async function contextoDelAsunto(
         resumenConceptos: String(j.resumen_conceptos ?? ''),
         problemaGlobal: String(j.problema_global ?? ''),
         problemas: (j.problemas ?? []) as ContextoDelAsunto['problemas'],
+        encargo: (j.encargo ?? null) as Record<string, string> | null,
+        proyecto: j.proyecto
+            ? {
+                generadoEn: String(j.proyecto.generado_en ?? ''),
+                palabras: Number(j.proyecto.palabras ?? 0),
+                avisos: (j.proyecto.avisos ?? []).map(String),
+                huecos: (j.proyecto.huecos ?? []).map(String),
+                advertencias: !!j.proyecto.advertencias,
+                nombre: String(j.proyecto.nombre ?? ''),
+                modo: String(j.proyecto.modo ?? ''),
+                sentidoGlobal: String(j.proyecto.sentido_global ?? ''),
+                criterios: (j.proyecto.criterios ?? []) as FichaProyecto['criterios'],
+            }
+            : null,
         avisos: (j.avisos ?? []) as string[],
     };
 }
