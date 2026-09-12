@@ -1031,6 +1031,11 @@ export interface FichaProyecto {
     modo: string;
     sentidoGlobal: string;
     criterios: { problema: string; sentido: string; jerarquia: string }[];
+    /** PROYECTO ANTERIOR A QUE SE GUARDARA LA FICHA. Existe su .docx y consta
+     *  cuándo se generó; de las palabras, los avisos y el criterio no hay
+     *  registro. Se dice, no se rellena con ceros: un «0 palabras» en pantalla
+     *  es peor que no enseñar nada, porque parece un dato. */
+    parcial?: boolean;
 }
 
 export interface AsuntoEnCurso {
@@ -1044,6 +1049,9 @@ export interface AsuntoEnCurso {
     proyecto: {
         generadoEn: string; palabras: number; avisos: number;
         huecos: number; sentidoGlobal: string; modo: string;
+        /** Generado antes de que se guardara la ficha: consta cuándo y está su
+         *  documento, pero de las palabras y los avisos no hay registro. */
+        parcial: boolean;
     } | null;
 }
 
@@ -1069,6 +1077,7 @@ export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]
                     huecos: Number((a.proyecto as Record<string, unknown>).huecos ?? 0),
                     sentidoGlobal: String((a.proyecto as Record<string, unknown>).sentido_global ?? ''),
                     modo: String((a.proyecto as Record<string, unknown>).modo ?? ''),
+                    parcial: !!(a.proyecto as Record<string, unknown>).parcial,
                 }
                 : null,
         })).filter((a) => a.numero);
@@ -1129,6 +1138,7 @@ export async function contextoDelAsunto(
                 modo: String(j.proyecto.modo ?? ''),
                 sentidoGlobal: String(j.proyecto.sentido_global ?? ''),
                 criterios: (j.proyecto.criterios ?? []) as FichaProyecto['criterios'],
+                parcial: !!j.proyecto.parcial,
             }
             : null,
         avisos: (j.avisos ?? []) as string[],

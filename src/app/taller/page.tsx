@@ -1914,14 +1914,31 @@ export default function TallerDeSentencias() {
                                 }>
                                     Proyecto ya generado
                                 </Rotulo>
-                                <p className="text-[12.5px] leading-relaxed text-white/60">
-                                    Este asunto ya tiene sentencia escrita:{' '}
-                                    <span className="text-white/85">
-                                        {previo.palabras.toLocaleString('es-MX')} palabras
-                                    </span>
-                                    {previo.avisos.length > 0 && <>, {previo.avisos.length} avisos</>}
-                                    {previo.huecos.length > 0 && <> y {previo.huecos.length} huecos de tu criterio</>}.
-                                </p>
+                                {previo.parcial ? (
+                                    /* SE GENERÓ ANTES DE QUE SE GUARDARA LA FICHA.
+                                       Consta cuándo y está su documento; de las
+                                       palabras, los avisos y el criterio no hay
+                                       registro, y se dice en vez de enseñar ceros. */
+                                    <p className="text-[12.5px] leading-relaxed text-white/60">
+                                        Este asunto ya tiene sentencia escrita y su documento
+                                        se puede descargar.{' '}
+                                        <span className="text-white/45">
+                                            Se generó antes de que el taller guardara la ficha,
+                                            así que de sus avisos y de su criterio no hay
+                                            registro: para volver a verlos habría que generarlo
+                                            otra vez.
+                                        </span>
+                                    </p>
+                                ) : (
+                                    <p className="text-[12.5px] leading-relaxed text-white/60">
+                                        Este asunto ya tiene sentencia escrita:{' '}
+                                        <span className="text-white/85">
+                                            {previo.palabras.toLocaleString('es-MX')} palabras
+                                        </span>
+                                        {previo.avisos.length > 0 && <>, {previo.avisos.length} avisos</>}
+                                        {previo.huecos.length > 0 && <> y {previo.huecos.length} huecos de tu criterio</>}.
+                                    </p>
+                                )}
 
                                 {/* CON QUÉ SE RESOLVIÓ */}
                                 {(previo.sentidoGlobal || previo.criterios.length > 0) && (
@@ -1986,6 +2003,7 @@ export default function TallerDeSentencias() {
                                 con la ficha: sin ellos esta pantalla diría «12 avisos»
                                 y el secretario no sabría cuáles, que es exactamente el
                                 fallo que este recuadro vino a cerrar. */}
+                            {!previo.parcial && (
                             <AvisoBorrador datos={{
                                 palabras: previo.palabras,
                                 avisos: previo.avisos.length,
@@ -1994,6 +2012,7 @@ export default function TallerDeSentencias() {
                                 textoAvisos: previo.avisos,
                                 textoHuecos: previo.huecos,
                             }} />
+                            )}
                         </>
                     )}
 

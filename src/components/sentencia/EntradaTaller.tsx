@@ -165,7 +165,9 @@ function Reanudar({ asuntos, onAbrir }: {
                                     proyecto listo
                                 </span>
                                 <span className="block text-[10.5px] tabular-nums text-white/30">
-                                    {a.proyecto.palabras.toLocaleString('es-MX')} palabras
+                                    {a.proyecto.parcial
+                                        ? 'sin detalle guardado'
+                                        : `${a.proyecto.palabras.toLocaleString('es-MX')} palabras`}
                                     {a.proyecto.generadoEn
                                         ? ' · ' + new Date(a.proyecto.generadoEn)
                                             .toLocaleDateString('es-MX',
