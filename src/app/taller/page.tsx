@@ -1629,7 +1629,18 @@ export default function TallerDeSentencias() {
                             <button className={cn(
                                         boton,
                                         'bg-amber-400 text-charcoal-900 hover:bg-amber-300',
-                                        'disabled:bg-amber-400/30 disabled:text-charcoal-900/40')}
+                                        /* APAGADO PERO LEGIBLE. La clase `boton`
+                                           ya baja todo al 40%, y encima de eso
+                                           un ámbar al 30% con texto carbón daba
+                                           oscuro sobre oscuro: un borrón donde
+                                           no se leía nada. Y este botón apagado
+                                           tiene algo que decir —qué podrá hacer
+                                           en cuanto suba los documentos—, así
+                                           que se apaga a contorno, no a mancha. */
+                                        'disabled:opacity-100 disabled:border',
+                                        'disabled:border-amber-400/30',
+                                        'disabled:bg-amber-400/[0.07]',
+                                        'disabled:text-amber-200/60')}
                                     disabled={corriendo || falta.length > 0 || !!sinAcceso}
                                     onClick={generarTodo}>
                                 {corriendo
