@@ -1645,7 +1645,7 @@ export default function TallerDeSentencias() {
                             <button className={cn(
                                         boton,
                                         paso === 'adelanto' && !corriendo
-                                            ? 'bg-red-600 text-white hover:bg-red-500 shadow-[0_0_0_0_rgba(220,38,38,0.7)] animate-[latido_1.8s_ease-out_infinite]'
+                                            ? 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90 shadow-[0_0_0_0_rgba(201,169,98,0.7)] animate-[latido_1.8s_ease-out_infinite]'
                                             : 'border border-white/10 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}
                                     disabled={corriendo || paso === 'ficha'}
                                     onClick={pedirAcervo}>

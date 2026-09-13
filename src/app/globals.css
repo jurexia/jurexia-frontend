@@ -1519,12 +1519,18 @@ h6 {
 
    Y RESPETA A QUIEN PIDE QUE NADA SE MUEVA. Hay personas a las que el
    movimiento en pantalla les produce mareo o migraña, y el sistema operativo
-   tiene una casilla para decirlo. Cuando está puesta, el botón se queda rojo y
-   quieto: sigue siendo el que destaca, sin animación. */
+   tiene una casilla para decirlo. Cuando está puesta, el botón se queda quieto:
+   sigue siendo el que destaca, sin animación.
+
+   EL HALO ES DORADO, NO ROJO. Lo era, y el rojo en esta misma pantalla es el
+   color del error —la tarjeta de fallo es `border-red-400/bg-red-400`—. El
+   mismo color decía «algo va mal» y «continúa por aquí». En una herramienta
+   que se usa para firmar sentencias, esa colisión no se puede permitir: el
+   oro es el color de la acción de la casa y es el que llama sin alarmar. */
 @keyframes latido {
-    0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.65); }
-    70%  { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+    0%   { box-shadow: 0 0 0 0 rgba(201, 169, 98, 0.70); }
+    70%  { box-shadow: 0 0 0 14px rgba(201, 169, 98, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(201, 169, 98, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
