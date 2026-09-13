@@ -1298,7 +1298,39 @@ export default function TallerDeSentencias() {
                                        hayDocumentos={documentos.length >= 2}
                                        hayFicha={!!encargo.numero && !!encargo.tipoAsunto}
                                        enCurso={enCurso}
-                                       onReanudar={reanudar} />
+                                       onReanudar={reanudar}
+                        /* ═══ LA LLAMADA A GENERAR ═══
+                           David: «que la plataforma sea más intuitiva y llame
+                           al secretario a generar proyectos». El botón estaba
+                           en otra tarjeta, más abajo, y era del tamaño de una
+                           acción secundaria: se leía «3 · Generar el adelanto»
+                           y había que ir a buscar dónde se hacía eso.
+                           Aquí va al final del camino y con el tamaño de lo
+                           que es: la acción principal de la pantalla. */
+                                       accion={
+                            <div>
+                                <button className={cn(
+                                            'inline-flex w-full items-center justify-center gap-2',
+                                            'rounded-xl px-5 py-3.5 text-[14px] font-medium',
+                                            'transition disabled:cursor-not-allowed sm:w-auto',
+                                            'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90',
+                                            'shadow-[0_0_36px_-12px_rgba(201,169,98,0.65)]',
+                                            'disabled:bg-white/[0.05] disabled:text-white/45',
+                                            'disabled:shadow-none')}
+                                        disabled={corriendo || falta.length > 0 || !!sinAcceso}
+                                        onClick={pedirAdelanto}>
+                                    {corriendo
+                                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                                        : <FileText className="h-4 w-4" />}
+                                    {corriendo ? 'Leyendo el expediente…' : 'Generar el adelanto'}
+                                </button>
+                                {falta.length > 0 && (
+                                    <p className="mt-2 text-[12px] leading-relaxed text-white/45">
+                                        Antes hace falta {falta.join(', ')}.
+                                    </p>
+                                )}
+                            </div>
+                                       } />
                     )}
 
                     {pendientes.length === 0 && paso === 'ficha' && via === 'sise' && (
@@ -1574,6 +1606,14 @@ export default function TallerDeSentencias() {
                         <LineaDeFases fases={fasesSegun(paso, corriendo)} />
 
                         <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.07] pt-4">
+                            {/* EL MISMO BOTÓN, UNA SOLA VEZ. En el camino de
+                                archivos la acción principal vive ahora al final
+                                de los tres pasos, con su tamaño; dejarlo también
+                                aquí, pequeño y a treinta centímetros, son dos
+                                botones que hacen lo mismo y el secretario no
+                                sabe cuál es «el bueno». El camino de SISE no
+                                tiene pasos numerados, así que ahí se queda. */}
+                            {via !== 'archivos' && (
                             <button className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
                                     disabled={corriendo || falta.length > 0 || !!sinAcceso || paso !== 'ficha'}
                                     onClick={pedirAdelanto}>
@@ -1582,6 +1622,7 @@ export default function TallerDeSentencias() {
                                     : <FileText className="h-4 w-4" />}
                                 Generar adelanto
                             </button>
+                            )}
             {/* ═══ EL PASO QUE SE PERDÍA ═══
                 David: «después del adelanto viene la parte de consultar
                 acervo. Sin embargo, el secretario se pierde».
@@ -1661,7 +1702,7 @@ export default function TallerDeSentencias() {
                         </div>
                         )}
 
-                        {falta.length > 0 && paso === 'ficha' && (
+                        {falta.length > 0 && paso === 'ficha' && via !== 'archivos' && (
                             <p className="mt-3 text-[13px] text-white/45">
                                 Falta {falta.join(', ')}.
                             </p>

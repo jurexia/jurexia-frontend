@@ -94,12 +94,17 @@ function Ranura({
         return (
             <div className="group rounded-2xl border border-white/[0.07] bg-white/[0.04] p-3.5 transition-colors hover:border-accent-gold/25">
                 <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-gold/10">
-                        <FileText className="h-4 w-4 text-accent-gold" />
+                    <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-gold/10">
+                        <FileText className="h-5 w-5 text-accent-gold" />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-[14px] font-medium text-white/90">{doc.nombre}</p>
-                        <p className="mt-0.5 text-[12px] text-white/45">{titulo}</p>
+                        {/* EL RÓTULO MANDA SOBRE EL NOMBRE DEL ARCHIVO. Antes
+                            lo grande era «RECURSO DE REVISIÓN ESCANEADO_3.pdf»
+                            y debajo, en gris, «Acto reclamado». El secretario
+                            no busca su nombre de archivo: busca si ya está
+                            puesto el acto reclamado. */}
+                        <p className="text-[16px] font-medium tracking-[0.01em] text-white">{titulo}</p>
+                        <p className="mt-0.5 truncate text-[12px] text-white/45">{doc.nombre}</p>
 
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
                             <Pastilla tono="neutro">{pesoLegible(doc.bytes)}</Pastilla>
@@ -145,28 +150,44 @@ function Ranura({
                 onDragOver={(e) => { e.preventDefault(); setEncima(true); }}
                 onDragLeave={() => setEncima(false)}
                 onDrop={soltar}
+                /* ═══ A LA ESCALA DE LA ENTRADA ═══
+                   David: «solo la primera parte me parece moderna». Y tenía
+                   razón en dónde está la diferencia: la pantalla de entrada
+                   trata lo que hay que PULSAR como el contenido —título de
+                   16 px, qué hace en 14, por qué importa en 12, y aire—,
+                   mientras que aquí, que es donde de verdad empieza el
+                   trabajo, lo mismo estaba a 14/12 y apretado.
+                   Estos dos recuadros son la puerta de todo: sin los dos PDF
+                   no hay proyecto. Se les da el tamaño que les toca. */
                 className={cn(
-                    'w-full rounded-2xl border border-dashed p-5 text-left transition-all duration-200',
+                    'w-full rounded-2xl border border-dashed px-5 py-6 text-left',
+                    'transition-all duration-200',
                     encima
                         ? 'border-accent-gold/60 bg-accent-gold/[0.07] scale-[1.01]'
-                        : 'border-white/10 bg-white/[0.015] hover:border-accent-gold/35 hover:bg-white/[0.03]',
+                        : 'border-white/20 bg-white/[0.02] hover:border-accent-gold/45 '
+                          + 'hover:bg-accent-gold/[0.03]',
                 )}
             >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                     <div className={cn(
-                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors',
-                        encima ? 'bg-accent-gold/20' : 'bg-white/[0.05]',
+                        'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                        'transition-colors',
+                        encima ? 'bg-accent-gold/20' : 'bg-white/[0.06]',
                     )}>
-                        <Icono className={cn('h-4 w-4', encima ? 'text-accent-gold' : 'text-white/45')} />
+                        <Icono className={cn('h-5 w-5', encima ? 'text-accent-gold' : 'text-white/60')} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[14px] font-medium text-white/90">{titulo}</p>
-                        <p className="mt-0.5 flex items-center gap-1 text-[12px] text-white/45">
-                            <Upload className="h-3 w-3" /> Arrastra el PDF o haz clic
+                        <p className="text-[16px] font-medium tracking-[0.01em] text-white">{titulo}</p>
+                        <p className={cn(
+                            'mt-1 flex items-center gap-1.5 text-[14px]',
+                            encima ? 'text-accent-gold' : 'text-white/60',
+                        )}>
+                            <Upload className="h-3.5 w-3.5" />
+                            {encima ? 'Suelta aquí' : 'Arrastra el PDF o haz clic'}
                         </p>
                     </div>
                 </div>
-                <p className="mt-3 text-[12px] leading-relaxed text-white/45">{ayuda}</p>
+                <p className="mt-3.5 text-[12px] leading-relaxed text-white/45">{ayuda}</p>
             </button>
         </>
     );
@@ -191,7 +212,7 @@ export default function PanelDocumentos({
         <div className="flex h-full flex-col gap-4">
             <Tarjeta>
                 <Rotulo contador={documentos.length}>Documentos del asunto</Rotulo>
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                     {ranurasDe(vocabulario).map((r) => (
                         <Ranura
                             key={r.rol} {...r}

@@ -82,29 +82,45 @@ function Camino({
 
 /* Un paso dentro de un camino: rótulo, porqué y el control que toca. */
 export function Paso({
-    n, titulo, porque, hecho, children,
+    n, titulo, porque, hecho, activo, children,
 }: {
     n: number;
     titulo: string;
     porque?: string;
     hecho?: boolean;
+    /** El paso en el que está ahora mismo. Los tres se veían IGUAL —mismo
+     *  tamaño, mismo color, mismo círculo— y el secretario no tenía forma de
+     *  saber en cuál iba: la lista se leía como tres instrucciones sueltas en
+     *  vez de como un camino con una posición. */
+    activo?: boolean;
     children?: React.ReactNode;
 }) {
     return (
-        <div className="flex gap-3">
+        <div className={cn(
+            'flex gap-3.5 rounded-2xl p-3 transition-colors duration-300',
+            /* EL PASO DE AHORA SE VE. Un borde tenue y algo de fondo bastan:
+               no hace falta un color nuevo ni una animación. */
+            activo && 'bg-accent-gold/[0.04] ring-1 ring-inset ring-accent-gold/20',
+        )}>
             <span className={cn(
-                'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
-                'border text-[10px] font-semibold',
+                'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+                'border text-[12px] font-semibold transition-colors',
                 hecho ? 'border-emerald-400/40 bg-emerald-400/15 text-emerald-300'
-                      : 'border-accent-gold/35 bg-accent-gold/10 text-accent-gold/90')}>
-                {hecho ? <Check className="h-3 w-3" strokeWidth={3} /> : n}
+                      : activo ? 'border-accent-gold/60 bg-accent-gold/15 text-accent-gold'
+                               : 'border-white/20 bg-white/[0.04] text-white/45')}>
+                {hecho ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : n}
             </span>
             <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-white/75">{titulo}</p>
+                <p className={cn(
+                    'text-[16px] font-medium tracking-[0.01em]',
+                    hecho ? 'text-white/60' : activo ? 'text-white' : 'text-white/60',
+                )}>
+                    {titulo}
+                </p>
                 {porque && (
-                    <p className="mt-0.5 text-[12px] leading-relaxed text-white/45">{porque}</p>
+                    <p className="mt-1 text-[12px] leading-relaxed text-white/45">{porque}</p>
                 )}
-                {children && <div className="mt-2">{children}</div>}
+                {children && <div className="mt-3">{children}</div>}
             </div>
         </div>
     );
@@ -197,7 +213,7 @@ function Reanudar({ asuntos, onAbrir }: {
 
 export default function EntradaTaller({
     via, onVia, pasoArchivos, onPasoArchivos, hayDocumentos, hayFicha,
-    enCurso = [], onReanudar,
+    enCurso = [], onReanudar, accion,
 }: {
     via: ViaEntrada | null;
     onVia: (v: ViaEntrada | null) => void;
@@ -207,6 +223,9 @@ export default function EntradaTaller({
     hayFicha?: boolean;
     enCurso?: AsuntoEnCurso[];
     onReanudar?: (numero: string) => void;
+    /** El botón que genera. Lo pone la pantalla, porque es quien sabe si se
+     *  puede pulsar; aquí sólo se le da su sitio, que es el final del camino. */
+    accion?: React.ReactNode;
 }) {
     /* ── Nada elegido: los dos caminos ──────────────────────────────────── */
     if (!via) {
@@ -284,14 +303,15 @@ export default function EntradaTaller({
 
             <div className="space-y-3.5">
                 <Paso n={1} titulo="La ficha del asunto" hecho={!!hayFicha}
+                      activo={!hayFicha}
                       porque="Partes, fechas y tipo. De aquí salen la carátula, el cómputo del plazo y el vocabulario de todo el proyecto.">
                     {!pasoArchivos && (
                         <div className="grid gap-2 sm:grid-cols-2">
                             <button type="button" onClick={() => onPasoArchivos('admision')}
-                                    className="rounded-xl border border-white/10 bg-white/[0.02] p-3
+                                    className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3.5
                                                text-left transition-colors hover:border-accent-gold/35
                                                hover:bg-white/[0.04]">
-                                <span className="block text-[13px] font-medium text-white/90">
+                                <span className="block text-[14px] font-medium text-white">
                                     Tengo el auto de admisión
                                 </span>
                                 <span className="mt-1 block text-[12px] leading-snug text-white/45">
@@ -300,10 +320,10 @@ export default function EntradaTaller({
                                 </span>
                             </button>
                             <button type="button" onClick={() => onPasoArchivos('formulario')}
-                                    className="rounded-xl border border-white/10 bg-white/[0.02] p-3
+                                    className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3.5
                                                text-left transition-colors hover:border-accent-gold/35
                                                hover:bg-white/[0.04]">
-                                <span className="block text-[13px] font-medium text-white/90">
+                                <span className="block text-[14px] font-medium text-white">
                                     Prefiero llenar la ficha
                                 </span>
                                 <span className="mt-1 block text-[12px] leading-snug text-white/45">
@@ -324,10 +344,20 @@ export default function EntradaTaller({
                 </Paso>
 
                 <Paso n={2} titulo="Los dos documentos del asunto" hecho={!!hayDocumentos}
+                      activo={!!hayFicha && !hayDocumentos}
                       porque="El acto reclamado y el escrito de la parte. Del primero sale lo que resolvió la responsable; del segundo, lo que se combate. El contraste de los dos es de donde nacen los problemas jurídicos." />
 
+                {/* ═══ EL BOTÓN, DONDE ACABA EL CAMINO ═══
+                    Estaba treinta centímetros más abajo, dentro de otra
+                    tarjeta y del tamaño de un botón secundario. El secretario
+                    leía «3 · Generar el adelanto» y tenía que ir a buscar
+                    dónde se generaba. Ahora el paso tres TRAE el botón: se
+                    lee la instrucción y se pulsa en el mismo sitio. */}
                 <Paso n={3} titulo="Generar el adelanto"
-                      porque="Con eso el taller lee el expediente y te devuelve el asunto entendido: antecedentes, qué resolvió, qué se alega y los planteamientos. Todavía no decide nada." />
+                      activo={!!hayFicha && !!hayDocumentos}
+                      porque="Con eso el taller lee el expediente y te devuelve el asunto entendido: antecedentes, qué resolvió, qué se alega y los planteamientos. Todavía no decide nada.">
+                    {accion}
+                </Paso>
             </div>
         </div>
     );
