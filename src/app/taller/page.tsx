@@ -22,7 +22,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Loader2, Download, Search, FileText, AlertCircle, Zap } from 'lucide-react';
+import { Loader2, Download, Search, FileText, AlertCircle, Zap, Upload, Check } from 'lucide-react';
 import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
 import EntradaTaller from '@/components/sentencia/EntradaTaller';
@@ -77,6 +77,125 @@ function fasesSegun(paso: Paso, corriendo: boolean): Fase[] {
                 : f.requiereHumano && i === n ? 'espera'
                     : 'pendiente',
     }));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EL AUTO DE ADMISIÓN: UNA TARJETA Y YA
+   ═══════════════════════════════════════════════════════════════════════════
+   David, 13-sep-2026: «si el secretario tiene el auto de admisión, ni siquiera
+   son necesarios los botones de tipo de asunto. Basta con que lo arrastre o lo
+   cargue desde el navegador (porque no deja arrastrar actualmente) para que el
+   pipeline reconozca de qué asunto se va a tratar. (…) Una vez carga, los datos
+   necesarios serán pocos: la fecha de notificación, la de presentación y el
+   magistrado ponente. Lo demás ya viene en el auto».
+
+   DOS COSAS ESTABAN MAL Y LAS DOS SE ARREGLAN AQUÍ:
+
+   · NO DEJABA ARRASTRAR, y no era un capricho del navegador: esto era un
+     <label> con un <input type="file"> escondido dentro. Un label abre el
+     diálogo al pulsarlo, pero no recibe nada soltado encima —sin onDragOver ni
+     onDrop el navegador se limita a abrir el PDF en otra pestaña—. Ahora es un
+     soltador de verdad.
+
+   · ESTABA EN LA OTRA COLUMNA. Se elegía «Tengo el auto de admisión» a la
+     derecha y el sitio donde subirlo salía en el raíl izquierdo.
+
+   Y el tipo de asunto sale del auto: el servidor ya lo devuelve en
+   `ficha.tipo_asunto` y la pantalla ya lo aplicaba. Lo que sobraba era seguir
+   enseñando la rejilla de cuatro tipos después de haberlo leído. */
+function TarjetaAdmision({ fichando, fichado, onArchivo }: {
+    fichando: boolean;
+    fichado: string[];
+    onArchivo: (f: File) => void;
+}) {
+    const [encima, setEncima] = useState(false);
+    const input = React.useRef<HTMLInputElement>(null);
+    const listo = fichado.length > 0;
+
+    return (
+        <>
+            <input ref={input} type="file" accept=".pdf" className="sr-only"
+                   disabled={fichando}
+                   onChange={(e) => {
+                       const f = e.target.files?.[0];
+                       e.target.value = '';
+                       if (f) onArchivo(f);
+                   }} />
+            <button
+                type="button"
+                disabled={fichando}
+                onClick={() => input.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setEncima(true); }}
+                onDragLeave={() => setEncima(false)}
+                onDrop={(e) => {
+                    e.preventDefault(); setEncima(false);
+                    const f = e.dataTransfer.files?.[0];
+                    if (f) onArchivo(f);
+                }}
+                className={cn(
+                    'w-full rounded-2xl border border-dashed px-5 py-6 text-left',
+                    'transition-all duration-200 disabled:cursor-wait',
+                    encima ? 'border-accent-gold/60 bg-accent-gold/[0.07] scale-[1.01]'
+                           : listo ? 'border-emerald-400/30 bg-emerald-400/[0.04]'
+                                   : 'border-white/20 bg-white/[0.02] '
+                                     + 'hover:border-accent-gold/45 hover:bg-accent-gold/[0.03]',
+                )}
+            >
+                <span className="flex items-center gap-3.5">
+                    <span className={cn(
+                        'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                        'transition-colors',
+                        encima ? 'bg-accent-gold/20'
+                               : listo ? 'bg-emerald-400/10' : 'bg-white/[0.06]',
+                    )}>
+                        {fichando
+                            ? <Loader2 className="h-5 w-5 animate-spin text-accent-gold" />
+                            : listo
+                                ? <Check className="h-5 w-5 text-emerald-300" strokeWidth={2.5} />
+                                : <FileText className={cn('h-5 w-5',
+                                    encima ? 'text-accent-gold' : 'text-white/60')} />}
+                    </span>
+                    <span className="min-w-0">
+                        <span className="block text-[16px] font-medium tracking-[0.01em] text-white">
+                            {fichando ? 'Leyendo el auto…'
+                                      : listo ? 'Auto de admisión leído'
+                                              : 'El auto de admisión'}
+                        </span>
+                        <span className={cn(
+                            'mt-1 flex items-center gap-1.5 text-[14px]',
+                            encima ? 'text-accent-gold' : 'text-white/60',
+                        )}>
+                            <Upload className="h-3.5 w-3.5" />
+                            {encima ? 'Suelta aquí'
+                                    : listo ? 'Arrastra otro para rehacer la ficha'
+                                            : 'Arrastra el PDF o haz clic'}
+                        </span>
+                    </span>
+                </span>
+                <span className="mt-3.5 block text-[12px] leading-relaxed text-white/45">
+                    De aquí salen el tipo de asunto, el número de expediente, el
+                    tribunal, la autoridad responsable, el tercero interesado y
+                    quien promueve. No hay que elegir el tipo a mano: lo dice el
+                    propio auto.
+                </span>
+                {listo && (
+                    <span className="mt-3 flex flex-wrap gap-1.5">
+                        {fichado.map((k) => (
+                            <span key={k}
+                                  className="rounded-lg border border-emerald-400/30
+                                             bg-emerald-400/[0.08] px-1.5 py-0.5
+                                             text-[12px] text-emerald-300/90">
+                                {k.replace(/_/g, ' ')}
+                            </span>
+                        ))}
+                        <span className="text-[12px] text-white/45">
+                            leídos del auto · compruébalos
+                        </span>
+                    </span>
+                )}
+            </button>
+        </>
+    );
 }
 
 const boton = 'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 ' +
@@ -1092,9 +1211,25 @@ export default function TallerDeSentencias() {
     const sinAcceso = piloto && !piloto.tiene_acceso;
 
     return (
-        <div className="min-h-screen bg-charcoal-900 font-sans text-white antialiased">
-            <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 h-[420px] opacity-[0.55]"
-                 style={{ background: 'radial-gradient(70% 100% at 50% 0%, rgba(201,169,98,0.10) 0%, transparent 70%)' }} />
+        <div className="min-h-screen bg-charcoal-950 font-sans text-white antialiased">
+            {/* ═══ LA PROFUNDIDAD DEL FONDO ═══
+                David: «colores más profundos». El suelo era #1a1a1a plano y las
+                tarjetas se pintan con bg-white/[0.035] —#232323—: trece puntos
+                de diferencia. Con ese desnivel nada parece levantado y la
+                pantalla se lee chata por mucho que se ordenen las tarjetas.
+
+                Ahora el suelo es casi negro con un sesgo cálido, y encima van
+                DOS capas que no se ven pero se notan: un halo dorado arriba
+                —que ya estaba— y una veladura que aclara muy poco el centro
+                de la página, de modo que los bordes caen a oscuro. Es lo que
+                hace que el contenido parezca estar delante del fondo en vez de
+                pegado a él. Ninguna de las dos tiene color propio: son el mismo
+                oro y el mismo blanco de la casa, muy diluidos. */}
+            <div aria-hidden className="pointer-events-none fixed inset-0"
+                 style={{ background:
+                     'radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.035) 0%, transparent 60%)' }} />
+            <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 h-[460px] opacity-[0.6]"
+                 style={{ background: 'radial-gradient(70% 100% at 50% 0%, rgba(201,169,98,0.13) 0%, transparent 70%)' }} />
 
             <BarraSuperior asunto={asunto} />
 
@@ -1108,54 +1243,12 @@ export default function TallerDeSentencias() {
                     : 'lg:grid-cols-1')}>
                 <div className="flex flex-col gap-4 lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)] lg:overflow-y-auto lg:pr-1">
                     {piloto && <AvisoPiloto secretarios={piloto.secretarios} cupo={piloto.cupo} />}
-                    {/* ═══ LA FICHA, SIN TECLEARLA ═══
-                        Optativo y dicho como tal: quien no lo use no pierde
-                        nada, y quien lo use no queda atado —lo leído entra
-                        como propuesta en campos que siguen siendo suyos—.
-                        El auto de admisión es el único papel del expediente
-                        que dice, en su primera página, cómo se llama el
-                        asunto y quién es cada quien. */}
-                    {paso === 'ficha' && via === 'archivos' && pasoArchivos === 'admision' && (
-                        <label className={cn(
-                            'block cursor-pointer rounded-2xl border border-dashed px-4 py-3 transition',
-                            fichando
-                                ? 'border-accent-gold/40 bg-accent-gold/[0.05]'
-                                : 'border-white/20 bg-white/[0.02] hover:border-accent-gold/30')}>
-                            <input type="file" accept=".pdf" className="hidden"
-                                   disabled={fichando}
-                                   onChange={(e) => {
-                                       const f = e.target.files?.[0];
-                                       e.target.value = '';
-                                       if (f) void leerAdmision(f);
-                                   }} />
-                            <span className="flex items-center gap-2 text-[13px] font-medium text-white/75">
-                                {fichando
-                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin text-accent-gold" />
-                                    : <FileText className="h-3.5 w-3.5 text-accent-gold/70" />}
-                                {fichando ? 'Leyendo el auto…' : '¿Tienes el auto de admisión?'}
-                            </span>
-                            <span className="mt-1 block text-[12px] leading-relaxed text-white/45">
-                                Súbelo y se rellenan solos el expediente, el tribunal, la autoridad
-                                responsable, el tercero interesado y quien promueve. Es opcional:
-                                puedes teclear la ficha como siempre, y lo que ya hayas escrito no
-                                se toca.
-                            </span>
-                            {fichado.length > 0 && (
-                                <span className="mt-2 flex flex-wrap gap-1.5">
-                                    {fichado.map((k) => (
-                                        <span key={k}
-                                              className="rounded-lg border border-emerald-400/30 bg-emerald-400/[0.08]
-                                                         px-1.5 py-0.5 text-[12px] text-emerald-300/90">
-                                            {k.replace(/_/g, ' ')}
-                                        </span>
-                                    ))}
-                                    <span className="text-[12px] text-white/45">
-                                        leídos del auto · compruébalos
-                                    </span>
-                                </span>
-                            )}
-                        </label>
-                    )}
+                    {/* LA FICHA SIN TECLEARLA YA NO VIVE AQUÍ. El secretario
+                        elegía «Tengo el auto de admisión» en la columna derecha
+                        y el sitio donde subirlo aparecía en el raíl izquierdo:
+                        la decisión en un lado y la acción en el otro. Ahora la
+                        tarjeta está dentro del paso 1, que es donde se lee la
+                        instrucción —ver `TarjetaAdmision` más abajo—. */}
                     {/* LA FICHA Y LOS DOCUMENTOS APARECEN CUANDO HAY CAMINO.
                         Antes estaban siempre, y con ellos la rejilla de cuatro
                         tipos y los dos soltadores de PDF: tres decisiones
@@ -1170,7 +1263,8 @@ export default function TallerDeSentencias() {
                         <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
                                            deshabilitado={corriendo || paso !== 'ficha'}
                                            activa={paso === 'ficha' && via === 'archivos'
-                                                   && !(!!encargo.numero && !!encargo.tipoAsunto)} />
+                                                   && !(!!encargo.numero && !!encargo.tipoAsunto)}
+                                           delAuto={pasoArchivos === 'admision'} />
                     )}
                     {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
                         <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
@@ -1304,6 +1398,11 @@ export default function TallerDeSentencias() {
                                        hayFicha={!!encargo.numero && !!encargo.tipoAsunto}
                                        enCurso={enCurso}
                                        onReanudar={reanudar}
+                                       admision={
+                                           <TarjetaAdmision fichando={fichando}
+                                                            fichado={fichado}
+                                                            onArchivo={(f) => void leerAdmision(f)} />
+                                       }
                         /* ═══ LA LLAMADA A GENERAR ═══
                            David: «que la plataforma sea más intuitiva y llame
                            al secretario a generar proyectos». El botón estaba

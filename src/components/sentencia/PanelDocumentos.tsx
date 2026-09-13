@@ -213,7 +213,7 @@ export default function PanelDocumentos({
 
     return (
         <div className="flex h-full flex-col gap-4">
-            <Tarjeta className={cn(activa && 'ring-1 ring-inset ring-accent-gold/20')}>
+            <Tarjeta className={cn('emerge emerge-2', activa && 'respira')}>
                 <Rotulo contador={documentos.length}>Documentos del asunto</Rotulo>
                 <div className="space-y-3.5">
                     {ranurasDe(vocabulario).map((r) => (

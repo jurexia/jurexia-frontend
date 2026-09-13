@@ -18,6 +18,18 @@ module.exports = {
                     500: '#d4d2cc',
                 },
                 charcoal: {
+                    // EL SUELO, MÁS PROFUNDO. David: «colores más profundos».
+                    // El 900 era #1a1a1a, un gris plano y sin matiz, y las
+                    // tarjetas se pintan encima con bg-white/[0.035] —o sea
+                    // #232323—: trece puntos de diferencia. Con tan poco
+                    // desnivel nada parece levantado del fondo y la pantalla
+                    // se lee chata por mucho que se ordenen las tarjetas.
+                    //
+                    // El 950 es el suelo nuevo: casi negro y con un sesgo
+                    // cálido —más rojo que azul— para que case con el oro de
+                    // la casa en vez de pelearse con él. Sobre él, la misma
+                    // tarjeta ya salta de verdad.
+                    950: '#0f0e0d',
                     900: '#1a1a1a',
                     800: '#2d2d2d',
                     700: '#404040',

@@ -1587,3 +1587,61 @@ h6 {
   }
   .entrada-titulo { text-shadow: 0 0 6px rgba(255,255,255,0.16); }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EL TALLER SE MUEVE POCO, Y CUANDO SE MUEVE ES PORQUE DICE ALGO
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «animaciones simples pero atractivas para el secretario». Simples es
+   la palabra que manda. Esto es una herramienta de trabajo que se mira horas:
+   lo que se mueve por adorno acaba cansando, y en cuanto cansa se deja de ver.
+
+   Tres, y cada una responde a una pregunta del que mira:
+
+     · ¿qué acaba de aparecer?      → entra desde abajo, muy corto
+     · ¿dónde estoy ahora?          → el anillo del paso respira
+     · ¿se ha quedado colgado?      → la barra de progreso corre
+
+   Todas se apagan solas si el sistema operativo pide menos movimiento: hay
+   personas a las que el movimiento en pantalla les produce mareo o migraña. */
+
+@keyframes emergeTaller {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+.emerge { animation: emergeTaller 0.42s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* EL ESCALONADO ES LO QUE LO HACE ELEGANTE. Todas a la vez es un parpadeo de
+   la página entera; una detrás de otra, la vista recorre el orden en que hay
+   que leerlas. Nada pasa de 200 ms de retraso: más allá se percibe como que la
+   página va lenta. */
+.emerge-1 { animation-delay: 0.05s; }
+.emerge-2 { animation-delay: 0.11s; }
+.emerge-3 { animation-delay: 0.17s; }
+
+/* EL PASO DE AHORA RESPIRA. Es el anillo dorado del paso activo, subiendo y
+   bajando de intensidad muy despacio —cuatro segundos— y en un margen mínimo.
+   No parpadea ni llama: sólo impide que el ojo lo pierda al volver de leer
+   otra cosa. */
+@keyframes respiraAnillo {
+    0%, 100% { box-shadow: inset 0 0 0 1px rgba(201, 169, 98, 0.20); }
+    50%      { box-shadow: inset 0 0 0 1px rgba(201, 169, 98, 0.38); }
+}
+.respira { animation: respiraAnillo 4s ease-in-out infinite; }
+
+/* LA ESPERA TIENE QUE PARECER VIVA. El estudio tarda entre dos y seis minutos;
+   una barra quieta en el 70% no distingue «va trabajando» de «se murió». */
+@keyframes corre {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+.corre {
+    background-image: linear-gradient(90deg,
+        rgba(201,169,98,0.55) 0%, rgba(201,169,98,0.95) 50%, rgba(201,169,98,0.55) 100%);
+    background-size: 200% 100%;
+    animation: corre 1.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .emerge, .respira, .corre { animation: none !important; }
+    .emerge { opacity: 1; transform: none; }
+}

@@ -30,8 +30,14 @@ export function Tarjeta({
     return (
         <Tag
             className={cn(
-                'relative rounded-2xl border border-white/[0.07] bg-white/[0.035]',
+                'relative rounded-2xl border border-white/[0.07] bg-white/[0.045]',
                 'backdrop-blur-xl transition-colors duration-300',
+                /* LA TARJETA SE LEVANTA DEL SUELO. Con el fondo ya profundo
+                   (charcoal-950), una sombra baja y ancha le da el centímetro
+                   de aire que faltaba: no es un adorno, es lo que separa el
+                   plano del contenido del plano del fondo. Muy difusa y muy
+                   negra, para que se lea como sombra y no como marco. */
+                'shadow-[0_1px_2px_rgba(0,0,0,0.4),0_12px_32px_-12px_rgba(0,0,0,0.65)]',
                 glow && 'shadow-[0_0_60px_-20px_rgba(201,169,98,0.35)]',
                 padding, className,
             )}

@@ -100,7 +100,7 @@ export function Paso({
             'flex gap-3.5 rounded-2xl p-3 transition-colors duration-300',
             /* EL PASO DE AHORA SE VE. Un borde tenue y algo de fondo bastan:
                no hace falta un color nuevo ni una animación. */
-            activo && 'bg-accent-gold/[0.04] ring-1 ring-inset ring-accent-gold/20',
+            activo && 'bg-accent-gold/[0.04] respira',
         )}>
             <span className={cn(
                 'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
@@ -213,7 +213,7 @@ function Reanudar({ asuntos, onAbrir }: {
 
 export default function EntradaTaller({
     via, onVia, pasoArchivos, onPasoArchivos, hayDocumentos, hayFicha,
-    enCurso = [], onReanudar, accion,
+    enCurso = [], onReanudar, accion, admision,
 }: {
     via: ViaEntrada | null;
     onVia: (v: ViaEntrada | null) => void;
@@ -226,6 +226,9 @@ export default function EntradaTaller({
     /** El botón que genera. Lo pone la pantalla, porque es quien sabe si se
      *  puede pulsar; aquí sólo se le da su sitio, que es el final del camino. */
     accion?: React.ReactNode;
+    /** El soltador del auto de admisión. Vivía en el raíl izquierdo mientras
+     *  la elección se hacía aquí; su sitio es el paso 1. */
+    admision?: React.ReactNode;
 }) {
     /* ── Nada elegido: los dos caminos ──────────────────────────────────── */
     if (!via) {
@@ -333,9 +336,17 @@ export default function EntradaTaller({
                             </button>
                         </div>
                     )}
+                    {/* ═══ ELEGIDO EL AUTO, LA TARJETA Y NADA MÁS ═══
+                        David: «basta una tarjeta donde lo cargue y desde allí
+                        comenzar el recorrido». El tipo de asunto sale del propio
+                        auto —el servidor lo devuelve en `ficha.tipo_asunto`—,
+                        así que la rejilla de cuatro tipos sobra en este camino:
+                        es pedirle que elija algo que el papel ya dice. */}
+                    {pasoArchivos === 'admision' && admision}
                     {pasoArchivos && (
                         <button type="button" onClick={() => onPasoArchivos(null)}
-                                className="text-[12px] text-white/45 transition-colors hover:text-white/75">
+                                className="mt-2.5 block text-[12px] text-white/45
+                                           transition-colors hover:text-white/75">
                             {pasoArchivos === 'admision'
                                 ? 'estás subiendo el auto de admisión · cambiar'
                                 : 'estás llenando la ficha a mano · cambiar'}

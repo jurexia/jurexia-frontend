@@ -208,7 +208,8 @@ function SelectorTipo({ tipos, valor, onElegir }: {
     );
 }
 
-export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onTipo, activa }: {
+export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onTipo, activa,
+                                            delAuto }: {
     valor: Encargo;
     onCambiar: (e: Encargo) => void;
     deshabilitado?: boolean;
@@ -217,6 +218,9 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
      *  el raíl izquierdo: sin una señal común, el ojo no une las dos mitades
      *  —se lee «1 · La ficha del asunto» y hay que buscar dónde se llena—. */
     activa?: boolean;
+    /** El secretario vino por el auto de admisión. Entonces el tipo no se
+     *  pregunta: se lee del papel y se enseña para que lo compruebe. */
+    delAuto?: boolean;
     /** El tipo elegido, para que la pantalla rotule los documentos con el
      *  vocabulario que le corresponde. */
     onTipo?: (t: TipoAsunto | undefined) => void;
@@ -261,7 +265,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
         ? `del ${recurrido.slice(3)}` : `de ${recurrido}`;
 
     return (
-        <Tarjeta className={cn(activa && 'ring-1 ring-inset ring-accent-gold/20')}>
+        <Tarjeta className={cn('emerge emerge-1', activa && 'respira')}>
             <Rotulo accion={
                 <span className="text-[12px] text-white/45">
                     {tipo ? 'lo lees de un sello' : 'empieza por aquí'}
@@ -271,6 +275,43 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
             </Rotulo>
 
             <fieldset disabled={deshabilitado} className="grid gap-4 disabled:opacity-50">
+                {/* ═══ EL TIPO LO DIJO EL AUTO ═══
+                    David: «si el secretario tiene el auto de admisión, ni
+                    siquiera son necesarios los botones de tipo de asunto».
+                    Exacto: el servidor devuelve `ficha.tipo_asunto` y la
+                    pantalla ya lo aplicaba, así que la rejilla de cuatro
+                    quedaba pidiendo que eligiera algo que el papel ya decía.
+                    Se sustituye por una línea que informa de lo leído y deja
+                    corregirlo —leído no es lo mismo que correcto—. */}
+                {delAuto && tipo ? (
+                    <div className="rounded-2xl border border-emerald-400/25
+                                    bg-emerald-400/[0.05] px-4 py-3.5">
+                        <p className="text-[12px] uppercase tracking-[0.14em] text-white/45">
+                            Lo dice el auto
+                        </p>
+                        <p className="mt-1.5 flex items-baseline justify-between gap-2">
+                            <span className="text-[16px] font-medium tracking-[0.01em]
+                                             text-white first-letter:uppercase">
+                                {tipo.nombre}
+                            </span>
+                            <span className="shrink-0 text-[12px] font-semibold tabular-nums
+                                             text-white/60">
+                                {tipo.plazo.dias} días
+                            </span>
+                        </p>
+                        <p className="mt-1 text-[12px] leading-snug text-white/45">
+                            {tipo.plazo.fundamento}
+                        </p>
+                        <button type="button"
+                                onClick={() => onCambiar({ ...valor, tipoAsunto: '',
+                                                           excepcionPlazo: '', plazo: 0 })}
+                                className="mt-2 text-[12px] text-white/45 underline
+                                           underline-offset-2 transition-colors
+                                           hover:text-white/75">
+                            no es éste · elegirlo a mano
+                        </button>
+                    </div>
+                ) : (
                 <Campo etiqueta="¿Qué vas a proyectar?"
                        ayuda={errorCatalogo
                            ? ''
@@ -292,6 +333,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                                       ...valor, tipoAsunto: clave, excepcionPlazo: '', plazo: 0,
                                   })} />
                 </Campo>
+                )}
 
                 {/* NADA MÁS SE PINTA HASTA QUE HAY TIPO. Y cuando se pinta,
                     entra escalonado de arriba abajo: la vista sigue el orden en
