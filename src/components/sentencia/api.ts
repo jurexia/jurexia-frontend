@@ -498,6 +498,12 @@ export async function resolverEnVivo(
         oportunidadDecision?: string;
         /** Su razón, que va LITERAL al considerando cuando rectifica. */
         oportunidadMotivo?: string;
+        /** EL ATAJO DE UN SOLO CLIC: que decida el motor. El servidor reparte
+         *  con las propuestas que ya guardó al proponer —es la rama `else` de
+         *  `modos_decision.repartir`—, así que no hace falta mandarle de vuelta
+         *  lo que él mismo calculó. Nadie revisa el sentido: es el riesgo que
+         *  el botón amarillo anuncia. */
+        porJurimetria?: boolean;
     },
     onTexto?: (trozo: string) => void,
     onComponiendo?: () => void,
@@ -519,6 +525,9 @@ export async function resolverEnVivo(
         // distintas»: es una orden con excepciones, que es como se decide un
         // asunto de verdad.
         if (o.criteriosJson) fd.append('criterios_json', o.criteriosJson);
+    } else if (o.porJurimetria) {
+        // Ni criterios ni sentido global: el servidor toma de sus propuestas.
+        fd.append('modo_decision', 'acervo');
     } else if (o.criteriosJson) {
         fd.append('criterios_json', o.criteriosJson);
     } else if (o.criterio) {

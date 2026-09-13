@@ -22,7 +22,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Loader2, Download, Search, FileText, AlertCircle } from 'lucide-react';
+import { Loader2, Download, Search, FileText, AlertCircle, Zap } from 'lucide-react';
 import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
 import EntradaTaller from '@/components/sentencia/EntradaTaller';
@@ -703,6 +703,144 @@ export default function TallerDeSentencias() {
     // con su razón y los registros que lo apoyan; el secretario la acepta tal
     // cual, la edita o dicta el suyo. Sin este paso el proyecto salía con la
     // calificación que trajera la plantilla, y así nacían las incongruencias.
+    /* ═══════════════════════════════════════════════════════════════════════
+       EL CAMINO DE UN SOLO BOTÓN
+       ═══════════════════════════════════════════════════════════════════════
+       David: «una opción con un botón amarillo desde el principio que diga
+       "Genera todo el proyecto" y abajo, con letras más pequeñas, "Se decide por
+       jurimetría. No recomendado". Una vez que se tengan los documentos, el
+       proyecto se genera solo conforme a lo que considere acertado. Si el
+       secretario decide arriesgar sus consultas sin supervisión, dejémoslo —
+       pero queda expuesto a tenerlo que cambiar».
+
+       NO SE ENCADENAN LOS CALLBACKS DE LA PANTALLA, y no es un capricho: cada
+       paso lee el estado que puso el anterior, y en React ese estado todavía no
+       ha llegado cuando el siguiente arranca. Llamar a `pedirAcervo` y después a
+       `pedirPropuesta` daría una propuesta sobre una lista de problemas vacía.
+       Aquí los cuatro resultados viajan en variables locales y el estado se
+       actualiza al paso, sólo para que la pantalla acompañe.
+
+       EL SENTIDO LO DECIDE EL MOTOR, que es lo que hace este camino distinto:
+       se manda lo que la propuesta calificó, sin que nadie lo revise. Es
+       exactamente el riesgo que David acepta ofrecer. */
+    const generarTodo = useCallback(async () => {
+        setError(''); setCorriendo(true); setAvance('');
+        try {
+            // 1 · el adelanto: los dos PDF leídos, la ficha y los problemas.
+            const ade = await generarAdelanto(
+                { ...encargo, tipoAsunto: encargo.tipoAsunto,
+                  modo: ficheros.plantilla ? 'plantilla' : 'generado' },
+                { plantilla: ficheros.plantilla, acto: ficheros.acto!,
+                  conceptos: ficheros.conceptos! },
+                correo);
+            descargar(ade);
+            setPaso('adelanto');
+            void traerContexto(encargo.numero);
+
+            /* EL CÓMPUTO PARA ESTE CAMINO EN SECO, y es la única frenada que
+               tiene. Extemporánea significa que el recurso no se estudia en el
+               fondo: seguir de largo escribiría un proyecto que resuelve lo que
+               no debe resolverse, y sin nadie mirando. El camino largo sólo
+               avisa porque allí el secretario lee el aviso y decide; aquí no
+               hay quién lo lea. */
+            if (ade.oportunidad === 'EXTEMPORANEA') {
+                setError('El cómputo da EXTEMPORÁNEA y este camino no se detiene '
+                       + 'a preguntar: se paró aquí. El adelanto ya se descargó. '
+                       + 'Comprueba la fecha de notificación; si el cómputo es '
+                       + 'correcto, el asunto no se resuelve en el fondo y no hay '
+                       + 'proyecto que generar.');
+                irA('recorrido');
+                return;
+            }
+
+            // 2 · el acervo. El contexto se guarda antes de buscar, igual que
+            //     en el camino largo: es lo que afina la búsqueda.
+            if (contexto.trim()) {
+                await aportarContexto(correo, null, contexto, encargo.numero)
+                    .catch(() => { /* si no se guarda, igual viaja abajo */ });
+            }
+            const mat = await consultarAcervo(encargo.numero, correo,
+                                              'leyes_queretaro', contexto);
+            setMaterial(mat);
+            /* Se arman igual que en el camino largo: si este atajo acaba
+               cayendo a la pantalla de criterio —porque el motor no se atrevió—,
+               el secretario la encuentra completa y no a medias. */
+            const cands = mat.tesis.slice(0, 4).map((t) => ({
+                tipo: 'tesis' as const, registro: t.registro, rubro: t.rubro,
+                instancia: t.instancia,
+                porQue: t.obligatoria
+                    ? 'Jurisprudencia obligatoria del tema: vincula a este Tribunal.'
+                    : 'Tesis orientadora: ilustra, no vincula.',
+                verificado: true,
+            }));
+            const probs = mat.problemas.map((q, i) => ({
+                id: `p${i}`, pregunta: q.pregunta, resolvio: q.resolvio,
+                combate: q.combate, impedimento: q.impedimento ?? undefined,
+                candidatos: cands, criterio: '',
+            }));
+            setProblemas(probs);
+            setPaso('acervo');
+
+            // 3 · la propuesta: aquí decide el motor.
+            const pro = await proponerSolucion(encargo.numero, correo, contexto);
+            setPropuesta(pro);
+
+            // 4 · y se resuelve con lo que él propuso, sin revisión.
+            const VALIDOS = ['fundado', 'esencialmente_fundado',
+                             'sustancialmente_fundado', 'parcialmente_fundado',
+                             'fundado_insuficiente', 'infundado', 'inoperante',
+                             'inatendible', 'ineficaz', 'sin_materia'];
+            /* NO SE MANDAN: sólo se cuentan. Sirven para saber si el motor se
+               atrevió con algo; el reparto lo hace el servidor con las mismas
+               propuestas, que ya guardó. */
+            const criterios = probs.map((q, i) => {
+                const sug = pro.propuestas[i];
+                if (!sug || !sug.alcanza || !VALIDOS.includes(sug.sentido || ''))
+                    return null;
+                return {
+                    problema: q.pregunta, sentido: sug.sentido,
+                    razonamiento: sug.razon ?? '',
+                    jerarquia: sug.jerarquia ?? 'accesorio',
+                    prediccion: sug.prediccion ?? {},
+                };
+            }).filter(Boolean);
+            if (!criterios.length && !pro.global?.alcanza) {
+                // EL MOTOR NO SE ATREVIÓ, así que este camino tampoco. Se deja
+                // al secretario en la ventana de criterio con todo cargado, que
+                // es donde habría llegado por el camino largo.
+                setModo('por_problema');
+                setError('El motor no pudo decidir el sentido de ningún '
+                       + 'planteamiento con el material de este asunto. No se '
+                       + 'generó nada: el criterio te toca a ti, y lo tienes '
+                       + 'todo cargado más abajo.');
+                irA('criterio', 400);
+                return;
+            }
+            const rg = await resolverEnVivo(
+                encargo.numero, correo,
+                pro.global?.alcanza
+                    ? { sentidoGlobal: pro.global.sentido,
+                        razonGlobal: pro.global.razon,
+                        globalDictado: false,
+                        globalJson: JSON.stringify(pro.global),
+                        resolvioDeclarado: pro.global.contexto?.resolvio ?? '',
+                        responsable: encargo.responsable,
+                        contexto }
+                    : { porJurimetria: true,
+                        responsable: encargo.responsable, contexto },
+                (t) => setAvance((x) => x + t),
+                () => setAvance((x) => x + '\n\n… componiendo el documento'));
+            setProyecto(rg);
+            descargarProyecto(rg);
+            void traerGuardados(encargo.numero);
+            setPaso('proyecto');
+            irA('proyecto', 400);
+        } catch (e) {
+            setError(e instanceof Error ? e.message
+                   : 'No se pudo generar el proyecto completo.');
+        } finally { setCorriendo(false); }
+    }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados]);
+
     const pedirPropuesta = useCallback(async () => {
         setError(''); setCorriendo(true); setProponiendo(true);
         try {
@@ -1471,6 +1609,46 @@ export default function TallerDeSentencias() {
                                 Buscar solución jurídica
                             </button>
                         </div>
+
+            {/* ═══ EL ATAJO DE UN SOLO CLIC ═══
+                David: «una opción con un botón amarillo desde el principio que
+                diga "Genera todo el proyecto" y abajo, con letras más pequeñas,
+                "Se decide por jurimetría. No recomendado". (…) Si el secretario
+                decide arriesgar sus consultas sin supervisión, dejémoslo que use
+                el taller y le resuelva, pero queda expuesto a que él lo tenga
+                que cambiar».
+
+                VA APARTE Y NO EN LA FILA DE ARRIBA, y es deliberado: el camino
+                recomendado es el dorado, que se detiene una vez a que él decida.
+                Dos botones del mismo color en la misma fila serían dos caminos
+                de igual rango, y no lo son. Aquí está el amarillo, separado por
+                la línea, con su advertencia pegada debajo —donde se lee antes de
+                pulsar, no después—. */}
+                        {paso === 'ficha' && (
+                        <div className="mt-4 border-t border-white/[0.08] pt-4">
+                            <button className={cn(
+                                        boton,
+                                        'bg-amber-400 text-charcoal-900 hover:bg-amber-300',
+                                        'disabled:bg-amber-400/30 disabled:text-charcoal-900/40')}
+                                    disabled={corriendo || falta.length > 0 || !!sinAcceso}
+                                    onClick={generarTodo}>
+                                {corriendo
+                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                    : <Zap className="h-4 w-4" />}
+                                Genera todo el proyecto
+                            </button>
+                            <p className="mt-1.5 text-[11px] leading-relaxed text-white/40">
+                                Se decide por jurimetría. No recomendado.
+                            </p>
+                            <p className="mt-1 text-[11px] leading-relaxed text-white/30">
+                                Salta los ocho pasos y entrega el proyecto terminado,
+                                con el sentido que el motor considere acertado. Nadie
+                                lo revisa antes de escribirlo: si no coincide con tu
+                                criterio, el cambio corre por tu cuenta. Cuesta lo
+                                mismo que el camino con supervisión.
+                            </p>
+                        </div>
+                        )}
 
                         {falta.length > 0 && paso === 'ficha' && (
                             <p className="mt-3 text-[12px] text-white/40">
