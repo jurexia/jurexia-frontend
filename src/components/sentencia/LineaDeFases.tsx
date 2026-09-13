@@ -22,7 +22,7 @@ const ICONO: Record<EstadoFase, React.ComponentType<{ className?: string }>> = {
 };
 
 const COLOR: Record<EstadoFase, string> = {
-    pendiente: 'text-white/20 border-white/[0.08] bg-white/[0.02]',
+    pendiente: 'text-white/45 border-white/[0.08] bg-white/[0.02]',
     corriendo: 'text-accent-gold border-accent-gold/40 bg-accent-gold/10',
     lista: 'text-emerald-300 border-emerald-400/30 bg-emerald-400/10',
     espera: 'text-amber-300 border-amber-400/45 bg-amber-400/10',
@@ -83,10 +83,16 @@ export default function LineaDeFases({
                                     </span>
                                 ) : null}
                             </span>
-                            <span className={cn(
-                                'mt-0.5 block text-[11.5px] leading-relaxed',
-                                f.estado === 'pendiente' ? 'text-white/20' : 'text-white/45',
-                            )}>
+                            {/* LA DESCRIPCIÓN SE LEE SIEMPRE, pendiente o no.
+                                Estaba al 20% mientras el paso no hubiera
+                                corrido, y eso dejaba el mapa entero ilegible
+                                justo cuando más sirve: al abrir el asunto, con
+                                los nueve pasos pendientes, que es cuando el
+                                secretario quiere saber qué va a pasar.
+                                El estado lo dicen el anillo y el título —que sí
+                                cambian—, no el borrado de lo que explica. */}
+                            <span className="mt-0.5 block text-[11.5px] leading-relaxed
+                                             text-white/45">
                                 {f.detalle}
                             </span>
                         </button>

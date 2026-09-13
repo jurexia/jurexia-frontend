@@ -156,18 +156,40 @@ function SelectorTipo({ tipos, valor, onElegir }: {
                                   + 'hover:bg-white/[0.05] hover:-translate-y-px',
                         )}
                     >
-                        <span className={cn(
-                            // SIN `capitalize`: el servidor manda «amparo en
-                            // revisión» bien escrito y la clase lo convertía en
-                            // «Amparo En Revisión», con la preposición en alta.
-                            // Se pone en alta sólo la primera letra.
-                            'block text-[13px] font-medium first-letter:uppercase',
-                            activo ? 'text-accent-gold' : 'text-white/75',
-                        )}>
-                            {t.nombre}
+                        {/* EL PLAZO ES UN DATO, NO UNA FRASE. Iba pegado a su
+                            fundamento en una sola línea —«15 días · artículo 63
+                            de la Ley Federal de Procedimiento Contencioso
+                            Administrativo»— y ese nombre largo rompía en cuatro
+                            renglones: la tarjeta de revisión fiscal crecía, la
+                            de al lado se estiraba para igualarla y la rejilla
+                            quedaba visiblemente desigual.
+
+                            Ahora el número va arriba, alineado a la derecha y
+                            en cifras tabulares, que es lo que se busca de un
+                            vistazo —y lo que más cuesta cuando se yerra—; el
+                            fundamento queda debajo, a dos renglones como mucho.
+                            Todas las tarjetas miden lo mismo. */}
+                        <span className="flex items-baseline justify-between gap-2">
+                            <span className={cn(
+                                // SIN `capitalize`: el servidor manda «amparo en
+                                // revisión» bien escrito y la clase lo convertía
+                                // en «Amparo En Revisión», con la preposición en
+                                // alta. Se pone en alta sólo la primera letra.
+                                'text-[13px] font-medium first-letter:uppercase',
+                                activo ? 'text-accent-gold' : 'text-white/90',
+                            )}>
+                                {t.nombre}
+                            </span>
+                            <span className={cn(
+                                'shrink-0 text-[11px] font-semibold tabular-nums',
+                                activo ? 'text-accent-gold' : 'text-white/60',
+                            )}>
+                                {t.plazo.dias} días
+                            </span>
                         </span>
-                        <span className="mt-0.5 block text-[11px] text-white/45">
-                            {t.plazo.dias} días · {t.plazo.fundamento}
+                        <span className="mt-1 block text-[11px] leading-snug text-white/45
+                                         line-clamp-2">
+                            {t.plazo.fundamento}
                         </span>
                     </button>
                 );
