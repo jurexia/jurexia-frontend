@@ -139,8 +139,14 @@ function Campo({ etiqueta, ayuda, children }: {
 function SelectorTipo({ tipos, valor, onElegir }: {
     tipos: TipoAsunto[]; valor: string; onElegir: (clave: string) => void;
 }) {
+    /* UNA COLUMNA, NO DOS. Estas tarjetas viven en el raíl izquierdo, que mide
+       400px: en dos columnas cada una se queda en 190 y ahí no caben el nombre
+       y el plazo en la misma línea —«Amparo en revisión» se partía en dos
+       renglones y «Revisión fiscal» arrastraba cuatro—. En una columna entran
+       de largo, las cuatro miden igual y se siguen viendo todas de un vistazo,
+       que era el motivo de no usar un desplegable. */
     return (
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2">
             {tipos.map((t) => {
                 const activo = t.clave === valor;
                 return (
@@ -187,8 +193,12 @@ function SelectorTipo({ tipos, valor, onElegir }: {
                                 {t.plazo.dias} días
                             </span>
                         </span>
-                        <span className="mt-1 block text-[11px] leading-snug text-white/45
-                                         line-clamp-2">
+                        {/* SIN `block`: las dos clases ponen `display` y la
+                            que ganaba era `block`, así que el recorte no
+                            recortaba nada —se veían los cuatro renglones—.
+                            `line-clamp-2` ya trae el suyo. */}
+                        <span className="mt-1 line-clamp-2 text-[11px] leading-snug
+                                         text-white/45">
                             {t.plazo.fundamento}
                         </span>
                     </button>
