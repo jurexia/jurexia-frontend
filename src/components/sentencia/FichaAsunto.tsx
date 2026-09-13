@@ -18,7 +18,7 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: React.ReactNode })
     return (
         <div className="min-w-0">
             <dt className="text-[10px] uppercase tracking-wider text-white/45">{etiqueta}</dt>
-            <dd className="mt-0.5 truncate text-[12.5px] text-white/75" title={typeof valor === 'string' ? valor : undefined}>
+            <dd className="mt-0.5 truncate text-[13px] text-white/75" title={typeof valor === 'string' ? valor : undefined}>
                 {valor || <span className="text-white/45">—</span>}
             </dd>
         </div>
@@ -45,15 +45,15 @@ export default function FichaAsunto({ asunto }: { asunto: Asunto }) {
                 />
             </dl>
 
-            <div className="mt-4 rounded-2xl border-l-2 border-white/15 bg-black/20 py-3 pl-3.5 pr-3">
+            <div className="mt-4 rounded-2xl border-l-2 border-white/20 bg-black/20 py-3 pl-3.5 pr-3">
                 <p className="mb-1 text-[10px] uppercase tracking-wider text-white/45">Acto reclamado</p>
-                <p className="text-[12px] leading-relaxed text-white/60">{asunto.actoReclamado}</p>
+                <p className="text-[13px] leading-relaxed text-white/60">{asunto.actoReclamado}</p>
             </div>
 
             {o && (
                 <div className="mt-4 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3.5">
                     <div className="mb-2.5 flex items-center justify-between gap-3">
-                        <span className="flex items-center gap-1.5 text-[11px] font-medium text-white/60">
+                        <span className="flex items-center gap-1.5 text-[12px] font-medium text-white/60">
                             <CalendarDays className="h-3.5 w-3.5 text-accent-gold" />
                             Oportunidad
                         </span>
@@ -68,7 +68,7 @@ export default function FichaAsunto({ asunto }: { asunto: Asunto }) {
                         <Dato etiqueta="Presentación" valor={o.presentacion} />
                         <Dato etiqueta="Plazo" valor={`${o.plazo} días hábiles`} />
                     </dl>
-                    <p className="mt-2.5 text-[10.5px] leading-relaxed text-white/45">
+                    <p className="mt-2.5 text-[12px] leading-relaxed text-white/45">
                         Contado sobre el calendario de días hábiles del PJF. Los dos
                         calendarios van a la síntesis del documento final.
                     </p>

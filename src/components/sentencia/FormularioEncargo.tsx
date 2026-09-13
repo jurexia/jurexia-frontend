@@ -115,7 +115,7 @@ const VIAS = [
 ];
 
 const campo = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 ' +
-    'text-[13px] text-white/90 outline-none transition placeholder:text-white/45 ' +
+    'text-[14px] text-white/90 outline-none transition placeholder:text-white/45 ' +
     'focus:border-accent-gold/40 focus:bg-white/[0.06]';
 
 function Campo({ etiqueta, ayuda, children }: {
@@ -123,11 +123,11 @@ function Campo({ etiqueta, ayuda, children }: {
 }) {
     return (
         <label className="block">
-            <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
+            <span className="mb-1.5 block text-[12px] font-medium uppercase tracking-wide text-white/45">
                 {etiqueta}
             </span>
             {children}
-            {ayuda && <span className="mt-1 block text-[11px] text-white/45">{ayuda}</span>}
+            {ayuda && <span className="mt-1 block text-[12px] text-white/45">{ayuda}</span>}
         </label>
     );
 }
@@ -158,7 +158,7 @@ function SelectorTipo({ tipos, valor, onElegir }: {
                             'rounded-2xl border px-4 py-3 text-left transition-all duration-200',
                             activo
                                 ? 'border-accent-gold/45 bg-accent-gold/[0.07] shadow-[0_0_30px_-14px_rgba(201,169,98,0.5)]'
-                                : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 '
+                                : 'border-white/[0.07] bg-white/[0.03] hover:border-white/20 '
                                   + 'hover:bg-white/[0.05] hover:-translate-y-px',
                         )}
                     >
@@ -181,13 +181,13 @@ function SelectorTipo({ tipos, valor, onElegir }: {
                                 // revisión» bien escrito y la clase lo convertía
                                 // en «Amparo En Revisión», con la preposición en
                                 // alta. Se pone en alta sólo la primera letra.
-                                'text-[13px] font-medium first-letter:uppercase',
+                                'text-[14px] font-medium first-letter:uppercase',
                                 activo ? 'text-accent-gold' : 'text-white/90',
                             )}>
                                 {t.nombre}
                             </span>
                             <span className={cn(
-                                'shrink-0 text-[11px] font-semibold tabular-nums',
+                                'shrink-0 text-[12px] font-semibold tabular-nums',
                                 activo ? 'text-accent-gold' : 'text-white/60',
                             )}>
                                 {t.plazo.dias} días
@@ -197,7 +197,7 @@ function SelectorTipo({ tipos, valor, onElegir }: {
                             que ganaba era `block`, así que el recorte no
                             recortaba nada —se veían los cuatro renglones—.
                             `line-clamp-2` ya trae el suyo. */}
-                        <span className="mt-1 line-clamp-2 text-[11px] leading-snug
+                        <span className="mt-1 line-clamp-2 text-[12px] leading-snug
                                          text-white/45">
                             {t.plazo.fundamento}
                         </span>
@@ -258,7 +258,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
     return (
         <Tarjeta>
             <Rotulo accion={
-                <span className="text-[11px] text-white/45">
+                <span className="text-[12px] text-white/45">
                     {tipo ? 'lo lees de un sello' : 'empieza por aquí'}
                 </span>
             }>
@@ -274,9 +274,9 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                                : 'Cada asunto lleva sus apartados, su vocabulario y su plazo'}>
                 {errorCatalogo && (
                     <div className="mb-3 rounded-lg border border-red-400/30 bg-red-400/[0.06] px-3 py-2.5">
-                        <p className="text-[12px] leading-relaxed text-red-100">{errorCatalogo}</p>
+                        <p className="text-[13px] leading-relaxed text-red-100">{errorCatalogo}</p>
                         <button type="button" onClick={cargarCatalogo} disabled={cargandoCatalogo}
-                                className="mt-1.5 text-[12px] font-medium text-red-200 underline
+                                className="mt-1.5 text-[13px] font-medium text-red-200 underline
                                            underline-offset-2 hover:text-red-100 disabled:opacity-40">
                             {cargandoCatalogo ? 'reintentando…' : 'Reintentar'}
                         </button>
@@ -403,7 +403,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                     <div className="flex flex-wrap items-center gap-2">
                         {(valor.diasInhabilesExtra ?? []).map((d) => (
                             <span key={d}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-accent-gold/25 bg-accent-gold/10 px-2.5 py-1 text-[12px] text-accent-gold">
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-accent-gold/25 bg-accent-gold/10 px-2.5 py-1 text-[13px] text-accent-gold">
                                 {d}
                                 <button type="button" aria-label={`Quitar ${d}`}
                                         className="text-accent-gold/60 transition hover:text-accent-gold"
@@ -436,7 +436,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                                value={valor.inhabilesResponsable ?? ''}
                                placeholder="2025-12-16..2026-01-05, 2026-02-12"
                                onChange={(e) => set('inhabilesResponsable', e.target.value)} />
-                        <p className="mt-1 text-[11px] leading-relaxed text-white/45">
+                        <p className="mt-1 text-[12px] leading-relaxed text-white/45">
                             Un periodo es un tramo con dos puntos; un día suelto va solo.
                             Se suman a los inhábiles del artículo 19, no los sustituyen, y
                             sólo pueden alargar el plazo, nunca acortarlo.
@@ -446,10 +446,10 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
 
                 {/* EL PLAZO SE MUESTRA, NO SE PIDE. Es la ley. */}
                 <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-3">
-                    <span className="block text-[11px] font-medium uppercase tracking-wide text-white/45">
+                    <span className="block text-[12px] font-medium uppercase tracking-wide text-white/45">
                         Plazo
                     </span>
-                    <p className="mt-1 text-[13px] text-white/75">
+                    <p className="mt-1 text-[14px] text-white/75">
                         <span className="text-accent-gold">
                             {valor.excepcionPlazo
                                 ? (() => {
@@ -470,8 +470,8 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                     </p>
 
                     {tipo.excepciones_de_plazo.length > 0 && (
-                        <div className="mt-3 border-t border-white/[0.06] pt-3">
-                            <span className="mb-1.5 block text-[11px] text-white/45">
+                        <div className="mt-3 border-t border-white/[0.07] pt-3">
+                            <span className="mb-1.5 block text-[12px] text-white/45">
                                 ¿El asunto cae en alguna excepción? Esto no se deduce del
                                 expediente: lo sabes tú.
                             </span>
@@ -491,7 +491,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                     )}
                 </div>
 
-                <p className="text-[11px] leading-relaxed text-white/45">
+                <p className="text-[12px] leading-relaxed text-white/45">
                     Este proyecto llevará {tipo.apartados.considerandos.length} considerandos
                     —{tipo.apartados.considerandos.join(', ').toLowerCase()}— y se dirá
                     «{tipo.combate}», no otra cosa. Medido sobre {tipo.medido_sobre} adelantos

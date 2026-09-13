@@ -30,7 +30,7 @@ export function Tarjeta({
     return (
         <Tag
             className={cn(
-                'relative rounded-3xl border border-white/[0.07] bg-white/[0.035]',
+                'relative rounded-2xl border border-white/[0.07] bg-white/[0.035]',
                 'backdrop-blur-xl transition-colors duration-300',
                 glow && 'shadow-[0_0_60px_-20px_rgba(201,169,98,0.35)]',
                 padding, className,
@@ -67,7 +67,7 @@ export function Pastilla({
             onClick={onClick}
             className={cn(
                 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1',
-                'text-[11px] font-medium leading-none tracking-wide',
+                'text-[12px] font-medium leading-none tracking-wide',
                 'transition-all duration-200',
                 onClick && 'hover:scale-[1.03] active:scale-[0.98] cursor-pointer',
                 activa ? TONOS.oro : TONOS[tono],
@@ -86,10 +86,10 @@ export function Rotulo({
 }: { children: React.ReactNode; contador?: number; accion?: React.ReactNode }) {
     return (
         <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+            <h2 className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">
                 {children}
                 {contador !== undefined && (
-                    <span className="rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[10px] tabular-nums text-white/60">
+                    <span className="rounded-lg bg-white/[0.06] px-1.5 py-0.5 text-[10px] tabular-nums text-white/60">
                         {contador}
                     </span>
                 )}

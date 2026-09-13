@@ -39,7 +39,7 @@ function Parrafo({ rotulo, texto }: { rotulo: string; texto: string }) {
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">
                 {rotulo}
             </p>
-            <p className="text-[13px] leading-relaxed text-white/75">{texto}</p>
+            <p className="text-[14px] leading-relaxed text-white/75">{texto}</p>
         </div>
     );
 }
@@ -108,8 +108,8 @@ export default function SolucionDelAsunto({
 
             {/* ── 1 · EL CONTEXTO ─────────────────────────────────────────── */}
             {hayContexto && (
-                <section className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-4">
-                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                    <p className="mb-3 text-[12px] font-semibold uppercase tracking-wide text-white/45">
                         El asunto, en cuatro párrafos
                     </p>
                     <div className="space-y-3">
@@ -122,7 +122,7 @@ export default function SolucionDelAsunto({
                             <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-accent-gold/80">
                                 El tema del que cuelga todo
                             </p>
-                            <p className="text-[13px] leading-relaxed text-white/90">
+                            <p className="text-[14px] leading-relaxed text-white/90">
                                 {ctx.tema_principal}
                             </p>
                         </div>
@@ -141,11 +141,11 @@ export default function SolucionDelAsunto({
                  conjunta «salvo que declares que se estudian juntos y por
                  qué». Faltaba quién lo declarara, y ése es el secretario. */}
             {problemas.length > 0 && (
-                <section className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-4">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                    <p className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-white/45">
                         De lo anterior derivan estos problemas jurídicos
                     </p>
-                    <p className="mb-3 text-[11px] leading-relaxed text-white/45">
+                    <p className="mb-3 text-[12px] leading-relaxed text-white/45">
                         Marca dos o más si están tan ligados que se resuelven con
                         una sola línea argumentativa: el estudio los tratará
                         juntos y dirá por qué.
@@ -158,27 +158,27 @@ export default function SolucionDelAsunto({
                                 <div key={p.id}
                                      className={`flex items-start gap-2 rounded-xl border px-2.5 py-2 transition-colors ${
                                          g ? 'border-accent-gold/30 bg-accent-gold/[0.05]'
-                                           : sel ? 'border-white/25 bg-white/[0.05]'
+                                           : sel ? 'border-white/20 bg-white/[0.05]'
                                                  : 'border-white/[0.07] bg-white/[0.02]'}`}>
                                     <button type="button"
                                             onClick={() => setMarcados((m) =>
                                                 m.includes(p.id) ? m.filter((x) => x !== p.id) : [...m, p.id])}
-                                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[9px] ${
+                                            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] ${
                                                 sel ? 'border-accent-gold bg-accent-gold/30 text-white'
-                                                    : 'border-white/25 text-transparent'}`}
+                                                    : 'border-white/20 text-transparent'}`}
                                             aria-label={`Marcar el problema ${i + 1}`}>✓</button>
-                                    <p className="flex-1 text-[12.5px] leading-relaxed text-white/75">
+                                    <p className="flex-1 text-[13px] leading-relaxed text-white/75">
                                         <span className="text-white/45">{i + 1}. </span>
                                         {p.pregunta}
                                     </p>
                                     {p.jerarquia === 'principal' && (
-                                        <span className="mt-0.5 shrink-0 rounded bg-white/[0.08] px-1.5 py-0.5 text-[9.5px] uppercase text-white/60">
+                                        <span className="mt-0.5 shrink-0 rounded bg-white/[0.08] px-1.5 py-0.5 text-[10px] uppercase text-white/60">
                                             principal
                                         </span>
                                     )}
                                     {g && (
                                         <button type="button" onClick={() => desagrupar(g)}
-                                                className="mt-0.5 shrink-0 rounded bg-accent-gold/20 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase text-accent-gold/90"
+                                                className="mt-0.5 shrink-0 rounded bg-accent-gold/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-accent-gold/90"
                                                 title="Separar este grupo">
                                             juntos · {g} ✕
                                         </button>
@@ -189,7 +189,7 @@ export default function SolucionDelAsunto({
                     </div>
                     {marcados.length >= 2 && (
                         <button type="button" onClick={agrupar}
-                                className="mt-2.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-3 py-1.5 text-[11.5px] font-medium text-accent-gold/90 transition-colors hover:bg-accent-gold/20">
+                                className="mt-2.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-3 py-1.5 text-[12px] font-medium text-accent-gold/90 transition-colors hover:bg-accent-gold/20">
                             Estudiar juntos los {marcados.length} marcados
                         </button>
                     )}
@@ -197,11 +197,11 @@ export default function SolucionDelAsunto({
             )}
 
             {/* ── 2 · LAS DOS VÍAS ────────────────────────────────────────── */}
-            <section className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-4">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/45">
+            <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                <p className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-white/45">
                     Cómo se resuelve
                 </p>
-                <p className="mb-3 text-[12px] leading-relaxed text-white/45">
+                <p className="mb-3 text-[13px] leading-relaxed text-white/45">
                     El motor propone. Decides tú: puedes seguir su propuesta o
                     resolver al revés, y en cualquiera de los dos casos corregir
                     el texto antes de generar.
@@ -213,22 +213,22 @@ export default function SolucionDelAsunto({
                             className={cn('rounded-xl border p-3 text-left transition-colors',
                                 via === 'propuesta'
                                     ? 'border-accent-gold/50 bg-accent-gold/[0.07]'
-                                    : 'border-white/[0.09] bg-white/[0.02] hover:bg-white/[0.04]')}>
+                                    : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.04]')}>
                         <div className="mb-1 flex items-center gap-2">
                             <span className={cn('flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                                 via === 'propuesta'
                                     ? 'border-accent-gold bg-accent-gold text-charcoal-900'
-                                    : 'border-white/25')}>
+                                    : 'border-white/20')}>
                                 {via === 'propuesta' && <Check className="h-3 w-3" strokeWidth={3} />}
                             </span>
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-white/75">
+                            <span className="text-[12px] font-semibold uppercase tracking-wide text-white/75">
                                 La propuesta
                             </span>
                             <span className="ml-auto rounded bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-medium uppercase text-white/75">
                                 {global.sentido}
                             </span>
                         </div>
-                        <p className="text-[12px] leading-snug text-white/60">
+                        <p className="text-[13px] leading-snug text-white/60">
                             {global.razon?.slice(0, 190)}
                             {(global.razon?.length ?? 0) > 190 ? '…' : ''}
                         </p>
@@ -241,16 +241,16 @@ export default function SolucionDelAsunto({
                                 !hayAlternativa && 'cursor-not-allowed opacity-40',
                                 via === 'alternativa' && hayAlternativa
                                     ? 'border-accent-gold/50 bg-accent-gold/[0.07]'
-                                    : 'border-white/[0.09] bg-white/[0.02] hover:bg-white/[0.04]')}>
+                                    : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.04]')}>
                         <div className="mb-1 flex items-center gap-2">
                             <span className={cn('flex h-4 w-4 shrink-0 items-center justify-center rounded-full border',
                                 via === 'alternativa' && hayAlternativa
                                     ? 'border-accent-gold bg-accent-gold text-charcoal-900'
-                                    : 'border-white/25')}>
+                                    : 'border-white/20')}>
                                 {via === 'alternativa' && hayAlternativa &&
                                     <Check className="h-3 w-3" strokeWidth={3} />}
                             </span>
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-white/75">
+                            <span className="text-[12px] font-semibold uppercase tracking-wide text-white/75">
                                 Resolver al revés
                             </span>
                             {hayAlternativa && (
@@ -259,7 +259,7 @@ export default function SolucionDelAsunto({
                                 </span>
                             )}
                         </div>
-                        <p className="text-[12px] leading-snug text-white/60">
+                        <p className="text-[13px] leading-snug text-white/60">
                             {hayAlternativa
                                 ? alt.razon.slice(0, 190) + (alt.razon.length > 190 ? '…' : '')
                                 : 'El motor no escribió la vía contraria. Puedes razonarla tú abajo.'}
@@ -268,7 +268,7 @@ export default function SolucionDelAsunto({
                 </div>
 
                 {hayAlternativa && (
-                    <p className="mt-2 text-[10.5px] leading-relaxed text-white/45">
+                    <p className="mt-2 text-[12px] leading-relaxed text-white/45">
                         Cambiar de vía sustituye la razón de abajo: son
                         resoluciones opuestas y quedarse con la razón de la otra
                         es lo que produce un proyecto incongruente.
@@ -283,7 +283,7 @@ export default function SolucionDelAsunto({
                             <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/70">
                                 Por dónde se cae esta propuesta
                             </p>
-                            <p className="text-[11.5px] leading-relaxed text-white/60">
+                            <p className="text-[12px] leading-relaxed text-white/60">
                                 {global.en_contra}
                             </p>
                         </div>
@@ -291,13 +291,13 @@ export default function SolucionDelAsunto({
                 )}
 
                 {elegida.efecto?.trim() && (
-                    <p className="mt-3 border-t border-white/[0.06] pt-2.5 text-[11.5px] leading-relaxed text-white/45">
+                    <p className="mt-3 border-t border-white/[0.07] pt-2.5 text-[12px] leading-relaxed text-white/45">
                         <span className="text-white/45">Con los demás temas: </span>
                         {elegida.efecto}
                     </p>
                 )}
                 {elegida.apoyos?.length > 0 && (
-                    <p className="mt-1 text-[11px] leading-relaxed text-white/45">
+                    <p className="mt-1 text-[12px] leading-relaxed text-white/45">
                         Se apoya en: {elegida.apoyos.join(' · ')}
                     </p>
                 )}
@@ -306,7 +306,7 @@ export default function SolucionDelAsunto({
             {/* ── 3 · LA RAZÓN, QUE ES SUYA ───────────────────────────────── */}
             <section>
                 <div className="mb-1.5 flex items-baseline gap-2">
-                    <label className="text-[11px] font-medium uppercase tracking-wide text-white/45">
+                    <label className="text-[12px] font-medium uppercase tracking-wide text-white/45">
                         La razón con la que se resuelve
                     </label>
                     {razon.trim() && razon.trim() !== elegida.razon?.trim() && (
@@ -314,7 +314,7 @@ export default function SolucionDelAsunto({
                     )}
                     <button type="button"
                             onClick={() => onRazon(elegida.razon || '')}
-                            className="ml-auto flex items-center gap-1 text-[10.5px] text-white/45 transition-colors hover:text-white/60">
+                            className="ml-auto flex items-center gap-1 text-[12px] text-white/45 transition-colors hover:text-white/60">
                         <RefreshCw className="h-3 w-3" />
                         Volver a la del motor
                     </button>
@@ -324,8 +324,8 @@ export default function SolucionDelAsunto({
                     onChange={(e) => onRazon(e.target.value)}
                     rows={5}
                     placeholder="La razón por la que el proyecto se resuelve así. El estudio entero se construye sobre esto."
-                    className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/90 outline-none transition-colors placeholder:text-white/45 focus:border-accent-gold/40" />
-                <p className="mt-1.5 text-[11px] leading-relaxed text-white/45">
+                    className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[13px] leading-relaxed text-white/90 outline-none transition-colors placeholder:text-white/45 focus:border-accent-gold/40" />
+                <p className="mt-1.5 text-[12px] leading-relaxed text-white/45">
                     Corrígela y hazla tuya. Quien firma eres tú, y es este texto
                     —no el del motor— el que alinea todo el estudio.
                 </p>
@@ -344,14 +344,14 @@ export default function SolucionDelAsunto({
             {necesitaConceptos && (
                 <section className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.04] p-4">
                     <div className="mb-1.5 flex items-baseline gap-2">
-                        <label className="text-[11px] font-semibold uppercase tracking-wide text-amber-300/80">
+                        <label className="text-[12px] font-semibold uppercase tracking-wide text-amber-300/80">
                             Conceptos de violación
                         </label>
                         {conceptos?.trim() && (
                             <span className="text-[10px] text-accent-gold/70">aportados</span>
                         )}
                     </div>
-                    <p className="mb-2 text-[11.5px] leading-relaxed text-white/60">
+                    <p className="mb-2 text-[12px] leading-relaxed text-white/60">
                         Con este sentido se levanta el sobreseimiento, y el
                         tribunal asume jurisdicción: tiene que estudiar los
                         conceptos de violación por primera vez, en un
@@ -364,8 +364,8 @@ export default function SolucionDelAsunto({
                         onChange={(e) => onConceptos?.(e.target.value)}
                         rows={7}
                         placeholder="Pega aquí los conceptos de violación de la demanda de amparo, tal como se plantearon."
-                        className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/90 outline-none transition-colors placeholder:text-white/45 focus:border-accent-gold/40" />
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-white/45">
+                        className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[13px] leading-relaxed text-white/90 outline-none transition-colors placeholder:text-white/45 focus:border-accent-gold/40" />
+                    <p className="mt-1.5 text-[12px] leading-relaxed text-white/45">
                         Si los dejas en blanco el proyecto levanta el
                         sobreseimiento y advierte que el estudio queda
                         pendiente. No se inventan a partir de los agravios: son
@@ -376,11 +376,11 @@ export default function SolucionDelAsunto({
 
             {/* ── 4 · LA LISTA DE COMPROBACIÓN ────────────────────────────── */}
             {global.checklist?.length > 0 && (
-                <section className="rounded-2xl border border-white/[0.09] bg-white/[0.02] p-4">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                    <p className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-white/45">
                         Qué pasa con cada tema
                     </p>
-                    <p className="mb-3 text-[11.5px] leading-relaxed text-white/45">
+                    <p className="mb-3 text-[12px] leading-relaxed text-white/45">
                         Ninguno se queda sin contestar. Repásalo antes de generar.
                     </p>
                     <ul className="space-y-2">
@@ -393,12 +393,12 @@ export default function SolucionDelAsunto({
                                     className={cn('rounded-lg border p-2.5',
                                         sinDeterminar
                                             ? 'border-amber-400/30 bg-amber-400/[0.04]'
-                                            : 'border-white/[0.06] bg-white/[0.02]')}>
+                                            : 'border-white/[0.07] bg-white/[0.02]')}>
                                     <div className="mb-1 flex items-start gap-2">
-                                        <span className="shrink-0 tabular-nums text-[11px] text-white/45">
+                                        <span className="shrink-0 tabular-nums text-[12px] text-white/45">
                                             {String(i + 1).padStart(2, '0')}
                                         </span>
-                                        <span className="min-w-0 flex-1 text-[12px] leading-snug text-white/75">
+                                        <span className="min-w-0 flex-1 text-[13px] leading-snug text-white/75">
                                             {c.tema}
                                         </span>
                                         <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-[10px] uppercase',
@@ -408,12 +408,12 @@ export default function SolucionDelAsunto({
                                             {c.papel}
                                         </span>
                                     </div>
-                                    <p className={cn('pl-6 text-[11.5px] leading-relaxed',
+                                    <p className={cn('pl-6 text-[12px] leading-relaxed',
                                         sinDeterminar ? 'text-amber-200/70' : 'text-white/45')}>
                                         {suerte || '—'}
                                     </p>
                                     {c.tema_distinto && (
-                                        <p className="mt-1 pl-6 text-[10.5px] text-white/45">
+                                        <p className="mt-1 pl-6 text-[12px] text-white/45">
                                             Tema distinto: se estudia aparte, no sigue la
                                             suerte del principal.
                                         </p>

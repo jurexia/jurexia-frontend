@@ -50,8 +50,8 @@ function Camino({
             onClick={onClick}
             style={{ animationDelay: `${retraso}ms` }}
             className={cn(
-                'entrada-tarjeta group relative flex-1 overflow-hidden rounded-3xl border',
-                'border-white/[0.09] bg-black/40 p-6 text-left backdrop-blur-xl',
+                'entrada-tarjeta group relative flex-1 overflow-hidden rounded-2xl border',
+                'border-white/10 bg-black/40 p-6 text-left backdrop-blur-xl',
                 'transition-all duration-300',
                 'hover:border-accent-gold/45 hover:bg-black/30',
                 'hover:shadow-[0_0_60px_-24px_rgba(201,169,98,0.5)]',
@@ -66,16 +66,16 @@ function Camino({
                     {titulo}
                 </span>
                 {insignia && (
-                    <span className="rounded-md border border-accent-gold/30 bg-accent-gold/10
+                    <span className="rounded-lg border border-accent-gold/30 bg-accent-gold/10
                                      px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-accent-gold/90">
                         {insignia}
                     </span>
                 )}
             </span>
-            <span className="mt-2.5 block text-[13px] leading-relaxed text-white/60">{que}</span>
+            <span className="mt-2.5 block text-[14px] leading-relaxed text-white/60">{que}</span>
             {/* EL PORQUÉ, EN LETRA PEQUEÑA. Es lo que David pidió y es lo que
                 convierte un botón en una decisión informada. */}
-            <span className="mt-2 block text-[11.5px] leading-relaxed text-white/45">{porque}</span>
+            <span className="mt-2 block text-[12px] leading-relaxed text-white/45">{porque}</span>
         </button>
     );
 }
@@ -100,9 +100,9 @@ export function Paso({
                 {hecho ? <Check className="h-3 w-3" strokeWidth={3} /> : n}
             </span>
             <div className="min-w-0 flex-1">
-                <p className="text-[12.5px] font-medium text-white/75">{titulo}</p>
+                <p className="text-[13px] font-medium text-white/75">{titulo}</p>
                 {porque && (
-                    <p className="mt-0.5 text-[11.5px] leading-relaxed text-white/45">{porque}</p>
+                    <p className="mt-0.5 text-[12px] leading-relaxed text-white/45">{porque}</p>
                 )}
                 {children && <div className="mt-2">{children}</div>}
             </div>
@@ -126,8 +126,8 @@ function Reanudar({ asuntos, onAbrir }: {
 }) {
     if (!asuntos.length) return null;
     return (
-        <div className="mt-5 border-t border-white/[0.06] px-4 pb-4 pt-4">
-            <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-white/45">
+        <div className="mt-5 border-t border-white/[0.07] px-4 pb-4 pt-4">
+            <p className="mb-2 text-[12px] uppercase tracking-[0.14em] text-white/45">
                 O vuelve a uno tuyo
             </p>
             <div className="flex flex-col gap-1.5">
@@ -140,14 +140,14 @@ function Reanudar({ asuntos, onAbrir }: {
                         <RotateCcw className="h-3.5 w-3.5 shrink-0 text-white/45
                                               transition-colors group-hover:text-accent-gold/70" />
                         <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[12.5px] font-medium text-white/75">
+                            <span className="block truncate text-[13px] font-medium text-white/75">
                                 {a.numero}
                                 <span className="ml-2 font-normal text-white/45">
                                     {a.tipoAsunto.replace(/_/g, ' ')}
                                 </span>
                             </span>
                             {a.quejoso && (
-                                <span className="block truncate text-[11px] text-white/45">
+                                <span className="block truncate text-[12px] text-white/45">
                                     {a.quejoso}
                                 </span>
                             )}
@@ -161,10 +161,10 @@ function Reanudar({ asuntos, onAbrir }: {
                             su pantalla terminada en vez de en el adelanto. */}
                         {a.proyecto ? (
                             <span className="shrink-0 text-right">
-                                <span className="block text-[11px] font-medium text-accent-gold/85">
+                                <span className="block text-[12px] font-medium text-accent-gold/85">
                                     proyecto listo
                                 </span>
-                                <span className="block text-[10.5px] tabular-nums text-white/45">
+                                <span className="block text-[12px] tabular-nums text-white/45">
                                     {a.proyecto.parcial
                                         ? 'sin detalle guardado'
                                         : `${a.proyecto.palabras.toLocaleString('es-MX')} palabras`}
@@ -176,7 +176,7 @@ function Reanudar({ asuntos, onAbrir }: {
                                 </span>
                             </span>
                         ) : (
-                            <span className="shrink-0 text-[11px] text-white/45">
+                            <span className="shrink-0 text-[12px] text-white/45">
                                 {a.problemas > 0
                                     ? `${a.problemas} planteamiento${a.problemas === 1 ? '' : 's'}`
                                     : 'sin adelanto'}
@@ -185,7 +185,7 @@ function Reanudar({ asuntos, onAbrir }: {
                     </button>
                 ))}
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-white/45">
+            <p className="mt-2 text-[12px] leading-relaxed text-white/45">
                 Los que ya tienen proyecto se abren en su pantalla terminada, con sus
                 avisos y su descarga, y desde ahí puedes cambiar el sentido y volver a
                 generarlo. En los demás se recuperan la ficha, los resúmenes y los
@@ -213,8 +213,8 @@ export default function EntradaTaller({
         return (
             /* Centrada y con un ancho de lectura: estirada a mil quinientos
                píxeles, dos tarjetas se convierten en dos pancartas. */
-            <div className="entrada-fondo mx-auto w-full max-w-3xl rounded-3xl p-1 pt-6 sm:p-2 sm:pt-10">
-                <p className="px-4 pb-1 pt-3 text-[11px] uppercase tracking-[0.14em] text-white/45">
+            <div className="entrada-fondo mx-auto w-full max-w-3xl rounded-2xl p-1 pt-6 sm:p-2 sm:pt-10">
+                <p className="px-4 pb-1 pt-3 text-[12px] uppercase tracking-[0.14em] text-white/45">
                     Por dónde empezamos
                 </p>
                 <div className="flex flex-col gap-3 p-2 sm:flex-row">
@@ -247,7 +247,7 @@ export default function EntradaTaller({
     const volver = (
         <button type="button"
                 onClick={() => { onVia(null); onPasoArchivos(null); }}
-                className="inline-flex items-center gap-1.5 text-[11.5px] text-white/45
+                className="inline-flex items-center gap-1.5 text-[12px] text-white/45
                            transition-colors hover:text-white/75">
             <ArrowLeft className="h-3 w-3" />
             cambiar de camino
@@ -258,10 +258,10 @@ export default function EntradaTaller({
         return (
             <div className="flex items-center justify-between gap-3 rounded-2xl border
                             border-white/[0.07] bg-white/[0.02] px-4 py-2.5">
-                <span className="flex items-center gap-2 text-[12.5px] font-medium text-white/75">
+                <span className="flex items-center gap-2 text-[13px] font-medium text-white/75">
                     <Download className="h-3.5 w-3.5 text-accent-gold/70" />
                     Desde SISE
-                    <span className="rounded-md border border-accent-gold/30 bg-accent-gold/10
+                    <span className="rounded-lg border border-accent-gold/30 bg-accent-gold/10
                                      px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-accent-gold/90">
                         beta
                     </span>
@@ -275,7 +275,7 @@ export default function EntradaTaller({
     return (
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-                <span className="flex items-center gap-2 text-[12.5px] font-medium text-white/75">
+                <span className="flex items-center gap-2 text-[13px] font-medium text-white/75">
                     <FileText className="h-3.5 w-3.5 text-accent-gold/70" />
                     Con mis archivos
                 </span>
@@ -288,25 +288,25 @@ export default function EntradaTaller({
                     {!pasoArchivos && (
                         <div className="grid gap-2 sm:grid-cols-2">
                             <button type="button" onClick={() => onPasoArchivos('admision')}
-                                    className="rounded-xl border border-white/[0.09] bg-white/[0.02] p-3
+                                    className="rounded-xl border border-white/10 bg-white/[0.02] p-3
                                                text-left transition-colors hover:border-accent-gold/35
                                                hover:bg-white/[0.04]">
-                                <span className="block text-[12.5px] font-medium text-white/90">
+                                <span className="block text-[13px] font-medium text-white/90">
                                     Tengo el auto de admisión
                                 </span>
-                                <span className="mt-1 block text-[11.5px] leading-snug text-white/45">
+                                <span className="mt-1 block text-[12px] leading-snug text-white/45">
                                     Lo subes y salen solos el expediente, el tipo, el tribunal, la
                                     responsable y el tercero. Son ocho campos que no tecleas.
                                 </span>
                             </button>
                             <button type="button" onClick={() => onPasoArchivos('formulario')}
-                                    className="rounded-xl border border-white/[0.09] bg-white/[0.02] p-3
+                                    className="rounded-xl border border-white/10 bg-white/[0.02] p-3
                                                text-left transition-colors hover:border-accent-gold/35
                                                hover:bg-white/[0.04]">
-                                <span className="block text-[12.5px] font-medium text-white/90">
+                                <span className="block text-[13px] font-medium text-white/90">
                                     Prefiero llenar la ficha
                                 </span>
-                                <span className="mt-1 block text-[11.5px] leading-snug text-white/45">
+                                <span className="mt-1 block text-[12px] leading-snug text-white/45">
                                     A mano, como siempre. También sirve si el auto no está a la
                                     mano o si prefieres comprobar cada dato tú.
                                 </span>
@@ -315,7 +315,7 @@ export default function EntradaTaller({
                     )}
                     {pasoArchivos && (
                         <button type="button" onClick={() => onPasoArchivos(null)}
-                                className="text-[11.5px] text-white/45 transition-colors hover:text-white/75">
+                                className="text-[12px] text-white/45 transition-colors hover:text-white/75">
                             {pasoArchivos === 'admision'
                                 ? 'estás subiendo el auto de admisión · cambiar'
                                 : 'estás llenando la ficha a mano · cambiar'}

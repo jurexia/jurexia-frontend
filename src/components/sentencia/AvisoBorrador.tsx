@@ -70,10 +70,10 @@ export default function AvisoBorrador({ datos, className }: {
             <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" aria-hidden />
                 <div className="min-w-0">
-                    <h3 className="text-[15px] font-semibold text-amber-100">
+                    <h3 className="text-[16px] font-semibold text-amber-100">
                         Borrador. No es un proyecto firmable.
                     </h3>
-                    <p className="mt-1 text-[13px] leading-relaxed text-white/60">
+                    <p className="mt-1 text-[14px] leading-relaxed text-white/60">
                         {datos.palabras.toLocaleString('es-MX')} palabras
                         {datos.avisos > 0 && <> · <span className="text-amber-200">{datos.avisos} avisos</span></>}
                         {datos.huecos > 0 && <> · {datos.huecos} huecos de su criterio</>}
@@ -95,7 +95,7 @@ export default function AvisoBorrador({ datos, className }: {
                             {(datos.textoAvisos ?? []).map((a, i) => {
                                 const [cabeza, cuerpo] = partirAviso(a);
                                 return (
-                                    <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-amber-100/75">
+                                    <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-amber-100/75">
                                         <span className="shrink-0 text-amber-300/70">·</span>
                                         <span>
                                             {cabeza && (
@@ -113,7 +113,7 @@ export default function AvisoBorrador({ datos, className }: {
                     {(datos.textoHuecos?.length ?? 0) > 0 && (
                         <ul className="mt-2 space-y-1.5">
                             {(datos.textoHuecos ?? []).map((h, i) => (
-                                <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-white/60">
+                                <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-white/60">
                                     <span className="shrink-0 text-white/45">·</span>
                                     <span>{h}</span>
                                 </li>
@@ -126,14 +126,14 @@ export default function AvisoBorrador({ datos, className }: {
                             <li key={titulo} className="flex gap-2.5">
                                 <Icono className="mt-0.5 h-4 w-4 shrink-0 text-white/45" aria-hidden />
                                 <div>
-                                    <p className="text-[13px] font-medium text-white/90">{titulo}</p>
-                                    <p className="text-[12px] leading-snug text-white/60">{texto}</p>
+                                    <p className="text-[14px] font-medium text-white/90">{titulo}</p>
+                                    <p className="text-[13px] leading-snug text-white/60">{texto}</p>
                                 </div>
                             </li>
                         ))}
                     </ul>
 
-                    <p className="mt-4 border-t border-white/[0.08] pt-3 text-[12px] text-white/45">
+                    <p className="mt-4 border-t border-white/[0.07] pt-3 text-[13px] text-white/45">
                         Usted firma. El sistema no responde por el contenido.
                     </p>
                 </div>
@@ -147,7 +147,7 @@ export function AvisoPiloto({ secretarios, cupo }: { secretarios: number; cupo: 
     const quedan = Math.max(0, cupo - secretarios);
     return (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5
-                        text-[12px] text-white/60">
+                        text-[13px] text-white/60">
             <span className="font-medium text-white/75">Piloto Platinum</span>
             {' · '}
             {quedan > 0

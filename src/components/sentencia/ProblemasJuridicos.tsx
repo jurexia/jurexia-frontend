@@ -33,7 +33,7 @@ const NOMBRE_TIPO = {
 function FichaCandidato({ c }: { c: Candidato }) {
     const Icono = ICONO_TIPO[c.tipo];
     return (
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3.5 transition-colors hover:border-accent-gold/25">
+        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5 transition-colors hover:border-accent-gold/25">
             <div className="mb-2 flex flex-wrap items-center gap-1.5">
                 <Pastilla tono="oro" icono={Icono}>{NOMBRE_TIPO[c.tipo]}</Pastilla>
                 {c.registro && <Pastilla tono="neutro">Registro {c.registro}</Pastilla>}
@@ -42,8 +42,8 @@ function FichaCandidato({ c }: { c: Candidato }) {
                     <Pastilla tono="verde" icono={ShieldCheck}>verificada</Pastilla>
                 )}
             </div>
-            <p className="text-[12.5px] font-medium leading-relaxed text-white/90">{c.rubro}</p>
-            <p className="mt-1.5 text-[11.5px] leading-relaxed text-white/45">
+            <p className="text-[13px] font-medium leading-relaxed text-white/90">{c.rubro}</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-white/45">
                 <span className="text-white/60">Aplica porque</span> {c.porQue}
             </p>
         </div>
@@ -56,7 +56,7 @@ export default function ProblemasJuridicos({ problemas }: { problemas: ProblemaJ
     return (
         <Tarjeta>
             <Rotulo contador={problemas.length}>Problemas jurídicos</Rotulo>
-            <p className="mb-4 text-[12px] leading-relaxed text-white/45">
+            <p className="mb-4 text-[13px] leading-relaxed text-white/45">
                 Salen del contraste entre lo que resolvió la responsable y lo que se
                 combate. Cada uno trae lo que se encontró para resolverlo.
             </p>
@@ -71,18 +71,18 @@ export default function ProblemasJuridicos({ problemas }: { problemas: ProblemaJ
                                 'overflow-hidden rounded-2xl border transition-colors duration-300',
                                 activo
                                     ? 'border-accent-gold/25 bg-white/[0.035]'
-                                    : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]',
+                                    : 'border-white/[0.07] bg-white/[0.02] hover:border-white/10',
                             )}
                         >
                             <button
                                 onClick={() => setAbierto(activo ? null : p.id)}
                                 className="flex w-full items-start gap-3 px-4 py-3.5 text-left"
                             >
-                                <span className="mt-0.5 text-[11px] font-semibold tabular-nums text-accent-gold">
+                                <span className="mt-0.5 text-[12px] font-semibold tabular-nums text-accent-gold">
                                     {String(i + 1).padStart(2, '0')}
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                    <span className="block text-[13px] leading-relaxed text-white/90">
+                                    <span className="block text-[14px] leading-relaxed text-white/90">
                                         {p.pregunta}
                                     </span>
                                     <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -104,29 +104,29 @@ export default function ProblemasJuridicos({ problemas }: { problemas: ProblemaJ
                             </button>
 
                             {activo && (
-                                <div className="space-y-4 border-t border-white/[0.06] px-4 pb-4 pt-4">
+                                <div className="space-y-4 border-t border-white/[0.07] px-4 pb-4 pt-4">
                                     <div className="grid gap-3 sm:grid-cols-2">
-                                        <div className="rounded-2xl border-l-2 border-white/15 bg-black/20 py-3 pl-3.5 pr-3">
+                                        <div className="rounded-2xl border-l-2 border-white/20 bg-black/20 py-3 pl-3.5 pr-3">
                                             <p className="mb-1.5 text-[10px] uppercase tracking-wider text-white/45">
                                                 Resolvió la responsable
                                             </p>
-                                            <p className="text-[12px] leading-relaxed text-white/60">{p.resolvio}</p>
+                                            <p className="text-[13px] leading-relaxed text-white/60">{p.resolvio}</p>
                                         </div>
                                         <div className="rounded-2xl border-l-2 border-accent-gold/45 bg-black/20 py-3 pl-3.5 pr-3">
                                             <p className="mb-1.5 text-[10px] uppercase tracking-wider text-white/45">
                                                 Lo combate
                                             </p>
-                                            <p className="text-[12px] leading-relaxed text-white/60">{p.combate}</p>
+                                            <p className="text-[13px] leading-relaxed text-white/60">{p.combate}</p>
                                         </div>
                                     </div>
 
                                     {p.impedimento && (
                                         <div className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.06] p-3.5">
-                                            <p className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-amber-300">
+                                            <p className="mb-1 flex items-center gap-1.5 text-[12px] font-medium text-amber-300">
                                                 <AlertTriangle className="h-3.5 w-3.5" />
                                                 Se advierte un impedimento técnico: {p.impedimento.motivo}
                                             </p>
-                                            <p className="text-[11.5px] leading-relaxed text-amber-100/55">
+                                            <p className="text-[12px] leading-relaxed text-amber-100/55">
                                                 {p.impedimento.explicacion} La decisión es tuya; esto sólo lo señala.
                                             </p>
                                         </div>
@@ -139,7 +139,7 @@ export default function ProblemasJuridicos({ problemas }: { problemas: ProblemaJ
                                         <div className="space-y-2">
                                             {p.candidatos.map((c, j) => <FichaCandidato key={j} c={c} />)}
                                             {p.candidatos.length === 0 && (
-                                                <p className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3.5 text-[12px] text-white/45">
+                                                <p className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-[13px] text-white/45">
                                                     No se encontró jurisprudencia verificable para este punto.
                                                     Se resolverá con la ley aplicable y tu criterio.
                                                 </p>

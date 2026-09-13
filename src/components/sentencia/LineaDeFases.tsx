@@ -22,7 +22,7 @@ const ICONO: Record<EstadoFase, React.ComponentType<{ className?: string }>> = {
 };
 
 const COLOR: Record<EstadoFase, string> = {
-    pendiente: 'text-white/45 border-white/[0.08] bg-white/[0.02]',
+    pendiente: 'text-white/45 border-white/[0.07] bg-white/[0.02]',
     corriendo: 'text-accent-gold border-accent-gold/40 bg-accent-gold/10',
     lista: 'text-emerald-300 border-emerald-400/30 bg-emerald-400/10',
     espera: 'text-amber-300 border-amber-400/45 bg-amber-400/10',
@@ -68,7 +68,7 @@ export default function LineaDeFases({
                         >
                             <span className="flex items-baseline justify-between gap-3">
                                 <span className={cn(
-                                    'text-[13px] font-medium',
+                                    'text-[14px] font-medium',
                                     f.estado === 'pendiente' ? 'text-white/45' : 'text-white/90',
                                 )}>
                                     {f.titulo}
@@ -78,7 +78,7 @@ export default function LineaDeFases({
                                         te toca a ti
                                     </span>
                                 ) : f.segundos !== undefined ? (
-                                    <span className="shrink-0 text-[11px] tabular-nums text-white/45">
+                                    <span className="shrink-0 text-[12px] tabular-nums text-white/45">
                                         {f.segundos < 60 ? `${f.segundos}s` : `${Math.round(f.segundos / 60)}m`}
                                     </span>
                                 ) : null}
@@ -91,7 +91,7 @@ export default function LineaDeFases({
                                 secretario quiere saber qué va a pasar.
                                 El estado lo dicen el anillo y el título —que sí
                                 cambian—, no el borrado de lo que explica. */}
-                            <span className="mt-0.5 block text-[11.5px] leading-relaxed
+                            <span className="mt-0.5 block text-[12px] leading-relaxed
                                              text-white/45">
                                 {f.detalle}
                             </span>

@@ -98,8 +98,8 @@ function Ranura({
                         <FileText className="h-4 w-4 text-accent-gold" />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-medium text-white/90">{doc.nombre}</p>
-                        <p className="mt-0.5 text-[11px] text-white/45">{titulo}</p>
+                        <p className="truncate text-[14px] font-medium text-white/90">{doc.nombre}</p>
+                        <p className="mt-0.5 text-[12px] text-white/45">{titulo}</p>
 
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
                             <Pastilla tono="neutro">{pesoLegible(doc.bytes)}</Pastilla>
@@ -149,7 +149,7 @@ function Ranura({
                     'w-full rounded-2xl border border-dashed p-5 text-left transition-all duration-200',
                     encima
                         ? 'border-accent-gold/60 bg-accent-gold/[0.07] scale-[1.01]'
-                        : 'border-white/[0.12] bg-white/[0.015] hover:border-accent-gold/35 hover:bg-white/[0.03]',
+                        : 'border-white/10 bg-white/[0.015] hover:border-accent-gold/35 hover:bg-white/[0.03]',
                 )}
             >
                 <div className="flex items-center gap-3">
@@ -160,13 +160,13 @@ function Ranura({
                         <Icono className={cn('h-4 w-4', encima ? 'text-accent-gold' : 'text-white/45')} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-[13px] font-medium text-white/90">{titulo}</p>
-                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-white/45">
+                        <p className="text-[14px] font-medium text-white/90">{titulo}</p>
+                        <p className="mt-0.5 flex items-center gap-1 text-[12px] text-white/45">
                             <Upload className="h-3 w-3" /> Arrastra el PDF o haz clic
                         </p>
                     </div>
                 </div>
-                <p className="mt-3 text-[11px] leading-relaxed text-white/45">{ayuda}</p>
+                <p className="mt-3 text-[12px] leading-relaxed text-white/45">{ayuda}</p>
             </button>
         </>
     );
@@ -200,7 +200,7 @@ export default function PanelDocumentos({
                         />
                     ))}
                 </div>
-                <p className="mt-4 text-[11px] leading-relaxed text-white/45">
+                <p className="mt-4 text-[12px] leading-relaxed text-white/45">
                     Se aceptan escaneados. Si el PDF no trae texto, se reconoce
                     antes de leerlo y la ficha lo indica.
                 </p>
@@ -212,9 +212,9 @@ export default function PanelDocumentos({
                         onClick={() => setAbierto((v) => !v)}
                         className="flex w-full items-center justify-between px-5 py-4 text-left"
                     >
-                        <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                        <span className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">
                             Extractos clave
-                            <span className="rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[10px] tabular-nums text-white/60">
+                            <span className="rounded-lg bg-white/[0.06] px-1.5 py-0.5 text-[10px] tabular-nums text-white/60">
                                 {extractos.length}
                             </span>
                         </span>
@@ -234,7 +234,7 @@ export default function PanelDocumentos({
                                         {e.etiqueta}
                                         <span className="text-accent-gold/70">pág. {e.pagina}</span>
                                     </figcaption>
-                                    <blockquote className="text-[12px] leading-relaxed text-white/60">
+                                    <blockquote className="text-[13px] leading-relaxed text-white/60">
                                         {e.texto}
                                     </blockquote>
                                 </figure>
