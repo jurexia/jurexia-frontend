@@ -209,7 +209,7 @@ function SelectorTipo({ tipos, valor, onElegir }: {
 }
 
 export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onTipo, activa,
-                                            delAuto }: {
+                                            delAuto, onDelAuto }: {
     valor: Encargo;
     onCambiar: (e: Encargo) => void;
     deshabilitado?: boolean;
@@ -221,6 +221,8 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
     /** El secretario vino por el auto de admisión. Entonces el tipo no se
      *  pregunta: se lee del papel y se enseña para que lo compruebe. */
     delAuto?: boolean;
+    /** Para que pueda salirse del camino del auto si éste no sirve. */
+    onDelAuto?: (v: boolean) => void;
     /** El tipo elegido, para que la pantalla rotule los documentos con el
      *  vocabulario que le corresponde. */
     onTipo?: (t: TipoAsunto | undefined) => void;
@@ -283,7 +285,30 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                     quedaba pidiendo que eligiera algo que el papel ya decía.
                     Se sustituye por una línea que informa de lo leído y deja
                     corregirlo —leído no es lo mismo que correcto—. */}
-                {delAuto && tipo ? (
+                {delAuto && !tipo ? (
+                    /* AÚN NO HAY AUTO, PERO YA DIJO QUE LO TIENE. Aquí estaba
+                       la rejilla de cuatro tipos, y enseñarla es contradecir lo
+                       que el secretario acaba de elegir: va a subir el papel que
+                       dice el tipo, así que pedirle que lo escoja a mano son
+                       cuatro botones que no debe tocar. Se dice qué va a pasar
+                       y se deja la salida a mano por si el auto no sirve. */
+                    <div className="rounded-2xl border border-dashed border-white/20
+                                    bg-white/[0.02] px-4 py-3.5">
+                        <p className="text-[12px] uppercase tracking-[0.14em] text-white/45">
+                            ¿Qué vas a proyectar?
+                        </p>
+                        <p className="mt-1.5 text-[14px] leading-relaxed text-white/60">
+                            Lo dirá el auto de admisión. En cuanto lo subas aparece
+                            aquí, con su plazo y su fundamento.
+                        </p>
+                        <button type="button" onClick={() => onDelAuto?.(false)}
+                                className="mt-2 text-[12px] text-white/45 underline
+                                           underline-offset-2 transition-colors
+                                           hover:text-white/75">
+                            prefiero elegirlo a mano
+                        </button>
+                    </div>
+                ) : delAuto && tipo ? (
                     <div className="rounded-2xl border border-emerald-400/25
                                     bg-emerald-400/[0.05] px-4 py-3.5">
                         <p className="text-[12px] uppercase tracking-[0.14em] text-white/45">

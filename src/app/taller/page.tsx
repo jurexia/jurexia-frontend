@@ -1264,7 +1264,8 @@ export default function TallerDeSentencias() {
                                            deshabilitado={corriendo || paso !== 'ficha'}
                                            activa={paso === 'ficha' && via === 'archivos'
                                                    && !(!!encargo.numero && !!encargo.tipoAsunto)}
-                                           delAuto={pasoArchivos === 'admision'} />
+                                           delAuto={pasoArchivos === 'admision'}
+                                           onDelAuto={(v) => setPasoArchivos(v ? 'admision' : 'formulario')} />
                     )}
                     {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
                         <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
