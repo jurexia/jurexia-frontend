@@ -1168,11 +1168,16 @@ export default function TallerDeSentencias() {
                         expediente y hay algo que comprobar. */}
                     {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
                         <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
-                                           deshabilitado={corriendo || paso !== 'ficha'} />
+                                           deshabilitado={corriendo || paso !== 'ficha'}
+                                           activa={paso === 'ficha' && via === 'archivos'
+                                                   && !(!!encargo.numero && !!encargo.tipoAsunto)} />
                     )}
                     {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
                         <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
-                                         extractos={[]} vocabulario={voz} />
+                                         extractos={[]} vocabulario={voz}
+                                         activa={paso === 'ficha' && via === 'archivos'
+                                                 && !!encargo.numero && !!encargo.tipoAsunto
+                                                 && documentos.length < 2} />
                     )}
 
                     {/* ═══ LO QUE QUEDA GUARDADO DE ESTE ASUNTO ═══

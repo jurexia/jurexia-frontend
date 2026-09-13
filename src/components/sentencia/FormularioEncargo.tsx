@@ -208,10 +208,15 @@ function SelectorTipo({ tipos, valor, onElegir }: {
     );
 }
 
-export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onTipo }: {
+export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onTipo, activa }: {
     valor: Encargo;
     onCambiar: (e: Encargo) => void;
     deshabilitado?: boolean;
+    /** Si éste es el paso en el que está el secretario ahora mismo. Los pasos
+     *  numerados viven en la columna derecha y lo que hay que rellenar está en
+     *  el raíl izquierdo: sin una señal común, el ojo no une las dos mitades
+     *  —se lee «1 · La ficha del asunto» y hay que buscar dónde se llena—. */
+    activa?: boolean;
     /** El tipo elegido, para que la pantalla rotule los documentos con el
      *  vocabulario que le corresponde. */
     onTipo?: (t: TipoAsunto | undefined) => void;
@@ -256,7 +261,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
         ? `del ${recurrido.slice(3)}` : `de ${recurrido}`;
 
     return (
-        <Tarjeta>
+        <Tarjeta className={cn(activa && 'ring-1 ring-inset ring-accent-gold/20')}>
             <Rotulo accion={
                 <span className="text-[12px] text-white/45">
                     {tipo ? 'lo lees de un sello' : 'empieza por aquí'}

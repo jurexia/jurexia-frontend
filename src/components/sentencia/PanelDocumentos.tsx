@@ -194,7 +194,7 @@ function Ranura({
 }
 
 export default function PanelDocumentos({
-    documentos, onSoltar, onQuitar, extractos, vocabulario,
+    documentos, onSoltar, onQuitar, extractos, vocabulario, activa,
 }: {
     documentos: Documento[];
     onSoltar: (rol: RolDocumento, f: File) => void;
@@ -205,12 +205,15 @@ export default function PanelDocumentos({
      *  le pide «el acto reclamado» a quien va a subir una sentencia
      *  recurrida. */
     vocabulario?: VocabularioDocumentos;
+    /** El paso de ahora. Ver la nota en FormularioEncargo: enlaza el paso
+     *  numerado de la derecha con el sitio donde se trabaja. */
+    activa?: boolean;
 }) {
     const [abierto, setAbierto] = useState(true);
 
     return (
         <div className="flex h-full flex-col gap-4">
-            <Tarjeta>
+            <Tarjeta className={cn(activa && 'ring-1 ring-inset ring-accent-gold/20')}>
                 <Rotulo contador={documentos.length}>Documentos del asunto</Rotulo>
                 <div className="space-y-3.5">
                     {ranurasDe(vocabulario).map((r) => (
