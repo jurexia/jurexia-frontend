@@ -69,7 +69,7 @@ export default function LineaDeFases({
                             <span className="flex items-baseline justify-between gap-3">
                                 <span className={cn(
                                     'text-[13px] font-medium',
-                                    f.estado === 'pendiente' ? 'text-white/35' : 'text-white/90',
+                                    f.estado === 'pendiente' ? 'text-white/45' : 'text-white/90',
                                 )}>
                                     {f.titulo}
                                 </span>
@@ -78,14 +78,14 @@ export default function LineaDeFases({
                                         te toca a ti
                                     </span>
                                 ) : f.segundos !== undefined ? (
-                                    <span className="shrink-0 text-[11px] tabular-nums text-white/30">
+                                    <span className="shrink-0 text-[11px] tabular-nums text-white/45">
                                         {f.segundos < 60 ? `${f.segundos}s` : `${Math.round(f.segundos / 60)}m`}
                                     </span>
                                 ) : null}
                             </span>
                             <span className={cn(
                                 'mt-0.5 block text-[11.5px] leading-relaxed',
-                                f.estado === 'pendiente' ? 'text-white/20' : 'text-white/40',
+                                f.estado === 'pendiente' ? 'text-white/20' : 'text-white/45',
                             )}>
                                 {f.detalle}
                             </span>

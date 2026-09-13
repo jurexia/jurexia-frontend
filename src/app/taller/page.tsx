@@ -114,11 +114,11 @@ function Pliegue({ titulo, nota, abierto, children }: {
                      strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 18l6-6-6-6" />
                 </svg>
-                <span className="text-[12.5px] font-medium text-white/80">{titulo}</span>
+                <span className="text-[12.5px] font-medium text-white/75">{titulo}</span>
                 {nota && (
-                    <span className="ml-auto shrink-0 text-[11px] text-white/35">{nota}</span>
+                    <span className="ml-auto shrink-0 text-[11px] text-white/45">{nota}</span>
                 )}
-                <span className="shrink-0 text-[11px] text-white/40">
+                <span className="shrink-0 text-[11px] text-white/45">
                     <span className="group-open:hidden">ver</span>
                     <span className="hidden group-open:inline">ocultar</span>
                 </span>
@@ -1149,7 +1149,7 @@ export default function TallerDeSentencias() {
                                             {k.replace(/_/g, ' ')}
                                         </span>
                                     ))}
-                                    <span className="text-[11px] text-white/40">
+                                    <span className="text-[11px] text-white/45">
                                         leídos del auto · compruébalos
                                     </span>
                                 </span>
@@ -1190,7 +1190,7 @@ export default function TallerDeSentencias() {
                     {(guardados?.documentos?.length ?? 0) > 0 && (
                         <Tarjeta>
                             <Rotulo accion={
-                                <span className="text-[11px] text-white/30">
+                                <span className="text-[11px] text-white/45">
                                     sólo tú los ves
                                 </span>
                             }>
@@ -1206,12 +1206,12 @@ export default function TallerDeSentencias() {
                                                            border border-white/[0.07] bg-white/[0.02] px-3 py-2
                                                            text-left transition-colors
                                                            hover:border-accent-gold/35 hover:bg-white/[0.045]">
-                                            <FileText className="h-3.5 w-3.5 shrink-0 text-white/30
+                                            <FileText className="h-3.5 w-3.5 shrink-0 text-white/45
                                                                  transition-colors group-hover:text-accent-gold/70" />
-                                            <span className="min-w-0 flex-1 truncate text-[12px] text-white/80">
+                                            <span className="min-w-0 flex-1 truncate text-[12px] text-white/75">
                                                 {d.etiqueta}
                                             </span>
-                                            <span className="shrink-0 text-[11px] tabular-nums text-white/30">
+                                            <span className="shrink-0 text-[11px] tabular-nums text-white/45">
                                                 {Math.max(1, Math.round(d.bytes / 1024)).toLocaleString('es-MX')} KB
                                             </span>
                                         </button>
@@ -1239,7 +1239,7 @@ export default function TallerDeSentencias() {
                                         'mt-3 text-[11.5px] transition-colors',
                                         confirmaOlvidar
                                             ? 'font-medium text-red-300 hover:text-red-200'
-                                            : 'text-white/35 hover:text-white/70')}>
+                                            : 'text-white/45 hover:text-white/75')}>
                                 {confirmaOlvidar
                                     ? '¿Seguro? Esto borra los documentos, el proyecto y la sesión. Pulsa otra vez.'
                                     : 'Borrar todo lo de este asunto'}
@@ -1251,13 +1251,13 @@ export default function TallerDeSentencias() {
                         ha empezado. */}
                     {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
                     <label className={cn('block cursor-pointer rounded-xl border border-dashed',
-                        'border-white/15 bg-white/[0.02] px-4 py-3 text-[12px] text-white/50',
-                        'transition hover:border-accent-gold/30 hover:text-white/70')}>
+                        'border-white/15 bg-white/[0.02] px-4 py-3 text-[12px] text-white/60',
+                        'transition hover:border-accent-gold/30 hover:text-white/75')}>
                         <input type="file" accept=".docx" className="hidden"
                                onChange={(e) => e.target.files?.[0] &&
                                    setFicheros((p) => ({ ...p, plantilla: e.target.files![0] }))} />
                         {ficheros.plantilla
-                            ? <>Plantilla propia: <span className="text-white/80">{ficheros.plantilla.name}</span></>
+                            ? <>Plantilla propia: <span className="text-white/75">{ficheros.plantilla.name}</span></>
                             : <>Se usará la plantilla del tribunal ya cargada. Sube una .docx sólo si quieres otra.</>}
                     </label>
                     )}
@@ -1303,12 +1303,12 @@ export default function TallerDeSentencias() {
 
                     {pendientes.length === 0 && paso === 'ficha' && via === 'sise' && (
                     <Tarjeta>
-                        <Rotulo accion={<span className="text-[11px] text-white/30">se instala una vez</span>}>
+                        <Rotulo accion={<span className="text-[11px] text-white/45">se instala una vez</span>}>
                             Trae el expediente desde SISE
                         </Rotulo>
                         <p className="mt-2 text-[13px] leading-relaxed text-white/60">
                             Con el complemento instalado, abres tu expediente en SISE, pulsas
-                            <span className="text-white/85"> Vista Expediente Electrónico</span> y desde
+                            <span className="text-white/90"> Vista Expediente Electrónico</span> y desde
                             ahí mandas las constancias al taller. No hace falta que teclees el número,
                             el tipo ni la ponencia: salen de los autos.
                         </p>
@@ -1320,10 +1320,10 @@ export default function TallerDeSentencias() {
                             </a>
                             <a href={URL_COMPLEMENTO} target="_blank" rel="noopener"
                                className="text-[12px] text-white/45 underline underline-offset-2
-                                          hover:text-white/70">
+                                          hover:text-white/75">
                                 ver los pasos y la política
                             </a>
-                            <span className="text-[12px] text-white/35">Chrome · en tu computadora</span>
+                            <span className="text-[12px] text-white/45">Chrome · en tu computadora</span>
                         </div>
                         {/* LO QUE PASA DESPUÉS, dicho antes. Sin esto el
                             secretario instala, manda las constancias y no sabe
@@ -1332,7 +1332,7 @@ export default function TallerDeSentencias() {
                                       text-[12px] leading-relaxed text-white/60">
                             Una vez que instales el complemento y, desde la vista del expediente
                             electrónico, selecciones las constancias y pulses{' '}
-                            <span className="text-white/85">Mandar constancias seleccionadas al
+                            <span className="text-white/90">Mandar constancias seleccionadas al
                             taller</span>, este módulo se actualizará y podrás empezar con la
                             elaboración del proyecto.
                         </p>
@@ -1347,13 +1347,13 @@ export default function TallerDeSentencias() {
                         <div className="mt-3">
                           <Pliegue titulo="Cómo se instala" nota="3 pasos, una sola vez">
                         <ol className="mt-3 space-y-1.5 text-[12px] leading-relaxed text-white/45">
-                            <li><span className="text-white/70">1.</span> Descomprime el archivo.</li>
-                            <li><span className="text-white/70">2.</span> En Chrome, entra a
+                            <li><span className="text-white/75">1.</span> Descomprime el archivo.</li>
+                            <li><span className="text-white/75">2.</span> En Chrome, entra a
                                 <code className="mx-1 rounded bg-white/[0.06] px-1.5 py-0.5 text-white/75">chrome://extensions</code>
-                                y enciende <span className="text-white/70">Modo de desarrollador</span>.</li>
-                            <li><span className="text-white/70">3.</span> Pulsa
-                                <span className="text-white/70"> Cargar descomprimida</span> y elige la
-                                carpeta <span className="text-white/70">iurexia-sise</span>.</li>
+                                y enciende <span className="text-white/75">Modo de desarrollador</span>.</li>
+                            <li><span className="text-white/75">3.</span> Pulsa
+                                <span className="text-white/75"> Cargar descomprimida</span> y elige la
+                                carpeta <span className="text-white/75">iurexia-sise</span>.</li>
                         </ol>
                         {/* EL CORREO, A LA VISTA. La extensión pide un correo escrito a
                             mano, y una letra cambiada manda las constancias a un sitio
@@ -1364,9 +1364,9 @@ export default function TallerDeSentencias() {
                         </div>
                         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1
                                         border-t border-white/[0.08] pt-3">
-                            <span className="text-[12px] text-white/40">
+                            <span className="text-[12px] text-white/45">
                                 Este taller mira las constancias de{' '}
-                                <span className="text-white/80">{correo}</span>
+                                <span className="text-white/75">{correo}</span>
                             </span>
                             <button type="button" onClick={() => void mirarPendientes()}
                                     disabled={mirando}
@@ -1376,7 +1376,7 @@ export default function TallerDeSentencias() {
                                 {mirando ? 'buscando…' : 'buscar ahora'}
                             </button>
                         </div>
-                        <p className="mt-1 text-[11px] leading-relaxed text-white/30">
+                        <p className="mt-1 text-[11px] leading-relaxed text-white/45">
                             No hay que configurar nada: el complemento reconoce tu sesión de Iurexia
                             desde este mismo navegador. Si te dice que no la encuentra, entra aquí con
                             tu cuenta y vuelve a pulsar en el visor.
@@ -1390,7 +1390,7 @@ export default function TallerDeSentencias() {
                         <div className="mt-3">
                           <Pliegue titulo="Por qué tres pasos, y qué pasa con tus datos"
                                    nota="privacidad">
-                        <p className="mt-3 text-[11px] leading-relaxed text-white/30">
+                        <p className="mt-3 text-[11px] leading-relaxed text-white/45">
                             Son tres pasos y no uno porque Chrome sólo instala de un clic lo que viene
                             de su tienda, y publicar ahí exige revisión.
                         </p>
@@ -1398,8 +1398,8 @@ export default function TallerDeSentencias() {
                             el código qué se guarda de verdad y de añadir el borrado: antes
                             no había ninguno, y prometerlo habría sido falso sobre datos de
                             terceros que no eligieron estar ahí. */}
-                        <p className="mt-2 text-[11px] leading-relaxed text-white/30">
-                            <span className="text-white/50">Privacidad.</span> Iurexia no guarda tu
+                        <p className="mt-2 text-[11px] leading-relaxed text-white/45">
+                            <span className="text-white/60">Privacidad.</span> Iurexia no guarda tu
                             usuario, tu contraseña ni tu sesión del Consejo: el complemento usa la que
                             ya tienes abierta en tu navegador y sólo para pedirle al propio Consejo los
                             documentos que marques. No se manda ningún correo a nadie: las constancias
@@ -1425,7 +1425,7 @@ export default function TallerDeSentencias() {
                         existe. */}
                     {pendientes.length > 0 && paso === 'ficha' && (
                     <Tarjeta className="border-accent-gold/30 bg-accent-gold/[0.05]">
-                        <Rotulo accion={<span className="text-[11px] text-white/30">
+                        <Rotulo accion={<span className="text-[11px] text-white/45">
                             {pendientes.length === 1 ? 'traído por la extensión'
                                                      : `${pendientes.length} esperando`}
                         </span>}>
@@ -1434,7 +1434,7 @@ export default function TallerDeSentencias() {
 
                         {pendientes.length > 1 && (
                             <select value={elegido} onChange={(ev) => setElegido(ev.target.value)}
-                                    className="mt-3 w-full rounded-lg border border-white/12 bg-white/[0.05]
+                                    className="mt-3 w-full rounded-lg border border-white/10 bg-white/[0.05]
                                                px-3 py-2 text-[13px] text-white/90">
                                 <option value="">Elige el expediente…</option>
                                 {pendientes.map((p) => (
@@ -1450,26 +1450,26 @@ export default function TallerDeSentencias() {
                             if (!p) return null;
                             return (
                                 <div className="mt-3 space-y-2">
-                                    <p className="text-[13px] text-white/85">
+                                    <p className="text-[13px] text-white/90">
                                         <span className="font-medium">{p.numero}</span>
-                                        {p.tipoSise && <span className="text-white/55"> · {p.tipoSise}</span>}
+                                        {p.tipoSise && <span className="text-white/60"> · {p.tipoSise}</span>}
                                     </p>
-                                    {p.organo && <p className="text-[12px] text-white/40">{p.organo}</p>}
+                                    {p.organo && <p className="text-[12px] text-white/45">{p.organo}</p>}
                                     {p.documentos.length > 0 && (
                                         <div className="flex flex-wrap gap-1.5 pt-1">
                                             {p.documentos.map((d, i) => (
                                                 <span key={i} className="rounded-md border border-white/10
                                                         bg-white/[0.04] px-2 py-1 text-[11px] text-white/60">
                                                     {d.que.replace(/_/g, ' ')}
-                                                    {d.n > 0 && <span className="text-white/35"> · {d.n} pág</span>}
+                                                    {d.n > 0 && <span className="text-white/45"> · {d.n} pág</span>}
                                                 </span>
                                             ))}
                                         </div>
                                     )}
                                     {p.presentacion && (
-                                        <p className="text-[12px] text-white/40">
+                                        <p className="text-[12px] text-white/45">
                                             Presentación según SISE: {p.presentacion}
-                                            <span className="text-white/25"> — se confirma con la portada</span>
+                                            <span className="text-white/45"> — se confirma con la portada</span>
                                         </p>
                                     )}
                                 </div>
@@ -1487,13 +1487,13 @@ export default function TallerDeSentencias() {
                             hay que teclear nada más. */}
                         {sabemos && (
                             <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] p-3">
-                                <p className="text-[12px] leading-relaxed text-white/70">{sabemos.dice}</p>
+                                <p className="text-[12px] leading-relaxed text-white/75">{sabemos.dice}</p>
                                 <dl className="mt-2.5 grid gap-x-4 gap-y-1 text-[12px] sm:grid-cols-2">
                                     {Object.entries(sabemos.yaSabemos)
                                         .filter(([, v]) => v)
                                         .map(([k, v]) => (
                                         <div key={k} className="flex gap-2">
-                                            <dt className="shrink-0 text-white/35">
+                                            <dt className="shrink-0 text-white/45">
                                                 {k.replace(/_/g, ' ')}
                                             </dt>
                                             <dd className="text-white/75">{String(v)}</dd>
@@ -1510,7 +1510,7 @@ export default function TallerDeSentencias() {
                                 </span>
                                 <input type="date" value={fechaNotif}
                                        onChange={(ev) => setFechaNotif(ev.target.value)}
-                                       className="rounded-lg border border-white/12 bg-white/[0.05]
+                                       className="rounded-lg border border-white/10 bg-white/[0.05]
                                                   px-3 py-2 text-[13px] text-white/90" />
                             </label>
                             <button className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
@@ -1532,7 +1532,7 @@ export default function TallerDeSentencias() {
                                         'text-[12px] underline underline-offset-2 transition',
                                         confirmaBorrar
                                             ? 'font-medium text-red-300 hover:text-red-200'
-                                            : 'text-white/40 hover:text-white/70',
+                                            : 'text-white/45 hover:text-white/75',
                                         corriendo && 'opacity-40')}>
                                 {confirmaBorrar
                                     ? 'Sí, borrar este expediente y abrir SISE'
@@ -1540,20 +1540,20 @@ export default function TallerDeSentencias() {
                             </button>
                             {confirmaBorrar && (
                                 <button type="button" onClick={() => setConfirmaBorrar(false)}
-                                        className="text-[12px] text-white/40 underline
-                                                   underline-offset-2 hover:text-white/70">
+                                        className="text-[12px] text-white/45 underline
+                                                   underline-offset-2 hover:text-white/75">
                                     no, dejarlo
                                 </button>
                             )}
                         </div>
                         {confirmaBorrar && (
-                            <p className="mt-1.5 text-[11px] leading-relaxed text-white/35">
+                            <p className="mt-1.5 text-[11px] leading-relaxed text-white/45">
                                 Se borran las constancias del {elegido || 'expediente'} y se abre SISE
                                 para que tomes otro. Si luego lo necesitas, habrá que traerlo otra vez
                                 desde el visor.
                             </p>
                         )}
-                        <p className="mt-2 text-[11px] leading-relaxed text-white/35">
+                        <p className="mt-2 text-[11px] leading-relaxed text-white/45">
                             El número, el tipo, el órgano, el ponente y el secretario salen de los
                             autos. La fecha de notificación es la única que no está en los escaneos
                             y de ella depende el cómputo: por eso se pregunta.
@@ -1567,7 +1567,7 @@ export default function TallerDeSentencias() {
                         toca es escoger por dónde se entra. */}
                     {(paso !== 'ficha' || via || pendientes.length > 0) && (
                     <Tarjeta>
-                        <Rotulo accion={<span className="text-[11px] text-white/30">se detiene una sola vez</span>}>
+                        <Rotulo accion={<span className="text-[11px] text-white/45">se detiene una sola vez</span>}>
                             Recorrido del asunto
                         </Rotulo>
                         <span id="recorrido" />
@@ -1600,7 +1600,7 @@ export default function TallerDeSentencias() {
                                         boton,
                                         paso === 'adelanto' && !corriendo
                                             ? 'bg-red-600 text-white hover:bg-red-500 shadow-[0_0_0_0_rgba(220,38,38,0.7)] animate-[latido_1.8s_ease-out_infinite]'
-                                            : 'border border-white/12 bg-white/[0.05] text-white/85 hover:bg-white/[0.08]')}
+                                            : 'border border-white/10 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}
                                     disabled={corriendo || paso === 'ficha'}
                                     onClick={pedirAcervo}>
                                 {corriendo && paso === 'adelanto'
@@ -1637,10 +1637,10 @@ export default function TallerDeSentencias() {
                                     : <Zap className="h-4 w-4" />}
                                 Genera todo el proyecto
                             </button>
-                            <p className="mt-1.5 text-[11px] leading-relaxed text-white/40">
+                            <p className="mt-1.5 text-[11px] leading-relaxed text-white/45">
                                 Se decide por jurimetría. No recomendado.
                             </p>
-                            <p className="mt-1 text-[11px] leading-relaxed text-white/30">
+                            <p className="mt-1 text-[11px] leading-relaxed text-white/45">
                                 Salta los ocho pasos y entrega el proyecto terminado,
                                 con el sentido que el motor considere acertado. Nadie
                                 lo revisa antes de escribirlo: si no coincide con tu
@@ -1651,7 +1651,7 @@ export default function TallerDeSentencias() {
                         )}
 
                         {falta.length > 0 && paso === 'ficha' && (
-                            <p className="mt-3 text-[12px] text-white/40">
+                            <p className="mt-3 text-[12px] text-white/45">
                                 Falta {falta.join(', ')}.
                             </p>
                         )}
@@ -1723,7 +1723,7 @@ export default function TallerDeSentencias() {
                                         <ol className="space-y-1.5">
                                             {delAsunto.problemas.map((q, i) => (
                                                 <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-white/60">
-                                                    <span className="shrink-0 text-white/30">{i + 1}.</span>
+                                                    <span className="shrink-0 text-white/45">{i + 1}.</span>
                                                     <span>
                                                         {q.pregunta}
                                                         {q.jerarquia === 'principal' && (
@@ -1752,7 +1752,7 @@ export default function TallerDeSentencias() {
                                     nota que el nombre no es el bueno. */}
                                 <div>
                                     <label htmlFor="autoridad-resp"
-                                           className="block text-[12px] font-medium text-white/70">
+                                           className="block text-[12px] font-medium text-white/75">
                                         Autoridad responsable
                                     </label>
                                     <input id="autoridad-resp" value={encargo.responsable ?? ''}
@@ -1760,10 +1760,10 @@ export default function TallerDeSentencias() {
                                                (x) => ({ ...x, responsable: e.target.value }))}
                                            placeholder="No se pudo leer del acto: escríbela"
                                            className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.03]
-                                                      px-3 py-2 text-[12.5px] text-white/80
-                                                      placeholder:text-white/25 focus:border-accent-gold/40
+                                                      px-3 py-2 text-[12.5px] text-white/75
+                                                      placeholder:text-white/45 focus:border-accent-gold/40
                                                       focus:outline-none" />
-                                    <p className="mt-1 text-[11.5px] leading-relaxed text-white/40">
+                                    <p className="mt-1 text-[11.5px] leading-relaxed text-white/45">
                                         Se leyó del acto reclamado. Compruébala contra la carátula:
                                         de aquí sale el resolutivo. Si la corriges, manda lo que escribas.
                                     </p>
@@ -1785,10 +1785,10 @@ export default function TallerDeSentencias() {
                         {paso === 'adelanto' && (
                             <div className="mt-4 border-t border-white/[0.08] pt-4">
                                 <label htmlFor="ctx-previo"
-                                       className="block text-[12px] font-medium text-white/70">
+                                       className="block text-[12px] font-medium text-white/75">
                                     Lo que sabes del asunto y no está en los papeles
                                 </label>
-                                <p className="mt-1 text-[11.5px] leading-relaxed text-white/40">
+                                <p className="mt-1 text-[11.5px] leading-relaxed text-white/45">
                                     Opcional. Lo que escribas aquí se usa para BUSCAR: entra en el
                                     acervo como una consulta propia, además de las preguntas de los
                                     problemas. Cuanto más preciso el concepto jurídico, mejor la
@@ -1797,12 +1797,12 @@ export default function TallerDeSentencias() {
                                 <textarea id="ctx-previo" rows={3} value={contexto}
                                           onChange={(e) => setContexto(e.target.value)}
                                           placeholder="p. ej.: la pericial se declaró desierta porque la oferente no presentó a su perito en la fecha señalada, pese a estar notificada"
-                                          className="mt-2 w-full rounded-lg border border-white/12
+                                          className="mt-2 w-full rounded-lg border border-white/10
                                                      bg-white/[0.04] px-3 py-2.5 text-[13px]
                                                      leading-relaxed text-white/90
-                                                     placeholder:text-white/25" />
+                                                     placeholder:text-white/45" />
                                 {contexto.trim().length > 0 && (
-                                    <p className="mt-1.5 text-[11px] text-white/35">
+                                    <p className="mt-1.5 text-[11px] text-white/45">
                                         {contexto.trim().length.toLocaleString('es-MX')} caracteres ·
                                         entran en la búsqueda al pulsar el botón de arriba
                                     </p>
@@ -1836,7 +1836,7 @@ export default function TallerDeSentencias() {
                                        material.tesis.filter((t) => t.obligatoria).length
                                        } obligatorias · ${material.normas.length} preceptos${
                                        material.materia ? ` · acervo ${material.materia}` : ''}`}>
-                            <p className="mb-2.5 text-[11.5px] leading-relaxed text-white/40">
+                            <p className="mb-2.5 text-[11.5px] leading-relaxed text-white/45">
                                 Lo que el acervo dice sobre tus planteamientos. No decide nada:
                                 es con lo que se funda una vez decidido.
                             </p>
@@ -1849,9 +1849,9 @@ export default function TallerDeSentencias() {
                             {material.materia && (
                                 <p className="mb-2.5 rounded-lg border border-white/[0.07]
                                               bg-white/[0.02] px-3 py-2 text-[11.5px]
-                                              leading-relaxed text-white/50">
+                                              leading-relaxed text-white/60">
                                     Se buscó en el acervo de materia{' '}
-                                    <span className="text-white/80">{material.materia}</span>.
+                                    <span className="text-white/75">{material.materia}</span>.
                                     Si el asunto no es de esa materia, cámbialo en la ficha y
                                     vuelve a buscar: de ahí sale la ley con la que se funda.
                                 </p>
@@ -1865,10 +1865,10 @@ export default function TallerDeSentencias() {
                                             <span className={cn('rounded-md border px-1.5 py-0.5 text-[10px] font-medium',
                                                 t.obligatoria
                                                     ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300'
-                                                    : 'border-white/10 bg-white/[0.05] text-white/50')}>
+                                                    : 'border-white/10 bg-white/[0.05] text-white/60')}>
                                                 {t.obligatoria ? 'Obligatoria' : 'Orientadora'}
                                             </span>
-                                            <span className="text-[11px] text-white/35">
+                                            <span className="text-[11px] text-white/45">
                                                 Reg. {t.registro} · {t.instancia}
                                             </span>
                                         </div>
@@ -1878,9 +1878,9 @@ export default function TallerDeSentencias() {
                             </ul>
                             {material.tesis.length > 12 && !marcoEntero && (
                                 <button type="button" onClick={() => setMarcoEntero(true)}
-                                        className="mt-2 text-[11px] text-white/35 underline
+                                        className="mt-2 text-[11px] text-white/45 underline
                                                    decoration-white/20 underline-offset-2
-                                                   transition-colors hover:text-white/70">
+                                                   transition-colors hover:text-white/75">
                                     Y {material.tesis.length - 12} tesis más, todas en el
                                     proyecto · verlas
                                 </button>
@@ -1891,13 +1891,13 @@ export default function TallerDeSentencias() {
                                 ordenamiento, y son la mitad de lo que funda. */}
                             {material.normas.length > 0 && (
                                 <div className="mt-3 border-t border-white/[0.07] pt-2.5">
-                                    <p className="mb-1.5 text-[11px] uppercase tracking-wide text-white/35">
+                                    <p className="mb-1.5 text-[11px] uppercase tracking-wide text-white/45">
                                         Preceptos recuperados
                                     </p>
                                     <ul className="grid gap-1">
                                         {(marcoEntero ? material.normas
                                                        : material.normas.slice(0, 14)).map((n, i) => (
-                                            <li key={i} className="text-[11.5px] leading-snug text-white/55">
+                                            <li key={i} className="text-[11.5px] leading-snug text-white/60">
                                                 <span className="text-white/75">art. {n.articulo}</span>
                                                 {n.cuerpo_legal ? ` · ${n.cuerpo_legal}` : ''}
                                             </li>
@@ -1905,15 +1905,15 @@ export default function TallerDeSentencias() {
                                     </ul>
                                     {material.normas.length > 14 && !marcoEntero && (
                                         <button type="button" onClick={() => setMarcoEntero(true)}
-                                                className="mt-1 text-[11px] text-white/35 underline
+                                                className="mt-1 text-[11px] text-white/45 underline
                                                            decoration-white/20 underline-offset-2
-                                                           transition-colors hover:text-white/70">
+                                                           transition-colors hover:text-white/75">
                                             Y {material.normas.length - 14} más · verlos
                                         </button>
                                     )}
                                     {marcoEntero && (
                                         <button type="button" onClick={() => setMarcoEntero(false)}
-                                                className="mt-2 text-[11px] text-white/30
+                                                className="mt-2 text-[11px] text-white/45
                                                            transition-colors hover:text-white/60">
                                             volver a la lista corta
                                         </button>
@@ -1948,7 +1948,7 @@ export default function TallerDeSentencias() {
                     {(material?.espejo?.length ?? 0) > 0 && (
                         <Tarjeta>
                             <Rotulo accion={
-                                <span className="text-[11px] text-white/30">
+                                <span className="text-[11px] text-white/45">
                                     no es un recuento: son sentencias que puede abrir
                                 </span>
                             }>
@@ -1956,7 +1956,7 @@ export default function TallerDeSentencias() {
                             </Rotulo>
                             <p className="mb-3 text-[11.5px] leading-relaxed text-white/45">
                                 Del acervo de{' '}
-                                <span className="text-white/70">
+                                <span className="text-white/75">
                                     {material!.espejo![0].tribunal}
                                 </span>
                                 : las sentencias suyas más cercanas a cada planteamiento.
@@ -1976,11 +1976,11 @@ export default function TallerDeSentencias() {
                                                     className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5
                                                                rounded-lg border border-white/[0.07]
                                                                bg-white/[0.02] px-3 py-2 text-[11.5px]">
-                                                    <span className="font-medium text-white/80">
+                                                    <span className="font-medium text-white/75">
                                                         {f.tipo_asunto} {f.expediente}
                                                     </span>
                                                     {f.fecha && (
-                                                        <span className="tabular-nums text-white/35">
+                                                        <span className="tabular-nums text-white/45">
                                                             {f.fecha.slice(0, 10)}
                                                         </span>
                                                     )}
@@ -2021,7 +2021,7 @@ export default function TallerDeSentencias() {
                                 de criterio ese año, aquí no aparece, y quien lea esto
                                 tiene que saberlo antes de darle peso. */}
                             <p className="mt-3 border-t border-white/[0.08] pt-2.5
-                                          text-[11px] leading-relaxed text-white/35">
+                                          text-[11px] leading-relaxed text-white/45">
                                 {material!.espejo![0].cobertura}
                             </p>
                         </Tarjeta>
@@ -2059,10 +2059,10 @@ export default function TallerDeSentencias() {
                                             decision === id
                                                 ? 'border-accent-gold/50 bg-accent-gold/[0.07]'
                                                 : 'border-white/[0.09] bg-white/[0.02] hover:bg-white/[0.04]')}>
-                                    <span className="block text-[12.5px] font-medium text-white/85">
+                                    <span className="block text-[12.5px] font-medium text-white/90">
                                         {titulo}
                                     </span>
-                                    <span className="mt-1 block text-[11.5px] leading-snug text-white/50">
+                                    <span className="mt-1 block text-[11.5px] leading-snug text-white/60">
                                         {que}
                                     </span>
                                 </button>
@@ -2071,7 +2071,7 @@ export default function TallerDeSentencias() {
                         {decision !== '' && (
                             <div className="mt-3">
                                 <label htmlFor="motivo-oportunidad"
-                                       className="block text-[12px] font-medium text-white/70">
+                                       className="block text-[12px] font-medium text-white/75">
                                     Por qué
                                 </label>
                                 <textarea id="motivo-oportunidad" rows={2}
@@ -2080,9 +2080,9 @@ export default function TallerDeSentencias() {
                                           placeholder="p. ej.: la Junta Especial Número Dos suspendió labores del catorce al veinticinco de agosto"
                                           className="mt-1.5 w-full resize-y rounded-xl border border-white/[0.09]
                                                      bg-black/20 px-3.5 py-2.5 text-[13px] leading-relaxed
-                                                     text-white/90 placeholder:text-white/25 outline-none
+                                                     text-white/90 placeholder:text-white/45 outline-none
                                                      focus:border-accent-gold/45" />
-                                <p className="mt-1 text-[11px] leading-relaxed text-white/35">
+                                <p className="mt-1 text-[11px] leading-relaxed text-white/45">
                                     Va LITERAL al considerando de oportunidad. Sin razón escrita, la
                                     rectificación no se sostiene en revisión.
                                 </p>
@@ -2149,7 +2149,7 @@ export default function TallerDeSentencias() {
                     {corriendo && !proponiendo && paso === 'acervo' && (
                         <Tarjeta>
                             <Rotulo accion={
-                                <span className="text-[11px] tabular-nums text-white/30">
+                                <span className="text-[11px] tabular-nums text-white/45">
                                     {avance ? `${avance.trim().split(/\s+/).length} palabras`
                                             : 'leyendo el acervo'}
                                 </span>
@@ -2157,7 +2157,7 @@ export default function TallerDeSentencias() {
                                 {avance ? 'Escribiendo el estudio' : 'Preparando el estudio'}
                             </Rotulo>
                             <div className="max-h-[26rem] overflow-y-auto rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-                                <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-white/70">
+                                <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-white/75">
                                     {avance || 'El motor está leyendo las tesis y las normas del acervo y fijando la premisa. El texto empieza a aparecer aquí en cuanto escribe la primera línea; suele tardar alrededor de un minuto.'}
                                     <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-accent-gold align-middle" />
                                 </p>
@@ -2182,7 +2182,7 @@ export default function TallerDeSentencias() {
                         <>
                             <Tarjeta>
                                 <Rotulo accion={
-                                    <span className="text-[11px] text-white/30">
+                                    <span className="text-[11px] text-white/45">
                                         {previo.generadoEn
                                             ? new Date(previo.generadoEn).toLocaleString('es-MX', {
                                                 dateStyle: 'long', timeStyle: 'short' })
@@ -2209,7 +2209,7 @@ export default function TallerDeSentencias() {
                                 ) : (
                                     <p className="text-[12.5px] leading-relaxed text-white/60">
                                         Este asunto ya tiene sentencia escrita:{' '}
-                                        <span className="text-white/85">
+                                        <span className="text-white/90">
                                             {previo.palabras.toLocaleString('es-MX')} palabras
                                         </span>
                                         {previo.avisos.length > 0 && <>, {previo.avisos.length} avisos</>}
@@ -2222,11 +2222,11 @@ export default function TallerDeSentencias() {
                                     <div className="mt-3 rounded-xl border border-white/[0.07]
                                                     bg-white/[0.02] p-3">
                                         <p className="mb-1.5 text-[10px] font-semibold uppercase
-                                                      tracking-wide text-white/40">
+                                                      tracking-wide text-white/45">
                                             Con qué criterio salió
                                         </p>
                                         {previo.sentidoGlobal && (
-                                            <p className="text-[12px] text-white/70">
+                                            <p className="text-[12px] text-white/75">
                                                 Todo el asunto:{' '}
                                                 <span className="font-medium text-white/90">
                                                     {previo.sentidoGlobal.replace(/_/g, ' ')}
@@ -2236,8 +2236,8 @@ export default function TallerDeSentencias() {
                                         {previo.criterios.length > 0 && (
                                             <ul className="mt-1.5 grid gap-1">
                                                 {previo.criterios.map((c, i) => (
-                                                    <li key={i} className="text-[11.5px] leading-snug text-white/55">
-                                                        <span className="font-medium text-white/80">
+                                                    <li key={i} className="text-[11.5px] leading-snug text-white/60">
+                                                        <span className="font-medium text-white/75">
                                                             {c.sentido.replace(/_/g, ' ')}
                                                         </span>
                                                         {' · '}{c.problema}
@@ -2259,7 +2259,7 @@ export default function TallerDeSentencias() {
                                         material se cargan ahí, y sin ellos la
                                         ventana de criterio no tiene qué calificar.
                                         Son unos cuarenta segundos y se dicen. */}
-                                    <button className={cn(boton, 'border border-white/12 bg-white/[0.05] text-white/85 hover:bg-white/[0.08]')}
+                                    <button className={cn(boton, 'border border-white/10 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}
                                             disabled={corriendo}
                                             onClick={() => { setPrevio(null); void pedirAcervo(); }}>
                                         {corriendo
@@ -2268,7 +2268,7 @@ export default function TallerDeSentencias() {
                                         Cambiar el sentido y volver a generar
                                     </button>
                                 </div>
-                                <p className="mt-2 text-[11.5px] leading-relaxed text-white/40">
+                                <p className="mt-2 text-[11.5px] leading-relaxed text-white/45">
                                     Volver a generar reescribe el documento de este expediente:
                                     se guarda el último, no todos los intentos. Descarga el
                                     actual antes si quieres conservarlo.
@@ -2317,7 +2317,7 @@ export default function TallerDeSentencias() {
                                     Descargar de nuevo
                                 </button>
                                 <p className="text-[12px] leading-relaxed text-white/45">
-                                    <span className="text-white/70">{proyecto.nombre}</span>
+                                    <span className="text-white/75">{proyecto.nombre}</span>
                                     {' '}ya se descargó a tu carpeta de descargas al terminar.
                                     Es un .docx sobre la plantilla del tribunal: se abre y se
                                     edita como cualquier proyecto tuyo.

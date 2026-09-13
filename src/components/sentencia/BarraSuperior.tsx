@@ -30,7 +30,7 @@ export default function BarraSuperior({
             <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
                 <Link
                     href="/chat"
-                    className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[12px] text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white/80"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[12px] text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white/75"
                 >
                     <ArrowLeft className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Chat</span>
@@ -39,7 +39,7 @@ export default function BarraSuperior({
                 <span className="h-4 w-px bg-white/[0.09]" />
 
                 <Wordmark className="text-[15px] text-white/90" />
-                <span className="hidden text-[11px] uppercase tracking-[0.14em] text-white/30 sm:inline">
+                <span className="hidden text-[11px] uppercase tracking-[0.14em] text-white/45 sm:inline">
                     Taller de sentencias
                 </span>
 
@@ -49,18 +49,18 @@ export default function BarraSuperior({
                         onClick={onCambiarAsunto}
                         className="ml-2 inline-flex h-8 min-w-0 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 transition-colors hover:border-accent-gold/30"
                     >
-                        <span className="truncate text-[12px] font-medium text-white/85">
+                        <span className="truncate text-[12px] font-medium text-white/90">
                             {asunto.numero}
                         </span>
-                        <span className="hidden shrink-0 text-[11px] text-white/35 md:inline">
+                        <span className="hidden shrink-0 text-[11px] text-white/45 md:inline">
                             {ETIQUETA_TIPO[asunto.tipo]}
                         </span>
-                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/30" />
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-white/45" />
                     </button>
                 )}
 
                 <div className="ml-auto flex items-center gap-3">
-                    <span className="hidden items-center gap-1.5 text-[11px] text-white/35 sm:flex">
+                    <span className="hidden items-center gap-1.5 text-[11px] text-white/45 sm:flex">
                         <Circle className={cn(
                             'h-2 w-2 fill-current',
                             conectado ? 'text-emerald-400' : 'text-red-400',

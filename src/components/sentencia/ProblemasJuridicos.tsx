@@ -42,9 +42,9 @@ function FichaCandidato({ c }: { c: Candidato }) {
                     <Pastilla tono="verde" icono={ShieldCheck}>verificada</Pastilla>
                 )}
             </div>
-            <p className="text-[12.5px] font-medium leading-relaxed text-white/85">{c.rubro}</p>
-            <p className="mt-1.5 text-[11.5px] leading-relaxed text-white/40">
-                <span className="text-white/55">Aplica porque</span> {c.porQue}
+            <p className="text-[12.5px] font-medium leading-relaxed text-white/90">{c.rubro}</p>
+            <p className="mt-1.5 text-[11.5px] leading-relaxed text-white/45">
+                <span className="text-white/60">Aplica porque</span> {c.porQue}
             </p>
         </div>
     );
@@ -56,7 +56,7 @@ export default function ProblemasJuridicos({ problemas }: { problemas: ProblemaJ
     return (
         <Tarjeta>
             <Rotulo contador={problemas.length}>Problemas jurídicos</Rotulo>
-            <p className="mb-4 text-[12px] leading-relaxed text-white/40">
+            <p className="mb-4 text-[12px] leading-relaxed text-white/45">
                 Salen del contraste entre lo que resolvió la responsable y lo que se
                 combate. Cada uno trae lo que se encontró para resolverlo.
             </p>
@@ -98,7 +98,7 @@ export default function ProblemasJuridicos({ problemas }: { problemas: ProblemaJ
                                     </span>
                                 </span>
                                 <ChevronDown className={cn(
-                                    'mt-1 h-4 w-4 shrink-0 text-white/25 transition-transform duration-300',
+                                    'mt-1 h-4 w-4 shrink-0 text-white/45 transition-transform duration-300',
                                     activo && 'rotate-180',
                                 )} />
                             </button>
@@ -107,16 +107,16 @@ export default function ProblemasJuridicos({ problemas }: { problemas: ProblemaJ
                                 <div className="space-y-4 border-t border-white/[0.06] px-4 pb-4 pt-4">
                                     <div className="grid gap-3 sm:grid-cols-2">
                                         <div className="rounded-2xl border-l-2 border-white/15 bg-black/20 py-3 pl-3.5 pr-3">
-                                            <p className="mb-1.5 text-[10px] uppercase tracking-wider text-white/35">
+                                            <p className="mb-1.5 text-[10px] uppercase tracking-wider text-white/45">
                                                 Resolvió la responsable
                                             </p>
-                                            <p className="text-[12px] leading-relaxed text-white/65">{p.resolvio}</p>
+                                            <p className="text-[12px] leading-relaxed text-white/60">{p.resolvio}</p>
                                         </div>
                                         <div className="rounded-2xl border-l-2 border-accent-gold/45 bg-black/20 py-3 pl-3.5 pr-3">
-                                            <p className="mb-1.5 text-[10px] uppercase tracking-wider text-white/35">
+                                            <p className="mb-1.5 text-[10px] uppercase tracking-wider text-white/45">
                                                 Lo combate
                                             </p>
-                                            <p className="text-[12px] leading-relaxed text-white/65">{p.combate}</p>
+                                            <p className="text-[12px] leading-relaxed text-white/60">{p.combate}</p>
                                         </div>
                                     </div>
 
@@ -133,13 +133,13 @@ export default function ProblemasJuridicos({ problemas }: { problemas: ProblemaJ
                                     )}
 
                                     <div>
-                                        <p className="mb-2.5 text-[10px] uppercase tracking-wider text-white/35">
+                                        <p className="mb-2.5 text-[10px] uppercase tracking-wider text-white/45">
                                             Para resolverlo
                                         </p>
                                         <div className="space-y-2">
                                             {p.candidatos.map((c, j) => <FichaCandidato key={j} c={c} />)}
                                             {p.candidatos.length === 0 && (
-                                                <p className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3.5 text-[12px] text-white/40">
+                                                <p className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3.5 text-[12px] text-white/45">
                                                     No se encontró jurisprudencia verificable para este punto.
                                                     Se resolverá con la ley aplicable y tu criterio.
                                                 </p>

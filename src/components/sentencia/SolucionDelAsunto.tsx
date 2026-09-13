@@ -36,10 +36,10 @@ function Parrafo({ rotulo, texto }: { rotulo: string; texto: string }) {
     if (!texto?.trim()) return null;
     return (
         <div>
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-white/35">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">
                 {rotulo}
             </p>
-            <p className="text-[13px] leading-relaxed text-white/80">{texto}</p>
+            <p className="text-[13px] leading-relaxed text-white/75">{texto}</p>
         </div>
     );
 }
@@ -122,7 +122,7 @@ export default function SolucionDelAsunto({
                             <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-accent-gold/80">
                                 El tema del que cuelga todo
                             </p>
-                            <p className="text-[13px] leading-relaxed text-white/85">
+                            <p className="text-[13px] leading-relaxed text-white/90">
                                 {ctx.tema_principal}
                             </p>
                         </div>
@@ -145,7 +145,7 @@ export default function SolucionDelAsunto({
                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/45">
                         De lo anterior derivan estos problemas jurídicos
                     </p>
-                    <p className="mb-3 text-[11px] leading-relaxed text-white/30">
+                    <p className="mb-3 text-[11px] leading-relaxed text-white/45">
                         Marca dos o más si están tan ligados que se resuelven con
                         una sola línea argumentativa: el estudio los tratará
                         juntos y dirá por qué.
@@ -167,12 +167,12 @@ export default function SolucionDelAsunto({
                                                 sel ? 'border-accent-gold bg-accent-gold/30 text-white'
                                                     : 'border-white/25 text-transparent'}`}
                                             aria-label={`Marcar el problema ${i + 1}`}>✓</button>
-                                    <p className="flex-1 text-[12.5px] leading-relaxed text-white/80">
-                                        <span className="text-white/35">{i + 1}. </span>
+                                    <p className="flex-1 text-[12.5px] leading-relaxed text-white/75">
+                                        <span className="text-white/45">{i + 1}. </span>
                                         {p.pregunta}
                                     </p>
                                     {p.jerarquia === 'principal' && (
-                                        <span className="mt-0.5 shrink-0 rounded bg-white/[0.08] px-1.5 py-0.5 text-[9.5px] uppercase text-white/50">
+                                        <span className="mt-0.5 shrink-0 rounded bg-white/[0.08] px-1.5 py-0.5 text-[9.5px] uppercase text-white/60">
                                             principal
                                         </span>
                                     )}
@@ -221,14 +221,14 @@ export default function SolucionDelAsunto({
                                     : 'border-white/25')}>
                                 {via === 'propuesta' && <Check className="h-3 w-3" strokeWidth={3} />}
                             </span>
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                            <span className="text-[11px] font-semibold uppercase tracking-wide text-white/75">
                                 La propuesta
                             </span>
-                            <span className="ml-auto rounded bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-medium uppercase text-white/70">
+                            <span className="ml-auto rounded bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-medium uppercase text-white/75">
                                 {global.sentido}
                             </span>
                         </div>
-                        <p className="text-[12px] leading-snug text-white/55">
+                        <p className="text-[12px] leading-snug text-white/60">
                             {global.razon?.slice(0, 190)}
                             {(global.razon?.length ?? 0) > 190 ? '…' : ''}
                         </p>
@@ -250,16 +250,16 @@ export default function SolucionDelAsunto({
                                 {via === 'alternativa' && hayAlternativa &&
                                     <Check className="h-3 w-3" strokeWidth={3} />}
                             </span>
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                            <span className="text-[11px] font-semibold uppercase tracking-wide text-white/75">
                                 Resolver al revés
                             </span>
                             {hayAlternativa && (
-                                <span className="ml-auto rounded bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-medium uppercase text-white/70">
+                                <span className="ml-auto rounded bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-medium uppercase text-white/75">
                                     {alt.sentido}
                                 </span>
                             )}
                         </div>
-                        <p className="text-[12px] leading-snug text-white/55">
+                        <p className="text-[12px] leading-snug text-white/60">
                             {hayAlternativa
                                 ? alt.razon.slice(0, 190) + (alt.razon.length > 190 ? '…' : '')
                                 : 'El motor no escribió la vía contraria. Puedes razonarla tú abajo.'}
@@ -268,7 +268,7 @@ export default function SolucionDelAsunto({
                 </div>
 
                 {hayAlternativa && (
-                    <p className="mt-2 text-[10.5px] leading-relaxed text-white/30">
+                    <p className="mt-2 text-[10.5px] leading-relaxed text-white/45">
                         Cambiar de vía sustituye la razón de abajo: son
                         resoluciones opuestas y quedarse con la razón de la otra
                         es lo que produce un proyecto incongruente.
@@ -292,12 +292,12 @@ export default function SolucionDelAsunto({
 
                 {elegida.efecto?.trim() && (
                     <p className="mt-3 border-t border-white/[0.06] pt-2.5 text-[11.5px] leading-relaxed text-white/45">
-                        <span className="text-white/30">Con los demás temas: </span>
+                        <span className="text-white/45">Con los demás temas: </span>
                         {elegida.efecto}
                     </p>
                 )}
                 {elegida.apoyos?.length > 0 && (
-                    <p className="mt-1 text-[11px] leading-relaxed text-white/30">
+                    <p className="mt-1 text-[11px] leading-relaxed text-white/45">
                         Se apoya en: {elegida.apoyos.join(' · ')}
                     </p>
                 )}
@@ -314,7 +314,7 @@ export default function SolucionDelAsunto({
                     )}
                     <button type="button"
                             onClick={() => onRazon(elegida.razon || '')}
-                            className="ml-auto flex items-center gap-1 text-[10.5px] text-white/35 transition-colors hover:text-white/60">
+                            className="ml-auto flex items-center gap-1 text-[10.5px] text-white/45 transition-colors hover:text-white/60">
                         <RefreshCw className="h-3 w-3" />
                         Volver a la del motor
                     </button>
@@ -324,8 +324,8 @@ export default function SolucionDelAsunto({
                     onChange={(e) => onRazon(e.target.value)}
                     rows={5}
                     placeholder="La razón por la que el proyecto se resuelve así. El estudio entero se construye sobre esto."
-                    className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/85 outline-none transition-colors placeholder:text-white/25 focus:border-accent-gold/40" />
-                <p className="mt-1.5 text-[11px] leading-relaxed text-white/30">
+                    className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/90 outline-none transition-colors placeholder:text-white/45 focus:border-accent-gold/40" />
+                <p className="mt-1.5 text-[11px] leading-relaxed text-white/45">
                     Corrígela y hazla tuya. Quien firma eres tú, y es este texto
                     —no el del motor— el que alinea todo el estudio.
                 </p>
@@ -351,7 +351,7 @@ export default function SolucionDelAsunto({
                             <span className="text-[10px] text-accent-gold/70">aportados</span>
                         )}
                     </div>
-                    <p className="mb-2 text-[11.5px] leading-relaxed text-white/55">
+                    <p className="mb-2 text-[11.5px] leading-relaxed text-white/60">
                         Con este sentido se levanta el sobreseimiento, y el
                         tribunal asume jurisdicción: tiene que estudiar los
                         conceptos de violación por primera vez, en un
@@ -364,8 +364,8 @@ export default function SolucionDelAsunto({
                         onChange={(e) => onConceptos?.(e.target.value)}
                         rows={7}
                         placeholder="Pega aquí los conceptos de violación de la demanda de amparo, tal como se plantearon."
-                        className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/85 outline-none transition-colors placeholder:text-white/25 focus:border-accent-gold/40" />
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-white/30">
+                        className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/90 outline-none transition-colors placeholder:text-white/45 focus:border-accent-gold/40" />
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-white/45">
                         Si los dejas en blanco el proyecto levanta el
                         sobreseimiento y advierte que el estudio queda
                         pendiente. No se inventan a partir de los agravios: son
@@ -380,7 +380,7 @@ export default function SolucionDelAsunto({
                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/45">
                         Qué pasa con cada tema
                     </p>
-                    <p className="mb-3 text-[11.5px] leading-relaxed text-white/40">
+                    <p className="mb-3 text-[11.5px] leading-relaxed text-white/45">
                         Ninguno se queda sin contestar. Repásalo antes de generar.
                     </p>
                     <ul className="space-y-2">
@@ -395,16 +395,16 @@ export default function SolucionDelAsunto({
                                             ? 'border-amber-400/30 bg-amber-400/[0.04]'
                                             : 'border-white/[0.06] bg-white/[0.02]')}>
                                     <div className="mb-1 flex items-start gap-2">
-                                        <span className="shrink-0 tabular-nums text-[11px] text-white/25">
+                                        <span className="shrink-0 tabular-nums text-[11px] text-white/45">
                                             {String(i + 1).padStart(2, '0')}
                                         </span>
-                                        <span className="min-w-0 flex-1 text-[12px] leading-snug text-white/70">
+                                        <span className="min-w-0 flex-1 text-[12px] leading-snug text-white/75">
                                             {c.tema}
                                         </span>
                                         <span className={cn('shrink-0 rounded px-1.5 py-0.5 text-[10px] uppercase',
                                             c.papel === 'principal'
                                                 ? 'bg-accent-gold/15 text-accent-gold'
-                                                : 'bg-white/[0.06] text-white/40')}>
+                                                : 'bg-white/[0.06] text-white/45')}>
                                             {c.papel}
                                         </span>
                                     </div>
@@ -413,7 +413,7 @@ export default function SolucionDelAsunto({
                                         {suerte || '—'}
                                     </p>
                                     {c.tema_distinto && (
-                                        <p className="mt-1 pl-6 text-[10.5px] text-white/30">
+                                        <p className="mt-1 pl-6 text-[10.5px] text-white/45">
                                             Tema distinto: se estudia aparte, no sigue la
                                             suerte del principal.
                                         </p>

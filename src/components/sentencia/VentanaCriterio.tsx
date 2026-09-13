@@ -72,7 +72,7 @@ function Calificativas({ elegido, onElegir, nota }: {
             <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
                 {grupos.map((g) => (
                     <div key={g.id} className="min-w-0">
-                        <p className="mb-1.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white/30">
+                        <p className="mb-1.5 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white/45">
                             {g.titulo}
                         </p>
                         <div className="flex flex-wrap gap-1.5">
@@ -87,7 +87,7 @@ function Calificativas({ elegido, onElegir, nota }: {
                 ))}
             </div>
             {nota && (
-                <p className="mt-2 text-[11px] leading-relaxed text-white/35">
+                <p className="mt-2 text-[11px] leading-relaxed text-white/45">
                     «Fundado pero insuficiente» le da la razón a quien promueve y aun
                     así no prospera: por eso está de ese lado. En los engroses medidos
                     acaba en resolutivo desfavorable tan seguido como el infundado.
@@ -239,7 +239,7 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
                 <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-accent-gold/80">
                     El problema que decide el proyecto
                 </p>
-                <p className="text-[12.5px] leading-relaxed text-white/85">
+                <p className="text-[12.5px] leading-relaxed text-white/90">
                     {principal?.pregunta || '—'}
                 </p>
                 {predPrincipal?.frase && (
@@ -259,14 +259,14 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
             {global && (
                 <div className="rounded-xl border border-white/[0.09] bg-white/[0.02] p-3">
                     <div className="mb-2 flex items-baseline gap-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-white/45">
                             Lo que propone el motor
                         </p>
                         <span className="rounded bg-accent-gold/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-gold">
                             {global.sentido}
                         </span>
                         {global.confianza && (
-                            <span className="text-[10px] text-white/30">
+                            <span className="text-[10px] text-white/45">
                                 confianza {global.confianza}
                             </span>
                         )}
@@ -278,13 +278,13 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
 
                     {global.problema_que_decide && (
                         <p className="mt-2 text-[11.5px] leading-relaxed text-white/45">
-                            <span className="text-white/30">Cuelga de: </span>
+                            <span className="text-white/45">Cuelga de: </span>
                             {global.problema_que_decide}
                         </p>
                     )}
                     {global.efecto && (
                         <p className="mt-1 text-[11.5px] leading-relaxed text-white/45">
-                            <span className="text-white/30">Con los demás: </span>
+                            <span className="text-white/45">Con los demás: </span>
                             {global.efecto}
                         </p>
                     )}
@@ -303,7 +303,7 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
                     )}
 
                     {global.apoyos?.length > 0 && (
-                        <p className="mt-2 border-t border-white/[0.06] pt-2 text-[11px] leading-relaxed text-white/35">
+                        <p className="mt-2 border-t border-white/[0.06] pt-2 text-[11px] leading-relaxed text-white/45">
                             Se apoya en: {global.apoyos.join(' · ')}
                         </p>
                     )}
@@ -312,7 +312,7 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
 
             {/* 2 · LA DECISIÓN */}
             <div>
-                <p className="mb-2 text-[12px] leading-relaxed text-white/55">
+                <p className="mb-2 text-[12px] leading-relaxed text-white/60">
                     Elige el sentido. Debajo verás qué le pasa a cada problema
                     con esa elección, antes de generar nada.
                 </p>
@@ -338,13 +338,13 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
             {/* 3 · LA CONSECUENCIA, PROBLEMA A PROBLEMA */}
             {sentidoGlobal && (
                 <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-white/45">
                         Con ese sentido, el proyecto queda así
                     </p>
                     <ul className="space-y-1.5">
                         {problemas.map((p, i) => (
                             <li key={p.id} className="flex gap-2 text-[11.5px] leading-snug">
-                                <span className="shrink-0 tabular-nums text-white/30">
+                                <span className="shrink-0 tabular-nums text-white/45">
                                     {String(i + 1).padStart(2, '0')}
                                 </span>
                                 <span className="min-w-0 flex-1 text-white/60">
@@ -355,15 +355,15 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
                                     i === iPrincipal
                                         ? 'bg-accent-gold/15 text-accent-gold'
                                         : prospera
-                                            ? 'bg-white/[0.06] text-white/40'
-                                            : 'bg-white/[0.06] text-white/55')}>
+                                            ? 'bg-white/[0.06] text-white/45'
+                                            : 'bg-white/[0.06] text-white/60')}>
                                     {consecuencia(p, i)}
                                 </span>
                             </li>
                         ))}
                     </ul>
                     {prospera && problemas.length > 1 && (
-                        <p className="mt-2 border-t border-white/[0.06] pt-2 text-[11px] leading-relaxed text-white/40">
+                        <p className="mt-2 border-t border-white/[0.06] pt-2 text-[11px] leading-relaxed text-white/45">
                             Los accesorios no se contestan: el proyecto dirá que
                             quedaron sin materia. Si alguno pide algo que dé MÁS de
                             lo que concede el principal, ése se estudia igual —el
@@ -376,7 +376,7 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
             {/* 4 · LA RAZÓN, QUE ES SUYA */}
             {onRazonGlobal && (
                 <div>
-                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/40">
+                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-white/45">
                         Por qué. Esto alinea todo el estudio
                     </label>
                     <textarea
@@ -384,9 +384,9 @@ function BloqueGlobal({ problemas, propuesta, sentidoGlobal, onSentidoGlobal,
                         onChange={(e) => onRazonGlobal(e.target.value)}
                         rows={4}
                         placeholder="La razón por la que el proyecto se resuelve en ese sentido. Si insertaste la propuesta, corrígela y añade lo que falte: el estudio se construye sobre esto."
-                        className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/85 outline-none transition-colors placeholder:text-white/25 focus:border-accent-gold/40" />
+                        className="w-full resize-y rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2.5 text-[12.5px] leading-relaxed text-white/90 outline-none transition-colors placeholder:text-white/45 focus:border-accent-gold/40" />
                     {global?.razon && razonGlobal?.trim() === global.razon.trim() && (
-                        <p className="mt-1.5 text-[11px] text-white/35">
+                        <p className="mt-1.5 text-[11px] text-white/45">
                             Es la propuesta del motor, tal cual. Léela y hazla tuya:
                             quien firma eres tú.
                         </p>
@@ -621,7 +621,7 @@ export default function VentanaCriterio({
                 </div>
                 <span className="shrink-0 text-right">
                     <span className="block text-2xl font-semibold tabular-nums text-white/90">{fuerza.pct}%</span>
-                    <span className="block text-[10px] uppercase tracking-wider text-white/35">criterio dado</span>
+                    <span className="block text-[10px] uppercase tracking-wider text-white/45">criterio dado</span>
                 </span>
             </div>
 
@@ -633,8 +633,8 @@ export default function VentanaCriterio({
                 />
             </div>
             <div className="mb-5 flex items-center justify-between gap-3 text-[11px]">
-                <span className="text-white/40">{dictamen}</span>
-                <span className="shrink-0 tabular-nums text-white/30">
+                <span className="text-white/45">{dictamen}</span>
+                <span className="shrink-0 tabular-nums text-white/45">
                     {fuerza.via === 'global'
                         ? `${fuerza.conSentido ? 'sentido dictado' : 'sin sentido'} · ${
                               fuerza.conRazon ? 'razón escrita' : 'falta el porqué'}`
@@ -690,10 +690,10 @@ export default function VentanaCriterio({
                                                     : 'border-white/25')}>
                                         {modo === id && <Check className="h-3 w-3" strokeWidth={3} />}
                                     </span>
-                                    <span className="text-[12.5px] font-medium text-white/85">{titulo}</span>
+                                    <span className="text-[12.5px] font-medium text-white/90">{titulo}</span>
                                 </div>
-                                <p className="text-[11.5px] leading-snug text-white/50">{que}</p>
-                                <p className="mt-1 text-[11px] leading-snug text-white/30">{cuando}</p>
+                                <p className="text-[11.5px] leading-snug text-white/60">{que}</p>
+                                <p className="mt-1 text-[11px] leading-snug text-white/45">{cuando}</p>
                             </button>
                         ))}
                     </div>
@@ -705,7 +705,7 @@ export default function VentanaCriterio({
                     <div className="mt-3 flex gap-2 rounded-lg border-l-2 border-amber-400/40 bg-amber-400/[0.04] py-2 pl-2.5 pr-3">
                         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300/70" />
                         <p className="text-[11.5px] leading-relaxed text-white/60">
-                            El motor propone; <span className="text-white/85">el criterio es
+                            El motor propone; <span className="text-white/90">el criterio es
                             tuyo</span>. Lee la razón antes de generar y corrígela si no es la
                             que sostendrías: el proyecto sale con tu nombre y la
                             responsabilidad de que el sentido sea el correcto es tuya.
@@ -763,7 +763,7 @@ export default function VentanaCriterio({
                     {problemas.length} planteamientos no se califican uno a uno: el
                     principal decide, y los accesorios quedan como consecuencia suya.
                     Si prefieres calificarlos por separado, cambia arriba a{' '}
-                    <span className="text-white/70">tema por tema</span>.
+                    <span className="text-white/75">tema por tema</span>.
                 </p>
             ) : (
             <div className="space-y-4">
@@ -771,7 +771,7 @@ export default function VentanaCriterio({
                     const razonado = p.criterio.trim().split(/\s+/).length >= 25 && MARCAS_DE_RAZON.test(p.criterio);
                     return (
                         <div key={p.id} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-                            <p className="mb-2 text-[13px] leading-relaxed text-white/80">
+                            <p className="mb-2 text-[13px] leading-relaxed text-white/75">
                                 <span className="mr-2 text-[11px] font-semibold text-accent-gold">
                                     {String(i + 1).padStart(2, '0')}
                                 </span>
@@ -792,8 +792,8 @@ export default function VentanaCriterio({
                                 <p className={cn(
                                     'mb-3 flex items-center gap-1.5 text-[11.5px]',
                                     p.prediccion.confianza === 'baja'
-                                        ? 'text-white/35' : 'text-white/55')}>
-                                    <span className="text-white/30">El acervo:</span>
+                                        ? 'text-white/45' : 'text-white/60')}>
+                                    <span className="text-white/45">El acervo:</span>
                                     <span className="text-white/75">{p.prediccion.frase}</span>
                                     {p.sentido && p.prediccion.sentido &&
                                      !mismaDireccion(p.prediccion.sentido, p.sentido) && (
@@ -836,7 +836,7 @@ export default function VentanaCriterio({
                                 placeholder="Mi criterio es… porque…"
                                 className={cn(
                                     'w-full resize-y rounded-xl border bg-black/20 px-3.5 py-2.5',
-                                    'text-[13px] leading-relaxed text-white/90 placeholder:text-white/25',
+                                    'text-[13px] leading-relaxed text-white/90 placeholder:text-white/45',
                                     'transition-colors duration-200 outline-none',
                                     razonado
                                         ? 'border-emerald-400/25 focus:border-emerald-400/50'
@@ -933,7 +933,7 @@ export default function VentanaCriterio({
                     <p className="text-[12px] font-medium text-amber-200/90">
                         Al motor le falta material para proponer en algunos puntos
                     </p>
-                    <p className="mt-1 text-[11.5px] leading-relaxed text-white/55">
+                    <p className="mt-1 text-[11.5px] leading-relaxed text-white/60">
                         Sube el documento que echó en falta —el contrato colectivo, el
                         convenio, el acta— o escribe el contexto. Lo usará para proponer
                         y para redactar, citándolo como documento aportado.
@@ -945,14 +945,14 @@ export default function VentanaCriterio({
                         placeholder="Por ejemplo: «CLÁUSULA 64. El trabajador que acredite incapacidad…»"
                         className={cn(
                             'mt-2 w-full rounded-xl border border-white/[0.10] bg-white/[0.03]',
-                            'px-3 py-2 text-[12.5px] text-white/85 placeholder:text-white/25',
+                            'px-3 py-2 text-[12.5px] text-white/90 placeholder:text-white/45',
                             'outline-none focus:border-white/25',
                         )}
                     />
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                         <label className={cn(
                             'inline-flex h-9 cursor-pointer items-center rounded-xl border',
-                            'border-white/[0.12] bg-white/[0.04] px-3 text-[12px] text-white/70',
+                            'border-white/[0.12] bg-white/[0.04] px-3 text-[12px] text-white/75',
                             'hover:bg-white/[0.08]',
                         )}>
                             {fichero ? fichero.name.slice(0, 30) : 'Elegir documento…'}
@@ -966,7 +966,7 @@ export default function VentanaCriterio({
                             className={cn(
                                 'inline-flex h-9 items-center rounded-xl px-3 text-[12px] font-semibold',
                                 aportando || (!fichero && !contexto.trim())
-                                    ? 'cursor-not-allowed border border-white/[0.08] text-white/30'
+                                    ? 'cursor-not-allowed border border-white/[0.08] text-white/45'
                                     : 'bg-amber-400/90 text-charcoal-900 hover:brightness-110',
                             )}
                         >
@@ -1009,7 +1009,7 @@ export default function VentanaCriterio({
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-accent-gold">
                             Así se va a resolver
                         </p>
-                        <span className="text-[10.5px] text-white/40">
+                        <span className="text-[10.5px] text-white/45">
                             esto es lo que decide el proyecto
                         </span>
                     </div>
@@ -1018,7 +1018,7 @@ export default function VentanaCriterio({
                             <div className="flex flex-wrap items-baseline gap-x-2">
                                 <span className={cn(
                                     'text-[12px] font-semibold',
-                                    d.de === 'tuyo' ? 'text-accent-gold' : 'text-white/85')}>
+                                    d.de === 'tuyo' ? 'text-accent-gold' : 'text-white/90')}>
                                     {d.sentido ? d.sentido.replace(/_/g, ' ').toUpperCase() : 'SIN DECIDIR'}
                                 </span>
                                 <span className={cn(
@@ -1032,7 +1032,7 @@ export default function VentanaCriterio({
                                         : 'sin materia'}
                                 </span>
                             </div>
-                            <p className="mt-0.5 text-[11.5px] leading-relaxed text-white/55">
+                            <p className="mt-0.5 text-[11.5px] leading-relaxed text-white/60">
                                 {d.pregunta}
                             </p>
                         </div>
@@ -1045,17 +1045,17 @@ export default function VentanaCriterio({
 
             {decision.length > 0 && !todoDecidido && (
                 <div className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3.5">
-                    <p className="text-[11px] uppercase tracking-wide text-white/35">
+                    <p className="text-[11px] uppercase tracking-wide text-white/45">
                         Falta por decidir
                     </p>
                     {decision.some((d) => !d.sentido) ? (
-                        <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                        <p className="mt-1 text-[12px] leading-relaxed text-white/60">
                             {decision.filter((d) => !d.sentido).length} de {decision.length}{' '}
                             planteamientos sin calificar. Cuando estén todos —cada uno con
                             su porqué— verás aquí cómo va a resolverse el asunto.
                         </p>
                     ) : (
-                        <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                        <p className="mt-1 text-[12px] leading-relaxed text-white/60">
                             Están todos calificados, pero {sinPorque.length === 1
                                 ? 'uno se quedó sin el porqué'
                                 : `${sinPorque.length} se quedaron sin el porqué`}. Un
@@ -1075,7 +1075,7 @@ export default function VentanaCriterio({
                     'text-[13px] font-semibold transition-all duration-200',
                     listo && !generando
                         ? 'bg-accent-gold text-charcoal-900 hover:brightness-110 active:scale-[0.99]'
-                        : 'cursor-not-allowed border border-white/[0.08] bg-white/[0.03] text-white/30',
+                        : 'cursor-not-allowed border border-white/[0.08] bg-white/[0.03] text-white/45',
                 )}
             >
                 {proponiendo ? 'El motor está proponiendo…'
@@ -1084,12 +1084,12 @@ export default function VentanaCriterio({
                 {!generando && !proponiendo && <ArrowRight className="h-4 w-4" />}
             </button>
             {!listo && (
-                <p className="mt-2 text-center text-[11px] text-white/30">
+                <p className="mt-2 text-center text-[11px] text-white/45">
                     Elige el sentido de al menos un problema, o pide la propuesta al motor.
                 </p>
             )}
             {listo && !completo && (
-                <p className="mt-2 text-center text-[11px] text-white/40">
+                <p className="mt-2 text-center text-[11px] text-white/45">
                     Quedan {fuerza.total - fuerza.conSentido} problema
                     {fuerza.total - fuerza.conSentido === 1 ? '' : 's'} sin sentido:
                     se estudiarán igual, pero fijarlos alinea mejor la sentencia.

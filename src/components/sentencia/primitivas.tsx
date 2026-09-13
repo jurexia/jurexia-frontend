@@ -86,10 +86,10 @@ export function Rotulo({
 }: { children: React.ReactNode; contador?: number; accion?: React.ReactNode }) {
     return (
         <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40">
+            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
                 {children}
                 {contador !== undefined && (
-                    <span className="rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[10px] tabular-nums text-white/50">
+                    <span className="rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[10px] tabular-nums text-white/60">
                         {contador}
                     </span>
                 )}

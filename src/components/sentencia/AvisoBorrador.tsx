@@ -113,8 +113,8 @@ export default function AvisoBorrador({ datos, className }: {
                     {(datos.textoHuecos?.length ?? 0) > 0 && (
                         <ul className="mt-2 space-y-1.5">
                             {(datos.textoHuecos ?? []).map((h, i) => (
-                                <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-white/55">
-                                    <span className="shrink-0 text-white/30">·</span>
+                                <li key={i} className="flex gap-2 text-[12.5px] leading-relaxed text-white/60">
+                                    <span className="shrink-0 text-white/45">·</span>
                                     <span>{h}</span>
                                 </li>
                             ))}
@@ -124,10 +124,10 @@ export default function AvisoBorrador({ datos, className }: {
                     <ul className="mt-4 grid gap-3 sm:grid-cols-2">
                         {PUNTOS.map(({ icono: Icono, titulo, texto }) => (
                             <li key={titulo} className="flex gap-2.5">
-                                <Icono className="mt-0.5 h-4 w-4 shrink-0 text-white/35" aria-hidden />
+                                <Icono className="mt-0.5 h-4 w-4 shrink-0 text-white/45" aria-hidden />
                                 <div>
-                                    <p className="text-[13px] font-medium text-white/85">{titulo}</p>
-                                    <p className="text-[12px] leading-snug text-white/50">{texto}</p>
+                                    <p className="text-[13px] font-medium text-white/90">{titulo}</p>
+                                    <p className="text-[12px] leading-snug text-white/60">{texto}</p>
                                 </div>
                             </li>
                         ))}
@@ -147,7 +147,7 @@ export function AvisoPiloto({ secretarios, cupo }: { secretarios: number; cupo: 
     const quedan = Math.max(0, cupo - secretarios);
     return (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5
-                        text-[12px] text-white/55">
+                        text-[12px] text-white/60">
             <span className="font-medium text-white/75">Piloto Platinum</span>
             {' · '}
             {quedan > 0
