@@ -1101,6 +1101,57 @@ export function descargarDelAlmacen(numero: string, userEmail: string): void {
     window.open(u, '_blank', 'noopener');
 }
 
+/* ═══ LOS DOCUMENTOS DEL ASUNTO, Y LA PRIVACIDAD ═══
+   David: «hay que guardar los archivos de cada secretario y sus proyectos para
+   que pueda volver a trabajar, incluso cambiar de sentido. Dinámico y con
+   historial —no eliminar su pdf—, pero con privacidad y no utilización de datos
+   personales para ningún fin, sin excepción».
+
+   Hasta ahora los PDF se leían y se tiraban con la petición. Ya se guardan en el
+   mismo almacén privado del proyecto, con el correo cifrado en la ruta. */
+export interface DocumentosDelAsunto {
+    documentos: { rol: string; etiqueta: string; bytes: number }[];
+    proyecto: boolean;
+    aviso: string;
+}
+
+export async function documentosDelAsunto(
+    numero: string, userEmail: string,
+): Promise<DocumentosDelAsunto | null> {
+    if (!numero || !userEmail) return null;
+    try {
+        const res = await fetch(`${BASE}/taller/documentos`
+            + `?numero=${encodeURIComponent(numero)}`
+            + `&user_email=${encodeURIComponent(userEmail)}`);
+        if (!res.ok) return null;
+        return await res.json();
+    } catch { return null; }
+}
+
+/** Abre uno de los documentos guardados. */
+export function descargarDocumento(
+    numero: string, rol: string, userEmail: string,
+): void {
+    window.open(`${BASE}/taller/documento`
+        + `?numero=${encodeURIComponent(numero)}`
+        + `&rol=${encodeURIComponent(rol)}`
+        + `&user_email=${encodeURIComponent(userEmail)}`, '_blank', 'noopener');
+}
+
+/** LO QUE CONVIERTE LA PROMESA EN GARANTÍA. Destruye documentos, proyecto y
+ *  sesión de ese asunto. No se puede deshacer. */
+export async function olvidarAsunto(
+    numero: string, userEmail: string,
+): Promise<string> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    const res = await fetch(`${BASE}/taller/olvidar`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    const j = await res.json().catch(() => null);
+    return String(j?.mensaje ?? 'Se borró todo lo de ese asunto.');
+}
+
 /** El asunto, para leerlo antes de decidir nada. */
 export async function contextoDelAsunto(
     numero: string, userEmail: string,

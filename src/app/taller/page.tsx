@@ -27,7 +27,8 @@ import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
 import EntradaTaller from '@/components/sentencia/EntradaTaller';
 import type { ViaEntrada, PasoArchivos } from '@/components/sentencia/EntradaTaller';
-import type { AsuntoEnCurso, FichaProyecto } from '@/components/sentencia/api';
+import type { AsuntoEnCurso, FichaProyecto, DocumentosDelAsunto }
+    from '@/components/sentencia/api';
 import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
 import LineaDeFases from '@/components/sentencia/LineaDeFases';
 import VentanaCriterio from '@/components/sentencia/VentanaCriterio';
@@ -45,6 +46,7 @@ import {
     estadoPiloto, descargarProyecto,
     sisePendiente, generarDesdeExpediente, NecesitaNotificacion, razonarSentido,
     contextoDelAsunto, asuntosEnCurso, descargarDelAlmacen,
+    documentosDelAsunto, descargarDocumento, olvidarAsunto,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
     fichaDesdeAdmision,
 } from '@/components/sentencia/api';
@@ -234,6 +236,11 @@ export default function TallerDeSentencias() {
        generar; éste es la FICHA de uno anterior, y su documento vive en el
        almacén. Se separan a propósito para no fingir un fichero que no está. */
     const [previo, setPrevio] = useState<FichaProyecto | null>(null);
+    /* LOS DOCUMENTOS GUARDADOS DEL ASUNTO. Hasta ahora los PDF se leían y se
+       tiraban con la petición: volver a un asunto exigía traerlos otra vez. */
+    const [guardados, setGuardados] = useState<DocumentosDelAsunto | null>(null);
+    const [confirmaOlvidar, setConfirmaOlvidar] = useState(false);
+
     /* EL MARCO, ENTERO CUANDO SE PIDE. La lista se corta en doce tesis y
        catorce preceptos y lo decía —«y 6 más»—, pero decirlo no es enseñarlo:
        este panel existe para COMPROBAR con qué se va a fundar, y seis tesis que
@@ -335,6 +342,24 @@ export default function TallerDeSentencias() {
     const [material, setMaterial] = useState<MaterialDelCaso | null>(null);
     const [problemas, setProblemas] = useState<ProblemaJuridico[]>([]);
     const [proyecto, setProyecto] = useState<ResultadoProyecto | null>(null);
+    /* Se preguntan al abrir un asunto y al terminar de generar: son los dos
+       momentos en que la respuesta cambia. */
+    const traerGuardados = useCallback(async (num: string) => {
+        if (!num || !correo) { setGuardados(null); return; }
+        setGuardados(await documentosDelAsunto(num, correo));
+    }, [correo]);
+
+    const olvidar = useCallback(async () => {
+        if (!confirmaOlvidar) { setConfirmaOlvidar(true); return; }
+        try {
+            const msg = await olvidarAsunto(encargo.numero, correo);
+            setGuardados(null); setPrevio(null); setProyecto(null);
+            setEnCurso((xs) => xs.filter((x) => x.numero !== encargo.numero));
+            setError(msg);
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo borrar el asunto.');
+        } finally { setConfirmaOlvidar(false); }
+    }, [confirmaOlvidar, encargo.numero, correo]);
 
     useEffect(() => {
         if (!correo) return;
@@ -392,6 +417,7 @@ export default function TallerDeSentencias() {
                aterriza en SU PANTALLA —el aviso de borrador con sus avisos y su
                descarga—, que es lo que David pidió; si no, en el adelanto, con
                el botón rojo pendiente. */
+            void traerGuardados(numero);
             if (c.proyecto) {
                 setPrevio(c.proyecto);
                 setPaso('proyecto');
@@ -844,6 +870,7 @@ export default function TallerDeSentencias() {
                     () => setAvance((x) => x + '\n\n… componiendo el documento'));
                 setProyecto(rg);
                 descargarProyecto(rg);
+                void traerGuardados(encargo.numero);
                 setPaso('proyecto');
                 // Terminó: al aviso de borrador, que es lo que hay que leer
                 // ANTES de abrir el documento.
@@ -1008,6 +1035,78 @@ export default function TallerDeSentencias() {
                     {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
                         <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
                                          extractos={[]} vocabulario={voz} />
+                    )}
+
+                    {/* ═══ LO QUE QUEDA GUARDADO DE ESTE ASUNTO ═══
+                        David: «hay que guardar los archivos de cada secretario y
+                        sus proyectos para que pueda volver a trabajar, incluso
+                        cambiar de sentido. Dinámico y con historial —no eliminar
+                        su pdf—, pero con privacidad y no utilización de datos
+                        personales para ningún fin, sin excepción».
+
+                        Los PDF se leían y se tiraban con la petición. Ya se
+                        guardan, y aquí se ven: se pueden abrir, y se pueden
+                        borrar. El botón de borrar no es un adorno de
+                        cumplimiento — es lo que convierte la promesa en algo que
+                        el secretario puede ejercer y comprobar. */}
+                    {(guardados?.documentos?.length ?? 0) > 0 && (
+                        <Tarjeta>
+                            <Rotulo accion={
+                                <span className="text-[11px] text-white/30">
+                                    sólo tú los ves
+                                </span>
+                            }>
+                                Guardado de este asunto
+                            </Rotulo>
+                            <ul className="grid gap-1.5">
+                                {guardados!.documentos.map((d) => (
+                                    <li key={d.rol}>
+                                        <button type="button"
+                                                onClick={() => descargarDocumento(
+                                                    encargo.numero, d.rol, correo)}
+                                                className="group flex w-full items-center gap-2.5 rounded-lg
+                                                           border border-white/[0.07] bg-white/[0.02] px-3 py-2
+                                                           text-left transition-colors
+                                                           hover:border-accent-gold/35 hover:bg-white/[0.045]">
+                                            <FileText className="h-3.5 w-3.5 shrink-0 text-white/30
+                                                                 transition-colors group-hover:text-accent-gold/70" />
+                                            <span className="min-w-0 flex-1 truncate text-[12px] text-white/80">
+                                                {d.etiqueta}
+                                            </span>
+                                            <span className="shrink-0 text-[11px] tabular-nums text-white/30">
+                                                {Math.max(1, Math.round(d.bytes / 1024)).toLocaleString('es-MX')} KB
+                                            </span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                            {guardados!.proyecto && (
+                                <p className="mt-2 text-[11.5px] text-white/45">
+                                    Y el proyecto generado, que puedes descargar y volver a
+                                    generar con otro sentido cuantas veces quieras.
+                                </p>
+                            )}
+
+                            {/* LA PRIVACIDAD, DICHA SIN MATICES porque así está
+                                contratada: los planes de API de pago de los
+                                modelos no usan el contenido de las peticiones
+                                para entrenar. */}
+                            <p className="mt-3 border-t border-white/[0.08] pt-2.5
+                                          text-[11.5px] leading-relaxed text-white/45">
+                                {guardados!.aviso}
+                            </p>
+
+                            <button type="button" onClick={() => void olvidar()}
+                                    className={cn(
+                                        'mt-3 text-[11.5px] transition-colors',
+                                        confirmaOlvidar
+                                            ? 'font-medium text-red-300 hover:text-red-200'
+                                            : 'text-white/35 hover:text-white/70')}>
+                                {confirmaOlvidar
+                                    ? '¿Seguro? Esto borra los documentos, el proyecto y la sesión. Pulsa otra vez.'
+                                    : 'Borrar todo lo de este asunto'}
+                            </button>
+                        </Tarjeta>
                     )}
                     {/* La plantilla propia tampoco pinta nada antes de elegir
                         camino: es el último detalle de un trabajo que aún no
