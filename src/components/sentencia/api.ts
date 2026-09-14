@@ -227,6 +227,9 @@ export interface EstadoPiloto {
     cupo: number;
     tiene_acceso: boolean;
     aviso: string;
+    /** El camino de SISE está cerrado salvo para administración y testers.
+     *  Lo decide el servidor, no la pantalla. */
+    puede_sise?: boolean;
 }
 
 async function _fallo(res: Response): Promise<never> {

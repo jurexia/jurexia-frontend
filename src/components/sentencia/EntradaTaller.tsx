@@ -34,7 +34,7 @@ export type PasoArchivos = 'admision' | 'formulario';
 /* Un botón grande de los que emergen del fondo negro. El resplandor va en el
    rótulo, no en el marco: una caja que brilla entera parece un anuncio. */
 function Camino({
-    titulo, que, porque, icono: Icono, onClick, retraso = 0, insignia,
+    titulo, que, porque, icono: Icono, onClick, retraso = 0, insignia, cerrado,
 }: {
     titulo: string;
     que: string;
@@ -43,19 +43,30 @@ function Camino({
     onClick: () => void;
     retraso?: number;
     insignia?: string;
+    /** Cerrado: se ve, se lee y no se pulsa. */
+    cerrado?: boolean;
 }) {
     return (
         <button
             type="button"
-            onClick={onClick}
+            onClick={cerrado ? undefined : onClick}
+            disabled={cerrado}
+            aria-disabled={cerrado}
             style={{ animationDelay: `${retraso}ms` }}
+            /* ═══ UN CAMINO CERRADO SE ENSEÑA, NO SE ESCONDE ═══
+               David: «inhabilita la opción de SISE (…) deja el mensaje de
+               próximamente». Esconderlo dejaría la pantalla con una sola
+               tarjeta y sin explicación; enseñarlo apagado dice qué hay y que
+               viene. La puerta de verdad está en el servidor: `puede_sise`. */
             className={cn(
                 'entrada-tarjeta group relative flex-1 overflow-hidden rounded-2xl border',
-                'border-white/10 bg-black/40 p-6 text-left backdrop-blur-xl',
-                'transition-all duration-300',
-                'hover:border-accent-gold/45 hover:bg-black/30',
-                'hover:shadow-[0_0_60px_-24px_rgba(201,169,98,0.5)]',
-                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-gold/60',
+                'p-6 text-left backdrop-blur-xl transition-all duration-300',
+                cerrado
+                    ? 'cursor-not-allowed border-white/[0.07] bg-black/50 opacity-60'
+                    : 'border-white/10 bg-black/40 hover:border-accent-gold/45 '
+                      + 'hover:bg-black/30 hover:shadow-[0_0_60px_-24px_rgba(201,169,98,0.5)] '
+                      + 'focus-visible:outline focus-visible:outline-2 '
+                      + 'focus-visible:outline-accent-gold/60',
             )}
         >
             <span className="flex items-center gap-2.5">
@@ -213,7 +224,7 @@ function Reanudar({ asuntos, onAbrir }: {
 
 export default function EntradaTaller({
     via, onVia, pasoArchivos, onPasoArchivos, hayDocumentos, hayFicha,
-    enCurso = [], onReanudar, accion, admision,
+    enCurso = [], onReanudar, accion, admision, puedeSise = false,
 }: {
     via: ViaEntrada | null;
     onVia: (v: ViaEntrada | null) => void;
@@ -229,6 +240,9 @@ export default function EntradaTaller({
     /** El soltador del auto de admisión. Vivía en el raíl izquierdo mientras
      *  la elección se hacía aquí; su sitio es el paso 1. */
     admision?: React.ReactNode;
+    /** Lo dice el servidor en /taller/estado. Cerrado salvo administración y
+     *  testers mientras el complemento está en pruebas. */
+    puedeSise?: boolean;
 }) {
     /* ── Nada elegido: los dos caminos ──────────────────────────────────── */
     if (!via) {
@@ -250,11 +264,14 @@ export default function EntradaTaller({
                     />
                     <Camino
                         titulo="Desde SISE"
-                        insignia="beta"
+                        insignia={puedeSise ? 'beta' : 'próximamente'}
+                        cerrado={!puedeSise}
                         icono={Download}
                         retraso={110}
                         que="El complemento trae las constancias desde el Expediente Electrónico."
-                        porque="Se instala una vez, en Chrome y en tu computadora. Después no hay que teclear el número, el tipo ni la ponencia: salen de los autos."
+                        porque={puedeSise
+                            ? 'Se instala una vez, en Chrome y en tu computadora. Después no hay que teclear el número, el tipo ni la ponencia: salen de los autos.'
+                            : 'Traerá las constancias sin teclear el número, el tipo ni la ponencia. Está en pruebas y todavía no se abre: por ahora el taller trabaja con tus archivos.'}
                         onClick={() => onVia('sise')}
                     />
                 </div>

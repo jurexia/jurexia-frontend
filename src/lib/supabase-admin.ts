@@ -25,19 +25,43 @@ function getSupabaseAdmin(): any {
     return adminInstance;
 }
 
-// Plan configuration mapping
+/* ═══════════════════════════════════════════════════════════════════════════
+   LA CUOTA DE CADA PLAN
+   ═══════════════════════════════════════════════════════════════════════════
+   `proyectosMes` es nuevo y es una bolsa APARTE de `queriesLimit`. Hasta ahora
+   una sentencia del taller costaba 10 consultas del chat, y eso mezcla dos
+   cosas que no se parecen: una consulta vale céntimos y un proyecto cuesta
+   minutos de motor. Además el secretario no puede saber cuántos proyectos le
+   quedan mirando un número de consultas.
+
+   Se gasta primero la cuota del mes —que caduca— y sólo después las recargas
+   —que no—. Ver `consumir_proyecto_taller` en la base de datos: el orden está
+   ahí y es deliberado.
+
+   La cuenta gratuita no lleva cuota mensual: lleva UNA prueba de por vida, que
+   se cuenta aparte en `proyectos_prueba_usados`. Es para que conozca la
+   herramienta, no para redactar un proyecto gratis cada treinta días. */
 export const PLAN_CONFIG = {
-    gratuito: { queriesLimit: 5, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    basico_monthly: { queriesLimit: 70, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
+    gratuito: { queriesLimit: 5, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false, proyectosMes: 0 },
+    basico_monthly: { queriesLimit: 70, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false, proyectosMes: 0 },
     // El Básico anual da lo mismo que el mensual: cambia el cobro, no el
     // derecho. Faltaba aquí, y por eso el webhook no sabía cuántas consultas
     // darle a quien lo comprara. Igual que pro_annual espeja a pro_monthly.
-    basico_annual: { queriesLimit: 70, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    pro_monthly: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    pro_annual: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    platinum_monthly: { queriesLimit: 560, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    platinum_annual: { queriesLimit: 560, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false },
-    ultra_secretarios: { queriesLimit: 140, draftsLimit: 20, sentenciaQueriesLimit: 50, isUnlimited: false },
+    basico_annual: { queriesLimit: 70, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false, proyectosMes: 0 },
+    pro_monthly: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false, proyectosMes: 0 },
+    pro_annual: { queriesLimit: 140, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false, proyectosMes: 0 },
+    platinum_monthly: { queriesLimit: 560, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false, proyectosMes: 0 },
+    platinum_annual: { queriesLimit: 560, draftsLimit: 0, sentenciaQueriesLimit: 0, isUnlimited: false, proyectosMes: 0 },
+    // ULTRA SECRETARIOS, tal como David lo definió el 13-sep-2026: «el
+    // secretario tendrá acceso al chat (560 consultas como ultra) y podrá
+    // generar 40 proyectos de sentencia al mes». Las 560 son las mismas que
+    // Platinum; los 40 proyectos son la bolsa nueva.
+    //
+    // ESTABA MAL Y HABRÍA COBRADO DE MENOS: decía 140 consultas —las de Pro—
+    // aunque el plan cuesta 999 y se anuncia por encima de Platinum, que da
+    // 560. Quien lo hubiera comprado habría recibido menos chat que alguien
+    // pagando 599.
+    ultra_secretarios: { queriesLimit: 560, draftsLimit: 20, sentenciaQueriesLimit: 50, isUnlimited: false, proyectosMes: 40 },
 } as const;
 
 export type PlanType = keyof typeof PLAN_CONFIG;
@@ -112,6 +136,13 @@ export async function updateUserSubscription(
         queries_limit: config.queriesLimit,
         drafts_limit: config.draftsLimit,
         sentencia_queries_limit: config.sentenciaQueriesLimit,
+        /* LA CUOTA DE PROYECTOS VIAJA CON EL PLAN. Si no se escribe aquí, quien
+           compre Ultra se queda con el 0 por defecto de la columna y paga 999
+           por un taller que no le deja generar nada. Bajar de plan también la
+           ajusta, que es lo correcto: el derecho es del plan vigente.
+           LO RECARGADO NO SE TOCA NUNCA: está comprado aparte y no caduca; si
+           una bajada de plan lo borrara, sería quedarse con dinero cobrado. */
+        proyectos_mes_limite: config.proyectosMes,
         stripe_customer_id: stripeCustomerId || undefined,
         stripe_subscription_id: stripeSubscriptionId || undefined,
         is_active: true,
@@ -122,6 +153,9 @@ export async function updateUserSubscription(
         updatePayload.queries_used = 0;
         updatePayload.drafts_used = 0;
         updatePayload.sentencia_queries_used = 0;
+        // El mes empieza de cero al renovar, igual que las consultas. La fecha
+        // del periodo la pone la propia función de consumo si se queda vacía.
+        updatePayload.proyectos_mes_usados = 0;
     }
 
     const { data, error } = await getSupabaseAdmin()

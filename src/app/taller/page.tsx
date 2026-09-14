@@ -1399,6 +1399,7 @@ export default function TallerDeSentencias() {
                                        hayFicha={!!encargo.numero && !!encargo.tipoAsunto}
                                        enCurso={enCurso}
                                        onReanudar={reanudar}
+                                       puedeSise={!!piloto?.puede_sise}
                                        admision={
                                            <TarjetaAdmision fichando={fichando}
                                                             fichado={fichado}

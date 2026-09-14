@@ -307,6 +307,51 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         return;
     }
 
+    /* ═══════════════════════════════════════════════════════════════════════
+       UNA RECARGA NO ES UNA SUSCRIPCIÓN
+       ═══════════════════════════════════════════════════════════════════════
+       El taller vende recargas de diez proyectos por 250 MXN, pago único y sin
+       caducidad. Llegan por este mismo evento, así que hay que apartarlas ANTES
+       de que el flujo de suscripciones las tome por un cambio de plan: si no,
+       quien recarga vería su plan recalculado a partir de un precio que no es
+       de ningún plan, y el guardián de más abajo lo dejaría en «gratuito».
+
+       SE ACREDITA CON LA FUNCIÓN DE LA BASE, no con un `update` desde aquí, y
+       por dos motivos: suma y escribe el asiento en una sola transacción, y es
+       IDEMPOTENTE. Stripe reintenta los webhooks —es su diseño, no un fallo—, y
+       sin esa garantía un reintento regala diez proyectos. El seguro es la
+       unicidad de `stripe_session_id` en `taller_recargas`. */
+    if (session.metadata?.ruta === 'recarga_taller') {
+        const proyectos = parseInt(session.metadata?.proyectos || '0', 10);
+        if (!proyectos || proyectos < 0) {
+            console.error(`❌ Recarga sin proyectos en metadata para ${email}:`, session.metadata);
+            return;
+        }
+        const admin = getSupabaseAdmin();
+        const { data: perfil } = await admin
+            .from('user_profiles').select('id').eq('email', email).limit(1).maybeSingle();
+        if (!perfil?.id) {
+            // NO SE TRAGA EL FALLO EN SILENCIO: hay dinero cobrado y sin abonar.
+            console.error(`🚨 RECARGA PAGADA SIN PERFIL — ${email} pagó ${session.amount_total} y no hay a quién abonarle. Sesión ${session.id}`);
+            return;
+        }
+        const { data: res, error: errRec } = await admin.rpc('acreditar_recarga_taller', {
+            p_user_id: perfil.id,
+            p_email: email,
+            p_proyectos: proyectos,
+            p_importe_centavos: session.amount_total ?? 0,
+            p_session_id: session.id,
+            p_payment_intent: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+        });
+        if (errRec) {
+            console.error(`🚨 No se pudo acreditar la recarga de ${email} (sesión ${session.id}):`, errRec);
+            throw errRec;   // que Stripe reintente: el abono es idempotente
+        }
+        console.log(`🔋 Recarga acreditada: ${email} +${proyectos} proyectos`,
+                    (res as { duplicada?: boolean })?.duplicada ? '(reintento, ya estaba)' : '');
+        return;
+    }
+
     if (!session.subscription) {
         console.error('❌ No subscription ID in checkout session — this might be a one-time payment');
         return;

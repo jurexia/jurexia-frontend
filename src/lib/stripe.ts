@@ -171,14 +171,18 @@ export const PLANS = {
         price: 999,
         currency: 'MXN',
         interval: 'month' as const,
-        queryLimit: 140,
+        queryLimit: 560,
         sentenciaQueryLimit: 50,
         draftLimit: 20,
+        /** Proyectos de sentencia incluidos cada mes. Se agotan y se pueden
+         *  recargar; las recargas no caducan. */
+        proyectosMes: 40,
         features: [
-            '140 consultas/mes al chat principal',
-            '50 consultas/mes al Redactor de Sentencias',
-            '20 redacciones de sentencia/mes',
-            'Acceso exclusivo al Redactor TCC',
+            '560 consultas/mes al chat, como Platinum',
+            '40 proyectos de sentencia al mes',
+            'Recargas de 10 proyectos por $250 MXN, sin caducidad',
+            'Taller de sentencias completo: adelanto, acervo, criterio y proyecto',
+            '20 GB para tus expedientes',
             'Soporte dedicado'
         ]
     }

@@ -64,6 +64,92 @@ export default function TerminosPage() {
                             </p>
                         </section>
 
+                        {/* ═══ LA CLÁUSULA DEL TALLER DE SENTENCIAS ═══
+                            David, 13-sep-2026: «la suscripción implica contratar
+                            un servicio de software de inteligencia artificial con
+                            cláusula de estricta privacidad, que exime a Iurexia
+                            del uso irresponsable por parte del usuario al generar
+                            los documentos. El redactor es una herramienta de
+                            apoyo, no un sustituto. Esto agrégalo a términos y
+                            condiciones. Cuando el usuario acepta el servicio y
+                            hace el pago, acepta esos términos».
+
+                            VA INMEDIATAMENTE DESPUÉS DE LA ACEPTACIÓN y antes de
+                            la descripción del servicio, no al final: es lo que
+                            delimita la responsabilidad de quien firma un proyecto
+                            con su nombre, y enterrarla en el apartado catorce
+                            sería esconderla. */}
+                        <section className="mb-8">
+                            <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">
+                                1 bis. Taller de sentencias: naturaleza del servicio,
+                                privacidad y responsabilidad
+                            </h2>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Qué se contrata.</strong> La suscripción al taller de
+                                sentencias —incluido el Plan Ultra Secretarios— es la contratación de
+                                un <strong>servicio de software de inteligencia artificial</strong>.
+                                No es asesoría jurídica, no constituye una opinión legal y no crea
+                                relación abogado-cliente. Iurexia pone a disposición una herramienta;
+                                el criterio jurídico, en todos los casos, es de quien la usa.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Herramienta de apoyo, no sustituto.</strong> El redactor
+                                produce <em>borradores</em>. No sustituye el estudio del expediente,
+                                el criterio del servidor público ni la revisión de quien suscribe la
+                                resolución. El usuario se obliga a verificar, antes de darle cualquier
+                                uso, la identidad de las partes, la exactitud de las fechas y del
+                                cómputo, la existencia y el contenido de los criterios citados, su
+                                obligatoriedad, y que estén contestados todos los planteamientos.
+                                Todo documento generado se entrega con la advertencia de que es un
+                                borrador no firmable.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Privacidad estricta.</strong> Los documentos, expedientes y
+                                textos que el usuario cargue en el taller se tratan bajo cláusula de
+                                confidencialidad estricta: <strong>no se utilizan para entrenar
+                                modelos</strong>, no se ceden a terceros con fines comerciales y no se
+                                emplean para ninguna finalidad distinta de prestarle el servicio al
+                                propio usuario. Los proveedores de modelos de inteligencia artificial
+                                que Iurexia contrata operan bajo condiciones contractuales de no
+                                entrenamiento con los datos transmitidos por su interfaz de
+                                programación. El usuario conserva la titularidad de sus documentos y
+                                puede solicitar su eliminación en cualquier momento.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Uso responsable y deslinde.</strong> El usuario es el único
+                                responsable del uso que dé a los documentos generados, de su
+                                contenido definitivo una vez editado y de su incorporación a cualquier
+                                actuación. <strong>Iurexia queda exenta de responsabilidad</strong> por
+                                el uso irresponsable, negligente o contrario a derecho de los
+                                documentos generados, incluyendo —de manera enunciativa y no
+                                limitativa— su empleo sin la verificación exigida en esta cláusula,
+                                su firma o presentación sin revisión, la carga de información a la que
+                                el usuario no tenga derecho de acceso, y cualquier consecuencia
+                                procesal, administrativa o disciplinaria derivada de ello.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Cuotas, recargas y almacenamiento.</strong> Cada plan incluye
+                                un número de proyectos de sentencia al mes, que se renueva al inicio
+                                de cada periodo y <strong>no es acumulable</strong>. El usuario puede
+                                adquirir recargas de proyectos adicionales mediante pago único; los
+                                proyectos así adquiridos <strong>no caducan</strong> y se consumen
+                                únicamente después de agotada la cuota mensual del plan. Las recargas
+                                no son reembolsables una vez acreditadas, salvo lo dispuesto por la
+                                legislación aplicable en materia de protección al consumidor. El plan
+                                incluye asimismo una capacidad de almacenamiento determinada para los
+                                expedientes del usuario.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed">
+                                <strong>Aceptación con el pago.</strong> La contratación de la
+                                suscripción o de una recarga, y la realización del pago
+                                correspondiente, constituyen la aceptación expresa de esta cláusula y
+                                de la totalidad de los presentes Términos y Condiciones, en términos
+                                de los artículos 1803 y 1834 bis del Código Civil Federal y 89 del
+                                Código de Comercio, relativos al consentimiento expresado por medios
+                                electrónicos.
+                            </p>
+                        </section>
+
                         <section className="mb-8">
                             <h2 className="font-serif text-2xl font-medium text-charcoal-900 mb-4">
                                 2. Descripción del Servicio
