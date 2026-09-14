@@ -420,29 +420,45 @@ export default function SecretariosPage() {
                                         </div>
                                         <p className="text-gray-500 mb-8">IVA incluido · Cancela cuando quieras</p>
 
-                                        <button
-                                            disabled={true}
-                                            className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-gray-700 text-gray-400 font-bold text-lg rounded-full cursor-not-allowed opacity-80"
+                                        {/* YA SE PUEDE CONTRATAR. El botón decía «Próximamente»
+                                            aunque el plan lleva meses dado de alta en Stripe:
+                                            price_1T2MzR3uD85CqvjMW6MK8OyG, 999 MXN al mes, activo.
+                                            Quien llegaba aquí decidido a pagar no tenía dónde. */}
+                                        <Link
+                                            href="/precios?plan=ultra_secretarios"
+                                            className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#c9a962] text-[#0a0f1a] font-bold text-lg rounded-full transition-colors hover:bg-[#d8bd7d]"
                                         >
-                                            Próximamente
-                                        </button>
+                                            Contratar el plan
+                                            <ArrowRight className="w-5 h-5" />
+                                        </Link>
                                         <p className="text-center text-xs text-gray-500 mt-3">
                                             Cancela cuando quieras · Sin compromiso
+                                        </p>
+                                        <p className="text-center text-xs text-gray-500 mt-2">
+                                            ¿Primero probarlo?{' '}
+                                            <Link href="/tcc-beta" className="text-[#c9a962] underline underline-offset-2 hover:text-[#d8bd7d]">
+                                                genera un proyecto gratis
+                                            </Link>
                                         </p>
                                     </div>
 
                                     <div>
                                         <ul className="space-y-4">
                                             {[
-                                                'Hasta 20 proyectos de sentencia por mes',
+                                                /* LAS CIFRAS DE VERDAD. Decía «20 proyectos» y «50
+                                                   consultas», que eran las del plan cuando se escribió
+                                                   la página. El plan da 560 consultas —las mismas que
+                                                   Platinum— y 40 proyectos; anunciar de menos por un
+                                                   texto viejo es vender peor de lo que se tiene. */
+                                                '560 consultas al mes al chat de Iurexia, con todo lo premium incluido',
+                                                '40 proyectos de sentencia al mes en el taller',
+                                                'Recargas de 10 proyectos por $250 MXN, y no caducan',
+                                                '20 GB para tus expedientes, con historial de tus proyectos',
                                                 'Estudio de fondo fundado y motivado con normativa real',
-                                                'Jurisprudencia de SCJN inyectada automáticamente',
-                                                'Descarga en formato DOCX editable',
-                                                'Tribunales Colegiados de Circuito',
-                                                'Juzgados de Distrito (próximamente)',
+                                                'Jurisprudencia de la SCJN y del Semanario, con su registro',
+                                                'Descarga en formato DOCX editable, en tu plantilla',
+                                                'Amparo directo, amparo en revisión, queja y revisión fiscal',
                                                 'Instrucciones personalizadas del Secretario',
-                                                'Base de datos en constante crecimiento',
-                                                '50 consultas de IA legal general incluidas',
                                                 'Soporte prioritario por correo',
                                             ].map((feature, i) => (
                                                 <li key={i} className="flex items-start gap-3">
@@ -526,12 +542,16 @@ export default function SecretariosPage() {
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.3} direction="scale">
-                        <button
-                            disabled={true}
-                            className="inline-flex items-center gap-2 px-10 py-5 bg-gray-700 text-gray-400 font-bold text-lg rounded-full cursor-not-allowed opacity-80"
+                        <Link
+                            href="/tcc-beta"
+                            className="inline-flex items-center gap-2 px-10 py-5 bg-[#c9a962] text-[#0a0f1a] font-bold text-lg rounded-full transition-colors hover:bg-[#d8bd7d]"
                         >
-                            Próximamente
-                        </button>
+                            Genera tu primer proyecto gratis
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
+                        <p className="mt-4 text-sm text-gray-500">
+                            Sin tarjeta. Una prueba por cuenta.
+                        </p>
                     </AnimateOnScroll>
                 </div>
             </section>

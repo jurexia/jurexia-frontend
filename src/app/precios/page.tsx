@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Check, Calendar, Loader2, AlertTriangle, ShieldCheck, Lock, CreditCard } from 'lucide-react';
+import { Scale, ArrowRight, Check, Calendar, Loader2, AlertTriangle, ShieldCheck, Lock, CreditCard, FileText } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
@@ -270,56 +270,116 @@ export default function PreciosPage() {
                                 son inventados —tribunal, magistrada, partes,
                                 expediente—; los criterios que cita son registros
                                 reales del Semanario. */}
-                            {/* ═══ LA PRUEBA, EN UN WORD ═══
-                                David, 13-sep-2026: «hay un video viejo que muestra
-                                la herramienta, sólo sustitúyelo por una tarjeta
-                                actual y la imagen de un documento (abre word)
-                                generado con el proyecto».
+                            {/* ═══ LA PRUEBA: LA PANTALLA Y LA HOJA ═══
+                                David, 13-sep-2026: «allí sólo debería estar la
+                                hoja (no Word) y del lado izquierdo la interfaz
+                                del taller».
 
-                                El vídeo enseñaba la pantalla del taller; lo que
-                                convence a un secretario no es la pantalla, es el
-                                documento: 34 páginas en Word, con su carátula, su
-                                resultando y sus notas al pie.
-
-                                TODOS LOS DATOS SON INVENTADOS y el órgano no es el
-                                de nadie en concreto: se mudó a un colegiado del
-                                Primer Circuito precisamente para que no se
-                                reconozca ningún asunto real. */}
+                                LA INTERFAZ VA DIBUJADA, NO FOTOGRAFIADA. Una
+                                captura de pantalla envejece —cada cambio en el
+                                taller la deja mintiendo—, pesa, y se ve borrosa
+                                en pantallas densas. Dibujada con los mismos
+                                estilos siempre está al día y es nítida. La hoja
+                                sí es real: es un proyecto que salió del taller,
+                                con todos los datos inventados y mudado a un
+                                colegiado del Primer Circuito para que no se
+                                reconozca ningún asunto. */}
                             <div className="mt-8 border-t border-white/10 pt-7">
                                 <p className="text-[10px] font-bold tracking-widest text-accent-gold/80">
-                                    LO QUE SALE: UN WORD DE 34 PÁGINAS
+                                    DE LOS DOS PDF AL PROYECTO
                                 </p>
                                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
                                     Entra el acto reclamado y el escrito de la parte. Sale un proyecto
                                     completo —carátula, resultandos, considerandos, estudio de fondo y
                                     resolutivos— redactado sobre el criterio que fijó el secretario,
-                                    con los preceptos y los criterios al pie. Se abre en Word y se
-                                    edita como cualquier otro. Datos ficticios.
+                                    con los preceptos y los criterios al pie, en formato Word y en tu
+                                    plantilla. Datos ficticios.
                                 </p>
-                                <div className="mt-5 grid items-center gap-6 md:grid-cols-[minmax(0,1fr)_auto]">
-                                    <div className="grid gap-2 sm:grid-cols-2">
-                                        {[
-                                            ['El adelanto', 'Oportunidad, ratio, conceptos y problemas jurídicos.'],
-                                            ['Tu criterio', 'El sentido de cada problema, y el porqué, lo pones tú.'],
-                                            ['El estudio', 'Sobre tu razonamiento, con la ley que aplicó la responsable.'],
-                                            ['El documento', 'En tu plantilla, con las citas trazadas a su fuente.'],
-                                        ].map(([titulo, texto], i) => (
-                                            <div key={titulo} className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-3.5 py-2.5">
-                                                <p className="font-mono text-[10px] tracking-wide text-accent-gold/70">0{i + 1}</p>
-                                                <p className="mt-0.5 font-serif text-[13px] font-bold text-white">{titulo}</p>
-                                                <p className="mt-0.5 text-[12px] leading-snug text-gray-400">{texto}</p>
+
+                                <div className="mt-6 grid items-start gap-7 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                                    {/* ── El taller, tal como se ve ── */}
+                                    <div>
+                                        <p className="mb-2.5 text-[10px] font-bold tracking-widest text-gray-500">
+                                            EL TALLER
+                                        </p>
+                                        <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0f0e0d] p-4 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.9)]">
+                                            <div className="flex items-center gap-2 border-b border-white/[0.07] pb-2.5">
+                                                <span className="font-serif text-[13px] font-semibold text-white">
+                                                    Iurex<span className="text-accent-gold">ia</span>
+                                                </span>
+                                                <span className="text-[9px] uppercase tracking-[0.14em] text-white/40">
+                                                    Taller de sentencias
+                                                </span>
                                             </div>
-                                        ))}
+                                            {[
+                                                ['1', 'La ficha del asunto', 'El auto de admisión la rellena solo: tipo, expediente, tribunal y partes.', true],
+                                                ['2', 'Los dos documentos', 'El acto reclamado y el escrito de la parte. De su contraste nacen los planteamientos.', false],
+                                                ['3', 'Tu criterio', 'El sentido de cada planteamiento, y el porqué, lo pones tú. Es el único paso que no se automatiza.', false],
+                                            ].map(([n, titulo, texto, activo]) => (
+                                                <div
+                                                    key={n as string}
+                                                    className={`mt-3 flex gap-3 rounded-lg p-2.5 ${activo ? 'bg-accent-gold/[0.06] ring-1 ring-inset ring-accent-gold/25' : ''}`}
+                                                >
+                                                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${activo ? 'border-accent-gold/60 bg-accent-gold/15 text-accent-gold' : 'border-white/20 bg-white/[0.04] text-white/45'}`}>
+                                                        {n as string}
+                                                    </span>
+                                                    <span className="min-w-0">
+                                                        <span className={`block text-[13px] font-medium ${activo ? 'text-white' : 'text-white/60'}`}>
+                                                            {titulo as string}
+                                                        </span>
+                                                        <span className="mt-0.5 block text-[11px] leading-relaxed text-white/45">
+                                                            {texto as string}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                            ))}
+                                            <div className="mt-3.5 border-t border-white/[0.07] pt-3.5">
+                                                <span className="inline-flex items-center gap-2 rounded-lg bg-accent-gold px-4 py-2.5 text-[13px] font-medium text-charcoal-900 shadow-[0_0_30px_-10px_rgba(201,169,98,0.7)]">
+                                                    <FileText className="h-3.5 w-3.5" />
+                                                    Generar el adelanto
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="mx-auto w-full max-w-[340px] overflow-hidden rounded-xl border border-white/10 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.85)]">
-                                        <Image
-                                            src="/demo/proyecto-word.png"
-                                            alt="Un proyecto de sentencia generado por el taller, abierto en Microsoft Word: amparo en revisión civil del Décimo Tribunal Colegiado en Materia Civil del Primer Circuito, con carátula, resultandos y 34 páginas. Todos los datos son ficticios."
-                                            width={920}
-                                            height={1466}
-                                            className="block h-auto w-full"
-                                        />
+
+                                    {/* ── Y la hoja que sale ── */}
+                                    <div>
+                                        <p className="mb-2.5 text-[10px] font-bold tracking-widest text-gray-500">
+                                            EL PROYECTO · 34 PÁGINAS
+                                        </p>
+                                        <div className="overflow-hidden rounded-xl bg-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)]">
+                                            <Image
+                                                src="/demo/proyecto-hoja.png"
+                                                alt="Primera hoja de un proyecto de sentencia generado por el taller: amparo en revisión civil del Décimo Tribunal Colegiado en Materia Civil del Primer Circuito, con la carátula, el visto y el primer resultando. Todos los datos son ficticios."
+                                                width={722}
+                                                height={1119}
+                                                className="block h-auto w-full"
+                                            />
+                                        </div>
                                     </div>
+                                </div>
+
+                                {/* ── LAS DOS PUERTAS ──
+                                    Una para probar sin pagar —David: «ya debería estar habilitado el
+                                    botón para Genera tu primer proyecto gratis»— y otra para leer el
+                                    plan entero antes de decidir. */}
+                                <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-white/10 pt-6">
+                                    <Link
+                                        href="/tcc-beta"
+                                        className="inline-flex items-center gap-2 rounded-full bg-accent-gold px-7 py-3.5 text-sm font-bold text-[#0a0f1a] transition-colors hover:bg-[#d8bd7d]"
+                                    >
+                                        Genera tu primer proyecto gratis
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Link>
+                                    <Link
+                                        href="/secretarios"
+                                        className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3.5 text-sm font-medium text-gray-300 transition-colors hover:border-accent-gold/45 hover:text-white"
+                                    >
+                                        Ver más sobre el plan
+                                    </Link>
+                                    <span className="text-xs text-gray-500">
+                                        Sin tarjeta · Una prueba por cuenta
+                                    </span>
                                 </div>
                             </div>
                         </div>

@@ -405,6 +405,34 @@ export default function TallerDeSentencias() {
     }, [correo]);
     const [corriendo, setCorriendo] = useState(false);
     const [error, setError] = useState('');
+
+    /* ─ SE RECONOCE POR EL 402 DEL SERVIDOR, no por buscar palabras en la
+         prosa del mensaje: el texto se reescribe y una heurística de palabras
+         falla en silencio, que es la peor manera de fallar. El servidor manda
+         402 «Payment Required» y `api.ts` lo cuelga del error. ─ */
+    const sinProyectos = /sin_saldo|proyecto de prueba|proyectos de este mes|Plan Ultra Secretarios/i
+        .test(error || '');
+    const [recargando, setRecargando] = useState(false);
+
+    /* COMPRAR UNA RECARGA. Abre el cobro de Stripe en la misma pestaña: volver
+       con el navegador deja al secretario donde estaba, y el webhook ya le
+       habrá abonado los diez proyectos. */
+    const comprarRecarga = useCallback(async () => {
+        setRecargando(true);
+        try {
+            const r = await fetch('/api/stripe/recarga', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: correo }),
+            });
+            const j = await r.json();
+            if (j?.url) { window.location.href = j.url; return; }
+            setError(j?.error || 'No se pudo abrir el cobro de la recarga.');
+        } catch {
+            setError('No se pudo abrir el cobro de la recarga.');
+        } finally { setRecargando(false); }
+    }, [correo]);
+
     const [piloto, setPiloto] = useState<EstadoPiloto | null>(null);
 
     const [encargo, setEncargo] = useState<Encargo>(ENCARGO_VACIO);
@@ -1373,10 +1401,50 @@ export default function TallerDeSentencias() {
                     )}
 
                     {error && (
-                        <Tarjeta className="border-red-400/30 bg-red-400/[0.06]">
+                        <Tarjeta className={cn(
+                            sinProyectos
+                                ? 'border-accent-gold/35 bg-accent-gold/[0.06]'
+                                : 'border-red-400/30 bg-red-400/[0.06]')}>
                             <div className="flex gap-2.5">
-                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
-                                <p className="text-[14px] leading-relaxed text-red-100">{error}</p>
+                                <AlertCircle className={cn('mt-0.5 h-4 w-4 shrink-0',
+                                    sinProyectos ? 'text-accent-gold' : 'text-red-300')} />
+                                <div className="min-w-0">
+                                    <p className={cn('text-[14px] leading-relaxed',
+                                        sinProyectos ? 'text-white/90' : 'text-red-100')}>
+                                        {error}
+                                    </p>
+                                    {/* ═══ QUEDARSE SIN PROYECTOS NO ES UN ERROR ═══
+                                        David: «luego permitir a los usuarios gratuitos
+                                        suscribirse cuando no tengan más posibilidad de
+                                        generar proyectos».
+                                        Se acabó la cuota y eso tiene solución, así que no
+                                        se pinta en rojo de fallo ni se deja al secretario
+                                        con un mensaje y nada que pulsar: aquí están las
+                                        dos salidas, con su precio escrito. */}
+                                    {sinProyectos && (
+                                        <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
+                                            <a href="/precios?plan=ultra_secretarios"
+                                               className={cn(boton,
+                                                   'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}>
+                                                Ver el plan Ultra · $999 al mes
+                                            </a>
+                                            <button type="button"
+                                                    disabled={recargando}
+                                                    onClick={comprarRecarga}
+                                                    className={cn(boton,
+                                                        'border border-white/20 bg-white/[0.05] text-white/90',
+                                                        'hover:bg-white/[0.08]')}>
+                                                {recargando
+                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                    : <Zap className="h-4 w-4" />}
+                                                Recargar 10 proyectos · $250
+                                            </button>
+                                            <span className="text-[12px] text-white/45">
+                                                los recargados no caducan
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </Tarjeta>
                     )}
