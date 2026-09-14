@@ -143,16 +143,51 @@ export default function AvisoBorrador({ datos, className }: {
 }
 
 /** La banda del piloto: cuántas plazas quedan y qué pasa cuando se acaben. */
-export function AvisoPiloto({ secretarios, cupo }: { secretarios: number; cupo: number }) {
-    const quedan = Math.max(0, cupo - secretarios);
+/* ═══ EL CARTEL DEL PILOTO SE RETIRA ═══
+   David, 13-sep-2026: «a esta herramienta ya no acceden Platinum. Deja a
+   quienes ocuparon los 9 de los 10 asientos. Ahora sólo podrán acceder los
+   gratuitos para su prueba y quienes contraten el plan mensual».
+
+   Decía «Piloto Platinum · quedan 1 de 10 plazas» y las dos mitades han dejado
+   de ser ciertas: no es Platinum y no quedan plazas que ofrecer. Un cartel que
+   anuncia una fase cerrada le da al visitante una idea equivocada de qué está
+   comprando, y estamos a punto de publicitar.
+
+   En su lugar, lo que sí le sirve a cada cual: al del piloto, que conserva su
+   asiento; al gratuito, que tiene una prueba; y al que no tiene ninguna de las
+   dos, dónde está el plan. El contador de arriba lleva la cuenta exacta. */
+export function AvisoPiloto({ delPiloto, restantes, mesLimite }: {
+    delPiloto?: boolean; restantes?: number; mesLimite?: number;
+}) {
+    if (delPiloto) {
+        return (
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5
+                            text-[13px] text-white/60">
+                <span className="font-medium text-white/75">Tu plaza del piloto</span>
+                {' · '}conservas el acceso al taller y tus 40 proyectos al mes.
+            </div>
+        );
+    }
+    // Con plan de pago no hace falta cartel: el contador de arriba ya lo dice.
+    if ((mesLimite ?? 0) > 0) return null;
+    if ((restantes ?? 0) > 0) {
+        return (
+            <div className="rounded-xl border border-accent-gold/25 bg-accent-gold/[0.05] px-4 py-2.5
+                            text-[13px] text-white/75">
+                <span className="font-medium text-accent-gold">Tu proyecto de prueba</span>
+                {' · '}gratis y completo. Después, el plan Ultra Secretarios incluye 40 al mes.
+            </div>
+        );
+    }
     return (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5
                         text-[13px] text-white/60">
-            <span className="font-medium text-white/75">Piloto Platinum</span>
-            {' · '}
-            {quedan > 0
-                ? <>quedan {quedan} de {cupo} plazas. Al completarse, el taller pasa al plan Ultra.</>
-                : <>cupo completo. Quienes ya entraron conservan el acceso.</>}
+            <span className="font-medium text-white/75">Prueba usada</span>
+            {' · '}el taller es del plan Ultra Secretarios: 40 proyectos al mes.{' '}
+            <a href="/precios?plan=ultra_secretarios"
+               className="text-accent-gold underline underline-offset-2 hover:text-accent-gold/80">
+                ver el plan
+            </a>
         </div>
     );
 }

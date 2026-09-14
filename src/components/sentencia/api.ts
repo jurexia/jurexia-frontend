@@ -232,6 +232,8 @@ export interface EstadoPiloto {
     puede_sise?: boolean;
     /** Cuántos proyectos le quedan y de dónde salen. */
     proyectos?: BolsaProyectos;
+    /** Ocupó uno de los diez asientos del piloto y conserva el acceso. */
+    del_piloto?: boolean;
 }
 
 /** LAS TRES BOLSAS. La del mes caduca, las recargas no, y la prueba es de por

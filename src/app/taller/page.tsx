@@ -1270,7 +1270,11 @@ export default function TallerDeSentencias() {
                     ? 'lg:grid-cols-[minmax(320px,400px)_1fr]'
                     : 'lg:grid-cols-1')}>
                 <div className="flex flex-col gap-4 lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)] lg:overflow-y-auto lg:pr-1">
-                    {piloto && <AvisoPiloto secretarios={piloto.secretarios} cupo={piloto.cupo} />}
+                    {piloto && !piloto.proyectos?.sin_limite && (
+                        <AvisoPiloto delPiloto={piloto.del_piloto}
+                                     restantes={piloto.proyectos?.restantes}
+                                     mesLimite={piloto.proyectos?.mes_limite} />
+                    )}
                     {/* LA FICHA SIN TECLEARLA YA NO VIVE AQUÍ. El secretario
                         elegía «Tengo el auto de admisión» en la columna derecha
                         y el sitio donde subirlo aparecía en el raíl izquierdo:
