@@ -79,13 +79,6 @@ export default function SecretariosPage() {
                                     >
                                         Suscribirme · $999/mes
                                     </Link>
-                                    <a
-                                        href="#features"
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-6 py-3.5 text-[15px] font-medium text-white/75 whitespace-nowrap transition-colors hover:border-white/30 hover:text-white"
-                                    >
-                                        Conocer más
-                                        <ChevronDown className="w-4 h-4" />
-                                    </a>
                                 </div>
                                 {/* LA PRUEBA YA NO SE PIDE POR CORREO. David:
                                     «ya quita lo de solicitar prueba porque el usuario
@@ -96,6 +89,17 @@ export default function SecretariosPage() {
                                     La prueba no se solicita: cualquier cuenta gratuita genera
                                     un proyecto completo desde el taller, sin tarjeta.
                                 </p>
+                                {/* TRES LLAMADAS EN UN ENCABEZADO ES UNA DE MÁS, y la tercera
+                                    saltaba de renglón porque los tres botones no cabían en la
+                                    columna del texto. «Conocer más» no es una decisión: es
+                                    bajar a leer. Va como enlace, que es lo que es. */}
+                                <a
+                                    href="#features"
+                                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-white/60 transition-colors hover:text-[#c9a962]"
+                                >
+                                    Conocer cómo funciona
+                                    <ChevronDown className="w-4 h-4" />
+                                </a>
                             </AnimateOnScroll>
 
                             <AnimateOnScroll delay={0.4}>
