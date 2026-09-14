@@ -14,13 +14,13 @@ import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 export default function SecretariosPage() {
 
     return (
-        <main className="min-h-screen bg-[#0a0f1a] text-white overflow-hidden">
+        <main className="min-h-screen bg-[#0f0e0d] text-white overflow-hidden">
             <Navbar />
 
             {/* ═══ HERO SECTION ═══ */}
             <section className="relative pt-28 pb-20 px-4">
                 {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0a0f1a] via-[#0d1525] to-[#0a0f1a]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0f0e0d] via-[#131211] to-[#0f0e0d]" />
                 {/* Gold accent lines */}
                 <div className="absolute inset-0 opacity-[0.03]"
                     style={{ backgroundImage: 'linear-gradient(45deg, #c9a962 1px, transparent 1px), linear-gradient(-45deg, #c9a962 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
@@ -43,35 +43,45 @@ export default function SecretariosPage() {
                             </AnimateOnScroll>
 
                             <AnimateOnScroll delay={0.2}>
-                                <p className="text-lg text-gray-400 leading-relaxed mb-8 max-w-xl">
+                                <p className="text-lg text-white/60 leading-relaxed mb-8 max-w-xl">
                                     Herramientas de IA avanzada diseñadas para <strong className="text-white">ampliar la capacidad intelectual del secretario</strong>: proyección estadística con jurimetría, búsqueda en 111,000+ precedentes reales y redacción de proyectos de sentencia con modelos de razonamiento profundo.
                                     Todo bajo tu <strong className="text-[#c9a962]">gestión estricta y criterio en cada paso</strong> — tú defines el rumbo, tú validas, tú firmas.
                                 </p>
                             </AnimateOnScroll>
 
                             <AnimateOnScroll delay={0.3}>
-                                <div className="flex flex-col sm:flex-row gap-4">
+                                {/* ═══ TRES ACCIONES, TRES PESOS ═══
+                                    David: «esos botones están estéticamente
+                                    desagradables». Eran tres óvalos de anchos dispares,
+                                    y la causa era concreta: `rounded-full` sobre un
+                                    botón cuyo texto envuelve en tres renglones deja de
+                                    ser una píldora y se convierte en una elipse.
+
+                                    Ahora llevan el radio del taller, el texto no envuelve
+                                    y los rótulos están medidos para que los tres midan
+                                    parecido. Y se leen como lo que son: la prueba
+                                    gratuita manda —es lo que queremos que pulse—, la
+                                    suscripción va en contorno dorado, y conocer más en
+                                    gris, que es ayuda y no decisión. */}
+                                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
                                     <Link
                                         href="/tcc-beta"
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#c9a962] text-[#0a0f1a] font-bold rounded-full transition-colors hover:bg-[#d8bd7d]"
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#c9a962] px-6 py-3.5 text-[15px] font-bold text-[#0f0e0d] whitespace-nowrap transition-colors hover:bg-[#d8bd7d]"
                                     >
-                                        Genera tu primer proyecto gratis
-                                        <ArrowRight className="w-5 h-5" />
+                                        Probar gratis
+                                        <ArrowRight className="w-4 h-4" />
                                     </Link>
-                                    {/* SUSCRIBIRSE, ARRIBA Y NO A MITAD DE PÁGINA.
-                                        David: «no veo ningún botón que me permita la
-                                        suscripción». Lo había, en la sección de precios,
-                                        pero quien entra decidido no baja a buscarlo. */}
+                                    {/* SUSCRIBIRSE, ARRIBA Y NO A MITAD DE PÁGINA:
+                                        quien entra decidido no baja a buscarlo. */}
                                     <Link
                                         href="/precios?plan=ultra_secretarios"
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-[#c9a962]/50 text-[#c9a962] font-bold rounded-full transition-all hover:bg-[#c9a962]/10"
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c9a962]/45 px-6 py-3.5 text-[15px] font-semibold text-[#c9a962] whitespace-nowrap transition-colors hover:bg-[#c9a962]/10"
                                     >
-                                        Suscribirme · $999 al mes
-                                        <ArrowRight className="w-4 h-4" />
+                                        Suscribirme · $999/mes
                                     </Link>
                                     <a
                                         href="#features"
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/20 text-white font-medium rounded-full hover:bg-white/5 transition-all"
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-6 py-3.5 text-[15px] font-medium text-white/75 whitespace-nowrap transition-colors hover:border-white/30 hover:text-white"
                                     >
                                         Conocer más
                                         <ChevronDown className="w-4 h-4" />
@@ -82,7 +92,7 @@ export default function SecretariosPage() {
                                     gratuito puede hacer una prueba; no es necesario».
                                     Cualquier cuenta gratuita genera un proyecto desde el
                                     propio taller, sin tarjeta y sin escribirle a nadie. */}
-                                <p className="mt-3 text-sm text-gray-500">
+                                <p className="mt-3 text-sm text-white/45">
                                     La prueba no se solicita: cualquier cuenta gratuita genera
                                     un proyecto completo desde el taller, sin tarjeta.
                                 </p>
@@ -97,22 +107,22 @@ export default function SecretariosPage() {
                                             menos por un texto viejo es vender peor de lo que
                                             se tiene, y esto se ve en la primera pantalla. */}
                                         <div className="text-2xl font-bold text-[#c9a962]">40</div>
-                                        <div className="text-xs text-gray-500">proyectos/mes</div>
+                                        <div className="text-xs text-white/45">proyectos/mes</div>
                                     </div>
                                     <div className="w-px h-10 bg-white/10" />
                                     <div className="text-center">
                                         <div className="text-2xl font-bold text-[#c9a962]">111K+</div>
-                                        <div className="text-xs text-gray-500">precedentes</div>
+                                        <div className="text-xs text-white/45">precedentes</div>
                                     </div>
                                     <div className="w-px h-10 bg-white/10" />
                                     <div className="text-center">
                                         <div className="text-2xl font-bold text-[#c9a962]">560</div>
-                                        <div className="text-xs text-gray-500">consultas/mes</div>
+                                        <div className="text-xs text-white/45">consultas/mes</div>
                                     </div>
                                     <div className="w-px h-10 bg-white/10" />
                                     <div className="text-center">
                                         <div className="text-2xl font-bold text-[#c9a962]">24/7</div>
-                                        <div className="text-xs text-gray-500">disponible</div>
+                                        <div className="text-xs text-white/45">disponible</div>
                                     </div>
                                 </div>
                             </AnimateOnScroll>
@@ -125,7 +135,7 @@ export default function SecretariosPage() {
                                     {/* Outer glow ring */}
                                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#c9a962]/20 to-transparent animate-pulse" style={{ animationDuration: '3s' }} />
                                     {/* Inner circle with logo */}
-                                    <div className="relative w-64 h-64 rounded-full bg-gradient-to-br from-[#1a1a6b] to-[#111840] border border-[#c9a962]/30 flex items-center justify-center shadow-2xl shadow-[#c9a962]/10 overflow-hidden">
+                                    <div className="relative w-64 h-64 rounded-full bg-gradient-to-br from-[#1c1b19] to-[#121110] border border-[#c9a962]/30 flex items-center justify-center shadow-2xl shadow-[#c9a962]/10 overflow-hidden">
                                         <Image
                                             src="/pjf-escudo.png"
                                             alt="Poder Judicial de la Federación"
@@ -135,10 +145,10 @@ export default function SecretariosPage() {
                                         />
                                     </div>
                                     {/* Floating badges */}
-                                    <div className="absolute -top-2 -right-2 px-3 py-1.5 bg-[#c9a962] text-[#0a0f1a] text-xs font-bold rounded-full shadow-lg">
+                                    <div className="absolute -top-2 -right-2 px-3 py-1.5 bg-[#c9a962] text-[#0f0e0d] text-xs font-bold rounded-full shadow-lg">
                                         NUEVO
                                     </div>
-                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-[#111827] border border-[#c9a962]/30 rounded-full">
+                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-[#171614] border border-[#c9a962]/30 rounded-full">
                                         <span className="text-xs text-[#c9a962] font-medium">Plan Secretario PJF</span>
                                     </div>
                                 </div>
@@ -149,9 +159,9 @@ export default function SecretariosPage() {
             </section>
 
             {/* ═══ TRUST BAR ═══ */}
-            <section className="py-6 bg-[#111827] border-y border-white/5">
+            <section className="py-6 bg-[#171614] border-y border-white/5">
                 <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 text-gray-500 text-sm">
+                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 text-white/45 text-sm">
                         <div className="flex items-center gap-2">
                             <Lock className="w-4 h-4 text-[#c9a962]" />
                             <span>Datos 100% confidenciales</span>
@@ -181,7 +191,7 @@ export default function SecretariosPage() {
                             <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
                                 El estudio de fondo consume <span className="text-[#c9a962]">horas de tu jornada</span>
                             </h2>
-                            <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+                            <p className="text-white/60 max-w-2xl mx-auto text-lg">
                                 Revisar actas, identificar agravios, buscar jurisprudencia aplicable, fundar y motivar cada concepto de violación...
                                 Iurexia genera el andamiaje para que exprimias tu capacidad intelectual en lo que importa: <strong className="text-white">tu criterio jurídico y la calidad del fallo</strong>.
                             </p>
@@ -191,7 +201,7 @@ export default function SecretariosPage() {
                     <div className="grid md:grid-cols-2 gap-8">
                         {/* Before */}
                         <AnimateOnScroll delay={0.1}>
-                            <div className="relative p-8 rounded-2xl bg-gradient-to-br from-red-950/30 to-[#111827] border border-red-900/30">
+                            <div className="relative p-8 rounded-2xl bg-gradient-to-br from-red-950/30 to-[#171614] border border-red-900/30">
                                 <div className="absolute -top-3 left-6 px-3 py-1 bg-red-900/60 border border-red-800/40 rounded-full text-xs text-red-200 font-medium">
                                     SIN IUREXIA
                                 </div>
@@ -203,7 +213,7 @@ export default function SecretariosPage() {
                                         'Copiar y pegar de sentencias anteriores',
                                         'Jornadas de 12+ horas para un solo proyecto',
                                     ].map((item, i) => (
-                                        <li key={i} className="flex items-start gap-3 text-gray-400">
+                                        <li key={i} className="flex items-start gap-3 text-white/60">
                                             <span className="w-5 h-5 rounded-full bg-red-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
                                                 <span className="text-red-400 text-xs">✕</span>
                                             </span>
@@ -216,7 +226,7 @@ export default function SecretariosPage() {
 
                         {/* After */}
                         <AnimateOnScroll delay={0.2}>
-                            <div className="relative p-8 rounded-2xl bg-gradient-to-br from-[#c9a962]/10 to-[#111827] border border-[#c9a962]/30">
+                            <div className="relative p-8 rounded-2xl bg-gradient-to-br from-[#c9a962]/10 to-[#171614] border border-[#c9a962]/30">
                                 <div className="absolute -top-3 left-6 px-3 py-1 bg-[#c9a962]/20 border border-[#c9a962]/30 rounded-full text-xs text-[#c9a962] font-medium">
                                     CON IUREXIA
                                 </div>
@@ -230,7 +240,7 @@ export default function SecretariosPage() {
                                         'Jurimetría: proyección estadística del sentido para orientar tu estrategia',
                                         'Más tiempo para razonar, menos para la mecánica',
                                     ].map((item, i) => (
-                                        <li key={i} className="flex items-start gap-3 text-gray-300">
+                                        <li key={i} className="flex items-start gap-3 text-white/75">
                                             <span className="w-5 h-5 rounded-full bg-[#c9a962]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                                                 <Check className="w-3 h-3 text-[#c9a962]" />
                                             </span>
@@ -245,7 +255,7 @@ export default function SecretariosPage() {
             </section>
 
             {/* ═══ FEATURES GRID ═══ */}
-            <section id="features" className="py-24 px-4 bg-[#111827]">
+            <section id="features" className="py-24 px-4 bg-[#171614]">
                 <div className="max-w-6xl mx-auto">
                     <AnimateOnScroll>
                         <div className="text-center mb-16">
@@ -317,9 +327,9 @@ export default function SecretariosPage() {
                             },
                         ].map((feature, i) => (
                             <AnimateOnScroll key={i} delay={i * 0.08}>
-                                <div className="group relative p-6 rounded-2xl bg-[#0a0f1a] border border-white/5 hover:border-[#c9a962]/30 transition-all duration-300 hover:-translate-y-1">
+                                <div className="group relative p-6 rounded-2xl bg-[#0f0e0d] border border-white/5 hover:border-[#c9a962]/30 transition-all duration-300 hover:-translate-y-1">
                                     {'badge' in feature && feature.badge && (
-                                        <span className="absolute -top-2.5 -right-2.5 px-2 py-0.5 bg-[#c9a962] text-[#0a0f1a] text-[9px] font-bold rounded-full shadow-lg">
+                                        <span className="absolute -top-2.5 -right-2.5 px-2 py-0.5 bg-[#c9a962] text-[#0f0e0d] text-[9px] font-bold rounded-full shadow-lg">
                                             {feature.badge}
                                         </span>
                                     )}
@@ -327,7 +337,7 @@ export default function SecretariosPage() {
                                         {feature.icon}
                                     </div>
                                     <h3 className="font-serif text-lg font-medium mb-2 text-white">{feature.title}</h3>
-                                    <p className="text-sm text-gray-400 leading-relaxed">{feature.desc}</p>
+                                    <p className="text-sm text-white/60 leading-relaxed">{feature.desc}</p>
                                 </div>
                             </AnimateOnScroll>
                         ))}
@@ -358,7 +368,7 @@ export default function SecretariosPage() {
                                 <div className="relative text-center">
                                     <div className="text-5xl font-bold text-[#c9a962]/10 mb-4">{item.step}</div>
                                     <h3 className="font-serif text-lg font-medium mb-2">{item.title}</h3>
-                                    <p className="text-sm text-gray-400">{item.desc}</p>
+                                    <p className="text-sm text-white/60">{item.desc}</p>
                                     {i < 3 && (
                                         <ArrowRight className="hidden md:block absolute -right-4 top-8 w-6 h-6 text-[#c9a962]/30" />
                                     )}
@@ -370,17 +380,17 @@ export default function SecretariosPage() {
             </section>
 
             {/* ═══ RESPONSIBLE USE ═══ */}
-            <section className="py-16 px-4 bg-[#111827]">
+            <section className="py-16 px-4 bg-[#171614]">
                 <div className="max-w-4xl mx-auto">
                     <AnimateOnScroll>
-                        <div className="relative rounded-2xl border border-[#c9a962]/30 p-8 md:p-12 bg-gradient-to-br from-[#0d1525] to-[#111827]">
+                        <div className="relative rounded-2xl border border-[#c9a962]/30 p-8 md:p-12 bg-gradient-to-br from-[#131211] to-[#171614]">
                             <div className="absolute -top-3 left-8 px-4 py-1 bg-[#c9a962]/15 border border-[#c9a962]/30 rounded-full">
                                 <span className="text-[11px] font-bold text-[#c9a962] tracking-widest">USO RESPONSABLE</span>
                             </div>
                             <h3 className="font-serif text-2xl md:text-3xl font-medium text-white mb-3 mt-2">
                                 El criterio es tuyo. <span className="text-[#c9a962]">Siempre.</span>
                             </h3>
-                            <p className="text-gray-400 mb-8 max-w-2xl leading-relaxed">
+                            <p className="text-white/60 mb-8 max-w-2xl leading-relaxed">
                                 Iurexia no resuelve asuntos ni sustituye el juicio jurisdiccional. Es una herramienta que amplía la capacidad técnica del secretario — la responsabilidad del fallo permanece íntegramente en el operador jurídico.
                             </p>
                             <div className="grid md:grid-cols-2 gap-4">
@@ -392,7 +402,7 @@ export default function SecretariosPage() {
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.03] border border-white/5">
                                         <span className="text-lg leading-none mt-0.5 flex-shrink-0">{item.icon}</span>
-                                        <p className="text-sm text-gray-300 leading-relaxed">{item.text}</p>
+                                        <p className="text-sm text-white/75 leading-relaxed">{item.text}</p>
                                     </div>
                                 ))}
                             </div>
@@ -402,7 +412,7 @@ export default function SecretariosPage() {
             </section>
 
             {/* ═══ PRICING ═══ */}
-            <section className="py-24 px-4 bg-gradient-to-b from-[#111827] to-[#0a0f1a]">
+            <section className="py-24 px-4 bg-gradient-to-b from-[#171614] to-[#0f0e0d]">
                 <div className="max-w-4xl mx-auto">
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
@@ -410,21 +420,21 @@ export default function SecretariosPage() {
                             <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">
                                 Plan Secretario <span className="text-[#c9a962]">PJF</span>
                             </h2>
-                            <p className="text-gray-400 max-w-2xl mx-auto">
+                            <p className="text-white/60 max-w-2xl mx-auto">
                                 Diseñado específicamente para Secretarios de Acuerdos, Proyectistas y funcionarios del Poder Judicial de la Federación.
                             </p>
                         </div>
                     </AnimateOnScroll>
 
                     <AnimateOnScroll delay={0.2} direction="scale">
-                        <div className="relative rounded-3xl overflow-hidden">
+                        <div className="relative rounded-2xl overflow-hidden">
                             {/* Card glow */}
                             <div className="absolute inset-0 bg-gradient-to-br from-[#c9a962]/20 to-transparent opacity-50" />
-                            <div className="absolute inset-[1px] rounded-3xl bg-gradient-to-br from-[#111827] to-[#0d1525]" />
+                            <div className="absolute inset-[1px] rounded-2xl bg-gradient-to-br from-[#171614] to-[#131211]" />
 
                             <div className="relative p-10 md:p-14">
                                 {/* Badge */}
-                                <div className="absolute top-0 right-8 px-4 py-2 bg-[#c9a962] text-[#0a0f1a] text-xs font-bold tracking-wider rounded-b-lg">
+                                <div className="absolute top-0 right-8 px-4 py-2 bg-[#c9a962] text-[#0f0e0d] text-xs font-bold tracking-wider rounded-b-lg">
                                     EXCLUSIVO PJF
                                 </div>
 
@@ -432,9 +442,9 @@ export default function SecretariosPage() {
                                     <div>
                                         <div className="flex items-baseline gap-2 mb-2">
                                             <span className="text-6xl font-bold text-white">$999</span>
-                                            <span className="text-xl text-gray-400">MXN/mes</span>
+                                            <span className="text-xl text-white/60">MXN/mes</span>
                                         </div>
-                                        <p className="text-gray-500 mb-8">IVA incluido · Cancela cuando quieras</p>
+                                        <p className="text-white/45 mb-8">IVA incluido · Cancela cuando quieras</p>
 
                                         {/* YA SE PUEDE CONTRATAR. El botón decía «Próximamente»
                                             aunque el plan lleva meses dado de alta en Stripe:
@@ -442,15 +452,15 @@ export default function SecretariosPage() {
                                             Quien llegaba aquí decidido a pagar no tenía dónde. */}
                                         <Link
                                             href="/precios?plan=ultra_secretarios"
-                                            className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#c9a962] text-[#0a0f1a] font-bold text-lg rounded-full transition-colors hover:bg-[#d8bd7d]"
+                                            className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#c9a962] text-[#0f0e0d] font-bold text-lg rounded-xl whitespace-nowrap transition-colors hover:bg-[#d8bd7d]"
                                         >
                                             Contratar el plan
                                             <ArrowRight className="w-5 h-5" />
                                         </Link>
-                                        <p className="text-center text-xs text-gray-500 mt-3">
+                                        <p className="text-center text-xs text-white/45 mt-3">
                                             Cancela cuando quieras · Sin compromiso
                                         </p>
-                                        <p className="text-center text-xs text-gray-500 mt-2">
+                                        <p className="text-center text-xs text-white/45 mt-2">
                                             ¿Primero probarlo?{' '}
                                             <Link href="/tcc-beta" className="text-[#c9a962] underline underline-offset-2 hover:text-[#d8bd7d]">
                                                 genera un proyecto gratis
@@ -479,7 +489,7 @@ export default function SecretariosPage() {
                                             ].map((feature, i) => (
                                                 <li key={i} className="flex items-start gap-3">
                                                     <Check className="w-5 h-5 text-[#c9a962] flex-shrink-0 mt-0.5" />
-                                                    <span className="text-gray-300 text-sm">{feature}</span>
+                                                    <span className="text-white/75 text-sm">{feature}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -544,7 +554,7 @@ export default function SecretariosPage() {
             </section>
 
             {/* ═══ FINAL CTA ═══ */}
-            <section className="py-24 px-4 bg-gradient-to-t from-[#0a0f1a] to-[#111827]">
+            <section className="py-24 px-4 bg-gradient-to-t from-[#0f0e0d] to-[#171614]">
                 <div className="max-w-4xl mx-auto text-center">
                     <AnimateOnScroll>
                         <div className="flex justify-center items-center gap-3 mb-8">
@@ -559,19 +569,19 @@ export default function SecretariosPage() {
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
-                        <p className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto">
+                        <p className="text-lg text-white/60 mb-8 max-w-2xl mx-auto">
                             Iurexia no pretende reemplazar el juicio del secretario — lo potencia. Tú defines el criterio, la IA hace la mecánica. El resultado es tuyo.
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.3} direction="scale">
                         <Link
                             href="/tcc-beta"
-                            className="inline-flex items-center gap-2 px-10 py-5 bg-[#c9a962] text-[#0a0f1a] font-bold text-lg rounded-full transition-colors hover:bg-[#d8bd7d]"
+                            className="inline-flex items-center gap-2 px-10 py-5 bg-[#c9a962] text-[#0f0e0d] font-bold text-lg rounded-xl whitespace-nowrap transition-colors hover:bg-[#d8bd7d]"
                         >
                             Genera tu primer proyecto gratis
                             <ArrowRight className="w-5 h-5" />
                         </Link>
-                        <p className="mt-4 text-sm text-gray-500">
+                        <p className="mt-4 text-sm text-white/45">
                             Sin tarjeta. Una prueba por cuenta.
                         </p>
                     </AnimateOnScroll>
@@ -587,22 +597,22 @@ export default function SecretariosPage() {
                             <span className="font-serif text-lg font-semibold">Iurex<span className="text-[#c9a962]">ia</span></span>
                         </div>
                         <div className="flex items-center gap-6">
-                            <Link href="/precios" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+                            <Link href="/precios" className="text-sm text-white/45 hover:text-white/75 transition-colors">
                                 Otros planes
                             </Link>
-                            <Link href="/privacidad" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+                            <Link href="/privacidad" className="text-sm text-white/45 hover:text-white/75 transition-colors">
                                 Privacidad
                             </Link>
-                            <Link href="/terminos" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+                            <Link href="/terminos" className="text-sm text-white/45 hover:text-white/75 transition-colors">
                                 Términos
                             </Link>
                         </div>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-white/45">
                             © 2026 Iurexia. Todos los derechos reservados.
                         </p>
                     </div>
                     <div className="mt-4 text-center">
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-white/45">
                             <strong>Nota:</strong> Iurexia es una herramienta de apoyo que no sustituye el criterio jurisdiccional del Secretario ni del Magistrado Ponente.
                         </p>
                     </div>
@@ -631,7 +641,7 @@ function FAQItemDark({ question, answer }: { question: string; answer: string })
                 style={{ maxHeight: isOpen ? '300px' : '0px', opacity: isOpen ? 1 : 0 }}
             >
                 <div className="px-6 pb-6">
-                    <p className="text-gray-400 leading-relaxed">{answer}</p>
+                    <p className="text-white/60 leading-relaxed">{answer}</p>
                 </div>
             </div>
         </div>
