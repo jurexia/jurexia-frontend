@@ -51,12 +51,13 @@ export default function SecretariosPage() {
 
                             <AnimateOnScroll delay={0.3}>
                                 <div className="flex flex-col sm:flex-row gap-4">
-                                    <button
-                                        disabled
-                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/8 text-white/35 font-bold rounded-full cursor-not-allowed border border-white/10"
+                                    <Link
+                                        href="/tcc-beta"
+                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#c9a962] text-[#0a0f1a] font-bold rounded-full transition-colors hover:bg-[#d8bd7d]"
                                     >
-                                        Próximamente
-                                    </button>
+                                        Genera tu primer proyecto gratis
+                                        <ArrowRight className="w-5 h-5" />
+                                    </Link>
                                     <a
                                         href="#features"
                                         className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/20 text-white font-medium rounded-full hover:bg-white/5 transition-all"
@@ -502,11 +503,17 @@ export default function SecretariosPage() {
                             },
                             {
                                 q: '¿Mis expedientes son confidenciales?',
-                                a: 'Absolutamente. Los archivos que subes son procesados temporalmente con encriptación de grado militar y eliminados automáticamente. Nunca almacenamos tus expedientes ni los usamos para entrenar modelos de IA. Tu información está protegida.'
+                                /* ESTO DECÍA «nunca almacenamos tus expedientes» Y HA DEJADO DE
+                                   SER CIERTO: el taller los guarda desde que existe el historial de
+                                   proyectos —son los 20 GB del plan— para que puedas volver a un
+                                   asunto y regenerarlo. Lo que no se hace es entrenar con ellos, que
+                                   es lo que de verdad preocupa. Una página que promete de más sobre
+                                   privacidad es peor que una que no promete nada. */
+                                a: 'Tus expedientes se guardan en tu cuenta —son los 20 GB del plan— para que puedas volver a un asunto, cambiarle el sentido y regenerarlo sin volver a subir nada. Lo que NO se hace, bajo cláusula expresa en los términos: no se usan para entrenar modelos, no se ceden a terceros y no se emplean para ninguna finalidad distinta de prestarte el servicio. Los proveedores de IA que contratamos operan con condiciones de no entrenamiento. Puedes borrar los documentos de un asunto cuando quieras, desde el propio taller.'
                             },
                             {
-                                q: '¿Qué pasa si no uso las 20 sentencias del mes?',
-                                a: 'Las sentencias no utilizadas no se acumulan al siguiente mes. Sin embargo, el plan incluye también 50 consultas de IA legal general que puedes usar para investigación jurídica, análisis de documentos y más.'
+                                q: '¿Qué pasa si no uso los 40 proyectos del mes?',
+                                a: 'Los proyectos del mes no se acumulan: la cuota se renueva al inicio de cada periodo. Lo que sí se guarda para siempre son las recargas: si compras 10 proyectos por $250 MXN, esos no caducan y se usan sólo después de agotar la cuota mensual. El plan incluye además 560 consultas al mes al chat de Iurexia, con todo lo premium: búsqueda jurídica, análisis de documentos y filtros por entidad.'
                             },
                             {
                                 q: '¿Puedo cancelar en cualquier momento?',
