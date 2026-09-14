@@ -278,7 +278,13 @@ export default function PreciosPage() {
             <section className="py-10 px-4">
                 <div className="max-w-4xl mx-auto space-y-4">
                     <AnimateOnScroll delay={0.05}>
-                        <div className="rounded-2xl bg-gradient-to-br from-[#0d1525] to-[#1a1a2e] border border-accent-gold/30 p-8">
+                        <div className="relative overflow-hidden rounded-2xl border border-accent-gold/25 bg-gradient-to-br from-[#171614] to-[#0f0e0d] p-8 shadow-[0_1px_2px_rgba(0,0,0,0.4),0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+                            {/* EL MISMO HALO QUE EL TALLER: un resplandor dorado muy
+                                diluido arriba, que levanta la tarjeta del fondo sin
+                                ensuciar el borde. No es un degradado de color: es el
+                                oro de la casa al 8 %. */}
+                            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40"
+                                 style={{ background: 'radial-gradient(70% 100% at 50% 0%, rgba(201,169,98,0.08) 0%, transparent 70%)' }} />
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div>
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30 mb-4">
@@ -295,7 +301,7 @@ export default function PreciosPage() {
                                             { label: 'Recargas sin caducidad', detail: '10 proyectos más por $250 MXN cuando los necesites; los recargados no expiran' },
                                             { label: '20 GB para tus expedientes', detail: 'Tus PDF y tus proyectos se guardan y puedes volver a ellos' },
                                         ].map((item, i) => (
-                                            <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
+                                            <li key={i} className="flex items-start gap-2.5 text-sm text-white/75">
                                                 <span className="w-4 h-4 rounded-full bg-accent-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                                                     <Check className="w-2.5 h-2.5 text-accent-gold" />
                                                 </span>
@@ -305,7 +311,7 @@ export default function PreciosPage() {
                                     </ul>
                                 </div>
                                 <div className="shrink-0 max-w-xs">
-                                    <p className="text-sm text-gray-400 leading-relaxed text-center md:text-left">
+                                    <p className="text-sm text-white/60 leading-relaxed text-center md:text-left">
                                         Pensado para quien proyecta sentencias todos los días. El
                                         redactor es una <span className="text-accent-gold font-semibold">herramienta
                                         de apoyo</span>, no un sustituto: el criterio jurídico, en
@@ -338,7 +344,7 @@ export default function PreciosPage() {
                                 <p className="text-[10px] font-bold tracking-widest text-accent-gold/80">
                                     DE LOS DOS PDF AL PROYECTO
                                 </p>
-                                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
+                                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60">
                                     Entra el acto reclamado y el escrito de la parte. Sale un proyecto
                                     completo —carátula, resultandos, considerandos, estudio de fondo y
                                     resolutivos— redactado sobre el criterio que fijó el secretario,
@@ -349,7 +355,7 @@ export default function PreciosPage() {
                                 <div className="mt-6 grid items-start gap-7 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
                                     {/* ── El taller, tal como se ve ── */}
                                     <div>
-                                        <p className="mb-2.5 text-[10px] font-bold tracking-widest text-gray-500">
+                                        <p className="mb-2.5 text-[10px] font-bold tracking-widest text-white/45">
                                             EL TALLER
                                         </p>
                                         <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0f0e0d] p-4 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.9)]">
@@ -394,7 +400,7 @@ export default function PreciosPage() {
 
                                     {/* ── Y la hoja que sale ── */}
                                     <div>
-                                        <p className="mb-2.5 text-[10px] font-bold tracking-widest text-gray-500">
+                                        <p className="mb-2.5 text-[10px] font-bold tracking-widest text-white/45">
                                             EL PROYECTO · 34 PÁGINAS
                                         </p>
                                         <div className="overflow-hidden rounded-xl bg-white shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)]">
@@ -409,9 +415,9 @@ export default function PreciosPage() {
                                         {/* AL PIE DE LA HOJA, Y NO ENTERRADO. Quien mira esta
                                             imagen está viendo lo que parece el expediente de
                                             alguien; hay que decirle ahí mismo que no lo es. */}
-                                        <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500">
+                                        <p className="mt-2.5 text-[11px] leading-relaxed text-white/45">
                                             Las partes, el magistrado y la secretaria son{' '}
-                                            <span className="text-gray-400">nombres ficticios</span>, y
+                                            <span className="text-white/60">nombres ficticios</span>, y
                                             el asunto no corresponde a ningún expediente real. Iurexia
                                             aplica una{' '}
                                             <Link href="/privacidad" className="text-accent-gold/80 underline underline-offset-2 hover:text-accent-gold">
@@ -438,11 +444,11 @@ export default function PreciosPage() {
                                     </Link>
                                     <Link
                                         href="/secretarios"
-                                        className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3.5 text-sm font-medium text-gray-300 transition-colors hover:border-accent-gold/45 hover:text-white"
+                                        className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3.5 text-sm font-medium text-white/75 transition-colors hover:border-accent-gold/45 hover:text-white"
                                     >
                                         Ver más sobre el plan
                                     </Link>
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs text-white/45">
                                         Sin tarjeta · Una prueba por cuenta
                                     </span>
                                 </div>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-    Scale, ArrowRight, Check, Shield, FileText, Brain,
+    ArrowRight, Check, Shield, FileText, Brain,
     Clock, Gavel, BookOpen, Sparkles, ChevronDown,
     Building2, Users, Zap, Award, Lock, TrendingUp
 } from 'lucide-react';
@@ -175,7 +175,7 @@ export default function SecretariosPage() {
                             <span>Base de datos verificada</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Scale className="w-4 h-4 text-[#c9a962]" />
+                            <BookOpen className="w-4 h-4 text-[#c9a962]" />
                             <span>Normativa actualizada</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -561,8 +561,11 @@ export default function SecretariosPage() {
             <section className="py-24 px-4 bg-gradient-to-t from-[#0f0e0d] to-[#171614]">
                 <div className="max-w-4xl mx-auto text-center">
                     <AnimateOnScroll>
-                        <div className="flex justify-center items-center gap-3 mb-8">
-                            <Scale className="w-8 h-8 text-[#c9a962]" />
+                        {/* SIN BALANZA. David: «quita esa balanza que precede a las
+                            letras de Iurexia; es vieja y ya no usamos iconos así».
+                            El wordmark se sostiene solo — es la marca, y ponerle
+                            delante un icono genérico de bufete la rebaja. */}
+                        <div className="flex justify-center items-center mb-8">
                             <span className="font-serif text-4xl font-semibold tracking-tight">Iurex<span className="text-[#c9a962]">ia</span></span>
                         </div>
                     </AnimateOnScroll>
@@ -596,8 +599,7 @@ export default function SecretariosPage() {
             <footer className="py-8 border-t border-white/5">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <Scale className="w-5 h-5 text-[#c9a962]" />
+                        <div className="flex items-center">
                             <span className="font-serif text-lg font-semibold">Iurex<span className="text-[#c9a962]">ia</span></span>
                         </div>
                         <div className="flex items-center gap-6">
