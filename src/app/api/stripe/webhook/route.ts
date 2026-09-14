@@ -282,7 +282,17 @@ function buildPaymentFailedEmail(name: string, attemptCount: number) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-    const email = (session.customer_email || session.metadata?.userEmail || '').toLowerCase().trim();
+    /* `customer_details.email` ES EL TERCERO Y HACE FALTA (14-sep-2026).
+       Los dos primeros bastan cuando la sesión nace en nuestra web, que ya sabe
+       quién compra. Pero un ENLACE DE PAGO de Stripe —el que se manda por
+       correo— no lleva `customer_email` ni metadatos de usuario: el correo lo
+       teclea el cliente en la pantalla de cobro y aterriza aquí. Sin este
+       tercer intento, la función se iba por el `return` de abajo con el dinero
+       ya cobrado y sin abonar nada, y el fallo no se vería hasta que el cliente
+       reclamara. */
+    const email = (session.customer_email
+        || session.customer_details?.email
+        || session.metadata?.userEmail || '').toLowerCase().trim();
 
     console.log('✅ Checkout completed:', {
         sessionId: session.id,
@@ -349,6 +359,62 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         }
         console.log(`🔋 Recarga acreditada: ${email} +${proyectos} proyectos`,
                     (res as { duplicada?: boolean })?.duplicada ? '(reintento, ya estaba)' : '');
+        return;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       RECARGA DE CONSULTAS — 200 MXN, 187 consultas, sin caducidad
+       ═══════════════════════════════════════════════════════════════════════
+       Misma forma que la del taller y por las mismas razones: se aparta ANTES
+       del flujo de suscripciones y se abona con una función de la base que es
+       idempotente, porque Stripe reintenta y un reintento regalaría 187.
+
+       LA CANTIDAD SE LEE DE LA SESIÓN, NO DE LOS METADATOS. El enlace de pago
+       permite ajustar cuántas recargas se llevan (de 1 a 10), así que el
+       `consultas` del metadato es el tamaño de UNA y hay que multiplicarlo por
+       lo que realmente compró. Confiar sólo en el metadato le cobraría cinco
+       recargas y le abonaría una. */
+    if (session.metadata?.ruta === 'recarga_consultas') {
+        const porPaquete = parseInt(session.metadata?.consultas || '0', 10);
+        if (!porPaquete || porPaquete <= 0) {
+            console.error(`❌ Recarga de consultas sin cantidad en metadata para ${email}:`, session.metadata);
+            return;
+        }
+
+        let cantidad = 1;
+        try {
+            const lineas = await getStripe().checkout.sessions.listLineItems(session.id, { limit: 10 });
+            cantidad = lineas.data.reduce((n, l) => n + (l.quantity ?? 1), 0) || 1;
+        } catch (e) {
+            // Se sigue con una: abonar de menos se corrige a mano y deja al
+            // cliente servido; abonar de más regala consultas sin control.
+            console.error(`⚠️ No pude leer las líneas de ${session.id}; abono una recarga:`, e);
+        }
+        const consultas = porPaquete * cantidad;
+
+        const admin = getSupabaseAdmin();
+        const { data: perfil } = await admin
+            .from('user_profiles').select('id').eq('email', email).limit(1).maybeSingle();
+        if (!perfil?.id) {
+            console.error(`🚨 RECARGA DE CONSULTAS PAGADA SIN PERFIL — ${email} pagó ${session.amount_total} y no hay a quién abonarle. Sesión ${session.id}`);
+            return;
+        }
+
+        const { data: res, error: errRec } = await admin.rpc('acreditar_recarga_consultas', {
+            p_user_id: perfil.id,
+            p_email: email,
+            p_consultas: consultas,
+            p_importe_centavos: session.amount_total ?? 0,
+            p_session_id: session.id,
+            p_payment_intent: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+        });
+        if (errRec) {
+            console.error(`🚨 No se pudo acreditar la recarga de consultas de ${email} (sesión ${session.id}):`, errRec);
+            throw errRec;   // que Stripe reintente: el abono es idempotente
+        }
+        const info = res as { duplicada?: boolean; disponibles?: number } | null;
+        console.log(`🔋 Consultas acreditadas: ${email} +${consultas} (quedan ${info?.disponibles ?? '?'})`,
+                    info?.duplicada ? '(reintento, ya estaba)' : '');
         return;
     }
 
