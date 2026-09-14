@@ -674,6 +674,11 @@ async function extraerDeArchivo(
         // el botón de subir anuncia su costo.
         const uid = await userId()
         if (uid) form.append('user_id', uid)
+        // Aquí se quiere el EXTRACTO del documento, no un análisis
+        // fundamentado: el acervo no aporta nada al resumen y sí tarda.
+        // Desde el 14-sep-2026 el endpoint busca en el acervo por defecto;
+        // la carpeta lo apaga expresamente.
+        form.append('usar_acervo', '0')
 
         const res = await fetch(`${API_URL}/analyze-document`, { method: 'POST', body: form })
         if (!res.ok) {

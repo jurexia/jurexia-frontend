@@ -573,9 +573,13 @@ export default function ChatPage() {
         if (user.id) formData.append('user_id', user.id);
         // El globo también aplica al análisis de documentos: antes este camino
         // lo ignoraba en silencio y el abogado no recibía sus fuentes.
+        // La entidad viaja SIEMPRE, no sólo con el globo de internet: desde
+        // el 14-sep-2026 el análisis de documentos busca en el acervo, y sin
+        // entidad la búsqueda no abre el silo estatal. Es justo el fallo de
+        // Puebla: diez artículos federales con etiqueta de otro estado.
+        if (selectedEstado) formData.append('estado', selectedEstado);
         if (fuentesWebActivas()) {
             formData.append('fuentes_web', '1');
-            if (selectedEstado) formData.append('estado', selectedEstado);
         }
 
         try {
