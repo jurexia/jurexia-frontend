@@ -11,6 +11,56 @@ import { PLANS } from '@/lib/stripe';
 import { RejillaCubos, CircuitoNeuronal } from '@/components/FondosDePlan';
 import Image from 'next/image';
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUSCRIBIRSE A ULTRA SECRETARIOS
+   ═══════════════════════════════════════════════════════════════════════════
+   David, 13-sep-2026: «no veo ningún botón que me permita la suscripción».
+   Y no lo veía porque NO EXISTÍA: esta página vendía Básico, Pro y Platinum, y
+   Ultra sólo aparecía descrito en la tarjeta azul. El plan llevaba meses dado de
+   alta y activo en Stripe —999 MXN al mes, comprobado hoy— y no había en toda la
+   web un sitio donde pagarlo. Un plan que no se puede comprar no existe.
+
+   Usa el mismo camino de cobro que los otros planes: `redirectToCheckout` con su
+   priceId. Sobre la variable de entorno que David preguntó: `getPriceId` cae al
+   identificador escrito en `PROMOTION_PRICE_IDS` cuando la variable no está, así
+   que funciona igual. Aquí se comprueba de todas formas antes de pulsar, porque
+   quedarse sin precio en mitad del cobro es la peor manera de enterarse. */
+function BotonUltra() {
+    const { user } = useAuth();
+    const [cargando, setCargando] = useState(false);
+    const precio = PLANS.ultra_secretarios.priceId;
+
+    const suscribir = async () => {
+        if (!precio) {
+            alert('Error de configuración del plan. Por favor contacta a soporte.');
+            return;
+        }
+        if (!user?.email) {
+            window.location.href = '/login?redirect=/precios';
+            return;
+        }
+        setCargando(true);
+        try {
+            await redirectToCheckout(precio, user.email);
+        } catch (e: any) {
+            alert(`No se pudo abrir el cobro: ${e?.message || 'error desconocido'}.`);
+        } finally { setCargando(false); }
+    };
+
+    return (
+        <button
+            onClick={suscribir}
+            disabled={cargando}
+            className="inline-flex items-center gap-2 rounded-full bg-accent-gold px-7 py-3.5 text-sm font-bold text-[#0a0f1a] transition-colors hover:bg-[#d8bd7d] disabled:opacity-60"
+        >
+            {cargando
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <ArrowRight className="h-4 w-4" />}
+            Suscribirme · $999 MXN al mes
+        </button>
+    );
+}
+
 export default function PreciosPage() {
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
     const isAnnual = billingPeriod === 'annual';
@@ -351,11 +401,25 @@ export default function PreciosPage() {
                                             <Image
                                                 src="/demo/proyecto-hoja.png"
                                                 alt="Primera hoja de un proyecto de sentencia generado por el taller: amparo en revisión civil del Décimo Tribunal Colegiado en Materia Civil del Primer Circuito, con la carátula, el visto y el primer resultando. Todos los datos son ficticios."
-                                                width={722}
-                                                height={1119}
+                                                width={724}
+                                                height={1143}
                                                 className="block h-auto w-full"
                                             />
                                         </div>
+                                        {/* AL PIE DE LA HOJA, Y NO ENTERRADO. Quien mira esta
+                                            imagen está viendo lo que parece el expediente de
+                                            alguien; hay que decirle ahí mismo que no lo es. */}
+                                        <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500">
+                                            Las partes, el magistrado y la secretaria son{' '}
+                                            <span className="text-gray-400">nombres ficticios</span>, y
+                                            el asunto no corresponde a ningún expediente real. Iurexia
+                                            aplica una{' '}
+                                            <Link href="/privacidad" className="text-accent-gold/80 underline underline-offset-2 hover:text-accent-gold">
+                                                política de privacidad rigurosa
+                                            </Link>
+                                            : los expedientes que subas no se usan para entrenar
+                                            modelos ni se ceden a terceros.
+                                        </p>
                                     </div>
                                 </div>
 
@@ -364,9 +428,10 @@ export default function PreciosPage() {
                                     botón para Genera tu primer proyecto gratis»— y otra para leer el
                                     plan entero antes de decidir. */}
                                 <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-white/10 pt-6">
+                                    <BotonUltra />
                                     <Link
                                         href="/tcc-beta"
-                                        className="inline-flex items-center gap-2 rounded-full bg-accent-gold px-7 py-3.5 text-sm font-bold text-[#0a0f1a] transition-colors hover:bg-[#d8bd7d]"
+                                        className="inline-flex items-center gap-2 rounded-full border border-accent-gold/50 px-7 py-3.5 text-sm font-bold text-accent-gold transition-colors hover:bg-accent-gold/10"
                                     >
                                         Genera tu primer proyecto gratis
                                         <ArrowRight className="h-4 w-4" />

@@ -230,6 +230,23 @@ export interface EstadoPiloto {
     /** El camino de SISE está cerrado salvo para administración y testers.
      *  Lo decide el servidor, no la pantalla. */
     puede_sise?: boolean;
+    /** Cuántos proyectos le quedan y de dónde salen. */
+    proyectos?: BolsaProyectos;
+}
+
+/** LAS TRES BOLSAS. La del mes caduca, las recargas no, y la prueba es de por
+ *  vida. `restantes` ya las suma: es lo que la pantalla enseña. */
+export interface BolsaProyectos {
+    mes_usados: number;
+    mes_limite: number;
+    recargados: number;
+    prueba_usados: number;
+    prueba_max: number;
+    restantes: number;
+    /** Administración y testers: no se les cuenta nada. */
+    sin_limite: boolean;
+    almacenamiento_bytes: number;
+    almacenamiento_limite: number;
 }
 
 async function _fallo(res: Response): Promise<never> {

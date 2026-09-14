@@ -58,6 +58,17 @@ export default function SecretariosPage() {
                                         Genera tu primer proyecto gratis
                                         <ArrowRight className="w-5 h-5" />
                                     </Link>
+                                    {/* SUSCRIBIRSE, ARRIBA Y NO A MITAD DE PÁGINA.
+                                        David: «no veo ningún botón que me permita la
+                                        suscripción». Lo había, en la sección de precios,
+                                        pero quien entra decidido no baja a buscarlo. */}
+                                    <Link
+                                        href="/precios?plan=ultra_secretarios"
+                                        className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-[#c9a962]/50 text-[#c9a962] font-bold rounded-full transition-all hover:bg-[#c9a962]/10"
+                                    >
+                                        Suscribirme · $999 al mes
+                                        <ArrowRight className="w-4 h-4" />
+                                    </Link>
                                     <a
                                         href="#features"
                                         className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/20 text-white font-medium rounded-full hover:bg-white/5 transition-all"
@@ -66,23 +77,27 @@ export default function SecretariosPage() {
                                         <ChevronDown className="w-4 h-4" />
                                     </a>
                                 </div>
-                                <a
-                                    href="mailto:soporte@iurexia.com?subject=Solicitud%20de%20prueba%20—%20Plan%20Secretario%20PJF&body=Hola%2C%20me%20gustaría%20solicitar%20una%20prueba%20de%20la%20función%20Redactor%20de%20Sentencias.%0A%0AMi%20correo%20de%20registro%20en%20Iurexia%20es%3A%20"
-                                    className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-[#c9a962] transition-colors mt-2 group"
-                                >
-                                    <Sparkles className="w-3.5 h-3.5 text-[#c9a962]/60 group-hover:text-[#c9a962] transition-colors" />
-                                    ¿Quieres una prueba antes de suscribirte?{' '}
-                                    <span className="text-[#c9a962] underline underline-offset-2 decoration-[#c9a962]/40 group-hover:decoration-[#c9a962]">
-                                        Solicítala aquí
-                                    </span>
-                                </a>
+                                {/* LA PRUEBA YA NO SE PIDE POR CORREO. David:
+                                    «ya quita lo de solicitar prueba porque el usuario
+                                    gratuito puede hacer una prueba; no es necesario».
+                                    Cualquier cuenta gratuita genera un proyecto desde el
+                                    propio taller, sin tarjeta y sin escribirle a nadie. */}
+                                <p className="mt-3 text-sm text-gray-500">
+                                    La prueba no se solicita: cualquier cuenta gratuita genera
+                                    un proyecto completo desde el taller, sin tarjeta.
+                                </p>
                             </AnimateOnScroll>
 
                             <AnimateOnScroll delay={0.4}>
                                 <div className="flex items-center gap-6 mt-8 pt-8 border-t border-white/10">
                                     <div className="text-center">
-                                        <div className="text-2xl font-bold text-[#c9a962]">20</div>
-                                        <div className="text-xs text-gray-500">sentencias/mes</div>
+                                        {/* DECÍA 20 Y 50. Son las cifras del plan cuando se
+                                            escribió la página; el plan da 40 proyectos y 560
+                                            consultas —las mismas que Platinum—. Anunciar de
+                                            menos por un texto viejo es vender peor de lo que
+                                            se tiene, y esto se ve en la primera pantalla. */}
+                                        <div className="text-2xl font-bold text-[#c9a962]">40</div>
+                                        <div className="text-xs text-gray-500">proyectos/mes</div>
                                     </div>
                                     <div className="w-px h-10 bg-white/10" />
                                     <div className="text-center">
@@ -91,7 +106,7 @@ export default function SecretariosPage() {
                                     </div>
                                     <div className="w-px h-10 bg-white/10" />
                                     <div className="text-center">
-                                        <div className="text-2xl font-bold text-[#c9a962]">50</div>
+                                        <div className="text-2xl font-bold text-[#c9a962]">560</div>
                                         <div className="text-xs text-gray-500">consultas/mes</div>
                                     </div>
                                     <div className="w-px h-10 bg-white/10" />

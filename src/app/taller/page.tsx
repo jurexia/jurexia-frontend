@@ -1259,7 +1259,7 @@ export default function TallerDeSentencias() {
             <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 h-[460px] opacity-[0.6]"
                  style={{ background: 'radial-gradient(70% 100% at 50% 0%, rgba(201,169,98,0.13) 0%, transparent 70%)' }} />
 
-            <BarraSuperior asunto={asunto} />
+            <BarraSuperior asunto={asunto} proyectos={piloto?.proyectos} />
 
             <main className={cn(
                 'relative mx-auto grid max-w-[1500px] gap-4 px-4 py-5 sm:px-6',
