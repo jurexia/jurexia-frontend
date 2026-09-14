@@ -9,6 +9,7 @@ import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import { PLANS } from '@/lib/stripe';
 import { RejillaCubos, CircuitoNeuronal } from '@/components/FondosDePlan';
+import Image from 'next/image';
 
 export default function PreciosPage() {
     const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
@@ -231,7 +232,7 @@ export default function PreciosPage() {
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div>
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30 mb-4">
-                                        <span className="text-[10px] font-bold text-accent-gold tracking-widest">PLAN ULTRA SECRETARIOS · $999 MXN/mes</span>
+                                        <span className="text-[10px] font-bold text-accent-gold tracking-widest">PLAN ULTRA SECRETARIOS · $999 MXN/mes · DISPONIBLE</span>
                                     </div>
                                     <h3 className="font-serif text-xl md:text-2xl font-medium text-white mb-3">
                                         Herramientas exclusivas para el<br />
@@ -239,7 +240,10 @@ export default function PreciosPage() {
                                     </h3>
                                     <ul className="space-y-2 mb-4">
                                         {[
-                                            { label: 'Redactor de Sentencias PJF', detail: 'Borradores con estudio de fondo, jurisprudencia inyectada y estructura TCC profesional' },
+                                            { label: '560 consultas al mes', detail: 'El mismo acceso al chat jurídico que el plan Platinum' },
+                                            { label: '40 proyectos de sentencia al mes', detail: 'Adelanto, acervo, tu criterio y el proyecto redactado sobre tu razonamiento' },
+                                            { label: 'Recargas sin caducidad', detail: '10 proyectos más por $250 MXN cuando los necesites; los recargados no expiran' },
+                                            { label: '20 GB para tus expedientes', detail: 'Tus PDF y tus proyectos se guardan y puedes volver a ellos' },
                                         ].map((item, i) => (
                                             <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
                                                 <span className="w-4 h-4 rounded-full bg-accent-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -252,8 +256,10 @@ export default function PreciosPage() {
                                 </div>
                                 <div className="shrink-0 max-w-xs">
                                     <p className="text-sm text-gray-400 leading-relaxed text-center md:text-left">
-                                        <span className="text-accent-gold font-semibold">Versión beta disponible</span> para usuarios Platinum.
-                                        La versión Ultra estará disponible próximamente.
+                                        Pensado para quien proyecta sentencias todos los días. El
+                                        redactor es una <span className="text-accent-gold font-semibold">herramienta
+                                        de apoyo</span>, no un sustituto: el criterio jurídico, en
+                                        todos los casos, lo pone el secretario.
                                     </p>
                                 </div>
                             </div>
@@ -264,42 +270,56 @@ export default function PreciosPage() {
                                 son inventados —tribunal, magistrada, partes,
                                 expediente—; los criterios que cita son registros
                                 reales del Semanario. */}
+                            {/* ═══ LA PRUEBA, EN UN WORD ═══
+                                David, 13-sep-2026: «hay un video viejo que muestra
+                                la herramienta, sólo sustitúyelo por una tarjeta
+                                actual y la imagen de un documento (abre word)
+                                generado con el proyecto».
+
+                                El vídeo enseñaba la pantalla del taller; lo que
+                                convence a un secretario no es la pantalla, es el
+                                documento: 34 páginas en Word, con su carátula, su
+                                resultando y sus notas al pie.
+
+                                TODOS LOS DATOS SON INVENTADOS y el órgano no es el
+                                de nadie en concreto: se mudó a un colegiado del
+                                Primer Circuito precisamente para que no se
+                                reconozca ningún asunto real. */}
                             <div className="mt-8 border-t border-white/10 pt-7">
                                 <p className="text-[10px] font-bold tracking-widest text-accent-gold/80">
-                                    EL TALLER, DE PRINCIPIO A FIN
+                                    LO QUE SALE: UN WORD DE 34 PÁGINAS
                                 </p>
                                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
-                                    Entra un amparo directo con su ficha, el acto reclamado y los
-                                    conceptos de violación. Sale un proyecto redactado sobre el
-                                    criterio que fijó el secretario, con sus criterios trazados.
-                                    Datos ficticios.
+                                    Entra el acto reclamado y el escrito de la parte. Sale un proyecto
+                                    completo —carátula, resultandos, considerandos, estudio de fondo y
+                                    resolutivos— redactado sobre el criterio que fijó el secretario,
+                                    con los preceptos y los criterios al pie. Se abre en Word y se
+                                    edita como cualquier otro. Datos ficticios.
                                 </p>
-                                <div className="mt-5 overflow-hidden rounded-xl border border-white/10 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.7)]">
-                                    <video
-                                        className="block w-full"
-                                        autoPlay
-                                        loop
-                                        muted
-                                        playsInline
-                                        preload="metadata"
-                                        poster="/demo/sentencia-poster.jpg"
-                                        aria-label="Demostración con datos ficticios: un amparo directo laboral entra al taller de sentencias, se genera el adelanto, se consulta el acervo, el secretario fija su criterio en cinco problemas jurídicos y el taller devuelve el proyecto de sentencia."
-                                    >
-                                        <source src="/demo/sentencia.mp4" type="video/mp4" />
-                                    </video>
-                                </div>
-                                <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                                    {[
-                                        ['El adelanto', 'Oportunidad, ratio, conceptos y problemas jurídicos.'],
-                                        ['Tu criterio', 'El sentido de cada problema, y el porqué, lo pones tú.'],
-                                        ['La sentencia', 'El proyecto redactado sobre tu razonamiento.'],
-                                    ].map(([titulo, texto], i) => (
-                                        <div key={titulo} className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-3.5 py-2.5">
-                                            <p className="font-mono text-[10px] tracking-wide text-accent-gold/70">0{i + 1}</p>
-                                            <p className="mt-0.5 font-serif text-[13px] font-bold text-white">{titulo}</p>
-                                            <p className="mt-0.5 text-[12px] leading-snug text-gray-400">{texto}</p>
-                                        </div>
-                                    ))}
+                                <div className="mt-5 grid items-center gap-6 md:grid-cols-[minmax(0,1fr)_auto]">
+                                    <div className="grid gap-2 sm:grid-cols-2">
+                                        {[
+                                            ['El adelanto', 'Oportunidad, ratio, conceptos y problemas jurídicos.'],
+                                            ['Tu criterio', 'El sentido de cada problema, y el porqué, lo pones tú.'],
+                                            ['El estudio', 'Sobre tu razonamiento, con la ley que aplicó la responsable.'],
+                                            ['El documento', 'En tu plantilla, con las citas trazadas a su fuente.'],
+                                        ].map(([titulo, texto], i) => (
+                                            <div key={titulo} className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-3.5 py-2.5">
+                                                <p className="font-mono text-[10px] tracking-wide text-accent-gold/70">0{i + 1}</p>
+                                                <p className="mt-0.5 font-serif text-[13px] font-bold text-white">{titulo}</p>
+                                                <p className="mt-0.5 text-[12px] leading-snug text-gray-400">{texto}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mx-auto w-full max-w-[340px] overflow-hidden rounded-xl border border-white/10 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.85)]">
+                                        <Image
+                                            src="/demo/proyecto-word.png"
+                                            alt="Un proyecto de sentencia generado por el taller, abierto en Microsoft Word: amparo en revisión civil del Décimo Tribunal Colegiado en Materia Civil del Primer Circuito, con carátula, resultandos y 34 páginas. Todos los datos son ficticios."
+                                            width={920}
+                                            height={1466}
+                                            className="block h-auto w-full"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
