@@ -1645,3 +1645,17 @@ h6 {
     .emerge, .respira, .corre { animation: none !important; }
     .emerge { opacity: 1; transform: none; }
 }
+
+
+/* ═══ LA AURORA DEL TALLER ═══
+   David: «colores más profundos y elegantes, o con efectos de última
+   generación». Tres manchas de oro y ámbar muy desenfocadas que derivan en
+   medio minuto. No se ven como animación: se notan como profundidad. Con
+   movimiento reducido se quedan quietas. */
+.taller-aurora { position: fixed; inset: -20%; z-index: 0; pointer-events: none; filter: blur(60px); opacity: .5; }
+.taller-aurora i { position: absolute; border-radius: 50%; width: 55vw; height: 55vw; max-width: 900px; max-height: 900px; display: block; }
+.taller-aurora i:nth-child(1) { left: -10%; top: -20%; background: radial-gradient(circle, rgba(201,169,98,.26), transparent 60%); animation: deriva 26s ease-in-out infinite alternate; }
+.taller-aurora i:nth-child(2) { right: -15%; top: 30%; background: radial-gradient(circle, rgba(142,116,54,.2), transparent 62%); animation: deriva 34s ease-in-out infinite alternate-reverse; }
+.taller-aurora i:nth-child(3) { left: 30%; bottom: -30%; background: radial-gradient(circle, rgba(120,90,60,.14), transparent 60%); animation: deriva 40s ease-in-out infinite alternate; }
+@keyframes deriva { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(6%, 4%, 0) scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .taller-aurora i { animation: none; } }

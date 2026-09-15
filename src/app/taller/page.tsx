@@ -30,7 +30,9 @@ import type { ViaEntrada, PasoArchivos } from '@/components/sentencia/EntradaTal
 import type { AsuntoEnCurso, FichaProyecto, DocumentosDelAsunto }
     from '@/components/sentencia/api';
 import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
-import LineaDeFases from '@/components/sentencia/LineaDeFases';
+import AnilloDeFases from '@/components/sentencia/AnilloDeFases';
+import Espinazo from '@/components/sentencia/Espinazo';
+import type { PasoDelEspinazo } from '@/components/sentencia/Espinazo';
 import Decision from '@/components/sentencia/Decision';
 import FormularioEncargo, { ENCARGO_VACIO, faltaEnEncargo } from '@/components/sentencia/FormularioEncargo';
 import type { TipoAsunto } from '@/components/sentencia/api';
@@ -1238,6 +1240,44 @@ export default function TallerDeSentencias() {
 
     const sinAcceso = piloto && !piloto.tiene_acceso;
 
+    /* ═══ LA FICHA, LOS DOCUMENTOS Y LA PLANTILLA, UNA SOLA VEZ ═══
+       Se pintan dentro del paso 1 mientras se está en él, y después quedan
+       plegados en el raíl —para leer y comprobar, no para volver a empezar—. */
+    const fichaJsx = (
+        <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
+                                           deshabilitado={corriendo || paso !== 'ficha'}
+                                           activa={paso === 'ficha' && via === 'archivos'
+                                                   && !(!!encargo.numero && !!encargo.tipoAsunto)}
+                                           delAuto={pasoArchivos === 'admision'}
+                                           onDelAuto={(v) => setPasoArchivos(v ? 'admision' : 'formulario')} />
+    );
+    const documentosJsx = (
+        <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
+                                         extractos={[]} vocabulario={voz}
+                                         activa={paso === 'ficha' && via === 'archivos'
+                                                 && !!encargo.numero && !!encargo.tipoAsunto
+                                                 && documentos.length < 2} />
+    );
+    const plantillaJsx = (
+        <label className={cn('block cursor-pointer rounded-xl border border-dashed',
+                        'border-white/20 bg-white/[0.02] px-4 py-3 text-[13px] text-white/60',
+                        'transition hover:border-accent-gold/30 hover:text-white/75')}>
+                        <input type="file" accept=".docx" className="hidden"
+                               onChange={(e) => e.target.files?.[0] &&
+                                   setFicheros((p) => ({ ...p, plantilla: e.target.files![0] }))} />
+                        {ficheros.plantilla
+                            ? <>Plantilla propia: <span className="text-white/75">{ficheros.plantilla.name}</span></>
+                            : <>Se usará la plantilla del tribunal ya cargada. Sube una .docx sólo si quieres otra.</>}
+                    </label>
+    );
+    const pasoEspinazo: PasoDelEspinazo =
+        paso === 'ficha' ? 1 : paso === 'adelanto' ? 2 : paso === 'proyecto' ? 4 : 3;
+    const hechosEspinazo = ([1, 2, 3, 4] as PasoDelEspinazo[]).filter((n) => n < pasoEspinazo);
+    const irAlPaso = (n: PasoDelEspinazo) => {
+        if (n === 1) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+        irA(['', 'recorrido', 'criterio', 'proyecto'][n - 1], 80);
+    };
+
     return (
         <div className="min-h-screen bg-charcoal-950 font-sans text-white antialiased">
             {/* ═══ LA PROFUNDIDAD DEL FONDO ═══
@@ -1259,6 +1299,7 @@ export default function TallerDeSentencias() {
             <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 h-[460px] opacity-[0.6]"
                  style={{ background: 'radial-gradient(70% 100% at 50% 0%, rgba(201,169,98,0.13) 0%, transparent 70%)' }} />
 
+            <div aria-hidden className="taller-aurora"><i /><i /><i /></div>
             <BarraSuperior asunto={asunto} proyectos={piloto?.proyectos} />
 
             <main className={cn(
@@ -1270,6 +1311,12 @@ export default function TallerDeSentencias() {
                     ? 'lg:grid-cols-[minmax(320px,400px)_1fr]'
                     : 'lg:grid-cols-1')}>
                 <div className="flex flex-col gap-4 lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)] lg:overflow-y-auto lg:pr-1">
+                    {(paso !== 'ficha' || via || pendientes.length > 0) && (
+                        <Espinazo activo={pasoEspinazo} hechos={hechosEspinazo}
+                                  corriendo={corriendo} onIr={irAlPaso}
+                                  nota={<><span className="text-white/60">Un paso a la vez.</span> Lo hecho se
+                                        puede reabrir para leerlo; lo que no toca todavía está cerrado.</>} />
+                    )}
                     {piloto && !piloto.proyectos?.sin_limite && (
                         <AvisoPiloto delPiloto={piloto.del_piloto}
                                      restantes={piloto.proyectos?.restantes}
@@ -1291,20 +1338,16 @@ export default function TallerDeSentencias() {
                         los autos. Enseñarlos ahí es contradecir lo que la propia
                         tarjeta acaba de prometer. Vuelven en cuanto llega el
                         expediente y hay algo que comprobar. */}
-                    {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
-                        <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
-                                           deshabilitado={corriendo || paso !== 'ficha'}
-                                           activa={paso === 'ficha' && via === 'archivos'
-                                                   && !(!!encargo.numero && !!encargo.tipoAsunto)}
-                                           delAuto={pasoArchivos === 'admision'}
-                                           onDelAuto={(v) => setPasoArchivos(v ? 'admision' : 'formulario')} />
-                    )}
-                    {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
-                        <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
-                                         extractos={[]} vocabulario={voz}
-                                         activa={paso === 'ficha' && via === 'archivos'
-                                                 && !!encargo.numero && !!encargo.tipoAsunto
-                                                 && documentos.length < 2} />
+                    {paso === 'ficha' && pendientes.length > 0 && fichaJsx}
+                    {paso === 'ficha' && pendientes.length > 0 && documentosJsx}
+                    {paso !== 'ficha' && (
+                        <Pliegue titulo="Ficha y documentos" nota="leídos">
+                            <div className="space-y-3 pt-2">
+                                {fichaJsx}
+                                {documentosJsx}
+                                {plantillaJsx}
+                            </div>
+                        </Pliegue>
                     )}
 
                     {/* ═══ LO QUE QUEDA GUARDADO DE ESTE ASUNTO ═══
@@ -1381,18 +1424,7 @@ export default function TallerDeSentencias() {
                     {/* La plantilla propia tampoco pinta nada antes de elegir
                         camino: es el último detalle de un trabajo que aún no
                         ha empezado. */}
-                    {(paso !== 'ficha' || (via === 'archivos') || pendientes.length > 0) && (
-                    <label className={cn('block cursor-pointer rounded-xl border border-dashed',
-                        'border-white/20 bg-white/[0.02] px-4 py-3 text-[13px] text-white/60',
-                        'transition hover:border-accent-gold/30 hover:text-white/75')}>
-                        <input type="file" accept=".docx" className="hidden"
-                               onChange={(e) => e.target.files?.[0] &&
-                                   setFicheros((p) => ({ ...p, plantilla: e.target.files![0] }))} />
-                        {ficheros.plantilla
-                            ? <>Plantilla propia: <span className="text-white/75">{ficheros.plantilla.name}</span></>
-                            : <>Se usará la plantilla del tribunal ya cargada. Sube una .docx sólo si quieres otra.</>}
-                    </label>
-                    )}
+                    {paso === 'ficha' && pendientes.length > 0 && plantillaJsx}
                 </div>
 
                 <div className="flex min-w-0 flex-col gap-4">
@@ -1472,6 +1504,9 @@ export default function TallerDeSentencias() {
                                        enCurso={enCurso}
                                        onReanudar={reanudar}
                                        puedeSise={!!piloto?.puede_sise}
+                                       ficha={fichaJsx}
+                                       documentos={documentosJsx}
+                                       plantilla={plantillaJsx}
                                        admision={
                                            <TarjetaAdmision fichando={fichando}
                                                             fichado={fichado}
@@ -1781,7 +1816,35 @@ export default function TallerDeSentencias() {
                             Recorrido del asunto
                         </Rotulo>
                         <span id="recorrido" />
-                        <LineaDeFases fases={fasesSegun(paso, corriendo)} />
+                        <AnilloDeFases fases={fasesSegun(paso, corriendo)} corriendo={corriendo} />
+                        {paso !== 'ficha' && delAsunto && (
+                            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                                <div className="rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3">
+                                    <p className="text-[16px] font-semibold text-white">
+                                        {extemporanea ? 'Extemporánea' : 'En tiempo'}
+                                    </p>
+                                    <p className="text-[12px] text-white/45">
+                                        {extemporanea ? 'el cómputo lo dice; decides abajo' : 'según el cómputo de días hábiles'}
+                                    </p>
+                                </div>
+                                <div className="rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3">
+                                    <p className="text-[16px] font-semibold tabular-nums text-white">
+                                        {delAsunto.problemas.length}
+                                    </p>
+                                    <p className="text-[12px] text-white/45">
+                                        {delAsunto.problemas.length === 1 ? 'problema jurídico' : 'problemas jurídicos'}
+                                    </p>
+                                </div>
+                                <div className="rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3">
+                                    <p className="text-[16px] font-semibold tabular-nums text-white">
+                                        {material ? material.tesis.length : '—'}
+                                    </p>
+                                    <p className="text-[12px] text-white/45">
+                                        {material ? 'criterios con registro verificado' : 'criterios: al buscar la solución'}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.07] pt-4">
                             {/* EL MISMO BOTÓN, UNA SOLA VEZ. En el camino de

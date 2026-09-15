@@ -225,6 +225,7 @@ function Reanudar({ asuntos, onAbrir }: {
 export default function EntradaTaller({
     via, onVia, pasoArchivos, onPasoArchivos, hayDocumentos, hayFicha,
     enCurso = [], onReanudar, accion, admision, puedeSise = false,
+    ficha, documentos, plantilla,
 }: {
     via: ViaEntrada | null;
     onVia: (v: ViaEntrada | null) => void;
@@ -243,6 +244,13 @@ export default function EntradaTaller({
     /** Lo dice el servidor en /taller/estado. Cerrado salvo administración y
      *  testers mientras el complemento está en pruebas. */
     puedeSise?: boolean;
+    /* LA FICHA Y LOS DOCUMENTOS, DENTRO DE SU PASO. Vivían en el raíl
+       izquierdo mientras el paso numerado estaba a la derecha: la instrucción
+       en un lado y el sitio donde se trabaja en el otro. Ahora el raíl es el
+       recorrido y cada paso trae lo suyo. */
+    ficha?: React.ReactNode;
+    documentos?: React.ReactNode;
+    plantilla?: React.ReactNode;
 }) {
     /* ── Nada elegido: los dos caminos ──────────────────────────────────── */
     if (!via) {
@@ -360,6 +368,7 @@ export default function EntradaTaller({
                         así que la rejilla de cuatro tipos sobra en este camino:
                         es pedirle que elija algo que el papel ya dice. */}
                     {pasoArchivos === 'admision' && admision}
+                    {pasoArchivos && ficha && <div className="mt-3">{ficha}</div>}
                     {pasoArchivos && (
                         <button type="button" onClick={() => onPasoArchivos(null)}
                                 className="mt-2.5 block text-[12px] text-white/45
@@ -373,7 +382,14 @@ export default function EntradaTaller({
 
                 <Paso n={2} titulo="Los dos documentos del asunto" hecho={!!hayDocumentos}
                       activo={!!hayFicha && !hayDocumentos}
-                      porque="El acto reclamado y el escrito de la parte. Del primero sale lo que resolvió la responsable; del segundo, lo que se combate. El contraste de los dos es de donde nacen los problemas jurídicos." />
+                      porque="El acto reclamado y el escrito de la parte. Del primero sale lo que resolvió la responsable; del segundo, lo que se combate. El contraste de los dos es de donde nacen los problemas jurídicos.">
+                    {hayFicha && (documentos || plantilla) && (
+                        <div className="space-y-3">
+                            {documentos}
+                            {plantilla}
+                        </div>
+                    )}
+                </Paso>
 
                 {/* ═══ EL BOTÓN, DONDE ACABA EL CAMINO ═══
                     Estaba treinta centímetros más abajo, dentro de otra
