@@ -432,7 +432,18 @@ export default function ConstructorDemanda({
         const argumentos = !usar ? '' : (claseResultado === 'recurso'
             ? '\n\nAGRAVIOS YA ESTRUCTURADOS Y VERIFICADOS (intégralos como agravios numerados del recurso, en este orden, conservando cada cita tal como está escrita, sin cambiar registros, rubros ni artículos):\n\n'
             : '\n\nFUNDAMENTOS YA ESTRUCTURADOS Y VERIFICADOS (intégralos en el capítulo de derecho o de conceptos de violación, conservando cada cita tal como está escrita, sin cambiar registros, rubros ni artículos):\n\n') +
-            usar.argumentos.map((a, i) => `${rotuloDe(claseResultado, i)}. ${a.titulo}\n${a.redaccion}`).join('\n\n');
+            usar.argumentos.map((a, i) => `${rotuloDe(claseResultado, i)}. ${a.titulo}\n${a.redaccion}`).join('\n\n') +
+            /* EL TEXTO DE LO YA VERIFICADO VIAJA CON EL ENCARGO. La redacción hace su
+               propia búsqueda, y cuando no traía una tesis que Toulmin ya había
+               verificado, el modelo escribía DENTRO del escrito una «nota de
+               cobertura documental» diciendo que no la recuperó. */
+            (() => {
+                const lista = usar.citadas.map((id) => usar.fuentes[id]).filter(Boolean)
+                    .map((f) => `- ${f.cita}${f.texto ? `\n  ${f.texto.replace(/\s+/g, ' ').slice(0, 700)}` : ''}`);
+                return lista.length
+                    ? `\n\nTEXTO DE LAS FUENTES CITADAS, YA VERIFICADAS CONTRA EL ACERVO DE IUREXIA (apóyate en ellas aunque tu búsqueda no las traiga; dentro del escrito no escribas notas sobre lo que la búsqueda recuperó o no recuperó):\n${lista.join('\n')}`
+                    : '';
+            })();
         // El subtipo viaja en su propio renglón: un salto dentro lo partiría.
         const subtipo = esRecurso ? caso.recurso.replace(/\s+/g, ' ').trim() : tipoSel.subtipo;
         const cuerpoCaso = esRecurso
