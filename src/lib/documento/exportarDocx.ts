@@ -45,6 +45,10 @@ type Bloque =
           readonly interlineado?: number
           /** Sangría de primera línea, si el usuario la puso. */
           readonly sangria?: boolean
+          /** Cada `<ol>` es su propia numeración: los HECHOS y los PUNTOS
+              PETITORIOS empiezan en 1 los dos, no corren seguidos. */
+          readonly lista?: number
+          readonly inicio?: number
       }
     | { readonly clase: 'tabla'; readonly encabezado: readonly string[]; readonly filas: readonly (readonly string[])[] }
 
@@ -149,7 +153,7 @@ function tablaDeNodo(nodo: HTMLElement): Bloque | null {
 }
 
 /** El árbol del editor a una lista plana de bloques. Nada del usuario se tira. */
-export function bloquesDe(raiz: HTMLElement): Bloque[] {
+export function bloquesDe(raiz: HTMLElement, cuenta = { listas: 0 }): Bloque[] {
     const bloques: Bloque[] = []
     let sueltos: Trozo[] = []
     const vaciarSueltos = () => {
@@ -166,9 +170,12 @@ export function bloquesDe(raiz: HTMLElement): Bloque[] {
         const etiqueta = hijo.tagName.toLowerCase()
         if (etiqueta === 'ul' || etiqueta === 'ol') {
             const clase = etiqueta === 'ul' ? 'vineta' : 'numerada'
+            const lista = ++cuenta.listas
+            const inicio = Math.max(1, parseInt(hijo.getAttribute('start') || '1', 10) || 1)
             for (const punto of Array.from(hijo.children)) {
                 bloques.push({
                     clase,
+                    ...(clase === 'numerada' ? { lista, inicio } : {}),
                     trozos: trozosDe(punto, false, false),
                     alineacion: (punto instanceof HTMLElement ? alineacionDe(punto) : undefined) ?? alineacionDe(hijo),
                 })
@@ -193,7 +200,7 @@ export function bloquesDe(raiz: HTMLElement): Bloque[] {
         // Un `div` con párrafos dentro (lo deja a veces el pegado) se recorre
         // como si sus hijos estuvieran sueltos en la raíz.
         if (etiqueta === 'div' && hijo.querySelector('p,h1,h2,h3,ul,ol,blockquote,table')) {
-            bloques.push(...bloquesDe(hijo))
+            bloques.push(...bloquesDe(hijo, cuenta))
             continue
         }
         bloques.push({
@@ -288,7 +295,7 @@ export async function construirDocx(bloques: readonly Bloque[], papel: Papel): P
                 break
             case 'numerada':
                 cuerpo.push(new Paragraph({ children: corrido(b.trozos), alignment: alineado(b.alineacion) ?? AlignmentType.JUSTIFIED,
-                    numbering: { reference: NUMERACION, level: 0 }, spacing: { after: 120, line: 360 } }))
+                    numbering: { reference: `${NUMERACION}-${b.inicio ?? 1}`, level: 0, instance: b.lista ?? 0 }, spacing: { after: 120, line: 360 } }))
                 break
             case 'parrafo':
                 cuerpo.push(new Paragraph({
@@ -312,10 +319,12 @@ export async function construirDocx(bloques: readonly Bloque[], papel: Papel): P
             },
         },
         numbering: {
-            config: [{
-                reference: NUMERACION,
-                levels: [{ level: 0, format: LevelFormat.DECIMAL, text: '%1.', style: { paragraph: { indent: { left: 720, hanging: 360 } } } }],
-            }],
+            // Una definición por número de arranque (`<ol start>`); cada lista
+            // es una instancia distinta de la suya, así no se continúan.
+            config: Array.from(new Set([1, ...bloques.flatMap((b) => (b.clase === 'numerada' ? [b.inicio ?? 1] : []))])).map((inicio) => ({
+                reference: `${NUMERACION}-${inicio}`,
+                levels: [{ level: 0, format: LevelFormat.DECIMAL, text: '%1.', start: inicio, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }],
+            })),
         },
         sections: [{
             properties: {

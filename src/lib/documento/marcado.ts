@@ -64,7 +64,7 @@ export function markdownAHtml(md: string): string {
     const lineas = limpiarMarcadores(md).split('\n')
     const out: string[] = []
     let parrafo: string[] = []
-    let lista: { tipo: 'ul' | 'ol'; items: string[] } | null = null
+    let lista: { tipo: 'ul' | 'ol'; items: string[]; inicio: number } | null = null
     let cita: string[] = []
 
     const cerrarParrafo = () => {
@@ -72,7 +72,10 @@ export function markdownAHtml(md: string): string {
         parrafo = []
     }
     const cerrarLista = () => {
-        if (lista) out.push(`<${lista.tipo}>${lista.items.map((i) => `<li>${enLinea(i)}</li>`).join('')}</${lista.tipo}>`)
+        if (lista) {
+            const inicio = lista.tipo === 'ol' && lista.inicio > 1 ? ` start="${lista.inicio}"` : ''
+            out.push(`<${lista.tipo}${inicio}>${lista.items.map((i) => `<li>${enLinea(i)}</li>`).join('')}</${lista.tipo}>`)
+        }
         lista = null
     }
     const cerrarCita = () => {
@@ -81,10 +84,23 @@ export function markdownAHtml(md: string): string {
     }
     const cerrarTodo = () => { cerrarParrafo(); cerrarLista(); cerrarCita() }
 
-    for (const bruta of lineas) {
-        const linea = bruta.trimEnd()
-        const t = linea.trim()
-        if (t === '') { cerrarTodo(); continue }
+    const VINETA = /^[-*•]\s+(.*)$/
+    const NUMERO = /^(\d+)[.)]\s+(.*)$/
+    for (let k = 0; k < lineas.length; k++) {
+        const t = lineas[k].trim()
+        if (t === '') {
+            /* UNA LÍNEA EN BLANCO ENTRE «1.» Y «2.» NO CIERRA LA LISTA. Es como
+               escribe un modelo los HECHOS; cerrarla dejaba cada hecho en su
+               propio `<ol>` y todos salían como «1.». */
+            let s = k + 1
+            while (s < lineas.length && lineas[s].trim() === '') s++
+            const sigue = s < lineas.length ? lineas[s].trim() : ''
+            if (lista && ((lista.tipo === 'ol' && NUMERO.test(sigue)) || (lista.tipo === 'ul' && VINETA.test(sigue)))) {
+                cerrarParrafo(); cerrarCita()
+                continue
+            }
+            cerrarTodo(); continue
+        }
         if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) { cerrarTodo(); continue }
 
         const h = /^(#{1,6})\s+(.*)$/.exec(t)
@@ -107,13 +123,13 @@ export function markdownAHtml(md: string): string {
             cita.push(t.replace(/^>\s?/, ''))
             continue
         }
-        const vi = /^[-*•]\s+(.*)$/.exec(t)
-        const nu = /^\d+[.)]\s+(.*)$/.exec(t)
+        const vi = VINETA.exec(t)
+        const nu = NUMERO.exec(t)
         if (vi || nu) {
             cerrarParrafo(); cerrarCita()
             const tipo = vi ? 'ul' : 'ol'
-            if (!lista || lista.tipo !== tipo) { cerrarLista(); lista = { tipo, items: [] } }
-            lista.items.push((vi ?? nu)![1])
+            if (!lista || lista.tipo !== tipo) { cerrarLista(); lista = { tipo, items: [], inicio: nu ? parseInt(nu[1], 10) || 1 : 1 } }
+            lista.items.push(vi ? vi[1] : nu![2])
             continue
         }
         cerrarLista(); cerrarCita()
@@ -123,12 +139,81 @@ export function markdownAHtml(md: string): string {
     return out.join('')
 }
 
-/** Texto plano (para enviar el documento al chat en la revisión). */
+/**
+ * Texto plano del documento (para mandarlo a revisar).
+ *
+ * SE RECORRE EL ÁRBOL, NO UNA LISTA DE ETIQUETAS. Lo que el abogado escribe a
+ * mano llega como texto suelto en la raíz o en `<div>`, y leer sólo
+ * `p, h1…h3, li` lo dejaba fuera: Revisar contestaba «el documento es muy
+ * corto» con páginas escritas. Y con `textContent`, no `innerText`: en
+ * teléfono la hoja está oculta tras su pestaña, y `innerText` de algo oculto
+ * devuelve vacío.
+ */
 export function textoDeHtml(raiz: HTMLElement): string {
     const partes: string[] = []
-    raiz.querySelectorAll('h1,h2,h3,p,li,blockquote').forEach((n) => {
-        const t = (n as HTMLElement).innerText.trim()
-        if (t) partes.push(n.tagName === 'LI' ? `- ${t}` : t)
-    })
+    let suelto = ''
+    const volcar = () => { const t = suelto.replace(/[ \t]+\n/g, '\n').trim(); if (t) partes.push(t); suelto = '' }
+    const textoDe = (n: Node): string => {
+        if (n.nodeType === 3) return n.textContent || ''
+        if (!(n instanceof HTMLElement)) return ''
+        if (n.tagName === 'BR') return '\n'
+        return Array.from(n.childNodes).map(textoDe).join('')
+    }
+    const BLOQUE = /^(P|DIV|H[1-6]|BLOCKQUOTE|PRE|TABLE|SECTION|ARTICLE|HR)$/
+    const recorrer = (padre: Node) => {
+        for (const n of Array.from(padre.childNodes)) {
+            if (n instanceof HTMLElement && (n.tagName === 'UL' || n.tagName === 'OL')) {
+                volcar()
+                const base = parseInt(n.getAttribute('start') || '1', 10) || 1
+                Array.from(n.children).forEach((li, i) => {
+                    const t = textoDe(li).trim()
+                    if (t) partes.push(n.tagName === 'OL' ? `${base + i}. ${t}` : `- ${t}`)
+                })
+            } else if (n instanceof HTMLElement && BLOQUE.test(n.tagName)) {
+                volcar()
+                if (n.tagName === 'DIV' && n.querySelector('p,div,h1,h2,h3,ul,ol,blockquote,table')) recorrer(n)
+                else { const t = textoDe(n).trim(); if (t) partes.push(t) }
+            } else {
+                suelto += textoDe(n)
+            }
+        }
+        volcar()
+    }
+    recorrer(raiz)
     return partes.join('\n\n')
+}
+
+/**
+ * ¿LO QUE DEVOLVIÓ EL CHAT ES UN ESCRITO, O UN AVISO?
+ *
+ * `/chat` no contesta con error HTTP cuando se acaban las consultas, la cuenta
+ * está suspendida o falla la infraestructura: manda el aviso como texto dentro
+ * del stream («❌ Has alcanzado tu límite…»). Tomar eso por la demanda
+ * sustituía el documento entero por una línea. Y el aviso de respuesta
+ * truncada («envía continúa») no tiene sentido dentro de la hoja.
+ */
+export function analizarRespuesta(bruto: string): { error: string | null; texto: string; truncada: boolean } {
+    const crudo = bruto || ''
+    if (/SUSCRIPCION_SUSPENDIDA/.test(crudo)) {
+        return { error: 'Tu suscripción está suspendida por un cobro pendiente.', texto: '', truncada: false }
+    }
+    let limpio = limpiarMarcadores(crudo)
+    const falla = /(^|\n)\s*❌\s*(.*)/.exec(limpio)
+    if (falla) {
+        const antes = limpio.slice(0, falla.index).trim()
+        const mensaje = falla[2].replace(/\*\*/g, '').trim()
+        // El aviso solo (corto, sin nada antes) o el de consulta fallida detrás
+        // de un texto a medias: no hay escrito. Una revisión que usa ❌ como
+        // viñeta es larga y sigue siendo respuesta.
+        if ((!antes && limpio.length < 600) || /No pudimos completar/i.test(mensaje)) {
+            const error = /consultas|l[íi]mite/i.test(mensaje) ? 'Se te acabaron las consultas de este periodo.'
+                : /No pudimos completar/i.test(mensaje) ? 'No se pudo completar. No se te descontó la consulta: vuelve a intentarlo.'
+                : (mensaje || 'No se pudo completar la consulta.')
+            return { error, texto: '', truncada: false }
+        }
+    }
+    let truncada = false
+    const corte = /\n-{3,}\s*\n\s*⚠️\s*\*\*Respuesta truncada\*\*[\s\S]*$/.exec(limpio)
+    if (corte) { limpio = limpio.slice(0, corte.index).trim(); truncada = true }
+    return { error: null, texto: limpio, truncada }
 }

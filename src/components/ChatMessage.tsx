@@ -330,6 +330,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const cleanContentForExport = useCallback((raw: string): string => {
         let clean = raw;
 
+        // 0. El RAZONAMIENTO, antes que los comentarios. El paso 1 borraba los
+        // marcadores THINKING_START/END y dejaba su contenido —el análisis
+        // interno del modelo, en inglés— delante del escrito; el paso 9, que
+        // debía quitarlo, ya no encontraba nada. Un bloque abierto sin cierre
+        // se descarta hasta el final.
+        clean = clean.replace(/<!--THINKING_START-->[\s\S]*?(?:<!--THINKING_END-->|$)/g, '');
+        clean = clean.replace(/<!--thinking-->[\s\S]*?(?:<!--\/thinking-->|$)/g, '');
+
         // 1. Fuera TODOS los comentarios HTML, no sólo los que se conocían.
         //
         // Antes se listaban uno a uno —CITATION_META, PRECEDENTES_META— y al

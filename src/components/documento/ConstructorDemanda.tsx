@@ -9,7 +9,7 @@ import {
 import { Hoja, type HojaAPI } from './Hoja';
 import { TarjetaToulmin } from './TarjetaToulmin';
 import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
-import { markdownAHtml, textoDeHtml, limpiarMarcadores } from '@/lib/documento/marcado';
+import { analizarRespuesta, markdownAHtml, textoDeHtml } from '@/lib/documento/marcado';
 import {
     ErrorToulmin, ORDINALES, argumentoAHtml, toulminStream,
     type ResultadoToulmin,
@@ -182,7 +182,17 @@ export default function ConstructorDemanda({
 
     const [aviso, setAviso] = useState<string>('');
     const [exportando, setExportando] = useState(false);
-    const abortar = useRef<AbortController | null>(null);
+    /* UN CONTROLADOR POR OPERACIÓN. Con uno compartido, pulsar «Revisar»
+       mientras Toulmin trabajaba abortaba Toulmin y lo dejaba girando para
+       siempre, y «Detener» podía parar la operación equivocada. */
+    const tAbort = useRef<AbortController | null>(null);
+    const rAbort = useRef<AbortController | null>(null);
+    const vAbort = useRef<AbortController | null>(null);
+    useEffect(() => () => { tAbort.current?.abort(); rAbort.current?.abort(); vAbort.current?.abort(); }, []);
+    /* Lo que había en la hoja antes de que «Redactar» la sustituyera. */
+    const [respaldo, setRespaldo] = useState<string | null>(null);
+    const [confirmarReemplazo, setConfirmarReemplazo] = useState(false);
+    const raizRef = useRef<HTMLDivElement | null>(null);
 
     const tipoSel = TIPOS.find((t) => t.valor === caso.tipo) ?? TIPOS[0];
     const tituloEfectivo = titulo.trim() || `${tipoSel.etiqueta}${caso.estado ? ` · ${getEstadoLabel(caso.estado)}` : ''}`;
@@ -195,11 +205,52 @@ export default function ConstructorDemanda({
         } catch { /* sin almacenamiento: el borrador vive mientras la pestaña esté abierta */ }
     }, [caso, resultado, insertados, revisionHtml, papel, titulo, paso, usuarioId]);
     useEffect(() => { const id = window.setTimeout(guardar, 400); return () => window.clearTimeout(id); }, [guardar]);
-
-    // Si el chat cambia de entidad y el caso aún no la tiene, se toma.
+    // Al cerrar la pestaña o salir de /chat, lo pendiente se guarda ya (la espera de 400 ms se cancelaba).
+    const guardarRef = useRef(guardar);
+    useEffect(() => { guardarRef.current = guardar; }, [guardar]);
     useEffect(() => {
-        if (estadoChat && !caso.estado) setCaso((c) => ({ ...c, estado: estadoChat }));
+        const ya = () => guardarRef.current();
+        window.addEventListener('pagehide', ya);
+        return () => { window.removeEventListener('pagehide', ya); ya(); };
+    }, []);
+
+    /* LA ENTIDAD DEL CHAT SE TOMA UNA VEZ, al empezar un caso nuevo. Si el
+       abogado elige «Sin entidad (sólo federal)», se respeta: antes el efecto
+       volvía a poner la del chat en cuanto el campo quedaba vacío. */
+    const entidadElegida = useRef(Boolean(guardado));
+    useEffect(() => {
+        if (!entidadElegida.current && estadoChat && !caso.estado) setCaso((c) => ({ ...c, estado: estadoChat }));
     }, [estadoChat, caso.estado]);
+
+    /* FOCO. Abierto a pantalla completa es un diálogo: el foco entra, Escape
+       cierra, Tab no se escapa al chat de atrás, y al cerrar vuelve al botón
+       que lo abrió. Acoplado a un lado, sólo entra y vuelve. */
+    const focoPrevio = useRef<HTMLElement | null>(null);
+    useEffect(() => {
+        if (!enCliente) return;
+        if (abierto) {
+            focoPrevio.current = document.activeElement as HTMLElement | null;
+            const id = window.requestAnimationFrame(() => {
+                raizRef.current?.querySelector<HTMLElement>('[data-foco-inicial]')?.focus();
+            });
+            return () => window.cancelAnimationFrame(id);
+        }
+        const previo = focoPrevio.current;
+        focoPrevio.current = null;
+        if (previo && document.contains(previo)) previo.focus();
+    }, [abierto, enCliente]);
+    function teclaDelDialogo(e: React.KeyboardEvent<HTMLDivElement>) {
+        if (disp.lateral) return;
+        if (e.key === 'Escape') { e.stopPropagation(); onCerrar(); return; }
+        if (e.key !== 'Tab' || !raizRef.current) return;
+        const foco = Array.from(raizRef.current.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])',
+        )).filter((el) => el.offsetParent !== null && getComputedStyle(el).visibility !== 'hidden');
+        if (!foco.length) return;
+        const primero = foco[0], ultimo = foco[foco.length - 1];
+        if (e.shiftKey && document.activeElement === primero) { e.preventDefault(); ultimo.focus(); }
+        else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero.focus(); }
+    }
 
     useEffect(() => {
         if (!abierto || !pasoInicial) return;
@@ -240,26 +291,33 @@ export default function ConstructorDemanda({
     // ── 2 · TOULMIN ──────────────────────────────────────────────────────
     async function estructurar() {
         if (!casoListo) { setPaso('caso'); return; }
-        abortar.current?.abort();
-        abortar.current = new AbortController();
+        tAbort.current?.abort();
+        const control = new AbortController();
+        tAbort.current = control;
         setTEstado('trabajando'); setTError(''); setTEtapa('problemas');
+        let llego = false;
         try {
             const sesion = await getSession();
             for await (const ev of toulminStream({
                 hechos: caso.hechos, pretension: caso.pretension,
                 tipo: tipoSel.etiqueta.toLowerCase(), estado: caso.estado || undefined, materia: tipoSel.materia,
-            }, sesion?.access_token, abortar.current.signal)) {
+            }, sesion?.access_token, control.signal)) {
                 if (ev.tipo === 'paso') setTEtapa(ev.clave === 'material' ? 'argumentos' : ev.clave);
                 if (ev.tipo === 'error') throw new ErrorToulmin(ev.mensaje, 500);
                 if (ev.tipo === 'listo') {
+                    llego = true;
                     setResultado(ev.resultado);
                     setInsertados([]);
                     setTEstado('listo');
                 }
             }
+            if (!llego) throw new ErrorToulmin('La conexión se cortó antes de terminar. Vuelve a intentarlo.', 0);
             onConsultaGastada?.();
         } catch (e) {
-            if ((e as Error)?.name === 'AbortError') return;
+            if ((e as Error)?.name === 'AbortError' || control.signal.aborted) {
+                if (tAbort.current === control) setTEstado(resultado ? 'listo' : 'inactivo');
+                return;
+            }
             const status = e instanceof ErrorToulmin ? e.status : 0;
             setTError(status === 429
                 ? 'Se te acabaron las consultas de este periodo.'
@@ -287,10 +345,19 @@ export default function ConstructorDemanda({
     }
 
     // ── 3 · REDACTAR (el /chat de siempre) ───────────────────────────────
+    function pedirRedaccion(modo: 'reemplazar' | 'final') {
+        // Sustituir una hoja con trabajo pide confirmación: es lo único que borra.
+        if (modo === 'reemplazar' && hoja.current && !hoja.current.vacia()) { setConfirmarReemplazo(true); return; }
+        setConfirmarReemplazo(false);
+        void redactar(modo);
+    }
+
     async function redactar(modo: 'reemplazar' | 'final') {
         if (!casoListo) { setPaso('caso'); return; }
-        abortar.current?.abort();
-        abortar.current = new AbortController();
+        setConfirmarReemplazo(false);
+        rAbort.current?.abort();
+        const control = new AbortController();
+        rAbort.current = control;
         setREstado('trabajando'); setRError('');
         setVista('documento');
         const argumentos = resultado?.argumentos?.length
@@ -314,31 +381,52 @@ ${caso.pretension.trim()}${argumentos}`;
             const sesion = await getSession();
             for await (const trozo of streamChat(
                 [{ role: 'user', content: mensaje }], caso.estado || undefined, 30,
-                sesion?.access_token, false, sesion?.user?.id, undefined, undefined, undefined, abortar.current.signal,
+                sesion?.access_token, false, sesion?.user?.id, undefined, undefined, undefined, control.signal,
             )) {
+                // Un reintento de streamChat vuelve a mandar la respuesta ENTERA: lo de antes se tira.
+                if (trozo.includes('<!--RETRY:')) { texto = ''; continue; }
                 texto += trozo;
                 const ahora = Date.now();
                 if (ahora - ultimo > 250) {
                     ultimo = ahora;
-                    setVistaPrevia(markdownAHtml(texto) || '<p style="text-align:center;color:#8b7355"><i>Iurexia está analizando el caso y preparando la demanda…</i></p>');
+                    const previa = analizarRespuesta(texto);
+                    setVistaPrevia((!previa.error && markdownAHtml(previa.texto)) || '<p style="text-align:center;color:#8b7355"><i>Iurexia está analizando el caso y preparando la demanda…</i></p>');
                 }
             }
-            const html = markdownAHtml(texto);
-            if (!limpiarMarcadores(texto)) throw new Error('La redacción llegó vacía.');
+            const r = analizarRespuesta(texto);
+            if (r.error) throw new Error(r.error);
+            const html = markdownAHtml(r.texto);
+            if (!html) throw new Error('La redacción llegó vacía. Vuelve a intentarlo.');
+            if (modo === 'reemplazar' && hoja.current && !hoja.current.vacia()) setRespaldo(hoja.current.raiz()?.innerHTML ?? null);
+            else setRespaldo(null);
             if (modo === 'reemplazar' || hoja.current?.vacia()) hoja.current?.reemplazar(html);
             else hoja.current?.insertar(html, 'final');
             setREstado('listo');
-            mostrarAviso('La demanda quedó en el documento. Revísala y ajústala a tu caso.');
+            mostrarAviso(r.truncada
+                ? 'La redacción quedó incompleta: pulsa «Añadir al final» para que continúe.'
+                : 'La demanda quedó en el documento. Revísala y ajústala a tu caso.');
             onConsultaGastada?.();
         } catch (e) {
-            if ((e as Error)?.name !== 'AbortError') {
+            if ((e as Error)?.name === 'AbortError' || control.signal.aborted) {
+                if (rAbort.current === control) setREstado('inactivo');
+            } else {
                 const m = (e as Error)?.message || '';
-                setRError(/429|consultas/i.test(m) ? 'Se te acabaron las consultas de este periodo.' : 'No se pudo redactar. Vuelve a intentarlo.');
+                setRError(/429|consultas/i.test(m) ? 'Se te acabaron las consultas de este periodo.'
+                    : /suspendida|No se te descontó|vacía/i.test(m) ? m
+                    : 'No se pudo redactar. Vuelve a intentarlo.');
                 setREstado('error');
             }
         } finally {
-            setVistaPrevia(null);
+            if (rAbort.current === control) setVistaPrevia(null);
         }
+    }
+
+    function recuperarAnterior() {
+        if (respaldo == null) return;
+        hoja.current?.reemplazar(respaldo);
+        setRespaldo(null);
+        setVista('documento');
+        mostrarAviso('Se recuperó el documento anterior.');
     }
 
     // ── 4 · REVISAR (el /chat de siempre) ────────────────────────────────
@@ -346,8 +434,9 @@ ${caso.pretension.trim()}${argumentos}`;
         const raiz = hoja.current?.raiz();
         const texto = raiz ? textoDeHtml(raiz) : '';
         if (texto.length < 200) { setVError('El documento todavía es muy corto para revisarlo.'); setVEstado('error'); return; }
-        abortar.current?.abort();
-        abortar.current = new AbortController();
+        vAbort.current?.abort();
+        const control = new AbortController();
+        vAbort.current = control;
         setVEstado('trabajando'); setVError(''); setRevisionHtml('');
         const mensaje = `Revisa este borrador de ${tipoSel.etiqueta.toLowerCase()}${caso.estado ? ` (${getEstadoLabel(caso.estado)})` : ''} y dime, con fundamento en la ley y la jurisprudencia aplicables, qué fundamentos legales o requisitos le faltan o están mal citados antes de presentarlo. Sé concreto: artículo por artículo, y termina con una lista de cambios concretos que debo hacer.
 
@@ -359,18 +448,33 @@ ${texto.slice(0, 60000)}`;
             const sesion = await getSession();
             for await (const trozo of streamChat(
                 [{ role: 'user', content: mensaje }], caso.estado || undefined, 30,
-                sesion?.access_token, false, sesion?.user?.id, undefined, undefined, undefined, abortar.current.signal,
+                sesion?.access_token, false, sesion?.user?.id, undefined, undefined, undefined, control.signal,
             )) {
+                if (trozo.includes('<!--RETRY:')) { salida = ''; continue; }
                 salida += trozo;
                 const ahora = Date.now();
-                if (ahora - ultimo > 300) { ultimo = ahora; setRevisionHtml(markdownAHtml(salida) || '<p><i>Iurexia está leyendo el documento…</i></p>'); }
+                if (ahora - ultimo > 300) {
+                    ultimo = ahora;
+                    const previa = analizarRespuesta(salida);
+                    setRevisionHtml((!previa.error && markdownAHtml(previa.texto)) || '<p><i>Iurexia está leyendo el documento…</i></p>');
+                }
             }
-            setRevisionHtml(markdownAHtml(salida));
+            const r = analizarRespuesta(salida);
+            if (r.error) throw new Error(r.error);
+            const html = markdownAHtml(r.texto);
+            if (!html) throw new Error('La revisión llegó vacía. Vuelve a intentarlo.');
+            setRevisionHtml(html);
             setVEstado('listo');
             onConsultaGastada?.();
         } catch (e) {
-            if ((e as Error)?.name !== 'AbortError') {
-                setVError('No se pudo revisar. Vuelve a intentarlo.');
+            if ((e as Error)?.name === 'AbortError' || control.signal.aborted) {
+                if (vAbort.current === control) { setVEstado('inactivo'); setRevisionHtml(''); }
+            } else {
+                const m = (e as Error)?.message || '';
+                setRevisionHtml('');
+                setVError(/429|consultas/i.test(m) ? 'Se te acabaron las consultas de este periodo.'
+                    : /suspendida|No se te descontó|vacía/i.test(m) ? m
+                    : 'No se pudo revisar. Vuelve a intentarlo.');
                 setVEstado('error');
             }
         }
@@ -401,7 +505,7 @@ ${texto.slice(0, 60000)}`;
 
     const botonPrimario = 'inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-charcoal-900 px-4 text-[13.5px] font-semibold text-white transition-colors hover:bg-charcoal-800 disabled:cursor-not-allowed disabled:bg-charcoal-900/40';
     const botonSecundario = 'inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-charcoal-900/15 bg-white px-4 text-[13.5px] font-medium text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:cursor-not-allowed disabled:opacity-50';
-    const campo = 'w-full rounded-lg border border-charcoal-900/15 bg-white px-3 py-2.5 text-[14px] leading-relaxed text-charcoal-900 placeholder:text-charcoal-900/35 focus:border-accent-gold focus:outline-none focus:ring-2 focus:ring-accent-gold/25';
+    const campo = 'w-full rounded-lg border border-charcoal-900/15 bg-white px-3 py-2.5 text-base leading-relaxed text-charcoal-900 placeholder:text-charcoal-900/45 sm:text-[14px] focus:border-accent-gold focus:outline-none focus:ring-2 focus:ring-accent-gold/25';
     const rotulo = 'mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-accent-brown';
 
     if (!enCliente) return null;
@@ -415,16 +519,18 @@ ${texto.slice(0, 60000)}`;
             role={disp.lateral ? 'complementary' : 'dialog'}
             aria-modal={disp.lateral ? undefined : true}
             aria-label="Constructor de demanda"
+            ref={raizRef}
+            onKeyDown={teclaDelDialogo}
         >
             {/* ── CABECERA ─────────────────────────────────────────────── */}
             <header className="grid h-14 shrink-0 grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-charcoal-900/10 bg-cream-100 px-2 sm:gap-3 sm:px-4">
                 {disp.lateral ? (
-                    <button type="button" onClick={onCerrar} aria-label="Recoger el constructor"
+                    <button type="button" onClick={onCerrar} aria-label="Recoger el constructor" data-foco-inicial
                         className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-medium text-charcoal-900/75 transition-colors hover:bg-charcoal-900/5 hover:text-charcoal-900">
                         <X className="h-4 w-4" /> Recoger
                     </button>
                 ) : (
-                    <button type="button" onClick={onCerrar}
+                    <button type="button" onClick={onCerrar} data-foco-inicial
                         className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-medium text-charcoal-900/75 transition-colors hover:bg-charcoal-900/5 hover:text-charcoal-900">
                         <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Volver al chat</span><span className="sm:hidden">Chat</span>
                     </button>
@@ -437,7 +543,7 @@ ${texto.slice(0, 60000)}`;
                         onChange={(e) => setTitulo(e.target.value)}
                         placeholder={tituloEfectivo}
                         aria-label="Nombre del documento"
-                        className="w-full max-w-[420px] truncate rounded-md bg-transparent px-2 py-1 text-center text-[14px] font-medium text-charcoal-900 placeholder:text-charcoal-900/60 hover:bg-charcoal-900/[0.04] focus:bg-white focus:outline-none focus:ring-1 focus:ring-accent-gold/50"
+                        className="w-full max-w-[420px] truncate rounded-md bg-transparent px-2 py-1 text-center text-base font-medium text-charcoal-900 placeholder:text-charcoal-900/60 sm:text-[14px] hover:bg-charcoal-900/[0.04] focus:bg-white focus:outline-none focus:ring-1 focus:ring-accent-gold/50"
                     />
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -468,9 +574,13 @@ ${texto.slice(0, 60000)}`;
                 ))}
             </div>
 
-            <div className={`min-h-0 flex-1 ${disp.dos ? 'grid grid-cols-[380px_1fr]' : ''}`}>
+            {/* En pestañas, la oculta NO se quita del flujo con display:none: eso
+                ponía su desplazamiento a cero y el scrollIntoView de una inserción
+                caía sobre una caja sin medida. Se apila invisible debajo. */}
+            <div className={`relative min-h-0 flex-1 ${disp.dos ? 'grid grid-cols-[380px_1fr]' : ''}`}>
                 {/* ── LOS PASOS ─────────────────────────────────────────── */}
-                <aside className={`h-full min-h-0 overflow-y-auto border-charcoal-900/10 bg-cream-200/60 ${disp.dos ? 'block border-r' : vista === 'pasos' ? 'block' : 'hidden'}`}>
+                <aside aria-hidden={!disp.dos && vista !== 'pasos' ? true : undefined}
+                    className={`h-full min-h-0 overflow-y-auto border-charcoal-900/10 bg-cream-200/60 ${disp.dos ? 'block border-r' : vista === 'pasos' ? 'block' : 'invisible absolute inset-0'}`}>
                     <ol className="mx-auto grid max-w-2xl gap-2.5 p-3 sm:p-4">
                         {PASOS.map((p) => {
                             const activo = paso === p.id;
@@ -501,7 +611,7 @@ ${texto.slice(0, 60000)}`;
                                                         </label>
                                                         <label className="block">
                                                             <span className={rotulo}>Entidad</span>
-                                                            <select className={campo} value={caso.estado} onChange={(e) => setCaso({ ...caso, estado: e.target.value })}>
+                                                            <select className={campo} value={caso.estado} onChange={(e) => { entidadElegida.current = true; setCaso({ ...caso, estado: e.target.value }); }}>
                                                                 <option value="">Sin entidad (sólo federal)</option>
                                                                 {ESTADOS_SOLO.map((e) => <option key={e.value} value={e.value}>{e.label}</option>)}
                                                             </select>
@@ -519,7 +629,7 @@ ${texto.slice(0, 60000)}`;
                                                             onChange={(e) => setCaso({ ...caso, pretension: e.target.value })}
                                                             placeholder="Las prestaciones o pretensiones que reclamas." />
                                                     </label>
-                                                    <p className="text-[12px] leading-relaxed text-charcoal-900/55">
+                                                    <p className="text-[12px] leading-relaxed text-charcoal-900/70">
                                                         Sin nombres reales si no hace falta: para fundar basta con los hechos.
                                                     </p>
                                                     <button type="button" className={botonPrimario} disabled={!casoListo} onClick={() => setPaso('toulmin')}>
@@ -553,7 +663,7 @@ ${texto.slice(0, 60000)}`;
                                                                     );
                                                                 })}
                                                             </ul>
-                                                            <p className="mt-2.5 text-[11.5px] text-charcoal-900/50">Tarda alrededor de un minuto.</p>
+                                                            <p className="mt-2.5 text-[12px] text-charcoal-900/70">Tarda alrededor de un minuto.</p>
                                                         </div>
                                                     ) : (
                                                         <button type="button" className={botonPrimario} disabled={!casoListo} onClick={estructurar}>
@@ -606,20 +716,34 @@ ${texto.slice(0, 60000)}`;
                                                     {rEstado === 'trabajando' ? (
                                                         <div className="flex items-center gap-2.5 rounded-lg border border-charcoal-900/10 bg-cream-100 px-3 py-3 text-[13px] text-charcoal-900">
                                                             <Loader2 className="h-4 w-4 animate-spin text-accent-brown" /> Redactando en el documento…
-                                                            <button type="button" onClick={() => abortar.current?.abort()} className="ml-auto text-[12px] font-medium text-charcoal-900/60 underline-offset-2 hover:underline">Detener</button>
+                                                            <button type="button" onClick={() => rAbort.current?.abort()} className="ml-auto h-8 rounded-md border border-charcoal-900/15 bg-white px-3 text-[12.5px] font-medium text-charcoal-900 transition-colors hover:border-charcoal-900/35">Detener</button>
+                                                        </div>
+                                                    ) : confirmarReemplazo ? (
+                                                        <div className="grid gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                                                            <p className="text-[13px] leading-relaxed text-amber-950">La hoja ya tiene texto. ¿Lo sustituyo por la demanda nueva o la añado al final?</p>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <button type="button" className={botonSecundario} onClick={() => void redactar('final')}>Añadir al final</button>
+                                                                <button type="button" className={botonPrimario} onClick={() => void redactar('reemplazar')}>Sustituir</button>
+                                                            </div>
+                                                            <button type="button" onClick={() => setConfirmarReemplazo(false)} className="h-8 text-[12.5px] font-medium text-charcoal-900/70 hover:text-charcoal-900">Cancelar</button>
                                                         </div>
                                                     ) : (
                                                         <div className="grid gap-2">
-                                                            <button type="button" className={botonPrimario} disabled={!casoListo} onClick={() => redactar('reemplazar')}>
+                                                            <button type="button" className={botonPrimario} disabled={!casoListo} onClick={() => pedirRedaccion('reemplazar')}>
                                                                 <ScrollText className="h-4 w-4 text-accent-gold" /> Redactar
                                                                 <span className="rounded bg-white/15 px-1.5 py-0.5 text-[10.5px] font-medium text-white/80">1 consulta</span>
                                                             </button>
-                                                            <button type="button" className={botonSecundario} disabled={!casoListo} onClick={() => redactar('final')}>
+                                                            <button type="button" className={botonSecundario} disabled={!casoListo} onClick={() => pedirRedaccion('final')}>
                                                                 Añadir al final
                                                             </button>
                                                         </div>
                                                     )}
-                                                    <p className="text-[11.5px] leading-relaxed text-charcoal-900/50">«Redactar» sustituye lo que haya en la hoja; «Añadir al final» lo conserva.</p>
+                                                    <p className="text-[12px] leading-relaxed text-charcoal-900/70">«Redactar» sustituye lo que haya en la hoja; «Añadir al final» lo conserva.</p>
+                                                    {respaldo != null && rEstado === 'listo' && (
+                                                        <button type="button" onClick={recuperarAnterior} className="justify-self-start text-[12.5px] font-medium text-accent-brown underline-offset-2 hover:underline">
+                                                            Recuperar el documento anterior
+                                                        </button>
+                                                    )}
                                                     {rEstado === 'error' && <AvisoError mensaje={rError} />}
                                                 </div>
                                             )}
@@ -663,7 +787,7 @@ ${texto.slice(0, 60000)}`;
                                                             <Printer className="h-4 w-4" /> Imprimir o PDF
                                                         </button>
                                                     </div>
-                                                    <p className="text-[11.5px] leading-relaxed text-charcoal-900/50">
+                                                    <p className="text-[12px] leading-relaxed text-charcoal-900/70">
                                                         Revisa y firma tú el escrito: Iurexia orienta y fundamenta, no sustituye tu criterio profesional.
                                                     </p>
                                                 </div>
@@ -677,15 +801,27 @@ ${texto.slice(0, 60000)}`;
                 </aside>
 
                 {/* ── LA HOJA ───────────────────────────────────────────── */}
-                <section className={`h-full min-h-0 flex-col ${disp.dos || vista === 'documento' ? 'flex' : 'hidden'}`} aria-label="Documento">
+                <section aria-hidden={!disp.dos && vista !== 'documento' ? true : undefined}
+                    className={`flex h-full min-h-0 flex-col ${disp.dos || vista === 'documento' ? '' : 'invisible absolute inset-0'}`} aria-label="Documento">
+                    {rEstado === 'trabajando' && (
+                        <div className="flex shrink-0 items-center gap-2.5 border-b border-charcoal-900/10 bg-charcoal-900 px-3 py-1.5 text-[13px] text-white sm:px-4">
+                            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-accent-gold" />
+                            <span className="min-w-0 truncate">Redactando la demanda…</span>
+                            <button type="button" onClick={() => rAbort.current?.abort()}
+                                className="ml-auto h-8 shrink-0 rounded-md border border-white/25 px-3 text-[12.5px] font-medium text-white transition-colors hover:bg-white/10">
+                                Detener
+                            </button>
+                        </div>
+                    )}
                     <Hoja ref={hoja} htmlInicial={htmlRef.current}
                         onCambio={(h) => { htmlRef.current = h; guardar(); }}
                         vistaPrevia={vistaPrevia} />
                 </section>
             </div>
 
-            {aviso && (
-                <div role="status" className={`pointer-events-none fixed bottom-5 z-50 flex justify-center px-4 ${disp.lateral ? 'right-0' : 'inset-x-0'}`} style={disp.lateral ? { width: disp.ancho } : undefined}>
+            {/* La región de estado está SIEMPRE montada: si nace ya con el texto, el lector de pantalla no la anuncia. */}
+            <div role="status" aria-live="polite" className={`pointer-events-none fixed bottom-5 z-50 flex justify-center px-4 ${disp.lateral ? 'right-0' : 'inset-x-0'}`} style={disp.lateral ? { width: disp.ancho } : undefined}>
+                {aviso && (
                     <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-full bg-charcoal-900 px-4 py-2.5 text-[13px] text-white shadow-lg">
                         <Check className="h-4 w-4 shrink-0 text-accent-gold" />
                         <span className="min-w-0">{aviso}</span>
@@ -693,8 +829,8 @@ ${texto.slice(0, 60000)}`;
                             <button type="button" onClick={() => setVista('documento')} className="shrink-0 font-semibold text-accent-gold">Ver</button>
                         )}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }

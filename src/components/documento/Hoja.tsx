@@ -65,17 +65,43 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
     const avisar = () => {
         if (espera.current) window.clearTimeout(espera.current);
         espera.current = window.setTimeout(() => {
+            espera.current = null;
             if (hoja.current) cambio.current(hoja.current.innerHTML);
         }, 600);
     };
-    useEffect(() => () => {
-        if (espera.current) window.clearTimeout(espera.current);
-        if (hoja.current) cambio.current(hoja.current.innerHTML);
+    /* LO ÚLTIMO QUE SE ESCRIBIÓ NO SE PIERDE AL SALIR. El nodo se toma al
+       montar: en la limpieza React ya soltó `hoja.current`, y guardar desde
+       ahí no guardaba nada. Además se guarda al ocultar o cerrar la pestaña. */
+    useEffect(() => {
+        const nodo = hoja.current;
+        const volcar = () => {
+            if (espera.current) { window.clearTimeout(espera.current); espera.current = null; }
+            if (nodo) cambio.current(nodo.innerHTML);
+        };
+        const alOcultar = () => { if (document.visibilityState === 'hidden') volcar(); };
+        // Enter crea <p>, no <div>: así el exportador, la sangría y la revisión lo leen igual.
+        try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch { /* navegador sin comando */ }
+        window.addEventListener('pagehide', volcar);
+        document.addEventListener('visibilitychange', alOcultar);
+        return () => {
+            window.removeEventListener('pagehide', volcar);
+            document.removeEventListener('visibilitychange', alOcultar);
+            volcar();
+        };
     }, []);
+    const lienzo = useRef<HTMLDivElement | null>(null);
+    /* Mientras se redacta, la vista previa crece; si el abogado está abajo
+       (siguiendo la escritura), se le mantiene abajo. Si subió a leer, no. */
+    useEffect(() => {
+        const c = lienzo.current;
+        if (!c || vistaPrevia == null) return;
+        if (c.scrollHeight - c.scrollTop - c.clientHeight < 160) c.scrollTop = c.scrollHeight;
+    }, [vistaPrevia]);
 
     useImperativeHandle(ref, () => ({
         raiz: () => hoja.current,
-        vacia: () => !(hoja.current?.innerText || '').trim(),
+        // textContent y no innerText: con la hoja oculta tras su pestaña, innerText devuelve vacío.
+        vacia: () => !(hoja.current?.textContent || '').trim(),
         reemplazar: (html: string) => {
             if (!hoja.current) return;
             hoja.current.innerHTML = html;
@@ -157,7 +183,7 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
     }
 
     function sangrar() {
-        const bloques = bloquesSeleccionados().filter((b) => b.tagName === 'P');
+        const bloques = bloquesSeleccionados().filter((b) => b.tagName === 'P' || b.tagName === 'DIV');
         if (!bloques.length) return;
         const quitar = bloques.every((b) => parseFloat(b.style.textIndent) > 0);
         bloques.forEach((b) => { b.style.textIndent = quitar ? '' : '1.25cm'; });
@@ -230,16 +256,18 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
                 </div>
             )}
 
-            <div className="min-h-0 flex-1 overflow-y-auto bg-cream-300/70 px-3 py-4 sm:px-6 sm:py-8">
+            <div ref={lienzo} className="min-h-0 flex-1 overflow-y-auto bg-cream-300/70 px-3 py-4 sm:px-6 sm:py-8">
                 {/* LA PÁGINA. Márgenes en % del ancho, proporcionales a los del
                     Word: 3 cm de 21.59 a la izquierda (13.9 %), 2 cm a la
                     derecha (9.3 %) y 2.5 cm arriba y abajo (11.6 %). Así la hoja
                     guarda su proporción en un teléfono y en un monitor. */}
-                <div className="relative mx-auto w-full max-w-[816px] bg-white shadow-[0_1px_2px_rgba(20,18,16,0.06),0_12px_40px_-12px_rgba(20,18,16,0.18)] ring-1 ring-charcoal-900/[0.06]">
+                <div aria-busy={vistaPrevia != null} className="relative mx-auto w-full max-w-[816px] bg-white shadow-[0_1px_2px_rgba(20,18,16,0.06),0_12px_40px_-12px_rgba(20,18,16,0.18)] ring-1 ring-charcoal-900/[0.06]">
+                    {/* LA VISTA PREVIA VA EN EL FLUJO y la hoja sale de él: la
+                        altura la marca lo que se va escribiendo. Encima y con
+                        overflow oculto se cortaba a la altura de la hoja anterior. */}
                     {vistaPrevia != null && (
                         <div
-                            aria-live="polite"
-                            className="hoja-escrito absolute inset-0 z-[1] overflow-hidden bg-white pb-[11.6%] pl-[13.9%] pr-[9.3%] pt-[11.6%]"
+                            className="hoja-escrito min-h-[70vh] bg-white pb-[11.6%] pl-[13.9%] pr-[9.3%] pt-[11.6%]"
                             dangerouslySetInnerHTML={{ __html: vistaPrevia }}
                         />
                     )}
@@ -258,7 +286,7 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
                         onBlur={() => { if (hoja.current) cambio.current(hoja.current.innerHTML); }}
                         onPaste={pegar}
                         dangerouslySetInnerHTML={inicial.current}
-                        className={`hoja-escrito min-h-[70vh] pb-[11.6%] pl-[13.9%] pr-[9.3%] pt-[11.6%] outline-none ${vistaPrevia != null ? 'invisible' : ''}`}
+                        className={`hoja-escrito min-h-[70vh] pb-[11.6%] pl-[13.9%] pr-[9.3%] pt-[11.6%] outline-none ${vistaPrevia != null ? 'invisible absolute inset-0 overflow-hidden' : ''}`}
                     />
                 </div>
             </div>
@@ -301,7 +329,7 @@ function Eleccion({ rotulo, ancho, opciones, onElegir }: {
                 if (v !== '') onElegir(v);
                 e.target.value = '';
             }}
-            className={`h-8 cursor-pointer rounded-md border border-charcoal-900/10 bg-white/70 px-1.5 text-[11px] text-charcoal-900/70 transition-colors hover:bg-white hover:text-charcoal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-gold max-sm:order-last ${ancho}`}
+            className={`h-8 cursor-pointer rounded-md border border-charcoal-900/10 bg-white/70 px-1.5 text-base text-charcoal-900/70 sm:text-[11px] transition-colors hover:bg-white hover:text-charcoal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-gold max-sm:order-last ${ancho}`}
         >
             <option value="">{rotulo}</option>
             {opciones.map((o) => <option key={o.valor} value={o.valor}>{o.texto}</option>)}
