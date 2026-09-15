@@ -285,10 +285,15 @@ export default function ChatPage() {
         setTimeout(() => setCounterPulse(false), 600);
     }, []);
 
+    // El botón Toulmin DESPLIEGA y RECOGE el constructor: en escritorio es un
+    // panel junto al chat, así que volver a pulsarlo es la forma natural de
+    // quitarlo de en medio.
     const abrirConstructor = useCallback((paso: 'caso' | 'toulmin') => {
-        setConstructorPaso(paso);
         setConstructorMontado(true);
-        setConstructorAbierto(true);
+        setConstructorAbierto((abierto) => {
+            if (!abierto) setConstructorPaso(paso);
+            return !abierto;
+        });
     }, []);
 
     const llevarAlDocumento = useCallback((markdown: string) => {
@@ -794,12 +799,12 @@ export default function ChatPage() {
                 onToggleGuide={handleToggleGuide}
             />
 
-            <div className="flex flex-col h-screen md:ml-[var(--sidebar-w,18rem)] transition-[margin] duration-300">
+            <div className="flex flex-col h-screen md:ml-[var(--sidebar-w,18rem)] lg:mr-[var(--constructor-w,0px)] transition-[margin] duration-300">
                 {/* Encabezado alineado con el sistema de la barra pública
                     (3-ago-2026): todo control mide h-8, radio único, sin
                     píldoras ni degradados. Sálvame conserva su rojo por ser el
                     módulo de urgencia; el resto vive en la paleta de la casa. */}
-                <header className="fixed top-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 h-14">
+                <header className="fixed top-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] z-30 bg-cream-300/80 backdrop-blur-md border-b border-black/5 h-14">
                     {/* Dos grupos, no una fila apelotonada a la derecha
                         (3-sep-2026). A la izquierda las cuatro herramientas de
                         trabajo, con el mismo peso entre ellas; a la derecha el
@@ -945,7 +950,7 @@ export default function ChatPage() {
 
                 {/* Progressive Nudge Banner — shows when queries running low */}
                 {!isPro && !nudgeBannerDismissed && queriesRemaining > 0 && queriesRemaining <= 2 && hasMessages && (
-                    <div className="fixed top-14 left-0 right-0 md:left-[var(--sidebar-w,18rem)] z-25 animate-in slide-in-from-top duration-500">
+                    <div className="fixed top-14 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] z-25 animate-in slide-in-from-top duration-500">
                         <div className="bg-gradient-to-r from-amber-50 via-amber-100/80 to-yellow-50 border-b border-accent-gold/20 px-4 py-2.5">
                             <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-2 min-w-0">
@@ -1056,6 +1061,7 @@ export default function ChatPage() {
                                     onMateriaChange={setSelectedMateria}
 
                                     onAbrirConstructor={abrirConstructor}
+                                    constructorAbierto={constructorAbierto}
                                 />
 
                                 <div className="mt-4 text-center">
@@ -1168,7 +1174,7 @@ export default function ChatPage() {
                 </main>
 
                 {hasMessages && (
-                    <div className="fixed bottom-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] bg-gradient-to-t from-cream-300 via-cream-300 pt-8 pb-6 px-4 z-20">
+                    <div className="fixed bottom-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] bg-gradient-to-t from-cream-300 via-cream-300 pt-8 pb-6 px-4 z-20">
                         <ChatInput
                             onSubmit={handleSendMessage}
                             onDocumentSubmit={handleDocumentSubmit}
@@ -1187,6 +1193,7 @@ export default function ChatPage() {
                             onMateriaChange={setSelectedMateria}
 
                             onAbrirConstructor={abrirConstructor}
+                                    constructorAbierto={constructorAbierto}
                         />
                     </div>
                 )}

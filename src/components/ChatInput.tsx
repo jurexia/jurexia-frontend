@@ -23,7 +23,7 @@ import {
     Globe
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
-import { FileText, X, Network, FileSignature } from 'lucide-react';
+import { FileText, X, Network } from 'lucide-react';
 import TextEnhanceModal from './TextEnhanceModal';
 import DraftModal, { DraftRequest } from './DraftModal';
 import SentenciaModal from './SentenciaModal';
@@ -115,8 +115,10 @@ interface ChatInputProps {
     onFueroChange?: (fueros: string[]) => void;
     selectedMateria?: string;
     onMateriaChange?: (materia: string) => void;
-    /** Abre el constructor de demanda (editor Word + pasos) en el paso pedido. */
+    /** Despliega o recoge el constructor de demanda (editor Word + pasos + Toulmin). */
     onAbrirConstructor?: (paso: 'caso' | 'toulmin') => void;
+    /** Si el constructor está desplegado: el botón Toulmin se ve pulsado. */
+    constructorAbierto?: boolean;
 }
 
 /* Fuentes de internet encendidas EN ESTA VISITA. A nivel de módulo a
@@ -143,6 +145,7 @@ export default function ChatInput({
     selectedMateria = '',
     onMateriaChange,
     onAbrirConstructor,
+    constructorAbierto = false,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -812,7 +815,12 @@ ${draftRequest.descripcion}`;
                     {/* Action Cards Row — Blue Cards */}
                     <div className="mt-2 pt-2 border-t border-gray-100">
                         {/* Buscar / Redactar toggle + Pro — stays compact */}
-                        <div className="flex items-center gap-1 mb-2">
+                        {/* LA FILA DEL MODO. Buscar/Redactar a la izquierda y Toulmin al
+                            final, alineado con el borde derecho de la rejilla de
+                            abajo (David, 15-sep-2026). En teléfono los tres
+                            escalones de Redactar bajan a su propio renglón para que
+                            nada se salga del cuadro. */}
+                        <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 mb-2">
                             {/* Consulta rápida: sólo el rayo. Se enciende en el
                                 dorado de la casa —el amarillo de Iurexia— y el
                                 nombre vive en el tooltip, que es lo que pidió
@@ -905,7 +913,7 @@ ${draftRequest.descripcion}`;
                                 el abogado sepa con qué motor va a escribir, en vez de
                                 deducirlo de un interruptor apagado. */}
                             {chatMode === 'redactar' && (
-                                <div className="inline-flex items-center gap-1 flex-shrink-0">
+                                <div className="order-last flex basis-full flex-wrap items-center gap-1 sm:order-none sm:basis-auto sm:flex-nowrap sm:flex-shrink-0">
                                     {NIVELES_REDACCION.map(nivel => {
                                         const elegido = nivelRedaccion === nivel.id;
                                         const bloqueado = !nivel.permitido(accesoRedaccion);
@@ -934,6 +942,25 @@ ${draftRequest.descripcion}`;
                                         );
                                     })}
                                 </div>
+                            )}
+
+                            {onAbrirConstructor && (
+                                <button
+                                    type="button"
+                                    data-guide="toulmin"
+                                    onClick={() => onAbrirConstructor('toulmin')}
+                                    aria-pressed={constructorAbierto}
+                                    title={constructorAbierto
+                                        ? 'Recoger el constructor de demanda'
+                                        : 'Toulmin: construir la demanda con argumentos citados y llevarla a Word'}
+                                    className={`ml-auto flex h-[26px] flex-shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-semibold tracking-wide text-white transition-all duration-200
+                                        ${constructorAbierto
+                                            ? 'bg-charcoal-900 ring-2 ring-accent-gold/70'
+                                            : 'bg-charcoal-900 hover:bg-charcoal-800'}`}
+                                >
+                                    <Network className="h-3 w-3 text-accent-gold" />
+                                    Toulmin
+                                </button>
                             )}
                         </div>
 
@@ -1017,46 +1044,6 @@ ${draftRequest.descripcion}`;
                                 {!canAccessJurimetria && <Lock className="w-2 h-2 flex-shrink-0 opacity-60" />}
                             </button>
 
-                            {/* ── EL CONSTRUCTOR DE DEMANDA ─────────────────────
-                                David, 15-sep-2026: «desplegarlo con un botón bien
-                                logrado abajo del chat». Van en la MISMA rejilla de
-                                cuatro columnas, dos celdas cada uno: sus bordes
-                                caen exactamente bajo los de arriba en teléfono,
-                                tableta y escritorio, y a 375 px cada uno mide el
-                                doble que los de arriba, así que su texto no se
-                                recorta. El tono papel y oro los separa de las
-                                herramientas negras: éstos no consultan, construyen. */}
-                            {onAbrirConstructor && (
-                                <>
-                                    <button
-                                        type="button"
-                                        data-guide="constructor"
-                                        onClick={() => onAbrirConstructor('caso')}
-                                        title="Construir la demanda paso a paso en un documento Word"
-                                        className="col-span-2 flex items-center justify-center gap-1.5 px-2 py-[7px] rounded-md text-[10px] sm:text-[11px] font-semibold whitespace-nowrap
-                                            border border-accent-gold/50 bg-gradient-to-b from-[#fcf8ee] to-[#f2e7cb] text-charcoal-900
-                                            shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_1px_2px_rgba(139,115,85,0.18)]
-                                            transition-all duration-200 hover:border-accent-gold hover:to-[#ecdcb6]"
-                                    >
-                                        <FileSignature className="w-3 h-3 flex-shrink-0 text-accent-brown" />
-                                        <span className="truncate">Construir demanda</span>
-                                        <span className="hidden sm:inline rounded bg-charcoal-900 px-1 py-px text-[8.5px] font-bold tracking-wide text-accent-gold">WORD</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        data-guide="toulmin"
-                                        onClick={() => onAbrirConstructor('toulmin')}
-                                        title="Estructurar argumentos con el modelo de Toulmin, citando Constitución, tratados y jurisprudencia"
-                                        className="col-span-2 flex items-center justify-center gap-1.5 px-2 py-[7px] rounded-md text-[10px] sm:text-[11px] font-semibold whitespace-nowrap
-                                            border border-accent-gold/50 bg-gradient-to-b from-[#fcf8ee] to-[#f2e7cb] text-charcoal-900
-                                            shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_1px_2px_rgba(139,115,85,0.18)]
-                                            transition-all duration-200 hover:border-accent-gold hover:to-[#ecdcb6]"
-                                    >
-                                        <Network className="w-3 h-3 flex-shrink-0 text-accent-brown" />
-                                        <span className="truncate">Argumentos Toulmin</span>
-                                    </button>
-                                </>
-                            )}
                         </div>
                     </div>
 

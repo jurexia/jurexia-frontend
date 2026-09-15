@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
     AlertTriangle, ArrowDownToLine, Check, ChevronLeft, FileText, ListChecks, Loader2, Network,
-    PenLine, Printer, ScrollText,
+    PenLine, Printer, ScrollText, X,
 } from 'lucide-react';
 import { Hoja, type HojaAPI } from './Hoja';
 import { TarjetaToulmin } from './TarjetaToulmin';
@@ -142,6 +142,44 @@ export default function ConstructorDemanda({
     const [vError, setVError] = useState('');
     const [revisionHtml, setRevisionHtml] = useState(guardado?.revisionHtml ?? '');
 
+    /* ── DÓNDE SE DESPLIEGA ────────────────────────────────────────────
+       David, 15-sep-2026: «en la misma ventana, si es posible sin salir del
+       chat». En escritorio el constructor se ACOPLA a la derecha y el chat se
+       estrecha a su lado (la página lee `--constructor-w`), dejándole al chat
+       al menos 420 px. Si no caben los dos —pantallas chicas, tabletas y
+       teléfonos— se abre a pantalla completa con su botón de volver.
+       Dentro, pasos y hoja van lado a lado desde 960 px de panel; con menos,
+       en dos pestañas del mismo ancho. */
+    const [disp, setDisp] = useState({ lateral: false, ancho: 0, dos: false });
+    useEffect(() => {
+        const raiz = document.documentElement;
+        const calcular = () => {
+            const vw = window.innerWidth;
+            const rem = parseFloat(getComputedStyle(raiz).fontSize) || 16;
+            const sw = getComputedStyle(raiz).getPropertyValue('--sidebar-w').trim();
+            const barra = vw >= 768 ? (sw.endsWith('rem') ? parseFloat(sw) * rem : sw.endsWith('px') ? parseFloat(sw) : 18 * rem) : 0;
+            const CHAT_MIN = 420;
+            let ancho = Math.round(Math.min(1120, Math.max(640, vw * 0.55)));
+            if (vw - barra - ancho < CHAT_MIN) ancho = Math.round(vw - barra - CHAT_MIN);
+            const lateral = vw >= 1024 && ancho >= 600;
+            const anchoReal = lateral ? ancho : vw;
+            const dos = anchoReal >= 960;
+            setDisp((d) => (d.lateral === lateral && d.ancho === anchoReal && d.dos === dos ? d : { lateral, ancho: anchoReal, dos }));
+        };
+        calcular();
+        window.addEventListener('resize', calcular);
+        // Plegar la barra lateral del chat cambia `--sidebar-w` en <html>.
+        const mo = new MutationObserver(calcular);
+        mo.observe(raiz, { attributes: true, attributeFilter: ['style'] });
+        return () => { window.removeEventListener('resize', calcular); mo.disconnect(); };
+    }, []);
+    useEffect(() => {
+        const raiz = document.documentElement;
+        const w = abierto && disp.lateral ? `${disp.ancho}px` : '0px';
+        if (raiz.style.getPropertyValue('--constructor-w') !== w) raiz.style.setProperty('--constructor-w', w);
+    }, [abierto, disp.lateral, disp.ancho]);
+    useEffect(() => () => { document.documentElement.style.setProperty('--constructor-w', '0px'); }, []);
+
     const [aviso, setAviso] = useState<string>('');
     const [exportando, setExportando] = useState(false);
     const abortar = useRef<AbortController | null>(null);
@@ -163,15 +201,21 @@ export default function ConstructorDemanda({
         if (estadoChat && !caso.estado) setCaso((c) => ({ ...c, estado: estadoChat }));
     }, [estadoChat, caso.estado]);
 
-    useEffect(() => { if (abierto && pasoInicial) { setPaso(pasoInicial); setVista('pasos'); } }, [abierto, pasoInicial]);
+    useEffect(() => {
+        if (!abierto || !pasoInicial) return;
+        const listo = caso.hechos.trim().length >= 40 && caso.pretension.trim().length >= 10;
+        setPaso(pasoInicial === 'toulmin' && !listo ? 'caso' : pasoInicial);
+        setVista('pasos');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [abierto, pasoInicial]);
 
     // Bloquear el scroll de la página de atrás mientras está abierto.
     useEffect(() => {
-        if (!abierto) return;
+        if (!abierto || disp.lateral) return;
         const previo = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         return () => { document.body.style.overflow = previo; };
-    }, [abierto]);
+    }, [abierto, disp.lateral]);
 
     // Lo que llega desde una respuesta del chat («Al documento»).
     const ultimaInsercion = useRef(0);
@@ -364,17 +408,27 @@ ${texto.slice(0, 60000)}`;
 
     return (
         <div
-            className={`fixed inset-0 z-40 flex flex-col bg-cream-300 ${abierto ? '' : 'hidden'}`}
-            role="dialog"
-            aria-modal="true"
+            className={`fixed flex flex-col bg-cream-300 ${abierto ? '' : 'hidden'} ${disp.lateral
+                ? 'inset-y-0 right-0 z-[35] border-l border-charcoal-900/10 shadow-[-18px_0_48px_-28px_rgba(20,18,16,0.45)]'
+                : 'inset-0 z-40'}`}
+            style={disp.lateral ? { width: disp.ancho } : undefined}
+            role={disp.lateral ? 'complementary' : 'dialog'}
+            aria-modal={disp.lateral ? undefined : true}
             aria-label="Constructor de demanda"
         >
             {/* ── CABECERA ─────────────────────────────────────────────── */}
             <header className="grid h-14 shrink-0 grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-charcoal-900/10 bg-cream-100 px-2 sm:gap-3 sm:px-4">
-                <button type="button" onClick={onCerrar}
-                    className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-medium text-charcoal-900/75 transition-colors hover:bg-charcoal-900/5 hover:text-charcoal-900">
-                    <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Volver al chat</span><span className="sm:hidden">Chat</span>
-                </button>
+                {disp.lateral ? (
+                    <button type="button" onClick={onCerrar} aria-label="Recoger el constructor"
+                        className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-medium text-charcoal-900/75 transition-colors hover:bg-charcoal-900/5 hover:text-charcoal-900">
+                        <X className="h-4 w-4" /> Recoger
+                    </button>
+                ) : (
+                    <button type="button" onClick={onCerrar}
+                        className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-medium text-charcoal-900/75 transition-colors hover:bg-charcoal-900/5 hover:text-charcoal-900">
+                        <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Volver al chat</span><span className="sm:hidden">Chat</span>
+                    </button>
+                )}
                 <div className="flex min-w-0 items-center justify-center gap-2">
                     <span className="hidden font-serif text-[15px] font-semibold text-charcoal-900 md:inline">Iurex<span className="text-accent-gold">ia</span></span>
                     <span className="hidden h-4 w-px bg-charcoal-900/15 md:inline-block" />
@@ -405,7 +459,7 @@ ${texto.slice(0, 60000)}`;
             </header>
 
             {/* ── PESTAÑAS (móvil y tableta) ───────────────────────────── */}
-            <div className="grid shrink-0 grid-cols-2 gap-1 border-b border-charcoal-900/10 bg-cream-100 p-1.5 lg:hidden" role="tablist">
+            <div className={`grid shrink-0 grid-cols-2 gap-1 border-b border-charcoal-900/10 bg-cream-100 p-1.5 ${disp.dos ? 'hidden' : ''}`} role="tablist">
                 {(['pasos', 'documento'] as const).map((v) => (
                     <button key={v} type="button" role="tab" aria-selected={vista === v} onClick={() => setVista(v)}
                         className={`h-9 rounded-lg text-[13px] font-medium transition-colors ${vista === v ? 'bg-charcoal-900 text-white' : 'text-charcoal-900/70 hover:bg-charcoal-900/5'}`}>
@@ -414,9 +468,9 @@ ${texto.slice(0, 60000)}`;
                 ))}
             </div>
 
-            <div className="min-h-0 flex-1 lg:grid lg:grid-cols-[420px_1fr]">
+            <div className={`min-h-0 flex-1 ${disp.dos ? 'grid grid-cols-[380px_1fr]' : ''}`}>
                 {/* ── LOS PASOS ─────────────────────────────────────────── */}
-                <aside className={`h-full min-h-0 overflow-y-auto border-charcoal-900/10 bg-cream-200/60 lg:block lg:border-r ${vista === 'pasos' ? 'block' : 'hidden'}`}>
+                <aside className={`h-full min-h-0 overflow-y-auto border-charcoal-900/10 bg-cream-200/60 ${disp.dos ? 'block border-r' : vista === 'pasos' ? 'block' : 'hidden'}`}>
                     <ol className="mx-auto grid max-w-2xl gap-2.5 p-3 sm:p-4">
                         {PASOS.map((p) => {
                             const activo = paso === p.id;
@@ -438,7 +492,7 @@ ${texto.slice(0, 60000)}`;
                                         <div className="border-t border-charcoal-900/[0.06] px-3.5 pb-4 pt-3">
                                             {p.id === 'caso' && (
                                                 <div className="grid gap-3">
-                                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                                                    <div className="grid grid-cols-1 gap-3">
                                                         <label className="block">
                                                             <span className={rotulo}>Escrito</span>
                                                             <select className={campo} value={caso.tipo} onChange={(e) => setCaso({ ...caso, tipo: e.target.value })}>
@@ -555,7 +609,7 @@ ${texto.slice(0, 60000)}`;
                                                             <button type="button" onClick={() => abortar.current?.abort()} className="ml-auto text-[12px] font-medium text-charcoal-900/60 underline-offset-2 hover:underline">Detener</button>
                                                         </div>
                                                     ) : (
-                                                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                                                        <div className="grid gap-2">
                                                             <button type="button" className={botonPrimario} disabled={!casoListo} onClick={() => redactar('reemplazar')}>
                                                                 <ScrollText className="h-4 w-4 text-accent-gold" /> Redactar
                                                                 <span className="rounded bg-white/15 px-1.5 py-0.5 text-[10.5px] font-medium text-white/80">1 consulta</span>
@@ -601,7 +655,7 @@ ${texto.slice(0, 60000)}`;
                                                     <p className="text-[12px] leading-relaxed text-charcoal-900/60">
                                                         Arial 12, interlineado 1.5, justificado, márgenes de escrito (3 cm izquierda, 2 cm derecha, 2.5 cm arriba y abajo) y número de página.
                                                     </p>
-                                                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                                                    <div className="grid gap-2">
                                                         <button type="button" className={botonPrimario} onClick={descargarWord} disabled={exportando}>
                                                             {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowDownToLine className="h-4 w-4 text-accent-gold" />} Descargar Word
                                                         </button>
@@ -623,7 +677,7 @@ ${texto.slice(0, 60000)}`;
                 </aside>
 
                 {/* ── LA HOJA ───────────────────────────────────────────── */}
-                <section className={`h-full min-h-0 flex-col lg:flex ${vista === 'documento' ? 'flex' : 'hidden'}`} aria-label="Documento">
+                <section className={`h-full min-h-0 flex-col ${disp.dos || vista === 'documento' ? 'flex' : 'hidden'}`} aria-label="Documento">
                     <Hoja ref={hoja} htmlInicial={htmlRef.current}
                         onCambio={(h) => { htmlRef.current = h; guardar(); }}
                         vistaPrevia={vistaPrevia} />
@@ -631,12 +685,12 @@ ${texto.slice(0, 60000)}`;
             </div>
 
             {aviso && (
-                <div role="status" className="pointer-events-none fixed inset-x-0 bottom-5 z-50 flex justify-center px-4">
+                <div role="status" className={`pointer-events-none fixed bottom-5 z-50 flex justify-center px-4 ${disp.lateral ? 'right-0' : 'inset-x-0'}`} style={disp.lateral ? { width: disp.ancho } : undefined}>
                     <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-full bg-charcoal-900 px-4 py-2.5 text-[13px] text-white shadow-lg">
                         <Check className="h-4 w-4 shrink-0 text-accent-gold" />
                         <span className="min-w-0">{aviso}</span>
-                        {vista === 'pasos' && (
-                            <button type="button" onClick={() => setVista('documento')} className="shrink-0 font-semibold text-accent-gold lg:hidden">Ver</button>
+                        {!disp.dos && vista === 'pasos' && (
+                            <button type="button" onClick={() => setVista('documento')} className="shrink-0 font-semibold text-accent-gold">Ver</button>
                         )}
                     </div>
                 </div>
