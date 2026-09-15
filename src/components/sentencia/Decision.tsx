@@ -138,6 +138,7 @@ export default function Decision({
     conceptosViolacion = '', onConceptosViolacion,
     onAportar, aportando, contextoAportado = 0,
     esRecurso = false, abrirCorreccion = 0,
+    extemporanea = false, oportunidadDecidida = true,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -165,6 +166,15 @@ export default function Decision({
     /** Sube cuando la página quiere abrir el panel de corrección —«Cambiar
      *  el sentido y regenerar» desde el proyecto terminado—. */
     abrirCorreccion?: number;
+    /** El cómputo de oportunidad dio EXTEMPORÁNEA. No bloquea —el botón sigue
+     *  activo, «nunca impedir el estudio de fondo»— pero si no se decidió
+     *  nada arriba, generar ahora resuelve sólo la improcedencia, sin fondo.
+     *  El secretario tiene que VER eso justo donde va a generar. */
+    extemporanea?: boolean;
+    /** false = el secretario no tocó la tarjeta de oportunidad de arriba
+     *  («Dejarlo así» / «Fue oportuna» / «Estudio en reserva»); true en
+     *  cualquiera de los tres casos, incluido dejarlo como está a propósito. */
+    oportunidadDecidida?: boolean;
 }) {
     const [corrigiendo, setCorrigiendo] = useState(false);
     const [porQue, setPorQue] = useState(false);
@@ -339,6 +349,20 @@ export default function Decision({
                         sale con tu nombre: lee la razón antes de generar y corrígela si no es la que sostendrías.
                     </p>
                 </div>
+                {/* MISMO AVISO, AQUÍ ARRIBA: este botón dorado es el primero
+                    que se ve y el más probable de pulsar sin bajar a leer la
+                    tarjeta final. */}
+                {extemporanea && !oportunidadDecidida && (
+                    <div className="mt-2 flex gap-2 rounded-lg border-l-2 border-amber-400/40 bg-amber-400/[0.04] py-2 pl-2.5 pr-3">
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300/70" />
+                        <p className="text-[12px] leading-relaxed text-white/60">
+                            El cómputo dice <span className="text-white/90">extemporánea</span> y
+                            no decidiste qué hacer con eso: si generas ahora, sale SÓLO la
+                            improcedencia, sin el fondo. Baja a «El cómputo da extemporánea» y
+                            elige «Fue oportuna» o «Estudio en reserva» si quieres otra cosa.
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* ═══ EL PORQUÉ, SÓLO SI SE PIDE ═══ */}
@@ -582,6 +606,26 @@ export default function Decision({
                     {necesitaConceptos && (
                         <p className="mt-2.5 text-[12px] text-amber-300/90">
                             Este recurso levanta un sobreseimiento: pega arriba los conceptos de violación antes de generar.
+                        </p>
+                    )}
+                    {/* ═══ EL CÓMPUTO DA EXTEMPORÁNEA Y NADIE LO DECIDIÓ ═══
+                        David, 15-sep-2026: «a pesar del aviso de
+                        extemporaneidad, si el secretario decide continuar con
+                        el estudio, el redactor debe entregar el proyecto». El
+                        botón sigue activo a propósito —nunca se bloquea el
+                        fondo—, pero si nadie tocó la tarjeta de arriba y se
+                        genera así, sale SÓLO la improcedencia, sin una letra
+                        de fondo: eso tiene que verse aquí, no descubrirse al
+                        abrir el .docx. */}
+                    {extemporanea && !oportunidadDecidida && (
+                        <p className="mt-2.5 flex items-start gap-1.5 text-[12px] text-amber-300/90">
+                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                            <span>
+                                El cómputo dice extemporánea y no decidiste qué hacer con eso:
+                                si generas así, sale SÓLO la improcedencia, sin el fondo. Sube
+                                a «El cómputo da extemporánea» y elige «Fue oportuna» o
+                                «Estudio en reserva» si quieres otra cosa.
+                            </span>
                         </p>
                     )}
                     <div className="mt-3 flex flex-wrap items-center gap-2.5">

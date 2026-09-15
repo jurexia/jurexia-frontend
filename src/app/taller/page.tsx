@@ -2425,7 +2425,8 @@ export default function TallerDeSentencias() {
                               conceptosViolacion={conceptosViolacion}
                               onConceptosViolacion={setConceptosViolacion}
                               contextoAportado={contexto.length}
-                              esRecurso={encargo.tipoAsunto !== 'amparo_directo'} />
+                              esRecurso={encargo.tipoAsunto !== 'amparo_directo'}
+                              extemporanea={extemporanea} oportunidadDecidida={decision !== ''} />
                     )}
 
                     {/* EL ESTUDIO, VIÉNDOSE ESCRIBIR. Antes aquí no había nada
