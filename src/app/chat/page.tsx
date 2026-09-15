@@ -816,6 +816,12 @@ export default function ChatPage() {
                         recogen en un menú. Se eligieron esas dos por ser las de
                         uso más esporádico —una es consulta puntual y la otra es
                         trabajo largo con su propia pantalla—. */}
+                    {/* CON EL CONSTRUCTOR ACOPLADO la columna del chat baja a
+                        420-650 px y la barra se pisaba («Normativa» debajo de
+                        «Sálvame»). La barra mide la ventana, no la columna: con
+                        el constructor abierto Mi trabajo, Lo último y Sálvame
+                        quedan en icono (con su nombre en el title), Normativa y
+                        Sentencia pasan al menú «Más», y el contador se retira. */}
                     <div className="h-full flex items-center justify-between gap-2 px-3 sm:px-4 min-w-0">
 
                         {/* ── Herramientas ── */}
@@ -823,10 +829,11 @@ export default function ChatPage() {
                             <Link
                                 href="/carpetas"
                                 data-guide="mi-trabajo"
+                                title="Mi trabajo"
                                 className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800"
                             >
                                 <FileText className="w-3.5 h-3.5 text-accent-gold" />
-                                <span className="hidden sm:inline">Mi trabajo</span>
+                                <span className={constructorAbierto ? 'hidden' : 'hidden sm:inline'}>Mi trabajo</span>
                             </Link>
 
                             {/* Lo último: comunicados de la Corte, tesis de la
@@ -838,12 +845,13 @@ export default function ChatPage() {
                                 className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-accent-gold/20"
                             >
                                 <Newspaper className="w-3.5 h-3.5 text-accent-gold" />
-                                <span className="hidden sm:inline">Lo último</span>
+                                <span className={constructorAbierto ? 'hidden' : 'hidden sm:inline'}>Lo último</span>
                             </Link>
 
                             <Link
                                 href="/normativa"
-                                className="hidden md:inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]"
+                                title="Normativa"
+                                className={`${constructorAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]`}
                             >
                                 <BookOpen className="w-3.5 h-3.5" />
                                 Normativa
@@ -858,7 +866,7 @@ export default function ChatPage() {
                                 title={canAccessSecretarioPJF
                                     ? 'Secretario del PJF — crea un borrador de sentencia'
                                     : 'Borrador de sentencia — exclusivo del plan Platinum'}
-                                className={`hidden md:inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors ${canAccessSecretarioPJF
+                                className={`${constructorAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors ${canAccessSecretarioPJF
                                     ? 'border border-accent-gold/45 bg-accent-gold/10 text-charcoal-900 hover:bg-accent-gold/20'
                                     : 'border border-charcoal-900/10 text-charcoal-500 hover:border-accent-gold/40 hover:text-charcoal-800'
                                     }`}
@@ -868,8 +876,8 @@ export default function ChatPage() {
                                 {!canAccessSecretarioPJF && <Lock className="w-2.5 h-2.5 opacity-60" />}
                             </button>
 
-                            {/* Lo que no cabe en móvil */}
-                            <div className="relative md:hidden">
+                            {/* Lo que no cabe en móvil, ni junto al constructor */}
+                            <div className={constructorAbierto ? 'relative' : 'relative md:hidden'}>
                                 <button
                                     onClick={() => setMenuMas(v => !v)}
                                     aria-label="Más herramientas"
@@ -917,7 +925,7 @@ export default function ChatPage() {
                                 className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-red-700/25 bg-red-50/60 px-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-red-700 transition-colors hover:bg-red-50"
                             >
                                 <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                                <span className="hidden lg:inline">Sálvame</span>
+                                <span className={constructorAbierto ? 'hidden' : 'hidden lg:inline'}>Sálvame</span>
                             </Link>
 
                             <button
@@ -930,7 +938,7 @@ export default function ChatPage() {
                             </button>
 
                             <div
-                                className={`hidden lg:flex h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
+                                className={`${constructorAbierto ? 'hidden' : 'hidden lg:flex'} h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
                                 title={`Consultas usadas este mes: ${queriesUsed} de ${queriesLimit}`}
                             >
                                 <span className={`font-semibold tabular-nums ${queriesRemaining <= 1 ? 'text-red-700' : 'text-charcoal-900'}`}>
