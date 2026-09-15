@@ -115,7 +115,7 @@ interface ChatInputProps {
     onFueroChange?: (fueros: string[]) => void;
     selectedMateria?: string;
     onMateriaChange?: (materia: string) => void;
-    /** Despliega o recoge el constructor de demanda (editor Word + pasos + Toulmin). */
+    /** Despliega o recoge el constructor de escritos —demanda o recurso— (editor Word + pasos + Toulmin). */
     onAbrirConstructor?: (paso: 'caso' | 'toulmin') => void;
     /** Si el constructor está desplegado: el botón Toulmin se ve pulsado. */
     constructorAbierto?: boolean;
@@ -951,8 +951,8 @@ ${draftRequest.descripcion}`;
                                     onClick={() => onAbrirConstructor('toulmin')}
                                     aria-pressed={constructorAbierto}
                                     title={constructorAbierto
-                                        ? 'Recoger el constructor de demanda'
-                                        : 'Toulmin: construir la demanda con argumentos citados y llevarla a Word'}
+                                        ? 'Recoger el constructor'
+                                        : 'Toulmin: construir una demanda o un recurso con argumentos citados y llevarlo a Word'}
                                     className={`ml-auto flex h-[26px] flex-shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-semibold tracking-wide text-white transition-all duration-200
                                         ${constructorAbierto
                                             ? 'bg-charcoal-900 ring-2 ring-accent-gold/70'

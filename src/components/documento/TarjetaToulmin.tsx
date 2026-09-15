@@ -44,10 +44,12 @@ function abreviar(nombre: string): string {
 }
 
 export function TarjetaToulmin({
-    argumento, ordinal, fuentes, insertado, onInsertar,
+    argumento, ordinal, fuentes, insertado, onInsertar, consideracion,
 }: {
     argumento: ArgumentoToulmin;
     ordinal: string;
+    /** En un recurso: la razón de la resolución que este agravio combate. */
+    consideracion?: string;
     fuentes: Record<string, FuenteToulmin>;
     insertado: boolean;
     onInsertar: () => void;
@@ -89,7 +91,7 @@ export function TarjetaToulmin({
     return (
         <article className="rounded-xl border border-charcoal-900/[0.08] bg-white shadow-[0_1px_2px_rgba(20,18,16,0.04)]">
             <header className="flex items-start gap-3 px-4 pb-2 pt-3.5">
-                <span className="mt-0.5 shrink-0 rounded-md bg-charcoal-900 px-1.5 py-[3px] text-[10px] font-semibold tracking-[0.08em] text-accent-gold">
+                <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-md bg-charcoal-900 px-1.5 py-[3px] text-[10px] font-semibold tracking-[0.08em] text-accent-gold">
                     {ordinal}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -97,6 +99,12 @@ export function TarjetaToulmin({
                     <p className="mt-1 text-[13px] leading-relaxed text-charcoal-900/80">{argumento.afirmacion}</p>
                 </div>
             </header>
+
+            {consideracion && (
+                <p className="mx-4 mb-1 border-l-2 border-accent-gold/60 pl-2.5 text-[12px] leading-relaxed text-charcoal-900/70">
+                    <span className="font-semibold text-charcoal-900/80">Combate: </span>{consideracion}
+                </p>
+            )}
 
             <div className="px-4 pb-1">
                 <Fichas ids={argumento.citadas} />

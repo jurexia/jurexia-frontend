@@ -11,8 +11,8 @@ import { TarjetaToulmin } from './TarjetaToulmin';
 import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
 import { analizarRespuesta, markdownAHtml, textoDeHtml } from '@/lib/documento/marcado';
 import {
-    ErrorToulmin, ORDINALES, argumentoAHtml, toulminStream,
-    type ResultadoToulmin,
+    ErrorToulmin, argumentoAHtml, rotuloDe, toulminStream,
+    type ClaseEscrito, type ResultadoToulmin,
 } from '@/lib/toulmin';
 import { streamChat } from '@/lib/api';
 import { getSession } from '@/lib/supabase';
@@ -42,6 +42,13 @@ import { ESTADOS_SOLO, getEstadoLabel } from '@/lib/estados';
  * Por debajo, dos pestañas del mismo ancho —Pasos · Documento— y la hoja
  * sigue MONTADA aunque no se vea: lo escrito no se pierde al cambiar.
  *
+ * DEMANDA O RECURSO. David, 15-sep-2026: «Toulmin es un modelo argumentativo
+ * que sirve para convencer. Esto es fundamental también en recursos… déjalo
+ * abierto para que él ingrese el tipo de recurso». En «Recurso» el abogado
+ * escribe el tipo (con sugerencias, no con lista cerrada), la materia y —lo
+ * que más pesa— LA RESOLUCIÓN QUE IMPUGNA: de sus consideraciones salen los
+ * agravios, que se rotulan «PRIMER AGRAVIO…» y van bajo AGRAVIOS.
+ *
  * EL BORRADOR SE GUARDA EN ESTE NAVEGADOR (localStorage, por usuario): caso,
  * argumentos, revisión y documento. Volver al chat y regresar no pierde nada.
  */
@@ -56,9 +63,46 @@ const TIPOS = [
     { valor: 'laboral', etiqueta: 'Demanda laboral', tipo: 'demanda', subtipo: 'laboral', materia: 'laboral' },
     { valor: 'agrario', etiqueta: 'Demanda agraria', tipo: 'demanda', subtipo: 'agrario', materia: 'administrativa' },
     { valor: 'amparo_indirecto', etiqueta: 'Demanda de amparo indirecto', tipo: 'amparo', subtipo: 'amparo_indirecto', materia: 'amparo' },
+    { valor: 'recurso', etiqueta: 'Recurso', tipo: 'impugnacion', subtipo: '', materia: '' },
 ] as const;
 
-interface Caso { tipo: string; estado: string; hechos: string; pretension: string }
+/** Sugerencias para el tipo de recurso. El campo es abierto: manda lo que escriba el abogado. */
+const RECURSOS_SUGERIDOS = [
+    'Apelación contra sentencia definitiva',
+    'Apelación contra auto',
+    'Revocación',
+    'Queja',
+    'Revisión en amparo indirecto',
+    'Reclamación',
+    'Revisión fiscal',
+    'Recurso de inconformidad',
+];
+
+const MATERIAS_RECURSO = [
+    { valor: 'civil', etiqueta: 'Civil' },
+    { valor: 'familiar', etiqueta: 'Familiar' },
+    { valor: 'mercantil', etiqueta: 'Mercantil' },
+    { valor: 'laboral', etiqueta: 'Laboral' },
+    { valor: 'penal', etiqueta: 'Penal' },
+    { valor: 'administrativa', etiqueta: 'Administrativa' },
+    { valor: 'amparo', etiqueta: 'Amparo' },
+];
+
+interface Caso {
+    tipo: string; estado: string; hechos: string; pretension: string;
+    /** Sólo en «recurso»: el tipo que escribe el abogado, la materia y la resolución impugnada. */
+    recurso: string; materia: string; resolucion: string;
+}
+
+const CASO_VACIO: Caso = { tipo: 'civil', estado: '', hechos: '', pretension: '', recurso: '', materia: 'civil', resolucion: '' };
+
+/** «apelación contra sentencia» → «Recurso de apelación contra sentencia»; «Queja» → «Recurso de queja». */
+function nombreDelRecurso(recurso: string): string {
+    const r = recurso.replace(/\s+/g, ' ').trim();
+    if (!r) return 'Recurso';
+    if (/^(recurso|juicio|incidente)\b/i.test(r)) return r.charAt(0).toUpperCase() + r.slice(1);
+    return `Recurso de ${r.charAt(0).toLowerCase()}${r.slice(1)}`;
+}
 
 interface Guardado {
     caso: Caso;
@@ -71,20 +115,26 @@ interface Guardado {
     paso: IdPaso;
 }
 
-const PASOS: { id: IdPaso; n: number; titulo: string; icono: typeof FileText }[] = [
-    { id: 'caso', n: 1, titulo: 'El caso', icono: PenLine },
-    { id: 'toulmin', n: 2, titulo: 'Argumentos · Toulmin', icono: Network },
-    { id: 'redactar', n: 3, titulo: 'Redactar la demanda', icono: ScrollText },
-    { id: 'revisar', n: 4, titulo: 'Revisar fundamentos', icono: ListChecks },
-    { id: 'word', n: 5, titulo: 'Word listo para imprimir', icono: FileText },
-];
+function pasosDe(clase: ClaseEscrito): { id: IdPaso; n: number; titulo: string; icono: typeof FileText }[] {
+    const recurso = clase === 'recurso';
+    return [
+        { id: 'caso', n: 1, titulo: recurso ? 'El recurso' : 'El caso', icono: PenLine },
+        { id: 'toulmin', n: 2, titulo: recurso ? 'Agravios · Toulmin' : 'Argumentos · Toulmin', icono: Network },
+        { id: 'redactar', n: 3, titulo: recurso ? 'Redactar el recurso' : 'Redactar la demanda', icono: ScrollText },
+        { id: 'revisar', n: 4, titulo: 'Revisar fundamentos', icono: ListChecks },
+        { id: 'word', n: 5, titulo: 'Word listo para imprimir', icono: FileText },
+    ];
+}
 
-const ETAPAS_TOULMIN = [
-    { clave: 'problemas', texto: 'Planteando los problemas jurídicos' },
-    { clave: 'acervo', texto: 'Buscando en Constitución, tratados, leyes y jurisprudencia' },
-    { clave: 'argumentos', texto: 'Construyendo los argumentos' },
-    { clave: 'verificando', texto: 'Verificando cada cita contra el acervo' },
-];
+function etapasDe(clase: ClaseEscrito) {
+    const recurso = clase === 'recurso';
+    return [
+        { clave: 'problemas', texto: recurso ? 'Identificando lo que hay que combatir de la resolución' : 'Planteando los problemas jurídicos' },
+        { clave: 'acervo', texto: 'Buscando en Constitución, tratados, leyes y jurisprudencia' },
+        { clave: 'argumentos', texto: recurso ? 'Construyendo los agravios' : 'Construyendo los argumentos' },
+        { clave: 'verificando', texto: 'Verificando cada cita contra el acervo' },
+    ];
+}
 
 function claveDe(usuarioId?: string) {
     return `iurexia:constructor:v1:${usuarioId || 'anonimo'}`;
@@ -123,7 +173,8 @@ export default function ConstructorDemanda({
 
     const [paso, setPaso] = useState<IdPaso>(guardado?.paso ?? 'caso');
     const [vista, setVista] = useState<'pasos' | 'documento'>('pasos');
-    const [caso, setCaso] = useState<Caso>(guardado?.caso ?? { tipo: 'civil', estado: estadoChat || '', hechos: '', pretension: '' });
+    // Un borrador de antes del modo recurso no trae sus campos: se completan con los vacíos.
+    const [caso, setCaso] = useState<Caso>(guardado?.caso ? { ...CASO_VACIO, ...guardado.caso } : { ...CASO_VACIO, estado: estadoChat || '' });
     const [papel, setPapel] = useState<Papel>(guardado?.papel ?? 'carta');
     const [titulo, setTitulo] = useState(guardado?.titulo ?? '');
     const htmlRef = useRef<string>(guardado?.html ?? '');
@@ -195,7 +246,17 @@ export default function ConstructorDemanda({
     const raizRef = useRef<HTMLDivElement | null>(null);
 
     const tipoSel = TIPOS.find((t) => t.valor === caso.tipo) ?? TIPOS[0];
-    const tituloEfectivo = titulo.trim() || `${tipoSel.etiqueta}${caso.estado ? ` · ${getEstadoLabel(caso.estado)}` : ''}`;
+    const clase: ClaseEscrito = tipoSel.valor === 'recurso' ? 'recurso' : 'demanda';
+    const esRecurso = clase === 'recurso';
+    /* Lo que el escrito ES, dicho para una persona: «Demanda civil» o «Recurso de apelación…». */
+    const nombreEscrito = esRecurso ? nombreDelRecurso(caso.recurso) : tipoSel.etiqueta;
+    const materiaEscrito = esRecurso ? (caso.materia || 'civil') : tipoSel.materia;
+    const PASOS = pasosDe(clase);
+    const ETAPAS_TOULMIN = etapasDe(clase);
+    const tituloEfectivo = titulo.trim() || `${nombreEscrito}${caso.estado ? ` · ${getEstadoLabel(caso.estado)}` : ''}`;
+    /* El resultado guardado es de la clase con que se construyó: si el abogado cambia
+       de demanda a recurso, los argumentos de antes siguen ahí pero se rotulan como eran. */
+    const claseResultado: ClaseEscrito = resultado?.clase === 'recurso' ? 'recurso' : 'demanda';
 
     // ── guardar en este navegador ─────────────────────────────────────────
     const guardar = useCallback(() => {
@@ -254,7 +315,8 @@ export default function ConstructorDemanda({
 
     useEffect(() => {
         if (!abierto || !pasoInicial) return;
-        const listo = caso.hechos.trim().length >= 40 && caso.pretension.trim().length >= 10;
+        const listo = caso.hechos.trim().length >= 40 && caso.pretension.trim().length >= 10
+            && (caso.tipo !== 'recurso' || (caso.recurso.trim().length >= 3 && caso.resolucion.trim().length >= 40));
         setPaso(pasoInicial === 'toulmin' && !listo ? 'caso' : pasoInicial);
         setVista('pasos');
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -286,7 +348,8 @@ export default function ConstructorDemanda({
         window.setTimeout(() => setAviso(''), 3200);
     }
 
-    const casoListo = caso.hechos.trim().length >= 40 && caso.pretension.trim().length >= 10;
+    const casoListo = caso.hechos.trim().length >= 40 && caso.pretension.trim().length >= 10
+        && (!esRecurso || (caso.recurso.trim().length >= 3 && caso.resolucion.trim().length >= 40));
 
     // ── 2 · TOULMIN ──────────────────────────────────────────────────────
     async function estructurar() {
@@ -299,8 +362,10 @@ export default function ConstructorDemanda({
         try {
             const sesion = await getSession();
             for await (const ev of toulminStream({
-                hechos: caso.hechos, pretension: caso.pretension,
-                tipo: tipoSel.etiqueta.toLowerCase(), estado: caso.estado || undefined, materia: tipoSel.materia,
+                hechos: caso.hechos, pretension: caso.pretension, clase,
+                tipo: esRecurso ? caso.recurso.replace(/\s+/g, ' ').trim() : tipoSel.etiqueta.toLowerCase(),
+                resolucion: esRecurso ? caso.resolucion : undefined,
+                estado: caso.estado || undefined, materia: materiaEscrito,
             }, sesion?.access_token, control.signal)) {
                 if (ev.tipo === 'paso') setTEtapa(ev.clave === 'material' ? 'argumentos' : ev.clave);
                 if (ev.tipo === 'error') throw new ErrorToulmin(ev.mensaje, 500);
@@ -329,19 +394,19 @@ export default function ConstructorDemanda({
     function insertarArgumento(i: number) {
         if (!resultado) return;
         const a = resultado.argumentos[i];
-        hoja.current?.insertar(argumentoAHtml(a, ORDINALES[i]), 'final');
+        hoja.current?.insertar(argumentoAHtml(a, rotuloDe(claseResultado, i)), 'final');
         setInsertados((xs) => (xs.includes(i) ? xs : [...xs, i]));
         mostrarAviso(`«${a.titulo}» quedó al final del documento.`);
     }
 
     function insertarTodos() {
         if (!resultado) return;
-        const html = `<h2>FUNDAMENTOS DE DERECHO</h2>` +
-            resultado.argumentos.map((a, i) => argumentoAHtml(a, ORDINALES[i])).join('');
+        const html = `<h2>${claseResultado === 'recurso' ? 'AGRAVIOS' : 'FUNDAMENTOS DE DERECHO'}</h2>` +
+            resultado.argumentos.map((a, i) => argumentoAHtml(a, rotuloDe(claseResultado, i))).join('');
         hoja.current?.insertar(html, 'final');
         setInsertados(resultado.argumentos.map((_, i) => i));
         setVista('documento');
-        mostrarAviso('Los argumentos quedaron en el documento.');
+        mostrarAviso(claseResultado === 'recurso' ? 'Los agravios quedaron en el documento.' : 'Los argumentos quedaron en el documento.');
     }
 
     // ── 3 · REDACTAR (el /chat de siempre) ───────────────────────────────
@@ -360,21 +425,34 @@ export default function ConstructorDemanda({
         rAbort.current = control;
         setREstado('trabajando'); setRError('');
         setVista('documento');
-        const argumentos = resultado?.argumentos?.length
-            ? '\n\nFUNDAMENTOS YA ESTRUCTURADOS Y VERIFICADOS (intégralos en el capítulo de derecho o de conceptos de violación, conservando cada cita tal como está escrita, sin cambiar registros, rubros ni artículos):\n\n' +
-              resultado.argumentos.map((a, i) => `${ORDINALES[i]}. ${a.titulo}\n${a.redaccion}`).join('\n\n')
-            : '';
-        const mensaje = `[REDACTAR_DOCUMENTO]
-Tipo: ${tipoSel.tipo}
-Subtipo: ${tipoSel.subtipo}
-Jurisdicción: ${caso.estado ? getEstadoLabel(caso.estado) : 'No indicada'}
+        const usar = resultado?.argumentos?.length ? resultado : null;
+        const argumentos = !usar ? '' : (claseResultado === 'recurso'
+            ? '\n\nAGRAVIOS YA ESTRUCTURADOS Y VERIFICADOS (intégralos como agravios numerados del recurso, en este orden, conservando cada cita tal como está escrita, sin cambiar registros, rubros ni artículos):\n\n'
+            : '\n\nFUNDAMENTOS YA ESTRUCTURADOS Y VERIFICADOS (intégralos en el capítulo de derecho o de conceptos de violación, conservando cada cita tal como está escrita, sin cambiar registros, rubros ni artículos):\n\n') +
+            usar.argumentos.map((a, i) => `${rotuloDe(claseResultado, i)}. ${a.titulo}\n${a.redaccion}`).join('\n\n');
+        // El subtipo viaja en su propio renglón: un salto dentro lo partiría.
+        const subtipo = esRecurso ? caso.recurso.replace(/\s+/g, ' ').trim() : tipoSel.subtipo;
+        const cuerpoCaso = esRecurso
+            ? `ANTECEDENTES:
+${caso.hechos.trim()}
 
-Descripción del caso:
-HECHOS:
+RESOLUCIÓN QUE SE IMPUGNA:
+${caso.resolucion.trim()}
+
+LO QUE SE PIDE AL RESOLVER EL RECURSO:
+${caso.pretension.trim()}`
+            : `HECHOS:
 ${caso.hechos.trim()}
 
 LO QUE SE PIDE:
-${caso.pretension.trim()}${argumentos}`;
+${caso.pretension.trim()}`;
+        const mensaje = `[REDACTAR_DOCUMENTO]
+Tipo: ${tipoSel.tipo}
+Subtipo: ${subtipo}
+${esRecurso ? `Materia: ${materiaEscrito}\n` : ''}Jurisdicción: ${caso.estado ? getEstadoLabel(caso.estado) : 'No indicada'}
+
+Descripción del caso:
+${esRecurso ? `Escrito: ${nombreEscrito}\n\n` : ''}${cuerpoCaso}${argumentos}`;
         let texto = '';
         let ultimo = 0;
         try {
@@ -390,7 +468,7 @@ ${caso.pretension.trim()}${argumentos}`;
                 if (ahora - ultimo > 250) {
                     ultimo = ahora;
                     const previa = analizarRespuesta(texto);
-                    setVistaPrevia((!previa.error && markdownAHtml(previa.texto)) || '<p style="text-align:center;color:#8b7355"><i>Iurexia está analizando el caso y preparando la demanda…</i></p>');
+                    setVistaPrevia((!previa.error && markdownAHtml(previa.texto)) || `<p style="text-align:center;color:#8b7355"><i>Iurexia está analizando ${esRecurso ? 'la resolución y preparando el recurso' : 'el caso y preparando la demanda'}…</i></p>`);
                 }
             }
             const r = analizarRespuesta(texto);
@@ -404,7 +482,7 @@ ${caso.pretension.trim()}${argumentos}`;
             setREstado('listo');
             mostrarAviso(r.truncada
                 ? 'La redacción quedó incompleta: pulsa «Añadir al final» para que continúe.'
-                : 'La demanda quedó en el documento. Revísala y ajústala a tu caso.');
+                : esRecurso ? 'El recurso quedó en el documento. Revísalo y ajústalo a tu caso.' : 'La demanda quedó en el documento. Revísala y ajústala a tu caso.');
             onConsultaGastada?.();
         } catch (e) {
             if ((e as Error)?.name === 'AbortError' || control.signal.aborted) {
@@ -438,7 +516,15 @@ ${caso.pretension.trim()}${argumentos}`;
         const control = new AbortController();
         vAbort.current = control;
         setVEstado('trabajando'); setVError(''); setRevisionHtml('');
-        const mensaje = `Revisa este borrador de ${tipoSel.etiqueta.toLowerCase()}${caso.estado ? ` (${getEstadoLabel(caso.estado)})` : ''} y dime, con fundamento en la ley y la jurisprudencia aplicables, qué fundamentos legales o requisitos le faltan o están mal citados antes de presentarlo. Sé concreto: artículo por artículo, y termina con una lista de cambios concretos que debo hacer.
+        const mensaje = esRecurso
+            ? `Revisa este borrador de ${nombreEscrito.charAt(0).toLowerCase()}${nombreEscrito.slice(1)}${caso.estado ? ` (${getEstadoLabel(caso.estado)})` : ''} y dime, con fundamento en la ley y la jurisprudencia aplicables: si cada agravio combate las consideraciones que sostienen la resolución impugnada o deja alguna en pie, si hay riesgo de que alguno se declare inoperante, y qué fundamentos o requisitos del recurso faltan o están mal citados. Sé concreto, agravio por agravio, y termina con una lista de cambios que debo hacer.
+
+RESOLUCIÓN QUE SE IMPUGNA:
+${caso.resolucion.trim().slice(0, 12000)}
+
+BORRADOR:
+${texto.slice(0, 50000)}`
+            : `Revisa este borrador de ${tipoSel.etiqueta.toLowerCase()}${caso.estado ? ` (${getEstadoLabel(caso.estado)})` : ''} y dime, con fundamento en la ley y la jurisprudencia aplicables, qué fundamentos legales o requisitos le faltan o están mal citados antes de presentarlo. Sé concreto: artículo por artículo, y termina con una lista de cambios concretos que debo hacer.
 
 BORRADOR:
 ${texto.slice(0, 60000)}`;
@@ -518,7 +604,7 @@ ${texto.slice(0, 60000)}`;
             style={disp.lateral ? { width: disp.ancho } : undefined}
             role={disp.lateral ? 'complementary' : 'dialog'}
             aria-modal={disp.lateral ? undefined : true}
-            aria-label="Constructor de demanda"
+            aria-label="Constructor de escritos"
             ref={raizRef}
             onKeyDown={teclaDelDialogo}
         >
@@ -606,9 +692,33 @@ ${texto.slice(0, 60000)}`;
                                                         <label className="block">
                                                             <span className={rotulo}>Escrito</span>
                                                             <select className={campo} value={caso.tipo} onChange={(e) => setCaso({ ...caso, tipo: e.target.value })}>
-                                                                {TIPOS.map((t) => <option key={t.valor} value={t.valor}>{t.etiqueta}</option>)}
+                                                                <optgroup label="Demandas">
+                                                                    {TIPOS.filter((t) => t.valor !== 'recurso').map((t) => <option key={t.valor} value={t.valor}>{t.etiqueta}</option>)}
+                                                                </optgroup>
+                                                                <optgroup label="Recursos">
+                                                                    <option value="recurso">Recurso (escribes cuál)</option>
+                                                                </optgroup>
                                                             </select>
                                                         </label>
+                                                        {esRecurso && (
+                                                            <>
+                                                                <label className="block">
+                                                                    <span className={rotulo}>Tipo de recurso</span>
+                                                                    <input className={campo} list="iurexia-recursos" value={caso.recurso} maxLength={140}
+                                                                        onChange={(e) => setCaso({ ...caso, recurso: e.target.value })}
+                                                                        placeholder="Apelación contra sentencia definitiva, revocación, queja…" />
+                                                                    <datalist id="iurexia-recursos">
+                                                                        {RECURSOS_SUGERIDOS.map((r) => <option key={r} value={r} />)}
+                                                                    </datalist>
+                                                                </label>
+                                                                <label className="block">
+                                                                    <span className={rotulo}>Materia</span>
+                                                                    <select className={campo} value={caso.materia} onChange={(e) => setCaso({ ...caso, materia: e.target.value })}>
+                                                                        {MATERIAS_RECURSO.map((m) => <option key={m.valor} value={m.valor}>{m.etiqueta}</option>)}
+                                                                    </select>
+                                                                </label>
+                                                            </>
+                                                        )}
                                                         <label className="block">
                                                             <span className={rotulo}>Entidad</span>
                                                             <select className={campo} value={caso.estado} onChange={(e) => { entidadElegida.current = true; setCaso({ ...caso, estado: e.target.value }); }}>
@@ -618,22 +728,35 @@ ${texto.slice(0, 60000)}`;
                                                         </label>
                                                     </div>
                                                     <label className="block">
-                                                        <span className={rotulo}>Hechos</span>
-                                                        <textarea className={`${campo} min-h-[150px] resize-y`} value={caso.hechos}
+                                                        <span className={rotulo}>{esRecurso ? 'Antecedentes' : 'Hechos'}</span>
+                                                        <textarea className={`${campo} ${esRecurso ? 'min-h-[110px]' : 'min-h-[150px]'} resize-y`} value={caso.hechos}
                                                             onChange={(e) => setCaso({ ...caso, hechos: e.target.value })}
-                                                            placeholder="Qué pasó, en orden: quiénes, cuándo, dónde, qué documentos o pruebas hay." />
+                                                            placeholder={esRecurso
+                                                                ? 'Cómo llegó el asunto hasta aquí: el juicio, lo que se reclamó, las pruebas y lo que se alegó.'
+                                                                : 'Qué pasó, en orden: quiénes, cuándo, dónde, qué documentos o pruebas hay.'} />
                                                     </label>
+                                                    {esRecurso && (
+                                                        <label className="block">
+                                                            <span className={rotulo}>Resolución que se impugna</span>
+                                                            <textarea className={`${campo} min-h-[150px] resize-y`} value={caso.resolucion}
+                                                                onChange={(e) => setCaso({ ...caso, resolucion: e.target.value })}
+                                                                placeholder="Qué resolvió la autoridad y con qué razones. Puedes pegar las consideraciones de la sentencia o del auto." />
+                                                            <span className="mt-1 block text-[12px] leading-relaxed text-charcoal-900/70">De aquí salen los agravios: mientras más fiel a lo que dijo, mejor se combate.</span>
+                                                        </label>
+                                                    )}
                                                     <label className="block">
                                                         <span className={rotulo}>Lo que se pide</span>
                                                         <textarea className={`${campo} min-h-[90px] resize-y`} value={caso.pretension}
                                                             onChange={(e) => setCaso({ ...caso, pretension: e.target.value })}
-                                                            placeholder="Las prestaciones o pretensiones que reclamas." />
+                                                            placeholder={esRecurso
+                                                                ? 'Que se revoque o modifique lo resuelto y, en su lugar, se resuelva…'
+                                                                : 'Las prestaciones o pretensiones que reclamas.'} />
                                                     </label>
                                                     <p className="text-[12px] leading-relaxed text-charcoal-900/70">
-                                                        Sin nombres reales si no hace falta: para fundar basta con los hechos.
+                                                        Sin nombres reales si no hace falta: para fundar basta con {esRecurso ? 'lo resuelto y los antecedentes' : 'los hechos'}.
                                                     </p>
                                                     <button type="button" className={botonPrimario} disabled={!casoListo} onClick={() => setPaso('toulmin')}>
-                                                        Continuar con los argumentos
+                                                        {esRecurso ? 'Continuar con los agravios' : 'Continuar con los argumentos'}
                                                     </button>
                                                 </div>
                                             )}
@@ -641,10 +764,19 @@ ${texto.slice(0, 60000)}`;
                                             {p.id === 'toulmin' && (
                                                 <div className="grid gap-3">
                                                     <p className="text-[13px] leading-relaxed text-charcoal-900/70">
-                                                        Iurexia plantea los problemas jurídicos de tu caso y construye cada argumento con sus seis piezas —afirmación, hechos, regla, respaldo, fuerza y la objeción que hay que vencer—, citando sólo lo que encuentra en el acervo: Constitución, tratados, Corte Interamericana, leyes y jurisprudencia.
+                                                        {esRecurso
+                                                            ? 'Iurexia identifica las consideraciones de la resolución que sostienen lo resuelto y construye cada agravio con sus seis piezas —lo que se combate, lo que consta, la norma violada, su respaldo, su fuerza y la objeción del tribunal que hay que vencer—, citando sólo lo que encuentra en el acervo: Constitución, tratados, Corte Interamericana, leyes y jurisprudencia.'
+                                                            : 'Iurexia plantea los problemas jurídicos de tu caso y construye cada argumento con sus seis piezas —afirmación, hechos, regla, respaldo, fuerza y la objeción que hay que vencer—, citando sólo lo que encuentra en el acervo: Constitución, tratados, Corte Interamericana, leyes y jurisprudencia.'}
                                                     </p>
                                                     {!casoListo && (
-                                                        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900 ring-1 ring-amber-200">Primero escribe los hechos y lo que pides (paso 1).</p>
+                                                        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900 ring-1 ring-amber-200">
+                                                            {esRecurso ? 'Primero escribe el tipo de recurso, los antecedentes, la resolución que impugnas y lo que pides (paso 1).' : 'Primero escribe los hechos y lo que pides (paso 1).'}
+                                                        </p>
+                                                    )}
+                                                    {resultado && claseResultado !== clase && tEstado !== 'trabajando' && (
+                                                        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900 ring-1 ring-amber-200">
+                                                            Estos {claseResultado === 'recurso' ? 'agravios se construyeron para un recurso' : 'argumentos se construyeron para una demanda'}. Vuelve a estructurar para {esRecurso ? 'el recurso' : 'la demanda'}.
+                                                        </p>
                                                     )}
                                                     {tEstado === 'trabajando' ? (
                                                         <div className="rounded-lg border border-charcoal-900/10 bg-cream-100 p-3">
@@ -668,7 +800,7 @@ ${texto.slice(0, 60000)}`;
                                                     ) : (
                                                         <button type="button" className={botonPrimario} disabled={!casoListo} onClick={estructurar}>
                                                             <Network className="h-4 w-4 text-accent-gold" />
-                                                            {resultado ? 'Volver a estructurar' : 'Estructurar argumentos'}
+                                                            {resultado ? 'Volver a estructurar' : esRecurso ? 'Estructurar agravios' : 'Estructurar argumentos'}
                                                             <span className="rounded bg-white/15 px-1.5 py-0.5 text-[10.5px] font-medium text-white/80">1 consulta</span>
                                                         </button>
                                                     )}
@@ -678,7 +810,7 @@ ${texto.slice(0, 60000)}`;
                                                         <div className="grid gap-2.5">
                                                             <div className="flex flex-wrap items-center justify-between gap-2">
                                                                 <p className="text-[12px] text-charcoal-900/60">
-                                                                    {resultado.argumentos.length} argumentos · {resultado.citadas.length} fuentes citadas, todas del acervo
+                                                                    {resultado.argumentos.length} {claseResultado === 'recurso' ? 'agravios' : 'argumentos'} · {resultado.citadas.length} fuentes citadas, todas del acervo
                                                                 </p>
                                                                 <button type="button" onClick={insertarTodos}
                                                                     className="h-8 rounded-lg border border-accent-gold/50 bg-accent-gold/10 px-3 text-[12px] font-semibold text-charcoal-900 transition-colors hover:bg-accent-gold/20">
@@ -686,7 +818,8 @@ ${texto.slice(0, 60000)}`;
                                                                 </button>
                                                             </div>
                                                             {resultado.argumentos.map((a, i) => (
-                                                                <TarjetaToulmin key={`${i}-${a.titulo}`} argumento={a} ordinal={ORDINALES[i]} fuentes={resultado.fuentes}
+                                                                <TarjetaToulmin key={`${i}-${a.titulo}`} argumento={a} ordinal={rotuloDe(claseResultado, i)} fuentes={resultado.fuentes}
+                                                                    consideracion={claseResultado === 'recurso' ? resultado.consideraciones?.[i] : undefined}
                                                                     insertado={insertados.includes(i)} onInsertar={() => insertarArgumento(i)} />
                                                             ))}
                                                             {(resultado.avisos.length > 0 || resultado.faltantes.length > 0) && (
@@ -702,7 +835,7 @@ ${texto.slice(0, 60000)}`;
                                                                     )}
                                                                 </div>
                                                             )}
-                                                            <button type="button" className={botonSecundario} onClick={() => setPaso('redactar')}>Continuar: redactar la demanda</button>
+                                                            <button type="button" className={botonSecundario} onClick={() => setPaso('redactar')}>{esRecurso ? 'Continuar: redactar el recurso' : 'Continuar: redactar la demanda'}</button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -711,7 +844,9 @@ ${texto.slice(0, 60000)}`;
                                             {p.id === 'redactar' && (
                                                 <div className="grid gap-3">
                                                     <p className="text-[13px] leading-relaxed text-charcoal-900/70">
-                                                        Iurexia redacta la {tipoSel.etiqueta.toLowerCase()} completa —proemio, hechos, derecho, pruebas y puntos petitorios— con {resultado?.argumentos?.length ? `tus ${resultado.argumentos.length} argumentos ya estructurados` : 'los hechos y lo que pides'}. Llega a la hoja mientras se escribe.
+                                                        {esRecurso
+                                                            ? <>Iurexia redacta el {nombreEscrito.charAt(0).toLowerCase() + nombreEscrito.slice(1)} completo —proemio, resolución que se impugna, agravios y puntos petitorios— con {resultado?.argumentos?.length && claseResultado === 'recurso' ? `tus ${resultado.argumentos.length} agravios ya estructurados` : 'lo resuelto y lo que pides'}. Llega a la hoja mientras se escribe.</>
+                                                            : <>Iurexia redacta la {tipoSel.etiqueta.toLowerCase()} completa —proemio, hechos, derecho, pruebas y puntos petitorios— con {resultado?.argumentos?.length && claseResultado === 'demanda' ? `tus ${resultado.argumentos.length} argumentos ya estructurados` : 'los hechos y lo que pides'}. Llega a la hoja mientras se escribe.</>}
                                                     </p>
                                                     {rEstado === 'trabajando' ? (
                                                         <div className="flex items-center gap-2.5 rounded-lg border border-charcoal-900/10 bg-cream-100 px-3 py-3 text-[13px] text-charcoal-900">
@@ -720,7 +855,7 @@ ${texto.slice(0, 60000)}`;
                                                         </div>
                                                     ) : confirmarReemplazo ? (
                                                         <div className="grid gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                                                            <p className="text-[13px] leading-relaxed text-amber-950">La hoja ya tiene texto. ¿Lo sustituyo por la demanda nueva o la añado al final?</p>
+                                                            <p className="text-[13px] leading-relaxed text-amber-950">La hoja ya tiene texto. ¿Lo sustituyo por {esRecurso ? 'el recurso nuevo o lo añado' : 'la demanda nueva o la añado'} al final?</p>
                                                             <div className="grid grid-cols-2 gap-2">
                                                                 <button type="button" className={botonSecundario} onClick={() => void redactar('final')}>Añadir al final</button>
                                                                 <button type="button" className={botonPrimario} onClick={() => void redactar('reemplazar')}>Sustituir</button>
@@ -806,7 +941,7 @@ ${texto.slice(0, 60000)}`;
                     {rEstado === 'trabajando' && (
                         <div className="flex shrink-0 items-center gap-2.5 border-b border-charcoal-900/10 bg-charcoal-900 px-3 py-1.5 text-[13px] text-white sm:px-4">
                             <Loader2 className="h-4 w-4 shrink-0 animate-spin text-accent-gold" />
-                            <span className="min-w-0 truncate">Redactando la demanda…</span>
+                            <span className="min-w-0 truncate">{esRecurso ? 'Redactando el recurso…' : 'Redactando la demanda…'}</span>
                             <button type="button" onClick={() => rAbort.current?.abort()}
                                 className="ml-auto h-8 shrink-0 rounded-md border border-white/25 px-3 text-[12.5px] font-medium text-white transition-colors hover:bg-white/10">
                                 Detener

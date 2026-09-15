@@ -1485,7 +1485,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     <button
                                         onClick={() => onLlevarAlDocumento(cleanContentForExport(message.content))}
                                         className="inline-flex items-center gap-1.5 rounded-md border border-charcoal-900/15 bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal-900 transition-colors hover:border-accent-gold/60 hover:bg-accent-gold/10"
-                                        title="Añadir esta respuesta al documento de la demanda"
+                                        title="Añadir esta respuesta al documento del constructor"
                                     >
                                         <FileSignature className="w-3.5 h-3.5 text-accent-brown" />
                                         Al documento

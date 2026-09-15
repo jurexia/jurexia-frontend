@@ -35,7 +35,11 @@ export interface ArgumentoToulmin {
 }
 
 export interface ResultadoToulmin {
+    /** «demanda» o «recurso» (los resultados guardados antes del 15-sep no la traen). */
+    clase?: ClaseEscrito;
     problemas: string[];
+    /** En un recurso, la consideración de la resolución que combate cada problema. */
+    consideraciones?: string[];
     materia: string;
     argumentos: ArgumentoToulmin[];
     fuentes: Record<string, FuenteToulmin>;
@@ -45,10 +49,16 @@ export interface ResultadoToulmin {
     conteo: Partial<Record<ClaseFuente, number>>;
 }
 
+export type ClaseEscrito = 'demanda' | 'recurso';
+
 export interface PeticionToulmin {
     hechos: string;
     pretension: string;
+    clase?: ClaseEscrito;
+    /** En un recurso, el que escribió el abogado: «apelación contra sentencia definitiva». */
     tipo?: string;
+    /** En un recurso: lo que resolvió la autoridad y sus razones. */
+    resolucion?: string;
     estado?: string;
     materia?: string;
 }
@@ -129,3 +139,11 @@ export function argumentoAHtml(a: ArgumentoToulmin, ordinal?: string): string {
 }
 
 export const ORDINALES = ['PRIMERO', 'SEGUNDO', 'TERCERO', 'CUARTO', 'QUINTO', 'SEXTO', 'SÉPTIMO', 'OCTAVO'];
+
+/** Los agravios se rotulan como en el foro: «PRIMER AGRAVIO», «TERCER AGRAVIO». */
+export const ORDINALES_AGRAVIO = ['PRIMER AGRAVIO', 'SEGUNDO AGRAVIO', 'TERCER AGRAVIO', 'CUARTO AGRAVIO',
+    'QUINTO AGRAVIO', 'SEXTO AGRAVIO', 'SÉPTIMO AGRAVIO', 'OCTAVO AGRAVIO'];
+
+export function rotuloDe(clase: ClaseEscrito | undefined, i: number): string {
+    return (clase === 'recurso' ? ORDINALES_AGRAVIO : ORDINALES)[i] ?? String(i + 1);
+}
