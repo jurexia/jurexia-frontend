@@ -776,6 +776,10 @@ export default function TallerDeSentencias() {
        cosas es lo que hizo que David dictara «infundado global» y recibiera un
        proyecto que amparaba. */
     const [globalDictado, setGlobalDictado] = useState(false);
+    /* SUBE cada vez que el secretario pide cambiar el sentido desde el
+       proyecto terminado: la pantalla de decisión abre su panel de
+       corrección al verlo subir. */
+    const [vueltaCriterio, setVueltaCriterio] = useState(0);
     /* Los problemas cuya razón está redactando el motor ahora mismo. */
     const [razonando, setRazonando] = useState<Set<string>>(new Set());
 
@@ -2390,9 +2394,13 @@ export default function TallerDeSentencias() {
                               onProponer={pedirPropuesta} propuesta={propuesta}
                               proponiendo={proponiendo}
                               onAportar={aportarYProponer} aportando={aportando}
+                              modo={modo} onModo={setModo}
                               sentidoGlobal={sentidoGlobal}
                               onSentidoGlobal={elegirGlobal}
+                              razonGlobal={razonGlobal}
                               onRazonGlobal={setRazonGlobal}
+                              globalDictado={globalDictado}
+                              abrirCorreccion={vueltaCriterio}
                               tocados={tocados}
                               onRazonar={pedirRazon} razonando={razonando}
                               conceptosViolacion={conceptosViolacion}
@@ -2628,7 +2636,7 @@ export default function TallerDeSentencias() {
                                         Descargar el Word
                                     </button>
                                     <button type="button" disabled={corriendo}
-                                            onClick={() => { setProyecto(null); setPaso('acervo'); irA('criterio', 120); }}
+                                            onClick={() => { setProyecto(null); setPaso('acervo'); setVueltaCriterio((v) => v + 1); irA('criterio', 120); }}
                                             className={cn(boton, 'h-11 border border-white/15 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}>
                                         <Search className="h-4 w-4" />
                                         Cambiar el sentido y regenerar
