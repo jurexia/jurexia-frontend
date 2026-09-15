@@ -2585,6 +2585,59 @@ export default function TallerDeSentencias() {
 
                     {proyecto && (
                         <>
+                            {/* ═══ PASO 4: EL WORD, Y LOS AVISOS EN TRES BOTONES ═══
+                                David: «reducirlo a botones y entonces sí desplegar».
+                                Primero lo que el secretario vino a buscar —el
+                                documento, con sus cifras— y las dos salidas: bajarlo
+                                o cambiar el sentido. Los avisos van debajo, agrupados. */}
+                            <Tarjeta glow className="border-accent-gold/30">
+                                <p className="text-[12px] uppercase tracking-[0.14em] text-accent-gold/80">
+                                    Paso 4 · proyecto listo para revisar
+                                </p>
+                                <h2 className="mt-2 font-serif text-xl font-medium text-white">
+                                    {proyecto.nombre}
+                                </h2>
+                                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                                    <div className="rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3">
+                                        <p className="text-[16px] font-semibold tabular-nums text-white">
+                                            {proyecto.palabras.toLocaleString('es-MX')}
+                                        </p>
+                                        <p className="text-[12px] text-white/45">palabras · {Math.max(1, Math.round(proyecto.palabras / 380))} páginas</p>
+                                    </div>
+                                    <div className="rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3">
+                                        <p className="text-[16px] font-semibold text-white">
+                                            {sentidoGlobal ? sentidoGlobal.replace(/_/g, ' ') : `${problemas.filter((q) => q.sentido).length} de ${problemas.length}`}
+                                        </p>
+                                        <p className="text-[12px] text-white/45">
+                                            {sentidoGlobal ? 'sentido de todo el asunto' : 'problemas con sentido'}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3">
+                                        <p className="text-[16px] font-semibold tabular-nums text-white">
+                                            {proyecto.avisos}
+                                        </p>
+                                        <p className="text-[12px] text-white/45">avisos, agrupados abajo</p>
+                                    </div>
+                                </div>
+                                <div className="mt-4 flex flex-wrap items-center gap-2.5">
+                                    <button type="button" onClick={() => descargarProyecto(proyecto)}
+                                            className={cn(boton,
+                                                'h-11 bg-gradient-to-b from-[#e3c98a] to-accent-gold text-charcoal-900',
+                                                'shadow-[0_10px_30px_-12px_rgba(201,169,98,0.7)] hover:-translate-y-px')}>
+                                        <Download className="h-4 w-4" />
+                                        Descargar el Word
+                                    </button>
+                                    <button type="button" disabled={corriendo}
+                                            onClick={() => { setProyecto(null); setPaso('acervo'); irA('criterio', 120); }}
+                                            className={cn(boton, 'h-11 border border-white/15 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}>
+                                        <Search className="h-4 w-4" />
+                                        Cambiar el sentido y regenerar
+                                    </button>
+                                    <p className="text-[12px] leading-relaxed text-white/45">
+                                        Ya se descargó al terminar. Es un .docx sobre la plantilla del tribunal.
+                                    </p>
+                                </div>
+                            </Tarjeta>
                             <AvisoBorrador datos={{
                                 palabras: proyecto.palabras, avisos: proyecto.avisos,
                                 huecos: proyecto.huecos, tieneAdvertencias: proyecto.tieneAdvertencias,
@@ -2600,19 +2653,7 @@ export default function TallerDeSentencias() {
                                 nunca se vio. Ahora se dice qué documento es y
                                 que ya está bajado; el botón sigue ahí para
                                 quien no lo encuentre. */}
-                            <div className="flex flex-wrap items-center gap-3">
-                                <button className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
-                                        onClick={() => descargarProyecto(proyecto)}>
-                                    <Download className="h-4 w-4" />
-                                    Descargar de nuevo
-                                </button>
-                                <p className="text-[13px] leading-relaxed text-white/45">
-                                    <span className="text-white/75">{proyecto.nombre}</span>
-                                    {' '}ya se descargó a tu carpeta de descargas al terminar.
-                                    Es un .docx sobre la plantilla del tribunal: se abre y se
-                                    edita como cualquier proyecto tuyo.
-                                </p>
-                            </div>
+
                         </>
                     )}
                 </div>

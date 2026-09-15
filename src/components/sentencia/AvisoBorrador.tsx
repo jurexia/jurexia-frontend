@@ -15,7 +15,7 @@
  */
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertTriangle, FileWarning, Users, BookMarked, ListChecks } from 'lucide-react';
 import { Tarjeta, cn } from './primitivas';
 
@@ -59,50 +59,81 @@ const PUNTOS = [
       texto: 'Este borrador tiende a repetir la misma razón. Pode antes de firmar.' },
 ];
 
+/* ═══ LOS AVISOS, EN TRES BOTONES ═══
+   David (15-sep-2026): «reducirlo a botones y entonces sí desplegar». Un
+   proyecto real trae veintiséis avisos y se leían como una lista de
+   veintiséis renglones del mismo peso. Ahora son tres cifras con botón:
+   lo que hay que COMPROBAR antes de firmar —abierto por omisión—, lo de
+   FORMA y lo INFORMATIVO. No se tira nada: cada botón despliega su lista
+   entera. El reparto va por las marcas que los propios textos traen
+   —«Compruébalo», «antes de firmar», «SINTAXIS», «palabras»—; lo que no
+   casa con ninguna queda como informativo, nunca fuera. */
+type Grupo = 'comprobar' | 'forma' | 'info';
+
+function grupoDe(t: string): Grupo {
+    const x = t.toLowerCase();
+    if (/compru[eé]b|antes de firmar|no se pudo|no consta|no est[aá]n en|hueco|revíselo a mano/.test(x)) return 'comprobar';
+    if (/sintaxis|palabras|p[aá]rrafos|comod[ií]n|repetid|se qued[oó] corto|oscila|mediana/.test(x)) return 'forma';
+    return 'info';
+}
+
 export default function AvisoBorrador({ datos, className }: {
     datos: DatosBorrador; className?: string;
 }) {
+    const [abierto, setAbierto] = useState<Grupo | null>('comprobar');
+    const avisos = datos.textoAvisos ?? [];
+    const huecos = datos.textoHuecos ?? [];
+    const grupos: Record<Grupo, string[]> = { comprobar: [], forma: [], info: [] };
+    for (const a of avisos) grupos[grupoDe(a)].push(a);
+    for (const h of huecos) grupos.comprobar.push(`Hueco de tu criterio: ${h}`);
+    const BOTONES: { id: Grupo; titulo: string; tono: string }[] = [
+        { id: 'comprobar', titulo: 'para comprobar antes de firmar', tono: 'text-amber-300' },
+        { id: 'forma', titulo: 'de forma', tono: 'text-white/75' },
+        { id: 'info', titulo: 'informativos', tono: 'text-white/60' },
+    ];
     return (
-        <Tarjeta
-            padding="p-5"
-            className={cn('border-amber-400/30 bg-amber-400/[0.06]', className)}
-        >
+        <Tarjeta padding="p-5" className={cn('border-amber-400/30 bg-amber-400/[0.06]', className)}>
             <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" aria-hidden />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                     <h3 className="text-[16px] font-semibold text-amber-100">
                         Borrador. No es un proyecto firmable.
                     </h3>
                     <p className="mt-1 text-[14px] leading-relaxed text-white/60">
                         {datos.palabras.toLocaleString('es-MX')} palabras
-                        {datos.avisos > 0 && <> · <span className="text-amber-200">{datos.avisos} avisos</span></>}
-                        {datos.huecos > 0 && <> · {datos.huecos} huecos de su criterio</>}
+                        {datos.huecos > 0 && <> · {datos.huecos} huecos de tu criterio</>}
                         {datos.tieneAdvertencias && (
                             <> · <span className="text-amber-200">
-                                el sistema encontró un obstáculo al sentido que usted fijó
+                                el sistema encontró un obstáculo al sentido que fijaste
                             </span></>
                         )}
                     </p>
-
-                    {/* QUÉ DICEN LOS AVISOS, no cuántos son.
-                        Se contaban y se tiraban los textos, y entre ellos venía
-                        el único que de verdad importa: «El criterio pedía X y
-                        esa calificación no aparece en el estudio». El
-                        secretario veía «3 avisos» y un recuadro genérico, sin
-                        forma de saber que el sistema no le había hecho caso. */}
-                    {(datos.textoAvisos?.length ?? 0) > 0 && (
-                        <ul className="mt-3 space-y-1.5 border-t border-amber-400/20 pt-3">
-                            {(datos.textoAvisos ?? []).map((a, i) => {
+                    {(avisos.length + huecos.length) > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            {BOTONES.filter((b) => grupos[b.id].length > 0).map((b) => (
+                                <button key={b.id} type="button"
+                                        onClick={() => setAbierto((v) => (v === b.id ? null : b.id))}
+                                        aria-expanded={abierto === b.id}
+                                        className={cn(
+                                            'inline-flex h-9 items-center gap-2 rounded-xl border px-3.5 text-[13px] transition-colors',
+                                            abierto === b.id
+                                                ? 'border-amber-400/45 bg-amber-400/10 text-white'
+                                                : 'border-white/10 bg-white/[0.03] text-white/75 hover:border-white/20')}>
+                                    <span className={cn('font-semibold tabular-nums', b.tono)}>{grupos[b.id].length}</span>
+                                    {b.titulo}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    {abierto && grupos[abierto].length > 0 && (
+                        <ul className="mt-3 space-y-1.5 rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-2.5">
+                            {grupos[abierto].map((a, i) => {
                                 const [cabeza, cuerpo] = partirAviso(a);
                                 return (
-                                    <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-amber-100/75">
+                                    <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-white/75">
                                         <span className="shrink-0 text-amber-300/70">·</span>
                                         <span>
-                                            {cabeza && (
-                                                <span className="font-medium text-amber-100">
-                                                    {cabeza}:{' '}
-                                                </span>
-                                            )}
+                                            {cabeza && <span className="font-medium text-amber-100">{cabeza}: </span>}
                                             {cuerpo}
                                         </span>
                                     </li>
@@ -110,31 +141,25 @@ export default function AvisoBorrador({ datos, className }: {
                             })}
                         </ul>
                     )}
-                    {(datos.textoHuecos?.length ?? 0) > 0 && (
-                        <ul className="mt-2 space-y-1.5">
-                            {(datos.textoHuecos ?? []).map((h, i) => (
-                                <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-white/60">
-                                    <span className="shrink-0 text-white/45">·</span>
-                                    <span>{h}</span>
+                    <details className="group mt-4 border-t border-white/[0.07] pt-3">
+                        <summary className="flex cursor-pointer list-none items-center gap-2 text-[13px] text-white/60 hover:text-white">
+                            <span className="text-accent-gold/70 transition-transform group-open:rotate-90">›</span>
+                            Qué revisar siempre, aunque no haya avisos
+                        </summary>
+                        <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+                            {PUNTOS.map(({ icono: Icono, titulo, texto }) => (
+                                <li key={titulo} className="flex gap-2.5">
+                                    <Icono className="mt-0.5 h-4 w-4 shrink-0 text-white/45" aria-hidden />
+                                    <div>
+                                        <p className="text-[14px] font-medium text-white/90">{titulo}</p>
+                                        <p className="text-[13px] leading-snug text-white/60">{texto}</p>
+                                    </div>
                                 </li>
                             ))}
                         </ul>
-                    )}
-
-                    <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-                        {PUNTOS.map(({ icono: Icono, titulo, texto }) => (
-                            <li key={titulo} className="flex gap-2.5">
-                                <Icono className="mt-0.5 h-4 w-4 shrink-0 text-white/45" aria-hidden />
-                                <div>
-                                    <p className="text-[14px] font-medium text-white/90">{titulo}</p>
-                                    <p className="text-[13px] leading-snug text-white/60">{texto}</p>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-
-                    <p className="mt-4 border-t border-white/[0.07] pt-3 text-[13px] text-white/45">
-                        Usted firma. El sistema no responde por el contenido.
+                    </details>
+                    <p className="mt-3 text-[13px] text-white/45">
+                        Tú firmas. El sistema no responde por el contenido.
                     </p>
                 </div>
             </div>
@@ -142,7 +167,6 @@ export default function AvisoBorrador({ datos, className }: {
     );
 }
 
-/** La banda del piloto: cuántas plazas quedan y qué pasa cuando se acaben. */
 /* ═══ EL CARTEL DEL PILOTO SE RETIRA ═══
    David, 13-sep-2026: «a esta herramienta ya no acceden Platinum. Deja a
    quienes ocuparon los 9 de los 10 asientos. Ahora sólo podrán acceder los
