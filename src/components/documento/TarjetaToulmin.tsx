@@ -25,13 +25,31 @@ const ETIQUETA_CLASE: Record<string, string> = {
     tesis: 'Jurisprudencia',
 };
 
+/* «JURISPRUDENCIA» SÓLO CUANDO LO ES. La ficha rotulaba igual una tesis aislada,
+   que no obliga; el catálogo ya distingue el tipo (`toulmin._tipo_tesis`). */
+function etiquetaDe(f: FuenteToulmin): string {
+    if (f.clase !== 'tesis') return ETIQUETA_CLASE[f.clase];
+    const tipo = (f.tipo || '').toLowerCase();
+    return tipo.includes('jurisprudencia') ? 'Jurisprudencia' : tipo.includes('aislada') ? 'Tesis aislada' : 'Tesis';
+}
+
 function rotuloCorto(f: FuenteToulmin): string {
     switch (f.clase) {
         case 'tesis': return `Reg. ${f.registro}`;
         case 'constitucion': return `Art. ${f.articulo} CPEUM`;
         case 'ley': return `Art. ${f.articulo} · ${abreviar(f.fuente || '')}`;
-        case 'tratado': return `${(f.articulo || '').replace(/^art[íi]culo/i, 'Art.')} · ${abreviar(f.fuente || '')}`.replace(/^ · /, '');
-        case 'coidh': return (f.caso || 'Corte IDH').replace(/^Caso\s+/i, '').slice(0, 28) + (f.parrafo ? `, párr. ${f.parrafo}` : '');
+        case 'tratado': {
+            // «Art. 3 CDN» ya trae la sigla: repetirla daba «Art. 3 CDN · CDN».
+            const art = (f.articulo || '').replace(/^art[íi]culo/i, 'Art.').trim();
+            const sigla = abreviar(f.fuente || '');
+            return art && sigla && art.toLowerCase().endsWith(sigla.toLowerCase()) ? art : `${art} · ${sigla}`.replace(/^ · | · $/g, '');
+        }
+        case 'coidh': {
+            // El nombre del caso se corta por palabra, con puntos suspensivos, no a media palabra.
+            const caso = (f.caso || 'Corte IDH').replace(/^Caso\s+/i, '');
+            const corto = caso.length <= 34 ? caso : caso.slice(0, 34).replace(/\s+\S*$/, '') + '…';
+            return corto + (f.parrafo ? `, párr. ${f.parrafo}` : '');
+        }
         default: return f.id;
     }
 }
@@ -77,7 +95,7 @@ export function TarjetaToulmin({
                                 : 'border-accent-gold/40 bg-accent-gold/[0.08] text-charcoal-900 hover:border-accent-gold hover:bg-accent-gold/15'
                         }`}
                     >
-                        <span className={activa ? 'text-accent-gold' : 'text-accent-brown'}>{ETIQUETA_CLASE[f.clase]}</span>
+                        <span className={activa ? 'text-accent-gold' : 'text-accent-brown'}>{etiquetaDe(f)}</span>
                         <span className="truncate">{rotuloCorto(f)}</span>
                     </button>
                 );
