@@ -184,6 +184,28 @@ export function textoDeHtml(raiz: HTMLElement): string {
 }
 
 /**
+ * EL ESCRITO Y LA ESTRATEGIA, SEPARADOS.
+ *
+ * Los tres prompts de redacción del chat (demanda, amparo, impugnación)
+ * terminan con «## ESTRATEGIA PROCESAL Y RECOMENDACIONES», «## ESTRATEGIA DEL
+ * AMPARO» o «## ESTRATEGIA DE IMPUGNACIÓN»: tablas de fortaleza, probabilidad
+ * de éxito y alternativas. En el chat es un buen consejo; en la hoja acababa
+ * impreso dentro del Word que el abogado presenta. Aquí se corta en ese rubro
+ * —y en la «evaluación de viabilidad» que alguno escribe antes— y lo de
+ * después se enseña aparte.
+ */
+const RX_ESTRATEGIA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*)?[ \t]*(?:ESTRATEGIA(?:[ \t]+(?:PROCESAL|DE[ \t]+IMPUGNACI[ÓO]N|DEL[ \t]+AMPARO))|(?:EVALUACI[ÓO]N|AN[ÁA]LISIS)[ \t]+DE[ \t]+VIABILIDAD)\b.*$/im
+
+export function separarEstrategia(md: string): { escrito: string; estrategia: string } {
+    const t = md || ''
+    const m = RX_ESTRATEGIA.exec(t)
+    if (!m) return { escrito: t, estrategia: '' }
+    // El separador «---» que suele ir justo antes también se queda fuera del escrito.
+    const escrito = t.slice(0, m.index).replace(/(?:\n[ \t]*(?:-{3,}|\*{3,}|_{3,})[ \t]*)+\s*$/, '').trimEnd()
+    return { escrito, estrategia: t.slice(m.index).trim() }
+}
+
+/**
  * ¿LO QUE DEVOLVIÓ EL CHAT ES UN ESCRITO, O UN AVISO?
  *
  * `/chat` no contesta con error HTTP cuando se acaban las consultas, la cuenta

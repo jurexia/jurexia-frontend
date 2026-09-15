@@ -90,8 +90,10 @@ export function TarjetaToulmin({
 
     return (
         <article className="rounded-xl border border-charcoal-900/[0.08] bg-white shadow-[0_1px_2px_rgba(20,18,16,0.04)]">
-            <header className="flex items-start gap-3 px-4 pb-2 pt-3.5">
-                <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-md bg-charcoal-900 px-1.5 py-[3px] text-[10px] font-semibold tracking-[0.08em] text-accent-gold">
+            {/* «SEGUNDO AGRAVIO» es tres veces «PRIMERO»: en teléfono el rótulo va
+                encima del título para no robarle la mitad del ancho. */}
+            <header className="flex flex-col gap-1.5 px-4 pb-2 pt-3.5 sm:flex-row sm:items-start sm:gap-3">
+                <span className="mt-0.5 self-start shrink-0 whitespace-nowrap rounded-md bg-charcoal-900 px-1.5 py-[3px] text-[10px] font-semibold tracking-[0.08em] text-accent-gold">
                     {ordinal}
                 </span>
                 <div className="min-w-0 flex-1">

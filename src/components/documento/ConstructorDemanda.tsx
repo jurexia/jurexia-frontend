@@ -9,7 +9,7 @@ import {
 import { Hoja, type HojaAPI } from './Hoja';
 import { TarjetaToulmin } from './TarjetaToulmin';
 import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
-import { analizarRespuesta, markdownAHtml, textoDeHtml } from '@/lib/documento/marcado';
+import { analizarRespuesta, markdownAHtml, separarEstrategia, textoDeHtml } from '@/lib/documento/marcado';
 import {
     ErrorToulmin, argumentoAHtml, rotuloDe, toulminStream,
     type ClaseEscrito, type ResultadoToulmin,
@@ -109,6 +109,8 @@ interface Guardado {
     resultado: ResultadoToulmin | null;
     insertados: number[];
     revisionHtml: string;
+    /** La estrategia que el chat pone al final de la redacción: se enseña, no se imprime. */
+    estrategiaHtml?: string;
     papel: Papel;
     titulo: string;
     html: string;
@@ -192,6 +194,7 @@ export default function ConstructorDemanda({
     const [vEstado, setVEstado] = useState<Estado>(guardado?.revisionHtml ? 'listo' : 'inactivo');
     const [vError, setVError] = useState('');
     const [revisionHtml, setRevisionHtml] = useState(guardado?.revisionHtml ?? '');
+    const [estrategiaHtml, setEstrategiaHtml] = useState(guardado?.estrategiaHtml ?? '');
 
     /* ── DÓNDE SE DESPLIEGA ────────────────────────────────────────────
        David, 15-sep-2026: «en la misma ventana, si es posible sin salir del
@@ -261,10 +264,10 @@ export default function ConstructorDemanda({
     // ── guardar en este navegador ─────────────────────────────────────────
     const guardar = useCallback(() => {
         try {
-            const g: Guardado = { caso, resultado, insertados, revisionHtml, papel, titulo, html: htmlRef.current, paso };
+            const g: Guardado = { caso, resultado, insertados, revisionHtml, estrategiaHtml, papel, titulo, html: htmlRef.current, paso };
             window.localStorage.setItem(claveDe(usuarioId), JSON.stringify(g));
         } catch { /* sin almacenamiento: el borrador vive mientras la pestaña esté abierta */ }
-    }, [caso, resultado, insertados, revisionHtml, papel, titulo, paso, usuarioId]);
+    }, [caso, resultado, insertados, revisionHtml, estrategiaHtml, papel, titulo, paso, usuarioId]);
     useEffect(() => { const id = window.setTimeout(guardar, 400); return () => window.clearTimeout(id); }, [guardar]);
     // Al cerrar la pestaña o salir de /chat, lo pendiente se guarda ya (la espera de 400 ms se cancelaba).
     const guardarRef = useRef(guardar);
@@ -468,13 +471,15 @@ ${esRecurso ? `Escrito: ${nombreEscrito}\n\n` : ''}${cuerpoCaso}${argumentos}`;
                 if (ahora - ultimo > 250) {
                     ultimo = ahora;
                     const previa = analizarRespuesta(texto);
-                    setVistaPrevia((!previa.error && markdownAHtml(previa.texto)) || `<p style="text-align:center;color:#8b7355"><i>Iurexia está analizando ${esRecurso ? 'la resolución y preparando el recurso' : 'el caso y preparando la demanda'}…</i></p>`);
+                    setVistaPrevia((!previa.error && markdownAHtml(separarEstrategia(previa.texto).escrito)) || `<p style="text-align:center;color:#8b7355"><i>Iurexia está analizando ${esRecurso ? 'la resolución y preparando el recurso' : 'el caso y preparando la demanda'}…</i></p>`);
                 }
             }
             const r = analizarRespuesta(texto);
             if (r.error) throw new Error(r.error);
-            const html = markdownAHtml(r.texto);
+            const partes = separarEstrategia(r.texto);
+            const html = markdownAHtml(partes.escrito);
             if (!html) throw new Error('La redacción llegó vacía. Vuelve a intentarlo.');
+            setEstrategiaHtml(partes.estrategia ? markdownAHtml(partes.estrategia) : '');
             if (modo === 'reemplazar' && hoja.current && !hoja.current.vacia()) setRespaldo(hoja.current.raiz()?.innerHTML ?? null);
             else setRespaldo(null);
             if (modo === 'reemplazar' || hoja.current?.vacia()) hoja.current?.reemplazar(html);
@@ -874,6 +879,16 @@ ${texto.slice(0, 60000)}`;
                                                         </div>
                                                     )}
                                                     <p className="text-[12px] leading-relaxed text-charcoal-900/70">«Redactar» sustituye lo que haya en la hoja; «Añadir al final» lo conserva.</p>
+                                                    {estrategiaHtml && rEstado !== 'trabajando' && (
+                                                        <details className="group rounded-lg border border-charcoal-900/10 bg-cream-100">
+                                                            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-[13px] font-medium text-charcoal-900">
+                                                                <span>Estrategia y riesgos <span className="font-normal text-charcoal-900/70">· no va al documento</span></span>
+                                                                <span aria-hidden="true" className="text-charcoal-900/60 transition-transform group-open:rotate-180">▾</span>
+                                                            </summary>
+                                                            <div className="hoja-escrito max-h-[45vh] overflow-y-auto border-t border-charcoal-900/10 bg-white px-4 py-3 !text-[13px] !leading-relaxed"
+                                                                dangerouslySetInnerHTML={{ __html: estrategiaHtml }} />
+                                                        </details>
+                                                    )}
                                                     {respaldo != null && rEstado === 'listo' && (
                                                         <button type="button" onClick={recuperarAnterior} className="justify-self-start text-[12.5px] font-medium text-accent-brown underline-offset-2 hover:underline">
                                                             Recuperar el documento anterior
