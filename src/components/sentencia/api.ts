@@ -19,6 +19,9 @@ export interface EncargoAdelanto {
     notificacion: string;           // ISO, 2026-05-11
     presentacion: string;
     reglaSurtimiento?: string;
+    /** Sólo cuando reglaSurtimiento === 'otra': la fecha, ISO, en que el
+     *  secretario declara que la notificación surtió efectos. */
+    surteEfectos?: string;
     plazo?: number;
     /** La excepción de plazo declarada, si el tipo tiene alguna: en la queja,
      *  «suspension» (dos días) u «omision_tramite» (en cualquier tiempo). */
@@ -84,6 +87,8 @@ export async function generarAdelanto(
     // uno de Yucatán se hacía con la regla de otro estado. La general es la
     // notificación personal, artículo 31, fracción I, de la Ley de Amparo.
     fd.append('regla_surtimiento', encargo.reglaSurtimiento ?? 'personal');
+    if (encargo.reglaSurtimiento === 'otra' && encargo.surteEfectos)
+        fd.append('surte_efectos', encargo.surteEfectos);
     // EL PLAZO NO SE MANDA SI NO SE DECLARA: cero significa «el que la ley da a
     // este tipo de asunto», y el servidor lo resuelve con el catálogo. Antes se
     // mandaban quince para todo, y una queja tiene cinco.
@@ -1265,6 +1270,10 @@ export interface FichaLeida {
     tercero_interesado?: string;
     expediente_origen?: string;
     magistrado?: string;
+    /** Leída del propio auto cuando trae la portada de la Oficina de
+     *  Correspondencia Común — no siempre está, y cuando no está el
+     *  secretario la teclea como hoy. ISO. */
+    presentacion?: string;
 }
 
 export async function fichaDesdeAdmision(

@@ -36,6 +36,7 @@
 import React from 'react';
 import { Tarjeta, Rotulo, cn } from './primitivas';
 import { obtenerTipos, type TipoAsunto } from './api';
+import Calendario from './Calendario';
 
 export interface Encargo {
     tipoAsunto: string;
@@ -47,6 +48,10 @@ export interface Encargo {
     notificacion: string;
     presentacion: string;
     reglaSurtimiento: string;
+    /** SÓLO CUANDO reglaSurtimiento === 'otra'. La fecha, ISO, en que el
+     *  propio secretario declara que la notificación surtió efectos: ninguna
+     *  regla del catálogo es la suya y el redactor no se la inventa. */
+    surteEfectos?: string;
     /** Cero = el que la ley da a este tipo. Sólo se manda si se declara otro. */
     plazo: number;
     /** La excepción de plazo, cuando el tipo tiene alguna. */
@@ -102,16 +107,23 @@ export interface Encargo {
 export const ENCARGO_VACIO: Encargo = {
     tipoAsunto: '', numero: '', encabezado: '', quejoso: '', magistrado: '',
     secretario: '', notificacion: '', presentacion: '',
-    reglaSurtimiento: 'personal', plazo: 0, diasInhabilesExtra: [],
+    reglaSurtimiento: 'personal', surteEfectos: '', plazo: 0, diasInhabilesExtra: [],
     inhabilesResponsable: '', materia: '',
 };
 
-/** Las reglas de surtimiento que el pipeline sabe computar. */
+/** Las reglas de surtimiento que el pipeline sabe computar, y una salida
+ *  manual para cuando ninguna es la del asunto. `tja_qro_boletin` dice de
+ *  quién es en su propia etiqueta —no es una regla genérica de «boletín»,
+ *  es del Tribunal de Justicia Administrativa DE QUERÉTARO— para que no se
+ *  elija por descuido en un asunto de otro estado; el servidor además la
+ *  rechaza si la materia es administrativa y el estado declarado no es
+ *  Querétaro. */
 const VIAS = [
     { v: 'personal', t: 'Personal — surte al día hábil siguiente' },
     { v: 'lista', t: 'Por lista — surte al día hábil siguiente' },
     { v: 'lfpca', t: 'LFPCA — al día hábil siguiente' },
-    { v: 'tja_qro_boletin', t: 'Boletín del TJA de Querétaro — al tercer día' },
+    { v: 'tja_qro_boletin', t: 'Boletín del TJA de Querétaro — al tercer día (sólo asuntos de Querétaro)' },
+    { v: 'otra', t: 'Otra regla — yo declaro cuándo surtió efectos' },
 ];
 
 const campo = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 ' +
@@ -448,13 +460,22 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
+                    {/* EL CALENDARIO ABRE EN EL MES DEL DATO QUE YA SE TIENE.
+                        David: «ya teniendo la fecha en que se presentó el
+                        recurso, desplegar el calendario en su mes y año para
+                        que el secretario sólo seleccione cuándo fue
+                        notificado, pudiendo cambiar de mes». La presentación
+                        suele llegar antes —del auto de admisión, o del auto
+                        de turno— así que es ella la que posiciona a la
+                        notificación, y no al revés. */}
                     <Campo etiqueta={`Notificación ${deRecurrido}`}>
-                        <input type="date" className={campo} value={valor.notificacion}
-                               onChange={(e) => set('notificacion', e.target.value)} />
+                        <Calendario valor={valor.notificacion}
+                                    mesInicial={valor.presentacion ? valor.presentacion.slice(0, 7) : undefined}
+                                    onCambiar={(iso) => set('notificacion', iso)} />
                     </Campo>
                     <Campo etiqueta={`Presentación: ${tipo.escrito}`}>
-                        <input type="date" className={campo} value={valor.presentacion}
-                               onChange={(e) => set('presentacion', e.target.value)} />
+                        <Calendario valor={valor.presentacion}
+                                    onCambiar={(iso) => set('presentacion', iso)} />
                     </Campo>
                 </div>
 
@@ -467,6 +488,29 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                         ))}
                     </select>
                 </Campo>
+
+                {/* ═══ OTRA REGLA: DOS FECHAS, DECLARADAS ═══
+                    David: «hay que darle la opción al secretario de "Otra
+                    regla" y que se despliegue un calendario para que
+                    selecciones primero cuándo se notificó y luego cuándo
+                    surte efectos». El «cuándo se notificó» es el campo de
+                    arriba —siempre está—; aquí sólo falta el segundo: cuándo
+                    surtió efectos, sin que el sistema se lo invente. */}
+                {valor.reglaSurtimiento === 'otra' && (
+                    <div className="rounded-xl border border-accent-gold/25 bg-accent-gold/[0.04] p-3.5">
+                        <p className="mb-3 text-[12px] leading-relaxed text-white/60">
+                            Ninguna regla del catálogo es la de este asunto: declara tú
+                            cuándo surtió efectos la notificación. El considerando lo dirá
+                            así —«según lo manifestado»— y no le inventará una regla que
+                            no aplicaste.
+                        </p>
+                        <Campo etiqueta="¿Cuándo surtió efectos la notificación?">
+                            <Calendario valor={valor.surteEfectos ?? ''}
+                                        mesInicial={valor.notificacion ? valor.notificacion.slice(0, 7) : undefined}
+                                        onCambiar={(iso) => set('surteEfectos', iso)} />
+                        </Campo>
+                    </div>
+                )}
 
                 <Campo etiqueta="Días inhábiles adicionales de TU tribunal"
                        ayuda={['amparo_directo', 'revision_fiscal'].includes(valor.tipoAsunto)
@@ -589,6 +633,8 @@ export function faltaEnEncargo(e: Encargo): string[] {
      * secretario la escribe, manda él. */
     if (!e.notificacion) falta.push('la fecha de notificación');
     if (!e.presentacion) falta.push('la fecha de presentación');
+    if (e.reglaSurtimiento === 'otra' && !e.surteEfectos)
+        falta.push('cuándo surtió efectos la notificación (elegiste «otra regla»)');
     /* EL TRIBUNAL, EL MAGISTRADO Y EL SECRETARIO se toman del último asunto
      * de este secretario. Sólo se exigen la primera vez, y de eso se encarga
      * el servidor, que es quien sabe si hay asunto anterior. */

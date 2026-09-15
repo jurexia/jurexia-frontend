@@ -39,6 +39,8 @@ import type { TipoAsunto } from '@/components/sentencia/api';
 import type { Encargo } from '@/components/sentencia/FormularioEncargo';
 import AvisoBorrador, { AvisoPiloto } from '@/components/sentencia/AvisoBorrador';
 import { Tarjeta, Rotulo, cn } from '@/components/sentencia/primitivas';
+import VentanaTesis from '@/components/sentencia/VentanaTesis';
+import type { TesisDelAcervo } from '@/components/sentencia/api';
 import type { Asunto, Documento, Fase, ProblemaJuridico, RolDocumento } from '@/components/sentencia/tipos';
 import {
     generarAdelanto, descargar, consultarAcervo, resolverConCriterio,
@@ -367,6 +369,10 @@ export default function TallerDeSentencias() {
        este panel existe para COMPROBAR con qué se va a fundar, y seis tesis que
        no se pueden leer son seis que no se pueden comprobar. */
     const [marcoEntero, setMarcoEntero] = useState(false);
+    // LA TESIS, SIN SALIR DEL REDACTOR. David: «basta con un clic para abrir
+    // una ventana que muestre la tesis, sin salir del redactor». `null` =
+    // cerrada; la tesis clicada = abierta.
+    const [tesisAbierta, setTesisAbierta] = useState<TesisDelAcervo | null>(null);
     const [pasoArchivos, setPasoArchivos] = useState<PasoArchivos | null>(null);
     const [fichando, setFichando] = useState(false);
     const [fichado, setFichado] = useState<string[]>([]);
@@ -396,6 +402,11 @@ export default function TallerDeSentencias() {
                 poner('tribunal', ficha.tribunal);
                 poner('ciudad', ficha.ciudad);
                 poner('magistrado', ficha.magistrado);
+                // LA FECHA DE PRESENTACIÓN. No siempre está en el auto de
+                // admisión —a veces sólo en la portada de la promoción—, así
+                // que se propone cuando se lee y se deja vacía cuando no: el
+                // secretario la teclea como hoy en ese caso.
+                poner('presentacion', ficha.presentacion);
                 return x;
             });
             setFichado(leidos);
@@ -552,6 +563,7 @@ export default function TallerDeSentencias() {
                 secretario: en.secretario || e.secretario,
                 materia: en.materia || e.materia,
                 reglaSurtimiento: en.regla_surtimiento || e.reglaSurtimiento,
+                surteEfectos: en.surte_efectos || e.surteEfectos,
                 inhabilesResponsable: en.inhabiles_responsable || e.inhabilesResponsable,
                 // Las fechas llegan en ISO con hora; el campo es un date.
                 notificacion: (en.notificacion || '').slice(0, 10) || e.notificacion,
@@ -2156,20 +2168,27 @@ export default function TallerDeSentencias() {
                             <ul className="grid gap-2">
                                 {(marcoEntero ? material.tesis
                                                : material.tesis.slice(0, 12)).map((t) => (
-                                    <li key={t.registro}
-                                        className="rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
-                                        <div className="mb-1 flex flex-wrap items-center gap-2">
-                                            <span className={cn('rounded-lg border px-1.5 py-0.5 text-[10px] font-medium',
-                                                t.obligatoria
-                                                    ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300'
-                                                    : 'border-white/10 bg-white/[0.05] text-white/60')}>
-                                                {t.obligatoria ? 'Obligatoria' : 'Orientadora'}
-                                            </span>
-                                            <span className="text-[12px] text-white/45">
-                                                Reg. {t.registro} · {t.instancia}
-                                            </span>
-                                        </div>
-                                        <p className="text-[13px] leading-snug text-white/75">{t.rubro}</p>
+                                    <li key={t.registro}>
+                                        <button type="button" onClick={() => setTesisAbierta(t)}
+                                                className="w-full rounded-lg border border-white/[0.07] bg-white/[0.02]
+                                                           p-3 text-left transition hover:border-accent-gold/30
+                                                           hover:bg-white/[0.035]">
+                                            <div className="mb-1 flex flex-wrap items-center gap-2">
+                                                <span className={cn('rounded-lg border px-1.5 py-0.5 text-[10px] font-medium',
+                                                    t.obligatoria
+                                                        ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300'
+                                                        : 'border-white/10 bg-white/[0.05] text-white/60')}>
+                                                    {t.obligatoria ? 'Obligatoria' : 'Orientadora'}
+                                                </span>
+                                                {/* EL CLIC ABRE LA TESIS AQUÍ MISMO. David: «esto ayuda para que
+                                                    el secretario no salga del redactor a verificar la tesis». */}
+                                                <span className="text-[12px] text-accent-gold/80 underline
+                                                                 decoration-accent-gold/25 underline-offset-2">
+                                                    Reg. {t.registro} · {t.instancia}
+                                                </span>
+                                            </div>
+                                            <p className="text-[13px] leading-snug text-white/75">{t.rubro}</p>
+                                        </button>
                                     </li>
                                 ))}
                             </ul>
@@ -2666,6 +2685,7 @@ export default function TallerDeSentencias() {
                     )}
                 </div>
             </main>
+            <VentanaTesis tesis={tesisAbierta} onCerrar={() => setTesisAbierta(null)} />
         </div>
     );
 }
