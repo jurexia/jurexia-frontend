@@ -197,10 +197,16 @@ const decodificar = (s: string) => s
     .replace(/<[^>]+>/g, ' ').replace(/&#8599;/g, '').replace(/&quot;/g, '"').replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim()
 
-export function separarTarjetas(md: string): { sin: string; tarjetas: string } {
+export function separarTarjetas(md: string): { sin: string; tarjetas: string; aviso: string } {
     let t = md || ''
     const listas: string[] = []
+    let aviso = ''
     t = t.replace(RX_TARJETA, (bloque) => {
+        // La nota de la tarjeta avisa cuando una cita textual de doctrina no se pudo
+        // verificar contra la obra: esa advertencia no se pierde con la tarjeta.
+        const nota = decodificar((/<div class="fw-nota">([\s\S]*?)<\/div>/.exec(bloque) || [])[1] || '')
+        const alerta = /⚠️?\s*([\s\S]*no pudieron verificarse[\s\S]*)$/.exec(nota)
+        if (alerta) aviso = alerta[1].trim()
         const cab = decodificar((/<div class="fw-cab">([\s\S]*?)<\/div>/.exec(bloque) || [])[1] || '').replace(/^[^A-Za-zÁÉÍÓÚÑáéíóúñ]+/, '')
         const items = Array.from(bloque.matchAll(/<span class="fw-tit">([\s\S]*?)<\/span>\s*<span class="fw-dom">([\s\S]*?)<\/span>/g))
             .map((m) => `- ${decodificar(m[1])}${decodificar(m[2]) ? ` (${decodificar(m[2])})` : ''}`)
@@ -209,7 +215,7 @@ export function separarTarjetas(md: string): { sin: string; tarjetas: string } {
     })
     const abierta = t.indexOf('<div class="fuentes-web">')
     if (abierta !== -1) t = t.slice(0, abierta)
-    return { sin: t.replace(/\n{3,}/g, '\n\n').trimEnd(), tarjetas: listas.join('\n\n') }
+    return { sin: t.replace(/\n{3,}/g, '\n\n').trimEnd(), tarjetas: listas.join('\n\n'), aviso }
 }
 
 /**
@@ -223,14 +229,23 @@ export function separarTarjetas(md: string): { sin: string; tarjetas: string } {
  * —y en la «evaluación de viabilidad» que alguno escribe antes— y lo de
  * después se enseña aparte.
  */
-const RX_ESTRATEGIA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*)?[ \t]*(?:ESTRATEGIA(?:[ \t]+(?:PROCESAL|DE[ \t]+IMPUGNACI[ÓO]N|DEL[ \t]+AMPARO))|(?:EVALUACI[ÓO]N|AN[ÁA]LISIS)[ \t]+DE[ \t]+VIABILIDAD)\b.*$/im
+// SÓLO CON FORMA DE RUBRO Y EN MAYÚSCULAS (segunda revisión): un párrafo del escrito
+// que empiece por «Estrategia procesal…» no puede mandar fuera todo lo que sigue.
+// Se admite «FASE 3:», numeración romana o un emoji delante.
+const RX_ESTRATEGIA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*)?[ \t]*(?:[IVX]+\.[ \t]*|FASE[ \t]+\d+[ \t]*:[ \t]*|[^\sA-Za-zÁÉÍÓÚÑáéíóúñ0-9#*]{1,3}[ \t]*)?(?:ESTRATEGIA(?:[ \t]+(?:PROCESAL|DE[ \t]+IMPUGNACI[ÓO]N|DEL[ \t]+AMPARO))|(?:EVALUACI[ÓO]N|AN[ÁA]LISIS)[ \t]+DE[ \t]+VIABILIDAD)\b.*$/gm
+const RX_CIERRE_ESCRITO = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*)?[ \t]*(?:PROTESTO|PROTESTAMOS|PUNTOS PETITORIOS|PETITORIOS)\b/gm
 
 export function separarEstrategia(md: string): { escrito: string; estrategia: string } {
     const t = md || ''
-    const m = RX_ESTRATEGIA.exec(t)
-    if (!m) return { escrito: t, estrategia: '' }
-    // El separador «---» que suele ir justo antes también se queda fuera del escrito.
-    const escrito = t.slice(0, m.index).replace(/(?:\n[ \t]*(?:-{3,}|\*{3,}|_{3,})[ \t]*)+\s*$/, '').trimEnd()
+    const candidatos = Array.from(t.matchAll(RX_ESTRATEGIA))
+    if (!candidatos.length) return { escrito: t, estrategia: '' }
+    // Si el escrito tiene su cierre, la estrategia es la que viene DESPUÉS de él.
+    const cierres = Array.from(t.matchAll(RX_CIERRE_ESCRITO))
+    const ultimoCierre = cierres.length ? cierres[cierres.length - 1].index ?? -1 : -1
+    const m = candidatos.find((c) => (c.index ?? 0) > ultimoCierre) ?? (ultimoCierre === -1 ? candidatos[0] : null)
+    if (!m || m.index === undefined) return { escrito: t, estrategia: '' }
+    // Los separadores «---» o «═══» que van justo antes también se quedan fuera del escrito.
+    const escrito = t.slice(0, m.index).replace(/(?:\n[ \t]*(?:-{3,}|\*{3,}|_{3,}|═{3,})[ \t]*)+\s*$/, '').trimEnd()
     return { escrito, estrategia: t.slice(m.index).trim() }
 }
 

@@ -96,6 +96,13 @@ interface Caso {
 
 const CASO_VACIO: Caso = { tipo: 'civil', estado: '', hechos: '', pretension: '', recurso: '', materia: 'civil', resolucion: '' };
 
+/** Principio y final de un texto largo, como `toulmin._recorte`: los resolutivos van al final. */
+function recorte(texto: string, tope: number): string {
+    if (texto.length <= tope) return texto;
+    const cabeza = Math.floor(tope / 3);
+    return `${texto.slice(0, cabeza).trimEnd()}\n[…]\n${texto.slice(-(tope - cabeza)).trimStart()}`;
+}
+
 /** «apelación contra sentencia» → «Recurso de apelación contra sentencia»; «Queja» → «Recurso de queja». */
 function nombreDelRecurso(recurso: string): string {
     const r = recurso.replace(/\s+/g, ' ').trim();
@@ -195,6 +202,7 @@ export default function ConstructorDemanda({
     const [vError, setVError] = useState('');
     const [revisionHtml, setRevisionHtml] = useState(guardado?.revisionHtml ?? '');
     const [estrategiaHtml, setEstrategiaHtml] = useState(guardado?.estrategiaHtml ?? '');
+    const [avisoDoctrina, setAvisoDoctrina] = useState('');
 
     /* ── DÓNDE SE DESPLIEGA ────────────────────────────────────────────
        David, 15-sep-2026: «en la misma ventana, si es posible sin salir del
@@ -265,7 +273,11 @@ export default function ConstructorDemanda({
     const resultadoVigente = resultado && resultado.argumentos?.length && claseResultado === clase ? resultado : null;
     /* El amparo directo y el juicio de nulidad no son recursos: sus argumentos son
        conceptos de violación o de impugnación, no agravios. */
-    const noEsRecurso = esRecurso && /amparo\s+directo|juicio\s+de\s+nulidad|contencioso\s+administrativo|juicio\s+contencioso/i.test(caso.recurso);
+    // Sólo cuando el texto NOMBRA el juicio, no un recurso dentro de él («revisión en
+    // amparo directo» es un recurso). Es un aviso, no un bloqueo (segunda revisión).
+    const noEsRecurso = esRecurso
+        && /^\s*(demanda\s+de\s+|juicio\s+de\s+)?(amparo\s+directo|nulidad|juicio\s+contencioso(\s+administrativo)?)\b/i.test(caso.recurso)
+        && !/\b(recurso|revisi[oó]n|queja|reclamaci[oó]n|apelaci[oó]n|revocaci[oó]n|inconformidad)\b/i.test(caso.recurso);
 
     // ── guardar en este navegador ─────────────────────────────────────────
     const guardar = useCallback(() => {
@@ -358,7 +370,7 @@ export default function ConstructorDemanda({
     }
 
     const casoListo = caso.hechos.trim().length >= 40 && caso.pretension.trim().length >= 10
-        && (!esRecurso || (caso.recurso.trim().length >= 3 && caso.resolucion.trim().length >= 40 && !noEsRecurso));
+        && (!esRecurso || (caso.recurso.trim().length >= 3 && caso.resolucion.trim().length >= 40));
 
     // ── 2 · TOULMIN ──────────────────────────────────────────────────────
     async function estructurar() {
@@ -373,7 +385,7 @@ export default function ConstructorDemanda({
             for await (const ev of toulminStream({
                 hechos: caso.hechos, pretension: caso.pretension, clase,
                 tipo: esRecurso ? caso.recurso.replace(/\s+/g, ' ').trim() : tipoSel.etiqueta.toLowerCase(),
-                resolucion: esRecurso ? caso.resolucion : undefined,
+                resolucion: esRecurso ? recorte(caso.resolucion.trim(), 60000) : undefined,
                 estado: caso.estado || undefined, materia: materiaEscrito,
             }, sesion?.access_token, control.signal)) {
                 if (ev.tipo === 'paso') setTEtapa(ev.clave === 'material' ? 'argumentos' : ev.clave);
@@ -458,11 +470,11 @@ export default function ConstructorDemanda({
         // El subtipo viaja en su propio renglón: un salto dentro lo partiría.
         const subtipo = esRecurso ? caso.recurso.replace(/\s+/g, ' ').trim() : tipoSel.subtipo;
         const cuerpoCaso = esRecurso
-            ? `ANTECEDENTES:
-${caso.hechos.trim()}
+            ? `RESOLUCIÓN QUE SE IMPUGNA:
+${recorte(caso.resolucion.trim(), 30000)}
 
-RESOLUCIÓN QUE SE IMPUGNA:
-${caso.resolucion.trim()}
+ANTECEDENTES:
+${caso.hechos.trim()}
 
 LO QUE SE PIDE AL RESOLVER EL RECURSO:
 ${caso.pretension.trim()}`
@@ -504,6 +516,7 @@ ${esRecurso ? `Escrito: ${nombreEscrito}\n\n` : ''}${cuerpoCaso}${argumentos}`;
             if (!html) throw new Error('La redacción llegó vacía. Vuelve a intentarlo.');
             const notas = [partes.estrategia, sinTarjetas.tarjetas].filter(Boolean).join('\n\n');
             setEstrategiaHtml(notas ? markdownAHtml(notas) : '');
+            setAvisoDoctrina(sinTarjetas.aviso);
             if (modo === 'reemplazar' && hoja.current && !hoja.current.vacia()) setRespaldo(hoja.current.raiz()?.innerHTML ?? null);
             else setRespaldo(null);
             if (modo === 'reemplazar' || hoja.current?.vacia()) hoja.current?.reemplazar(html);
@@ -549,7 +562,7 @@ ${esRecurso ? `Escrito: ${nombreEscrito}\n\n` : ''}${cuerpoCaso}${argumentos}`;
             ? `Revisa este borrador de ${nombreEscrito.charAt(0).toLowerCase()}${nombreEscrito.slice(1)}${caso.estado ? ` (${getEstadoLabel(caso.estado)})` : ''}. Antes que nada, dime si ese recurso procede contra la resolución según la ley aplicable, ante qué órgano se interpone y en qué plazo; si no procede, dime cuál es el medio correcto y su plazo. Después dime, con fundamento en la ley y la jurisprudencia aplicables: si cada agravio combate las consideraciones que sostienen la resolución impugnada o deja alguna en pie, si hay riesgo de que alguno se declare inoperante, y qué fundamentos o requisitos del recurso faltan o están mal citados. Sé concreto, agravio por agravio, y termina con una lista de cambios que debo hacer.
 
 RESOLUCIÓN QUE SE IMPUGNA:
-${caso.resolucion.trim().slice(0, 12000)}
+${recorte(caso.resolucion.trim(), 12000)}
 
 BORRADOR:
 ${texto.slice(0, 50000)}`
@@ -781,7 +794,7 @@ ${texto.slice(0, 60000)}`;
                                                     {esRecurso && (
                                                         <label className="block">
                                                             <span className={rotulo}>Resolución que se impugna</span>
-                                                            <textarea className={`${campo} min-h-[150px] resize-y`} value={caso.resolucion} maxLength={60000}
+                                                            <textarea className={`${campo} min-h-[150px] resize-y`} value={caso.resolucion}
                                                                 onChange={(e) => setCaso({ ...caso, resolucion: e.target.value })}
                                                                 placeholder="Qué resolvió la autoridad y con qué razones. Puedes pegar las consideraciones de la sentencia o del auto." />
                                                             <span className="mt-1 block text-[12px] leading-relaxed text-charcoal-900/70">
@@ -921,6 +934,9 @@ ${texto.slice(0, 60000)}`;
                                                         </div>
                                                     )}
                                                     <p className="text-[12px] leading-relaxed text-charcoal-900/70">«Redactar» sustituye lo que haya en la hoja; «Añadir al final» lo conserva.</p>
+                                                    {avisoDoctrina && rEstado !== 'trabajando' && (
+                                                        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12.5px] leading-relaxed text-amber-900 ring-1 ring-amber-200">{avisoDoctrina}</p>
+                                                    )}
                                                     {estrategiaHtml && rEstado !== 'trabajando' && (
                                                         <details className="group rounded-lg border border-charcoal-900/10 bg-cream-100">
                                                             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-[13px] font-medium text-charcoal-900">
