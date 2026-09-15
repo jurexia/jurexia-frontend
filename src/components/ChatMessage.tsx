@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature } from 'lucide-react';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
@@ -14,6 +14,8 @@ interface ChatMessageProps {
     avatarUrl?: string | null;
     tratamiento?: string | null;
     onCitationClick?: (source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }) => void;
+    /** Lleva esta respuesta (markdown limpio) al documento del constructor de demanda. */
+    onLlevarAlDocumento?: (markdown: string) => void;
 }
 
 // UUID regex for document IDs
@@ -76,7 +78,7 @@ function filterDocumentContent(content: string): string {
 
 
 
-export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento }: ChatMessageProps) {
+export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
@@ -1468,6 +1470,19 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     <FolderPlus className="w-3.5 h-3.5 text-accent-gold" />
                                     A mi carpeta
                                 </button>
+
+                                {/* Al constructor de demanda: la respuesta entra al final
+                                    de la hoja, sin marcadores ni identificadores. */}
+                                {onLlevarAlDocumento && (
+                                    <button
+                                        onClick={() => onLlevarAlDocumento(cleanContentForExport(message.content))}
+                                        className="inline-flex items-center gap-1.5 rounded-md border border-charcoal-900/15 bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal-900 transition-colors hover:border-accent-gold/60 hover:bg-accent-gold/10"
+                                        title="Añadir esta respuesta al documento de la demanda"
+                                    >
+                                        <FileSignature className="w-3.5 h-3.5 text-accent-brown" />
+                                        Al documento
+                                    </button>
+                                )}
                             </div>
                         )}
 

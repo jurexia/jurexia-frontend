@@ -26,6 +26,13 @@ import { useInsignia } from '@/hooks/useInsignia';
 import { CeremoniaInsignia } from '@/components/CeremoniaInsignia';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
+import dynamic from 'next/dynamic';
+import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
+import { markdownAHtml } from '@/lib/documento/marcado';
+
+/* El constructor de demanda se carga sólo cuando alguien lo abre: trae el
+   editor y la librería de Word, que el chat no necesita para consultar. */
+const ConstructorDemanda = dynamic(() => import('@/components/documento/ConstructorDemanda'), { ssr: false });
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { useRouter } from 'next/navigation';
 import { getEstadoLabel } from '@/lib/estados';
@@ -110,6 +117,11 @@ export default function ChatPage() {
     // en el orden del recorrido apuntara el foco al botón equivocado.
     const PRECEDENTES_TOUR_STEP = pasoPorId('precedentes');
     const [selectedEstado, setSelectedEstado] = useState<string>('');
+    // ── Constructor de demanda (editor Word + pasos + Toulmin) ──
+    const [constructorMontado, setConstructorMontado] = useState(false);
+    const [constructorAbierto, setConstructorAbierto] = useState(false);
+    const [constructorPaso, setConstructorPaso] = useState<'caso' | 'toulmin' | null>(null);
+    const [insercionDocumento, setInsercionDocumento] = useState<InsercionDocumento | null>(null);
     const [showStateModal, setShowStateModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
     const estadoInitializedRef = useRef(false);
@@ -272,6 +284,30 @@ export default function ChatPage() {
         setCounterPulse(true);
         setTimeout(() => setCounterPulse(false), 600);
     }, []);
+
+    const abrirConstructor = useCallback((paso: 'caso' | 'toulmin') => {
+        setConstructorPaso(paso);
+        setConstructorMontado(true);
+        setConstructorAbierto(true);
+    }, []);
+
+    const llevarAlDocumento = useCallback((markdown: string) => {
+        setInsercionDocumento({ html: markdownAHtml(markdown), n: Date.now() });
+        setConstructorPaso(null);
+        setConstructorMontado(true);
+        setConstructorAbierto(true);
+    }, []);
+
+    // El constructor gasta consultas por su cuenta (Toulmin, redactar,
+    // revisar): el contador de la cabecera se sincroniza igual que tras el chat.
+    const sincronizarCuota = useCallback(async () => {
+        if (!user?.id) return;
+        try {
+            const { getSubscriptionInfo } = await import('@/lib/supabase');
+            const info = await getSubscriptionInfo(user.id);
+            if (info) handleQueryCompleted(info.queriesUsed, info.queriesLimit);
+        } catch { /* el contador se corrige en la siguiente consulta */ }
+    }, [user?.id, handleQueryCompleted]);
 
     // Chat Hook
     const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos } = useChat({
@@ -1018,6 +1054,8 @@ export default function ChatPage() {
                                     onFueroChange={setSelectedFuero}
                                     selectedMateria={selectedMateria}
                                     onMateriaChange={setSelectedMateria}
+
+                                    onAbrirConstructor={abrirConstructor}
                                 />
 
                                 <div className="mt-4 text-center">
@@ -1086,7 +1124,7 @@ export default function ChatPage() {
                                 const showNudge = !isPro && message.role === 'assistant' && assistantCount > 0 && assistantCount % 3 === 0 && index !== messages.length - 1;
                                 return (
                                     <div key={index}>
-                                        <ChatMessage message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} />
+                                        <ChatMessage message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
                                         {showNudge && <UpgradeNudge messageIndex={assistantCount} />}
                                     </div>
                                 );
@@ -1147,6 +1185,8 @@ export default function ChatPage() {
                             onFueroChange={setSelectedFuero}
                             selectedMateria={selectedMateria}
                             onMateriaChange={setSelectedMateria}
+
+                            onAbrirConstructor={abrirConstructor}
                         />
                     </div>
                 )}
@@ -1403,6 +1443,17 @@ export default function ChatPage() {
                 startStep={showPrecedentesTour ? PRECEDENTES_TOUR_STEP : 0}
             />
 
+            {constructorMontado && (
+                <ConstructorDemanda
+                    abierto={constructorAbierto}
+                    pasoInicial={constructorPaso}
+                    estadoChat={selectedEstado}
+                    usuarioId={user?.id}
+                    insercion={insercionDocumento}
+                    onCerrar={() => setConstructorAbierto(false)}
+                    onConsultaGastada={sincronizarCuota}
+                />
+            )}
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 
             <WelcomeVideoModal isOpen={showWelcomeVideo} onClose={handleWelcomeVideoClose} />

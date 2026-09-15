@@ -23,7 +23,7 @@ import {
     Globe
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
-import { FileText, X } from 'lucide-react';
+import { FileText, X, Network, FileSignature } from 'lucide-react';
 import TextEnhanceModal from './TextEnhanceModal';
 import DraftModal, { DraftRequest } from './DraftModal';
 import SentenciaModal from './SentenciaModal';
@@ -115,6 +115,8 @@ interface ChatInputProps {
     onFueroChange?: (fueros: string[]) => void;
     selectedMateria?: string;
     onMateriaChange?: (materia: string) => void;
+    /** Abre el constructor de demanda (editor Word + pasos) en el paso pedido. */
+    onAbrirConstructor?: (paso: 'caso' | 'toulmin') => void;
 }
 
 /* Fuentes de internet encendidas EN ESTA VISITA. A nivel de módulo a
@@ -140,6 +142,7 @@ export default function ChatInput({
     onFueroChange,
     selectedMateria = '',
     onMateriaChange,
+    onAbrirConstructor,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -1013,6 +1016,47 @@ ${draftRequest.descripcion}`;
                                 <span className="truncate">Jurimetría</span>
                                 {!canAccessJurimetria && <Lock className="w-2 h-2 flex-shrink-0 opacity-60" />}
                             </button>
+
+                            {/* ── EL CONSTRUCTOR DE DEMANDA ─────────────────────
+                                David, 15-sep-2026: «desplegarlo con un botón bien
+                                logrado abajo del chat». Van en la MISMA rejilla de
+                                cuatro columnas, dos celdas cada uno: sus bordes
+                                caen exactamente bajo los de arriba en teléfono,
+                                tableta y escritorio, y a 375 px cada uno mide el
+                                doble que los de arriba, así que su texto no se
+                                recorta. El tono papel y oro los separa de las
+                                herramientas negras: éstos no consultan, construyen. */}
+                            {onAbrirConstructor && (
+                                <>
+                                    <button
+                                        type="button"
+                                        data-guide="constructor"
+                                        onClick={() => onAbrirConstructor('caso')}
+                                        title="Construir la demanda paso a paso en un documento Word"
+                                        className="col-span-2 flex items-center justify-center gap-1.5 px-2 py-[7px] rounded-md text-[10px] sm:text-[11px] font-semibold whitespace-nowrap
+                                            border border-accent-gold/50 bg-gradient-to-b from-[#fcf8ee] to-[#f2e7cb] text-charcoal-900
+                                            shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_1px_2px_rgba(139,115,85,0.18)]
+                                            transition-all duration-200 hover:border-accent-gold hover:to-[#ecdcb6]"
+                                    >
+                                        <FileSignature className="w-3 h-3 flex-shrink-0 text-accent-brown" />
+                                        <span className="truncate">Construir demanda</span>
+                                        <span className="hidden sm:inline rounded bg-charcoal-900 px-1 py-px text-[8.5px] font-bold tracking-wide text-accent-gold">WORD</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        data-guide="toulmin"
+                                        onClick={() => onAbrirConstructor('toulmin')}
+                                        title="Estructurar argumentos con el modelo de Toulmin, citando Constitución, tratados y jurisprudencia"
+                                        className="col-span-2 flex items-center justify-center gap-1.5 px-2 py-[7px] rounded-md text-[10px] sm:text-[11px] font-semibold whitespace-nowrap
+                                            border border-accent-gold/50 bg-gradient-to-b from-[#fcf8ee] to-[#f2e7cb] text-charcoal-900
+                                            shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_1px_2px_rgba(139,115,85,0.18)]
+                                            transition-all duration-200 hover:border-accent-gold hover:to-[#ecdcb6]"
+                                    >
+                                        <Network className="w-3 h-3 flex-shrink-0 text-accent-brown" />
+                                        <span className="truncate">Argumentos Toulmin</span>
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
 
