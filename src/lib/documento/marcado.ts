@@ -184,6 +184,35 @@ export function textoDeHtml(raiz: HTMLElement): string {
 }
 
 /**
+ * LAS TARJETAS HTML DEL CHAT, FUERA DEL ESCRITO.
+ *
+ * Al final de la respuesta el chat pega en HTML la tarjeta «Doctrina
+ * consultada» (doctrina.py) y la de fuentes web, con clases `fuentes-web`/`fw-*`.
+ * Aquí el markdown se escapa, así que en la hoja salían «</div></div>» como
+ * texto. Se sacan como lista legible —obra, editorial y página— para las notas.
+ * Una tarjeta a medio llegar (streaming) se corta desde donde empieza.
+ */
+const RX_TARJETA = /<div class="fuentes-web">[\s\S]*?<div class="fw-nota">[\s\S]*?<\/div>\s*<\/div>/g
+const decodificar = (s: string) => s
+    .replace(/<[^>]+>/g, ' ').replace(/&#8599;/g, '').replace(/&quot;/g, '"').replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim()
+
+export function separarTarjetas(md: string): { sin: string; tarjetas: string } {
+    let t = md || ''
+    const listas: string[] = []
+    t = t.replace(RX_TARJETA, (bloque) => {
+        const cab = decodificar((/<div class="fw-cab">([\s\S]*?)<\/div>/.exec(bloque) || [])[1] || '').replace(/^[^A-Za-zÁÉÍÓÚÑáéíóúñ]+/, '')
+        const items = Array.from(bloque.matchAll(/<span class="fw-tit">([\s\S]*?)<\/span>\s*<span class="fw-dom">([\s\S]*?)<\/span>/g))
+            .map((m) => `- ${decodificar(m[1])}${decodificar(m[2]) ? ` (${decodificar(m[2])})` : ''}`)
+        if (items.length) listas.push(`**${cab || 'Referencias consultadas'}**\n\n${items.join('\n')}`)
+        return ''
+    })
+    const abierta = t.indexOf('<div class="fuentes-web">')
+    if (abierta !== -1) t = t.slice(0, abierta)
+    return { sin: t.replace(/\n{3,}/g, '\n\n').trimEnd(), tarjetas: listas.join('\n\n') }
+}
+
+/**
  * EL ESCRITO Y LA ESTRATEGIA, SEPARADOS.
  *
  * Los tres prompts de redacción del chat (demanda, amparo, impugnación)

@@ -9,7 +9,7 @@ import {
 import { Hoja, type HojaAPI } from './Hoja';
 import { TarjetaToulmin } from './TarjetaToulmin';
 import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
-import { analizarRespuesta, markdownAHtml, separarEstrategia, textoDeHtml } from '@/lib/documento/marcado';
+import { analizarRespuesta, markdownAHtml, separarEstrategia, separarTarjetas, textoDeHtml } from '@/lib/documento/marcado';
 import {
     ErrorToulmin, argumentoAHtml, rotuloDe, toulminStream,
     type ClaseEscrito, type ResultadoToulmin,
@@ -471,15 +471,17 @@ ${esRecurso ? `Escrito: ${nombreEscrito}\n\n` : ''}${cuerpoCaso}${argumentos}`;
                 if (ahora - ultimo > 250) {
                     ultimo = ahora;
                     const previa = analizarRespuesta(texto);
-                    setVistaPrevia((!previa.error && markdownAHtml(separarEstrategia(previa.texto).escrito)) || `<p style="text-align:center;color:#8b7355"><i>Iurexia está analizando ${esRecurso ? 'la resolución y preparando el recurso' : 'el caso y preparando la demanda'}…</i></p>`);
+                    setVistaPrevia((!previa.error && markdownAHtml(separarEstrategia(separarTarjetas(previa.texto).sin).escrito)) || `<p style="text-align:center;color:#8b7355"><i>Iurexia está analizando ${esRecurso ? 'la resolución y preparando el recurso' : 'el caso y preparando la demanda'}…</i></p>`);
                 }
             }
             const r = analizarRespuesta(texto);
             if (r.error) throw new Error(r.error);
-            const partes = separarEstrategia(r.texto);
+            const sinTarjetas = separarTarjetas(r.texto);
+            const partes = separarEstrategia(sinTarjetas.sin);
             const html = markdownAHtml(partes.escrito);
             if (!html) throw new Error('La redacción llegó vacía. Vuelve a intentarlo.');
-            setEstrategiaHtml(partes.estrategia ? markdownAHtml(partes.estrategia) : '');
+            const notas = [partes.estrategia, sinTarjetas.tarjetas].filter(Boolean).join('\n\n');
+            setEstrategiaHtml(notas ? markdownAHtml(notas) : '');
             if (modo === 'reemplazar' && hoja.current && !hoja.current.vacia()) setRespaldo(hoja.current.raiz()?.innerHTML ?? null);
             else setRespaldo(null);
             if (modo === 'reemplazar' || hoja.current?.vacia()) hoja.current?.reemplazar(html);
@@ -547,12 +549,14 @@ ${texto.slice(0, 60000)}`;
                 if (ahora - ultimo > 300) {
                     ultimo = ahora;
                     const previa = analizarRespuesta(salida);
-                    setRevisionHtml((!previa.error && markdownAHtml(previa.texto)) || '<p><i>Iurexia está leyendo el documento…</i></p>');
+                    const pv = separarTarjetas(previa.texto);
+                    setRevisionHtml((!previa.error && markdownAHtml(pv.sin)) || '<p><i>Iurexia está leyendo el documento…</i></p>');
                 }
             }
             const r = analizarRespuesta(salida);
             if (r.error) throw new Error(r.error);
-            const html = markdownAHtml(r.texto);
+            const rv = separarTarjetas(r.texto);
+            const html = markdownAHtml([rv.sin, rv.tarjetas].filter(Boolean).join('\n\n'));
             if (!html) throw new Error('La revisión llegó vacía. Vuelve a intentarlo.');
             setRevisionHtml(html);
             setVEstado('listo');
@@ -882,7 +886,7 @@ ${texto.slice(0, 60000)}`;
                                                     {estrategiaHtml && rEstado !== 'trabajando' && (
                                                         <details className="group rounded-lg border border-charcoal-900/10 bg-cream-100">
                                                             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-[13px] font-medium text-charcoal-900">
-                                                                <span>Estrategia y riesgos <span className="font-normal text-charcoal-900/70">· no va al documento</span></span>
+                                                                <span>Estrategia y referencias <span className="font-normal text-charcoal-900/70">· no va al documento</span></span>
                                                                 <span aria-hidden="true" className="text-charcoal-900/60 transition-transform group-open:rotate-180">▾</span>
                                                             </summary>
                                                             <div className="hoja-escrito max-h-[45vh] overflow-y-auto border-t border-charcoal-900/10 bg-white px-4 py-3 !text-[13px] !leading-relaxed"
