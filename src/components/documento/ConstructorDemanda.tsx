@@ -260,6 +260,12 @@ export default function ConstructorDemanda({
     /* El resultado guardado es de la clase con que se construyó: si el abogado cambia
        de demanda a recurso, los argumentos de antes siguen ahí pero se rotulan como eran. */
     const claseResultado: ClaseEscrito = resultado?.clase === 'recurso' ? 'recurso' : 'demanda';
+    /* Lo que se usa al redactar, se marca como hecho y se anuncia sale de la MISMA
+       condición: argumentos de una demanda no viajan en el encargo de un recurso. */
+    const resultadoVigente = resultado && resultado.argumentos?.length && claseResultado === clase ? resultado : null;
+    /* El amparo directo y el juicio de nulidad no son recursos: sus argumentos son
+       conceptos de violación o de impugnación, no agravios. */
+    const noEsRecurso = esRecurso && /amparo\s+directo|juicio\s+de\s+nulidad|contencioso\s+administrativo|juicio\s+contencioso/i.test(caso.recurso);
 
     // ── guardar en este navegador ─────────────────────────────────────────
     const guardar = useCallback(() => {
@@ -352,7 +358,7 @@ export default function ConstructorDemanda({
     }
 
     const casoListo = caso.hechos.trim().length >= 40 && caso.pretension.trim().length >= 10
-        && (!esRecurso || (caso.recurso.trim().length >= 3 && caso.resolucion.trim().length >= 40));
+        && (!esRecurso || (caso.recurso.trim().length >= 3 && caso.resolucion.trim().length >= 40 && !noEsRecurso));
 
     // ── 2 · TOULMIN ──────────────────────────────────────────────────────
     async function estructurar() {
@@ -373,6 +379,11 @@ export default function ConstructorDemanda({
                 if (ev.tipo === 'paso') setTEtapa(ev.clave === 'material' ? 'argumentos' : ev.clave);
                 if (ev.tipo === 'error') throw new ErrorToulmin(ev.mensaje, 500);
                 if (ev.tipo === 'listo') {
+                    // Un servidor que aún no conoce los recursos devuelve argumentos de demanda:
+                    // se dice, en vez de guardarlos como si fueran agravios.
+                    if (esRecurso && ev.resultado?.clase !== 'recurso') {
+                        throw new ErrorToulmin('El servidor todavía no admite recursos. Vuelve a intentarlo en unos minutos.', 0);
+                    }
                     llego = true;
                     setResultado(ev.resultado);
                     setInsertados([]);
@@ -389,7 +400,7 @@ export default function ConstructorDemanda({
             const status = e instanceof ErrorToulmin ? e.status : 0;
             setTError(status === 429
                 ? 'Se te acabaron las consultas de este periodo.'
-                : (e as Error)?.message || 'No se pudieron construir los argumentos.');
+                : (e as Error)?.message || (esRecurso ? 'No se pudieron construir los agravios.' : 'No se pudieron construir los argumentos.'));
             setTEstado('error');
         }
     }
@@ -428,11 +439,11 @@ export default function ConstructorDemanda({
         rAbort.current = control;
         setREstado('trabajando'); setRError('');
         setVista('documento');
-        const usar = resultado?.argumentos?.length ? resultado : null;
-        const argumentos = !usar ? '' : (claseResultado === 'recurso'
-            ? '\n\nAGRAVIOS YA ESTRUCTURADOS Y VERIFICADOS (intégralos como agravios numerados del recurso, en este orden, conservando cada cita tal como está escrita, sin cambiar registros, rubros ni artículos):\n\n'
+        const usar = resultadoVigente;
+        const argumentos = !usar ? '' : (clase === 'recurso'
+            ? '\n\nAGRAVIOS YA ESTRUCTURADOS Y VERIFICADOS (intégralos como agravios numerados del recurso, en este orden, cada uno íntegro como bloque de prosa bajo su rótulo, sin dividirlos en subapartados ni agregar agravios contra consideraciones secundarias, conservando cada cita tal como está escrita, sin cambiar registros, rubros ni artículos):\n\n'
             : '\n\nFUNDAMENTOS YA ESTRUCTURADOS Y VERIFICADOS (intégralos en el capítulo de derecho o de conceptos de violación, conservando cada cita tal como está escrita, sin cambiar registros, rubros ni artículos):\n\n') +
-            usar.argumentos.map((a, i) => `${rotuloDe(claseResultado, i)}. ${a.titulo}\n${a.redaccion}`).join('\n\n') +
+            usar.argumentos.map((a, i) => `${rotuloDe(clase, i)}. ${a.titulo}\n${a.redaccion}`).join('\n\n') +
             /* EL TEXTO DE LO YA VERIFICADO VIAJA CON EL ENCARGO. La redacción hace su
                propia búsqueda, y cuando no traía una tesis que Toulmin ya había
                verificado, el modelo escribía DENTRO del escrito una «nota de
@@ -463,7 +474,7 @@ ${caso.pretension.trim()}`;
         const mensaje = `[REDACTAR_DOCUMENTO]
 Tipo: ${tipoSel.tipo}
 Subtipo: ${subtipo}
-${esRecurso ? `Materia: ${materiaEscrito}\n` : ''}Jurisdicción: ${caso.estado ? getEstadoLabel(caso.estado) : 'No indicada'}
+${esRecurso ? `Materia: ${materiaEscrito}\n` : ''}${esRecurso && usar?.recurrente === 'autoridad' ? 'Recurrente: autoridad (voz institucional, sin alegar derechos humanos propios)\n' : ''}Jurisdicción: ${caso.estado ? getEstadoLabel(caso.estado) : 'No indicada'}
 
 Descripción del caso:
 ${esRecurso ? `Escrito: ${nombreEscrito}\n\n` : ''}${cuerpoCaso}${argumentos}`;
@@ -535,7 +546,7 @@ ${esRecurso ? `Escrito: ${nombreEscrito}\n\n` : ''}${cuerpoCaso}${argumentos}`;
         vAbort.current = control;
         setVEstado('trabajando'); setVError(''); setRevisionHtml('');
         const mensaje = esRecurso
-            ? `Revisa este borrador de ${nombreEscrito.charAt(0).toLowerCase()}${nombreEscrito.slice(1)}${caso.estado ? ` (${getEstadoLabel(caso.estado)})` : ''} y dime, con fundamento en la ley y la jurisprudencia aplicables: si cada agravio combate las consideraciones que sostienen la resolución impugnada o deja alguna en pie, si hay riesgo de que alguno se declare inoperante, y qué fundamentos o requisitos del recurso faltan o están mal citados. Sé concreto, agravio por agravio, y termina con una lista de cambios que debo hacer.
+            ? `Revisa este borrador de ${nombreEscrito.charAt(0).toLowerCase()}${nombreEscrito.slice(1)}${caso.estado ? ` (${getEstadoLabel(caso.estado)})` : ''}. Antes que nada, dime si ese recurso procede contra la resolución según la ley aplicable, ante qué órgano se interpone y en qué plazo; si no procede, dime cuál es el medio correcto y su plazo. Después dime, con fundamento en la ley y la jurisprudencia aplicables: si cada agravio combate las consideraciones que sostienen la resolución impugnada o deja alguna en pie, si hay riesgo de que alguno se declare inoperante, y qué fundamentos o requisitos del recurso faltan o están mal citados. Sé concreto, agravio por agravio, y termina con una lista de cambios que debo hacer.
 
 RESOLUCIÓN QUE SE IMPUGNA:
 ${caso.resolucion.trim().slice(0, 12000)}
@@ -603,7 +614,7 @@ ${texto.slice(0, 60000)}`;
 
     const hecho: Record<IdPaso, boolean> = {
         caso: casoListo,
-        toulmin: tEstado === 'listo',
+        toulmin: tEstado === 'listo' && !!resultadoVigente,
         redactar: rEstado === 'listo',
         revisar: vEstado === 'listo',
         word: false,
@@ -611,7 +622,7 @@ ${texto.slice(0, 60000)}`;
 
     const botonPrimario = 'inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-charcoal-900 px-4 text-[13.5px] font-semibold text-white transition-colors hover:bg-charcoal-800 disabled:cursor-not-allowed disabled:bg-charcoal-900/40';
     const botonSecundario = 'inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-charcoal-900/15 bg-white px-4 text-[13.5px] font-medium text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:cursor-not-allowed disabled:opacity-50';
-    const campo = 'w-full rounded-lg border border-charcoal-900/15 bg-white px-3 py-2.5 text-base leading-relaxed text-charcoal-900 placeholder:text-charcoal-900/45 sm:text-[14px] focus:border-accent-gold focus:outline-none focus:ring-2 focus:ring-accent-gold/25';
+    const campo = 'w-full rounded-lg border border-charcoal-900/15 bg-white px-3 py-2.5 text-base leading-relaxed text-charcoal-900 placeholder:text-charcoal-900/45 [@media(pointer:fine)]:text-[14px] focus:border-accent-gold focus:outline-none focus:ring-2 focus:ring-accent-gold/25';
     const rotulo = 'mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-accent-brown';
 
     if (!enCliente) return null;
@@ -649,7 +660,7 @@ ${texto.slice(0, 60000)}`;
                         onChange={(e) => setTitulo(e.target.value)}
                         placeholder={tituloEfectivo}
                         aria-label="Nombre del documento"
-                        className="w-full max-w-[420px] truncate rounded-md bg-transparent px-2 py-1 text-center text-base font-medium text-charcoal-900 placeholder:text-charcoal-900/60 sm:text-[14px] hover:bg-charcoal-900/[0.04] focus:bg-white focus:outline-none focus:ring-1 focus:ring-accent-gold/50"
+                        className="w-full max-w-[420px] truncate rounded-md bg-transparent px-2 py-1 text-center text-base font-medium text-charcoal-900 placeholder:text-charcoal-900/60 [@media(pointer:fine)]:text-[14px] hover:bg-charcoal-900/[0.04] focus:bg-white focus:outline-none focus:ring-1 focus:ring-accent-gold/50"
                     />
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -711,7 +722,14 @@ ${texto.slice(0, 60000)}`;
                                                     <div className="grid grid-cols-1 gap-3">
                                                         <label className="block">
                                                             <span className={rotulo}>Escrito</span>
-                                                            <select className={campo} value={caso.tipo} onChange={(e) => setCaso({ ...caso, tipo: e.target.value })}>
+                                                            <select className={campo} value={caso.tipo} onChange={(e) => {
+                                                                const nuevo = e.target.value;
+                                                                // Al pasar de una demanda a recurso, la materia se hereda de la demanda.
+                                                                const previa = TIPOS.find((x) => x.valor === caso.tipo)?.materia;
+                                                                const materia = nuevo === 'recurso' && caso.tipo !== 'recurso' && previa && MATERIAS_RECURSO.some((m) => m.valor === previa)
+                                                                    ? previa : caso.materia;
+                                                                setCaso({ ...caso, tipo: nuevo, materia });
+                                                            }}>
                                                                 <optgroup label="Demandas">
                                                                     {TIPOS.filter((t) => t.valor !== 'recurso').map((t) => <option key={t.valor} value={t.valor}>{t.etiqueta}</option>)}
                                                                 </optgroup>
@@ -727,6 +745,11 @@ ${texto.slice(0, 60000)}`;
                                                                     <input className={campo} list="iurexia-recursos" value={caso.recurso} maxLength={140}
                                                                         onChange={(e) => setCaso({ ...caso, recurso: e.target.value })}
                                                                         placeholder="Apelación contra sentencia definitiva, revocación, queja…" />
+                                                                    {noEsRecurso && (
+                                                                        <span className="mt-1.5 block rounded-lg bg-amber-50 px-3 py-2 text-[12.5px] leading-relaxed text-amber-900 ring-1 ring-amber-200">
+                                                                            El amparo directo y el juicio de nulidad no son recursos: son demandas, y sus argumentos son conceptos de violación o de impugnación, no agravios. Para ese escrito usa «Escrito legal» en el chat.
+                                                                        </span>
+                                                                    )}
                                                                     <datalist id="iurexia-recursos">
                                                                         {RECURSOS_SUGERIDOS.map((r) => <option key={r} value={r} />)}
                                                                     </datalist>
@@ -749,7 +772,7 @@ ${texto.slice(0, 60000)}`;
                                                     </div>
                                                     <label className="block">
                                                         <span className={rotulo}>{esRecurso ? 'Antecedentes' : 'Hechos'}</span>
-                                                        <textarea className={`${campo} ${esRecurso ? 'min-h-[110px]' : 'min-h-[150px]'} resize-y`} value={caso.hechos}
+                                                        <textarea className={`${campo} ${esRecurso ? 'min-h-[110px]' : 'min-h-[150px]'} resize-y`} value={caso.hechos} maxLength={15000}
                                                             onChange={(e) => setCaso({ ...caso, hechos: e.target.value })}
                                                             placeholder={esRecurso
                                                                 ? 'Cómo llegó el asunto hasta aquí: el juicio, lo que se reclamó, las pruebas y lo que se alegó.'
@@ -758,15 +781,19 @@ ${texto.slice(0, 60000)}`;
                                                     {esRecurso && (
                                                         <label className="block">
                                                             <span className={rotulo}>Resolución que se impugna</span>
-                                                            <textarea className={`${campo} min-h-[150px] resize-y`} value={caso.resolucion}
+                                                            <textarea className={`${campo} min-h-[150px] resize-y`} value={caso.resolucion} maxLength={60000}
                                                                 onChange={(e) => setCaso({ ...caso, resolucion: e.target.value })}
                                                                 placeholder="Qué resolvió la autoridad y con qué razones. Puedes pegar las consideraciones de la sentencia o del auto." />
-                                                            <span className="mt-1 block text-[12px] leading-relaxed text-charcoal-900/70">De aquí salen los agravios: mientras más fiel a lo que dijo, mejor se combate.</span>
+                                                            <span className="mt-1 block text-[12px] leading-relaxed text-charcoal-900/70">
+                                                                {caso.resolucion.length > 12000
+                                                                    ? `${caso.resolucion.length.toLocaleString('es-MX')} caracteres: para los agravios se leen el principio y el final. Si puedes, pega sólo las consideraciones que sostienen lo resuelto y los resolutivos.`
+                                                                    : 'De aquí salen los agravios: mientras más fiel a lo que dijo, mejor se combate.'}
+                                                            </span>
                                                         </label>
                                                     )}
                                                     <label className="block">
                                                         <span className={rotulo}>Lo que se pide</span>
-                                                        <textarea className={`${campo} min-h-[90px] resize-y`} value={caso.pretension}
+                                                        <textarea className={`${campo} min-h-[90px] resize-y`} value={caso.pretension} maxLength={4000}
                                                             onChange={(e) => setCaso({ ...caso, pretension: e.target.value })}
                                                             placeholder={esRecurso
                                                                 ? 'Que se revoque o modifique lo resuelto y, en su lugar, se resuelva…'
@@ -839,7 +866,7 @@ ${texto.slice(0, 60000)}`;
                                                             </div>
                                                             {resultado.argumentos.map((a, i) => (
                                                                 <TarjetaToulmin key={`${i}-${a.titulo}`} argumento={a} ordinal={rotuloDe(claseResultado, i)} fuentes={resultado.fuentes}
-                                                                    consideracion={claseResultado === 'recurso' ? resultado.consideraciones?.[i] : undefined}
+                                                                    consideracion={claseResultado === 'recurso' ? a.consideracion || undefined : undefined}
                                                                     insertado={insertados.includes(i)} onInsertar={() => insertarArgumento(i)} />
                                                             ))}
                                                             {(resultado.avisos.length > 0 || resultado.faltantes.length > 0) && (
@@ -865,8 +892,8 @@ ${texto.slice(0, 60000)}`;
                                                 <div className="grid gap-3">
                                                     <p className="text-[13px] leading-relaxed text-charcoal-900/70">
                                                         {esRecurso
-                                                            ? <>Iurexia redacta el {nombreEscrito.charAt(0).toLowerCase() + nombreEscrito.slice(1)} completo —proemio, resolución que se impugna, agravios y puntos petitorios— con {resultado?.argumentos?.length && claseResultado === 'recurso' ? `tus ${resultado.argumentos.length} agravios ya estructurados` : 'lo resuelto y lo que pides'}. Llega a la hoja mientras se escribe.</>
-                                                            : <>Iurexia redacta la {tipoSel.etiqueta.toLowerCase()} completa —proemio, hechos, derecho, pruebas y puntos petitorios— con {resultado?.argumentos?.length && claseResultado === 'demanda' ? `tus ${resultado.argumentos.length} argumentos ya estructurados` : 'los hechos y lo que pides'}. Llega a la hoja mientras se escribe.</>}
+                                                            ? <>Iurexia redacta el {nombreEscrito.charAt(0).toLowerCase() + nombreEscrito.slice(1)} completo —proemio, resolución que se impugna, agravios y puntos petitorios— con {resultadoVigente ? `tus ${resultadoVigente.argumentos.length} agravios ya estructurados` : 'lo resuelto y lo que pides'}. Llega a la hoja mientras se escribe.</>
+                                                            : <>Iurexia redacta la {tipoSel.etiqueta.toLowerCase()} completa —proemio, hechos, derecho, pruebas y puntos petitorios— con {resultadoVigente ? `tus ${resultadoVigente.argumentos.length} argumentos ya estructurados` : 'los hechos y lo que pides'}. Llega a la hoja mientras se escribe.</>}
                                                     </p>
                                                     {rEstado === 'trabajando' ? (
                                                         <div className="flex items-center gap-2.5 rounded-lg border border-charcoal-900/10 bg-cream-100 px-3 py-3 text-[13px] text-charcoal-900">

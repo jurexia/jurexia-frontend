@@ -32,6 +32,8 @@ export interface ArgumentoToulmin {
     refutacion: { objecion: string; respuesta: string; fuentes: string[] };
     redaccion: string;
     citadas: string[];
+    /** En un recurso: la consideración de la resolución que combate (resuelta por número en el servidor). */
+    consideracion?: string;
 }
 
 export interface ResultadoToulmin {
@@ -40,6 +42,8 @@ export interface ResultadoToulmin {
     problemas: string[];
     /** En un recurso, la consideración de la resolución que combate cada problema. */
     consideraciones?: string[];
+    /** En un recurso: «particular» o «autoridad». */
+    recurrente?: string;
     materia: string;
     argumentos: ArgumentoToulmin[];
     fuentes: Record<string, FuenteToulmin>;
@@ -90,10 +94,17 @@ export async function* toulminStream(
         signal,
     });
     if (!r.ok) {
-        let detalle = 'No se pudieron construir los argumentos.';
+        let detalle = peticion.clase === 'recurso' ? 'No se pudieron construir los agravios.' : 'No se pudieron construir los argumentos.';
         try {
             const j = await r.json();
             if (typeof j?.detail === 'string') detalle = j.detail;
+            // Un 422 trae `detail` como lista: casi siempre, un texto que excede su tope.
+            else if (Array.isArray(j?.detail)) {
+                const largo = j.detail.find((d: { type?: string }) => /too_long/.test(String(d?.type)));
+                detalle = largo
+                    ? 'Alguno de los textos es demasiado largo. Acórtalo (pega sólo lo que sostiene lo resuelto) y vuelve a intentarlo.'
+                    : 'Revisa los datos del escrito y vuelve a intentarlo.';
+            }
         } catch { /* sin cuerpo JSON */ }
         throw new ErrorToulmin(detalle, r.status);
     }

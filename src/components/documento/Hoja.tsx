@@ -329,7 +329,7 @@ function Eleccion({ rotulo, ancho, opciones, onElegir }: {
                 if (v !== '') onElegir(v);
                 e.target.value = '';
             }}
-            className={`h-8 cursor-pointer rounded-md border border-charcoal-900/10 bg-white/70 px-1.5 text-base text-charcoal-900/70 sm:text-[11px] transition-colors hover:bg-white hover:text-charcoal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-gold max-sm:order-last ${ancho}`}
+            className={`h-8 cursor-pointer rounded-md border border-charcoal-900/10 bg-white/70 px-1.5 text-base text-charcoal-900/70 [@media(pointer:fine)]:text-[11px] transition-colors hover:bg-white hover:text-charcoal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-gold max-sm:order-last ${ancho}`}
         >
             <option value="">{rotulo}</option>
             {opciones.map((o) => <option key={o.valor} value={o.valor}>{o.texto}</option>)}
