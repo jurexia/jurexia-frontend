@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import { Suspense } from 'react';
 import HeroVideo from '@/components/HeroVideo';
 import DespachosVitrina from '@/components/DespachosVitrina';
+import VideoChat from '@/components/VideoChat';
 import DemoEnVivo from '@/components/DemoEnVivo';
 import ChatInput from '@/components/ChatInput';
 import Link from 'next/link';
@@ -36,6 +37,11 @@ export default function HomePage() {
 
             {/* Hero con vídeo de fondo. El titular y los botones viven ahí. */}
             <HeroVideo />
+
+            {/* La pieza del chat (v43), bajo la portada y sobre la vitrina.
+                David, 15-sep-2026: «al igual que Harvey, el vídeo se
+                reproduce pero no se escucha hasta que el usuario haga clic». */}
+            <VideoChat />
 
             {/* La franja de despachos, inmediatamente bajo el vídeo. Es la
                 primera pregunta que se hace quien llega a evaluarnos: quién
