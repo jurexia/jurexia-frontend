@@ -31,7 +31,7 @@ import type { AsuntoEnCurso, FichaProyecto, DocumentosDelAsunto }
     from '@/components/sentencia/api';
 import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
 import LineaDeFases from '@/components/sentencia/LineaDeFases';
-import VentanaCriterio from '@/components/sentencia/VentanaCriterio';
+import Decision from '@/components/sentencia/Decision';
 import FormularioEncargo, { ENCARGO_VACIO, faltaEnEncargo } from '@/components/sentencia/FormularioEncargo';
 import type { TipoAsunto } from '@/components/sentencia/api';
 import type { Encargo } from '@/components/sentencia/FormularioEncargo';
@@ -2322,23 +2322,20 @@ export default function TallerDeSentencias() {
                 )}
 
                     {problemas.length > 0 && (
-                    <VentanaCriterio problemas={problemas} onCambiar={cambiarCriterio}
-                                         onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo'}
-                                         onProponer={pedirPropuesta} propuesta={propuesta}
-                                         proponiendo={proponiendo}
-                                         onAportar={aportarYProponer} aportando={aportando}
-                                         modo={modo} onModo={setModo}
-                                         sentidoGlobal={sentidoGlobal}
-                                         razonGlobal={razonGlobal}
-                                         onRazonGlobal={setRazonGlobal}
-                                         onSentidoGlobal={elegirGlobal}
-                                         tocados={tocados}
-                                         globalDictado={globalDictado}
-                                         onRazonar={pedirRazon} razonando={razonando}
-                                         grupos={grupos} onGrupos={setGrupos}
-                                         conceptosViolacion={conceptosViolacion}
-                                         onConceptosViolacion={setConceptosViolacion}
-                                         contextoAportado={contexto.length} />
+                    <Decision problemas={problemas} onCambiar={cambiarCriterio}
+                              onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo' && !proponiendo}
+                              onProponer={pedirPropuesta} propuesta={propuesta}
+                              proponiendo={proponiendo}
+                              onAportar={aportarYProponer} aportando={aportando}
+                              sentidoGlobal={sentidoGlobal}
+                              onSentidoGlobal={elegirGlobal}
+                              onRazonGlobal={setRazonGlobal}
+                              tocados={tocados}
+                              onRazonar={pedirRazon} razonando={razonando}
+                              conceptosViolacion={conceptosViolacion}
+                              onConceptosViolacion={setConceptosViolacion}
+                              contextoAportado={contexto.length}
+                              esRecurso={encargo.tipoAsunto !== 'amparo_directo'} />
                     )}
 
                     {/* EL ESTUDIO, VIÉNDOSE ESCRIBIR. Antes aquí no había nada

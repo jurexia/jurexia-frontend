@@ -419,9 +419,23 @@ export interface SolucionGlobal {
     }[];
 }
 
+/* EL CONTRASTE, por planteamiento: la razón toral de la sentencia, si el
+   agravio la combate y si el fallo sobrevive por otra. Lo calcula la fase 5
+   antes de proponer; la pantalla de decisión lo enseña detrás de «ver por
+   qué». */
+export interface ContrasteDelPlanteamiento {
+    numero: number;
+    razon_toral: string;
+    la_combate: boolean;
+    sobrevive: boolean;
+    veredicto_previo: string;
+    por_que: string;
+}
+
 export interface RespuestaPropuesta {
     propuestas: PropuestaDeSolucion[];
     global?: SolucionGlobal | null;
+    contraste?: ContrasteDelPlanteamiento[];
     resumen: string;
     avisos: string[];
     /** Esto se devuelve tal cual —o editado— para resolver con ella. */
@@ -452,6 +466,8 @@ export async function proponerSolucion(
     return {
         propuestas: j.propuestas ?? [],
         global: j.global?.alcanza ? (j.global as SolucionGlobal) : null,
+        contraste: Array.isArray(j.contraste)
+            ? (j.contraste as ContrasteDelPlanteamiento[]) : [],
         resumen: j.resumen ?? '',
         avisos: j.avisos ?? [],
         criteriosJson: j.criterios_json ?? '',
