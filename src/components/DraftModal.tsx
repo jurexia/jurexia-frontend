@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, FileEdit, Scale, Gavel, Users, Briefcase, Home, ShoppingCart, FileText, Shield, Mail, Building, UserCheck, Scroll, Landmark, BookOpen, AlertTriangle, ArrowUpDown, RotateCcw, HelpCircle, Eye, Wheat, Flag } from 'lucide-react';
 
 interface DraftModalProps {
@@ -94,6 +94,56 @@ const FALTAS_DISPONIBLES = [
 
 type DocumentType = keyof typeof DOCUMENT_TYPES;
 
+/* LOS ESTADOS DEL SELECTOR DE LA DENUNCIA, y cuál vale.
+   Una denuncia de nivel estatal salió al API como «Nivel: Estatal ()», sin
+   estado, y el redactor dejó veinte huecos «[INSERTAR ARTÍCULO APLICABLE]»
+   (medido el 16-sep-2026 sobre los escritos guardados). Pasaba porque el
+   selector no tenía opción vacía: si el estado del chat llegaba vacío —o
+   llegaba «FEDERAL», el valor por omisión, o «CIUDAD_DE_MEXICO», que aquí se
+   llama «CDMX»—, la pantalla enseñaba «Aguascalientes» como elegido mientras
+   por dentro no había ninguno. El abogado creía haber elegido estado. */
+const ESTADOS_DENUNCIA: ReadonlyArray<readonly [string, string]> = [
+    ['AGUASCALIENTES', 'Aguascalientes'],
+    ['BAJA_CALIFORNIA', 'Baja California'],
+    ['BAJA_CALIFORNIA_SUR', 'Baja California Sur'],
+    ['CAMPECHE', 'Campeche'],
+    ['CHIAPAS', 'Chiapas'],
+    ['CHIHUAHUA', 'Chihuahua'],
+    ['COAHUILA', 'Coahuila'],
+    ['COLIMA', 'Colima'],
+    ['CDMX', 'Ciudad de México'],
+    ['DURANGO', 'Durango'],
+    ['ESTADO_DE_MEXICO', 'Estado de México'],
+    ['GUANAJUATO', 'Guanajuato'],
+    ['GUERRERO', 'Guerrero'],
+    ['HIDALGO', 'Hidalgo'],
+    ['JALISCO', 'Jalisco'],
+    ['MICHOACAN', 'Michoacán'],
+    ['MORELOS', 'Morelos'],
+    ['NAYARIT', 'Nayarit'],
+    ['NUEVO_LEON', 'Nuevo León'],
+    ['OAXACA', 'Oaxaca'],
+    ['PUEBLA', 'Puebla'],
+    ['QUERETARO', 'Querétaro'],
+    ['QUINTANA_ROO', 'Quintana Roo'],
+    ['SAN_LUIS_POTOSI', 'San Luis Potosí'],
+    ['SINALOA', 'Sinaloa'],
+    ['SONORA', 'Sonora'],
+    ['TABASCO', 'Tabasco'],
+    ['TAMAULIPAS', 'Tamaulipas'],
+    ['TLAXCALA', 'Tlaxcala'],
+    ['VERACRUZ', 'Veracruz'],
+    ['YUCATAN', 'Yucatán'],
+    ['ZACATECAS', 'Zacatecas'],
+];
+const ALIAS_ESTADO: Record<string, string> = { CIUDAD_DE_MEXICO: 'CDMX' };
+
+/** El estado del chat traducido a una opción del selector, o '' si no es ninguno. */
+function estadoDelSelector(estado?: string): string {
+    const v = ALIAS_ESTADO[estado ?? ''] ?? estado ?? '';
+    return ESTADOS_DENUNCIA.some(([valor]) => valor === v) ? v : '';
+}
+
 export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL' }: DraftModalProps) {
     const [selectedType, setSelectedType] = useState<DocumentType | null>(null);
     const [selectedSubtipo, setSelectedSubtipo] = useState<string>('');
@@ -102,7 +152,12 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
 
     // Campos para denuncia administrativa
     const [nivelAutoridad, setNivelAutoridad] = useState<'federal' | 'estatal'>('federal');
-    const [estadoDenuncia, setEstadoDenuncia] = useState(estado);
+    const [estadoDenuncia, setEstadoDenuncia] = useState(() => estadoDelSelector(estado));
+    // El estado del chat puede llegar DESPUÉS de montar el modal: al abrirlo se
+    // toma si todavía no hay uno elegido. Nunca pisa la elección del abogado.
+    useEffect(() => {
+        if (isOpen) setEstadoDenuncia((actual) => actual || estadoDelSelector(estado));
+    }, [isOpen, estado]);
     const [cargoDenunciado, setCargoDenunciado] = useState<string>('juez');
     const [materiaDenuncia, setMateriaDenuncia] = useState<string>('civil');
     const [faltasSeleccionadas, setFaltasSeleccionadas] = useState<string[]>([]);
@@ -115,6 +170,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
         if (isDenuncia) {
             // Validar campos de denuncia
             if (faltasSeleccionadas.length === 0 || !descripcion.trim()) return;
+            if (nivelAutoridad === 'estatal' && !estadoDenuncia) return;
 
             onDraft({
                 tipo: 'denuncia_administrativa',
@@ -147,7 +203,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
         setSelectedSubtipo('');
         setDescripcion('');
         setNivelAutoridad('federal');
-        setEstadoDenuncia(estado);
+        setEstadoDenuncia(estadoDelSelector(estado));
         setCargoDenunciado('juez');
         setMateriaDenuncia('civil');
         setFaltasSeleccionadas([]);
@@ -172,7 +228,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
 
     // Determinar si el formulario está listo para enviar
     const canSubmit = isDenuncia
-        ? (faltasSeleccionadas.length > 0 && descripcion.trim())
+        ? (faltasSeleccionadas.length > 0 && descripcion.trim() && (nivelAutoridad === 'federal' || !!estadoDenuncia))
         : (selectedType && selectedSubtipo && descripcion.trim());
 
     return (
@@ -305,41 +361,19 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                     <select
                                         value={estadoDenuncia}
                                         onChange={(e) => setEstadoDenuncia(e.target.value)}
+                                        aria-invalid={!estadoDenuncia}
                                         className="w-full mt-2 p-2.5 border border-charcoal-700 rounded-xl bg-charcoal-800 text-cream-100 text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-colors"
                                     >
-                                        <option value="AGUASCALIENTES">Aguascalientes</option>
-                                        <option value="BAJA_CALIFORNIA">Baja California</option>
-                                        <option value="BAJA_CALIFORNIA_SUR">Baja California Sur</option>
-                                        <option value="CAMPECHE">Campeche</option>
-                                        <option value="CHIAPAS">Chiapas</option>
-                                        <option value="CHIHUAHUA">Chihuahua</option>
-                                        <option value="COAHUILA">Coahuila</option>
-                                        <option value="COLIMA">Colima</option>
-                                        <option value="CDMX">Ciudad de México</option>
-                                        <option value="DURANGO">Durango</option>
-                                        <option value="ESTADO_DE_MEXICO">Estado de México</option>
-                                        <option value="GUANAJUATO">Guanajuato</option>
-                                        <option value="GUERRERO">Guerrero</option>
-                                        <option value="HIDALGO">Hidalgo</option>
-                                        <option value="JALISCO">Jalisco</option>
-                                        <option value="MICHOACAN">Michoacán</option>
-                                        <option value="MORELOS">Morelos</option>
-                                        <option value="NAYARIT">Nayarit</option>
-                                        <option value="NUEVO_LEON">Nuevo León</option>
-                                        <option value="OAXACA">Oaxaca</option>
-                                        <option value="PUEBLA">Puebla</option>
-                                        <option value="QUERETARO">Querétaro</option>
-                                        <option value="QUINTANA_ROO">Quintana Roo</option>
-                                        <option value="SAN_LUIS_POTOSI">San Luis Potosí</option>
-                                        <option value="SINALOA">Sinaloa</option>
-                                        <option value="SONORA">Sonora</option>
-                                        <option value="TABASCO">Tabasco</option>
-                                        <option value="TAMAULIPAS">Tamaulipas</option>
-                                        <option value="TLAXCALA">Tlaxcala</option>
-                                        <option value="VERACRUZ">Veracruz</option>
-                                        <option value="YUCATAN">Yucatán</option>
-                                        <option value="ZACATECAS">Zacatecas</option>
+                                        <option value="" disabled>Elige el estado del juzgado…</option>
+                                        {ESTADOS_DENUNCIA.map(([valor, nombre]) => (
+                                            <option key={valor} value={valor}>{nombre}</option>
+                                        ))}
                                     </select>
+                                )}
+                                {nivelAutoridad === 'estatal' && !estadoDenuncia && (
+                                    <p className="mt-1.5 text-xs text-red-300">
+                                        Elige el estado: sin él no se puede citar su Ley Orgánica del Poder Judicial.
+                                    </p>
                                 )}
                             </div>
 
