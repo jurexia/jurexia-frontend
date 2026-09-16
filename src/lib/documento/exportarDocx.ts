@@ -354,7 +354,7 @@ export async function construirDocx(bloques: readonly Bloque[], papel: Papel): P
 
 export function nombreDeArchivo(titulo: string, extension: string): string {
     let limpio = (titulo || '')
-        .replace(/[\\/:*?"<>| -]/g, ' ')
+        .replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
         .replace(/[.…]+/g, ' ')
         .replace(/\s+/g, ' ')
         .trim()

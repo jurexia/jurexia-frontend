@@ -1479,16 +1479,24 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     A mi carpeta
                                 </button>
 
-                                {/* Al constructor de demanda: la respuesta entra al final
-                                    de la hoja, sin marcadores ni identificadores. */}
+                                {/* AL EDITOR. La respuesta se abre como un documento de
+                                    Word en esta misma ventana —sin marcadores ni
+                                    identificadores— para darle forma antes de bajarla.
+                                    Era «Al documento»; David lo quiso azul y con el
+                                    nombre de lo que produce (15-sep-2026). El DOCX de al
+                                    lado se queda tal cual: baja la respuesta con su
+                                    membrete y las citas como notas al pie, que es lo que
+                                    este camino no puede dar, porque una nota al pie no se
+                                    puede ver en la hoja y lo que aquí se descarga es
+                                    exactamente lo que se ve. */}
                                 {onLlevarAlDocumento && (
                                     <button
                                         onClick={() => onLlevarAlDocumento(cleanContentForExport(message.content))}
-                                        className="inline-flex items-center gap-1.5 rounded-md border border-charcoal-900/15 bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal-900 transition-colors hover:border-accent-gold/60 hover:bg-accent-gold/10"
-                                        title="Añadir esta respuesta al documento del constructor"
+                                        className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+                                        title="Abrir esta respuesta en el editor para darle forma y descargarla en Word"
                                     >
-                                        <FileSignature className="w-3.5 h-3.5 text-accent-brown" />
-                                        Al documento
+                                        <FileSignature className="w-3.5 h-3.5" />
+                                        Word
                                     </button>
                                 )}
                             </div>

@@ -28,11 +28,15 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
+import type { EscritoEnEdicion } from '@/components/documento/EditorEscrito';
 import { markdownAHtml } from '@/lib/documento/marcado';
 
 /* El constructor de demanda se carga sólo cuando alguien lo abre: trae el
    editor y la librería de Word, que el chat no necesita para consultar. */
 const ConstructorDemanda = dynamic(() => import('@/components/documento/ConstructorDemanda'), { ssr: false });
+/* El editor suelto, igual: la misma hoja y el mismo exportador, sin Toulmin. */
+const EditorEscrito = dynamic(() => import('@/components/documento/EditorEscrito'), { ssr: false });
+
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { useRouter } from 'next/navigation';
 import { getEstadoLabel } from '@/lib/estados';
@@ -66,6 +70,26 @@ const SUGGESTIONS = [
     { text: '¿Qué recursos existen contra una sentencia de amparo directo?', label: 'AMPARO' },
     { text: '¿En qué consiste la adopción plena y cuáles son sus efectos jurídicos?', label: 'FAMILIAR' },
 ];
+
+/* Identifica una respuesta por su propio texto. `Message` no lleva id y el
+   índice de la lista se mueve al llegar mensajes nuevos; la huella del texto,
+   no: mientras se trate de la misma respuesta el editor conserva lo editado, y
+   en cuanto es otra, empieza de cero. */
+function idDeRespuesta(markdown: string): string {
+    let h = 0;
+    for (let i = 0; i < markdown.length; i++) h = (Math.imul(h, 31) + markdown.charCodeAt(i)) | 0;
+    return `r${(h >>> 0).toString(36)}`;
+}
+/* El nombre propuesto del archivo: el PRIMER RENGLÓN con texto de la respuesta
+   ya limpia, no sus primeras palabras a secas. Casi todas empiezan por un rubro
+   («## Procedencia de la acción alimentaria»), y cortar por palabras pegaba el
+   rubro con el arranque del párrafo siguiente —«Procedencia de la acción
+   alimentaria Procede la acció…»—, que como nombre de archivo no vale. Se vio
+   montando el componente donde vive, no suelto. */
+function tituloDeRespuesta(markdown: string): string {
+    const renglon = markdown.replace(/[#*_>`]/g, '').split('\n').map((l) => l.trim()).find(Boolean) ?? '';
+    return renglon.split(/\s+/).slice(0, 12).join(' ').slice(0, 80) || 'Escrito de Iurexia';
+}
 
 export default function ChatPage() {
     // Auth protection - redirects to login if not authenticated
@@ -122,6 +146,8 @@ export default function ChatPage() {
     const [constructorAbierto, setConstructorAbierto] = useState(false);
     const [constructorPaso, setConstructorPaso] = useState<'caso' | 'toulmin' | null>(null);
     const [insercionDocumento, setInsercionDocumento] = useState<InsercionDocumento | null>(null);
+    // ── El editor suelto: una respuesta abierta como Word, sin los pasos ──
+    const [escritoEnEdicion, setEscritoEnEdicion] = useState<EscritoEnEdicion | null>(null);
     const [showStateModal, setShowStateModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
     const estadoInitializedRef = useRef(false);
@@ -296,12 +322,21 @@ export default function ChatPage() {
         });
     }, []);
 
+    /* EL BOTÓN «WORD» DE CADA RESPUESTA.
+       Abre la respuesta como un documento editable en esta misma ventana. Si el
+       constructor de escritos ya está desplegado, el abogado está redactando su
+       demanda: ahí lo útil es que la respuesta caiga DENTRO de esa hoja, que es
+       lo que hacía este botón cuando se llamaba «Al documento». Si no lo está,
+       se abre el editor suelto —la misma hoja, sin los pasos de Toulmin—.
+       Así el botón promete una sola cosa: «este texto pasa a un documento que
+       puedes editar aquí mismo», y nunca se abren dos paneles a la vez. */
     const llevarAlDocumento = useCallback((markdown: string) => {
-        setInsercionDocumento({ html: markdownAHtml(markdown), n: Date.now() });
-        setConstructorPaso(null);
-        setConstructorMontado(true);
-        setConstructorAbierto(true);
-    }, []);
+        if (constructorAbierto) {
+            setInsercionDocumento({ html: markdownAHtml(markdown), n: Date.now() });
+            return;
+        }
+        setEscritoEnEdicion({ id: idDeRespuesta(markdown), html: markdownAHtml(markdown), titulo: tituloDeRespuesta(markdown) });
+    }, [constructorAbierto]);
 
     // El constructor gasta consultas por su cuenta (Toulmin, redactar,
     // revisar): el contador de la cabecera se sincroniza igual que tras el chat.
@@ -1469,6 +1504,9 @@ export default function ChatPage() {
                     onConsultaGastada={sincronizarCuota}
                 />
             )}
+            {/* El editor suelto queda montado tras la primera apertura: así lo
+                que se escribió sigue ahí si se recoge y se vuelve a abrir. */}
+            <EditorEscrito escrito={escritoEnEdicion} onCerrar={() => setEscritoEnEdicion(null)} />
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 
             <WelcomeVideoModal isOpen={showWelcomeVideo} onClose={handleWelcomeVideoClose} />
