@@ -147,10 +147,15 @@ export function Paso({
    Va DEBAJO de los dos caminos, no encima: quien entra a empezar un asunto
    nuevo es la mayoría, y una lista de expedientes antiguos en el sitio de más
    peso convertiría la entrada en un archivador. */
-function Reanudar({ asuntos, onAbrir }: {
+function Reanudar({ asuntos, onAbrir, onDescargar }: {
     asuntos: AsuntoEnCurso[];
     onAbrir: (numero: string) => void;
+    /** Abrir el .docx de una versión concreta del mismo expediente. */
+    onDescargar?: (numero: string, version: number) => void;
 }) {
+    /* QUÉ EXPEDIENTE TIENE LA LISTA ABIERTA. Uno solo: dos listas desplegadas
+       a la vez devuelven el archivador que esta pantalla vino a quitar. */
+    const [abierto, setAbierto] = React.useState('');
     if (!asuntos.length) return null;
     return (
         <div className="mt-5 border-t border-white/[0.07] px-4 pb-4 pt-4">
@@ -159,10 +164,13 @@ function Reanudar({ asuntos, onAbrir }: {
             </p>
             <div className="flex flex-col gap-1.5">
                 {asuntos.map((a) => (
-                    <button key={a.numero} type="button" onClick={() => onAbrir(a.numero)}
-                            className="group flex items-center gap-3 rounded-xl border
-                                       border-white/[0.07] bg-white/[0.02] px-3 py-2 text-left
-                                       transition-colors hover:border-accent-gold/35
+                    <div key={a.numero}
+                         className="rounded-xl border border-white/[0.07] bg-white/[0.02]
+                                    transition-colors focus-within:border-accent-gold/35
+                                    hover:border-accent-gold/35">
+                    <button type="button" onClick={() => onAbrir(a.numero)}
+                            className="group flex w-full items-center gap-3 rounded-xl
+                                       px-3 py-2 text-left transition-colors
                                        hover:bg-white/[0.045]">
                         <RotateCcw className="h-3.5 w-3.5 shrink-0 text-white/45
                                               transition-colors group-hover:text-accent-gold/70" />
@@ -210,13 +218,6 @@ function Reanudar({ asuntos, onAbrir }: {
                                                 { day: 'numeric', month: 'short' })
                                         : ''}
                                 </span>
-                                {a.versiones && a.versiones.length > 1 && (
-                                    <span className="mt-0.5 block text-[10px] text-white/35">
-                                        {a.versiones.slice(0, 3)
-                                            .map((v) => (v.sentidoGlobal || 'sin sentido').replace(/_/g, ' '))
-                                            .join(' · ')}
-                                    </span>
-                                )}
                             </span>
                         ) : (
                             <span className="shrink-0 text-[12px] text-white/45">
@@ -226,6 +227,67 @@ function Reanudar({ asuntos, onAbrir }: {
                             </span>
                         )}
                     </button>
+                    {/* ═══ LOS PROYECTOS DEL MISMO EXPEDIENTE ═══
+                        David, 16-sep-2026: «si un expediente tiene más de un
+                        proyecto, guardarlos en la misma pestaña de historial».
+                        Contarlos no basta: el secretario que probó dos salidas
+                        quiere LEERLAS para comparar. Cada versión trae su
+                        sentido, su fecha y su documento; el último se abre
+                        además entrando al asunto, que es el camino normal.
+
+                        Plegado por omisión: la fila de un asunto con un solo
+                        proyecto no cambia en nada. */}
+                    {a.versiones && a.versiones.length > 1 && (
+                        <div className="border-t border-white/[0.06] px-3 pb-2 pt-1.5">
+                            <button type="button"
+                                    onClick={() => setAbierto((x) => (x === a.numero ? '' : a.numero))}
+                                    className="text-[12px] text-white/45 underline
+                                               decoration-white/20 underline-offset-2
+                                               transition-colors hover:text-accent-gold/80">
+                                {abierto === a.numero
+                                    ? 'Ocultar los proyectos'
+                                    : `Ver los ${a.versiones.length} proyectos`}
+                            </button>
+                            {abierto === a.numero && (
+                                <ul className="mt-1.5 flex flex-col gap-1">
+                                    {a.versiones.map((v) => (
+                                        <li key={v.version}
+                                            className="flex items-center gap-2 text-[12px]">
+                                            <span className="w-7 shrink-0 tabular-nums text-white/35">
+                                                v{v.version}
+                                            </span>
+                                            <span className="min-w-0 flex-1 truncate text-white/60">
+                                                {(v.sentidoGlobal || 'sin sentido').replace(/_/g, ' ')}
+                                                <span className="text-white/35">
+                                                    {v.palabras
+                                                        ? ` · ${v.palabras.toLocaleString('es-MX')} palabras`
+                                                        : ''}
+                                                    {v.generadoEn
+                                                        ? ' · ' + new Date(v.generadoEn)
+                                                            .toLocaleDateString('es-MX',
+                                                                { day: 'numeric', month: 'short' })
+                                                        : ''}
+                                                </span>
+                                            </span>
+                                            {onDescargar && (
+                                                <button type="button"
+                                                        onClick={() => onDescargar(a.numero, v.version)}
+                                                        className="inline-flex shrink-0 items-center gap-1
+                                                                   rounded-lg border border-white/10 px-2 py-0.5
+                                                                   text-[12px] text-white/60 transition-colors
+                                                                   hover:border-accent-gold/45
+                                                                   hover:text-accent-gold/90">
+                                                    <Download className="h-3 w-3" />
+                                                    Abrir
+                                                </button>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )}
+                    </div>
                 ))}
             </div>
             <p className="mt-2 text-[12px] leading-relaxed text-white/45">
@@ -240,7 +302,7 @@ function Reanudar({ asuntos, onAbrir }: {
 
 export default function EntradaTaller({
     via, onVia, pasoArchivos, onPasoArchivos, hayDocumentos, hayFicha,
-    enCurso = [], onReanudar, accion, admision, puedeSise = false,
+    enCurso = [], onReanudar, onDescargarVersion, accion, admision, puedeSise = false,
     ficha, documentos, plantilla,
 }: {
     via: ViaEntrada | null;
@@ -251,6 +313,8 @@ export default function EntradaTaller({
     hayFicha?: boolean;
     enCurso?: AsuntoEnCurso[];
     onReanudar?: (numero: string) => void;
+    /** El .docx de una versión anterior del mismo expediente. */
+    onDescargarVersion?: (numero: string, version: number) => void;
     /** El botón que genera. Lo pone la pantalla, porque es quien sabe si se
      *  puede pulsar; aquí sólo se le da su sitio, que es el final del camino. */
     accion?: React.ReactNode;
@@ -300,7 +364,8 @@ export default function EntradaTaller({
                     />
                 </div>
                 {onReanudar && (
-                    <Reanudar asuntos={enCurso} onAbrir={onReanudar} />
+                    <Reanudar asuntos={enCurso} onAbrir={onReanudar}
+                              onDescargar={onDescargarVersion} />
                 )}
             </div>
         );

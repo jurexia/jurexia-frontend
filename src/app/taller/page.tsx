@@ -1577,6 +1577,8 @@ export default function TallerDeSentencias() {
                                        hayFicha={!!encargo.numero && !!encargo.tipoAsunto}
                                        enCurso={enCurso}
                                        onReanudar={reanudar}
+                                       onDescargarVersion={(n, v) =>
+                                           void descargarDelAlmacen(n, correo, v)}
                                        puedeSise={!!piloto?.puede_sise}
                                        ficha={fichaJsx}
                                        documentos={documentosJsx}
