@@ -36,7 +36,7 @@
 import React from 'react';
 import { Tarjeta, Rotulo, cn } from './primitivas';
 import { obtenerTipos, type TipoAsunto } from './api';
-import Calendario from './Calendario';
+import Calendario, { comprimirTramos, expandirTramos } from './Calendario';
 
 export interface Encargo {
     tipoAsunto: string;
@@ -529,50 +529,55 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                     </div>
                 )}
 
-                <Campo etiqueta="Días inhábiles adicionales de TU tribunal"
+                {/* ═══ LOS DÍAS, MARCADOS EN EL CALENDARIO ═══
+                    David, 16-sep-2026: «que el secretario pueda
+                    seleccionarlos en conjunto en calendario y cuando termine
+                    un botón de "Listo", y así se suman todos de forma más
+                    cómoda sin tener que ingresar uno por uno». Antes era un
+                    <input type="date"> que admitía UN día por vez: una
+                    quincena de vacaciones eran quince aperturas del
+                    calendario del navegador. */}
+                <Campo etiqueta="Días inhábiles adicionales de TU tribunal" sinLabel
                        ayuda={['amparo_directo', 'revision_fiscal'].includes(valor.tipoAsunto)
                            ? 'Los del artículo 19, sábados y domingos y las vacaciones del Poder Judicial ya van contados. Aquí sólo los de tu propio tribunal; los de la responsable van en el campo de abajo.'
                            : 'Los del artículo 19, sábados y domingos y las vacaciones del Poder Judicial ya van contados. Aquí sólo los de tu tribunal.'}>
-                    <div className="flex flex-wrap items-center gap-2">
-                        {(valor.diasInhabilesExtra ?? []).map((d) => (
-                            <span key={d}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-accent-gold/25 bg-accent-gold/10 px-2.5 py-1 text-[13px] text-accent-gold">
-                                {d}
-                                <button type="button" aria-label={`Quitar ${d}`}
-                                        className="text-accent-gold/60 transition hover:text-accent-gold"
-                                        onClick={() => set('diasInhabilesExtra',
-                                            (valor.diasInhabilesExtra ?? []).filter((x) => x !== d))}>
-                                    ×
-                                </button>
-                            </span>
-                        ))}
-                        <input type="date" className={`${campo} w-auto`} value=""
-                               onChange={(e) => {
-                                   const d = e.target.value;
-                                   if (!d) return;
-                                   const ya = valor.diasInhabilesExtra ?? [];
-                                   if (!ya.includes(d)) set('diasInhabilesExtra', [...ya, d].sort());
-                               }} />
-                    </div>
+                    <Calendario multiple
+                                valores={valor.diasInhabilesExtra ?? []}
+                                onValores={(ds) => set('diasInhabilesExtra', ds)}
+                                mesInicial={(valor.notificacion || valor.presentacion || '').slice(0, 7) || undefined}
+                                placeholder="Ninguno · marcarlos en el calendario" />
+                    {(valor.diasInhabilesExtra ?? []).length > 0 && (
+                        <p className="mt-1 text-[12px] leading-relaxed text-accent-gold/80">
+                            {comprimirTramos(valor.diasInhabilesExtra ?? [])}
+                        </p>
+                    )}
                 </Campo>
 
                 {/* ═══ LOS DÍAS EN QUE NO LABORÓ LA RESPONSABLE ═══
                     Sólo se pinta en los dos tipos donde el escrito se presenta
                     ANTE ELLA. Un campo que no se puede aplicar es una trampa:
                     el secretario lo rellena, no pasa nada, y no sabe por qué. */}
+                {/* EL PERIODO VACACIONAL YA NO SE ESCRIBE. Era un campo de
+                    texto con sintaxis propia —«2025-12-16..2026-01-05»— y
+                    David lo señaló: marcando los días en el calendario se hace
+                    igual de rápido y no hay sintaxis que aprender ni que
+                    equivocar. Al servidor sigue viajando como texto, con los
+                    días consecutivos comprimidos en tramos, que es lo que
+                    `leer_inhabiles_responsable` entiende. */}
                 {['amparo_directo', 'revision_fiscal'].includes(valor.tipoAsunto) && (
-                    <Campo etiqueta="Días en que NO laboró la autoridad responsable"
+                    <Campo etiqueta="Días en que NO laboró la autoridad responsable" sinLabel
                            ayuda={valor.tipoAsunto === 'revision_fiscal'
                                ? 'El recurso se presenta ante la Sala responsable (artículo 63 de la LFPCA) y son hábiles los días en que sus oficinas están abiertas al público. Sus periodos vacacionales no se computan.'
                                : 'La demanda se presenta por conducto de la responsable (artículo 176 de la Ley de Amparo), así que sus vacaciones y suspensiones tampoco cuentan — P./J. 4/2022, registro 2024494.'}>
-                        <input className={campo}
-                               value={valor.inhabilesResponsable ?? ''}
-                               placeholder="2025-12-16..2026-01-05, 2026-02-12"
-                               onChange={(e) => set('inhabilesResponsable', e.target.value)} />
+                        <Calendario multiple
+                                    valores={expandirTramos(valor.inhabilesResponsable ?? '')}
+                                    onValores={(ds) => set('inhabilesResponsable', comprimirTramos(ds))}
+                                    mesInicial={(valor.notificacion || valor.presentacion || '').slice(0, 7) || undefined}
+                                    placeholder="Ninguno · marcar sus vacaciones y suspensiones" />
                         <p className="mt-1 text-[12px] leading-relaxed text-white/45">
-                            Un periodo es un tramo con dos puntos; un día suelto va solo.
-                            Se suman a los inhábiles del artículo 19, no los sustituyen, y
-                            sólo pueden alargar el plazo, nunca acortarlo.
+                            {(valor.inhabilesResponsable ?? '').trim()
+                                ? <span className="text-accent-gold/80">{valor.inhabilesResponsable}</span>
+                                : 'Marca el periodo vacacional día por día: se suman a los inhábiles del artículo 19, no los sustituyen, y sólo pueden alargar el plazo, nunca acortarlo.'}
                         </p>
                     </Campo>
                 )}

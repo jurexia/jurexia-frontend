@@ -28,24 +28,77 @@ const DIAS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 const pad = (n: number) => String(n).padStart(2, '0');
 const isoDe = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`;
 
+/* ── DÍAS SUELTOS ↔ TRAMOS ───────────────────────────────────────────────
+   El campo de la responsable viaja al servidor como texto —«2025-12-16..
+   2026-01-05, 2026-02-12»— porque un periodo vacacional es un tramo. El
+   secretario ya no escribe esa sintaxis: marca los días en el calendario y
+   aquí se comprimen los consecutivos. Comprimir es sólo para que el texto
+   quepa y se lea; el servidor entiende igual las dos formas. */
+export function expandirTramos(texto: string): string[] {
+    const fuera = new Set<string>();
+    for (const trozo of (texto || '').split(',')) {
+        const t = trozo.trim();
+        if (!t) continue;
+        const [a, b] = t.split('..').map((x) => x.trim());
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(a)) continue;
+        if (!b) { fuera.add(a); continue; }
+        const d = new Date(`${a}T00:00:00`), fin = new Date(`${b}T00:00:00`);
+        // Un tramo al revés o absurdamente largo no se expande: se deja el día.
+        if (isNaN(fin.getTime()) || fin < d) { fuera.add(a); continue; }
+        for (let i = 0; d <= fin && i < 400; i++) {
+            fuera.add(d.toISOString().slice(0, 10));
+            d.setDate(d.getDate() + 1);
+        }
+    }
+    return Array.from(fuera).sort();
+}
+
+export function comprimirTramos(dias: string[]): string {
+    const ds = Array.from(new Set(dias.filter(Boolean))).sort();
+    const tramos: string[] = [];
+    let i = 0;
+    while (i < ds.length) {
+        let j = i;
+        while (j + 1 < ds.length) {
+            const sig = new Date(`${ds[j]}T00:00:00`);
+            sig.setDate(sig.getDate() + 1);
+            if (sig.toISOString().slice(0, 10) !== ds[j + 1]) break;
+            j++;
+        }
+        tramos.push(i === j ? ds[i] : `${ds[i]}..${ds[j]}`);
+        i = j + 1;
+    }
+    return tramos.join(', ');
+}
+
 function mesDe(v?: string): [number, number] | null {
     if (!v || v.length < 7) return null;
     const [y, m] = v.split('-').map(Number);
     return y && m ? [y, m - 1] : null;
 }
 
-export default function Calendario({ valor, onCambiar, mesInicial, placeholder }: {
-    /** ISO AAAA-MM-DD, o cadena vacía. */
-    valor: string;
-    onCambiar: (iso: string) => void;
+export default function Calendario({ valor, onCambiar, mesInicial, placeholder,
+                                    multiple = false, valores, onValores }: {
+    /** ISO AAAA-MM-DD, o cadena vacía. Ignorado en modo múltiple. */
+    valor?: string;
+    onCambiar?: (iso: string) => void;
     /** AAAA-MM: el mes en que abre la PRIMERA VEZ si `valor` sigue vacío. Por
      *  ejemplo, el mes de la fecha de presentación, para el campo de
      *  notificación. */
     mesInicial?: string;
     placeholder?: string;
+    /** VARIOS DÍAS DE UNA SENTADA. David, 16-sep-2026: «que el secretario
+     *  pueda seleccionarlos en conjunto en el calendario y cuando termine un
+     *  botón de Listo, y así se suman todos sin tener que ingresar uno por
+     *  uno». Cada clic marca o desmarca; el panel no se cierra hasta Listo. */
+    multiple?: boolean;
+    valores?: string[];
+    onValores?: (isos: string[]) => void;
 }) {
     const hoy = new Date();
-    const inicial = mesDe(valor) ?? mesDe(mesInicial) ?? [hoy.getFullYear(), hoy.getMonth()];
+    const marcados = React.useMemo(() => valores ?? [], [valores]);
+    const anclaMes = multiple ? (marcados[0] || '') : (valor || '');
+    const inicial = mesDe(anclaMes) ?? mesDe(mesInicial) ?? [hoy.getFullYear(), hoy.getMonth()];
     const [abierto, setAbierto] = React.useState(false);
     const [vista, setVista] = React.useState({ y: inicial[0], m: inicial[1] });
     const cajaRef = React.useRef<HTMLDivElement>(null);
@@ -57,10 +110,10 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
     // secretario lo sube tras haber abierto ya el formulario— y este campo
     // sigue vacío, la vista salta a su mes en cuanto llega.
     React.useEffect(() => {
-        if (valor) return;
+        if (multiple ? marcados.length > 0 : !!valor) return;
         const m = mesDe(mesInicial);
         if (m) setVista({ y: m[0], m: m[1] });
-    }, [mesInicial, valor]);
+    }, [mesInicial, valor, multiple, marcados]);
 
     // EL PANEL ESTÁ FUERA DE `cajaRef` —es un portal—, así que «clic fuera»
     // tiene que mirar las dos cajas o el primer clic en un día lo cerraría.
@@ -79,12 +132,13 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
         const r = cajaRef.current?.getBoundingClientRect();
         if (!r) return;
         // Abre hacia abajo salvo que no quepa; el panel mide 320 de alto.
-        const abajo = window.innerHeight - r.bottom > 330;
+        const alto = multiple ? 360 : 326;
+        const abajo = window.innerHeight - r.bottom > alto + 10;
         setSitio({
-            top: abajo ? r.bottom + 6 : Math.max(8, r.top - 326),
+            top: abajo ? r.bottom + 6 : Math.max(8, r.top - alto),
             left: Math.min(r.left, Math.max(8, window.innerWidth - 296)),
         });
-    }, []);
+    }, [multiple]);
 
     React.useEffect(() => {
         if (!abierto) return;
@@ -98,7 +152,7 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
     }, [abierto, situar]);
 
     const abrir = () => {
-        const m = mesDe(valor) ?? mesDe(mesInicial);
+        const m = mesDe(anclaMes) ?? mesDe(mesInicial);
         if (m) setVista({ y: m[0], m: m[1] });
         situar();
         setAbierto(true);
@@ -112,10 +166,19 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
         ...Array.from({ length: diasDelMes }, (_, i) => i + 1),
     ];
 
-    const legible = valor
-        ? new Date(`${valor}T00:00:00`).toLocaleDateString('es-MX',
-              { day: 'numeric', month: 'long', year: 'numeric' })
-        : (placeholder || 'Elegir fecha');
+    const legible = multiple
+        ? (marcados.length
+            ? `${marcados.length} día${marcados.length === 1 ? '' : 's'} marcado${marcados.length === 1 ? '' : 's'}`
+            : (placeholder || 'Elegir días en el calendario'))
+        : (valor
+            ? new Date(`${valor}T00:00:00`).toLocaleDateString('es-MX',
+                  { day: 'numeric', month: 'long', year: 'numeric' })
+            : (placeholder || 'Elegir fecha'));
+
+    const alternar = (iso: string) => {
+        const ya = marcados.includes(iso);
+        onValores?.(ya ? marcados.filter((x) => x !== iso) : [...marcados, iso].sort());
+    };
 
     return (
         /* NO SE ACTIVA EL LABEL QUE NOS ENVUELVA. Un <label> se asocia con su
@@ -182,10 +245,15 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
                         ))}
                         {celdas.map((d, i) => {
                             const iso = d ? isoDe(vista.y, vista.m, d) : '';
-                            const elegido = d !== null && iso === valor;
+                            const elegido = d !== null
+                                && (multiple ? marcados.includes(iso) : iso === valor);
                             return (
                                 <button key={i} type="button" disabled={d === null}
-                                        onClick={() => { onCambiar(iso); setAbierto(false); }}
+                                        onClick={() => {
+                                            if (multiple) { alternar(iso); return; }
+                                            onCambiar?.(iso);
+                                            setAbierto(false);
+                                        }}
                                         className={cn(
                                             'aspect-square rounded-lg text-[12px] transition',
                                             d === null
@@ -198,13 +266,34 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
                             );
                         })}
                     </div>
-                    {valor && (
-                        <button type="button" onClick={() => { onCambiar(''); setAbierto(false); }}
+                    {multiple ? (
+                        <div className="mt-2 flex items-center gap-2 border-t border-white/[0.07] pt-2">
+                            <span className="flex-1 text-[12px] text-white/45">
+                                {marcados.length
+                                    ? `${marcados.length} marcado${marcados.length === 1 ? '' : 's'}`
+                                    : 'Toca los días; se marcan y se desmarcan'}
+                            </span>
+                            {marcados.length > 0 && (
+                                <button type="button" onClick={() => onValores?.([])}
+                                        className="rounded-lg px-2 py-1 text-[12px] text-white/45
+                                                   transition hover:text-white/75">
+                                    Limpiar
+                                </button>
+                            )}
+                            <button type="button" onClick={() => setAbierto(false)}
+                                    className="rounded-lg bg-accent-gold px-3 py-1 text-[12px]
+                                               font-semibold text-charcoal-900 transition
+                                               hover:brightness-110">
+                                Listo
+                            </button>
+                        </div>
+                    ) : valor ? (
+                        <button type="button" onClick={() => { onCambiar?.(''); setAbierto(false); }}
                                 className="mt-2 w-full rounded-lg border border-white/10 py-1.5 text-[12px]
                                            text-white/45 transition hover:text-white/75">
                             Quitar fecha
                         </button>
-                    )}
+                    ) : null}
                 </div>, document.body)}
         </div>
     );
