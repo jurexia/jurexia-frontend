@@ -902,20 +902,29 @@ export default function TallerDeSentencias() {
             setPaso('adelanto');
             void traerContexto(encargo.numero);
 
-            /* EL CÓMPUTO PARA ESTE CAMINO EN SECO, y es la única frenada que
-               tiene. Extemporánea significa que el recurso no se estudia en el
-               fondo: seguir de largo escribiría un proyecto que resuelve lo que
-               no debe resolverse, y sin nadie mirando. El camino largo sólo
-               avisa porque allí el secretario lee el aviso y decide; aquí no
-               hay quién lo lea. */
+            /* EL CÓMPUTO EXTEMPORÁNEO AVISA, NO FRENA.
+               Aquí se paraba en seco: «se paró aquí (…) no hay proyecto que
+               generar». El razonamiento era que en este camino no hay nadie
+               leyendo el aviso. Pero quien pulsa «Genera todo el proyecto» ya
+               decidió seguir, y David lo ha pedido cuatro veces con las mismas
+               palabras: «a pesar del aviso de extemporaneidad, si el secretario
+               decide continuar con el estudio el redactor debe entregar el
+               proyecto». Un motor que se planta deja al secretario con dos PDF
+               leídos y nada escrito, que es justo lo que pasó con la revisión
+               fiscal 2/2026.
+               El cómputo NO se maquilla: la ejecutoria sigue diciendo lo que
+               dice, el aviso viaja pegado al proyecto y el servidor reserva la
+               oportunidad cuando nadie califica el fondo. Lo que cambia es que
+               el trabajo se entrega y la última palabra es del secretario. */
             if (ade.oportunidad === 'EXTEMPORANEA') {
-                setError('El cómputo da EXTEMPORÁNEA y este camino no se detiene '
-                       + 'a preguntar: se paró aquí. El adelanto ya se descargó. '
-                       + 'Comprueba la fecha de notificación; si el cómputo es '
-                       + 'correcto, el asunto no se resuelve en el fondo y no hay '
-                       + 'proyecto que generar.');
-                irA('recorrido');
-                return;
+                setExtemporanea(true);
+                setError('EL CÓMPUTO DA EXTEMPORÁNEA y aun así se generó el '
+                       + 'proyecto, con el sentido que propuso el motor. '
+                       + 'Compruébalo antes de firmar: si el cómputo es '
+                       + 'correcto, el recurso no se estudia en el fondo y lo '
+                       + 'que procede es desecharlo. Si no lo es, corrige la '
+                       + 'fecha de notificación o declara los días en que la '
+                       + 'responsable no laboró, y vuelve a generarlo.');
             }
 
             // 2 · el acervo. El contexto se guarda antes de buscar, igual que
