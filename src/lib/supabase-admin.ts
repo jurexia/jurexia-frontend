@@ -345,6 +345,59 @@ export async function downgradeToFree(email: string, canceledSubscriptionId?: st
 }
 
 /** Cuántos días de impago se aguantan antes de cortar el servicio. */
+/**
+ * Bloquear una cuenta por disputa de cargo (15-sep-2026).
+ *
+ * Quien desconoce un cargo ante su banco deja de usar la plataforma. No es
+ * una represalia: un cargo desconocido pone en duda QUIÉN controla la
+ * tarjeta, y seguir cobrando y sirviendo sobre un medio de pago cuestionado
+ * expone al titular —que puede ser la víctima— a un cobro que no autorizó.
+ *
+ * NO ES UNA SUSPENSIÓN, y por eso no usa `suspendido_at`:
+ *   · el barrido diario de morosos LEVANTA `suspendido_at` cuando no hay
+ *     factura abierta, y cancelar la suscripción del disputante deja cero
+ *     facturas abiertas: el bloqueo se desharía solo a la mañana siguiente;
+ *   · la suspensión se levanta pagando, el bloqueo no. Sólo lo levanta una
+ *     persona, borrando la fila de `blocked_users`.
+ *
+ * El asiento vive en `blocked_users`, la tabla que ya existía y que
+ * `is_user_blocked()` consulta desde el backend. Es idempotente: bloquear a
+ * un bloqueado no duplica ni cambia la fecha original.
+ */
+export async function bloquearPorDisputa(
+    email: string,
+    motivo = 'Disputa de cargo ante la institución bancaria',
+    por = 'webhook-stripe',
+): Promise<{ ok: boolean; yaEstaba: boolean }> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const { data: perfil, error: errPerfil } = await getSupabaseAdmin()
+        .from('user_profiles')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+    if (errPerfil || !perfil?.id) {
+        console.error(`❌ No encontré la cuenta de ${normalizedEmail} para bloquearla`, errPerfil);
+        return { ok: false, yaEstaba: false };
+    }
+
+    const { data, error } = await getSupabaseAdmin().rpc('bloquear_por_disputa', {
+        p_user_id: perfil.id,
+        p_motivo: motivo,
+        p_por: por,
+    });
+
+    if (error) {
+        console.error(`❌ No pude bloquear a ${normalizedEmail}:`, error);
+        return { ok: false, yaEstaba: false };
+    }
+    const r = (data ?? {}) as { ok?: boolean; ya_estaba?: boolean };
+    console.log(`🔒 CUENTA BLOQUEADA ${normalizedEmail} — ${motivo}`
+        + (r.ya_estaba ? ' (ya lo estaba)' : ''));
+    return { ok: !!r.ok, yaEstaba: !!r.ya_estaba };
+}
+
 export const DIAS_HASTA_SUSPENDER = Number(process.env.DIAS_HASTA_SUSPENDER || 14);
 
 /**

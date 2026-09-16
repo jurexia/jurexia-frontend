@@ -182,6 +182,36 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     return data
 }
 
+/**
+ * El bloqueo de la cuenta, si lo hay (15-sep-2026).
+ *
+ * Vive en `blocked_users`, no en el perfil: es la tabla que ya existía y la
+ * que el backend consulta con `is_user_blocked()`. Tener el bloqueo en dos
+ * sitios sería tener dos verdades que acaban discrepando.
+ *
+ * La tabla tiene RLS y una sola política de lectura: cada quien ve su propia
+ * fila. Un error o una fila ausente se tratan igual —sin bloqueo—, porque un
+ * fallo de red no puede cerrarle la aplicación a quien no ha hecho nada.
+ */
+export interface BloqueoCuenta {
+    reason: string | null;
+    blocked_at: string;
+}
+
+export async function getBloqueo(userId: string): Promise<BloqueoCuenta | null> {
+    const { data, error } = await supabase
+        .from('blocked_users')
+        .select('reason, blocked_at')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+    if (error) {
+        console.warn('No se pudo leer el estado de bloqueo (se asume sin bloqueo):', error.message)
+        return null
+    }
+    return (data as BloqueoCuenta | null) ?? null
+}
+
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>) {
     const { data, error } = await supabase
         .from('user_profiles')

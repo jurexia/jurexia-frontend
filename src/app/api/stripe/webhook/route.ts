@@ -8,6 +8,7 @@ import {
     resetUserQueries,
     suspenderPorImpago,
     levantarSuspension,
+    bloquearPorDisputa,
     DIAS_HASTA_SUSPENDER,
     PlanType,
     PLAN_CONFIG,
@@ -893,6 +894,81 @@ function devolucionAutomaticaActiva(): boolean {
  * Se cancela de inmediato y no al final del periodo: si se devuelve el dinero
  * del mes, dejar el acceso abierto sería regalarlo.
  */
+/**
+ * QUIEN DISPUTA, CANCELACIÓN Y BLOQUEO (15-sep-2026, política de David).
+ *
+ * Cancela la suscripción viva del cliente y cierra su cuenta. Se aplica a
+ * cualquier señal de que el titular desconoció un cargo: la consulta previa,
+ * el contracargo formal y el aviso temprano de fraude, que es el propio
+ * emisor diciendo que la tarjeta se usó sin autorización.
+ *
+ * La finalidad es evitar el uso indebido de una tarjeta que ya está en duda.
+ * Si el cargo lo desconoció quien no es el titular, seguir cobrando sería
+ * seguir el fraude; si lo desconoció el titular por error, la cuenta se
+ * restablece escribiendo a soporte y todo su contenido sigue ahí.
+ *
+ * Nunca lanza: un fallo aquí no puede tumbar el webhook y provocar que
+ * Stripe reintente el evento entero.
+ */
+async function cancelarYBloquearPorDisputa(chargeId: string | undefined, motivo: string): Promise<string> {
+    if (!chargeId) return 'sin cargo: no se pudo identificar al cliente';
+    const stripe = getStripe();
+    const partes: string[] = [];
+    let correo = '';
+
+    try {
+        const cargo = await stripe.charges.retrieve(chargeId);
+        correo = (cargo.billing_details?.email || cargo.receipt_email || '').toLowerCase().trim();
+        const clienteId = typeof cargo.customer === 'string' ? cargo.customer : cargo.customer?.id;
+
+        // 1. Cancelar toda suscripción viva. Si no se cancela, Stripe sigue
+        //    intentando cobrar al mes siguiente y eso es la vía más rápida a
+        //    la segunda disputa del mismo cliente. Pasó: una suscripción
+        //    disputada y ganada por el cliente seguía en `past_due`
+        //    reintentando cuatro meses después.
+        if (clienteId) {
+            const subs = await stripe.subscriptions.list({ customer: clienteId, status: 'all', limit: 10 });
+            const vivas = subs.data.filter(x => ['active', 'past_due', 'trialing', 'unpaid'].includes(x.status));
+            for (const s of vivas) {
+                try {
+                    await stripe.subscriptions.cancel(s.id);
+                    partes.push(`suscripción ${s.id} cancelada`);
+                } catch (e) {
+                    partes.push(`no pude cancelar ${s.id}`);
+                }
+            }
+            if (!vivas.length) partes.push('sin suscripción viva que cancelar');
+
+            // El correo de la cuenta puede no estar en el cargo (los enlaces
+            // de pago no lo llevan): el cliente de Stripe sí lo tiene.
+            if (!correo) {
+                const cli = await stripe.customers.retrieve(clienteId);
+                if (!('deleted' in cli && cli.deleted)) correo = (cli.email || '').toLowerCase().trim();
+            }
+        }
+
+        // 2. Cerrar la cuenta.
+        if (correo) {
+            const r = await bloquearPorDisputa(correo, motivo, 'webhook-stripe');
+            partes.push(r.ok ? (r.yaEstaba ? 'cuenta ya bloqueada' : 'cuenta bloqueada') : 'NO pude bloquear la cuenta');
+        } else {
+            partes.push('sin correo: la cuenta NO se bloqueó');
+        }
+    } catch (e) {
+        partes.push(`error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+
+    const resumen = partes.join(' · ');
+    console.log(`🔒 DISPUTA — ${chargeId} (${correo || 'correo desconocido'}): ${resumen}`);
+    try {
+        await getSupabaseAdmin().from('avisos_infraestructura').insert({
+            asunto: 'disputa-cuenta-bloqueada',
+            detalle: { charge: chargeId, correo, motivo, resumen },
+        });
+    } catch { /* la bitácora no bloquea nada */ }
+    return resumen;
+}
+
 async function devolverYCortar(chargeId: string, motivo: string): Promise<string> {
     const stripe = getStripe();
     const cargo = await stripe.charges.retrieve(chargeId);
@@ -956,6 +1032,12 @@ async function manejarAvisoTempranoDeFraude(aviso: Stripe.Radar.EarlyFraudWarnin
         console.warn('   devolución automática APAGADA (DEVOLUCION_AUTO=false) — no se hace nada');
         return;
     }
+    // Un aviso temprano es el EMISOR diciendo que la tarjeta se usó sin
+    // autorización. Es la señal más fuerte de uso indebido que existe, así
+    // que la cuenta se cierra aunque el aviso ya no sea accionable para la
+    // devolución.
+    await cancelarYBloquearPorDisputa(chargeId, `aviso_temprano_${aviso.fraud_type}`);
+
     if (aviso.actionable === false) {
         // Stripe marca así los avisos que llegan cuando la disputa YA existe:
         // devolver entonces no evita la comisión y duplicaría la pérdida.
@@ -1000,6 +1082,11 @@ async function manejarDisputaNueva(disputa: Stripe.Dispute): Promise<void> {
             },
         });
     } catch { /* la bitácora no bloquea nada */ }
+
+    // La cuenta se cierra en los DOS casos —consulta y contracargo—, porque
+    // en los dos el titular ya le dijo a su banco que no reconoce el cargo.
+    // Va antes que la devolución: si devolver falla, el bloqueo ya está hecho.
+    await cancelarYBloquearPorDisputa(chargeId, `disputa_${disputa.reason}`);
 
     if (!esConsulta) {
         console.warn('   contracargo ya formado: la comisión ya se cobró. '

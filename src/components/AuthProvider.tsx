@@ -2,8 +2,9 @@
 
 import { createContext, useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-import { supabase, getUserProfile, UserProfile } from '@/lib/supabase';
+import { supabase, getUserProfile, getBloqueo, UserProfile, BloqueoCuenta } from '@/lib/supabase';
 import { CuentaSuspendida } from '@/components/CuentaSuspendida';
+import { CuentaBloqueada } from '@/components/CuentaBloqueada';
 import type { User, Session } from '@supabase/supabase-js';
 
 /**
@@ -29,6 +30,15 @@ export interface AuthContextType {
     profile: UserProfile | null;
     loading: boolean;
     isAuthenticated: boolean;
+    /**
+     * Bloqueo de la cuenta por disputa de cargo. Nulo o ausente = sin bloqueo.
+     *
+     * OPCIONAL A PROPÓSITO: los seis puntos donde el estado de sesión se
+     * reconstruye entero —entrar, salir, expirar, fallar— no lo mencionan, y
+     * así al cerrar sesión el bloqueo se va con el resto de la sesión en vez
+     * de quedarse pegado al siguiente usuario del mismo navegador.
+     */
+    bloqueo?: BloqueoCuenta | null;
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -37,6 +47,7 @@ export const AuthContext = createContext<AuthContextType>({
     profile: null,
     loading: true,
     isAuthenticated: false,
+    bloqueo: null,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -46,16 +57,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile: null,
         loading: true,
         isAuthenticated: false,
+        bloqueo: null,
     });
 
     // Fetch profile without blocking — fire-and-forget update
     const loadProfile = useCallback(async (user: User) => {
         try {
-            const profile = await getUserProfile(user.id);
+            // El bloqueo se pide EN PARALELO con el perfil, no después: es lo
+            // que decide si la aplicación se abre, y encadenarlo añadiría un
+            // viaje completo a cada carga de página.
+            const [profile, bloqueo] = await Promise.all([
+                getUserProfile(user.id),
+                getBloqueo(user.id),
+            ]);
             setAuthState(prev => {
                 // Only update if still the same user
                 if (prev.user?.id === user.id) {
-                    return { ...prev, profile };
+                    return { ...prev, profile, bloqueo };
                 }
                 return prev;
             });
@@ -168,10 +186,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const enRutaDePago = RUTAS_ABIERTAS_EN_SUSPENSION.some((r) => rutaActual.startsWith(r));
     const suspendido = !!authState.profile?.suspendido_at && !enRutaDePago;
 
+    // ── EL MURO DEL BLOQUEO POR DISPUTA (15-sep-2026) ─────────────────────
+    //
+    // NO tiene rutas exentas, y es la diferencia con el muro de suspensión.
+    // Al suspendido se le deja llegar a la caja porque pagando recupera su
+    // cuenta; al bloqueado no hay caja que ofrecerle —su suscripción ya se
+    // canceló— y dejarle entrar a /checkout sería invitarle a contratar otra
+    // vez con la misma tarjeta que su banco puso en duda.
+    //
+    // El bloqueo gana al muro de suspensión cuando coinciden: decirle «no
+    // pudimos cobrarte» a quien desconoció el cargo sería contarle una
+    // historia distinta de la que su propio banco ya le contó.
+    const bloqueado = !!authState.bloqueo;
+
     return (
         <AuthContext.Provider value={authState}>
             {children}
-            {suspendido && <CuentaSuspendida email={authState.profile?.email} />}
+            {bloqueado && (
+                <CuentaBloqueada
+                    email={authState.profile?.email}
+                    desde={authState.bloqueo?.blocked_at}
+                />
+            )}
+            {!bloqueado && suspendido && <CuentaSuspendida email={authState.profile?.email} />}
         </AuthContext.Provider>
     );
 }

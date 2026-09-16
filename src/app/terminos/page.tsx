@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Scale, ArrowLeft } from 'lucide-react';
 
 export default function TerminosPage() {
-    const fechaActualizacion = "31 de agosto de 2026";
+    const fechaActualizacion = "15 de septiembre de 2026";
 
     return (
         <main className="min-h-screen bg-cream-300">
@@ -346,6 +346,41 @@ export default function TerminosPage() {
                                 <a href="mailto:soporte@iurexia.com" className="underline">soporte@iurexia.com</a>,
                                 donde su caso será revisado; la dispensa prevista en la cláusula 7.4 sigue
                                 estando disponible.
+                            </p>
+
+                            <h3 className="font-serif text-lg font-medium text-charcoal-900 mt-6 mb-3">
+                                7.6 Desconocimiento de cargos ante la institución bancaria
+                            </h3>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Conforme a la cláusula 7.4, el usuario cuenta con una vía directa, gratuita y sin
+                                necesidad de justificación para obtener la cancelación de su suscripción y el
+                                reembolso del período: basta con escribir a{' '}
+                                <a href="mailto:soporte@iurexia.com" className="underline">soporte@iurexia.com</a>.
+                                El usuario se obliga a acudir a ella antes de iniciar cualquier reclamación ante su
+                                institución bancaria.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Cuando el usuario desconozca un cargo ante su institución bancaria —por la vía de una
+                                aclaración, una contracargo o cualquier reclamación equivalente—,{' '}
+                                <strong>su suscripción será cancelada y su cuenta quedará bloqueada</strong>, sin
+                                perjuicio de las cantidades que resulten a cargo del usuario.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Esta medida es de seguridad, no sancionatoria.</strong> El desconocimiento de un
+                                cargo pone en duda quién ejerce el control del medio de pago: puede deberse a un error
+                                del propio titular, pero también al uso de una tarjeta por persona distinta de aquél.
+                                Mantener activo un servicio de renovación automática sobre un medio de pago cuestionado
+                                expondría al titular a cobros sucesivos que quizá no autorizó. La cancelación y el
+                                bloqueo impiden ese riesgo, y se aplican de manera general y uniforme a todo usuario en
+                                ese supuesto.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed">
+                                <strong>El bloqueo es revisable y el contenido se conserva.</strong> Las conversaciones,
+                                carpetas y documentos del usuario permanecen íntegros. Si el desconocimiento del cargo
+                                obedeció a un error, el usuario puede escribir a{' '}
+                                <a href="mailto:soporte@iurexia.com" className="underline">soporte@iurexia.com</a>{' '}
+                                desde el correo de su cuenta; acreditado el reconocimiento del cargo ante su institución
+                                bancaria, la cuenta se restablece con todo su contenido.
                             </p>
                         </section>
 
