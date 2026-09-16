@@ -269,7 +269,12 @@ function Reanudar({ asuntos, onAbrir, onDescargar }: {
                                                         : ''}
                                                 </span>
                                             </span>
-                                            {onDescargar && (
+                                            {v.sinCopia ? (
+                                                <span className="shrink-0 text-[12px] text-white/30"
+                                                      title="Se generó antes de que el taller guardara una copia por versión; el siguiente proyecto la sustituyó en el archivo.">
+                                                    sin copia
+                                                </span>
+                                            ) : onDescargar && (
                                                 <button type="button"
                                                         onClick={() => onDescargar(a.numero, v.version)}
                                                         className="inline-flex shrink-0 items-center gap-1

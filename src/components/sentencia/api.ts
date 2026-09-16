@@ -1112,6 +1112,10 @@ export interface AsuntoEnCurso {
     versiones: {
         version: number; generadoEn: string; palabras: number;
         avisos: number; sentidoGlobal: string; modo: string; nombre: string;
+        /** Consta lo que se resolvió, pero su .docx ya no existe: es el
+         *  proyecto anterior a que se archivara una copia por versión, y el
+         *  siguiente lo pisó en la ruta sin número. No se ofrece abrirlo. */
+        sinCopia: boolean;
     }[];
 }
 
@@ -1148,6 +1152,7 @@ export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]
                 sentidoGlobal: String(v.sentido_global ?? ''),
                 modo: String(v.modo ?? ''),
                 nombre: String(v.nombre ?? ''),
+                sinCopia: !!v.sin_copia,
             })).filter((v) => v.version > 0),
         })).filter((a) => a.numero);
     } catch {
