@@ -33,8 +33,19 @@ const PAUSA_MS = 600;
 // mucho peor que retrasar una promoción.
 //
 // Por eso la reserva es de 30 y no de 10: el margen protege lo transaccional.
-export const LIMITE_DIARIO = 100;
-export const LIMITE_MENSUAL = 3000;
+//
+// LOS TOPES SALEN DEL PLAN, NO DEL CÓDIGO (16-sep-2026). Por omisión son los
+// del gratuito, así que esto no cambia nada mientras no se configure. Al
+// contratar Pro (20 USD al mes: 50,000 correos, sin tope diario) basta con
+// fijar en Vercel `RESEND_LIMITE_DIARIO` y `RESEND_LIMITE_MENSUAL` y volver a
+// desplegar. Subirlos ANTES de contratar sería estrellarse contra el tope de
+// Resend y dejar sin cupo la recuperación de contraseñas.
+//
+// Ojo: con plan de pago el techo real deja de ser Resend y pasa a ser el
+// tiempo. La función del cron vive 300 s y aquí se manda uno cada 0.6 s, así
+// que una corrida no pasa de unos 300 correos. Por eso existe `plazoHasta`.
+export const LIMITE_DIARIO = Number(process.env.RESEND_LIMITE_DIARIO || 100);
+export const LIMITE_MENSUAL = Number(process.env.RESEND_LIMITE_MENSUAL || 3000);
 export const RESERVA_TRANSACCIONAL = 30;
 
 /** Cuántos correos de campaña caben hoy sin tocar la reserva. */
@@ -136,6 +147,8 @@ export interface Resultado {
     cupo_al_iniciar: number;
     detenido_por_cuota: boolean;
     restantes_en_segmento: number;
+    /** Se paró por tiempo antes de agotar el cupo: lo que falta sale mañana. */
+    detenido_por_tiempo?: boolean;
 }
 
 /**
@@ -153,8 +166,15 @@ export async function enviarCampania(opciones: {
     simulacro?: boolean;
     /** Tope de seguridad por corrida. */
     maximo?: number;
+    /**
+     * Hora límite (epoch ms) para dejar de enviar. La función del cron se corta
+     * a los 300 s; si la cortara Vercel a media tanda no habría reporte y la
+     * corrida parecería rota. Parando antes, lo enviado queda registrado y el
+     * resto sale en la siguiente corrida, sin repetir a nadie.
+     */
+    plazoHasta?: number;
 }): Promise<Resultado> {
-    const { campania, destinatarios, construir, simulacro = true, maximo = 500 } = opciones;
+    const { campania, destinatarios, construir, simulacro = true, maximo = 500, plazoHasta } = opciones;
 
     // El bloque de hoy es lo menor entre lo que pide quien llama y lo que
     // permite la cuota. En simulacro se calcula igual, para que el reporte
@@ -193,6 +213,7 @@ export async function enviarCampania(opciones: {
 
     for (const d of destinatarios) {
         if (res.enviados >= tope) break;
+        if (plazoHasta && Date.now() > plazoHasta) { res.detenido_por_tiempo = true; break; }
 
         const email = d.email?.trim().toLowerCase();
         if (!email) continue;

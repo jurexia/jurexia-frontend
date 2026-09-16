@@ -69,6 +69,7 @@ function quienLlama(req: NextRequest): 'cron' | 'admin' | null {
 
 
 export async function GET(req: NextRequest) {
+    const arranque = Date.now();
     const llamante = quienLlama(req);
     if (!llamante) {
         return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -112,9 +113,13 @@ export async function GET(req: NextRequest) {
         const inicio = await cupoDisponibleHoy();
         const tandas: Resultado[] = [];
         let restante = inicio.cupo;
+        // Se deja de enviar a los 240 s de haber empezado la ruta: quedan 60 de
+        // margen antes de que Vercel mate la función (maxDuration = 300).
+        const plazoHasta = arranque + 240_000;
 
         for (const campania of PRIORIDAD) {
             if (restante <= 0) break;
+            if (Date.now() > plazoHasta) break;
 
             const destinatarios = await segmento(campania);
             if (destinatarios.length === 0) continue;
@@ -143,6 +148,7 @@ export async function GET(req: NextRequest) {
                 construir: CAMPANIAS[campania].construir,
                 simulacro,
                 maximo: restante,
+                plazoHasta,
             });
 
             tandas.push(r);
