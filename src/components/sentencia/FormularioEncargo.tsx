@@ -130,16 +130,33 @@ const campo = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-
     'text-[14px] text-white/90 outline-none transition placeholder:text-white/45 ' +
     'focus:border-accent-gold/40 focus:bg-white/[0.06]';
 
-function Campo({ etiqueta, ayuda, children }: {
+function Campo({ etiqueta, ayuda, children, sinLabel }: {
     etiqueta: string; ayuda?: string; children: React.ReactNode;
+    /** UN <label> NO PUEDE ETIQUETAR CUARENTA BOTONES. El calendario propio
+     *  lo es, y dentro de un <label> el navegador reenvía cada clic al primer
+     *  control —el desplegable—, que se cerraba antes de que el día se
+     *  fijara: la fecha no se podía elegir. Los campos que traen calendario
+     *  se pintan como grupo, con su rótulo asociado por aria-labelledby. */
+    sinLabel?: boolean;
 }) {
+    const rotulo = (
+        <span className="mb-1.5 block text-[12px] font-medium uppercase tracking-wide text-white/45">
+            {etiqueta}
+        </span>
+    );
+    const pie = ayuda
+        ? <span className="mt-1 block text-[12px] text-white/45">{ayuda}</span>
+        : null;
+    if (sinLabel) {
+        return (
+            <div className="block" role="group" aria-label={etiqueta}>
+                {rotulo}{children}{pie}
+            </div>
+        );
+    }
     return (
         <label className="block">
-            <span className="mb-1.5 block text-[12px] font-medium uppercase tracking-wide text-white/45">
-                {etiqueta}
-            </span>
-            {children}
-            {ayuda && <span className="mt-1 block text-[12px] text-white/45">{ayuda}</span>}
+            {rotulo}{children}{pie}
         </label>
     );
 }
@@ -468,12 +485,12 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                         suele llegar antes —del auto de admisión, o del auto
                         de turno— así que es ella la que posiciona a la
                         notificación, y no al revés. */}
-                    <Campo etiqueta={`Notificación ${deRecurrido}`}>
+                    <Campo etiqueta={`Notificación ${deRecurrido}`} sinLabel>
                         <Calendario valor={valor.notificacion}
                                     mesInicial={valor.presentacion ? valor.presentacion.slice(0, 7) : undefined}
                                     onCambiar={(iso) => set('notificacion', iso)} />
                     </Campo>
-                    <Campo etiqueta={`Presentación: ${tipo.escrito}`}>
+                    <Campo etiqueta={`Presentación: ${tipo.escrito}`} sinLabel>
                         <Calendario valor={valor.presentacion}
                                     onCambiar={(iso) => set('presentacion', iso)} />
                     </Campo>
@@ -504,7 +521,7 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                             así —«según lo manifestado»— y no le inventará una regla que
                             no aplicaste.
                         </p>
-                        <Campo etiqueta="¿Cuándo surtió efectos la notificación?">
+                        <Campo etiqueta="¿Cuándo surtió efectos la notificación?" sinLabel>
                             <Calendario valor={valor.surteEfectos ?? ''}
                                         mesInicial={valor.notificacion ? valor.notificacion.slice(0, 7) : undefined}
                                         onCambiar={(iso) => set('surteEfectos', iso)} />

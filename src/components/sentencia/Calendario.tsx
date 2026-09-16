@@ -17,6 +17,7 @@
  */
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from './primitivas';
 
@@ -48,6 +49,9 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
     const [abierto, setAbierto] = React.useState(false);
     const [vista, setVista] = React.useState({ y: inicial[0], m: inicial[1] });
     const cajaRef = React.useRef<HTMLDivElement>(null);
+    const panelRef = React.useRef<HTMLDivElement>(null);
+    // EL PANEL VIVE EN UN PORTAL, así que hay que decirle dónde pintarse.
+    const [sitio, setSitio] = React.useState({ top: 0, left: 0 });
 
     // SI `mesInicial` LLEGA DESPUÉS —el auto de admisión tarda en leerse, o el
     // secretario lo sube tras haber abierto ya el formulario— y este campo
@@ -58,18 +62,45 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
         if (m) setVista({ y: m[0], m: m[1] });
     }, [mesInicial, valor]);
 
+    // EL PANEL ESTÁ FUERA DE `cajaRef` —es un portal—, así que «clic fuera»
+    // tiene que mirar las dos cajas o el primer clic en un día lo cerraría.
     React.useEffect(() => {
         if (!abierto) return;
         const fuera = (e: MouseEvent) => {
-            if (cajaRef.current && !cajaRef.current.contains(e.target as Node)) setAbierto(false);
+            const t = e.target as Node;
+            if (cajaRef.current?.contains(t) || panelRef.current?.contains(t)) return;
+            setAbierto(false);
         };
         document.addEventListener('mousedown', fuera);
         return () => document.removeEventListener('mousedown', fuera);
     }, [abierto]);
 
+    const situar = React.useCallback(() => {
+        const r = cajaRef.current?.getBoundingClientRect();
+        if (!r) return;
+        // Abre hacia abajo salvo que no quepa; el panel mide 320 de alto.
+        const abajo = window.innerHeight - r.bottom > 330;
+        setSitio({
+            top: abajo ? r.bottom + 6 : Math.max(8, r.top - 326),
+            left: Math.min(r.left, Math.max(8, window.innerWidth - 296)),
+        });
+    }, []);
+
+    React.useEffect(() => {
+        if (!abierto) return;
+        situar();
+        window.addEventListener('scroll', situar, true);
+        window.addEventListener('resize', situar);
+        return () => {
+            window.removeEventListener('scroll', situar, true);
+            window.removeEventListener('resize', situar);
+        };
+    }, [abierto, situar]);
+
     const abrir = () => {
         const m = mesDe(valor) ?? mesDe(mesInicial);
         if (m) setVista({ y: m[0], m: m[1] });
+        situar();
         setAbierto(true);
     };
 
@@ -87,7 +118,24 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
         : (placeholder || 'Elegir fecha');
 
     return (
-        <div className="relative" ref={cajaRef}>
+        /* NO SE ACTIVA EL LABEL QUE NOS ENVUELVA. Un <label> se asocia con su
+           PRIMER control, y este calendario son cuarenta botones: al pulsar un
+           día, el navegador reenviaba la activación al desplegable —que se
+           cerraba— y React desmontaba el día ANTES de que su onClick llegara
+           al handler delegado. Resultado medido en el formulario real: el
+           panel se cerraba y la fecha no se fijaba NUNCA. `preventDefault`
+           cancela sólo esa activación por defecto; los onClick de dentro
+           siguen corriendo. El formulario además ya no envuelve las fechas en
+           un <label>, pero esto deja el componente a salvo donde se monte. */
+        /* Y SE ELEVA SOBRE LOS CAMPOS DE ABAJO. Medido en el formulario real:
+           con el panel abierto, `document.elementFromPoint` sobre el día 15
+           devolvía el <input> del campo siguiente, no el día — el clic del
+           ratón se lo comía ese input y la fecha no se elegía nunca (el clic
+           por programa sí funcionaba, que es lo que despistaba). El panel ya
+           era `absolute z-20`, pero su contenedor no creaba contexto de
+           apilamiento propio: se le da uno mientras está abierto. */
+        <div className={cn('relative', abierto && 'z-50')} ref={cajaRef}
+             onClick={(e) => e.preventDefault()}>
             <button type="button" onClick={() => (abierto ? setAbierto(false) : abrir())}
                     className={cn(
                         'flex w-full items-center gap-2 rounded-lg border border-white/10',
@@ -97,8 +145,19 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
                 <CalendarDays className="h-3.5 w-3.5 shrink-0 text-white/45" />
                 <span className="flex-1 truncate first-letter:uppercase">{legible}</span>
             </button>
-            {abierto && (
-                <div className="absolute z-20 mt-1.5 w-72 rounded-xl border border-white/10
+            {/* EL PANEL SE PINTA EN EL BODY, NO AQUÍ DENTRO.
+                Medido en el formulario real: con el panel dentro de la
+                tarjeta, `document.elementsFromPoint` sobre el día 15 devolvía
+                ENCIMA el <input type="date"> del campo de abajo, aunque el
+                panel fuera `absolute z-50` — la tarjeta tiene backdrop-blur y
+                su contexto de apilamiento se comía la capa. El clic del ratón
+                se lo quedaba ese input y la fecha NO SE PODÍA ELEGIR (el clic
+                por programa sí entraba, que es lo que lo escondió en la
+                primera prueba). Un portal a `document.body` lo saca de todo
+                contexto ajeno, que es como se resuelve un desplegable. */}
+            {abierto && typeof document !== 'undefined' && createPortal(
+                <div ref={panelRef} style={{ top: sitio.top, left: sitio.left }}
+                     className="fixed z-[9999] w-72 rounded-xl border border-white/10
                                 bg-charcoal-900 p-3 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.7)]">
                     <div className="mb-2 flex items-center justify-between">
                         <button type="button" aria-label="Mes anterior"
@@ -146,8 +205,7 @@ export default function Calendario({ valor, onCambiar, mesInicial, placeholder }
                             Quitar fecha
                         </button>
                     )}
-                </div>
-            )}
+                </div>, document.body)}
         </div>
     );
 }
