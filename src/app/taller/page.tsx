@@ -1068,6 +1068,64 @@ export default function TallerDeSentencias() {
         } finally { setCorriendo(false); setProponiendo(false); }
     }, [encargo.numero, correo, contexto]);
 
+    /* ═══ QUIERO CAMBIAR DE SENTIDO ═══
+       David, 16-sep-2026: «si el secretario decide cambiar de sentido hay que
+       retroceder y BORRAR TODO lo que muestra el taller. Recuerda que en este
+       paso el secretario quiere volver a estudiar».
+
+       El botón viejo —«cambiar el sentido y regenerar»— sólo hacía
+       `setProyecto(null)`: quedaban en pantalla el estudio que se vio
+       escribirse, los avisos del proyecto anterior, las calificaciones ya
+       puestas y las razones escritas para el sentido que acaba de descartar.
+       Volvía al paso de criterio con la mesa sin recoger.
+
+       Se recoge la mesa: se borra el proyecto, el estudio en curso, los
+       errores, lo que él marcó y las razones que el motor escribió para el
+       sentido anterior. NO se borra el material del acervo —eso ya se
+       consultó y se pagó— ni las preguntas del caso, que son las mismas. Y se
+       vuelve a pedir la propuesta sola, para que llegue al paso de criterio
+       con la clasificación otra vez puesta y pueda cambiarla. */
+    const volverAEstudiar = useCallback(() => {
+        setProyecto(null);
+        setPrevio(null);
+        setAvance('');
+        setError('');
+        setTocados(new Set());
+        setRazonando(new Set());
+        setGrupos({});
+        setRazonGlobal('');
+        setSentidoGlobal('');
+        setGlobalDictado(false);
+        setPropuesta(null);
+        setMarcoEntero(false);
+        setTesisAbierta(null);      // la ventana de una tesis, si quedó abierta
+        setModo('por_problema');    // la vía de la vuelta anterior no manda en ésta
+        // Las calificaciones y las razones del sentido anterior se van: son de
+        // la decisión que acaba de descartar.
+        setProblemas((ps) => ps.map((p) => ({
+            ...p, sentido: undefined, criterio: '', razonDe: undefined,
+        })));
+        setPrevio(null);
+        setPaso('acervo');
+        setVueltaCriterio((v) => v + 1);
+        irA('criterio', 120);
+        // ── Y SE VUELVE A PROPONER SOLO, POR LA PUERTA QUE TOQUE ──
+        // Hay DOS maneras de llegar aquí y no son iguales:
+        //   · desde el proyecto recién hecho, el acervo y los planteamientos
+        //     siguen en memoria: basta volver a proponer;
+        //   · desde el historial, `reanudar` dejó el material vacío, y pedir
+        //     la propuesta sin acervo da un 409 del servidor —«consulta
+        //     primero el acervo: una propuesta sin material es una opinión»—.
+        // Por eso se mira antes qué hay. El secretario no tiene por qué saber
+        // por qué puerta entró.
+        if (material && problemas.length > 0) {
+            void pedirPropuesta();
+        } else {
+            void pedirAcervo();
+        }
+    }, [pedirPropuesta, pedirAcervo, material, problemas.length]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+
     const aportarYProponer = useCallback(async (doc: File | null, texto: string) => {
         setError(''); setAportando(true);
         try {
@@ -2407,7 +2465,15 @@ export default function TallerDeSentencias() {
                     </Tarjeta>
                 )}
 
-                    {problemas.length > 0 && (
+                    {/* EL PASO 3 NO SE QUEDA EN PANTALLA CUANDO YA HAY PASO 4.
+                        Recorrido del 16-sep-2026: con el proyecto ya escrito,
+                        el secretario seguía viendo «Aceptar y generar el
+                        proyecto» debajo, como si no lo hubiera hecho —tres
+                        botones que generan y tres que cambian el sentido, a la
+                        vez—. Mientras el proyecto esté en pantalla, la
+                        decisión se repliega: para volver a ella está «Quiero
+                        cambiar de sentido», que además recoge la mesa. */}
+                    {problemas.length > 0 && !proyecto && (
                     <Decision problemas={problemas} onCambiar={cambiarCriterio}
                               onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo' && !proponiendo}
                               onProponer={pedirPropuesta} propuesta={propuesta}
@@ -2579,11 +2645,11 @@ export default function TallerDeSentencias() {
                                         Son unos cuarenta segundos y se dicen. */}
                                     <button className={cn(boton, 'border border-white/10 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}
                                             disabled={corriendo}
-                                            onClick={() => { setPrevio(null); void pedirAcervo(); }}>
+                                            onClick={volverAEstudiar}>
                                         {corriendo
                                             ? <Loader2 className="h-4 w-4 animate-spin" />
                                             : <Search className="h-4 w-4" />}
-                                        Cambiar el sentido y volver a generar
+                                        Quiero cambiar de sentido
                                     </button>
                                 </div>
                                 <p className="mt-2 text-[12px] leading-relaxed text-white/45">
@@ -2656,10 +2722,10 @@ export default function TallerDeSentencias() {
                                         Descargar el Word
                                     </button>
                                     <button type="button" disabled={corriendo}
-                                            onClick={() => { setProyecto(null); setPaso('acervo'); setVueltaCriterio((v) => v + 1); irA('criterio', 120); }}
+                                            onClick={volverAEstudiar}
                                             className={cn(boton, 'h-11 border border-white/15 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}>
                                         <Search className="h-4 w-4" />
-                                        Cambiar el sentido y regenerar
+                                        Quiero cambiar de sentido
                                     </button>
                                     <p className="text-[12px] leading-relaxed text-white/45">
                                         Ya se descargó al terminar. Es un .docx sobre la plantilla del tribunal.

@@ -189,7 +189,16 @@ function Reanudar({ asuntos, onAbrir }: {
                         {a.proyecto ? (
                             <span className="shrink-0 text-right">
                                 <span className="block text-[12px] font-medium text-accent-gold/85">
-                                    proyecto listo
+                                    {/* VARIOS PROYECTOS DEL MISMO EXPEDIENTE, en la
+                                        misma fila. David, 16-sep-2026: «si un
+                                        expediente tiene más de un proyecto,
+                                        guardarlos en la misma pestaña de
+                                        historial». Son las veces que cambió de
+                                        sentido y volvió a generar; no son asuntos
+                                        distintos y no merecen filas distintas. */}
+                                    {a.versiones && a.versiones.length > 1
+                                        ? `${a.versiones.length} proyectos`
+                                        : 'proyecto listo'}
                                 </span>
                                 <span className="block text-[12px] tabular-nums text-white/45">
                                     {a.proyecto.parcial
@@ -201,6 +210,13 @@ function Reanudar({ asuntos, onAbrir }: {
                                                 { day: 'numeric', month: 'short' })
                                         : ''}
                                 </span>
+                                {a.versiones && a.versiones.length > 1 && (
+                                    <span className="mt-0.5 block text-[10px] text-white/35">
+                                        {a.versiones.slice(0, 3)
+                                            .map((v) => (v.sentidoGlobal || 'sin sentido').replace(/_/g, ' '))
+                                            .join(' · ')}
+                                    </span>
+                                )}
                             </span>
                         ) : (
                             <span className="shrink-0 text-[12px] text-white/45">

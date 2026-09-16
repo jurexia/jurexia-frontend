@@ -1105,6 +1105,14 @@ export interface AsuntoEnCurso {
          *  documento, pero de las palabras y los avisos no hay registro. */
         parcial: boolean;
     } | null;
+    /** LOS PROYECTOS ANTERIORES DEL MISMO EXPEDIENTE, del más nuevo al más
+     *  viejo. Son las veces que el secretario cambió de sentido y volvió a
+     *  generar: cada uno con su calificación y su documento. Vacío en los
+     *  asuntos anteriores a que esto se guardara. */
+    versiones: {
+        version: number; generadoEn: string; palabras: number;
+        avisos: number; sentidoGlobal: string; modo: string; nombre: string;
+    }[];
 }
 
 export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]> {
@@ -1132,6 +1140,15 @@ export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]
                     parcial: !!(a.proyecto as Record<string, unknown>).parcial,
                 }
                 : null,
+            versiones: ((a.proyectos ?? []) as Record<string, unknown>[]).map((v) => ({
+                version: Number(v.version ?? 0),
+                generadoEn: String(v.generado_en ?? ''),
+                palabras: Number(v.palabras ?? 0),
+                avisos: Number(v.avisos ?? 0),
+                sentidoGlobal: String(v.sentido_global ?? ''),
+                modo: String(v.modo ?? ''),
+                nombre: String(v.nombre ?? ''),
+            })).filter((v) => v.version > 0),
         })).filter((a) => a.numero);
     } catch {
         return [];
@@ -1143,10 +1160,15 @@ export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]
    guarda como Blob. Desde el HISTORIAL no hay Blob: el documento vive en el
    almacén y se pide por su número. El servidor lo busca primero en el disco de
    su proceso y luego en el almacén, así que funciona con los dos workers. */
-export function descargarDelAlmacen(numero: string, userEmail: string): void {
+export function descargarDelAlmacen(numero: string, userEmail: string,
+                                    version = 0): void {
+    // `version` abre un proyecto ANTERIOR del mismo expediente: los que quedan
+    // guardados cada vez que el secretario cambia de sentido y vuelve a
+    // generar. Sin él viene el último, como siempre.
     const u = `${BASE}/taller/descargar`
         + `?numero=${encodeURIComponent(numero)}`
-        + `&user_email=${encodeURIComponent(userEmail)}`;
+        + `&user_email=${encodeURIComponent(userEmail)}`
+        + (version ? `&version=${version}` : '');
     // Se navega en una pestaña nueva en vez de pedirlo con fetch: así el
     // navegador hace su descarga de siempre y un 404 se ve como un 404, no
     // como un botón que no hace nada.

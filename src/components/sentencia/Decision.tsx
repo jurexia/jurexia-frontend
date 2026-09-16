@@ -315,8 +315,18 @@ export default function Decision({
                 )}
 
                 {/* ═══ 2 · LOS DOS BOTONES ═══ */}
+                {/* ═══ AQUÍ ARRIBA YA NO SE GENERA ═══
+                    Recorrido del 16-sep-2026, con el proyecto ya hecho en
+                    pantalla: el secretario veía TRES botones que generan
+                    —éste, el de la tarjeta final y «cambiar el sentido y
+                    regenerar»— y TRES que cambian el sentido. David: «no
+                    múltiples botones que confundan, creo que quizá alguno
+                    está de sobra».
+                    Se genera en UN solo sitio: la tarjeta final, que es la
+                    que enseña con qué va a salir el proyecto. Aquí arriba se
+                    cuestiona la propuesta —«cambiar el sentido», «ver por
+                    qué»— y se baja a ver el resultado. */}
                 <div className="mt-5 flex flex-wrap items-center gap-2.5">
-                    {botonGenerar(true)}
                     {problemas.length > 0 && (
                         <button type="button" onClick={() => setCorrigiendo((v) => !v)}
                                 className={cn(
@@ -334,6 +344,13 @@ export default function Decision({
                             {porQue ? 'Ocultar el porqué' : 'Ver por qué'}
                         </button>
                     )}
+                    {listoParaGenerar && (
+                        <a href="#asi-sale"
+                           className="inline-flex h-10 items-center rounded-xl px-1 text-[13px]
+                                      font-medium text-accent-gold/85 transition hover:text-accent-gold">
+                            Ver cómo va a salir ↓
+                        </a>
+                    )}
                     {onProponer && !global && !propuesta?.propuestas?.length && (
                         <button type="button" onClick={onProponer}
                                 className="inline-flex h-10 items-center rounded-xl border border-white/10 px-3.5
@@ -349,20 +366,10 @@ export default function Decision({
                         sale con tu nombre: lee la razón antes de generar y corrígela si no es la que sostendrías.
                     </p>
                 </div>
-                {/* MISMO AVISO, AQUÍ ARRIBA: este botón dorado es el primero
-                    que se ve y el más probable de pulsar sin bajar a leer la
-                    tarjeta final. */}
-                {extemporanea && !oportunidadDecidida && (
-                    <div className="mt-2 flex gap-2 rounded-lg border-l-2 border-amber-400/40 bg-amber-400/[0.04] py-2 pl-2.5 pr-3">
-                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300/70" />
-                        <p className="text-[12px] leading-relaxed text-white/60">
-                            El cómputo dice <span className="text-white/90">extemporánea</span> y
-                            no decidiste qué hacer con eso: si generas ahora, sale SÓLO la
-                            improcedencia, sin el fondo. Baja a «El cómputo da extemporánea» y
-                            elige «Fue oportuna» o «Estudio en reserva» si quieres otra cosa.
-                        </p>
-                    </div>
-                )}
+                {/* EL AVISO DE EXTEMPORANEIDAD VIVE DONDE SE GENERA, y sólo
+                    ahí: al quitar el botón dorado de aquí arriba, repetirlo
+                    en los dos sitios era ruido. Está en la tarjeta final,
+                    junto al único botón que escribe el proyecto. */}
             </div>
 
             {/* ═══ EL PORQUÉ, SÓLO SI SE PIDE ═══ */}
@@ -564,7 +571,7 @@ export default function Decision({
 
             {/* ═══ 4 · LA TARJETA FINAL: CON QUÉ SALE EL PROYECTO ═══ */}
             {(problemas.length > 0 || sentidoGlobal) && (
-                <div className={cn('rounded-2xl border p-4 sm:p-5',
+                <div id="asi-sale" className={cn('rounded-2xl border p-4 sm:p-5',
                     alguienSeAparta ? 'border-accent-gold/45 bg-accent-gold/[0.06]' : 'border-white/10 bg-white/[0.03]')}>
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">Así va a salir el proyecto</p>
@@ -629,13 +636,7 @@ export default function Decision({
                         </p>
                     )}
                     <div className="mt-3 flex flex-wrap items-center gap-2.5">
-                        {botonGenerar(false)}
-                        {!corrigiendo && (
-                            <button type="button" onClick={() => setCorrigiendo(true)}
-                                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/15 px-3.5 text-[13px] font-medium text-white/75 transition hover:text-white">
-                                <PenLine className="h-3.5 w-3.5" /> Cambiar el sentido
-                            </button>
-                        )}
+                        {botonGenerar(true)}
                     </div>
                 </div>
             )}
