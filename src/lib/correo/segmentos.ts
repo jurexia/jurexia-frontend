@@ -211,7 +211,8 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
     for (let desde = 0; ; desde += TAMANO) {
         const columnas = origen(campania) === 'user_profiles' ? COLUMNAS_PERFIL : COLUMNAS;
         const q = filtrar(admin().from(origen(campania)).select(columnas), campania);
-        const { data, error } = await q.range(desde, desde + TAMANO - 1);
+        // Orden estable al paginar, o las páginas pueden solaparse y perder gente.
+        const { data, error } = await q.order('id', { ascending: true }).range(desde, desde + TAMANO - 1);
         if (error) throw new Error(`segmento ${campania}: ${error.message}`);
 
         filas.push(...(data ?? []));

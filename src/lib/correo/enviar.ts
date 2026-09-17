@@ -126,6 +126,11 @@ export async function leerYaEnviados(campania: string): Promise<Set<string>> {
             .select('email')
             .eq('campania', campania)
             .eq('estado', 'enviado')
+            // Orden estable OBLIGATORIO al paginar: sin él, PostgREST puede
+            // devolver páginas que se solapan. Medido el 17-sep-2026: la misma
+            // lectura dio 1,070 y 1,714 «ya enviados» con una hora de diferencia,
+            // y lo que se cuenta de menos se REENVÍA.
+            .order('id', { ascending: true })
             .range(desde, desde + 999);
         if (error) throw new Error(`No pude leer la bitácora: ${error.message}`);
         (data ?? []).forEach((r: { email: string }) => enviados.add(r.email.toLowerCase()));
@@ -184,6 +189,11 @@ export async function leerRecientes(dias: number): Promise<Set<string>> {
             .select('email')
             .eq('estado', 'enviado')
             .gte('enviado_at', desdeFecha)
+            // Orden estable OBLIGATORIO al paginar: sin él, PostgREST puede
+            // devolver páginas que se solapan. Medido el 17-sep-2026: la misma
+            // lectura dio 1,070 y 1,714 «ya enviados» con una hora de diferencia,
+            // y lo que se cuenta de menos se REENVÍA.
+            .order('id', { ascending: true })
             .range(desde, desde + 999);
         if (error) throw new Error(`No pude leer los envíos recientes: ${error.message}`);
         for (const r of data ?? []) recientes.add(String(r.email).toLowerCase());
