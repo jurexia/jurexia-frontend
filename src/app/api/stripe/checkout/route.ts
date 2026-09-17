@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
     try {
-        const { priceId, email: providedEmail } = await request.json();
+        const { priceId, email: providedEmail, promo } = await request.json();
 
         if (!priceId) {
             return NextResponse.json(
@@ -142,6 +142,26 @@ export async function POST(request: NextRequest) {
             origin
         });
 
+        // ── Código promocional ya aplicado (17-sep-2026) ─────────────────
+        // Las campañas mandan a /pro50, que pide la sesión con `promo`. Se
+        // busca el código ACTIVO y se aplica de entrada, para que el abogado
+        // vea el precio con descuento sin tener que teclear nada. Stripe hace
+        // cumplir las restricciones del código (sólo Pro mensual, sólo primera
+        // compra, vigencia); si no aplica, se sigue sin descuento y con la
+        // casilla de código abierta, en vez de dejarlo sin poder pagar.
+        //
+        // `discounts` y `allow_promotion_codes` son incompatibles en Stripe:
+        // van uno u otro, nunca los dos.
+        let descuento: { promotion_code: string }[] | undefined;
+        if (typeof promo === 'string' && /^[A-Za-z0-9-]{3,40}$/.test(promo)) {
+            try {
+                const codigos = await stripe.promotionCodes.list({ code: promo, active: true, limit: 1 });
+                if (codigos.data[0]) descuento = [{ promotion_code: codigos.data[0].id }];
+            } catch (e) {
+                console.warn(`⚠️ Código promocional ${promo} no se pudo leer:`, e);
+            }
+        }
+
         // Create Stripe Checkout Session
         const checkoutSession = await stripe.checkout.sessions.create({
             mode: 'subscription',
@@ -164,8 +184,8 @@ export async function POST(request: NextRequest) {
                     userEmail: customerEmail,
                 },
             },
-            // Allow promotion codes
-            allow_promotion_codes: true,
+            // Código ya aplicado, o la casilla para teclearlo: uno u otro.
+            ...(descuento ? { discounts: descuento } : { allow_promotion_codes: true }),
             // Billing address collection
             billing_address_collection: 'required',
             // Tax ID collection (RFC for Mexico)

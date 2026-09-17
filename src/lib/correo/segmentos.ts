@@ -30,11 +30,14 @@
  *   ya usaron (pago o no) ... 1,394 → referidos  (antes: sólo 159 de pago)
  */
 
+import { promises as dns } from 'dns';
 import { createClient } from '@supabase/supabase-js';
 import { ADMINS, type Destinatario } from './enviar';
 import type { NombreCampania } from './campanias';
 
 const COLUMNAS = 'id, email, full_name, estado, queries_used';
+/** `tratamiento` vive en el perfil; la vista `cuentas_dormidas` no lo expone. */
+const COLUMNAS_PERFIL = `${COLUMNAS}, tratamiento`;
 
 /**
  * Los dominios de despacho detectados en la base el 8-ago-2026.
@@ -112,6 +115,23 @@ function filtrar(q: any, campania: NombreCampania) {
         // recomienda lo que no ha usado, y pedírselo quema el remitente.
         return q.eq('is_active', true).not('last_query_at', 'is', null);
     }
+    // ── DESCUENTO PRO (17-sep-2026) ──────────────────────────────────────
+    // Quien ya consultó y nunca contrató: plan gratuito, cuenta activa, al
+    // menos una consulta (`last_query_at`, que no se reinicia) y correo
+    // verificado.
+    //
+    // `is_active` hace un trabajo que no se ve: los 69 abogados que pagaron
+    // alguna vez y hoy están en gratuito tienen la cuenta inactiva, así que
+    // quedan fuera. Importa, porque el código PRO50 sólo vale para una
+    // primera compra y Stripe se lo rechazaría: ofrecerles un descuento que
+    // no pueden usar sería peor que no escribirles. Medido contra los 1,622
+    // cobros de Stripe: cero coincidencias en el segmento.
+    if (campania === 'descuento_pro') {
+        return q.eq('subscription_type', 'gratuito')
+                .eq('is_active', true)
+                .not('last_query_at', 'is', null)
+                .not('email_verificado_at', 'is', null);
+    }
     if (campania === 'activacion') {
         // Nunca escribió una consulta — `last_query_at` nulo, que es lo único
         // que no se reinicia. Se dejan pasar 48 h desde el alta para no
@@ -131,7 +151,49 @@ function filtrar(q: any, campania: NombreCampania) {
     return q.eq('subscription_type', 'gratuito').gte('queries_used', 4);
 }
 
+/**
+ * Dominios que de verdad reciben correo (tienen registro MX).
+ *
+ * Quien no terminó su registro tiene la tasa de errores de dedo más alta de
+ * la base: entre 48 personas aparecen «gmail.con», «gmial.com», «hotmail.ess»
+ * y «outloot.com». Cada correo a un dominio inexistente es un rebote, y los
+ * rebotes son lo que más rápido hunde la reputación del remitente — también
+ * para los correos de contraseña que salen del mismo dominio. Se consulta el
+ * DNS una vez por dominio, no por persona.
+ */
+async function dominiosConCorreo(correos: string[]): Promise<Set<string>> {
+    const dominios = Array.from(new Set(correos.map((e) => (e.split('@')[1] || '').toLowerCase()).filter(Boolean)));
+    const validos = new Set<string>();
+    await Promise.all(dominios.map(async (d) => {
+        try {
+            const mx = await dns.resolveMx(d);
+            if (mx && mx.length) validos.add(d);
+        } catch {
+            // Sin MX o dominio inexistente: no se le escribe.
+        }
+    }));
+    return validos;
+}
+
+/**
+ * Registro pendiente: pidió el código de verificación y nunca lo escribió, así
+ * que no tiene cuenta. No viven en `user_profiles` sino en `otp_codes`, y se
+ * leen con una función que sólo ejecuta la clave de servicio.
+ */
+async function segmentoRegistroPendiente(): Promise<Destinatario[]> {
+    const { data, error } = await admin().rpc('segmento_registro_pendiente');
+    if (error) throw new Error(`segmento registro_pendiente: ${error.message}`);
+    const filas = (data ?? []) as { email: string; full_name: string | null }[];
+    const conCorreo = await dominiosConCorreo(filas.map((f) => f.email));
+    return filas
+        .filter((f) => f.email && conCorreo.has((f.email.split('@')[1] || '').toLowerCase()))
+        .filter((f) => !ADMINS.includes(f.email.toLowerCase()))
+        .map((f) => ({ id: null, email: f.email, full_name: f.full_name, estado: null, queries_used: 0 }));
+}
+
 export async function segmento(campania: NombreCampania): Promise<Destinatario[]> {
+    if (campania === 'registro_pendiente') return segmentoRegistroPendiente();
+
     // Paginado obligatorio: Supabase corta en 1,000 filas por respuesta
     // (ajuste `max-rows` de PostgREST) y IGNORA un `.limit()` mayor. Pedir
     // 2,000 devolvía exactamente 1,000 sin error ni aviso, así que el
@@ -141,7 +203,8 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
     const filas: Destinatario[] = [];
 
     for (let desde = 0; ; desde += TAMANO) {
-        const q = filtrar(admin().from(origen(campania)).select(COLUMNAS), campania);
+        const columnas = origen(campania) === 'user_profiles' ? COLUMNAS_PERFIL : COLUMNAS;
+        const q = filtrar(admin().from(origen(campania)).select(columnas), campania);
         const { data, error } = await q.range(desde, desde + TAMANO - 1);
         if (error) throw new Error(`segmento ${campania}: ${error.message}`);
 

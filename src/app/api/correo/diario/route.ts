@@ -49,7 +49,14 @@ export const maxDuration = 300;
 // cupo diario para campañas es de 70 —los otros 30 quedan reservados para lo
 // transaccional, que no puede quedarse sin cupo—. Así el cron completa la
 // tanda en tres días sin que nadie tenga que acordarse.
-const PRIORIDAD: NombreCampania[] = ['vitrina', 'referidos', 'entrada', 'suscripcion', 'reactivacion', 'activacion'];
+// EN PAUSA DESDE EL 17-SEP-2026: `reactivacion` y `activacion`. Nunca llegaron a
+// salir en volumen: el cupo gratuito de 70 al día se lo comían las de arriba.
+// Con el plan Pro de Resend el cupo sube a 700 y saldrían de golpe, con textos
+// de agosto que David no ha vuelto a ver —la reactivación anuncia la app móvil
+// «muy pronto»—. Además `reactivacion` va a la misma gente que el descuento de
+// Pro, y la pausa de tres días entre campañas haría que la tapara. Vuelven
+// cuando David apruebe el orden nuevo junto con las campañas del 17-sep.
+const PRIORIDAD: NombreCampania[] = ['vitrina', 'referidos', 'entrada', 'suscripcion'];
 
 /**
  * Vercel firma sus crons con CRON_SECRET. Se acepta también la clave de

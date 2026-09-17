@@ -22,8 +22,9 @@
  */
 
 import {
-    boton, caja, envolver, esc, fuerte, listado, nombrePila, parrafo, rotulo, SITIO,
+    boton, caja, envolver, esc, fuerte, listado, nombrePila, parrafo, rotulo, SITIO, videoChat,
 } from './plantilla';
+import { urlActivacion } from './activar';
 import { urlBaja } from './baja';
 import { urlEntrada } from './entrada';
 import {
@@ -32,6 +33,28 @@ import {
 import type { Correo, Destinatario } from './enviar';
 
 const CHAT = `${SITIO}/chat`;
+
+/**
+ * Cómo se nombra a quien recibe el correo (17-sep-2026).
+ *
+ * Todas las plantillas decían «Estimado licenciado», y la vista previa de las
+ * campañas de hoy lo delató: «Licenciado Martha». El nombre no dice cómo
+ * prefiere ser nombrada una persona, y equivocarse en el saludo de un correo
+ * masivo es el error que más se ve. El perfil guarda la preferencia en
+ * `tratamiento`; casi toda la base conserva el neutro (`lic`), y para ése se
+ * usa la fórmula formal mexicana que no marca género: «Apreciable Lic.».
+ */
+function saludo(d: Destinatario, nombre: string): string {
+    if (d.tratamiento === 'licenciada') return `Estimada licenciada ${esc(nombre)}:`;
+    if (d.tratamiento === 'licenciado') return `Estimado licenciado ${esc(nombre)}:`;
+    return `Apreciable Lic. ${esc(nombre)}:`;
+}
+
+function trato(d: Destinatario): string {
+    if (d.tratamiento === 'licenciada') return 'Licenciada';
+    if (d.tratamiento === 'licenciado') return 'Licenciado';
+    return 'Lic.';
+}
 const PRECIOS = `${SITIO}/precios`;
 
 /** Quita el HTML para la versión de texto plano que exige todo correo serio. */
@@ -85,11 +108,11 @@ function porQueImporta(): string {
 //    No menciona planes ni precios. Una sola meta: la primera consulta.
 // ─────────────────────────────────────────────────────────────────────────
 export function correoActivacion(d: Destinatario): Correo {
-    const nombre = nombrePila(d.full_name, d.email);
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
     const ejemplos = consultasEjemplo(d.estado);
 
     const cuerpo =
-        parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
             'Nos honra que haya abierto una cuenta en Iurexia. Sabemos lo que vale el tiempo de un abogado ' +
             'en ejercicio, y por eso este correo va a lo único que importa: que compruebe usted mismo, ' +
@@ -119,7 +142,7 @@ export function correoActivacion(d: Destinatario): Correo {
 
     const html = envolver({ cuerpo, urlBaja: urlBaja(d.email) });
     return {
-        asunto: `Licenciado ${nombre}, su cuenta de Iurexia lo está esperando`,
+        asunto: `${trato(d)} ${nombre}, su cuenta de Iurexia lo está esperando`,
         html,
         texto: aTexto(cuerpo) + `\n\nHacer su primera consulta: ${CHAT}\nDarse de baja: ${urlBaja(d.email)}`,
     };
@@ -135,10 +158,10 @@ export function correoActivacion(d: Destinatario): Correo {
 //    se presentan como lo que son —trabajo de desarrollo continuo—.
 // ─────────────────────────────────────────────────────────────────────────
 export function correoReactivacion(d: Destinatario): Correo {
-    const nombre = nombrePila(d.full_name, d.email);
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
 
     const cuerpo =
-        parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
             'Usted conoció Iurexia en una etapa temprana, y por eso queremos que sea de los primeros en ' +
             `saberlo: la plataforma que usted probó ya no existe. Lo que hay hoy es ${fuerte('Iurexia 2.0')}, ` +
@@ -176,7 +199,7 @@ export function correoReactivacion(d: Destinatario): Correo {
 
     const html = envolver({ cuerpo, urlBaja: urlBaja(d.email) });
     return {
-        asunto: `Licenciado ${nombre}, le presentamos Iurexia 2.0`,
+        asunto: `${trato(d)} ${nombre}, le presentamos Iurexia 2.0`,
         html,
         texto: aTexto(cuerpo) + `\n\nConocer Iurexia 2.0: ${SITIO}\nDarse de baja: ${urlBaja(d.email)}`,
     };
@@ -188,11 +211,11 @@ export function correoReactivacion(d: Destinatario): Correo {
 //    a gente que sabe exactamente qué está comprando.
 // ─────────────────────────────────────────────────────────────────────────
 export function correoSuscripcion(d: Destinatario): Correo {
-    const nombre = nombrePila(d.full_name, d.email);
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
     const usadas = d.queries_used ?? 0;
 
     const cuerpo =
-        parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
             `Usted agotó las consultas de su plan gratuito${usadas >= 5 ? '' : ' o está por hacerlo'}, ` +
             'y eso lo coloca en un grupo reducido: el de quienes le dieron a la plataforma un uso ' +
@@ -225,7 +248,7 @@ export function correoSuscripcion(d: Destinatario): Correo {
 
     const html = envolver({ cuerpo, urlBaja: urlBaja(d.email) });
     return {
-        asunto: `Licenciado ${nombre}, su plan gratuito llegó al límite`,
+        asunto: `${trato(d)} ${nombre}, su plan gratuito llegó al límite`,
         html,
         texto: aTexto(cuerpo) + `\n\nVer los planes: ${PRECIOS}\nDarse de baja: ${urlBaja(d.email)}`,
     };
@@ -237,12 +260,12 @@ export function correoSuscripcion(d: Destinatario): Correo {
 //    de invitación a reconocimiento.
 // ─────────────────────────────────────────────────────────────────────────
 export function correoReferidos(d: Destinatario): Correo {
-    const nombre = nombrePila(d.full_name, d.email);
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
     const enlace = d.id ? enlaceInvitacion(d.id) : `${SITIO}/registro`;
     const codigo = d.id ? codigoReferido(d.id) : '';
 
     const cuerpo =
-        parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
             `Le escribimos para ponerle en las manos algo que puede regalar: ` +
             `${fuerte(`${DIAS_DE_BIENVENIDA} días de Iurexia Pro`)} para cada colega que usted invite. ` +
@@ -285,9 +308,9 @@ export function correoReferidos(d: Destinatario): Correo {
             '22px 0 0 0',
         );
 
-    const html = envolver({ cuerpo, urlBaja: urlBaja(d.email) });
+    const html = envolver({ cuerpo, urlBaja: urlBaja(d.email), visual: videoChat() });
     return {
-        asunto: `Licenciado ${nombre}, regale ${DIAS_DE_BIENVENIDA} días de Iurexia Pro a un colega`,
+        asunto: `${trato(d)} ${nombre}, regale ${DIAS_DE_BIENVENIDA} días de Iurexia Pro a un colega`,
         html,
         texto: aTexto(cuerpo) + `\n\nSu enlace: ${enlace}\nDarse de baja: ${urlBaja(d.email)}`,
     };
@@ -303,10 +326,10 @@ export function correoReferidos(d: Destinatario): Correo {
 //    fresco de un clic.
 // ─────────────────────────────────────────────────────────────────────────
 export function correoEntrada(d: Destinatario): Correo {
-    const nombre = nombrePila(d.full_name, d.email);
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
 
     const cuerpo =
-        parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
             'Usted creó una cuenta en Iurexia, pero nunca llegó a entrar. Puede que el registro ' +
             'se interrumpiera, o simplemente que quedara pendiente entre asuntos más urgentes.',
@@ -329,7 +352,7 @@ export function correoEntrada(d: Destinatario): Correo {
 
     const html = envolver({ cuerpo, urlBaja: urlBaja(d.email) });
     return {
-        asunto: `Licenciado ${nombre}, su cuenta de Iurexia quedó a medio camino`,
+        asunto: `${trato(d)} ${nombre}, su cuenta de Iurexia quedó a medio camino`,
         html,
         texto: aTexto(cuerpo) + `\n\nEntrar sin contraseña: ${urlEntrada(d.email)}\nDarse de baja: ${urlBaja(d.email)}`,
     };
@@ -362,10 +385,10 @@ export function correoEntrada(d: Destinatario): Correo {
 const IMAGEN_VITRINA = `${SITIO}/vitrina/ejemplo.png`;
 
 export function correoVitrina(d: Destinatario): Correo {
-    const nombre = nombrePila(d.full_name, d.email);
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
 
     const cuerpo =
-        parrafo(`Estimado licenciado ${esc(nombre)}:`, '0 0 22px 0') +
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
             'Le escribo para invitar a su despacho a la vitrina de firmas de Iurexia: el ' +
             `espacio de nuestra portada donde aparecerán ${fuerte('los logotipos de los ' +
@@ -430,9 +453,191 @@ export function correoVitrina(d: Destinatario): Correo {
         );
 
     return {
-        asunto: `Licenciado ${nombre}, su despacho en la portada de Iurexia`,
-        html: envolver({ cuerpo, urlBaja: urlBaja(d.email) }),
+        asunto: `${trato(d)} ${nombre}, su despacho en la portada de Iurexia`,
+        html: envolver({ cuerpo, urlBaja: urlBaja(d.email), visual: videoChat() }),
         texto: aTexto(cuerpo) + `\n\n${SITIO}/vitrina\nDarse de baja: ${urlBaja(d.email)}`,
+    };
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────
+// PIEZAS COMUNES DE LAS CAMPAÑAS DEL 17-SEP-2026
+// ─────────────────────────────────────────────────────────────────────────
+
+/** «juan» → «Juan». Los nombres del registro llegan como se teclearon. */
+function capitalizar(t: string): string {
+    return t ? t.charAt(0).toLocaleUpperCase('es-MX') + t.slice(1) : t;
+}
+
+const OFERTA_PRO = `${SITIO}/pro50`;
+const VIGENCIA_OFERTA = '17 de octubre de 2026';
+
+/**
+ * Lo que ya se midió sobre trabajar con IA jurídica.
+ *
+ * CADA CIFRA DICE A QUIÉN SE MIDIÓ. Los dos ensayos aleatorizados se hicieron
+ * con estudiantes de Derecho, no con abogados en ejercicio, y las 240 horas
+ * son lo que los profesionales ESPERAN ahorrar, no algo medido. Escribirlo de
+ * otro modo sería exagerar ante el gremio que mejor detecta una exageración.
+ * No existe, al 17-sep-2026, un estudio de productividad con abogados
+ * mexicanos; por eso no se afirma nada sobre ellos.
+ *
+ * Fuentes, leídas el 17-sep-2026:
+ *   · Choi, Monahan y Schwarcz, «Lawyering in the Age of Artificial
+ *     Intelligence», Minnesota Law Review 109:147 (2024).
+ *   · Schwarcz et al., «AI-Powered Lawyering», Journal of Law and Empirical
+ *     Analysis 3(1) (2026). Cifras de la versión publicada, no del borrador.
+ *   · Thomson Reuters, Future of Professionals Report 2025.
+ */
+function evidenciaIA(): string {
+    return caja(
+        rotulo('Lo que ya se midió') +
+        listado([
+            'En un ensayo aleatorizado con 137 estudiantes de Derecho, trabajar con inteligencia artificial elevó la productividad entre 50 % y 130 % en cinco de seis tareas jurídicas.',
+            'En otro ensayo de la Universidad de Minnesota, quienes redactaron con IA terminaron un contrato 32 % más rápido y una demanda 24 % más rápido.',
+            'La herramienta jurídica que trabaja sobre fuentes registró 3 alucinaciones; un modelo de IA general, 11. Es el principio con el que trabaja Iurexia: cada cita, con su fuente.',
+            'Los profesionales jurídicos encuestados por Thomson Reuters esperan liberar casi 240 horas al año gracias a la IA.',
+        ]) +
+        `<p style="margin:14px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.6;color:#8b7355;">` +
+        `Fuentes: Schwarcz et al., <em>Journal of Law and Empirical Analysis</em> (2026); ` +
+        `Choi, Monahan y Schwarcz, <em>Minnesota Law Review</em> (2024); ` +
+        `Thomson Reuters, <em>Future of Professionals Report</em> (2025).</p>`,
+    );
+}
+
+/**
+ * El argumento del precio, en su versión que se puede sostener.
+ *
+ * David pidió decir que ninguna IA jurídica del mercado ofrece precios tan
+ * competitivos. No es cierto: el 17-sep-2026 LEXIUS México publicaba 169.99
+ * MXN al mes con uso ilimitado e IAN Jurídico 188 MXN. Dicho en un correo
+ * masivo, sería publicidad engañosa. Lo que sí es verdad —y convence más— es
+ * que las grandes plataformas internacionales ni siquiera publican su precio.
+ */
+function argumentoPrecio(): string {
+    return parrafo(
+        'Las grandes plataformas internacionales de inteligencia artificial jurídica ni siquiera ' +
+        'publican su precio: hay que pedir una cotización a su área de ventas. Iurexia publica el ' +
+        `suyo, ${fuerte('$149 pesos al mes para socios fundadores')}, y le ofrece la mitad en su primer mes.`,
+    );
+}
+
+function condicionesOferta(): string {
+    return `<p style="margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.65;color:#8b7355;">` +
+        `Condiciones: 50 % de descuento sobre el plan Pro mensual, sólo en el primer mes. Después se renueva ` +
+        `a $149 MXN mensuales hasta que usted cancele, lo que puede hacer en cualquier momento desde su perfil. ` +
+        `Para cuentas sin una suscripción de pago previa. Vigente hasta el ${VIGENCIA_OFERTA}. ` +
+        `Aplican los Términos y Condiciones de Iurexia.</p>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DESCUENTO PRO — para quien consultó y no contrató (17-sep-2026).
+//
+// Ya conocen la plataforma: no hay que explicarles qué hace, sino ofrecerles
+// el plan completo a un precio que no pida pensarlo mucho, con la salida a la
+// vista. La salida importa: a un abogado lo convence más «cancele cuando
+// quiera» que cualquier adjetivo.
+// ─────────────────────────────────────────────────────────────────────────
+export function correoDescuentoPro(d: Destinatario): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
+        parrafo(
+            'Usted ya consultó Iurexia con sus propios asuntos, así que sabe de lo que es capaz. Queremos ' +
+            'que la conozca con todas sus capacidades, y por eso le escribimos con una oferta concreta: ' +
+            `${fuerte('Iurexia Pro al 50 % en su primer mes')}.`,
+        ) +
+        caja(
+            rotulo('Su primer mes de Iurexia Pro') +
+            `<p style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.2;color:#1a1a1a;">$74.50 <span style="font-size:14px;color:#404040;">MXN</span></p>` +
+            `<p style="margin:0 0 16px;font-size:13px;color:#404040;">En lugar de $149, el precio de socio fundador. ` +
+            `El precio regular de Pro es de <span style="text-decoration:line-through;">$249</span>.</p>` +
+            listado([
+                '140 consultas al mes.',
+                'Inteligencia artificial jurídica avanzada, para análisis complejos y deducción.',
+                'Análisis de sus documentos: demandas, sentencias y contratos.',
+                'Búsqueda fundamentada en la legislación de su estado, con la fuente de cada cita.',
+                'Soporte prioritario.',
+            ]),
+        ) +
+        parrafo('', '18px 0 0 0') +
+        boton('Activar Pro con 50 % de descuento', OFERTA_PRO) +
+        parrafo(
+            `${fuerte('Si su primer mes no le convence, cancele cuando quiera')}, desde su perfil y sin ` +
+            'hablar con nadie. Conserva el acceso hasta el final del mes pagado.',
+            '20px 0 22px 0',
+        ) +
+        evidenciaIA() +
+        parrafo('', '10px 0 0 0') +
+        argumentoPrecio() +
+        parrafo(
+            'Estamos muy contentos con lo que Iurexia es hoy, y nos gustaría que lo comprobara con el plan ' +
+            'completo, en un asunto de su despacho.',
+            '0 0 6px 0',
+        ) +
+        `<p style="margin:20px 0 0;color:#1a1a1a;"><strong style="color:#1a1a1a;">Equipo de Iurexia</strong></p>` +
+        condicionesOferta();
+
+    return {
+        asunto: `${trato(d)} ${nombre}, Iurexia Pro al 50 % en su primer mes`,
+        html: envolver({ cuerpo, urlBaja: urlBaja(d.email), visual: videoChat() }),
+        texto: aTexto(cuerpo) + `\n\nActivar Pro con 50 %: ${OFERTA_PRO}\nDarse de baja: ${urlBaja(d.email)}`,
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// REGISTRO PENDIENTE — pidió el código y nunca lo escribió (17-sep-2026).
+//
+// No tiene cuenta. Lo primero es quitarle el obstáculo: el botón crea su
+// cuenta ya verificada y lo deja dentro, sin código. Todo lo demás —la
+// evidencia, la oferta— va DESPUÉS del botón, porque para esta persona la
+// única acción que importa hoy es entrar.
+// ─────────────────────────────────────────────────────────────────────────
+export function correoRegistroPendiente(d: Destinatario): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const activar = urlActivacion(d.email);
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
+        parrafo(
+            'Usted empezó a crear su cuenta en Iurexia, pero el registro quedó a la mitad: el código de ' +
+            'verificación que le enviamos no llegó a escribirse. Pasa más de lo que parece, y ya no tiene ' +
+            'que repetirlo.',
+        ) +
+        parrafo(
+            `Con este botón ${fuerte('su correo queda verificado y entra directamente a la plataforma')}, ` +
+            'sin código y sin contraseña:',
+        ) +
+        boton('Activar mi cuenta y entrar', activar) +
+        parrafo(
+            `Adentro le esperan ${fuerte('sus 5 consultas gratuitas cada mes')}, para que pruebe Iurexia con ` +
+            'un asunto real de su despacho: la legislación de su estado, la jurisprudencia y el análisis de ' +
+            'sus documentos, con la fuente de cada cita a la vista.',
+            '20px 0 22px 0',
+        ) +
+        evidenciaIA() +
+        parrafo('', '10px 0 0 0') +
+        caja(
+            rotulo('Y cuando quiera ir más lejos') +
+            `<p style="margin:0 0 12px;">${fuerte('Iurexia Pro al 50 % en su primer mes: $74.50 MXN')}, sobre el ` +
+            'precio de socio fundador de $149. Si no le convence, cancele cuando quiera desde su perfil.</p>' +
+            `<p style="margin:0;"><a href="${esc(OFERTA_PRO)}" style="color:#8b7355;text-decoration:underline;">Ver la oferta de Pro</a></p>`,
+        ) +
+        parrafo('', '18px 0 0 0') +
+        argumentoPrecio() +
+        parrafo(
+            'Estamos muy contentos con lo que Iurexia es hoy. Si algo le impide entrar, responda este ' +
+            'correo: le contestamos nosotros.',
+            '0 0 6px 0',
+        ) +
+        `<p style="margin:20px 0 0;color:#1a1a1a;"><strong style="color:#1a1a1a;">Equipo de Iurexia</strong></p>` +
+        condicionesOferta();
+
+    return {
+        asunto: `${trato(d)} ${nombre}, su cuenta de Iurexia está a un clic`,
+        html: envolver({ cuerpo, urlBaja: urlBaja(d.email), visual: videoChat() }),
+        texto: aTexto(cuerpo) + `\n\nActivar mi cuenta y entrar: ${activar}\nOferta Pro: ${OFERTA_PRO}\nDarse de baja: ${urlBaja(d.email)}`,
     };
 }
 
@@ -444,6 +649,8 @@ export const CAMPANIAS = {
     suscripcion: { construir: correoSuscripcion, etiqueta: 'Suscripción — topó el límite' },
     referidos: { construir: correoReferidos, etiqueta: 'Referidos — usuarios Pro' },
     vitrina: { construir: correoVitrina, etiqueta: 'Vitrina de despachos — todos los planes de pago' },
+    descuento_pro: { construir: correoDescuentoPro, etiqueta: 'Descuento Pro 50 % — consultó y no contrató' },
+    registro_pendiente: { construir: correoRegistroPendiente, etiqueta: 'Registro pendiente — pidió el código y no entró' },
 } as const;
 
 export type NombreCampania = keyof typeof CAMPANIAS;

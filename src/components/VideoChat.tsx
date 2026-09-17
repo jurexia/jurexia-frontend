@@ -40,7 +40,9 @@ export default function VideoChat() {
     };
 
     return (
-        <section className="bg-cream-300 px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
+        // `id` para que los correos de campaña lleven directo aquí: el GIF del
+        // correo es un avance, y quien lo pulsa viene a ver la pieza entera.
+        <section id="video-chat" className="scroll-mt-20 bg-cream-300 px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
             <div className="mx-auto max-w-5xl">
                 <p className="mb-5 text-center text-[11px] uppercase tracking-[0.16em] text-accent-brown">
                     El chat de Iurexia, en un minuto y medio

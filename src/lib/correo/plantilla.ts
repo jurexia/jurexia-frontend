@@ -76,9 +76,41 @@ export function listado(items: string[]): string {
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ${PALETA.borde};">${filas}</table>`;
 }
 
+/**
+ * El avance del video del chat (v43), para ir a todo el ancho bajo el membrete.
+ *
+ * POR QUÉ UN GIF Y NO EL VIDEO (17-sep-2026). Ningún cliente de correo serio
+ * reproduce `<video>`: Gmail lo quita y Outlook lo ignora. Un GIF sí se anima
+ * en Gmail, Apple Mail y los móviles, y en Outlook de escritorio —que sólo
+ * pinta el primer fotograma— se ve la pregunta ya escrita en el chat, que es
+ * una imagen con sentido por sí sola.
+ *
+ * Doce segundos de cuatro momentos (pregunta, recorrido del acervo, la cita que
+ * abre su documento y la revisión de una demanda) a 600 px, 8 fotogramas por
+ * segundo y 64 colores: 1.3 MB. La paleta reserva a propósito los rojos del
+ * aviso «Son del Código Civil, no del procesal», que se perdían y son justo
+ * lo que cuenta el momento. La imagen lleva al video completo, con sonido, en
+ * la portada.
+ */
+export const GIF_VIDEO_CHAT = `${SITIO}/correo/iurexia-chat.gif`;
+export const URL_VIDEO_CHAT = `${SITIO}/#video-chat`;
+
+export function videoChat(): string {
+    return `<a href="${esc(URL_VIDEO_CHAT)}" style="display:block;text-decoration:none;border:0;">` +
+        `<img src="${esc(GIF_VIDEO_CHAT)}" width="600" height="338" ` +
+        `alt="Iurexia en acción: una pregunta jurídica, el recorrido por el acervo, las citas que abren su documento y la revisión de una demanda. Ver el video completo." ` +
+        `style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;background-color:${PALETA.cremaFondo};" />` +
+        `</a>`;
+}
+
 export interface OpcionesCorreo {
     /** Cuerpo ya compuesto con los ayudantes de arriba. */
     cuerpo: string;
+    /**
+     * Pieza visual a todo el ancho, entre el membrete y el cuerpo. Va fuera del
+     * margen interior del cuerpo para que el GIF ocupe los 600 px completos.
+     */
+    visual?: string;
     /** Enlace de baja con un clic. Obligatorio en todo correo masivo. */
     urlBaja?: string;
     /** Texto del pie. Por defecto, el aviso de verificación de citas. */
@@ -95,7 +127,7 @@ const PIE_POR_DEFECTO =
  * confirmar cambio): esos no se pueden dar de baja porque no son publicidad, y
  * ofrecer la baja ahí haría que el usuario se saliera de avisos que necesita.
  */
-export function envolver({ cuerpo, urlBaja, pie }: OpcionesCorreo): string {
+export function envolver({ cuerpo, urlBaja, pie, visual }: OpcionesCorreo): string {
     const baja = urlBaja
         ? `<br><a href="${esc(urlBaja)}" style="color:${PALETA.marron};text-decoration:underline;">Darse de baja de estos avisos</a>`
         : '';
@@ -111,6 +143,10 @@ export function envolver({ cuerpo, urlBaja, pie }: OpcionesCorreo): string {
     </td>
   </tr>
 
+${visual ? `  <tr>
+    <td style="padding:0;border-bottom:1px solid ${PALETA.borde};line-height:0;font-size:0;">${visual}</td>
+  </tr>
+` : ''}
   <tr>
     <td style="padding:36px 44px 36px 44px;font-family:${SERIF};font-size:15px;line-height:1.72;color:${PALETA.texto};">
 ${cuerpo}

@@ -12,7 +12,7 @@ export function getStripe(): Promise<Stripe | null> {
 }
 
 // Redirect to Stripe Checkout
-export async function redirectToCheckout(priceId: string, userEmail?: string) {
+export async function redirectToCheckout(priceId: string, userEmail?: string, promo?: string) {
     console.log('🔄 redirectToCheckout called with:', { priceId, userEmail });
 
     try {
@@ -24,6 +24,7 @@ export async function redirectToCheckout(priceId: string, userEmail?: string) {
             body: JSON.stringify({
                 priceId,
                 email: userEmail,
+                ...(promo ? { promo } : {}),
             }),
         });
 

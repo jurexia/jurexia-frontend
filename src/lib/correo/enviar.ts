@@ -11,6 +11,7 @@
  * lo mismo a la misma gente en cada vuelta.
  */
 
+import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { cabecerasBaja, urlBaja } from './baja';
@@ -20,7 +21,7 @@ import { cabecerasBaja, urlBaja } from './baja';
 import { ADMINS } from '../admins';
 export { ADMINS };
 
-/** Ritmo de envío. Resend admite 2 por segundo. */
+/** Pausa entre peticiones. Resend admite 10 por segundo por equipo; con lotes de 100 sobra. */
 const PAUSA_MS = 600;
 
 // ── CUOTA DIARIA ─────────────────────────────────────────────────────────
@@ -89,6 +90,8 @@ export interface Destinatario {
     full_name?: string | null;
     estado?: string | null;
     queries_used?: number | null;
+    /** Cómo prefiere ser nombrado: 'lic' (neutro, por omisión), 'licenciado' o 'licenciada'. */
+    tratamiento?: string | null;
 }
 
 export interface Correo {
@@ -139,6 +142,8 @@ export interface Resultado {
     omitidos_baja: number;
     omitidos_ya_enviado: number;
     omitidos_admin: number;
+    /** Recibió otra campaña hace menos de DIAS_ENTRE_CAMPANIAS días. */
+    omitidos_reciente: number;
     fallidos: number;
     errores: string[];
     /** En simulacro no sale ningún correo: sólo se reporta a quién iría. */
@@ -152,11 +157,57 @@ export interface Resultado {
 }
 
 /**
+ * Días mínimos entre dos correos de campaña a la misma persona (17-sep-2026).
+ *
+ * Con el plan gratuito de Resend esto no hacía falta: 70 correos al día
+ * repartidos entre campañas rara vez caían dos veces en la misma persona. Con
+ * el plan Pro el techo desaparece y la misma corrida podría mandarle a un
+ * abogado la invitación a la vitrina, la de referidos y el descuento de Pro,
+ * los tres el mismo día. Eso es exactamente lo que convierte un remitente
+ * legítimo en correo no deseado —para el abogado y para Gmail—.
+ *
+ * La regla mira TODAS las campañas, no sólo la actual. Y como cada campaña de
+ * una corrida lee la bitácora fresca, quien recibió la primera ya queda fuera
+ * de la segunda sin coordinación adicional.
+ */
+export const DIAS_ENTRE_CAMPANIAS = Number(process.env.CORREO_DIAS_ENTRE_CAMPANIAS ?? 3);
+
+/** Quiénes recibieron cualquier correo de campaña en los últimos `dias`. */
+export async function leerRecientes(dias: number): Promise<Set<string>> {
+    const recientes = new Set<string>();
+    if (!(dias > 0)) return recientes;
+    const desdeFecha = new Date(Date.now() - dias * 86400_000).toISOString();
+    let desde = 0;
+    for (;;) {
+        const { data, error } = await admin()
+            .from('correo_envios')
+            .select('email')
+            .eq('estado', 'enviado')
+            .gte('enviado_at', desdeFecha)
+            .range(desde, desde + 999);
+        if (error) throw new Error(`No pude leer los envíos recientes: ${error.message}`);
+        for (const r of data ?? []) recientes.add(String(r.email).toLowerCase());
+        if (!data || data.length < 1000) break;
+        desde += 1000;
+    }
+    return recientes;
+}
+
+/** Máximo de correos por petición en el envío por lotes de Resend. */
+const LOTE = 100;
+
+/**
  * Envía una campaña.
  *
  * `construir` recibe cada destinatario y devuelve el correo ya compuesto, así
  * que la personalización (nombre, estado, consultas de ejemplo) vive en la
  * plantilla y no aquí.
+ *
+ * POR LOTES DESDE EL 17-SEP-2026. Uno a uno, con la pausa que exige el límite
+ * de peticiones, la función del cron —que vive 300 s— no pasaba de unos 400
+ * correos por corrida. Resend acepta 100 por petición, así que el techo real
+ * vuelve a ser la cuota y no el reloj. Cada lote lleva una clave de
+ * idempotencia: si la petición se reintenta, Resend no duplica el envío.
  */
 export async function enviarCampania(opciones: {
     campania: string;
@@ -189,6 +240,7 @@ export async function enviarCampania(opciones: {
         omitidos_baja: 0,
         omitidos_ya_enviado: 0,
         omitidos_admin: 0,
+        omitidos_reciente: 0,
         fallidos: 0,
         errores: [],
         simulacro,
@@ -199,68 +251,98 @@ export async function enviarCampania(opciones: {
 
     const bajas = await leerBajas();
     const yaEnviados = await leerYaEnviados(campania);
+    const recientes = await leerRecientes(DIAS_ENTRE_CAMPANIAS);
     const remitente = process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>';
-    const resend = simulacro ? null : new Resend(process.env.RESEND_API_KEY!);
+    // Las campañas invitan a responder («responda este correo y le
+    // contestamos nosotros»). Salían sin dirección de respuesta, así que la
+    // respuesta iba al remitente de campañas y nadie la leía.
+    const responderA = process.env.CORREO_RESPONDER_A || 'soporte@iurexia.com';
 
-    // Elegibles de verdad: los que pasan los tres frenos. Se cuenta antes de
-    // enviar para poder reportar cuántos quedan para los días siguientes.
-    const elegibles = destinatarios.filter((d) => {
-        const e = d.email?.trim().toLowerCase();
-        return !!e && !ADMINS.includes(e) && !bajas.has(e) && !yaEnviados.has(e);
-    });
-    res.restantes_en_segmento = Math.max(0, elegibles.length - tope);
-    res.detenido_por_cuota = elegibles.length > tope && tope === cupo;
-
+    // Elegibles de verdad: los que pasan los cuatro frenos. Se cuenta antes de
+    // enviar para poder reportar cuántos quedan para los días siguientes. Un
+    // mismo correo repetido en el segmento sale una sola vez.
+    const elegibles: Destinatario[] = [];
+    const vistos = new Set<string>();
     for (const d of destinatarios) {
-        if (res.enviados >= tope) break;
-        if (plazoHasta && Date.now() > plazoHasta) { res.detenido_por_tiempo = true; break; }
-
         const email = d.email?.trim().toLowerCase();
-        if (!email) continue;
-
+        if (!email || vistos.has(email)) continue;
+        vistos.add(email);
         if (ADMINS.includes(email)) { res.omitidos_admin++; continue; }
         if (bajas.has(email)) { res.omitidos_baja++; continue; }
         if (yaEnviados.has(email)) { res.omitidos_ya_enviado++; continue; }
+        if (recientes.has(email)) { res.omitidos_reciente++; continue; }
+        elegibles.push({ ...d, email });
+    }
+    res.restantes_en_segmento = Math.max(0, elegibles.length - tope);
+    res.detenido_por_cuota = elegibles.length > tope && tope === cupo;
 
-        const correo = construir(d);
-
-        if (simulacro) { res.enviados++; continue; }
-
-        try {
-            const { data, error } = await resend!.emails.send({
-                from: remitente,
-                to: email,
-                subject: correo.asunto,
-                html: correo.html,
-                text: correo.texto,
-                headers: cabecerasBaja(email),
-            });
-
-            if (error) {
-                res.fallidos++;
-                res.errores.push(`${email}: ${error.message}`);
-                await admin().from('correo_envios').insert({
-                    usuario_id: d.id ?? null, email, campania, estado: 'fallido',
-                });
-            } else {
-                res.enviados++;
-                // La bitácora se escribe SIEMPRE tras un envío bueno. Si esto
-                // fallara, la siguiente corrida repetiría el correo — por eso
-                // el error se registra en vez de tragarse.
-                const { error: eLog } = await admin().from('correo_envios').insert({
-                    usuario_id: d.id ?? null, email, campania,
-                    resend_id: data?.id ?? null, estado: 'enviado',
-                });
-                if (eLog) res.errores.push(`bitácora ${email}: ${eLog.message}`);
-            }
-        } catch (e) {
-            res.fallidos++;
-            res.errores.push(`${email}: ${e instanceof Error ? e.message : String(e)}`);
-        }
-
-        await new Promise((r) => setTimeout(r, PAUSA_MS));
+    const aEnviar = elegibles.slice(0, Math.max(0, tope));
+    if (simulacro) {
+        res.enviados = aEnviar.length;
+        return res;
     }
 
+    const resend = new Resend(process.env.RESEND_API_KEY!);
+    const hoy = new Date().toISOString().slice(0, 10);
+
+    for (let i = 0; i < aEnviar.length; i += LOTE) {
+        if (plazoHasta && Date.now() > plazoHasta) { res.detenido_por_tiempo = true; break; }
+        const lote = aEnviar.slice(i, i + LOTE);
+
+        let correos;
+        try {
+            correos = lote.map((d) => {
+                const c = construir(d);
+                return {
+                    from: remitente,
+                    to: d.email,
+                    replyTo: responderA,
+                    subject: c.asunto,
+                    html: c.html,
+                    text: c.texto,
+                    headers: cabecerasBaja(d.email),
+                    tags: [{ name: 'campania', value: campania.replace(/[^A-Za-z0-9_-]/g, '_') }],
+                };
+            });
+        } catch (e) {
+            // Una plantilla que revienta con un destinatario raro no debe
+            // tumbar el lote entero sin dejar rastro.
+            res.fallidos += lote.length;
+            res.errores.push(`plantilla, lote ${i / LOTE + 1}: ${e instanceof Error ? e.message : String(e)}`);
+            continue;
+        }
+
+        const huella = crypto.createHash('sha1').update(lote.map((d) => d.email).join(',')).digest('hex').slice(0, 20);
+        try {
+            const { data, error } = await resend.batch.send(correos, {
+                idempotencyKey: `${campania}:${hoy}:${huella}`,
+            });
+            if (error) {
+                res.fallidos += lote.length;
+                res.errores.push(`lote ${i / LOTE + 1}: ${error.message}`);
+                await admin().from('correo_envios').insert(
+                    lote.map((d) => ({ usuario_id: d.id ?? null, email: d.email, campania, estado: 'fallido' })),
+                );
+            } else {
+                const ids = data?.data ?? [];
+                res.enviados += lote.length;
+                // La bitácora se escribe SIEMPRE tras un envío bueno, y en un
+                // solo insert por lote. Si fallara, la siguiente corrida
+                // repetiría el lote — por eso el error se registra.
+                const { error: eLog } = await admin().from('correo_envios').insert(
+                    lote.map((d, k) => ({
+                        usuario_id: d.id ?? null, email: d.email, campania,
+                        resend_id: ids[k]?.id ?? null, estado: 'enviado',
+                    })),
+                );
+                if (eLog) res.errores.push(`bitácora lote ${i / LOTE + 1}: ${eLog.message}`);
+            }
+        } catch (e) {
+            res.fallidos += lote.length;
+            res.errores.push(`lote ${i / LOTE + 1}: ${e instanceof Error ? e.message : String(e)}`);
+        }
+        await new Promise((r) => setTimeout(r, PAUSA_MS));
+    }
     return res;
 }
 
