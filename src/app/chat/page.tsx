@@ -859,7 +859,7 @@ export default function ChatPage() {
                         y «Sálvame» abría la fila, que le daba una jerarquía que
                         no le toca: es el módulo de urgencia, no el de diario.
 
-                        En móvil no caben las cuatro: Normativa y Sentencia se
+                        En móvil no caben las cuatro: Normativa y Redactor PJF se
                         recogen en un menú. Se eligieron esas dos por ser las de
                         uso más esporádico —una es consulta puntual y la otra es
                         trabajo largo con su propia pantalla—. */}
@@ -868,7 +868,7 @@ export default function ChatPage() {
                         «Sálvame»). La barra mide la ventana, no la columna: con
                         el constructor abierto Mi trabajo, Lo último y Sálvame
                         quedan en icono (con su nombre en el title), Normativa y
-                        Sentencia pasan al menú «Más», y el contador se retira. */}
+                        Redactor PJF pasan al menú «Más», y el contador se retira. */}
                     <div className="h-full flex items-center justify-between gap-2 px-3 sm:px-4 min-w-0">
 
                         {/* ── Herramientas ── */}
@@ -911,15 +911,14 @@ export default function ChatPage() {
                                     else setShowPlatinumSentencia(true);
                                 }}
                                 title={canAccessSecretarioPJF
-                                    ? 'Secretario del PJF — crea un borrador de sentencia'
-                                    : 'Secretario del PJF — del plan Ultra Secretarios'}
-                                className={`${constructorAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors ${canAccessSecretarioPJF
-                                    ? 'border border-accent-gold/45 bg-accent-gold/10 text-charcoal-900 hover:bg-accent-gold/20'
-                                    : 'border border-charcoal-900/10 text-charcoal-500 hover:border-accent-gold/40 hover:text-charcoal-800'
-                                    }`}
+                                    ? 'Redactor PJF — crea un proyecto de sentencia'
+                                    : 'Redactor PJF — del plan Ultra Secretarios'}
+                                /* Negro, como «Mi trabajo» (David, 16-sep-2026). Con candado
+                                   o sin él, el mismo botón: el candado ya dice que falta el plan. */
+                                className={`${constructorAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800`}
                             >
-                                <Gavel className={`w-3.5 h-3.5 ${canAccessSecretarioPJF ? 'text-accent-gold' : 'text-charcoal-400'}`} />
-                                Sentencia
+                                <Gavel className="w-3.5 h-3.5 text-accent-gold" />
+                                Redactor PJF
                                 {!canAccessSecretarioPJF && <Lock className="w-2.5 h-2.5 opacity-60" />}
                             </button>
 
@@ -955,7 +954,7 @@ export default function ChatPage() {
                                                 className="flex w-full items-center gap-2.5 border-t border-charcoal-900/[0.06] px-3.5 py-3 text-left text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]"
                                             >
                                                 <Gavel className={`w-4 h-4 ${canAccessSecretarioPJF ? 'text-accent-gold' : 'text-charcoal-400'}`} />
-                                                Sentencia
+                                                Redactor PJF
                                                 {!canAccessSecretarioPJF && <Lock className="ml-auto w-3 h-3 text-charcoal-400" />}
                                             </button>
                                         </div>
