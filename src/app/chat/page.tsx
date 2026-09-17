@@ -30,6 +30,7 @@ import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
 import type { EscritoEnEdicion } from '@/components/documento/EditorEscrito';
 import { markdownAHtml } from '@/lib/documento/marcado';
+import { estadoPiloto } from '@/components/sentencia/api';
 
 /* El constructor de demanda se carga sólo cuando alguien lo abre: trae el
    editor y la librería de Word, que el chat no necesita para consultar. */
@@ -108,26 +109,37 @@ export default function ChatPage() {
     // entorno cuando se retome el redactor de primera instancia.
     const REDACTOR_SENTENCIAS_VISIBLE = process.env.NEXT_PUBLIC_REDACTOR_SENTENCIAS === '1';
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || user?.email === 'administracion@iurexia.com' || profile?.can_access_sentencia === true;
-    /* Secretario del PJF: Platinum, MÁS la excepción declarada en el perfil.
+    /* Secretario del PJF: LA MISMA REGLA QUE EL SERVIDOR.
      *
      * Este botón es la ÚNICA puerta al taller desde el chat —lleva a
-     * /tcc-beta, que es `export { default } from '../taller/page'`, o sea la
-     * misma pantalla— y era la única de las cuatro que no miraba
-     * `can_access_sentencia`. Las otras tres —la barra, la barra lateral y la
-     * página del chat— sí la miran desde siempre.
+     * /tcc-beta, que es `export { default } from '../taller/page'`—, y se quedó
+     * con la regla de antes del 13-sep-2026: sólo Platinum y la excepción del
+     * perfil. Ese día David cambió quién entra —«ahora sólo podrán acceder los
+     * gratuitos para su prueba y quienes contraten el plan mensual», más los
+     * nueve del piloto— y el servidor lo aplicó, pero aquí la cuenta gratuita
+     * seguía viendo el candado y un aviso de «exclusivo del plan Platinum».
+     * Medido el 16-sep: tres días de prueba abierta y CERO cuentas gratuitas
+     * habían entrado.
      *
-     * Se vio con una cuenta Pro a la que se le habilitó el taller por
-     * excepción: el servidor la dejaba pasar —`/taller/estado` devolvía
-     * `tiene_acceso: true`— y ella seguía viendo el candado y el aviso de
-     * «exclusivo del plan Platinum» que la mandaba a planes. Una excepción que
-     * el servidor concede y la pantalla niega no es una excepción: es una
-     * puerta cerrada con la llave puesta por dentro.
-     *
-     * El backend lo vuelve a comprobar, y con la misma regla: `_taller_puerta`
-     * llama a `_can_access_redactor_tcc`, que honra la bandera. */
-    const canAccessSecretarioPJF = isAdmin(user?.email)
+     * La decisión es del servidor (`/taller/estado` → `tiene_acceso`, que llama
+     * a `_can_access_redactor_tcc`): sólo él sabe quién ocupó asiento en el
+     * piloto. Mientras contesta, se pinta con lo que dice el perfil —prueba
+     * sin gastar, Ultra o la excepción—, que es la misma regla sin el piloto. */
+    const accesoTallerLocal = isAdmin(user?.email)
         || profile?.can_access_sentencia === true
-        || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
+        || profile?.subscription_type === 'ultra_secretarios'
+        || (!!profile && (profile.proyectos_prueba_usados ?? 0) < 1);
+    const [accesoTallerServidor, setAccesoTallerServidor] = useState<boolean | null>(null);
+    useEffect(() => {
+        const correo = user?.email;
+        if (!correo) return;
+        let vigente = true;
+        estadoPiloto(correo)
+            .then((e) => { if (vigente) setAccesoTallerServidor(!!e.tiene_acceso); })
+            .catch(() => { /* sin respuesta se queda la regla del perfil */ });
+        return () => { vigente = false; };
+    }, [user?.email, profile?.subscription_type, profile?.proyectos_prueba_usados]);
+    const canAccessSecretarioPJF = accesoTallerServidor ?? accesoTallerLocal;
 
     // States
     const [showPlatinumSentencia, setShowPlatinumSentencia] = useState(false);
@@ -900,7 +912,7 @@ export default function ChatPage() {
                                 }}
                                 title={canAccessSecretarioPJF
                                     ? 'Secretario del PJF — crea un borrador de sentencia'
-                                    : 'Borrador de sentencia — exclusivo del plan Platinum'}
+                                    : 'Secretario del PJF — del plan Ultra Secretarios'}
                                 className={`${constructorAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg px-3 text-[0.8125rem] font-medium transition-colors ${canAccessSecretarioPJF
                                     ? 'border border-accent-gold/45 bg-accent-gold/10 text-charcoal-900 hover:bg-accent-gold/20'
                                     : 'border border-charcoal-900/10 text-charcoal-500 hover:border-accent-gold/40 hover:text-charcoal-800'
@@ -1460,20 +1472,20 @@ export default function ChatPage() {
                             <Gavel className="w-5 h-5 text-[#c9a962]" />
                         </div>
                         <p className="text-[10px] font-bold tracking-[0.18em] text-[#c9a962] uppercase mb-2">
-                            Función exclusiva Platinum
+                            Plan Ultra Secretarios
                         </p>
                         <p className="text-white/80 text-sm leading-relaxed mb-6">
-                            El <span className="text-white font-semibold">Secretario del PJF</span> redacta un borrador
-                            de sentencia completo a partir del expediente: antecedentes, considerandos y puntos
-                            resolutivos. Está disponible en el plan <span className="text-white font-semibold">Platinum</span>.
+                            El <span className="text-white font-semibold">Secretario del PJF</span> redacta un proyecto
+                            de sentencia a partir del expediente. Ya usaste tu proyecto de prueba: el plan{' '}
+                            <span className="text-white font-semibold">Ultra Secretarios</span> incluye 40 proyectos al mes.
                         </p>
                         <div className="flex flex-col gap-2">
                             <a
-                                href="/precios"
+                                href="/precios?plan=ultra_secretarios"
                                 className="block w-full py-2.5 rounded-xl text-center text-sm font-bold transition-transform hover:scale-[1.02] active:scale-95"
                                 style={{ background: 'linear-gradient(135deg, #c9a84c, #e8c56d)', color: '#1a1a1a' }}
                             >
-                                Ver plan Platinum
+                                Ver el plan Ultra · $999 al mes
                             </a>
                             <button
                                 onClick={() => setShowPlatinumSentencia(false)}

@@ -149,6 +149,8 @@ export interface UserProfile {
     stripe_subscription_id: string | null;
     is_active: boolean;
     can_access_sentencia: boolean;
+    /** Proyectos de prueba del taller ya gastados, de por vida (la prueba es 1). */
+    proyectos_prueba_usados?: number;
     has_seen_welcome_video: boolean;
     avatar_url: string | null;
     /** Cómo prefiere ser nombrado. 'lic' es el neutro y el valor por omisión:

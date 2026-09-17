@@ -1514,7 +1514,8 @@ export default function TallerDeSentencias() {
                     {sinAcceso && (
                         <Tarjeta className="border-amber-400/30 bg-amber-400/[0.06]">
                             <p className="text-[14px] text-amber-100">
-                                El taller de sentencias es una función Platinum.
+                                El taller de sentencias es del plan Ultra Secretarios. Ya usaste tu
+                                proyecto de prueba; el plan incluye 40 proyectos al mes.
                             </p>
                         </Tarjeta>
                     )}
