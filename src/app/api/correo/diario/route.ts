@@ -56,7 +56,12 @@ export const maxDuration = 300;
 // «muy pronto»—. Además `reactivacion` va a la misma gente que el descuento de
 // Pro, y la pausa de tres días entre campañas haría que la tapara. Vuelven
 // cuando David apruebe el orden nuevo junto con las campañas del 17-sep.
-const PRIORIDAD: NombreCampania[] = ['vitrina', 'referidos', 'entrada', 'suscripcion'];
+//
+// También `referidos`, y por otra razón: con la pausa de tres días entre
+// campañas, la que salga primero le cierra la puerta a las demás para esa
+// persona. Referidos tiene 628 pendientes que irían hoy, y son en buena parte
+// la misma gente del descuento de Pro. Qué va primero es decisión de David.
+const PRIORIDAD: NombreCampania[] = ['vitrina', 'entrada', 'suscripcion'];
 
 /**
  * Vercel firma sus crons con CRON_SECRET. Se acepta también la clave de
