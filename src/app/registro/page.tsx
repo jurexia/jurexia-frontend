@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Check, ChevronDown, ChevronUp, ArrowLeft, Mail } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithGoogle, signInWithApple, supabase } from '@/lib/supabase';
+import { signInWithGoogle, signInWithApple } from '@/lib/supabase';
 import { destinoTrasEntrar } from '@/lib/destino-tras-entrar';
+import { entrarConCodigo, pedirCodigo } from '@/lib/entrada-con-codigo';
+import { OfertaContrasena, PasoCodigo } from '@/components/EntradaConCodigo';
 
 export default function RegistroPage() {
     const router = useRouter();
@@ -23,33 +25,19 @@ export default function RegistroPage() {
     }, []);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showEmailForm, setShowEmailForm] = useState(false);
 
-    // OTP state
+    // Registro con email (17-sep-2026): nombre y correo → código de seis
+    // dígitos → dentro. Si el correo ya tenía cuenta, entra a la suya en vez
+    // de chocar al final con «ya está registrado». La contraseña ya no se pide
+    // antes: se ofrece después, opcional.
     const [otpStep, setOtpStep] = useState(false);
-    const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
     const [otpSending, setOtpSending] = useState(false);
     const [otpVerifying, setOtpVerifying] = useState(false);
-    const [resendCooldown, setResendCooldown] = useState(0);
-    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-    // Resend cooldown timer
-    useEffect(() => {
-        if (resendCooldown <= 0) return;
-        const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
-        return () => clearTimeout(timer);
-    }, [resendCooldown]);
-
-    // Auto-focus first OTP input
-    useEffect(() => {
-        if (otpStep && inputRefs.current[0]) {
-            inputRefs.current[0].focus();
-        }
-    }, [otpStep]);
+    const [dentro, setDentro] = useState<{ nueva: boolean } | null>(null);
 
     const handleSendOTP = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -59,168 +47,65 @@ export default function RegistroPage() {
             return;
         }
 
-        if (password.length < 8) {
-            setError('La contraseña debe tener al menos 8 caracteres');
-            return;
-        }
-
         setOtpSending(true);
         setError('');
 
-        try {
-            const res = await fetch('/api/send-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email.trim().toLowerCase(), name: name.trim() }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                setError(data.error || 'Error al enviar el código');
-                return;
-            }
-
+        const r = await pedirCodigo({ email, name, modo: 'registro' });
+        if (r.ok) {
             setOtpStep(true);
-            setResendCooldown(60);
-            setOtpCode(['', '', '', '', '', '']);
-        } catch {
-            setError('Error de conexión. Intenta de nuevo.');
-        } finally {
-            setOtpSending(false);
+        } else {
+            setError(r.error);
         }
+
+        setOtpSending(false);
     };
 
-    const handleResendOTP = async () => {
-        if (resendCooldown > 0) return;
-
-        setOtpSending(true);
+    const handleResendOTP = async (): Promise<boolean> => {
         setError('');
-
-        try {
-            const res = await fetch('/api/send-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email.trim().toLowerCase(), name: name.trim() }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                setError(data.error || 'Error al reenviar');
-                return;
-            }
-
-            setResendCooldown(60);
-            setOtpCode(['', '', '', '', '', '']);
-        } catch {
-            setError('Error de conexión.');
-        } finally {
-            setOtpSending(false);
-        }
+        const r = await pedirCodigo({ email, name, modo: 'registro' });
+        if (!r.ok) setError(r.error);
+        return r.ok;
     };
 
-    const handleOtpChange = (index: number, value: string) => {
-        // Only allow digits
-        if (value && !/^\d$/.test(value)) return;
-
-        const newCode = [...otpCode];
-        newCode[index] = value;
-        setOtpCode(newCode);
-
-        // Auto-advance to next input
-        if (value && index < 5) {
-            inputRefs.current[index + 1]?.focus();
-        }
-
-        // Auto-submit when all 6 digits are entered
-        if (value && index === 5 && newCode.every(d => d !== '')) {
-            verifyOTP(newCode.join(''));
-        }
-    };
-
-    const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-        if (e.key === 'Backspace' && !otpCode[index] && index > 0) {
-            inputRefs.current[index - 1]?.focus();
-        }
-    };
-
-    const handleOtpPaste = (e: React.ClipboardEvent) => {
-        e.preventDefault();
-        const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-        if (pasted.length === 6) {
-            const newCode = pasted.split('');
-            setOtpCode(newCode);
-            inputRefs.current[5]?.focus();
-            verifyOTP(pasted);
-        }
-    };
-
-    const verifyOTP = async (code: string) => {
+    const verifyOTP = async (code: string): Promise<boolean> => {
         setOtpVerifying(true);
         setError('');
 
-        try {
-            const res = await fetch('/api/verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: email.trim().toLowerCase(),
-                    code,
-                    password,
-                    // Código de invitación, si llegó por el enlace de un
-                    // colega (/registro?ref=XXXXXXXX). Se lee de la URL en
-                    // vez de guardarse en estado para que sobreviva a que el
-                    // usuario recargue a medio registro.
-                    ref: codigoReferido,
-                }),
-            });
+        const r = await entrarConCodigo({
+            email,
+            code,
+            modo: 'registro',
+            // Código de invitación, si llegó por el enlace de un
+            // colega (/registro?ref=XXXXXXXX). Se lee de la URL en
+            // vez de guardarse en estado para que sobreviva a que el
+            // usuario recargue a medio registro.
+            ref: codigoReferido,
+        });
 
-            const data = await res.json();
+        setOtpVerifying(false);
 
-            if (!res.ok) {
-                setError(data.error || 'Error al verificar');
-                if (res.status === 409) {
-                    // Already registered — redirect to login
-                    setTimeout(() => router.push('/login'), 2000);
-                }
-                setOtpCode(['', '', '', '', '', '']);
-                inputRefs.current[0]?.focus();
-                return;
-            }
-
-            // Account created! Now sign in
-            const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: email.trim().toLowerCase(),
-                password,
-            });
-
-            if (signInError) {
-                setError('Cuenta creada. Inicia sesión manualmente.');
-                setTimeout(() => router.push('/login'), 2000);
-                return;
-            }
-
-            // Google Ads Conversion tracking: Registro
-            if (typeof (window as any).gtag === 'function') {
-                (window as any).gtag('event', 'conversion', {
-                    'send_to': 'AW-18019843576/jCevCMPy4Z4cEPj7w5BD',
-                    'value': 1.0,
-                    'currency': 'MXN'
-                });
-                (window as any).gtag('event', 'conversion', {
-                    'send_to': 'AW-18019843576/TidqCP3ZhaMaEMj0xOQo',
-                    'value': 1.0,
-                    'currency': 'MXN'
-                });
-            }
-
-            router.push(destino);
-        } catch {
-            setError('Error de conexión.');
-        } finally {
-            setOtpVerifying(false);
+        if (!r.ok) {
+            setError(r.error);
+            return false;
         }
+
+        // Google Ads Conversion tracking: Registro. Sólo cuentas nuevas: quien
+        // ya tenía una acaba de entrar, no de registrarse.
+        if (r.nueva && typeof (window as any).gtag === 'function') {
+            (window as any).gtag('event', 'conversion', {
+                'send_to': 'AW-18019843576/jCevCMPy4Z4cEPj7w5BD',
+                'value': 1.0,
+                'currency': 'MXN'
+            });
+            (window as any).gtag('event', 'conversion', {
+                'send_to': 'AW-18019843576/TidqCP3ZhaMaEMj0xOQo',
+                'value': 1.0,
+                'currency': 'MXN'
+            });
+        }
+
+        setDentro({ nueva: r.nueva });
+        return true;
     };
 
     const handleGoogleLogin = async () => {
@@ -251,99 +136,25 @@ export default function RegistroPage() {
 
                 {/* Register Card */}
                 <div className="bg-white rounded-3xl shadow-xl p-8 border border-black/5">
-                    {otpStep ? (
+                    {dentro ? (
+                        /* ── YA DENTRO: CONTRASEÑA OPCIONAL ── */
+                        <OfertaContrasena
+                            email={email.trim().toLowerCase()}
+                            titulo={dentro.nueva ? 'Tu cuenta está lista' : 'Ya estás dentro'}
+                            aviso={dentro.nueva ? undefined : 'Este email ya tenía una cuenta en Iurexia y entraste a ella.'}
+                            onListo={() => router.push(destino)}
+                        />
+                    ) : otpStep ? (
                         /* ── OTP VERIFICATION STEP ── */
-                        <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                            <button
-                                onClick={() => { setOtpStep(false); setError(''); }}
-                                className="flex items-center gap-1 text-sm text-charcoal-400 hover:text-charcoal-600 transition-colors mb-6"
-                            >
-                                <ArrowLeft className="w-4 h-4" />
-                                Volver
-                            </button>
-
-                            <div className="text-center mb-6">
-                                <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                    <Mail className="w-7 h-7 text-green-600" />
-                                </div>
-                                <h1 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
-                                    Verifica tu email
-                                </h1>
-                                <p className="text-charcoal-500 text-sm">
-                                    Enviamos un código de 6 dígitos a
-                                </p>
-                                <p className="text-charcoal-800 font-medium text-sm mt-1">
-                                    {email}
-                                </p>
-                            </div>
-
-                            {error && (
-                                <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl text-center mb-4">
-                                    {error}
-                                </div>
-                            )}
-
-                            {/* OTP Input */}
-                            <div className="flex justify-center gap-2 mb-6" onPaste={handleOtpPaste}>
-                                {otpCode.map((digit, i) => (
-                                    <input
-                                        key={i}
-                                        ref={el => { inputRefs.current[i] = el; }}
-                                        type="text"
-                                        inputMode="numeric"
-                                        maxLength={1}
-                                        value={digit}
-                                        onChange={e => handleOtpChange(i, e.target.value)}
-                                        onKeyDown={e => handleOtpKeyDown(i, e)}
-                                        disabled={otpVerifying}
-                                        className={`w-12 h-14 text-center text-xl font-bold rounded-xl border-2 transition-all outline-none
-                                            ${digit ? 'border-accent-gold bg-amber-50/50' : 'border-gray-200 bg-white'}
-                                            focus:border-accent-gold focus:ring-2 focus:ring-accent-gold/20
-                                            disabled:opacity-50`}
-                                    />
-                                ))}
-                            </div>
-
-                            {/* Verify button (fallback for manual submit) */}
-                            <button
-                                onClick={() => {
-                                    const code = otpCode.join('');
-                                    if (code.length === 6) verifyOTP(code);
-                                }}
-                                disabled={otpVerifying || otpCode.some(d => !d)}
-                                className="w-full py-2.5 px-4 bg-charcoal-900 text-white text-sm font-medium rounded-xl hover:bg-charcoal-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
-                            >
-                                {otpVerifying ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Verificando...
-                                    </span>
-                                ) : (
-                                    'Verificar y crear cuenta'
-                                )}
-                            </button>
-
-                            {/* Resend */}
-                            <div className="text-center">
-                                <p className="text-xs text-charcoal-400 mb-1">¿No recibiste el código?</p>
-                                {resendCooldown > 0 ? (
-                                    <p className="text-xs text-charcoal-400">
-                                        Reenviar en <span className="font-medium text-charcoal-600">{resendCooldown}s</span>
-                                    </p>
-                                ) : (
-                                    <button
-                                        onClick={handleResendOTP}
-                                        disabled={otpSending}
-                                        className="text-xs text-accent-brown font-medium hover:underline disabled:opacity-50"
-                                    >
-                                        {otpSending ? 'Enviando...' : 'Reenviar código'}
-                                    </button>
-                                )}
-                                <p className="text-xs text-charcoal-400 mt-2">
-                                    Revisa tu carpeta de spam si no lo encuentras
-                                </p>
-                            </div>
-                        </div>
+                        <PasoCodigo
+                            email={email.trim().toLowerCase()}
+                            error={error}
+                            verificando={otpVerifying}
+                            textoBoton="Verificar y entrar"
+                            onVerificar={verifyOTP}
+                            onReenviar={handleResendOTP}
+                            onVolver={() => { setOtpStep(false); setError(''); }}
+                        />
                     ) : (
                         /* ── REGISTRATION STEP ── */
                         <>
@@ -452,22 +263,6 @@ export default function RegistroPage() {
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-brown/50 focus:border-accent-brown transition-all text-sm"
                                                 placeholder="tu@email.com"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label htmlFor="password" className="block text-sm font-medium text-charcoal-700 mb-1.5">
-                                                Contraseña
-                                            </label>
-                                            <input
-                                                id="password"
-                                                type="password"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-brown/50 focus:border-accent-brown transition-all text-sm"
-                                                placeholder="Mínimo 8 caracteres"
-                                                minLength={8}
                                                 required
                                             />
                                         </div>

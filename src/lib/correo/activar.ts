@@ -6,7 +6,8 @@
  * el código de seis dígitos (`/api/verify-otp`). Quien pidió el código y no lo
  * escribió —se le pasó el correo, caducaron los diez minutos, cerró la
  * pestaña— no tiene cuenta: sólo queda en `otp_codes`, con su correo y su
- * nombre. No hay contraseña guardada, porque ésa viaja al verificar.
+ * nombre. No hay contraseña guardada: el registro ya no la pide (se ofrece,
+ * opcional, después de entrar con el código).
  *
  * QUÉ HACE EL ENLACE. Pulsar un enlace que llegó a esa bandeja prueba lo mismo
  * que el código: que la dirección es suya. Por eso el enlace crea la cuenta ya

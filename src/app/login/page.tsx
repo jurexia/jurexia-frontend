@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmail, signInWithGoogle, signInWithApple, resetPassword } from '@/lib/supabase';
 import { destinoTrasEntrar, recordarDestino } from '@/lib/destino-tras-entrar';
+import { EntrarConCodigo } from '@/components/EntradaConCodigo';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -28,6 +29,10 @@ export default function LoginPage() {
     const [resetLoading, setResetLoading] = useState(false);
     const [resetSent, setResetSent] = useState(false);
     const [resetError, setResetError] = useState('');
+
+    // Entrar con un código por correo, sin contraseña (17-sep-2026). El 78% de
+    // las cuentas entró con Google o Apple y no tiene ninguna que escribir aquí.
+    const [conCodigo, setConCodigo] = useState(false);
 
     const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -104,7 +109,13 @@ export default function LoginPage() {
 
                 {/* Login Card */}
                 <div className="bg-white rounded-3xl shadow-xl p-8 border border-black/5">
-                    {showForgotPassword ? (
+                    {conCodigo ? (
+                        <EntrarConCodigo
+                            emailInicial={email}
+                            onVolver={() => setConCodigo(false)}
+                            onDentro={() => router.push(destino)}
+                        />
+                    ) : showForgotPassword ? (
                         /* ── Forgot Password View ── */
                         resetSent ? (
                             /* Email Sent Confirmation */
@@ -287,6 +298,14 @@ export default function LoginPage() {
                                     {loading ? 'Iniciando...' : 'Iniciar Sesión'}
                                 </button>
                             </form>
+
+                            <button
+                                type="button"
+                                onClick={() => { setConCodigo(true); setError(''); }}
+                                className="w-full py-3 px-4 mt-3 border border-gray-200 text-charcoal-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                            >
+                                Entrar con un código por correo
+                            </button>
 
                             {/* Register Link */}
                             <p className="text-center text-sm text-charcoal-500 mt-6">
