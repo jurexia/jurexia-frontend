@@ -517,6 +517,110 @@ const TIPO_DOCX = 'application/vnd.openxmlformats-officedocument'
  *  que es lo que se siente como una avería.
  *
  *  `onTexto` recibe cada trozo del estudio según llega. */
+/* ═══ LA RECUPERACIÓN DE UN PROYECTO CUYA LÍNEA SE CORTÓ ═══
+   Ver el comentario largo dentro de `resolverEnVivo`. */
+
+/** Un minuto sin un solo byte —ni texto ni latido— es línea muerta: el
+ *  servidor late cada 15 segundos mientras el modelo calla. */
+const SILENCIO_MAXIMO_MS = 60_000;
+/** Cada cuánto se pregunta al almacén si el proyecto ya está. */
+const CADENCIA_RECUPERACION_MS = 8_000;
+/** Hasta cuándo se espera: el estudio son dos o tres minutos, y componer el
+ *  documento otros dos; ocho minutos cubren con holgura la corrida más larga. */
+const ESPERA_RECUPERACION_MS = 8 * 60_000;
+
+/** El motor dijo que falló. No es un problema de la línea y no se recupera. */
+class ErrorDelMotor extends Error {}
+
+/** La ficha del último proyecto del asunto, o null si no hay ninguno. */
+export async function fichaProyecto(numero: string, userEmail: string): Promise<FichaProyecto | null> {
+    const res = await fetch(
+        `${BASE}/taller/proyecto?numero=${encodeURIComponent(numero)}`
+        + `&user_email=${encodeURIComponent(userEmail)}`);
+    if (!res.ok) return _fallo(res);
+    const j = await res.json().catch(() => null);
+    const p = j?.proyecto as Record<string, unknown> | null | undefined;
+    if (!p) return null;
+    return {
+        version: Number(p.version ?? 1),
+        generadoEn: String(p.generado_en ?? ''),
+        palabras: Number(p.palabras ?? 0),
+        avisos: Array.isArray(p.avisos) ? p.avisos.map(String) : [],
+        huecos: Array.isArray(p.huecos) ? p.huecos.map(String) : [],
+        advertencias: Boolean(p.advertencias),
+        nombre: String(p.nombre ?? ''),
+        sentidoGlobal: String(p.sentido_global ?? ''),
+        modo: String(p.modo ?? ''),
+        criterios: [],
+    };
+}
+
+/** Qué versión había antes de arrancar: 0 si ninguna, null si no se pudo
+ *  saber (y entonces se decide por la fecha, con margen para relojes). */
+async function versionDelProyecto(numero: string, userEmail: string): Promise<number | null> {
+    try {
+        const f = await fichaProyecto(numero, userEmail);
+        return f ? (f.version ?? 1) : 0;
+    } catch {
+        return null;
+    }
+}
+
+const esperar = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** Va a buscar al almacén el proyecto que el servidor sigue escribiendo, y lo
+ *  devuelve como si hubiera llegado por el flujo. */
+async function recuperarProyecto(
+    numero: string, userEmail: string, versionAntes: number | null,
+    inicio: number, motivo: string, onTexto?: (trozo: string) => void,
+): Promise<ResultadoProyecto> {
+    onTexto?.(`\n\n… se cortó la conexión con el servidor (${motivo}). El proyecto `
+              + 'se sigue escribiendo allá y se recuperará solo en cuanto termine; '
+              + 'no hace falta volver a generarlo.');
+    const limite = Date.now() + ESPERA_RECUPERACION_MS;
+    let avisado = 0;
+    for (;;) {
+        const f = await fichaProyecto(numero, userEmail).catch(() => null);
+        const esDeEstaCorrida = !!f && (
+            versionAntes !== null
+                ? (f.version ?? 1) > versionAntes
+                /* Sin versión previa se decide por la fecha del servidor, con
+                   dos minutos de margen por si este reloj va adelantado. */
+                : Date.parse(f.generadoEn) >= inicio - 2 * 60_000);
+        if (f && esDeEstaCorrida) {
+            const r2 = await fetch(
+                `${BASE}/taller/descargar?numero=${encodeURIComponent(numero)}`
+                + `&user_email=${encodeURIComponent(userEmail)}`
+                + `&version=${f.version ?? 1}`);
+            if (!r2.ok) return _fallo(r2);
+            onTexto?.('\n\n… proyecto recuperado.');
+            return {
+                documento: await r2.blob(),
+                nombre: f.nombre || `${numero.replace('/', '-')}.docx`,
+                esBorrador: true,
+                palabras: f.palabras,
+                avisos: f.avisos.length,
+                huecos: f.huecos.length,
+                tieneAdvertencias: f.advertencias,
+                textoAvisos: f.avisos,
+                textoHuecos: f.huecos,
+            };
+        }
+        if (Date.now() >= limite) {
+            throw new Error(
+                `Se cortó la conexión con el servidor (${motivo}) y el proyecto `
+                + 'no apareció en ocho minutos. Si el servidor llegó a terminarlo, '
+                + 'estará en el historial de este asunto; si no, vuelve a generarlo.');
+        }
+        const minutos = Math.floor((Date.now() - inicio) / 60_000);
+        if (minutos > avisado) {
+            avisado = minutos;
+            onTexto?.(`\n… sigue en marcha (${minutos} min).`);
+        }
+        await esperar(CADENCIA_RECUPERACION_MS);
+    }
+}
+
 export async function resolverEnVivo(
     numero: string, userEmail: string,
     opciones: {
@@ -590,8 +694,38 @@ export async function resolverEnVivo(
     if (o.oportunidadMotivo?.trim())
         fd.append('oportunidad_motivo', o.oportunidadMotivo.trim());
 
+    /* ═══ LA LÍNEA PUEDE MORIRSE A MEDIAS, Y EL PROYECTO NO (17-sep-2026) ═══
+       El 536/2025: el servidor escribió el estudio entero y lo archivó, y esta
+       pantalla se quedó en «Escribiendo el proyecto…» con 141 palabras,
+       cortadas a media frase, durante horas. La conexión murió sin que ningún
+       extremo lo supiera —ni cierre ni error—, y `lector.read()` esperaba un
+       trozo que ya no iba a llegar.
+
+       Tres piezas lo arreglan, y las tres hacen falta:
+         · El servidor late cada 15 segundos mientras el modelo calla, así que
+           un minuto sin un solo byte ya no es «el modelo piensa»: es línea
+           muerta. El vigilante corta entonces la espera.
+         · El servidor termina, cobra y archiva el proyecto aunque la línea se
+           haya ido: corre en una tarea aparte del flujo.
+         · Si la línea se corta —por el vigilante, por un error de red o
+           porque el flujo cierra sin `listo`—, se va a buscar el proyecto al
+           almacén en vez de rendirse: `recuperarProyecto`.
+
+       La versión previa se lee ANTES de arrancar: es la única forma segura de
+       distinguir el proyecto de esta corrida del anterior del mismo
+       expediente sin fiarse del reloj de este equipo. */
+    const versionAntes = await versionDelProyecto(numero, userEmail);
+    const inicio = Date.now();
+
+    const control = new AbortController();
+    let reloj: ReturnType<typeof setTimeout> | undefined;
+    const rearmar = () => {
+        if (reloj) clearTimeout(reloj);
+        reloj = setTimeout(() => control.abort(), SILENCIO_MAXIMO_MS);
+    };
+
     const res = await fetch(`${BASE}/taller/resolver/stream`,
-                            { method: 'POST', body: fd });
+                            { method: 'POST', body: fd, signal: control.signal });
     if (!res.ok) return _fallo(res);
     if (!res.body) throw new Error('El servidor no devolvió un flujo.');
 
@@ -599,38 +733,60 @@ export async function resolverEnVivo(
     const dec = new TextDecoder();
     let resto = '';
     let listo: Record<string, unknown> | null = null;
+    /* Por qué se dejó de leer, cuando no fue porque terminó bien. */
+    let corte = '';
 
-    for (;;) {
-        const { done, value } = await lector.read();
-        if (done) break;
-        resto += dec.decode(value, { stream: true });
-        /* Los eventos van separados por una línea en blanco. Se guarda lo que
-           quede a medias: un trozo puede cortar un evento por la mitad. */
-        const partes = resto.split('\n\n');
-        resto = partes.pop() ?? '';
-        for (const bruto of partes) {
-            const linea = bruto.trim();
-            if (!linea.startsWith('data:')) continue;
-            let ev: Record<string, unknown>;
-            try {
-                ev = JSON.parse(linea.slice(5).trim());
-            } catch {
-                continue;               // un evento ilegible no tumba la corrida
+    try {
+        for (;;) {
+            rearmar();
+            const { done, value } = await lector.read();
+            if (done) break;
+            resto += dec.decode(value, { stream: true });
+            /* Los eventos van separados por una línea en blanco. Se guarda lo
+               que quede a medias: un trozo puede cortar un evento por la
+               mitad. Los latidos del servidor (`: latido`) no empiezan por
+               `data:` y se ignoran aquí; su trabajo ya lo hicieron al
+               resolver el `read()` y rearmar el vigilante. */
+            const partes = resto.split('\n\n');
+            resto = partes.pop() ?? '';
+            for (const bruto of partes) {
+                const linea = bruto.trim();
+                if (!linea.startsWith('data:')) continue;
+                let ev: Record<string, unknown>;
+                try {
+                    ev = JSON.parse(linea.slice(5).trim());
+                } catch {
+                    continue;           // un evento ilegible no tumba la corrida
+                }
+                if (ev.tipo === 'texto' && typeof ev.dato === 'string') {
+                    onTexto?.(ev.dato);
+                } else if (ev.tipo === 'componiendo') {
+                    onComponiendo?.();
+                } else if (ev.tipo === 'error') {
+                    /* El motor dice que falló: eso no se recupera, se cuenta. */
+                    throw new ErrorDelMotor(String(ev.mensaje || 'Falló la generación.'));
+                } else if (ev.tipo === 'listo') {
+                    listo = ev;
+                }
             }
-            if (ev.tipo === 'texto' && typeof ev.dato === 'string') {
-                onTexto?.(ev.dato);
-            } else if (ev.tipo === 'componiendo') {
-                onComponiendo?.();
-            } else if (ev.tipo === 'error') {
-                throw new Error(String(ev.mensaje || 'Falló la generación.'));
-            } else if (ev.tipo === 'listo') {
-                listo = ev;
-            }
+            if (listo) break;
+        }
+    } catch (e) {
+        if (e instanceof ErrorDelMotor) throw e;
+        corte = control.signal.aborted
+            ? `${Math.round(SILENCIO_MAXIMO_MS / 1000)} segundos sin recibir nada`
+            : (e instanceof Error ? e.message : 'error de red');
+    } finally {
+        if (reloj) clearTimeout(reloj);
+        if (!listo) {
+            control.abort();
+            lector.cancel().catch(() => undefined);
         }
     }
     if (!listo) {
-        throw new Error('El flujo terminó sin entregar el proyecto. '
-                        + 'Puedes recuperarlo con «Descargar de nuevo».');
+        return recuperarProyecto(numero, userEmail, versionAntes, inicio,
+                                 corte || 'el flujo cerró sin entregar el proyecto',
+                                 onTexto);
     }
 
     /* EL DOCUMENTO VIENE DENTRO DEL FLUJO, en base64. Si por lo que sea no
@@ -1087,6 +1243,9 @@ export interface FichaProyecto {
     modo: string;
     sentidoGlobal: string;
     criterios: { problema: string; sentido: string; jerarquia: string }[];
+    /** Con qué número se archivó su .docx (1 el primero, 2 el del cambio de
+     *  sentido…). Lo trae /taller/proyecto; el contexto del asunto no. */
+    version?: number;
     /** PROYECTO ANTERIOR A QUE SE GUARDARA LA FICHA. Existe su .docx y consta
      *  cuándo se generó; de las palabras, los avisos y el criterio no hay
      *  registro. Se dice, no se rellena con ceros: un «0 palabras» en pantalla
