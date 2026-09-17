@@ -193,6 +193,27 @@ export async function leerRecientes(dias: number): Promise<Set<string>> {
     return recientes;
 }
 
+/**
+ * Las 8:00 de la Ciudad de México en UTC (17-sep-2026, decisión de David).
+ *
+ * México no tiene horario de verano desde 2022: la capital está todo el año
+ * en UTC-6, así que las 8:00 son siempre las 14:00 UTC.
+ */
+export const HORA_ENTREGA_UTC = 14;
+
+/**
+ * La próxima entrega de las 8:00 de México, si cae dentro de `margenHoras`.
+ * Fuera de ese margen devuelve `undefined` y el correo sale al momento: un
+ * disparo manual por la tarde no debe quedar esperando al día siguiente sin
+ * que nadie lo haya pedido.
+ */
+export function proximaEntrega(ahora = new Date(), margenHoras = 6): string | undefined {
+    const objetivo = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate(), HORA_ENTREGA_UTC, 0, 0));
+    const falta = objetivo.getTime() - ahora.getTime();
+    if (falta > 60_000 && falta <= margenHoras * 3600_000) return objetivo.toISOString();
+    return undefined;
+}
+
 /** Máximo de correos por petición en el envío por lotes de Resend. */
 const LOTE = 100;
 
@@ -224,8 +245,14 @@ export async function enviarCampania(opciones: {
      * resto sale en la siguiente corrida, sin repetir a nadie.
      */
     plazoHasta?: number;
+    /**
+     * Hora de entrega (ISO 8601). Resend encola el correo y lo suelta a esa
+     * hora exacta, hasta 30 días después. Así la hora de llegada no depende
+     * de la puntualidad del cron, y un envío encolado se puede cancelar.
+     */
+    programadoPara?: string;
 }): Promise<Resultado> {
-    const { campania, destinatarios, construir, simulacro = true, maximo = 500, plazoHasta } = opciones;
+    const { campania, destinatarios, construir, simulacro = true, maximo = 500, plazoHasta, programadoPara } = opciones;
 
     // El bloque de hoy es lo menor entre lo que pide quien llama y lo que
     // permite la cuota. En simulacro se calcula igual, para que el reporte
@@ -302,6 +329,7 @@ export async function enviarCampania(opciones: {
                     text: c.texto,
                     headers: cabecerasBaja(d.email),
                     tags: [{ name: 'campania', value: campania.replace(/[^A-Za-z0-9_-]/g, '_') }],
+                    ...(programadoPara ? { scheduledAt: programadoPara } : {}),
                 };
             });
         } catch (e) {

@@ -115,12 +115,38 @@ export async function POST(req: NextRequest) {
         }
 
         const destinatarios = await segmento(cual);
+
+        // Igual que el cron: el enlace de invitación apunta a un código que
+        // tiene que estar GUARDADO antes de enviar, o el referido se pierde.
+        if (cual === 'referidos' && modo === 'real') {
+            const { asegurarCodigo } = await import('@/lib/referidos-backend');
+            await Promise.all(
+                destinatarios.filter(d => d.id).map(d => asegurarCodigo(d.id as string).catch(() => null)),
+            );
+        }
+
+        // `entregar` (ISO 8601): hora a la que Resend soltará los correos.
+        // Futura y a no más de 30 días, que es el límite de Resend.
+        const entregar = req.nextUrl.searchParams.get('entregar');
+        let programadoPara: string | undefined;
+        if (entregar) {
+            const t = Date.parse(entregar);
+            if (Number.isNaN(t) || t <= Date.now() + 60_000 || t > Date.now() + 30 * 86400_000) {
+                return NextResponse.json(
+                    { error: 'entregar debe ser una fecha ISO futura, a no más de 30 días' },
+                    { status: 400 },
+                );
+            }
+            programadoPara = new Date(t).toISOString();
+        }
+
         const resultado = await enviarCampania({
             campania: cual,
             destinatarios,
             construir: CAMPANIAS[cual].construir,
             simulacro: modo !== 'real',
             maximo,
+            programadoPara,
         });
 
         return NextResponse.json(resultado);

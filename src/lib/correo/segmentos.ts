@@ -94,10 +94,16 @@ function filtrar(q: any, campania: NombreCampania) {
     // No se filtra por uso: no se les pide un testimonio sobre la
     // herramienta, se les ofrece un espacio en la portada, y para eso lo que
     // importa es que sean clientes — no cuántas veces entraron.
+    //
+    // AMPLIADA EL 17-SEP-2026 (David): «todos los abogados activos que usan
+    // Iurexia». Entran los clientes de pago de siempre y, además, quien hizo al
+    // menos una consulta en los últimos 60 días, pague o no. La campaña sigue
+    // llamándose `vitrina`, así que los 218 que ya la recibieron no la reciben
+    // dos veces.
     if (campania === 'vitrina') {
+        const hace60 = new Date(Date.now() - 60 * 86400_000).toISOString();
         return q.eq('is_active', true)
-                .in('subscription_type', ['basico_monthly', 'pro_monthly', 'pro_annual',
-                    'platinum_monthly', 'platinum_annual', 'ultra_secretarios']);
+                .or(`subscription_type.in.(basico_monthly,pro_monthly,pro_annual,platinum_monthly,platinum_annual,ultra_secretarios),last_query_at.gte."${hace60}"`); // entre comillas: la fecha lleva «:» y «.», reservados en `or`
     }
 
 

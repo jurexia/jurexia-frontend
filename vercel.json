@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/correo/diario",
-      "schedule": "0 16 * * 1-5"
+      "schedule": "0 13 * * 1-5"
     },
     {
       "path": "/api/correo/salud",

@@ -35,7 +35,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CAMPANIAS, type NombreCampania } from '@/lib/correo/campanias';
 import { segmento } from '@/lib/correo/segmentos';
-import { cupoDisponibleHoy, enviarCampania, type Resultado } from '@/lib/correo/enviar';
+import { cupoDisponibleHoy, enviarCampania, proximaEntrega, type Resultado } from '@/lib/correo/enviar';
 import { revisarAlmacenamiento } from '@/lib/correo/alerta-almacenamiento';
 import { revisarSaldoMotor } from '@/lib/correo/alerta-saldo-motor';
 import { revisarRecuperacion } from '@/lib/correo/alerta-recuperacion';
@@ -49,19 +49,20 @@ export const maxDuration = 300;
 // cupo diario para campañas es de 70 —los otros 30 quedan reservados para lo
 // transaccional, que no puede quedarse sin cupo—. Así el cron completa la
 // tanda en tres días sin que nadie tenga que acordarse.
-// EN PAUSA DESDE EL 17-SEP-2026: `reactivacion` y `activacion`. Nunca llegaron a
-// salir en volumen: el cupo gratuito de 70 al día se lo comían las de arriba.
-// Con el plan Pro de Resend el cupo sube a 700 y saldrían de golpe, con textos
-// de agosto que David no ha vuelto a ver —la reactivación anuncia la app móvil
-// «muy pronto»—. Además `reactivacion` va a la misma gente que el descuento de
-// Pro, y la pausa de tres días entre campañas haría que la tapara. Vuelven
-// cuando David apruebe el orden nuevo junto con las campañas del 17-sep.
+// ORDEN APROBADO POR DAVID EL 17-SEP-2026. Con la pausa de tres días entre
+// campañas, la que va primero le cierra la puerta a las demás para esa
+// persona, así que el orden decide quién recibe qué:
 //
-// También `referidos`, y por otra razón: con la pausa de tres días entre
-// campañas, la que salga primero le cierra la puerta a las demás para esa
-// persona. Referidos tiene 628 pendientes que irían hoy, y son en buena parte
-// la misma gente del descuento de Pro. Qué va primero es decisión de David.
-const PRIORIDAD: NombreCampania[] = ['vitrina', 'entrada', 'suscripcion'];
+//   1. registro_pendiente — 42 que no pudieron entrar; poca gente, mucha intención.
+//   2. descuento_pro      — 1,513 que consultaron y no contrataron: los ingresos.
+//   3. vitrina            — ya ampliada a todos los activos, no sólo a clientes.
+//   4. referidos
+//   5. entrada
+//
+// EN PAUSA: `suscripcion` —le vende el plan a la misma gente que el descuento,
+// con peor oferta—, `reactivacion` —misma gente, y anuncia la app móvil «muy
+// pronto»— y `activacion`, con textos de agosto que no se han vuelto a revisar.
+const PRIORIDAD: NombreCampania[] = ['registro_pendiente', 'descuento_pro', 'vitrina', 'referidos', 'entrada'];
 
 /**
  * Vercel firma sus crons con CRON_SECRET. Se acepta también la clave de
@@ -128,6 +129,9 @@ export async function GET(req: NextRequest) {
         // Se deja de enviar a los 240 s de haber empezado la ruta: quedan 60 de
         // margen antes de que Vercel mate la función (maxDuration = 300).
         const plazoHasta = arranque + 240_000;
+        // El cron corre a las 7:00 de México y deja la tanda programada para
+        // las 8:00 en punto. Si se dispara a mano después de las 8:00, sale ya.
+        const programadoPara = proximaEntrega();
 
         for (const campania of PRIORIDAD) {
             if (restante <= 0) break;
@@ -161,6 +165,7 @@ export async function GET(req: NextRequest) {
                 simulacro,
                 maximo: restante,
                 plazoHasta,
+                programadoPara,
             });
 
             tandas.push(r);
