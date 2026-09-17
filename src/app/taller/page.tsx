@@ -2057,9 +2057,67 @@ export default function TallerDeSentencias() {
                                 <p className="text-[12px] uppercase tracking-wide text-accent-gold">
                                     El asunto, en corto
                                 </p>
-
+                                {/* ═══ DE QUÉ VA EL ASUNTO ═══
+                                    David (17-sep): «me gustaría una tarjeta más
+                                    grande en la que al secretario se le explique
+                                    de qué va el caso (…) mi redacción es más
+                                    amena y trata de dar a entender el asunto de
+                                    una forma más sencilla, con una sola tarjeta».
+                                    Los tres pliegues de abajo siguen —son la
+                                    fuente, para comprobar—, pero cerrados: lo
+                                    que se lee primero es el relato, y debajo,
+                                    numerada, la litis tal como la calculó el
+                                    reparto, que es exactamente lo que se va a
+                                    estudiar. */}
+                                {delAsunto.relato && (
+                                    <div className="rounded-xl border border-accent-gold/25
+                                                    bg-accent-gold/[0.045] px-4 py-4 sm:px-5">
+                                        <p className="text-[12px] uppercase tracking-wide text-accent-gold">
+                                            De qué va el asunto
+                                        </p>
+                                        <div className="mt-2 space-y-2.5">
+                                            {delAsunto.relato.split(/\n\s*\n/).map((parrafo, i) => (
+                                                <p key={i}
+                                                   className="text-[14px] leading-[1.7] text-white/85">
+                                                    {parrafo.trim()}
+                                                </p>
+                                            ))}
+                                        </div>
+                                        {delAsunto.problemas.length > 0 && (
+                                            <div className="mt-4 border-t border-accent-gold/15 pt-3.5">
+                                                <p className="text-[14px] font-medium text-white/90">
+                                                    ¿A qué se reduce la litis? Tendrás que resolver
+                                                    principalmente{' '}
+                                                    {delAsunto.problemas.length === 1
+                                                        ? 'este problema jurídico:'
+                                                        : `estos ${delAsunto.problemas.length} problemas jurídicos:`}
+                                                </p>
+                                                <ol className="mt-2 space-y-1.5">
+                                                    {delAsunto.problemas.map((q, i) => (
+                                                        <li key={i}
+                                                            className="flex gap-2.5 text-[13px] leading-relaxed text-white/75">
+                                                            <span className="shrink-0 tabular-nums text-accent-gold/80">
+                                                                {i + 1}.
+                                                            </span>
+                                                            <span>
+                                                                {q.pregunta}
+                                                                {q.jerarquia === 'principal' && (
+                                                                    <span className="ml-1.5 rounded border border-accent-gold/30 px-1 py-0.5
+                                                                                     text-[10px] uppercase text-accent-gold/80">
+                                                                        principal
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                                </ol>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                                 {delAsunto.antecedentes && (
-                                    <Pliegue titulo="Antecedentes" abierto={paso === 'adelanto'}
+                                    <Pliegue titulo="Antecedentes"
+                                             abierto={paso === 'adelanto' && !delAsunto.relato}
                                              nota={`${delAsunto.antecedentes.split(/\s+/).length} palabras`}>
                                         <p className="whitespace-pre-line text-[13px] leading-relaxed text-white/60">
                                             {delAsunto.antecedentes}
@@ -2069,7 +2127,7 @@ export default function TallerDeSentencias() {
 
                                 {delAsunto.resumenActo && (
                                     <Pliegue titulo={`Qué resolvió ${delAsunto.voz.organo}`}
-                                             abierto={paso === 'adelanto'}
+                                             abierto={paso === 'adelanto' && !delAsunto.relato}
                                              nota={`${delAsunto.resumenActo.split(/\s+/).length} palabras`}>
                                         <p className="whitespace-pre-line text-[13px] leading-relaxed text-white/60">
                                             {delAsunto.resumenActo}
@@ -2093,7 +2151,9 @@ export default function TallerDeSentencias() {
                                     asunto y se cierra al pasar a decidir, con
                                     el número a la vista para saber qué hay
                                     dentro sin abrirla. */}
-                                {delAsunto.problemas.length > 0 && (
+                                {/* CON RELATO, LA LITIS YA ESTÁ ARRIBA: la misma
+                                    lista dos veces en la misma tarjeta es ruido. */}
+                                {delAsunto.problemas.length > 0 && !delAsunto.relato && (
                                     <Pliegue titulo="Problemas jurídicos del caso"
                                              abierto={paso === 'adelanto'}
                                              nota={`${delAsunto.problemas.length} ${

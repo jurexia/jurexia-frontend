@@ -1048,6 +1048,10 @@ export interface ContextoDelAsunto {
     resumenActo: string;
     resumenConceptos: string;
     problemaGlobal: string;
+    /** DE QUÉ VA EL ASUNTO, contado de corrido: origen, quién se quejó, qué
+     *  le contestaron y por qué, y quién viene ahora con qué. La tarjeta
+     *  grande del paso 2. Vacío en las sesiones anteriores al 17-sep-2026. */
+    relato: string;
     problemas: { pregunta: string; resolvio: string; combate: string; jerarquia: string }[];
     avisos: string[];
     /** LA FICHA, PARA QUE LA PANTALLA NO VUELVA EN BLANCO. Al retomar un asunto
@@ -1255,6 +1259,7 @@ export async function contextoDelAsunto(
         resumenActo: String(j.resumen_acto ?? ''),
         resumenConceptos: String(j.resumen_conceptos ?? ''),
         problemaGlobal: String(j.problema_global ?? ''),
+        relato: String(j.relato ?? ''),
         problemas: (j.problemas ?? []) as ContextoDelAsunto['problemas'],
         encargo: (j.encargo ?? null) as Record<string, string> | null,
         proyecto: j.proyecto
