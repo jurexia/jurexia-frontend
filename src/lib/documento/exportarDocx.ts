@@ -64,6 +64,29 @@ const PAPEL_TWIPS: Record<Papel, { ancho: number; alto: number }> = {
 }
 export const MARGENES_CM = { arriba: 2.5, abajo: 2.5, izquierda: 3, derecha: 2 } as const
 
+/**
+ * LO QUE UN XML NO ADMITE, Y WORD NO PERDONA (18-sep-2026).
+ *
+ * David: «cuando intento abrir el documento Word aparece con contenido no
+ * legible». Reproducido: basta UN carácter de control —de los que traen los
+ * PDF raspados y viajan en el texto de la respuesta y en los datos de la
+ * cita— para que `document.xml` deje de ser XML bien formado. Word entonces
+ * no avisa de un carácter raro: declara ilegible el documento entero y ofrece
+ * «recuperar», que pierde el formato.
+ *
+ * XML 1.0 sólo admite tabulador, salto de línea, retorno y a partir del
+ * espacio. Se quitan también los sustitutos sueltos (un emoji partido a la
+ * mitad por un recorte de texto) por la misma razón.
+ */
+function limpiarXml(t: string): string {
+    return (t || '')
+        // eslint-disable-next-line no-control-regex
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '')
+        .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '')
+        .replace(/(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '$1')
+        .replace(/\u00a0/g, ' ')
+}
+
 const LETRA = 'Arial'
 const CUERPO_TEXTO = 24 // 12 pt, en medios puntos
 const TINTA = '111111'
@@ -77,7 +100,7 @@ function trozosDe(
     cuerpo: number | null = null
 ): Trozo[] {
     if (nodo.nodeType === Node.TEXT_NODE) {
-        const texto = (nodo.textContent ?? '').replace(/\u00a0/g, ' ')
+        const texto = limpiarXml(nodo.textContent ?? '')
         return texto === '' ? [...VACIO] : [{ texto, negrita, cursiva, subrayado, fuente, cuerpo }]
     }
     if (!(nodo instanceof HTMLElement)) return [...VACIO]
@@ -146,7 +169,7 @@ function tablaDeNodo(nodo: HTMLElement): Bloque | null {
     const filas: string[][] = []
     let encabezado: string[] = []
     for (const fila of Array.from(nodo.querySelectorAll('tr'))) {
-        const celdas = Array.from(fila.children).map((c) => (c.textContent ?? '').replace(/\s+/g, ' ').trim())
+        const celdas = Array.from(fila.children).map((c) => limpiarXml(c.textContent ?? '').replace(/\s+/g, ' ').trim())
         if (celdas.length === 0) continue
         const esCabecera = Array.from(fila.children).some((c) => c.tagName.toLowerCase() === 'th')
         if (esCabecera && encabezado.length === 0 && filas.length === 0) encabezado = celdas
@@ -240,7 +263,7 @@ export async function construirDocx(bloques: readonly Bloque[], papel: Papel, re
     const numeroDeNota = new Map<string, number>()
     const notas: Record<number, { children: InstanceType<typeof Paragraph>[] }> = {}
     const nota = (docId: string): number | null => {
-        const texto = referencias?.get(docId) ?? referencias?.get(docId.toLowerCase())
+        const texto = limpiarXml(referencias?.get(docId) ?? referencias?.get(docId.toLowerCase()) ?? '')
         if (!texto) return null
         const previo = numeroDeNota.get(docId.toLowerCase())
         if (previo) return previo
@@ -382,7 +405,7 @@ export async function construirDocx(bloques: readonly Bloque[], papel: Papel, re
 }
 
 export function nombreDeArchivo(titulo: string, extension: string): string {
-    let limpio = (titulo || '')
+    let limpio = limpiarXml(titulo || '')
         .replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
         .replace(/[.…]+/g, ' ')
         .replace(/\s+/g, ' ')
