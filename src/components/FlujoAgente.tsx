@@ -40,7 +40,7 @@ import { ESTADOS_MEXICO } from '@/lib/estados';
 
 export type Paso = { nombre: string; detalle?: string };
 
-type Ficha = { texto: string; icono: 'ley' | 'balanza' | 'web' | 'enlace' | 'sede' };
+type Ficha = { texto: string; icono: 'ley' | 'balanza' | 'web' | 'enlace' | 'sede'; /** El icono del sitio oficial de la institución consultada. */ imagen?: string };
 
 const ETAPAS: { nombre: string; titulo: string; glosa: string }[] = [
     { nombre: 'entender', titulo: 'Leyendo la consulta', glosa: 'Materia, jurisdicción y artículos citados' },
@@ -67,7 +67,7 @@ const ICONOS = {
 function fichasDe(nombre: string, detalle: string | undefined, fuentes: number | null): Ficha[] {
     if (nombre === 'buscar') {
         const f: Ficha[] = [
-            { texto: 'Legislación federal', icono: 'ley' },
+            { texto: 'Legislación federal', icono: 'ley', imagen: '/fuentes/diputados.png' },
             { texto: '32 entidades', icono: 'sede' },
         ];
         if (fuentes !== null) f.push({ texto: `${fuentes} fuentes`, icono: 'enlace' });
@@ -75,7 +75,7 @@ function fichasDe(nombre: string, detalle: string | undefined, fuentes: number |
     }
     if (nombre === 'precedentes' && detalle && detalle !== '0') {
         return [
-            { texto: 'Semanario Judicial', icono: 'balanza' },
+            { texto: 'Semanario Judicial', icono: 'balanza', imagen: '/fuentes/scjn.png' },
             { texto: `${detalle} precedentes`, icono: 'enlace' },
         ];
     }
@@ -153,11 +153,15 @@ interface Props {
     etiqueta?: string;
     retryMessage?: string;
     retryType?: string;
+    /** Columna simple también en escritorio: el proceso en orden, no en
+     *  ramas. David, 18-sep-2026: «similar al proceso de ramificado pero
+     *  ordenado». */
+    ordenado?: boolean;
 }
 
 export function FlujoAgente({
     pasos, sourcesCount, consulta, nombre, avatarUrl, tratamiento,
-    redactando, etiqueta, retryMessage, retryType,
+    redactando, etiqueta, retryMessage, retryType, ordenado = false,
 }: Props) {
     const filas = useMemo(() => {
         const vistos = new Map(pasos.map((p) => [p.nombre, p.detalle]));
@@ -303,7 +307,10 @@ export function FlujoAgente({
                                                 className="anima-brote inline-flex items-center gap-1.5 rounded-lg border border-cream-400 bg-white px-2.5 py-1 text-[11px] font-medium text-charcoal-900"
                                                 style={{ animationDelay: `${j * 90}ms` }}
                                             >
-                                                <Icono className="h-3 w-3 text-accent-brown" />
+                                                {f.imagen
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    ? <img src={f.imagen} alt="" className="h-3.5 w-3.5 rounded-[3px]" />
+                                                    : <Icono className="h-3 w-3 text-accent-brown" />}
                                                 {f.texto}
                                             </span>
                                         );
@@ -358,7 +365,7 @@ export function FlujoAgente({
                     return (
                         <li key={fila.nombre} className="relative pb-4 last:pb-1">
                             {/* ── Pantalla ancha: rama a un lado de la espina ── */}
-                            <div className="hidden sm:grid sm:grid-cols-[1fr_44px_1fr]">
+                            <div className={ordenado ? 'hidden' : 'hidden sm:grid sm:grid-cols-[1fr_44px_1fr]'}>
                                 <div className={izquierda ? 'pr-7' : ''}>{izquierda && tarjeta}</div>
                                 {/* self-stretch: sin él este div mide lo que el
                                     nodo (19px) y la espina queda de 2px. */}
@@ -371,7 +378,7 @@ export function FlujoAgente({
                             </div>
 
                             {/* ── Móvil: columna simple ── */}
-                            <div className="flex gap-3.5 sm:hidden">
+                            <div className={ordenado ? 'flex gap-3.5' : 'flex gap-3.5 sm:hidden'}>
                                 <div className="relative flex justify-center self-stretch">
                                     {!ultimaFila && (
                                         <span

@@ -5,6 +5,8 @@ import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkle
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
+import { institucionesDe, type MetaCitas } from '@/lib/documento/citas';
+import { IconoInstitucion } from '@/components/documento/IconoInstitucion';
 
 interface ChatMessageProps {
     message: Message;
@@ -1315,7 +1317,27 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         <p className="mt-0.5 text-xs text-charcoal-500">
                                             {processedContent.trim() ? processedContent.trim().split(/\s+/).length.toLocaleString('es-MX') : 0} palabras
                                             {docIdMap.size > 0 ? ` · ${docIdMap.size} ${docIdMap.size === 1 ? 'cita' : 'citas'}` : ''}
+                                            {citationMeta && citationMeta.valid > 0 ? ` · ${citationMeta.valid} verificadas` : ''}
                                         </p>
+                                        {/* DE DÓNDE VINO CADA FUENTE, con el icono de la institución
+                                            (David, 18-sep-2026): Cámara de Diputados para leyes federales
+                                            y Constitución, Suprema Corte para las tesis del Semanario,
+                                            Corte Interamericana cuando se cita. */}
+                                        {(() => {
+                                            const consultadas = institucionesDe(citationMeta as unknown as MetaCitas | null);
+                                            return consultadas.length > 0 ? (
+                                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                                    {consultadas.map(({ institucion, fuentes }) => (
+                                                        <span key={institucion.clave + institucion.nombre}
+                                                            className="inline-flex items-center gap-1.5 rounded-full border border-cream-300 bg-white px-2 py-0.5 text-[11px] text-charcoal-700">
+                                                            <IconoInstitucion inst={institucion} />
+                                                            <span className="truncate">{institucion.nombre}</span>
+                                                            <span className="tabular-nums text-charcoal-400">{fuentes}</span>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : null;
+                                        })()}
                                     </div>
                                     {onVerDocumento && (
                                         <button type="button" onClick={onVerDocumento}

@@ -122,3 +122,123 @@ export function palabrasDe(markdown: string): number {
         .trim();
     return t ? t.split(/\s+/).length : 0;
 }
+
+/* ═══ LA REFERENCIA APA, la misma que el DOCX del chat (portada de la burbuja) ═══ */
+export function referenciaAPA(f: FuenteCita): string {
+    const origen = (f.origen || '').trim();
+    const ref = (f.ref || '').trim();
+    const silo = (f.silo || '').toLowerCase();
+    const entidad = (f.entidad || '').trim();
+    const instancia = (f.instancia || '').trim();
+    const registro = (f.registro || '').trim();
+    const tesisNum = (f.tesis_num || '').trim();
+    const anio = new Date().getFullYear();
+    if (silo.includes('jurisprudencia') || tesisNum || registro) {
+        const corte = instancia || 'Suprema Corte de Justicia de la Nación';
+        const titulo = origen || ref || 'Tesis sin rubro';
+        return `${corte}. (s.f.). ${titulo}.${tesisNum ? ` Tesis ${tesisNum}.` : ''}${registro ? ` Registro digital: ${registro}.` : ''} Semanario Judicial de la Federación.`;
+    }
+    if (silo.includes('sentencia') || silo.includes('precedente') || silo.includes('holding')) {
+        return `${origen || 'Tribunal Colegiado de Circuito'}${ref ? `, Expediente ${ref}` : ''}. Poder Judicial de la Federación.`;
+    }
+    if (silo.includes('constitu') || /CPEUM|Constituci[oó]n/i.test(origen)) {
+        return `Constitución Política de los Estados Unidos Mexicanos${ref ? `, art. ${ref}` : ''}. (${anio}). Cámara de Diputados del H. Congreso de la Unión.`;
+    }
+    if (silo.includes('bloque') || /tratado|convenci[oó]n|pacto|protocolo|declaraci[oó]n/i.test(origen)) {
+        return `${origen}${ref ? `, art. ${ref}` : ''}. Tratado internacional ratificado por México.`;
+    }
+    if (silo.includes('federal') || silo.includes('codigo_nacional')) {
+        return `${origen}${ref ? `, art. ${ref}` : ''}. (${anio}). Cámara de Diputados del H. Congreso de la Unión.`;
+    }
+    if (silo.includes('estatal') || silo.startsWith('leyes_')) {
+        return `${origen}${ref ? `, art. ${ref}` : ''}. (${anio}).${entidad ? ` Congreso del Estado de ${entidad}.` : ''}`;
+    }
+    return `${origen || 'Fuente legal'}${ref ? `, art. ${ref}` : ''}. (${anio}).`;
+}
+
+/* ═══ DE DÓNDE VIENE CADA FUENTE, para el hilo (18-sep-2026) ═══
+   David: «con los logos de Cámara de Diputados (si se citan leyes federales o
+   Constitución), de la CIDH si se citó a la Corte Interamericana, y el de la
+   Suprema Corte (porque siempre se citan tesis del Semanario)». El icono es
+   el del sitio oficial de cada institución, servido desde /fuentes. */
+export interface Institucion {
+    clave: 'diputados' | 'scjn' | 'corteidh' | 'congreso_estatal' | 'tratado' | 'otra';
+    nombre: string;
+    /** Icono local (public/fuentes/*.png); vacío = sin icono, sólo la inicial. */
+    icono: string;
+}
+
+const INSTITUCIONES: Record<Institucion['clave'], Institucion> = {
+    diputados: { clave: 'diputados', nombre: 'Cámara de Diputados', icono: '/fuentes/diputados.png' },
+    scjn: { clave: 'scjn', nombre: 'Suprema Corte de Justicia de la Nación', icono: '/fuentes/scjn.png' },
+    corteidh: { clave: 'corteidh', nombre: 'Corte Interamericana de Derechos Humanos', icono: '/fuentes/corteidh.png' },
+    congreso_estatal: { clave: 'congreso_estatal', nombre: 'Congreso del Estado', icono: '' },
+    tratado: { clave: 'tratado', nombre: 'Tratados internacionales', icono: '' },
+    otra: { clave: 'otra', nombre: 'Otras fuentes', icono: '' },
+};
+
+export function institucionDe(f: Partial<FuenteCita>): Institucion {
+    const silo = (f.silo || '').toLowerCase();
+    const origen = (f.origen || '').toLowerCase();
+    const instancia = (f.instancia || '').toLowerCase();
+    if (/interamerican|corteidh|corte idh|pacto de san jos|convenci[oó]n americana/.test(origen) || /interamerican/.test(instancia)) return INSTITUCIONES.corteidh;
+    if (silo.includes('jurisprudencia') || silo.includes('sentencias_ef') || f.tesis_num || f.registro || /semanario|tesis|jurisprudencia/.test(origen)) return INSTITUCIONES.scjn;
+    if (silo.includes('constitu') || /cpeum|constituci[oó]n pol[ií]tica/.test(origen)) return INSTITUCIONES.diputados;
+    if (silo.includes('bloque') || /tratado|convenci[oó]n|pacto|protocolo|declaraci[oó]n universal/.test(origen)) return INSTITUCIONES.tratado;
+    if (silo.includes('federal') || silo.includes('codigo_nacional') || /c[oó]digo nacional|ley federal|ley general|c[oó]digo .*federal/.test(origen)) return INSTITUCIONES.diputados;
+    if (silo.includes('estatal') || silo.startsWith('leyes_')) { const e = (f.entidad || '').trim(); return e ? { ...INSTITUCIONES.congreso_estatal, nombre: `Congreso de ${e}` } : INSTITUCIONES.congreso_estatal; }
+    if (silo.includes('sentencia') || silo.includes('precedente') || /tribunal colegiado|circuito/.test(origen)) return INSTITUCIONES.scjn;
+    return INSTITUCIONES.otra;
+}
+
+/** Las instituciones consultadas en una respuesta, con cuántas fuentes de cada una, en orden de peso. */
+export function institucionesDe(meta: MetaCitas | null): { institucion: Institucion; fuentes: number }[] {
+    const cuenta = new Map<string, { institucion: Institucion; fuentes: number }>();
+    for (const f of Object.values(meta?.sources || {})) {
+        const inst = institucionDe(f);
+        const clave = inst.clave === 'congreso_estatal' ? inst.nombre : inst.clave;
+        const previo = cuenta.get(clave);
+        if (previo) previo.fuentes += 1; else cuenta.set(clave, { institucion: inst, fuentes: 1 });
+    }
+    return Array.from(cuenta.values()).sort((a, b) => b.fuentes - a.fuentes);
+}
+
+/* ═══ EL DOSSIER: todas las respuestas de la conversación en una hoja ═══
+   David, 18-sep-2026: «en ese documento podrá volver a generar una consulta y
+   se irá acumulando». Se convierte todo junto para que la numeración de las
+   citas siga de una respuesta a la siguiente; el separador sobrevive al
+   escapado y se vuelve una raya entre respuestas. */
+export const SEP_DOSSIER = '⟦sep⟧';
+
+export function htmlDeDossier(partes: string[]): { segmentos: string[]; orden: string[] } {
+    if (!partes.length) return { segmentos: [], orden: [] };
+    const { html, orden } = htmlDeDocumento(partes.join(`\n\n${SEP_DOSSIER}\n\n`));
+    const segmentos = html.split(/<p>⟦sep⟧<\/p>/);
+    while (segmentos.length < partes.length) segmentos.push('');
+    return { segmentos, orden };
+}
+
+/** Los metadatos de cita de varias respuestas, unidos. */
+export function metaDeDossier(partes: string[]): MetaCitas | null {
+    let salida: MetaCitas | null = null;
+    for (const parte of partes) {
+        const m = metaDeCitas(parte);
+        if (!m) continue;
+        if (!salida) { salida = { valid: 0, invalid: 0, total: 0, invalid_ids: [], sources: {} }; }
+        salida.valid += m.valid || 0;
+        salida.invalid += m.invalid || 0;
+        salida.total += m.total || 0;
+        salida.invalid_ids.push(...(m.invalid_ids || []));
+        Object.assign(salida.sources!, m.sources || {});
+    }
+    if (salida) {
+        // Las verificadas se cuentan por fuente distinta: la misma tesis citada
+        // en dos respuestas es una fuente, no dos.
+        const invalidas = new Set(salida.invalid_ids.map((x) => x.toLowerCase()));
+        const claves = Object.keys(salida.sources!).map((k) => k.toLowerCase());
+        salida.total = claves.length;
+        salida.invalid = claves.filter((k) => invalidas.has(k)).length;
+        salida.valid = salida.total - salida.invalid;
+    }
+    return salida;
+}

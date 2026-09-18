@@ -31,6 +31,8 @@ type Trozo = {
     readonly cuerpo: number | null
     /** Un salto de línea dentro del párrafo (`<br>`). */
     readonly salto?: boolean
+    /** Una ficha de cita [N]: el identificador de la fuente. Sale como nota al pie. */
+    readonly cita?: string
 }
 
 type Alineacion = 'izquierda' | 'centro' | 'derecha' | 'justificado'
@@ -82,6 +84,10 @@ function trozosDe(
 
     const etiqueta = nodo.tagName.toLowerCase()
     if (etiqueta === 'br') return [{ texto: '', negrita, cursiva, subrayado, fuente, cuerpo, salto: true }]
+    // LA FICHA [N] NO ES TEXTO: es la nota al pie que Word enseña al lector.
+    if (nodo.classList.contains('citation-badge') && nodo.dataset.docId) {
+        return [{ texto: '', negrita, cursiva, subrayado, fuente, cuerpo, cita: nodo.dataset.docId }]
+    }
 
     const estilo = nodo.style
     const peso = estilo.fontWeight
@@ -215,17 +221,39 @@ export function bloquesDe(raiz: HTMLElement, cuenta = { listas: 0 }): Bloque[] {
     return bloques
 }
 
-export async function construirDocx(bloques: readonly Bloque[], papel: Papel): Promise<Blob> {
+/** Las referencias por identificador de fuente, ya redactadas (APA). */
+export type Referencias = ReadonlyMap<string, string>
+
+export async function construirDocx(bloques: readonly Bloque[], papel: Papel, referencias?: Referencias): Promise<Blob> {
     const {
-        AlignmentType, BorderStyle, Document, Footer, LevelFormat, PageNumber, Packer,
+        AlignmentType, BorderStyle, Document, Footer, FootnoteReferenceRun, LevelFormat, PageNumber, Packer,
         Paragraph, Table, TableCell, TableRow, TextRun, UnderlineType, WidthType,
     } = await import('docx')
 
     const NUMERACION = 'lista-numerada'
 
+    /* LAS NOTAS AL PIE (18-sep-2026). David: «exportarse con sus citas APA
+       […] que podrá ver en su Office Word». Cada ficha [N] de la hoja es una
+       llamada de nota, numerada por orden de aparición en el documento; la
+       nota lleva la referencia APA de esa fuente. Sin referencia conocida, la
+       ficha no sale: una nota vacía es peor que ninguna. */
+    const numeroDeNota = new Map<string, number>()
+    const notas: Record<number, { children: InstanceType<typeof Paragraph>[] }> = {}
+    const nota = (docId: string): number | null => {
+        const texto = referencias?.get(docId) ?? referencias?.get(docId.toLowerCase())
+        if (!texto) return null
+        const previo = numeroDeNota.get(docId.toLowerCase())
+        if (previo) return previo
+        const n = numeroDeNota.size + 1
+        numeroDeNota.set(docId.toLowerCase(), n)
+        notas[n] = { children: [new Paragraph({ children: [new TextRun({ text: texto, size: 18, font: LETRA, color: '333333' })], spacing: { after: 40 } })] }
+        return n
+    }
+
     const corrido = (trozos: readonly Trozo[], extra?: { negrita?: boolean; cuerpo?: number }) =>
-        trozos.map((t) =>
-            t.salto
+        trozos.flatMap((t) => {
+            if (t.cita) { const n = nota(t.cita); return n ? [new FootnoteReferenceRun(n)] : [] }
+            return [t.salto
                 ? new TextRun({ text: '', break: 1 })
                 : new TextRun({
                       text: t.texto,
@@ -235,8 +263,8 @@ export async function construirDocx(bloques: readonly Bloque[], papel: Papel): P
                       font: t.fuente ?? undefined,
                       size: t.cuerpo !== null ? t.cuerpo * 2 : extra?.cuerpo,
                       color: TINTA,
-                  })
-        )
+                  })]
+        })
 
     const alineado = (a?: Alineacion) => {
         switch (a) {
@@ -310,6 +338,7 @@ export async function construirDocx(bloques: readonly Bloque[], papel: Papel): P
 
     const { ancho, alto } = PAPEL_TWIPS[papel]
     const documento = new Document({
+        ...(Object.keys(notas).length ? { footnotes: notas } : {}),
         styles: {
             default: {
                 document: {
@@ -378,8 +407,8 @@ function descargar(blob: Blob, nombre: string): void {
     window.setTimeout(() => URL.revokeObjectURL(url), 30_000)
 }
 
-export async function aWord(raiz: HTMLElement, titulo: string, papel: Papel): Promise<void> {
-    const blob = await construirDocx(bloquesDe(raiz), papel)
+export async function aWord(raiz: HTMLElement, titulo: string, papel: Papel, referencias?: Referencias): Promise<void> {
+    const blob = await construirDocx(bloquesDe(raiz), papel, referencias)
     descargar(blob, nombreDeArchivo(titulo, 'docx'))
 }
 

@@ -47,9 +47,12 @@ interface HojaProps {
     soloLectura?: boolean;
     /** Contenido que se está escribiendo (streaming): se enseña encima, sin editar. */
     vistaPrevia?: string | null;
+    /** La vista previa se escribe DEBAJO de lo que ya hay, sin esconderlo:
+     *  es el documento que se va acumulando consulta a consulta. */
+    anexando?: boolean;
 }
 
-export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, onCambio, soloLectura, vistaPrevia }, ref) {
+export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, onCambio, soloLectura, vistaPrevia, anexando = false }, ref) {
     const hoja = useRef<HTMLDivElement | null>(null);
     /* EL OBJETO, NO SÓLO LA CADENA, SE FIJA UNA VEZ. El App Router de Next 14
        trae el React «canary», que compara `dangerouslySetInnerHTML` por
@@ -265,7 +268,7 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
                     {/* LA VISTA PREVIA VA EN EL FLUJO y la hoja sale de él: la
                         altura la marca lo que se va escribiendo. Encima y con
                         overflow oculto se cortaba a la altura de la hoja anterior. */}
-                    {vistaPrevia != null && (
+                    {vistaPrevia != null && !anexando && (
                         <div
                             className="hoja-escrito min-h-[70vh] bg-white pb-[11.6%] pl-[13.9%] pr-[9.3%] pt-[11.6%]"
                             dangerouslySetInnerHTML={{ __html: vistaPrevia }}
@@ -286,8 +289,17 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
                         onBlur={() => { if (hoja.current) cambio.current(hoja.current.innerHTML); }}
                         onPaste={pegar}
                         dangerouslySetInnerHTML={inicial.current}
-                        className={`hoja-escrito min-h-[70vh] pb-[11.6%] pl-[13.9%] pr-[9.3%] pt-[11.6%] outline-none ${vistaPrevia != null ? 'invisible absolute inset-0 overflow-hidden' : ''}`}
+                        className={`hoja-escrito min-h-[70vh] pb-[11.6%] pl-[13.9%] pr-[9.3%] pt-[11.6%] outline-none ${vistaPrevia != null && !anexando ? 'invisible absolute inset-0 overflow-hidden' : ''} ${vistaPrevia != null && anexando ? '!min-h-0 !pb-0' : ''}`}
                     />
+                    {/* ANEXANDO: lo nuevo se escribe a continuación de lo que ya
+                        estaba, con el mismo margen, y la hoja editable sigue a la
+                        vista. Al terminar, el panel lo inserta al final. */}
+                    {vistaPrevia != null && anexando && (
+                        <div
+                            className="hoja-escrito bg-white pb-[11.6%] pl-[13.9%] pr-[9.3%]"
+                            dangerouslySetInnerHTML={{ __html: vistaPrevia }}
+                        />
+                    )}
                 </div>
             </div>
         </div>

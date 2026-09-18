@@ -28,7 +28,8 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
-import type { DocumentoVivo, VersionDocumento } from '@/components/documento/PanelDocumento';
+import type { VersionDocumento } from '@/components/documento/PanelDocumento';
+import { SEP_DOSSIER } from '@/lib/documento/citas';
 import { markdownAHtml, limpiarMarcadores } from '@/lib/documento/marcado';
 import { estadoPiloto } from '@/components/sentencia/api';
 
@@ -76,18 +77,17 @@ const SUGGESTIONS = [
    índice de la lista se mueve al llegar mensajes nuevos; la huella del texto,
    no: mientras se trate de la misma respuesta el editor conserva lo editado, y
    en cuanto es otra, empieza de cero. */
-/* ═══ QUÉ RESPUESTAS SON UN ESCRITO (18-sep-2026) ═══
-   David: «si lo que sale es un escrito, nace en la hoja; si es una respuesta,
-   se queda en el hilo». Se decide por el marcador que el compositor pone al
-   frente del mensaje: Redactar en cualquiera de sus escalones, Escrito legal
-   y Sentencia. El documento adjunto se decide en su propio camino. */
-const ES_ESCRITO = /^\s*\[(?:REDACTAR_DOCUMENTO|MODO_REDACCION|AUDITAR_SENTENCIA)/;
-
-/** A qué respuesta mira el panel Documento. */
-type VinculoDocumento =
-    | { tipo: 'indice'; indice: number }
-    | { tipo: 'version'; id: string }
-    | { tipo: 'suelto'; id: string; titulo: string; markdown: string };
+/* ═══ TODA RESPUESTA NACE EN EL DOCUMENTO (18-sep-2026) ═══
+   David: «que la respuesta empiece a redactarse en esa hoja, es decir, que se
+   despliegue al responder como Harvey […] y se irá acumulando». El hilo queda
+   como el proceso —de dónde consultó y qué hizo— y el documento es el
+   dossier de la conversación: cada respuesta se anexa a la anterior. */
+function sinMarcadoresDeUsuario(texto: string): string {
+    return (texto || '')
+        .replace(/^(?:\s*\[[A-Z_]+(?::[^\]]*)?\])+\s*/g, '')
+        .replace(/^📄 \*\*Documento adjunto:\*\* [^\n]*\n+/, '')
+        .trim();
+}
 
 function idDeRespuesta(markdown: string): string {
     let h = 0;
@@ -175,7 +175,6 @@ export default function ChatPage() {
     /* EL PANEL DOCUMENTO: qué respuesta enseña, si está desplegado y las
        versiones de esta conversación (guardadas en este navegador por ahora). */
     const [documentoAbierto, setDocumentoAbierto] = useState(false);
-    const [vinculo, setVinculo] = useState<VinculoDocumento | null>(null);
     const [versiones, setVersiones] = useState<VersionDocumento[]>([]);
     const convRecienCreadaRef = useRef<string | null>(null);
     const [showStateModal, setShowStateModal] = useState(false);
@@ -371,7 +370,8 @@ export default function ChatPage() {
             setInsercionDocumento({ html: markdownAHtml(markdown), n: Date.now() });
             return;
         }
-        setVinculo({ tipo: 'suelto', id: idDeRespuesta(markdown), titulo: tituloDeRespuesta(limpiarMarcadores(markdown)), markdown });
+        // La respuesta ya vive en el dossier: sólo se despliega el panel.
+        void markdown;
         setDocumentoAbierto(true);
     }, [constructorAbierto]);
 
@@ -585,13 +585,10 @@ export default function ChatPage() {
         const userMsg: Message = { role: 'user', content };
         lastSentUserMsgRef.current = userMsg;
 
-        /* SI LO QUE SALE ES UN ESCRITO, NACE EN EL DOCUMENTO. La respuesta
-           caerá en el índice siguiente al del mensaje del usuario. Con el
-           constructor abierto no: ahí el documento es el de la demanda. */
-        if (ES_ESCRITO.test(content) && !constructorAbiertoRef.current) {
-            setVinculo({ tipo: 'indice', indice: messagesRef.current.length + 1 });
-            setDocumentoAbierto(true);
-        }
+        /* LA RESPUESTA NACE EN EL DOCUMENTO: el panel se despliega al
+           responder, como Harvey. Con el constructor abierto no: ahí el
+           documento es el de la demanda. */
+        if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
         // Send the message (streaming). Devuelve el texto final de la
         // respuesta: es la fuente de verdad para el historial.
         const respuesta = await sendMessage(content, enableReasoning);
@@ -715,12 +712,8 @@ export default function ChatPage() {
             formData.append('fuentes_web', '1');
         }
 
-        // El análisis de un documento adjunto es un escrito: nace en el panel.
-        // El mensaje del usuario ya está en el hilo; la respuesta cae detrás.
-        if (!constructorAbiertoRef.current) {
-            setVinculo({ tipo: 'indice', indice: messagesRef.current.length });
-            setDocumentoAbierto(true);
-        }
+        // El análisis de un documento adjunto también nace en el panel.
+        if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
         let reloj: ReturnType<typeof setTimeout> | undefined;
         try {
             /* ═══ EL RELOJ MIRA EL SILENCIO, NO EL RELOJ (18-sep-2026) ═══
@@ -916,39 +909,41 @@ export default function ChatPage() {
         return () => ro.disconnect();
     }, [hasMessages]);
 
-    /* ═══ EL DOCUMENTO QUE VE EL PANEL ═══
-       Deriva de la respuesta a la que apunta el vínculo: en vivo mientras esa
-       respuesta es la última y sigue llegando; fija después. */
-    const documento = useMemo<DocumentoVivo | null>(() => {
-        if (!vinculo) return null;
-        if (vinculo.tipo === 'suelto') return { id: vinculo.id, titulo: vinculo.titulo, markdown: vinculo.markdown, enVivo: false };
-        if (vinculo.tipo === 'version') {
-            const v = versiones.find((x) => x.id === vinculo.id);
-            return v ? { id: v.id, titulo: v.titulo, markdown: v.markdown, enVivo: false } : null;
-        }
+    /* ═══ EL DOSSIER QUE VE EL PANEL ═══
+       Todas las respuestas terminadas de la conversación, en orden, y aparte
+       la que está llegando (vista previa). El panel las escribe seguidas. */
+    const bloquesDocumento = useMemo(() => {
         const trabajando = isLoading || isDocumentAnalyzing;
-        const m = messages[vinculo.indice];
-        if (!m || m.role !== 'assistant') return { id: `m${vinculo.indice}`, titulo: 'Escrito de Iurexia', markdown: '', enVivo: trabajando };
-        const enVivo = trabajando && vinculo.indice === messages.length - 1;
-        return { id: `m${vinculo.indice}`, titulo: tituloDeRespuesta(limpiarMarcadores(m.content)), markdown: m.content, enVivo };
-    }, [vinculo, versiones, messages, isLoading, isDocumentAnalyzing]);
+        const salida: { id: string; markdown: string }[] = [];
+        messages.forEach((m, i) => {
+            if (m.role !== 'assistant' || !m.content.trim()) return;
+            if (trabajando && i === messages.length - 1) return;   // la que llega va aparte
+            salida.push({ id: `m${i}`, markdown: m.content });
+        });
+        return salida;
+    }, [messages, isLoading, isDocumentAnalyzing]);
+    const vivoDocumento = useMemo(() => {
+        if (!(isLoading || isDocumentAnalyzing)) return null;
+        const ultimo = messages[messages.length - 1];
+        return ultimo?.role === 'assistant' ? ultimo.content : '';
+    }, [messages, isLoading, isDocumentAnalyzing]);
+    const hayDocumento = bloquesDocumento.length > 0 || vivoDocumento !== null;
+    const tituloDocumento = useMemo(() => {
+        const primera = messages.find((m) => m.role === 'user');
+        return primera ? tituloDeRespuesta(sinMarcadoresDeUsuario(primera.content)) : 'Documento de Iurexia';
+    }, [messages]);
 
-    // Cada escrito terminado queda como versión (las últimas doce).
+    // Cada respuesta terminada deja una versión del dossier (las últimas doce).
     useEffect(() => {
-        if (!documento || documento.enVivo || !documento.markdown.trim() || vinculo?.tipo !== 'indice') return;
-        setVersiones((vs) => vs.some((v) => v.id === documento.id) ? vs
-            : [...vs, { id: documento.id, titulo: documento.titulo, markdown: documento.markdown, fecha: Date.now() }].slice(-12));
-    }, [documento, vinculo]);
-
-    // Qué respuestas del hilo viven en el documento (para pintarlas resumidas).
-    const indicesEnDocumento = useMemo(() => {
-        const s = new Set<number>();
-        versiones.forEach((v) => { const n = /^m(\d+)$/.exec(v.id); if (n) s.add(Number(n[1])); });
-        if (vinculo?.tipo === 'indice') s.add(vinculo.indice);
-        return s;
-    }, [versiones, vinculo]);
-    const verDocumento = useCallback((indice: number) => {
-        setVinculo({ tipo: 'indice', indice });
+        if (!bloquesDocumento.length) return;
+        const ultimo = bloquesDocumento[bloquesDocumento.length - 1];
+        setVersiones((vs) => vs.some((v) => v.id === ultimo.id) ? vs
+            : [...vs, {
+                id: ultimo.id, titulo: tituloDocumento, fecha: Date.now(),
+                markdown: bloquesDocumento.map((b) => b.markdown).join(`\n\n${SEP_DOSSIER}\n\n`),
+            }].slice(-12));
+    }, [bloquesDocumento, tituloDocumento]);
+    const verDocumento = useCallback(() => {
         setConstructorAbierto(false);
         setDocumentoAbierto(true);
     }, []);
@@ -966,7 +961,6 @@ export default function ChatPage() {
             return;
         }
         setDocumentoAbierto(false);
-        setVinculo(null);
         if (!activeConversationId) { setVersiones([]); return; }
         try {
             const crudo = localStorage.getItem(`iurexia-documento-${activeConversationId}`);
@@ -1346,13 +1340,13 @@ export default function ChatPage() {
                             </div>
                         </div>
                     ) : (<>
-                        {documento && (
+                        {hayDocumento && (
                             <div className="mx-auto w-full max-w-[var(--chat-max)] px-4 pt-3 lg:hidden">
                                 <div className="grid grid-cols-2 gap-1 rounded-lg bg-charcoal-900/5 p-0.5" role="tablist">
                                     <button type="button" role="tab" aria-selected={true} className="h-8 rounded-md bg-charcoal-900 text-[12.5px] font-medium text-white">Consulta</button>
                                     <button type="button" role="tab" aria-selected={false} onClick={() => setDocumentoAbierto(true)}
                                         className="h-8 rounded-md text-[12.5px] font-medium text-charcoal-900/70 transition-colors hover:bg-white/60">
-                                        Documento{documento.enVivo ? ' ●' : ''}
+                                        Documento{vivoDocumento !== null ? ' ●' : ''}
                                     </button>
                                 </div>
                             </div>
@@ -1364,7 +1358,7 @@ export default function ChatPage() {
                                 const showNudge = !isPro && message.role === 'assistant' && assistantCount > 0 && assistantCount % 3 === 0 && index !== messages.length - 1;
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
-                                        <ChatMessage message={message} enDocumento={message.role === 'assistant' && indicesEnDocumento.has(index)} onVerDocumento={() => verDocumento(index)} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
+                                        <ChatMessage message={message} enDocumento={message.role === 'assistant'} onVerDocumento={verDocumento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
                                         {showNudge && <UpgradeNudge messageIndex={assistantCount} />}
                                     </div>
                                 );
@@ -1392,6 +1386,7 @@ export default function ChatPage() {
                                    es el propio mensaje del historial, justo
                                    arriba — repetirla aquí la mostraba doble. */
                                 <FlujoAgente
+                                    ordenado
                                     pasos={pasos}
                                     etiqueta={pasoDocumento || undefined}
                                     sourcesCount={sourcesCount}
@@ -1706,10 +1701,12 @@ export default function ChatPage() {
                 editado sigue ahí si se recoge y se vuelve a abrir. */}
             <PanelDocumento
                 abierto={documentoAbierto}
-                documento={documento}
+                clave={activeConversationId ?? 'nueva'}
+                titulo={tituloDocumento}
+                bloques={bloquesDocumento}
+                vivo={vivoDocumento}
                 versiones={versiones}
                 onCerrar={() => setDocumentoAbierto(false)}
-                onElegirVersion={(id) => setVinculo({ tipo: 'version', id })}
                 onCita={handleCitationClick}
             />
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />

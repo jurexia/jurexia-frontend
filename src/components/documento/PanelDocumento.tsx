@@ -3,75 +3,76 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDownToLine, Check, ChevronLeft, FileText, Loader2, Printer, X } from 'lucide-react';
 import { Hoja, type HojaAPI } from './Hoja';
 import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
-import { fuenteDeCita, htmlDeDocumento, metaDeCitas, palabrasDe, type FuenteCita } from '@/lib/documento/citas';
+import {
+    fuenteDeCita, htmlDeDocumento, htmlDeDossier, metaDeDossier, palabrasDe, referenciaAPA,
+    type FuenteCita,
+} from '@/lib/documento/citas';
 
 /**
  * EL PANEL DOCUMENTO: la hoja tipo Word acoplada al chat (18-sep-2026).
  *
- * David, 18-sep-2026: «rediseñar nuestro chat a como funciona el de Harvey,
- * conservando nuestros elementos […] desplegar la ventana tipo word
- * trabajando en tiempo real, con las citas […] del lado izquierdo la ventana
- * de chat y del derecho la interface de texto tipo word».
+ * David, 18-sep-2026: «rediseñar nuestro chat a como funciona el de Harvey
+ * […] que la respuesta empiece a redactarse en esa hoja, que se despliegue al
+ * responder […] en ese documento podrá volver a generar una consulta y se irá
+ * acumulando. Al último podrá exportarse ese documento con sus citas APA […]
+ * tal cual el formato que ve el usuario».
  *
- * La regla: si lo que sale es un escrito, nace aquí; si es una respuesta, se
- * queda en el hilo. El panel se acopla a la derecha con la misma geometría
- * que el constructor de escritos (55 % de la ventana, tope 1120 px, el chat
- * conserva 420) y escribe la misma variable `--constructor-w` que lee la
- * página. Los dos paneles nunca están abiertos a la vez: la página se ocupa.
+ * EL DOSSIER. La hoja es la conversación entera: cada respuesta se escribe a
+ * continuación de la anterior, separada por una raya, y la numeración de las
+ * citas sigue de una a otra. La que está llegando se ve como vista previa
+ * debajo de lo ya escrito; al terminar se inserta al final y queda editable.
+ * Lo que el abogado edita a mano no se toca: sólo se añade.
  *
- * EN VIVO. Mientras la respuesta llega, la hoja enseña la vista previa que ya
- * tenía para el constructor; al terminar, el texto se fija y queda editable.
- * Las citas [N] entran como fichas no editables que abren el visor de la
- * fuente, igual que en la burbuja.
+ * SE ACOPLA a la derecha con la misma geometría que el constructor de
+ * escritos (55 % de la ventana, tope 1120 px, el chat conserva 420) y escribe
+ * la misma variable `--constructor-w`. Los dos paneles nunca están abiertos a
+ * la vez: la página se ocupa.
  *
- * VERSIONES. Cada escrito terminado queda como una versión; la lista del
- * encabezado permite volver a cualquiera. Comparar dos versiones no existe
- * todavía.
+ * LAS CITAS [N] son fichas no editables que abren el visor de la fuente, y al
+ * exportar a Word salen como notas al pie con su referencia APA. Sin logo de
+ * Iurexia: el documento es del abogado.
  *
  * EN TELÉFONO Y TABLETA el panel cubre la pantalla y su cabecera lleva las dos
- * pestañas —Consulta · Documento—; la hoja sigue montada aunque se recoja,
- * así lo editado no se pierde.
+ * pestañas —Consulta · Documento—; la hoja sigue montada aunque se recoja.
  */
 
-export interface DocumentoVivo {
-    /** Identifica la respuesta: cambiar de id monta una hoja nueva. */
+export interface BloqueDocumento {
+    /** Identifica la respuesta dentro de la conversación (m<índice>). */
     id: string;
-    titulo: string;
     markdown: string;
-    /** El texto sigue llegando: vista previa, sin editar. */
-    enVivo: boolean;
 }
 
 export interface VersionDocumento {
     id: string;
     titulo: string;
+    /** El dossier entero en ese momento, con SEP_DOSSIER entre respuestas. */
     markdown: string;
     fecha: number;
 }
 
 interface Props {
     abierto: boolean;
-    documento: DocumentoVivo | null;
+    /** La conversación: cambiar de clave monta una hoja nueva. */
+    clave: string;
+    titulo: string;
+    /** Las respuestas terminadas, en orden. */
+    bloques: BloqueDocumento[];
+    /** La respuesta que está llegando (markdown parcial), o null. */
+    vivo: string | null;
     versiones: VersionDocumento[];
     onCerrar: () => void;
-    onElegirVersion: (id: string) => void;
     onCita?: (fuente: FuenteCita) => void;
 }
 
-export default function PanelDocumento({ abierto, documento, versiones, onCerrar, onElegirVersion, onCita }: Props) {
+export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, versiones, onCerrar, onCita }: Props) {
     const hoja = useRef<HojaAPI | null>(null);
     const raizRef = useRef<HTMLDivElement | null>(null);
-    const [titulo, setTitulo] = useState('');
+    const [nombre, setNombre] = useState('');
     const [papel, setPapel] = useState<Papel>('carta');
     const [exportando, setExportando] = useState(false);
     const [aviso, setAviso] = useState('');
+    const [versionElegida, setVersionElegida] = useState('');
     const relojAviso = useRef<number | null>(null);
-
-    /* EL ÚLTIMO DOCUMENTO SE RETIENE: al recoger el panel, `documento` puede
-       volver a null y la hoja no debe desmontarse con lo editado dentro. */
-    const [retenido, setRetenido] = useState<DocumentoVivo | null>(null);
-    useEffect(() => { if (documento) setRetenido(documento); }, [documento]);
-    const vigente = documento ?? retenido;
 
     /* ── DÓNDE SE DESPLIEGA: la misma geometría que el constructor ──────── */
     const [disp, setDisp] = useState({ lateral: false, ancho: 0 });
@@ -95,10 +96,8 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
         mo.observe(raiz, { attributes: true, attributeFilter: ['style'] });
         return () => { window.removeEventListener('resize', calcular); mo.disconnect(); };
     }, []);
-    /* UN SOLO ESCRITOR DE `--constructor-w` A LA VEZ. Se escribe mientras este
-       panel está abierto y se devuelve a cero sólo al cerrarse: si cada
-       recálculo escribiera «0px» estando cerrado, pisaría el ancho del
-       constructor cuando fuera él el abierto. */
+    /* UN SOLO ESCRITOR DE `--constructor-w` A LA VEZ: se escribe abierto y se
+       devuelve a cero sólo al cerrarse, para no pisar al constructor. */
     const escribio = useRef(false);
     useEffect(() => {
         const raiz = document.documentElement;
@@ -112,32 +111,36 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
     }, [abierto, disp.lateral, disp.ancho]);
     useEffect(() => () => { if (escribio.current) document.documentElement.style.setProperty('--constructor-w', '0px'); }, []);
 
-    /* ── EL TEXTO: markdown → hoja, con sus citas ─────────────────────── */
-    const { html, orden } = useMemo(
-        () => (vigente ? htmlDeDocumento(vigente.markdown) : { html: '', orden: [] as string[] }),
-        [vigente?.markdown],
-    );
-    const meta = useMemo(() => (vigente ? metaDeCitas(vigente.markdown) : null), [vigente?.markdown]);
-    const palabras = useMemo(() => (vigente ? palabrasDe(vigente.markdown) : 0), [vigente?.markdown]);
-    const enVivo = !!vigente?.enVivo;
+    /* ── EL TEXTO: todas las respuestas a la vez, para numerar las citas seguidas ── */
+    const partes = useMemo(() => [...bloques.map((b) => b.markdown), ...(vivo !== null ? [vivo] : [])], [bloques, vivo]);
+    const { segmentos, orden } = useMemo(() => htmlDeDossier(partes), [partes]);
+    const meta = useMemo(() => metaDeDossier(partes), [partes]);
+    const palabras = useMemo(() => palabrasDe(partes.join(' ')), [partes]);
+    const enVivo = vivo !== null;
+    const htmlBase = useMemo(() => segmentos.slice(0, bloques.length).join('<hr>'), [segmentos, bloques.length]);
+    const htmlVivo = enVivo ? (segmentos[bloques.length] ?? '') : null;
 
-    /* AL TERMINAR, EL TEXTO SE FIJA en la hoja y queda editable. Se detecta
-       la transición en vivo → quieto del MISMO documento. */
-    const estabaEnVivo = useRef(false);
+    /* LO QUE YA ESTÁ EN LA HOJA. Al montar (o al cambiar de conversación) la
+       hoja arranca con todas las respuestas terminadas; cada vez que termina
+       una nueva se INSERTA al final, sin tocar lo que el abogado editó. */
+    const insertados = useRef(0);
+    const claveMontada = useRef<string | null>(null);
     useEffect(() => {
-        if (estabaEnVivo.current && !enVivo && vigente) hoja.current?.reemplazar(html);
-        estabaEnVivo.current = enVivo;
-    }, [enVivo, html, vigente]);
+        if (claveMontada.current !== clave) {
+            claveMontada.current = clave;
+            insertados.current = bloques.length;
+            setNombre('');
+            setVersionElegida('');
+            return;
+        }
+        if (bloques.length > insertados.current) {
+            const nuevos = segmentos.slice(insertados.current, bloques.length).join('<hr>');
+            hoja.current?.insertar((insertados.current > 0 ? '<hr>' : '') + nuevos, 'final');
+            insertados.current = bloques.length;
+        }
+    }, [clave, bloques.length, segmentos]);
 
-    /* El nombre propuesto se rehace sólo al cambiar de documento. */
-    const ultimoId = useRef<string | null>(null);
-    useEffect(() => {
-        if (!vigente || vigente.id === ultimoId.current) return;
-        ultimoId.current = vigente.id;
-        setTitulo('');
-        estabaEnVivo.current = vigente.enVivo;
-    }, [vigente]);
-    const tituloEfectivo = titulo.trim() || vigente?.titulo || 'Escrito de Iurexia';
+    const tituloEfectivo = nombre.trim() || titulo || 'Documento de Iurexia';
 
     function mostrarAviso(texto: string) {
         setAviso(texto);
@@ -167,8 +170,7 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
         if (e.key === 'Escape') { e.stopPropagation(); onCerrar(); }
     }
 
-    /* LAS FICHAS [N] ABREN EL VISOR, tanto en la vista previa como en la hoja
-       editable: el clic sube hasta aquí. */
+    /* LAS FICHAS [N] ABREN EL VISOR, en la vista previa y en la hoja editable. */
     function clicEnHoja(e: React.MouseEvent<HTMLDivElement>) {
         const ficha = (e.target as HTMLElement).closest<HTMLElement>('.citation-badge');
         if (!ficha?.dataset.docId || !onCita) return;
@@ -176,12 +178,24 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
         onCita(fuenteDeCita(meta, ficha.dataset.docId));
     }
 
+    /* Volver a una versión: la hoja entera se sustituye por ese dossier. */
+    function elegirVersion(id: string) {
+        setVersionElegida(id);
+        const v = versiones.find((x) => x.id === id);
+        if (!v) return;
+        hoja.current?.reemplazar(htmlDeDocumento(v.markdown).html.replace(/<p>⟦sep⟧<\/p>/g, '<hr>'));
+        mostrarAviso('Versión restaurada en la hoja.');
+    }
+
+    /* EL WORD SALE DE LA HOJA VIVA, con cada ficha como nota al pie APA. */
     async function descargarWord() {
         const raiz = hoja.current?.raiz();
         if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return; }
         setExportando(true);
-        try { await aWord(raiz, tituloEfectivo, papel); }
-        catch { mostrarAviso('No se pudo generar el Word. Vuelve a intentarlo.'); }
+        try {
+            const referencias = new Map(orden.map((id) => [id, referenciaAPA(fuenteDeCita(meta, id))]));
+            await aWord(raiz, tituloEfectivo, papel, referencias);
+        } catch { mostrarAviso('No se pudo generar el Word. Vuelve a intentarlo.'); }
         finally { setExportando(false); }
     }
     function mandarAImprimir() {
@@ -190,9 +204,6 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
         if (!imprimir(raiz, tituloEfectivo, papel)) mostrarAviso('El navegador bloqueó la ventana de impresión.');
     }
 
-    if (!vigente) return null;
-
-    const versionActual = versiones.findIndex((v) => v.id === vigente.id);
     const fecha = (t: number) => new Date(t).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
     return (
@@ -209,7 +220,7 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
             style={disp.lateral ? { width: disp.ancho } : undefined}
         >
             {/* ── CABECERA ─────────────────────────────────────────────── */}
-            <header className="grid h-14 shrink-0 grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-charcoal-900/10 bg-cream-100 px-2 sm:gap-3 sm:px-4">
+            <header className="grid h-14 shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-charcoal-900/10 bg-cream-100 px-2 sm:gap-3 sm:px-4">
                 {disp.lateral ? (
                     <button type="button" onClick={onCerrar} aria-label="Recoger el documento" data-foco-inicial
                         className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-medium text-charcoal-900/75 transition-colors hover:bg-charcoal-900/5 hover:text-charcoal-900">
@@ -231,20 +242,20 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
                 <div className="flex min-w-0 items-center justify-center gap-2">
                     <FileText className="hidden h-4 w-4 shrink-0 text-accent-brown md:inline" />
                     <input
-                        value={titulo}
-                        onChange={(e) => setTitulo(e.target.value)}
-                        placeholder={vigente.titulo}
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                        placeholder={titulo || 'Documento de Iurexia'}
                         aria-label="Nombre del documento"
-                        className="w-full max-w-[420px] truncate rounded-md bg-transparent px-2 py-1 text-center text-[15px] font-medium text-charcoal-900 placeholder:text-charcoal-900/60 focus:bg-white focus:outline-none focus:ring-1 focus:ring-charcoal-900/15"
+                        className="w-full min-w-0 max-w-[420px] truncate rounded-md bg-transparent px-2 py-1 text-center text-[15px] font-medium text-charcoal-900 placeholder:text-charcoal-900/60 focus:bg-white focus:outline-none focus:ring-1 focus:ring-charcoal-900/15"
                     />
                     {versiones.length > 0 && (
                         <select
-                            value={versionActual >= 0 ? vigente.id : ''}
-                            onChange={(e) => e.target.value && onElegirVersion(e.target.value)}
+                            value={versionElegida}
+                            onChange={(e) => e.target.value && elegirVersion(e.target.value)}
                             aria-label="Versión del documento"
-                            className="hidden h-8 max-w-[160px] shrink-0 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-2 text-[12px] font-medium text-charcoal-900 sm:block"
+                            className="hidden h-8 max-w-[170px] shrink-0 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-2 text-[12px] font-medium text-charcoal-900 sm:block"
                         >
-                            {versionActual < 0 && <option value="">{enVivo ? 'Escribiendo…' : 'Sin guardar'}</option>}
+                            <option value="">{enVivo ? 'Escribiendo…' : `Versión ${versiones.length} (actual)`}</option>
                             {versiones.map((v, i) => (
                                 <option key={v.id} value={v.id}>Versión {i + 1} · {fecha(v.fecha)}</option>
                             ))}
@@ -262,7 +273,7 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
                         <Printer className="h-4 w-4" />
                     </button>
                     {/* Azul porque así lo pidió David para «Word» (15-sep-2026). */}
-                    <button type="button" onClick={descargarWord} disabled={exportando || enVivo} title="Descargar en Word"
+                    <button type="button" onClick={descargarWord} disabled={exportando || enVivo} title="Descargar en Word, con las citas como notas al pie"
                         className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-600 px-2.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-40 sm:px-3">
                         {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowDownToLine className="h-4 w-4" />}
                         <span className="hidden sm:inline">Word</span>
@@ -270,16 +281,15 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
                 </div>
             </header>
 
-            {/* ── LA HOJA ───────────────────────────────────────────────
-                La `key` monta una hoja nueva por documento; en vivo entra
-                vacía y enseña la vista previa; al terminar se fija el texto. */}
+            {/* ── LA HOJA: una por conversación; lo nuevo se anexa ────────── */}
             <section className="flex min-h-0 flex-1 flex-col" aria-label="Hoja del documento" onClick={clicEnHoja}>
                 <Hoja
-                    key={vigente.id}
+                    key={clave}
                     ref={hoja}
-                    htmlInicial={vigente.enVivo ? '' : html}
+                    htmlInicial={htmlBase}
                     onCambio={() => { /* vive en el DOM de la hoja */ }}
-                    vistaPrevia={enVivo ? html : null}
+                    vistaPrevia={htmlVivo}
+                    anexando={bloques.length > 0}
                 />
             </section>
 
@@ -287,8 +297,10 @@ export default function PanelDocumento({ abierto, documento, versiones, onCerrar
             <footer className="flex h-9 shrink-0 items-center gap-3 border-t border-charcoal-900/10 bg-cream-100 px-4 text-[11.5px] text-charcoal-900/65">
                 {enVivo ? (
                     <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>Escribiendo en el documento…</span></>
-                ) : (
+                ) : partes.length ? (
                     <><Check className="h-3.5 w-3.5 text-accent-gold" /><span>Listo para editar</span></>
+                ) : (
+                    <span>La primera respuesta se escribirá aquí.</span>
                 )}
                 <span className="ml-auto tabular-nums">{palabras.toLocaleString('es-MX')} palabras</span>
                 <span className="tabular-nums">{orden.length} {orden.length === 1 ? 'cita' : 'citas'}{meta && meta.valid > 0 ? ` · ${meta.valid} verificadas` : ''}</span>
