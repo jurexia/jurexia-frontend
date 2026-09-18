@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { X, Upload, FileText, File, Loader2, AlertCircle } from 'lucide-react';
+import { validarAdjunto } from '@/lib/documento/adjuntos';
 
 interface FileUploadModalProps {
     isOpen: boolean;
@@ -18,24 +19,11 @@ export default function FileUploadModal({ isOpen, onClose, onTextExtracted }: Fi
     const [aviso, setAviso] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    ];
-    const allowedExtensions = ['.pdf', '.doc', '.docx'];
-
+    /* La regla vive en un solo sitio: aquí y en el arrastre sobre la pantalla
+       se acepta y se rechaza lo mismo (18-sep-2026). */
     const validateFile = (file: File): boolean => {
-        const extension = '.' + file.name.split('.').pop()?.toLowerCase();
-
-        if (!allowedExtensions.includes(extension)) {
-            setError(`Formato no soportado. Usa: ${allowedExtensions.join(', ')}`);
-            return false;
-        }
-        if (file.size > 25 * 1024 * 1024) { // 25MB limit (backend handles analysis)
-            setError('El archivo es muy grande. Máximo 25MB.');
-            return false;
-        }
+        const fallo = validarAdjunto(file);
+        if (fallo) { setError(fallo); return false; }
         return true;
     };
 

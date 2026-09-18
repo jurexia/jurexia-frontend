@@ -23,7 +23,8 @@ import {
     Globe
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
-import { FileText, X, Network, ChevronUp } from 'lucide-react';
+import { FileText, X, Network, ChevronUp, ChevronDown, UploadCloud } from 'lucide-react';
+import { validarAdjunto, EXTENSIONES_ADJUNTO, LIMITE_ADJUNTO_MB } from '@/lib/documento/adjuntos';
 import TextEnhanceModal from './TextEnhanceModal';
 import DraftModal, { DraftRequest } from './DraftModal';
 import SentenciaModal from './SentenciaModal';
@@ -167,14 +168,19 @@ export default function ChatInput({
     const [showUpgradeModal, setShowUpgradeModal] = useState<'pro' | 'platinum' | null>(null);
     const [showJurimetriaModal, setShowJurimetriaModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ file: File; fileName: string } | null>(null);
+    const [arrastrando, setArrastrando] = useState(false);
+    const [avisoAdjunto, setAvisoAdjunto] = useState('');
 
-    /* EL COMPOSITOR SE PLIEGA MIENTRAS SE LEE (17-sep-2026). Seis filas
-       siempre visibles medían ≈320px al pie: en un portátil de 800px de alto
-       quedaban 424 para leer la respuesta. Al arrancar una respuesta las filas
-       de opciones (fuero/materia, modo y herramientas, Genios, Agente) se
-       recogen a una línea-resumen; vuelven al tocar el cuadro de texto, la
-       línea, o cuando la guía las necesita. Nada desaparece: se pliega. */
-    const [plegado, setPlegado] = useState(false);
+    /* LA CAJA SENCILLA ES LA PREDETERMINADA (18-sep-2026).
+       Antes (17-sep) el compositor arrancaba desplegado y se recogía solo al
+       empezar a responder: seis filas de herramientas medían ≈320px al pie y
+       en un portátil de 800px quedaban 424 para leer. David lo cerró del todo:
+       «que la ventana de chat que queda en la izquierda permanezca así salvo
+       que el usuario clickee desplegar herramientas […] esa ventana sencilla
+       será la predeterminada». Así que se arranca plegado, no se despliega
+       solo al tocar el texto, y el MISMO botón abre y cierra. Nada
+       desaparece: se pliega. */
+    const [plegado, setPlegado] = useState(true);
     useEffect(() => { if (isLoading) setPlegado(true); }, [isLoading]);
     useEffect(() => {
         const desplegar = () => setPlegado(false);
@@ -575,6 +581,83 @@ export default function ChatInput({
         }
     };
 
+    /* ── ARRASTRAR EL DOCUMENTO A LA VENTANA (18-sep-2026) ───────────────
+       David: «necesitamos que la ventana de texto nos permita recibir
+       documentos que el usuario arrastre a la ventana y no solo con la
+       función del clip».
+
+       SE ESCUCHA EN LA VENTANA ENTERA, no sólo sobre el cuadro de texto:
+       quien arrastra un PDF lo suelta donde está mirando —la respuesta, la
+       hoja de la derecha— y errar el blanco no puede costar el archivo.
+
+       HAY QUE CANCELAR TAMBIÉN `dragover`. Sin eso el navegador hace lo suyo
+       por omisión: abre el PDF en la pestaña, y la consulta a medio escribir
+       se pierde. Esa es la razón de que un fallo aquí sea caro.
+
+       La cuenta de entradas y salidas es lo que evita el parpadeo del aviso
+       al pasar por encima de los elementos anidados. Y mientras la ventana de
+       subida está abierta esto no se mete: allí hay su propia zona. */
+    const arrastres = useRef(0);
+    const relojAdjunto = useRef<number | null>(null);
+    const anunciarAdjunto = (texto: string) => {
+        setAvisoAdjunto(texto);
+        if (relojAdjunto.current) window.clearTimeout(relojAdjunto.current);
+        relojAdjunto.current = window.setTimeout(() => setAvisoAdjunto(''), 7000);
+    };
+    useEffect(() => () => { if (relojAdjunto.current) window.clearTimeout(relojAdjunto.current); }, []);
+    useEffect(() => {
+        const traeArchivos = (e: DragEvent) => Array.from(e.dataTransfer?.types || []).includes('Files');
+        const entrar = (e: DragEvent) => {
+            if (!traeArchivos(e) || showFileModal) return;
+            e.preventDefault();
+            arrastres.current += 1;
+            setArrastrando(true);
+        };
+        const encima = (e: DragEvent) => {
+            if (!traeArchivos(e) || showFileModal) return;
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        };
+        const salir = (e: DragEvent) => {
+            if (!traeArchivos(e)) return;
+            arrastres.current = Math.max(0, arrastres.current - 1);
+            if (arrastres.current === 0) setArrastrando(false);
+        };
+        const terminar = () => { arrastres.current = 0; setArrastrando(false); };
+        const soltar = (e: DragEvent) => {
+            if (!traeArchivos(e)) return;
+            terminar();
+            if (showFileModal) return;
+            e.preventDefault();
+            const archivos = Array.from(e.dataTransfer?.files || []);
+            if (!archivos.length) return;
+            const fallo = validarAdjunto(archivos[0]);
+            if (fallo) { anunciarAdjunto(fallo); return; }
+            setAttachedDocument({ file: archivos[0], fileName: archivos[0].name });
+            setActiveMode('search');
+            /* SE DICE QUÉ ENTRÓ Y QUÉ NO. Aquí se revisa un documento por
+               consulta; callarse los que sobran produce un análisis seguro de
+               sí mismo sobre un expediente incompleto. */
+            anunciarAdjunto(archivos.length > 1
+                ? `Se adjuntó «${archivos[0].name}». Aquí se revisa un documento por consulta: `
+                  + `${archivos.length - 1} ${archivos.length - 1 === 1 ? 'archivo no se envió' : 'archivos no se enviaron'}.`
+                : `«${archivos[0].name}» adjuntado. Escriba qué quiere que se haga con él.`);
+            window.setTimeout(() => textareaRef.current?.focus(), 0);
+        };
+        window.addEventListener('dragenter', entrar);
+        window.addEventListener('dragover', encima);
+        window.addEventListener('dragleave', salir);
+        window.addEventListener('dragend', terminar);
+        window.addEventListener('drop', soltar);
+        return () => {
+            window.removeEventListener('dragenter', entrar);
+            window.removeEventListener('dragover', encima);
+            window.removeEventListener('dragleave', salir);
+            window.removeEventListener('dragend', terminar);
+            window.removeEventListener('drop', soltar);
+        };
+    }, [showFileModal]);
+
     const handleFileExtracted = (file: File, fileName: string) => {
         // Attach raw file for backend-side analysis (Gemini Flash 1M context)
         setAttachedDocument({ file, fileName });
@@ -662,9 +745,35 @@ ${draftRequest.descripcion}`;
                     animation: textMirror 3s ease-in-out infinite alternate;
                 }
             `}</style>
+            {/* LA SEÑAL DE QUE SE PUEDE SOLTAR. Sin puntero: si el aviso
+                recibiera los eventos del ratón se metería en medio del propio
+                arrastre y la cuenta de entradas se descuadraría. */}
+            {arrastrando && (
+                <div aria-hidden="true"
+                     className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-charcoal-900/45 p-6 backdrop-blur-[2px]">
+                    <div className="flex flex-col items-center gap-2.5 rounded-2xl border-2 border-dashed border-[#c9a962] bg-cream-100 px-10 py-8 text-center shadow-2xl">
+                        <UploadCloud className="h-9 w-9 text-accent-brown" />
+                        <p className="font-serif text-lg text-charcoal-900">Suelte aquí su documento</p>
+                        <p className="text-[12px] text-charcoal-600">
+                            {EXTENSIONES_ADJUNTO.join(' · ')} — hasta {LIMITE_ADJUNTO_MB} MB, uno por consulta
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="w-full max-w-[var(--chat-max)] mx-auto relative z-20">
 
-
+                {avisoAdjunto && (
+                    <div role="status"
+                         className="mb-2 flex items-start gap-2 rounded-lg border border-cream-300 bg-cream-100 px-3 py-2 text-[12px] text-charcoal-700">
+                        <FileText className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-accent-brown" />
+                        <span className="min-w-0 flex-1">{avisoAdjunto}</span>
+                        <button type="button" onClick={() => setAvisoAdjunto('')} aria-label="Cerrar aviso"
+                                className="flex-shrink-0 text-charcoal-400 transition-colors hover:text-charcoal-900">
+                            <X className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
+                )}
 
                 {/* Main Input Container - Harvey Style */}
                 <div className="chat-input-container p-3">
@@ -752,7 +861,6 @@ ${draftRequest.descripcion}`;
                                 onChange={(e) => setMessage(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 onInput={handleInput}
-                                onFocus={() => setPlegado(false)}
                                 placeholder={attachedDocument
                                     ? "Escribe qué quieres hacer con el documento..."
                                     : chatMode === 'redactar'
@@ -844,18 +952,29 @@ ${draftRequest.descripcion}`;
                         </div>
                     </div>
 
-                    {plegado && (
-                        <button
-                            type="button"
-                            onClick={() => setPlegado(false)}
-                            title="Mostrar fuero, materia, modo y Genios"
-                            className="mt-2 flex w-full items-center gap-2 border-t border-gray-100 pt-2 text-left text-[11px] text-charcoal-500 transition-colors hover:text-charcoal-900"
-                        >
-                            <ChevronUp className="h-3.5 w-3.5 flex-shrink-0" />
-                            <span className="text-[10px] font-semibold uppercase tracking-wider">Opciones</span>
-                            <span className="min-w-0 truncate">{resumenPlegado}</span>
-                        </button>
-                    )}
+                    {/* DESPLEGAR / PLEGAR HERRAMIENTAS. El mismo botón en el
+                        mismo sitio hace las dos cosas, para que no haya que
+                        buscar dónde se cierra lo que se acaba de abrir. Plegado
+                        lleva además el resumen de lo elegido —fuero, materia,
+                        modo—, que si no queda invisible. */}
+                    <button
+                        type="button"
+                        data-guide="herramientas"
+                        onClick={() => setPlegado((v) => !v)}
+                        aria-expanded={!plegado}
+                        title={plegado
+                            ? 'Mostrar fuero, materia, modo, Genios y el resto de herramientas'
+                            : 'Ocultar las herramientas y dejar la caja sencilla'}
+                        className="mt-2 flex w-full items-center gap-2 border-t border-gray-100 pt-2 text-left text-[11px] text-charcoal-500 transition-colors hover:text-charcoal-900"
+                    >
+                        {plegado
+                            ? <ChevronUp className="h-3.5 w-3.5 flex-shrink-0" />
+                            : <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />}
+                        <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
+                            {plegado ? 'Desplegar herramientas' : 'Plegar herramientas'}
+                        </span>
+                        {plegado && <span className="hidden min-w-0 truncate sm:inline">{resumenPlegado}</span>}
+                    </button>
 
                     {/* Action Cards Row — Blue Cards */}
                     {!plegado && (

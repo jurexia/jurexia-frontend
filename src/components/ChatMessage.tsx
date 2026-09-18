@@ -5,6 +5,7 @@ import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkle
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
+import { recortarABloque, useRevelado } from '@/lib/documento/revelado';
 import { institucionesDe, type MetaCitas } from '@/lib/documento/citas';
 import { IconoInstitucion } from '@/components/documento/IconoInstitucion';
 
@@ -319,7 +320,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     // todo el árbol del mensaje se destruía y se volvía a crear con cada trozo,
     // así que un clic podía caer sobre un nodo que dejaba de existir a mitad de
     // camino. Memorizado, sólo se recalcula cuando el texto cambia de verdad.
-    const htmlFormateado = useMemo(() => formatMarkdown(processedContent), [processedContent]);
+    /* MIENTRAS LLEGA, SÓLO LO TERMINADO (18-sep-2026). Del texto en vuelo se
+       enseña hasta el último párrafo cerrado: así el bloque aparece entero,
+       con su desvanecido, en vez de escribirse letra a letra. */
+    const htmlFormateado = useMemo(
+        () => formatMarkdown(isStreaming ? recortarABloque(processedContent) : processedContent),
+        [processedContent, isStreaming],
+    );
+    useRevelado(contentRef, htmlFormateado, isStreaming);
 
     // ── CUENTA EN PAUSA POR UN COBRO QUE NO ENTRÓ (31-ago-2026) ───────────
     //
@@ -1356,7 +1364,6 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                         <div
                             ref={contentRef}
                             className={enDocumento ? 'hidden' : 'prose-legal respuesta px-5 py-4 sm:px-6'}
-                            dangerouslySetInnerHTML={{ __html: htmlFormateado }}
                             onClick={(e) => {
                                 const target = e.target as HTMLElement;
                                 if (target.classList.contains('citation-badge') && target.dataset.docId) {

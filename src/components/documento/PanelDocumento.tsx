@@ -7,6 +7,7 @@ import {
     fuenteDeCita, htmlDeDocumento, htmlDeDossier, metaDeDossier, palabrasDe, referenciaAPA,
     type FuenteCita,
 } from '@/lib/documento/citas';
+import { recortarABloque } from '@/lib/documento/revelado';
 
 /**
  * EL PANEL DOCUMENTO: la hoja tipo Word acoplada al chat (18-sep-2026).
@@ -112,7 +113,15 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     useEffect(() => () => { if (escribio.current) document.documentElement.style.setProperty('--constructor-w', '0px'); }, []);
 
     /* ── EL TEXTO: todas las respuestas a la vez, para numerar las citas seguidas ── */
-    const partes = useMemo(() => [...bloques.map((b) => b.markdown), ...(vivo !== null ? [vivo] : [])], [bloques, vivo]);
+    /* LO QUE SE ENSEÑA DE LA RESPUESTA QUE ESTÁ LLEGANDO: hasta el último
+       párrafo terminado. El párrafo a medio escribir se guarda para el trozo
+       siguiente, y por eso el texto aparece bloque a bloque —desvaneciéndose
+       hacia dentro— en lugar de letra a letra (David, 18-sep-2026). */
+    const vivoVisible = useMemo(() => (vivo === null ? null : recortarABloque(vivo)), [vivo]);
+    const partes = useMemo(
+        () => [...bloques.map((b) => b.markdown), ...(vivoVisible !== null ? [vivoVisible] : [])],
+        [bloques, vivoVisible],
+    );
     const { segmentos, orden } = useMemo(() => htmlDeDossier(partes), [partes]);
     const meta = useMemo(() => metaDeDossier(partes), [partes]);
     const palabras = useMemo(() => palabrasDe(partes.join(' ')), [partes]);

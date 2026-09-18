@@ -6,6 +6,7 @@ import {
     Quote, Redo2, RemoveFormatting, Underline, Undo2, type LucideIcon,
 } from 'lucide-react';
 import { escapar } from '@/lib/documento/marcado';
+import { TextoRevelado } from './TextoRevelado';
 
 /**
  * LA HOJA: el editor de texto enriquecido del constructor de demanda.
@@ -269,9 +270,9 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
                         altura la marca lo que se va escribiendo. Encima y con
                         overflow oculto se cortaba a la altura de la hoja anterior. */}
                     {vistaPrevia != null && !anexando && (
-                        <div
+                        <TextoRevelado
+                            html={vistaPrevia}
                             className="hoja-escrito min-h-[70vh] bg-white pb-[11.6%] pl-[13.9%] pr-[9.3%] pt-[11.6%]"
-                            dangerouslySetInnerHTML={{ __html: vistaPrevia }}
                         />
                     )}
                     <div
@@ -295,9 +296,9 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
                         estaba, con el mismo margen, y la hoja editable sigue a la
                         vista. Al terminar, el panel lo inserta al final. */}
                     {vistaPrevia != null && anexando && (
-                        <div
+                        <TextoRevelado
+                            html={vistaPrevia}
                             className="hoja-escrito bg-white pb-[11.6%] pl-[13.9%] pr-[9.3%]"
-                            dangerouslySetInnerHTML={{ __html: vistaPrevia }}
                         />
                     )}
                 </div>
