@@ -21,7 +21,7 @@
  * los números de ESE borrador.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Download, Search, FileText, AlertCircle, Zap, Upload, Check } from 'lucide-react';
 import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
@@ -494,6 +494,33 @@ export default function TallerDeSentencias() {
             }
         } catch { /* si no llega, la pantalla sigue como antes */ }
     }, [correo]);
+    /* ═══ LA SOLUCIÓN LLEGA SOLA ═══
+       David (17-sep): «cuando entrega el asunto en corto debería ya estarse
+       buscando la solución jurídica y contar con una propuesta global y por
+       puntos que el secretario pueda cambiar». El servidor consulta el acervo,
+       contrasta y propone en cuanto termina el adelanto; aquí se pregunta cada
+       cuatro segundos cómo va y, con la propuesta lista, se recoge —el botón
+       contesta al instante— y se pasa a decidir. Sin que el secretario pulse
+       nada entre leer el asunto y ver la propuesta.
+       Los dos callbacks que hacen el trabajo se definen más abajo; se llaman
+       por referencia para no adelantar su declaración. */
+    const avanceAuto = delAsunto?.avance ?? { consulta: '', contraste: '', propuesta: '' };
+    const autoEnCurso = paso === 'adelanto' && !!delAsunto
+        && avanceAuto.propuesta !== 'listo' && avanceAuto.propuesta !== 'fallo';
+    const pedirAcervoRef = useRef<((usarContexto?: boolean) => Promise<void>) | null>(null);
+    const pedirPropuestaRef = useRef<((opts?: { sinContexto?: boolean }) => Promise<void>) | null>(null);
+    const autoLanzado = useRef(false);
+    useEffect(() => {
+        if (!autoEnCurso || corriendo || !encargo.numero) return;
+        const t = setTimeout(() => { void traerContexto(encargo.numero); }, 4000);
+        return () => clearTimeout(t);
+    }, [autoEnCurso, corriendo, encargo.numero, delAsunto, traerContexto]);
+    useEffect(() => {
+        if (paso !== 'adelanto' || corriendo || autoLanzado.current) return;
+        if (avanceAuto.propuesta !== 'listo') return;
+        autoLanzado.current = true;
+        void pedirAcervoRef.current?.(false);
+    }, [paso, corriendo, avanceAuto.propuesta]);
     /* BORRAR PIDE CONFIRMACIÓN, pero no un modal: el mismo botón cambia de
        texto. Borrar tira las constancias y hay que volver a traerlas de SISE,
        así que un clic despistado cuesta trabajo de verdad. */
@@ -723,13 +750,14 @@ export default function TallerDeSentencias() {
                 setError('El cómputo da EXTEMPORÁNEA. Compruébalo antes de seguir: si es correcto, el asunto no se resuelve en el fondo.');
             }
             setPaso('adelanto');
+            autoLanzado.current = false;
             void traerContexto(encargo.numero);
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo generar el adelanto.');
         } finally { setCorriendo(false); }
     }, [encargo, ficheros, correo]);
 
-    const pedirAcervo = useCallback(async () => {
+    const pedirAcervo = useCallback(async (usarContexto: boolean = true) => {
         setError(''); setCorriendo(true);
         try {
             /* EL CONTEXTO VA EN LA BÚSQUEDA, no después de ella.
@@ -738,12 +766,12 @@ export default function TallerDeSentencias() {
                capacidad de buscar jurisprudencia o las normas aplicables».
                Hasta ahora este texto sólo se pedía DESPUÉS de proponer, y sólo
                si alguna propuesta no alcanzaba. */
-            if (contexto.trim()) {
+            if (usarContexto && contexto.trim()) {
                 await aportarContexto(correo, null, contexto, encargo.numero)
                     .catch(() => { /* si no se pudo guardar, igual viaja abajo */ });
             }
             const m = await consultarAcervo(encargo.numero, correo,
-                                            'leyes_queretaro', contexto);
+                                            'leyes_queretaro', usarContexto ? contexto : '');
             setMaterial(m);
             const candidatos = m.tesis.slice(0, 4).map((t) => ({
                 tipo: 'tesis' as const, registro: t.registro, rubro: t.rubro,
@@ -770,12 +798,19 @@ export default function TallerDeSentencias() {
                 })),
             ]);
             setPaso('acervo');
-            // El adelanto está: lo siguiente es el botón rojo.
             irA('recorrido');
+            /* Y SEGUIDO, LA PROPUESTA. Antes el botón sólo consultaba y el paso 3
+               salía vacío —«el motor no se atrevió»— hasta pulsar «Volver a
+               pedir la propuesta»: dos clics para una cosa, y el primero no
+               enseñaba nada. Ahora consultar es proponer. */
+            if (m.problemas.length > 0) {
+                await pedirPropuestaRef.current?.({ sinContexto: !usarContexto });
+            }
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo consultar el acervo.');
         } finally { setCorriendo(false); }
-    }, [encargo.numero, correo]);
+    }, [encargo.numero, correo, contexto]);
+    pedirAcervoRef.current = pedirAcervo;
 
     /* LO QUE EL SECRETARIO TOCA A MANO NO SE PISA NUNCA MÁS.
        Sin esta lista no había forma de distinguir un sentido que él eligió de
@@ -900,6 +935,7 @@ export default function TallerDeSentencias() {
                 correo);
             descargar(ade);
             setPaso('adelanto');
+            autoLanzado.current = false;
             void traerContexto(encargo.numero);
 
             /* EL CÓMPUTO EXTEMPORÁNEO AVISA, NO FRENA.
@@ -1015,10 +1051,11 @@ export default function TallerDeSentencias() {
         } finally { setCorriendo(false); }
     }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados]);
 
-    const pedirPropuesta = useCallback(async () => {
+    const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean }) => {
         setError(''); setCorriendo(true); setProponiendo(true);
         try {
-            const p = await proponerSolucion(encargo.numero, correo, contexto);
+            const p = await proponerSolucion(encargo.numero, correo,
+                                             opts?.sinContexto ? '' : contexto);
             setPropuesta(p);
             /* SE ENTRA DIRECTO A LA DECISIÓN, con la propuesta del motor ya
                puesta. Es lo que automatiza el trabajo: el caso frecuente es
@@ -1076,6 +1113,7 @@ export default function TallerDeSentencias() {
             setError(e instanceof Error ? e.message : 'No se pudo obtener la propuesta.');
         } finally { setCorriendo(false); setProponiendo(false); }
     }, [encargo.numero, correo, contexto]);
+    pedirPropuestaRef.current = pedirPropuesta;
 
     /* ═══ QUIERO CAMBIAR DE SENTIDO ═══
        David, 16-sep-2026: «si el secretario decide cambiar de sentido hay que
@@ -1902,7 +1940,7 @@ export default function TallerDeSentencias() {
                             Recorrido del asunto
                         </Rotulo>
                         <span id="recorrido" />
-                        <AnilloDeFases fases={fasesSegun(paso, corriendo)} corriendo={corriendo} />
+                        <AnilloDeFases fases={fasesSegun(paso, corriendo || autoEnCurso)} corriendo={corriendo || autoEnCurso} />
                         {paso !== 'ficha' && delAsunto && (
                             <div className="mt-4 grid gap-2 sm:grid-cols-3">
                                 <div className="rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3">
@@ -1964,18 +2002,65 @@ export default function TallerDeSentencias() {
                 mientras es EL paso que toca. El latido para en cuanto se pulsa:
                 una animación que no se apaga deja de ser una guía y pasa a ser
                 un adorno molesto. */}
+                            {/* ═══ LA SOLUCIÓN VIENE SOLA ═══
+                                David (17-sep): «cuando entrega el asunto en corto
+                                debería ya estarse buscando la solución jurídica».
+                                Mientras corre, aquí se ve cómo va; el botón sólo
+                                aparece si hay que buscar a mano (sesión anterior,
+                                fallo) o para repetir la búsqueda con el contexto
+                                que el secretario escribió. */}
+                            {paso === 'adelanto' && delAsunto && avanceAuto.propuesta !== 'fallo'
+                             && (autoEnCurso || avanceAuto.propuesta === 'listo') && (
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
+                                    {([['consulta', 'Buscando en el acervo'],
+                                       ['contraste', 'Contrastando los planteamientos'],
+                                       ['propuesta', 'Proponiendo la solución']] as const).map(([k, t]) => {
+                                        const e = avanceAuto[k];
+                                        return (
+                                            <span key={k} className={cn('inline-flex items-center gap-1.5',
+                                                e === 'listo' ? 'text-white/75'
+                                                    : e === 'en_curso' ? 'text-accent-gold'
+                                                        : 'text-white/40')}>
+                                                <span className={cn('inline-block h-1.5 w-1.5 rounded-full',
+                                                    e === 'listo' ? 'bg-emerald-400'
+                                                        : e === 'en_curso'
+                                                            ? 'bg-accent-gold animate-[latido_1.4s_ease-in-out_infinite]'
+                                                            : 'bg-white/20')} />
+                                                {t}{e === 'en_curso' ? '…' : ''}
+                                            </span>
+                                        );
+                                    })}
+                                    <span className="basis-full text-[12px] text-white/45">
+                                        {avanceAuto.propuesta === 'listo'
+                                            ? 'La propuesta está lista: se abre el paso 3.'
+                                            : 'En cuanto esté la propuesta, pasas a decidir. Mientras, lee el asunto.'}
+                                    </span>
+                                </div>
+                            )}
+                            {(paso !== 'adelanto' || !delAsunto || avanceAuto.propuesta === 'fallo'
+                              || (!autoEnCurso && avanceAuto.propuesta !== 'listo')) && (
                             <button className={cn(
                                         boton,
                                         paso === 'adelanto' && !corriendo
-                                            ? 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90 shadow-[0_0_0_0_rgba(201,169,98,0.7)] animate-[latido_1.8s_ease-out_infinite]'
+                                            ? 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90 shadow-[0_0_0_0_rgba(201,169,98,0.7)] animate-[latido_1.6s_ease-in-out_infinite]'
                                             : 'border border-white/10 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}
                                     disabled={corriendo || paso === 'ficha'}
-                                    onClick={pedirAcervo}>
+                                    onClick={() => { void pedirAcervo(true); }}>
                                 {corriendo && paso === 'adelanto'
                                     ? <Loader2 className="h-4 w-4 animate-spin" />
                                     : <Search className="h-4 w-4" />}
                                 Buscar solución jurídica
                             </button>
+                            )}
+                            {paso === 'adelanto' && delAsunto && contexto.trim().length > 0
+                             && avanceAuto.propuesta === 'listo' && (
+                            <button className={cn(boton, 'border border-white/10 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}
+                                    disabled={corriendo}
+                                    onClick={() => { void pedirAcervo(true); }}>
+                                <Search className="h-4 w-4" />
+                                Buscar de nuevo con tu contexto
+                            </button>
+                            )}
                         </div>
 
             {/* ═══ EL ATAJO DE UN SOLO CLIC ═══
@@ -2548,7 +2633,7 @@ export default function TallerDeSentencias() {
                     {problemas.length > 0 && !proyecto && (
                     <Decision problemas={problemas} onCambiar={cambiarCriterio}
                               onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo' && !proponiendo}
-                              onProponer={pedirPropuesta} propuesta={propuesta}
+                              onProponer={() => { void pedirPropuesta(); }} propuesta={propuesta}
                               proponiendo={proponiendo}
                               onAportar={aportarYProponer} aportando={aportando}
                               modo={modo} onModo={setModo}

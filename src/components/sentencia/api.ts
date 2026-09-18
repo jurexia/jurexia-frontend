@@ -1208,6 +1208,11 @@ export interface ContextoDelAsunto {
      *  le contestaron y por qué, y quién viene ahora con qué. La tarjeta
      *  grande del paso 2. Vacío en las sesiones anteriores al 17-sep-2026. */
     relato: string;
+    /** CÓMO VA LO QUE CORRE SOLO tras el adelanto: la consulta del acervo, el
+     *  contraste y la propuesta. Cada uno: '' (no empezó) · 'en_curso' ·
+     *  'listo' · 'fallo'. La pantalla lo pregunta cada pocos segundos y, con
+     *  la propuesta lista, la pide y pasa a decidir. */
+    avance: { consulta: string; contraste: string; propuesta: string };
     problemas: { pregunta: string; resolvio: string; combate: string; jerarquia: string }[];
     avisos: string[];
     /** LA FICHA, PARA QUE LA PANTALLA NO VUELVA EN BLANCO. Al retomar un asunto
@@ -1419,6 +1424,11 @@ export async function contextoDelAsunto(
         resumenConceptos: String(j.resumen_conceptos ?? ''),
         problemaGlobal: String(j.problema_global ?? ''),
         relato: String(j.relato ?? ''),
+        avance: {
+            consulta: String(j.avance?.consulta?.estado ?? ''),
+            contraste: String(j.avance?.contraste?.estado ?? ''),
+            propuesta: String(j.avance?.propuesta?.estado ?? ''),
+        },
         problemas: (j.problemas ?? []) as ContextoDelAsunto['problemas'],
         encargo: (j.encargo ?? null) as Record<string, string> | null,
         proyecto: j.proyecto
