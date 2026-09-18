@@ -208,20 +208,23 @@ export function institucionDe(f: Partial<FuenteCita>): Institucion {
     return INSTITUCIONES.otra;
 }
 
-/** Las instituciones consultadas en una respuesta, con cuántas fuentes de cada una, en orden de peso. */
+/** Las instituciones consultadas en una respuesta, con SUS fuentes, en orden de peso.
+ *  Devuelve los identificadores y no sólo la cuenta: el hilo despliega la lista
+ *  de cada institución al oprimir su logo (David, 18-sep-2026). */
 export function institucionesDe(
     meta: MetaCitas | null,
     /** Sólo estas fuentes (las citadas en la respuesta). Vacío = todas. */
     soloEstas?: Iterable<string>,
-): { institucion: Institucion; fuentes: number }[] {
+): { institucion: Institucion; fuentes: number; docIds: string[] }[] {
     const filtro = soloEstas ? new Set(Array.from(soloEstas, (x) => x.toLowerCase())) : null;
-    const cuenta = new Map<string, { institucion: Institucion; fuentes: number }>();
+    const cuenta = new Map<string, { institucion: Institucion; fuentes: number; docIds: string[] }>();
     for (const [clave, f] of Object.entries(meta?.sources || {})) {
         if (filtro && !filtro.has(clave.toLowerCase())) continue;
         const inst = institucionDe(f);
         const grupo = inst.clave === 'congreso_estatal' ? inst.nombre : inst.clave;
         const previo = cuenta.get(grupo);
-        if (previo) previo.fuentes += 1; else cuenta.set(grupo, { institucion: inst, fuentes: 1 });
+        if (previo) { previo.fuentes += 1; previo.docIds.push(clave); }
+        else cuenta.set(grupo, { institucion: inst, fuentes: 1, docIds: [clave] });
     }
     return Array.from(cuenta.values()).sort((a, b) => b.fuentes - a.fuentes);
 }

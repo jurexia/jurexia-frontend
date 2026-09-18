@@ -1,13 +1,13 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, BookOpen, ChevronRight } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature } from 'lucide-react';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
 import { recortarABloque, useRevelado } from '@/lib/documento/revelado';
-import { institucionesDe, type MetaCitas } from '@/lib/documento/citas';
-import { IconoInstitucion } from '@/components/documento/IconoInstitucion';
+import { type MetaCitas } from '@/lib/documento/citas';
+import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
 
 interface ChatMessageProps {
     message: Message;
@@ -1314,7 +1314,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             calculan del texto y no de lo que se pinte. */}
                         {enDocumento && (
                             <div className="px-5 py-4 sm:px-6">
-                                <div className="flex items-start gap-3 rounded-xl border border-cream-300 bg-cream-50 px-4 py-3">
+                                {/* `flex-wrap` y el botón con `basis-full` en teléfono: con
+                                    «Ver documento» en la misma fila, la columna de texto se
+                                    quedaba en 195 px y los emblemas salían como «C.. 3». */}
+                                <div className="flex flex-wrap items-start gap-3 rounded-xl border border-cream-300 bg-cream-50 px-4 py-3">
                                     {isStreaming
                                         ? <Loader2 className="mt-0.5 h-4 w-4 flex-shrink-0 animate-spin text-accent-brown" />
                                         : <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent-brown" />}
@@ -1330,31 +1333,22 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                                 return v > 0 ? ` · ${v} ${v === 1 ? 'verificada' : 'verificadas'}` : '';
                                             })()}
                                         </p>
-                                        {/* DE DÓNDE VINO CADA FUENTE, con el icono de la institución
-                                            (David, 18-sep-2026): Cámara de Diputados para leyes federales
-                                            y Constitución, Suprema Corte para las tesis del Semanario,
-                                            Corte Interamericana cuando se cita. */}
-                                        {(() => {
-                                            // Sólo las fuentes que ESTA respuesta cita, no todas las del acervo recuperado.
-                                            const consultadas = institucionesDe(citationMeta as unknown as MetaCitas | null, docIdMap.keys());
-                                            return consultadas.length > 0 ? (
-                                                <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                                                    {consultadas.map(({ institucion, fuentes }) => (
-                                                        <span key={institucion.clave + institucion.nombre}
-                                                            title={`${institucion.nombre} · ${fuentes} ${fuentes === 1 ? 'fuente' : 'fuentes'}`}
-                                                            className="inline-flex max-w-full items-center gap-2 rounded-lg border border-cream-300 bg-white py-1 pl-1.5 pr-2.5 text-[11.5px] text-charcoal-800">
-                                                            <IconoInstitucion inst={institucion} tam={22} />
-                                                            <span className="truncate font-medium">{institucion.nombre}</span>
-                                                            <span className="tabular-nums text-charcoal-400">{fuentes}</span>
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            ) : null;
-                                        })()}
+                                        {/* DE DÓNDE VINO CADA FUENTE, bajo el emblema de quien la
+                                            publica (David, 18-sep y 18-sep-2026): Cámara de Diputados
+                                            para leyes federales y Constitución, Suprema Corte para las
+                                            tesis del Semanario, Corte Interamericana cuando se cita.
+                                            Cada emblema despliega SUS fuentes; ya no hay una lista
+                                            revuelta al pie. */}
+                                        <FuentesPorInstitucion
+                                            meta={citationMeta as unknown as MetaCitas | null}
+                                            docIdMap={docIdMap}
+                                            onCita={onCitationClick}
+                                            className="mt-2.5"
+                                        />
                                     </div>
                                     {onVerDocumento && (
                                         <button type="button" onClick={onVerDocumento}
-                                            className="inline-flex h-8 flex-shrink-0 items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-xs font-semibold text-white transition-colors hover:bg-charcoal-800">
+                                            className="inline-flex h-8 flex-shrink-0 items-center justify-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-xs font-semibold text-white transition-colors hover:bg-charcoal-800 max-sm:order-last max-sm:mt-1 max-sm:basis-full">
                                             Ver documento
                                         </button>
                                     )}
@@ -1438,69 +1432,20 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             />
                         )}
 
-                        {/* Citation Legend — collapsible source list */}
-                        {!isStreaming && docIdMap.size > 0 && (
-                            <details className="mx-5 sm:mx-6 mb-3 mt-1 rounded-lg border border-cream-300 bg-cream-50/80 overflow-hidden group/sources">
-                                <summary className="px-3 py-2.5 text-xs font-medium text-charcoal-600 flex items-center gap-2 cursor-pointer hover:bg-cream-100 transition-colors select-none">
-                                    <BookOpen className="w-3.5 h-3.5 text-accent-brown" />
-                                    <span className="text-charcoal-900 font-semibold">{docIdMap.size} fuentes</span>
-                                    {citationMeta && citationMeta.invalid > 0 && (
-                                        <span className="text-[10px] text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
-                                            ⚠ {citationMeta.invalid} sin verificar
-                                        </span>
-                                    )}
-                                    <ChevronRight className="ml-auto w-3.5 h-3.5 text-charcoal-400 group-open/sources:rotate-90 transition-transform duration-200" />
-                                </summary>
-                                <div className="divide-y divide-cream-200 border-t border-cream-200">
-                                    {Array.from(docIdMap.entries()).map(([uuid, num]) => {
-                                        const isInvalid = citationMeta?.invalid_ids?.includes(uuid);
-                                        const source = citationMeta?.sources?.[uuid];
-                                        return (
-                                            <div
-                                                key={uuid}
-                                                className={`flex items-center gap-2.5 text-xs py-2 px-3 hover:bg-cream-100 transition-colors ${isInvalid ? 'opacity-60' : ''}`}
-                                            >
-                                                <button
-                                                    onClick={() => {
-                                                        const src = citationMeta?.sources?.[uuid]
-                                                            || citationMeta?.sources?.[uuid.toLowerCase()]
-                                                            || (citationMeta?.sources ? Object.entries(citationMeta.sources).find(([k]) => k.toLowerCase() === uuid.toLowerCase())?.[1] : undefined);
-                                                        onCitationClick?.({
-                                                            docId: uuid,
-                                                            origen: src?.origen || 'Fuente legal',
-                                                            ref: src?.ref || '',
-                                                            texto: src?.texto || '',
-                                                            pdf_url: src?.pdf_url,
-                                                            silo: src?.silo,
-                                                            entidad: src?.entidad,
-                                                            registro: src?.registro,
-                                                            tesis_num: src?.tesis_num,
-                                                            tipo_criterio: src?.tipo_criterio,
-                                                            instancia: src?.instancia,
-                                                            materia: src?.materia,
-                                                        });
-                                                    }}
-                                                    className="inline-flex items-center justify-center w-5 h-5 rounded bg-charcoal-900 text-white text-[10px] font-bold flex-shrink-0 hover:bg-charcoal-700 transition-colors cursor-pointer"
-                                                    title="Ver documento y PDF completo"
-                                                >
-                                                    {num}
-                                                </button>
-                                                <span className="text-charcoal-700 text-[11px] flex-1 min-w-0 truncate">
-                                                    {source
-                                                        ? `${source.origen}${source.ref ? ` — ${source.ref}` : ''}`
-                                                        : `${uuid.slice(0, 8)}...${uuid.slice(-4)}`
-                                                    }
-                                                </span>
-                                                {isInvalid && (
-                                                    <span className="text-amber-500 text-[10px] flex-shrink-0" title="UUID no encontrado en el contexto recuperado">
-                                                        ⚠
-                                                    </span>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </details>
+                        {/* LAS FUENTES, POR INSTITUCIÓN (18-sep-2026). Donde antes
+                            había una tira «N fuentes» que abría una lista revuelta
+                            —la Constitución, una tesis y un cuadernillo de la Corte
+                            Interamericana en el mismo renglón gris—, ahora manda el
+                            emblema: cada institución con su cuenta, y sus fuentes al
+                            oprimirla. En el hilo con documento esto ya sale dentro de
+                            la tarjeta, así que aquí sólo se pinta cuando no lo hay. */}
+                        {!isStreaming && !enDocumento && docIdMap.size > 0 && (
+                            <FuentesPorInstitucion
+                                meta={citationMeta as unknown as MetaCitas | null}
+                                docIdMap={docIdMap}
+                                onCita={onCitationClick}
+                                className="mx-5 mb-3 mt-1 sm:mx-6"
+                            />
                         )}
                         {/* Botones de acción. `flex-wrap` (7-ago-2026): sin él, los
                             cinco botones y la etiqueta medían 507 px dentro de una
