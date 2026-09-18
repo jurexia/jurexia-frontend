@@ -186,6 +186,9 @@ export default function ChatPage() {
     const cacheTimerRef = useRef<NodeJS.Timeout | null>(null);
     const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [isDocumentAnalyzing, setIsDocumentAnalyzing] = useState(false);
+    /* Por dónde va el análisis del documento: lo cuenta el servidor mientras
+       lee, reconoce el texto y consulta el acervo. */
+    const [pasoDocumento, setPasoDocumento] = useState('');
     const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
     // showFreeOnboarding removed — onboarding now inline via Quick Start buttons
     const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
@@ -679,17 +682,29 @@ export default function ChatPage() {
             formData.append('fuentes_web', '1');
         }
 
+        let reloj: ReturnType<typeof setTimeout> | undefined;
         try {
+            /* ═══ EL RELOJ MIRA EL SILENCIO, NO EL RELOJ (18-sep-2026) ═══
+               Antes se abortaba a los 120 segundos contados desde el envío,
+               pasara lo que pasara. Una contestación de demanda escaneada de
+               50 páginas tarda más que eso sólo en reconocerse, así que el
+               análisis se cancelaba aquí mientras el servidor lo terminaba
+               para nadie: cuatro veces el mismo día, con las cuatro consultas
+               cobradas. El servidor ahora cuenta su avance y late cada cinco
+               segundos; lo que se vigila es que no llegue NADA. */
+            const SILENCIO_MAXIMO_MS = 75000;
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
+            const rearmar = () => {
+                if (reloj) clearTimeout(reloj);
+                reloj = setTimeout(() => controller.abort(), SILENCIO_MAXIMO_MS);
+            };
+            rearmar();
 
             const response = await fetch(`${API_URL}/analyze-document`, {
                 method: 'POST',
                 body: formData,
                 signal: controller.signal,
             });
-
-            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Error al analizar documento' }));
@@ -705,6 +720,7 @@ export default function ChatPage() {
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
+                rearmar();   // llegó algo: texto, avance o latido
 
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
@@ -731,6 +747,8 @@ export default function ChatPage() {
                                     }
                                     return updated;
                                 });
+                            } else if (data.progreso) {
+                                setPasoDocumento(String(data.progreso));
                             } else if (data.error) {
                                 setMessages(prev => {
                                     const updated = [...prev];
@@ -757,7 +775,10 @@ export default function ChatPage() {
             const errMsg = err?.message || '';
 
             if (err?.name === 'AbortError' || errMsg.includes('abort')) {
-                userMessage = '⏱️ **El análisis tardó demasiado.**\n\nEl documento es muy extenso o complejo para procesarse en este momento. Intenta con un archivo más pequeño o con menos páginas.';
+                userMessage = '⏱️ **Se perdió el contacto con el servidor.**\n\n'
+                    + 'Dejó de llegar información durante más de un minuto mientras se '
+                    + 'analizaba tu documento. Puede que el análisis sí se haya completado: '
+                    + 'vuelve a intentarlo y, si se repite, escríbenos a soporte@iurexia.com.';
             } else if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('ERR_CONNECTION')) {
                 // ESTA RAMA ES SÓLO RED, y el mensaje decía otra cosa.
                 //
@@ -794,6 +815,8 @@ export default function ChatPage() {
                 return updated;
             });
         } finally {
+            if (reloj) clearTimeout(reloj);
+            setPasoDocumento('');
             // ALWAYS reset — guarantees export bar (PDF/DOCX/Print) appears after response
             setIsDocumentAnalyzing(false);
 
@@ -1256,6 +1279,7 @@ export default function ChatPage() {
                                    arriba — repetirla aquí la mostraba doble. */
                                 <FlujoAgente
                                     pasos={pasos}
+                                    etiqueta={pasoDocumento || undefined}
                                     sourcesCount={sourcesCount}
                                     retryMessage={retryMessage || undefined}
                                     retryType={retryType || undefined}

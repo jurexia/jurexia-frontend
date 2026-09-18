@@ -146,13 +146,18 @@ interface Props {
     avatarUrl?: string | null;
     tratamiento?: string | null;
     redactando?: boolean;
+    /** Lo que está pasando, contado por el servidor. El análisis de un
+     *  documento no emite etapas de la ramificación: emite estas líneas
+     *  («Reconociendo el texto de 50 páginas…»), y son lo único que hay
+     *  que leer mientras tanto. */
+    etiqueta?: string;
     retryMessage?: string;
     retryType?: string;
 }
 
 export function FlujoAgente({
     pasos, sourcesCount, consulta, nombre, avatarUrl, tratamiento,
-    redactando, retryMessage, retryType,
+    redactando, etiqueta, retryMessage, retryType,
 }: Props) {
     const filas = useMemo(() => {
         const vistos = new Map(pasos.map((p) => [p.nombre, p.detalle]));
@@ -256,9 +261,11 @@ export function FlujoAgente({
             <div className="flex items-center py-2 pl-1">
                 <Loader2 className="h-4 w-4 animate-spin text-accent-brown mr-3 flex-shrink-0" />
                 <span className="text-sm text-charcoal-700">
-                    {filas.length === 0
-                        ? 'Leyendo la consulta…'
-                        : redactando ? 'Redactando la respuesta…' : 'Iurexia está trabajando en su consulta…'}
+                    {etiqueta
+                        ? etiqueta
+                        : filas.length === 0
+                            ? 'Leyendo la consulta…'
+                            : redactando ? 'Redactando la respuesta…' : 'Iurexia está trabajando en su consulta…'}
                 </span>
             </div>
 
