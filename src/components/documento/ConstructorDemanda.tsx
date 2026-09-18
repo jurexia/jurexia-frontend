@@ -235,12 +235,22 @@ export default function ConstructorDemanda({
         mo.observe(raiz, { attributes: true, attributeFilter: ['style'] });
         return () => { window.removeEventListener('resize', calcular); mo.disconnect(); };
     }, []);
+    /* UN SOLO ESCRITOR A LA VEZ. El panel Documento escribe la misma variable;
+       si este efecto pusiera «0px» en cada recálculo estando cerrado, pisaría
+       el ancho del otro panel cuando fuera él el abierto. Se escribe abierto y
+       se devuelve a cero sólo al cerrarse. */
+    const escribio = useRef(false);
     useEffect(() => {
         const raiz = document.documentElement;
-        const w = abierto && disp.lateral ? `${disp.ancho}px` : '0px';
-        if (raiz.style.getPropertyValue('--constructor-w') !== w) raiz.style.setProperty('--constructor-w', w);
+        if (abierto && disp.lateral) {
+            raiz.style.setProperty('--constructor-w', `${disp.ancho}px`);
+            escribio.current = true;
+        } else if (escribio.current) {
+            raiz.style.setProperty('--constructor-w', '0px');
+            escribio.current = false;
+        }
     }, [abierto, disp.lateral, disp.ancho]);
-    useEffect(() => () => { document.documentElement.style.setProperty('--constructor-w', '0px'); }, []);
+    useEffect(() => () => { if (escribio.current) document.documentElement.style.setProperty('--constructor-w', '0px'); }, []);
 
     const [aviso, setAviso] = useState<string>('');
     const [exportando, setExportando] = useState(false);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Message, fuentesWebActivas } from '@/lib/api';
 import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
@@ -28,15 +28,15 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { useRequireAuth } from '@/lib/useAuth';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
-import type { EscritoEnEdicion } from '@/components/documento/EditorEscrito';
-import { markdownAHtml } from '@/lib/documento/marcado';
+import type { DocumentoVivo, VersionDocumento } from '@/components/documento/PanelDocumento';
+import { markdownAHtml, limpiarMarcadores } from '@/lib/documento/marcado';
 import { estadoPiloto } from '@/components/sentencia/api';
 
 /* El constructor de demanda se carga sólo cuando alguien lo abre: trae el
    editor y la librería de Word, que el chat no necesita para consultar. */
 const ConstructorDemanda = dynamic(() => import('@/components/documento/ConstructorDemanda'), { ssr: false });
-/* El editor suelto, igual: la misma hoja y el mismo exportador, sin Toulmin. */
-const EditorEscrito = dynamic(() => import('@/components/documento/EditorEscrito'), { ssr: false });
+/* El panel Documento, igual: la misma hoja y el mismo exportador, acoplados al chat. */
+const PanelDocumento = dynamic(() => import('@/components/documento/PanelDocumento'), { ssr: false });
 
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { useRouter } from 'next/navigation';
@@ -76,6 +76,19 @@ const SUGGESTIONS = [
    índice de la lista se mueve al llegar mensajes nuevos; la huella del texto,
    no: mientras se trate de la misma respuesta el editor conserva lo editado, y
    en cuanto es otra, empieza de cero. */
+/* ═══ QUÉ RESPUESTAS SON UN ESCRITO (18-sep-2026) ═══
+   David: «si lo que sale es un escrito, nace en la hoja; si es una respuesta,
+   se queda en el hilo». Se decide por el marcador que el compositor pone al
+   frente del mensaje: Redactar en cualquiera de sus escalones, Escrito legal
+   y Sentencia. El documento adjunto se decide en su propio camino. */
+const ES_ESCRITO = /^\s*\[(?:REDACTAR_DOCUMENTO|MODO_REDACCION|AUDITAR_SENTENCIA)/;
+
+/** A qué respuesta mira el panel Documento. */
+type VinculoDocumento =
+    | { tipo: 'indice'; indice: number }
+    | { tipo: 'version'; id: string }
+    | { tipo: 'suelto'; id: string; titulo: string; markdown: string };
+
 function idDeRespuesta(markdown: string): string {
     let h = 0;
     for (let i = 0; i < markdown.length; i++) h = (Math.imul(h, 31) + markdown.charCodeAt(i)) | 0;
@@ -159,7 +172,12 @@ export default function ChatPage() {
     const [constructorPaso, setConstructorPaso] = useState<'caso' | 'toulmin' | null>(null);
     const [insercionDocumento, setInsercionDocumento] = useState<InsercionDocumento | null>(null);
     // ── El editor suelto: una respuesta abierta como Word, sin los pasos ──
-    const [escritoEnEdicion, setEscritoEnEdicion] = useState<EscritoEnEdicion | null>(null);
+    /* EL PANEL DOCUMENTO: qué respuesta enseña, si está desplegado y las
+       versiones de esta conversación (guardadas en este navegador por ahora). */
+    const [documentoAbierto, setDocumentoAbierto] = useState(false);
+    const [vinculo, setVinculo] = useState<VinculoDocumento | null>(null);
+    const [versiones, setVersiones] = useState<VersionDocumento[]>([]);
+    const convRecienCreadaRef = useRef<string | null>(null);
     const [showStateModal, setShowStateModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
     const estadoInitializedRef = useRef(false);
@@ -333,6 +351,7 @@ export default function ChatPage() {
     // quitarlo de en medio.
     const abrirConstructor = useCallback((paso: 'caso' | 'toulmin') => {
         setConstructorMontado(true);
+        setDocumentoAbierto(false);      // nunca dos paneles a la vez
         setConstructorAbierto((abierto) => {
             if (!abierto) setConstructorPaso(paso);
             return !abierto;
@@ -352,7 +371,8 @@ export default function ChatPage() {
             setInsercionDocumento({ html: markdownAHtml(markdown), n: Date.now() });
             return;
         }
-        setEscritoEnEdicion({ id: idDeRespuesta(markdown), html: markdownAHtml(markdown), titulo: tituloDeRespuesta(markdown) });
+        setVinculo({ tipo: 'suelto', id: idDeRespuesta(markdown), titulo: tituloDeRespuesta(limpiarMarcadores(markdown)), markdown });
+        setDocumentoAbierto(true);
     }, [constructorAbierto]);
 
     // El constructor gasta consultas por su cuenta (Toulmin, redactar,
@@ -380,6 +400,10 @@ export default function ChatPage() {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const mainRef = useRef<HTMLElement>(null);
+    const messagesRef = useRef(messages);
+    messagesRef.current = messages;
+    const constructorAbiertoRef = useRef(constructorAbierto);
+    constructorAbiertoRef.current = constructorAbierto;
     const pieRef = useRef<HTMLDivElement>(null);
     /* La altura real del pie (compositor), medida: el hilo reserva eso y no 500px fijos. */
     const [pieAltura, setPieAltura] = useState(340);
@@ -545,6 +569,7 @@ export default function ChatPage() {
                 if (newConv) {
                     convId = newConv.id;
                     setActiveConvId(newConv.id);
+                    convRecienCreadaRef.current = newConv.id;
                     setActiveConversationId(newConv.id);
                 }
             } finally {
@@ -560,6 +585,13 @@ export default function ChatPage() {
         const userMsg: Message = { role: 'user', content };
         lastSentUserMsgRef.current = userMsg;
 
+        /* SI LO QUE SALE ES UN ESCRITO, NACE EN EL DOCUMENTO. La respuesta
+           caerá en el índice siguiente al del mensaje del usuario. Con el
+           constructor abierto no: ahí el documento es el de la demanda. */
+        if (ES_ESCRITO.test(content) && !constructorAbiertoRef.current) {
+            setVinculo({ tipo: 'indice', indice: messagesRef.current.length + 1 });
+            setDocumentoAbierto(true);
+        }
         // Send the message (streaming). Devuelve el texto final de la
         // respuesta: es la fuente de verdad para el historial.
         const respuesta = await sendMessage(content, enableReasoning);
@@ -650,7 +682,8 @@ export default function ChatPage() {
             if (newConv) {
                 docConvId = newConv.id;
                 setActiveConvId(newConv.id);
-                setActiveConversationId(newConv.id);
+                convRecienCreadaRef.current = newConv.id;
+                    setActiveConversationId(newConv.id);
             }
         }
 
@@ -682,6 +715,12 @@ export default function ChatPage() {
             formData.append('fuentes_web', '1');
         }
 
+        // El análisis de un documento adjunto es un escrito: nace en el panel.
+        // El mensaje del usuario ya está en el hilo; la respuesta cae detrás.
+        if (!constructorAbiertoRef.current) {
+            setVinculo({ tipo: 'indice', indice: messagesRef.current.length });
+            setDocumentoAbierto(true);
+        }
         let reloj: ReturnType<typeof setTimeout> | undefined;
         try {
             /* ═══ EL RELOJ MIRA EL SILENCIO, NO EL RELOJ (18-sep-2026) ═══
@@ -877,6 +916,70 @@ export default function ChatPage() {
         return () => ro.disconnect();
     }, [hasMessages]);
 
+    /* ═══ EL DOCUMENTO QUE VE EL PANEL ═══
+       Deriva de la respuesta a la que apunta el vínculo: en vivo mientras esa
+       respuesta es la última y sigue llegando; fija después. */
+    const documento = useMemo<DocumentoVivo | null>(() => {
+        if (!vinculo) return null;
+        if (vinculo.tipo === 'suelto') return { id: vinculo.id, titulo: vinculo.titulo, markdown: vinculo.markdown, enVivo: false };
+        if (vinculo.tipo === 'version') {
+            const v = versiones.find((x) => x.id === vinculo.id);
+            return v ? { id: v.id, titulo: v.titulo, markdown: v.markdown, enVivo: false } : null;
+        }
+        const trabajando = isLoading || isDocumentAnalyzing;
+        const m = messages[vinculo.indice];
+        if (!m || m.role !== 'assistant') return { id: `m${vinculo.indice}`, titulo: 'Escrito de Iurexia', markdown: '', enVivo: trabajando };
+        const enVivo = trabajando && vinculo.indice === messages.length - 1;
+        return { id: `m${vinculo.indice}`, titulo: tituloDeRespuesta(limpiarMarcadores(m.content)), markdown: m.content, enVivo };
+    }, [vinculo, versiones, messages, isLoading, isDocumentAnalyzing]);
+
+    // Cada escrito terminado queda como versión (las últimas doce).
+    useEffect(() => {
+        if (!documento || documento.enVivo || !documento.markdown.trim() || vinculo?.tipo !== 'indice') return;
+        setVersiones((vs) => vs.some((v) => v.id === documento.id) ? vs
+            : [...vs, { id: documento.id, titulo: documento.titulo, markdown: documento.markdown, fecha: Date.now() }].slice(-12));
+    }, [documento, vinculo]);
+
+    // Qué respuestas del hilo viven en el documento (para pintarlas resumidas).
+    const indicesEnDocumento = useMemo(() => {
+        const s = new Set<number>();
+        versiones.forEach((v) => { const n = /^m(\d+)$/.exec(v.id); if (n) s.add(Number(n[1])); });
+        if (vinculo?.tipo === 'indice') s.add(vinculo.indice);
+        return s;
+    }, [versiones, vinculo]);
+    const verDocumento = useCallback((indice: number) => {
+        setVinculo({ tipo: 'indice', indice });
+        setConstructorAbierto(false);
+        setDocumentoAbierto(true);
+    }, []);
+
+    /* Las versiones van con la conversación (en este navegador, por ahora).
+       Al cambiar de conversación se recogen el panel y su vínculo; la que se
+       acaba de crear para este envío no cuenta como cambio. */
+    const convCargadaRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (activeConversationId === convCargadaRef.current) return;
+        convCargadaRef.current = activeConversationId;
+        if (activeConversationId && convRecienCreadaRef.current === activeConversationId) {
+            convRecienCreadaRef.current = null;
+            setVersiones([]);
+            return;
+        }
+        setDocumentoAbierto(false);
+        setVinculo(null);
+        if (!activeConversationId) { setVersiones([]); return; }
+        try {
+            const crudo = localStorage.getItem(`iurexia-documento-${activeConversationId}`);
+            setVersiones(crudo ? (JSON.parse(crudo) as VersionDocumento[]) : []);
+        } catch { setVersiones([]); }
+    }, [activeConversationId]);
+    useEffect(() => {
+        if (!activeConversationId || convCargadaRef.current !== activeConversationId) return;
+        try { localStorage.setItem(`iurexia-documento-${activeConversationId}`, JSON.stringify(versiones)); } catch { /* sin almacenamiento */ }
+    }, [versiones, activeConversationId]);
+
+    const panelAbierto = constructorAbierto || documentoAbierto;
+
     /* SEGUIR LA RESPUESTA MIENTRAS SE ESCRIBE. El desplazamiento sólo ocurría
        al AÑADIR un mensaje; durante los 20-60 s de una respuesta larga la
        vista se quedaba arriba y el abogado bajaba a mano. Se sigue sólo si ya
@@ -946,7 +1049,7 @@ export default function ChatPage() {
                                 className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800"
                             >
                                 <FileText className="w-3.5 h-3.5 text-accent-gold" />
-                                <span className={constructorAbierto ? 'hidden' : 'hidden sm:inline'}>Mi trabajo</span>
+                                <span className={panelAbierto ? 'hidden' : 'hidden sm:inline'}>Mi trabajo</span>
                             </Link>
 
                             {/* Lo último: comunicados de la Corte, tesis de la
@@ -958,13 +1061,13 @@ export default function ChatPage() {
                                 className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-2.5 sm:px-3 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-accent-gold/20"
                             >
                                 <Newspaper className="w-3.5 h-3.5 text-accent-gold" />
-                                <span className={constructorAbierto ? 'hidden' : 'hidden sm:inline'}>Lo último</span>
+                                <span className={panelAbierto ? 'hidden' : 'hidden sm:inline'}>Lo último</span>
                             </Link>
 
                             <Link
                                 href="/normativa"
                                 title="Normativa"
-                                className={`${constructorAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]`}
+                                className={`${panelAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03]`}
                             >
                                 <BookOpen className="w-3.5 h-3.5" />
                                 Normativa
@@ -981,7 +1084,7 @@ export default function ChatPage() {
                                     : 'Redactor PJF — del plan Ultra Secretarios'}
                                 /* Negro, como «Mi trabajo» (David, 16-sep-2026). Con candado
                                    o sin él, el mismo botón: el candado ya dice que falta el plan. */
-                                className={`${constructorAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800`}
+                                className={`${panelAbierto ? 'hidden' : 'hidden md:inline-flex'} h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-charcoal-800`}
                             >
                                 <Gavel className="w-3.5 h-3.5 text-accent-gold" />
                                 Redactor PJF
@@ -989,7 +1092,7 @@ export default function ChatPage() {
                             </button>
 
                             {/* Lo que no cabe en móvil, ni junto al constructor */}
-                            <div className={constructorAbierto ? 'relative' : 'relative md:hidden'}>
+                            <div className={panelAbierto ? 'relative' : 'relative md:hidden'}>
                                 <button
                                     onClick={() => setMenuMas(v => !v)}
                                     aria-label="Más herramientas"
@@ -1037,7 +1140,7 @@ export default function ChatPage() {
                                 className="inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg border border-red-700/25 bg-red-50/60 px-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-red-700 transition-colors hover:bg-red-50"
                             >
                                 <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                                <span className={constructorAbierto ? 'hidden' : 'hidden lg:inline'}>Sálvame</span>
+                                <span className={panelAbierto ? 'hidden' : 'hidden lg:inline'}>Sálvame</span>
                             </Link>
 
                             <button
@@ -1050,7 +1153,7 @@ export default function ChatPage() {
                             </button>
 
                             <div
-                                className={`${constructorAbierto ? 'hidden' : 'hidden lg:flex'} h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
+                                className={`${panelAbierto ? 'hidden' : 'hidden lg:flex'} h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
                                 title={`Consultas usadas este mes: ${queriesUsed} de ${queriesLimit}`}
                             >
                                 <span className={`font-semibold tabular-nums ${queriesRemaining <= 1 ? 'text-red-700' : 'text-charcoal-900'}`}>
@@ -1242,7 +1345,18 @@ export default function ChatPage() {
                                 </div>
                             </div>
                         </div>
-                    ) : (
+                    ) : (<>
+                        {documento && (
+                            <div className="mx-auto w-full max-w-[var(--chat-max)] px-4 pt-3 lg:hidden">
+                                <div className="grid grid-cols-2 gap-1 rounded-lg bg-charcoal-900/5 p-0.5" role="tablist">
+                                    <button type="button" role="tab" aria-selected={true} className="h-8 rounded-md bg-charcoal-900 text-[12.5px] font-medium text-white">Consulta</button>
+                                    <button type="button" role="tab" aria-selected={false} onClick={() => setDocumentoAbierto(true)}
+                                        className="h-8 rounded-md text-[12.5px] font-medium text-charcoal-900/70 transition-colors hover:bg-white/60">
+                                        Documento{documento.enVivo ? ' ●' : ''}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                         <div className="mx-auto w-full max-w-[var(--chat-max)] px-4 py-6 space-y-5" style={{ paddingBottom: pieAltura + 24 }}>
                             {messages.map((message, index) => {
                                 // Count assistant messages up to this point
@@ -1250,7 +1364,7 @@ export default function ChatPage() {
                                 const showNudge = !isPro && message.role === 'assistant' && assistantCount > 0 && assistantCount % 3 === 0 && index !== messages.length - 1;
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
-                                        <ChatMessage message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
+                                        <ChatMessage message={message} enDocumento={message.role === 'assistant' && indicesEnDocumento.has(index)} onVerDocumento={() => verDocumento(index)} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
                                         {showNudge && <UpgradeNudge messageIndex={assistantCount} />}
                                     </div>
                                 );
@@ -1296,7 +1410,7 @@ export default function ChatPage() {
                 {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
                             <div ref={messagesEndRef} />
                         </div>
-                    )}
+                    </>)}
                 </main>
 
                 {hasMessages && (
@@ -1319,6 +1433,7 @@ export default function ChatPage() {
                             onMateriaChange={setSelectedMateria}
 
                             onAbrirConstructor={abrirConstructor}
+                            placeholder={documentoAbierto ? 'Pide un cambio al documento o haz otra consulta…' : undefined}
                                     constructorAbierto={constructorAbierto}
                         />
                     </div>
@@ -1587,9 +1702,16 @@ export default function ChatPage() {
                     onConsultaGastada={sincronizarCuota}
                 />
             )}
-            {/* El editor suelto queda montado tras la primera apertura: así lo
-                que se escribió sigue ahí si se recoge y se vuelve a abrir. */}
-            <EditorEscrito escrito={escritoEnEdicion} onCerrar={() => setEscritoEnEdicion(null)} />
+            {/* El panel Documento queda montado tras la primera apertura: lo
+                editado sigue ahí si se recoge y se vuelve a abrir. */}
+            <PanelDocumento
+                abierto={documentoAbierto}
+                documento={documento}
+                versiones={versiones}
+                onCerrar={() => setDocumentoAbierto(false)}
+                onElegirVersion={(id) => setVinculo({ tipo: 'version', id })}
+                onCita={handleCitationClick}
+            />
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 
             <WelcomeVideoModal isOpen={showWelcomeVideo} onClose={handleWelcomeVideoClose} />

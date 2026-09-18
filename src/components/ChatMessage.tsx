@@ -14,8 +14,11 @@ interface ChatMessageProps {
     avatarUrl?: string | null;
     tratamiento?: string | null;
     onCitationClick?: (source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }) => void;
-    /** Lleva esta respuesta (markdown limpio) al documento del constructor de demanda. */
+    /** Lleva esta respuesta al documento: al constructor si está abierto, o al panel Documento. */
     onLlevarAlDocumento?: (markdown: string) => void;
+    /** La respuesta vive en el panel Documento: aquí sólo se resume y se enlaza. */
+    enDocumento?: boolean;
+    onVerDocumento?: () => void;
 }
 
 // UUID regex for document IDs
@@ -78,7 +81,7 @@ function filterDocumentContent(content: string): string {
 
 
 
-export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento }: ChatMessageProps) {
+export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, enDocumento = false, onVerDocumento }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
@@ -1288,15 +1291,44 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             </div>
                         )}
                         {/* Sin texto todavía: que se vea que se está escribiendo. */}
-                        {isStreaming && !processedContent.trim() && (
+                        {isStreaming && !enDocumento && !processedContent.trim() && (
                             <div className="flex items-center px-5 sm:px-6 py-4 text-sm text-charcoal-600">
                                 <Loader2 className="w-4 h-4 animate-spin text-accent-brown mr-2.5" />
                                 Redactando la respuesta…
                             </div>
                         )}
+                        {/* EN EL DOCUMENTO, NO EN LA BURBUJA (18-sep-2026). Cuando la
+                            respuesta es un escrito, el texto se está escribiendo en la
+                            hoja de la derecha; aquí se dice cuánto va y se enlaza. El
+                            sello, las fuentes y las acciones siguen abajo, que se
+                            calculan del texto y no de lo que se pinte. */}
+                        {enDocumento && (
+                            <div className="px-5 py-4 sm:px-6">
+                                <div className="flex items-start gap-3 rounded-xl border border-cream-300 bg-cream-50 px-4 py-3">
+                                    {isStreaming
+                                        ? <Loader2 className="mt-0.5 h-4 w-4 flex-shrink-0 animate-spin text-accent-brown" />
+                                        : <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent-brown" />}
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-semibold text-charcoal-900">
+                                            {isStreaming ? 'Escribiendo en el documento…' : 'Escrito en el documento'}
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-charcoal-500">
+                                            {processedContent.trim() ? processedContent.trim().split(/\s+/).length.toLocaleString('es-MX') : 0} palabras
+                                            {docIdMap.size > 0 ? ` · ${docIdMap.size} ${docIdMap.size === 1 ? 'cita' : 'citas'}` : ''}
+                                        </p>
+                                    </div>
+                                    {onVerDocumento && (
+                                        <button type="button" onClick={onVerDocumento}
+                                            className="inline-flex h-8 flex-shrink-0 items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 text-xs font-semibold text-white transition-colors hover:bg-charcoal-800">
+                                            Ver documento
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                         <div
                             ref={contentRef}
-                            className="prose-legal respuesta px-5 py-4 sm:px-6"
+                            className={enDocumento ? 'hidden' : 'prose-legal respuesta px-5 py-4 sm:px-6'}
                             dangerouslySetInnerHTML={{ __html: htmlFormateado }}
                             onClick={(e) => {
                                 const target = e.target as HTMLElement;
@@ -1347,7 +1379,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             barra de acciones, para que la burbuja no salte de alto
                             al terminar. Es la señal de carga que no depende de la
                             ramificación ni de ninguna animación avanzada. */}
-                        {isStreaming && processedContent.trim() && (
+                        {isStreaming && !enDocumento && processedContent.trim() && (
                             <div className="flex items-center px-5 sm:px-6 py-2 border-t border-cream-200 text-[12px] text-charcoal-500">
                                 <Loader2 className="w-3.5 h-3.5 animate-spin text-accent-brown mr-2" />
                                 <span>Redactando…</span>
@@ -1444,14 +1476,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                         {!isStreaming && message.content.length > 50 && (
                             <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 px-4 sm:px-5 py-2 border-t border-cream-200 bg-cream-50">
                                 <span className="hidden sm:inline text-xs text-charcoal-500 mr-2">Exportar:</span>
-                                <button
+                                {!enDocumento && <button
                                     onClick={handleExportPDF}
                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 hover:bg-cream-200 rounded-md transition-colors"
                                     title="Exportar a PDF"
                                 >
                                     <FileDown className="w-3.5 h-3.5" />
                                     PDF
-                                </button>
+                                </button>}
                                 <button
                                     onClick={handleExportDOCX}
                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 hover:bg-cream-200 rounded-md transition-colors"
@@ -1460,14 +1492,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     <FileText className="w-3.5 h-3.5" />
                                     DOCX
                                 </button>
-                                <button
+                                {!enDocumento && <button
                                     onClick={handlePrint}
                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 hover:bg-cream-200 rounded-md transition-colors"
                                     title="Imprimir"
                                 >
                                     <Printer className="w-3.5 h-3.5" />
                                     Imprimir
-                                </button>
+                                </button>}
                                 <button
                                     onClick={handleCopy}
                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
@@ -1514,7 +1546,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     exactamente lo que se ve. */}
                                 {onLlevarAlDocumento && (
                                     <button
-                                        onClick={() => onLlevarAlDocumento(cleanContentForExport(message.content))}
+                                        onClick={() => onLlevarAlDocumento(message.content)}
                                         className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
                                         title="Abrir esta respuesta en el editor para darle forma y descargarla en Word"
                                     >
