@@ -18,14 +18,14 @@
  * «hazme un favor» y pasa a ser «te regalo seis días de Iurexia Pro», que es
  * algo que un abogado sí manda a un colega porque lo hace quedar bien.
  *
- *   · el invitado, al registrarse ....... 6 días de Pro, sin tarjeta
- *   · quien invita, por escalera ........ 1 activado →  6 días de Pro
- *                                         3 activados → 15 días de Pro
- *                                         5 activados → 30 días de Pro
+ *   · el invitado, al registrarse ....... 25 consultas que no caducan
+ *   · quien invita, por escalera ........ 1 colega SUSCRITO → 30 días
+ *                                         3 colegas SUSCRITOS → 2 meses
+ *     del plan Pro, o Platinum si ya era Pro. Sin tocar su cobro.
  *
- * La escalera paga desde el PRIMER invitado a propósito: con la valla en tres,
- * quien traía dos se quedaba sin nada y no volvía a intentarlo. Ese fue el
- * modo de fallo observado.
+ * La escalera sigue pagando desde el PRIMERO a propósito: con la valla sólo
+ * en tres, quien traía dos se quedaba sin nada y no volvía a intentarlo. Ese
+ * fue el modo de fallo observado en la versión de agosto.
  *
  * ─── QUÉ CUENTA COMO «USUARIO REAL» ──────────────────────────────────────
  * Correo verificado —lo es por construcción: la cuenta sólo nace después del
@@ -42,8 +42,25 @@
 
 import crypto from 'crypto';
 
-/** Días de Pro que recibe el INVITADO nada más registrarse. */
-export const DIAS_DE_BIENVENIDA = 6;
+/* ═══ SEGUNDA VERSIÓN DEL PROGRAMA (18-sep-2026) ═══
+   David: «tenemos esa campaña pero no ha funcionado. Vamos a modificarla:
+   el botón simple de Regala Iurexia, básico, con 25 consultas para el
+   beneficiario; y si ese colega y dos más se suscriben a cualquier plan, el
+   que invita obtiene plan Pro o superior —según la cuenta que tenga— gratis
+   durante dos meses».
+
+   QUÉ CAMBIA Y POR QUÉ. Los seis días de Pro del invitado eran un plan
+   prestado: vencían, había que revertirlos y en el camino se podía degradar
+   a alguien. Veinticinco consultas son una bolsa que NO caduca
+   (`consultas_recargadas`, la misma que usa una recarga comprada), no tocan
+   el plan de nadie y se explican en una línea.
+
+   Y el premio de quien invita deja de pagarse por un alta —que no vale
+   nada— y se paga por SUSCRIPCIÓN, que es lo que sostiene el negocio. */
+
+/** Consultas que recibe el INVITADO nada más registrarse. No caducan. */
+export const CONSULTAS_DE_BIENVENIDA = 25;
+
 
 /**
  * La escalera de quien invita. Cada peldaño se paga UNA vez —lo garantiza el
@@ -51,13 +68,24 @@ export const DIAS_DE_BIENVENIDA = 6;
  * peldaño alcanzado y se cuenta desde hoy, que es lo que dice el texto.
  */
 export const ESCALERA: { nivel: number; dias: number }[] = [
-    { nivel: 1, dias: 6 },
-    { nivel: 3, dias: 15 },
-    { nivel: 5, dias: 30 },
+    { nivel: 1, dias: 30 },
+    { nivel: 3, dias: 60 },
 ];
 
-/** El plan que se regala en todos los casos. */
+/** El plan que se regala a quien no paga nada todavía. */
 export const PLAN_REGALO = 'pro_monthly';
+
+/**
+ * «Pro o superior, según la cuenta que tenga» (David). A quien ya es Pro
+ * regalarle Pro no es un premio: sube a Platinum. A quien ya es Platinum se
+ * le alargan sus días, que es lo único que le falta.
+ */
+export function planDelPremio(planActual: string): string {
+    const p = (planActual || 'gratuito').toLowerCase();
+    if (p.startsWith('platinum') || p === 'ultra_secretarios') return 'platinum_monthly';
+    if (p.startsWith('pro')) return 'platinum_monthly';
+    return PLAN_REGALO;
+}
 
 /** Nivel reservado al regalo de bienvenida del invitado: no es peldaño. */
 export const NIVEL_BIENVENIDA = 0;
@@ -134,10 +162,10 @@ export function fechaLarga(d: Date): string {
 export function mensajeDeInvitacion(nombre: string | null, enlace: string): string {
     const dequien = nombre?.trim() ? `${nombre.trim()} ` : '';
     return (
-        `Colega, le comparto ${DIAS_DE_BIENVENIDA} días de Iurexia Pro sin costo ni tarjeta.\n\n` +
+        `Colega, le comparto ${CONSULTAS_DE_BIENVENIDA} consultas de Iurexia sin costo ni tarjeta.\n\n` +
         `Es el asistente jurídico con el que trabajo: responde con la ley y la ` +
         `jurisprudencia mexicanas citadas y verificables, no de memoria.\n\n` +
-        `Actívelos aquí: ${enlace}\n\n` +
+        `Actívelas aquí: ${enlace}\n\n` +
         (dequien ? `— ${dequien}` : '')
     );
 }

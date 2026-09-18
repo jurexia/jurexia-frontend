@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import RegalaIurexia, { IconoRegalo } from '@/components/RegalaIurexia';
 import {
     MessageSquarePlus,
     Trash2,
@@ -52,6 +53,9 @@ function ChatSidebar({
 }: ChatSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    /* «Regala Iurexia» vive aquí, donde el abogado trabaja todos los días. En
+       /perfil no la veía nadie: seis meses y cero invitaciones. */
+    const [regaloAbierto, setRegaloAbierto] = useState(false);
     const [filtro, setFiltro] = useState('');
     // El borrado es inmediato y definitivo, y en pantallas táctiles el bote
     // ya es visible: se pide confirmación en la propia fila.
@@ -385,6 +389,27 @@ function ChatSidebar({
                         background: 'rgba(0,0,0,0.18)',
                     }}
                 >
+                    <button
+                        type="button"
+                        onClick={() => { setRegaloAbierto(true); setIsMobileOpen(false); }}
+                        className="w-full flex items-center justify-between px-3 py-2 mb-2 rounded-xl transition-colors duration-200 group"
+                        style={{
+                            background: 'rgba(201, 169, 98, 0.10)',
+                            border: '1px solid rgba(201, 169, 98, 0.35)',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201, 169, 98, 0.18)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'rgba(201, 169, 98, 0.10)')}
+                    >
+                        <span className="flex items-center gap-2">
+                            <span className="grid h-5 w-5 place-items-center rounded-md bg-white/90">
+                                <IconoRegalo className="w-4 h-4" />
+                            </span>
+                            <span className="text-[0.8125rem] font-semibold" style={{ color: '#c9a962' }}>
+                                Regala Iurexia
+                            </span>
+                        </span>
+                        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" style={{ color: 'rgba(201, 169, 98, 0.6)' }} />
+                    </button>
                     <a
                         href="/guia-pro/Guia_Iurexia_Pro.html"
                         target="_blank"
@@ -497,6 +522,8 @@ function ChatSidebar({
             >
                 {contenido}
             </aside>
+
+            <RegalaIurexia abierto={regaloAbierto} onCerrar={() => setRegaloAbierto(false)} />
         </>
     );
 }

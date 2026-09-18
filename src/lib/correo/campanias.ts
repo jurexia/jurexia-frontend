@@ -28,7 +28,7 @@ import { urlActivacion } from './activar';
 import { urlBaja } from './baja';
 import { urlEntrada } from './entrada';
 import {
-    codigoReferido, enlaceInvitacion, DIAS_DE_BIENVENIDA, ESCALERA,
+    codigoReferido, enlaceInvitacion, CONSULTAS_DE_BIENVENIDA, ESCALERA,
 } from './referidos';
 import type { Correo, Destinatario } from './enviar';
 
@@ -268,24 +268,24 @@ export function correoReferidos(d: Destinatario): Correo {
         parrafo(saludo(d, nombre), '0 0 22px 0') +
         parrafo(
             `Le escribimos para ponerle en las manos algo que puede regalar: ` +
-            `${fuerte(`${DIAS_DE_BIENVENIDA} días de Iurexia Pro`)} para cada colega que usted invite. ` +
+            `${fuerte(`${CONSULTAS_DE_BIENVENIDA} consultas de Iurexia`)} para cada colega que usted invite. ` +
             'Sin tarjeta, sin compromiso de renovación y sin que a usted le cueste nada.',
         ) +
         parrafo(
             'La idea es sencilla. Cuando usted le recomienda una herramienta a un colega está poniendo ' +
             'su nombre de por medio, y eso vale. Así que quien reciba su invitación no llega a una ' +
-            'prueba recortada: entra con el plan Pro completo desde el primer día.',
+            'prueba de tres consultas: entra con veinticinco, y no caducan.',
         ) +
         caja(
             rotulo('Y usted también cobra') +
             listado(ESCALERA.map((p) =>
-                `${p.nivel} ${p.nivel === 1 ? 'colega invitado que use la plataforma' : 'colegas invitados que la usen'} → ` +
-                `${p.dias} días de Pro para su cuenta`,
+                `${p.nivel} ${p.nivel === 1 ? 'colega que se suscriba' : 'colegas que se suscriban'} a cualquier plan → ` +
+                `${p.dias === 60 ? 'dos meses' : `${p.dias} días`} de Pro para su cuenta, o de Platinum si ya es Pro`,
             )) +
             `<p style="margin:16px 0 0;font-size:13px;color:#404040;">Se paga desde el primero: ` +
-            `<strong style="color:#1a1a1a;">no hay que juntar cinco para recibir algo</strong>. ` +
-            `Cuenta el colega que verifica su correo y hace al menos una consulta real — no las altas ` +
-            `vacías, porque premiar registros de humo no le sirve a nadie.</p>` +
+            `<strong style="color:#1a1a1a;">no hay que juntar tres para recibir algo</strong>. ` +
+            `Cuenta el colega que contrata un plan de pago — no las altas vacías, porque premiar ` +
+            `registros de humo no le sirve a nadie.</p>` +
             `<p style="margin:12px 0 0;font-size:13px;color:#404040;">Si usted ya paga un plan, ` +
             `<strong style="color:#1a1a1a;">seguirá pagando exactamente lo mismo</strong>: los días ` +
             `regalados se suman a sus capacidades, no a su recibo. Su suscripción no se modifica y no ` +
@@ -310,7 +310,7 @@ export function correoReferidos(d: Destinatario): Correo {
 
     const html = envolver({ cuerpo, urlBaja: urlBaja(d.email), visual: videoChat() });
     return {
-        asunto: `${trato(d)} ${nombre}, regale ${DIAS_DE_BIENVENIDA} días de Iurexia Pro a un colega`,
+        asunto: `${trato(d)} ${nombre}, regale ${CONSULTAS_DE_BIENVENIDA} consultas de Iurexia a un colega`,
         html,
         texto: aTexto(cuerpo) + `\n\nSu enlace: ${enlace}\nDarse de baja: ${urlBaja(d.email)}`,
     };

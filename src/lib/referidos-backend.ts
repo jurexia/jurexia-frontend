@@ -2,9 +2,11 @@
  * Ciclo completo del programa «Regale Iurexia», del lado servidor.
  *
  *   registro con ?ref=CODIGO  →  referidos (padrino ↔ ahijado)
- *                             →  el AHIJADO recibe 6 días de Pro en el acto
+ *                             →  el AHIJADO recibe 25 consultas que no caducan
  *   el ahijado hace 1 consulta →  activado_at: ya cuenta como usuario real
- *   1 / 3 / 5 activados        →  el PADRINO cobra 6 / 15 / 30 días de Pro
+ *   el ahijado se SUSCRIBE     →  suscrito_pro_at
+ *   1 / 3 suscritos            →  el PADRINO cobra 30 / 60 días de Pro, o de
+ *                                 Platinum si ya era Pro
  *   al vencer                  →  reversión al plan que de verdad tenía
  *
  * ─── CÓMO SE PAGA ────────────────────────────────────────────────────────
@@ -37,8 +39,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import {
-    DIAS_DE_BIENVENIDA, ESCALERA, META_ESCALERA, NIVEL_BIENVENIDA,
-    PLANES_QUE_CUENTAN, PLAN_REGALO,
+    CONSULTAS_DE_BIENVENIDA, ESCALERA, META_ESCALERA,
+    PLANES_QUE_CUENTAN, PLAN_REGALO, planDelPremio,
     codigoReferido, peldanoAlcanzado, siguientePeldano, vencimientoEnDias,
 } from './correo/referidos';
 
@@ -142,10 +144,35 @@ export async function registrarReferido(codigo: string, ahijadoId: string) {
 
     // El invitado cobra PRIMERO. Es lo que convierte la invitación en un
     // regalo y no en un favor, que era el defecto del programa anterior.
-    const regalo = await otorgarPremio(ahijadoId, DIAS_DE_BIENVENIDA, NIVEL_BIENVENIDA)
-        .catch(() => null);
+    const regalo = await regalarConsultas(ahijadoId, CONSULTAS_DE_BIENVENIDA).catch(() => null);
 
     return { atado: true, regalo };
+}
+
+/**
+ * LAS CONSULTAS DE BIENVENIDA (18-sep-2026).
+ *
+ * Van a `consultas_recargadas`, la misma bolsa que llena una recarga
+ * comprada: `consume_query` la gasta después de la cuota del mes y NO caduca.
+ * Así el invitado estrena Iurexia con veinticinco consultas de verdad sin que
+ * nadie le preste un plan que después haya que quitarle —que es donde el
+ * programa anterior se complicaba y donde se podía degradar a alguien—.
+ */
+export async function regalarConsultas(usuarioId: string, consultas: number) {
+    const cliente = admin();
+    const { data: perfil } = await cliente
+        .from('user_profiles')
+        .select('consultas_recargadas')
+        .eq('id', usuarioId)
+        .maybeSingle();
+    if (!perfil) return { otorgado: false, consultas: 0, motivo: 'perfil no encontrado' };
+    const total = (perfil.consultas_recargadas ?? 0) + consultas;
+    const { error } = await cliente
+        .from('user_profiles')
+        .update({ consultas_recargadas: total, updated_at: new Date().toISOString() })
+        .eq('id', usuarioId);
+    if (error) return { otorgado: false, consultas: 0, motivo: error.message };
+    return { otorgado: true, consultas, total };
 }
 
 /**
@@ -284,11 +311,14 @@ export async function sincronizarActivaciones(padrinoId?: string) {
 export async function evaluarEscalera(padrinoId: string): Promise<PremioEscalera> {
     const cliente = admin();
 
+    /* SE CUENTAN LOS QUE SE SUSCRIBIERON, no los que se dieron de alta
+       (18-sep-2026). El alta no sostiene nada; la suscripción sí, y es lo que
+       David puso como condición del premio nuevo. */
     const { count } = await cliente
         .from('referidos')
         .select('id', { count: 'exact', head: true })
         .eq('padrino_id', padrinoId)
-        .not('activado_at', 'is', null);
+        .not('suscrito_pro_at', 'is', null);
 
     const activos = count ?? 0;
     const peldano = peldanoAlcanzado(activos);
@@ -300,7 +330,15 @@ export async function evaluarEscalera(padrinoId: string): Promise<PremioEscalera
         };
     }
 
-    const r = await otorgarPremio(padrinoId, peldano.dias, peldano.nivel);
+    /* «Pro o superior según la cuenta que tenga»: a quien ya es Pro se le da
+       Platinum, porque regalarle Pro no sería premio. */
+    const { data: quien } = await cliente
+        .from('user_profiles')
+        .select('subscription_type')
+        .eq('id', padrinoId)
+        .maybeSingle();
+    const r = await otorgarPremio(padrinoId, peldano.dias, peldano.nivel,
+                                  planDelPremio(quien?.subscription_type || 'gratuito'));
     return {
         otorgado: r.otorgado,
         activos,
@@ -382,7 +420,11 @@ export async function alSuscribirseUnReferido(emailDelAhijado: string, plan: str
         await cliente.from('referidos').update(parche).eq('id', vinculo.id);
     }
 
-    const premio = parche.activado_at ? await evaluarEscalera(vinculo.padrino_id) : null;
+    /* LA ESCALERA SE EVALÚA CON CADA SUSCRIPCIÓN NUEVA. Antes sólo se miraba
+       cuando el pago activaba a un invitado que no había consultado; ahora el
+       premio ES por suscripciones, así que cualquier alta de pago puede
+       completar un peldaño. */
+    const premio = parche.suscrito_pro_at ? await evaluarEscalera(vinculo.padrino_id) : null;
     return { contado: true, premio };
 }
 
@@ -460,6 +502,11 @@ export async function estadoDeReferidos(usuarioId: string) {
     const invitados = vinculos?.length ?? 0;
     const activos = vinculos?.filter((v) => v.activado_at).length ?? 0;
     const suscritos = vinculos?.filter((v) => v.suscrito_pro_at).length ?? 0;
+    const { data: cuenta } = await cliente
+        .from('user_profiles')
+        .select('subscription_type')
+        .eq('id', usuarioId)
+        .maybeSingle();
 
     const { data: premio } = await cliente
         .from('ascensos_referido')
@@ -478,8 +525,11 @@ export async function estadoDeReferidos(usuarioId: string) {
         suscritos,
         meta: META_ESCALERA,
         escalera: ESCALERA,
-        diasDeBienvenida: DIAS_DE_BIENVENIDA,
-        siguiente: siguientePeldano(activos),
+        consultasDeBienvenida: CONSULTAS_DE_BIENVENIDA,
+        /** El plan que cobraría hoy con la cuenta que tiene. */
+        planDelPremio: planDelPremio(cuenta?.subscription_type || 'gratuito'),
+        // La escalera se mide por SUSCRITOS desde el 18-sep-2026.
+        siguiente: siguientePeldano(suscritos),
         premio: premio ?? null,
     };
 }

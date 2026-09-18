@@ -72,14 +72,14 @@ const USOS_CFDI = [
  * el regalo, luego el motivo y el enlace al final. Sin signos de admiración ni
  * promesas — va dirigido a un colega y quien lo manda pone su prestigio.
  */
-function textoInvitacion(nombre: string | null | undefined, codigo: string): string {
+function textoInvitacion(nombre: string | null | undefined, codigo: string, consultas: number): string {
     const enlace = `https://www.iurexia.com/registro?ref=${codigo}`;
     const firma = nombre?.trim() ? `\n\n— ${nombre.trim()}` : '';
     return (
-        `Colega, le comparto 6 días de Iurexia Pro sin costo ni tarjeta.\n\n` +
+        `Colega, le comparto ${consultas} consultas de Iurexia sin costo ni tarjeta.\n\n` +
         `Es el asistente jurídico con el que trabajo: responde con la ley y la ` +
         `jurisprudencia mexicanas citadas y verificables, no de memoria.\n\n` +
-        `Actívelos aquí: ${enlace}${firma}`
+        `Actívelas aquí: ${enlace}${firma}`
     );
 }
 
@@ -179,7 +179,7 @@ export default function PerfilPage() {
     const [cancelMessage, setCancelMessage] = useState('');
     const [referidos, setReferidos] = useState<{
         codigo: string; invitados: number; activos: number; suscritos: number;
-        meta: number; diasDeBienvenida: number;
+        meta: number; consultasDeBienvenida: number; planDelPremio: string;
         escalera: { nivel: number; dias: number }[];
         siguiente: { nivel: number; dias: number; faltan: number } | null;
         premio: { vence_at: string; plan_previo: string; plan_premio: string; nivel: number } | null;
@@ -1158,7 +1158,7 @@ export default function PerfilPage() {
                 {referidos && (
                     <div className="lg:col-span-2">
                     <Tarjeta icono={Gift} titulo="Regale Iurexia" acento="azul"
-                        descripcion={`Regale ${referidos.diasDeBienvenida} días de Pro a un colega y gane los suyos`}>
+                        descripcion={`Regale ${referidos.consultasDeBienvenida} consultas a un colega y gane meses de Pro`}>
 
                         {referidos.premio && (
                             <div className="mb-5 p-4 rounded-lg border border-accent-gold/50 bg-cream-100">
@@ -1179,8 +1179,10 @@ export default function PerfilPage() {
 
                         <p className="text-sm text-charcoal-700 mb-5">
                             Cada colega que invite entra con{' '}
-                            <strong className="text-charcoal-900">{referidos.diasDeBienvenida} días de Iurexia Pro</strong>,
-                            sin tarjeta. Y usted gana los suyos conforme lo vayan usando:
+                            <strong className="text-charcoal-900">{referidos.consultasDeBienvenida} consultas</strong>{' '}
+                            que no caducan, sin tarjeta. Y usted gana días de{' '}
+                            {referidos.planDelPremio?.startsWith('platinum') ? 'Platinum' : 'Pro'}{' '}
+                            conforme sus colegas se vayan suscribiendo:
                         </p>
 
                         {/* La escalera. Se pinta completa para que se vea que
@@ -1188,7 +1190,7 @@ export default function PerfilPage() {
                             tres, quien traía dos se quedaba sin nada. */}
                         <div className="grid grid-cols-3 gap-2 mb-5">
                             {referidos.escalera.map((p) => {
-                                const logrado = referidos.activos >= p.nivel;
+                                const logrado = referidos.suscritos >= p.nivel;
                                 return (
                                     <div key={p.nivel}
                                         className={`rounded-lg border p-3 text-center transition-colors ${
@@ -1222,12 +1224,12 @@ export default function PerfilPage() {
                             {Array.from({ length: referidos.meta }).map((_, i) => (
                                 <div key={i}
                                     className={`h-2 flex-1 rounded-full ${
-                                        i < referidos.activos ? 'bg-accent-gold' : 'bg-cream-400'
+                                        i < referidos.suscritos ? 'bg-accent-gold' : 'bg-cream-400'
                                     }`}
                                 />
                             ))}
                             <span className="text-sm text-charcoal-700 ml-2 whitespace-nowrap">
-                                {referidos.activos} de {referidos.meta}
+                                {referidos.suscritos} de {referidos.meta}
                             </span>
                         </div>
                         <p className="text-sm text-charcoal-700 mb-5">
@@ -1236,9 +1238,10 @@ export default function PerfilPage() {
                                     <strong className="text-charcoal-900">
                                         {referidos.siguiente.faltan} {referidos.siguiente.faltan === 1 ? 'colega' : 'colegas'}
                                     </strong>{' '}
-                                    para sus {referidos.siguiente.dias} días.</>
+                                    para sus {referidos.siguiente.dias === 60 ? 'dos meses' : `${referidos.siguiente.dias} días`}.</>
                                 : <>Completó la escalera. Gracias por cada colega que nos recomendó.</>}
-                            {' '}Cuenta quien verifique su correo y haga al menos una consulta.
+                            {' '}Cuenta el colega que se suscriba a cualquier plan. Su cobro no cambia:
+                            si ya paga, sigue pagando lo mismo, y al terminar los días su cuenta vuelve sola a su plan.
                         </p>
 
                         {/* Compartir. WhatsApp primero y ancho completo en
@@ -1248,7 +1251,7 @@ export default function PerfilPage() {
                             el propio abogado, no como una campaña. */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
                             <a
-                                href={`https://wa.me/?text=${encodeURIComponent(textoInvitacion(profile?.full_name, referidos.codigo))}`}
+                                href={`https://wa.me/?text=${encodeURIComponent(textoInvitacion(profile?.full_name, referidos.codigo, referidos.consultasDeBienvenida))}`}
                                 target="_blank" rel="noopener noreferrer"
                                 className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#25D366] text-white text-sm font-medium hover:brightness-95 transition-all"
                             >
@@ -1256,7 +1259,7 @@ export default function PerfilPage() {
                                 Enviar por WhatsApp
                             </a>
                             <a
-                                href={`mailto:?subject=${encodeURIComponent('Le comparto ' + referidos.diasDeBienvenida + ' días de Iurexia Pro')}&body=${encodeURIComponent(textoInvitacion(profile?.full_name, referidos.codigo))}`}
+                                href={`mailto:?subject=${encodeURIComponent('Le comparto ' + referidos.consultasDeBienvenida + ' consultas de Iurexia')}&body=${encodeURIComponent(textoInvitacion(profile?.full_name, referidos.codigo, referidos.consultasDeBienvenida))}`}
                                 className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-cream-400 bg-cream-50 text-charcoal-900 text-sm font-medium hover:bg-cream-100 transition-colors"
                             >
                                 <Mail className="w-4 h-4" />
@@ -1306,6 +1309,10 @@ export default function PerfilPage() {
                                 <span className="text-charcoal-700">
                                     Ya usándolo:{' '}
                                     <strong className="text-charcoal-900">{referidos.activos}</strong>
+                                </span>
+                                <span className="text-charcoal-700">
+                                    Suscritos:{' '}
+                                    <strong className="text-charcoal-900">{referidos.suscritos}</strong>
                                 </span>
                             </div>
                         </div>

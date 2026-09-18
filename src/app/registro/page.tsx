@@ -267,6 +267,35 @@ export default function RegistroPage() {
                                             />
                                         </div>
 
+                                        {/* EL CÓDIGO DE INVITACIÓN, VISIBLE (18-sep-2026).
+                                            David: «al entrar con el link del colega le
+                                            pedirá el código de invitación». Llega puesto
+                                            desde el enlace y se puede escribir a mano:
+                                            quien recibió el código por WhatsApp sin el
+                                            enlace no tenía dónde ponerlo, y ese regalo se
+                                            perdía sin que nadie lo notara. */}
+                                        <div>
+                                            <label htmlFor="ref" className="block text-sm font-medium text-charcoal-700 mb-1.5">
+                                                Código de invitación <span className="font-normal text-charcoal-500">(opcional)</span>
+                                            </label>
+                                            <input
+                                                id="ref"
+                                                type="text"
+                                                value={codigoReferido ?? ''}
+                                                onChange={(e) => setCodigoReferido(e.target.value.trim().toUpperCase() || null)}
+                                                maxLength={12}
+                                                autoCapitalize="characters"
+                                                spellCheck={false}
+                                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-accent-brown/50 focus:border-transparent transition-all"
+                                                placeholder="NJ5HKDTE"
+                                            />
+                                            {codigoReferido && (
+                                                <p className="mt-1.5 text-xs text-accent-brown">
+                                                    Su colega le regala 25 consultas: entrarán en su cuenta al terminar el registro.
+                                                </p>
+                                            )}
+                                        </div>
+
                                         <div className="flex items-start gap-3">
                                             <input
                                                 id="terms"
