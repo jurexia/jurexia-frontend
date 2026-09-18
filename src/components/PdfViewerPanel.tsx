@@ -2,6 +2,7 @@
 
 import { TesisVerificada } from '@/components/TesisVerificada';
 import { VisorArticulo } from '@/components/VisorArticulo';
+import { AccionesPdf } from '@/components/documento/AccionesPdf';
 
 import { useEffect, useRef, useMemo } from 'react';
 import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel } from 'lucide-react';
@@ -481,15 +482,19 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, urlParaVisor, hasPd
                                 Coteja la norma citada con su fuente
                             </span>
                         </div>
-                        <a
-                            href={resolvedPdfUrl!}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-charcoal-900 text-white rounded-lg text-xs font-semibold hover:bg-charcoal-700 transition-colors shadow-sm"
-                        >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            Abrir en nueva pestaña
-                        </a>
+                        <div className="flex items-center gap-2">
+                            {urlParaVisor && <AccionesPdf url={urlParaVisor} nombre={displayLey || 'Documento oficial'} />}
+                            <a
+                                href={resolvedPdfUrl!}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-charcoal-900 text-white rounded-lg text-xs font-semibold hover:bg-charcoal-700 transition-colors shadow-sm"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Abrir en nueva pestaña</span>
+                                <span className="sm:hidden">Abrir</span>
+                            </a>
+                        </div>
                     </div>
                     <div className="bg-white border border-cream-400 rounded-2xl p-4 shadow-sm">
                         <div className="flex items-center gap-3 mb-3">
@@ -834,13 +839,19 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                         <span className="text-[10px] font-semibold uppercase tracking-widest text-charcoal-700">
                                             Documento oficial del Semanario
                                         </span>
-                                        {scjnUrl && (
-                                            <a href={scjnUrl} target="_blank" rel="noopener noreferrer"
-                                               className="inline-flex items-center gap-1 text-[11px] text-charcoal-600 underline">
-                                                <ExternalLink className="h-3 w-3" />
-                                                Ver en la Corte
-                                            </a>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {/* David, 18-sep-2026: «muchos usuarios guardan la
+                                                tesis o la imprimen». */}
+                                            <AccionesPdf url={urlParaVisor}
+                                                nombre={`Tesis ${tesisMeta?.tesis || registroNumber || ''}`.trim()} />
+                                            {scjnUrl && (
+                                                <a href={scjnUrl} target="_blank" rel="noopener noreferrer"
+                                                   className="inline-flex items-center gap-1 text-[11px] text-charcoal-600 underline">
+                                                    <ExternalLink className="h-3 w-3" />
+                                                    Ver en la Corte
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="overflow-hidden rounded-xl border border-cream-400 bg-cream-200"
                                          style={{ height: '460px' }}>

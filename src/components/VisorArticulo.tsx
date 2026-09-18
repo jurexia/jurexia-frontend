@@ -84,7 +84,68 @@ function numeroDe(etiqueta: string): string {
 }
 
 type Trozo = { inicio: number; fin: number; indice: number };
-type Objetivo = { pagina: number; desde: number; hasta: number; certeza: 'texto' | 'rotulo' };
+type Objetivo = { pagina: number; desde: number; hasta: number; certeza: 'texto' | 'rotulo' | 'aproximado' };
+
+/**
+ * LA FRASE LITERAL, CON SUS PALABRAS CORTAS (18-sep-2026).
+ *
+ * La versión anterior construía la huella con `palabrasClave`, que TIRA las
+ * palabras de tres letras o menos, y luego buscaba esa cadena tal cual en el
+ * PDF. Nunca podía casar: en el documento el texto sí trae sus «de», «en»,
+ * «se» y «un» entre medias. «AMPARO INDIRECTO. PROCEDE CUANDO SE RECLAMA UNA
+ * DILACIÓN…» se buscaba como «amparo indirecto procede cuando reclama
+ * dilacion», que no existe en ninguna página. Por eso toda tesis y toda
+ * sentencia decían «no se localizó la cita».
+ */
+function frasesDe(cuerpo: string): string[] {
+    const pal = cuerpo.split(' ').filter(Boolean);
+    const salida: string[] = [];
+    for (const largo of [14, 10, 7, 5]) {
+        for (const inicio of [0, 1, 2, 4, 8]) {
+            if (pal.length >= inicio + largo) {
+                const f = pal.slice(inicio, inicio + largo).join(' ');
+                if (!salida.includes(f)) salida.push(f);
+            }
+        }
+    }
+    return salida;
+}
+
+/**
+ * EL PASAJE MÁS PARECIDO, cuando la cita no es literal.
+ *
+ * Una sentencia no se cita palabra por palabra: lo que el sistema guarda es
+ * la razón de la decisión, ya redactada. Pedirle al PDF una frase idéntica es
+ * pedirle lo que no tiene. Se busca entonces la ventana de texto donde se
+ * juntan más palabras de la cita, y se dice lo que es: la más parecida, no la
+ * misma. Se pinta en gris, no en amarillo, para no prometer exactitud.
+ */
+function mejorPasaje(plano: string, claves: string[]): { desde: number; hasta: number; puntos: number } {
+    const posiciones: { i: number; w: string }[] = [];
+    for (const w of claves) {
+        let i = plano.indexOf(w);
+        let veces = 0;
+        while (i !== -1 && veces < 12 && posiciones.length < 600) {
+            posiciones.push({ i, w });
+            i = plano.indexOf(w, i + w.length);
+            veces++;
+        }
+    }
+    posiciones.sort((a, b) => a.i - b.i);
+    let mejor = { desde: -1, hasta: -1, puntos: 0 };
+    const VENTANA = 420;
+    for (let k = 0; k < posiciones.length; k++) {
+        const desde = posiciones[k].i;
+        const dentro = new Set<string>();
+        let hasta = desde;
+        for (let j = k; j < posiciones.length && posiciones[j].i - desde < VENTANA; j++) {
+            dentro.add(posiciones[j].w);
+            hasta = posiciones[j].i + posiciones[j].w.length;
+        }
+        if (dentro.size > mejor.puntos) mejor = { desde, hasta, puntos: dentro.size };
+    }
+    return mejor;
+}
 
 /**
  * El artículo despojado de sus adornos.
@@ -124,7 +185,7 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
     const [total, setTotal] = useState(0);
     const [paginaVisible, setPaginaVisible] = useState(1);
     const [estadoBusqueda, setEstadoBusqueda] =
-        useState<'buscando' | 'encontrado' | 'no_encontrado' | 'sin_articulo'>('buscando');
+        useState<'buscando' | 'encontrado' | 'aproximado' | 'no_encontrado' | 'sin_articulo'>('buscando');
     const [dims, setDims] = useState<{ ancho: number; alto: number } | null>(null);
 
     const rotulo = useMemo(() => (articulo || '').trim(), [articulo]);
@@ -200,7 +261,7 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
                 `top:${m[5] - h - 1}px`,
                 `width:${w + 3}px`,
                 `height:${h + 2.5}px`,
-                'background:rgba(250,204,21,0.40)',
+                `background:${obj.certeza === 'aproximado' ? 'rgba(148,163,184,0.40)' : 'rgba(250,204,21,0.40)'}`,
                 'border-radius:2px',
                 'pointer-events:none',
             ].join(';');
@@ -268,12 +329,16 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
 
                 let hallado: Objetivo | null = null;
                 let mejorPuntos = 0;
+                /* El texto de cada página se guarda: la primera pasada no sabe
+                   si una página posterior trae una coincidencia mejor. */
+                const planos: string[] = [];
                 const tope = Math.min(doc.numPages, 500);
 
                 for (let n = 1; n <= tope; n++) {
                     if (!vivo) return;
                     const page = await doc.getPage(n);
                     const { plano } = await planoDe(page);
+                    if (!rxRotulo) planos.push(plano);
 
                     if (rxRotulo) {
                         rxRotulo.lastIndex = 0;
@@ -299,27 +364,44 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
                         if (mejorPuntos >= 6) break;
                     }
 
-                    // Sin rótulo utilizable —o sin ninguna aparición— queda la
-                    // frase literal del cuerpo, ya sin el nombre de la ley.
-                    if (!rxRotulo && claves.length >= 7) {
-                        const frase = claves.slice(0, 7).join(' ');
-                        const pos = plano.indexOf(frase);
-                        if (pos !== -1) {
-                            hallado = { pagina: n, desde: pos,
-                                        hasta: pos + frase.length, certeza: 'texto' };
-                            break;
-                        }
-                    }
                 }
 
                 // Un rótulo sin NADA de su cuerpo detrás es una remisión o una
                 // línea de índice, no el precepto. Antes que llevar al abogado
                 // a un sitio equivocado, se admite no haberlo encontrado.
-                if (hallado && mejorPuntos === 0 && claves.length > 0) hallado = null;
+                if (hallado && hallado.certeza === 'rotulo' && mejorPuntos === 0 && claves.length > 0) hallado = null;
+
+                /* SIN RÓTULO —una tesis, una sentencia, un cuadernillo de la
+                   Corte Interamericana— la huella es el texto citado: primero
+                   la frase literal, de la más larga a la más corta; y si la
+                   cita no es literal, el pasaje donde se juntan más de sus
+                   palabras. Antes esta rama construía la frase sin las
+                   palabras cortas y además el filtro de arriba la anulaba,
+                   así que no encontraba nunca nada. */
+                if (!hallado && !rxRotulo && cuerpo) {
+                    for (const frase of frasesDe(cuerpo)) {
+                        for (let i = 0; i < planos.length && !hallado; i++) {
+                            const pos = planos[i].indexOf(frase);
+                            if (pos !== -1) hallado = { pagina: i + 1, desde: pos, hasta: pos + frase.length, certeza: 'texto' };
+                        }
+                        if (hallado) break;
+                    }
+                    if (!hallado && claves.length >= 5) {
+                        const minimo = Math.max(4, Math.ceil(claves.length * 0.35));
+                        let mejor = { pagina: 0, desde: -1, hasta: -1, puntos: 0 };
+                        for (let i = 0; i < planos.length; i++) {
+                            const m = mejorPasaje(planos[i], claves);
+                            if (m.puntos > mejor.puntos) mejor = { pagina: i + 1, ...m };
+                        }
+                        if (mejor.puntos >= minimo && mejor.desde >= 0) {
+                            hallado = { pagina: mejor.pagina, desde: mejor.desde, hasta: mejor.hasta, certeza: 'aproximado' };
+                        }
+                    }
+                }
 
                 if (!vivo) return;
                 objetivo.current = hallado;
-                setEstadoBusqueda(hallado ? 'encontrado' : 'no_encontrado');
+                setEstadoBusqueda(hallado ? (hallado.certeza === 'aproximado' ? 'aproximado' : 'encontrado') : 'no_encontrado');
                 setCargando(false);
             } catch (e) {
                 if (!vivo) return;
@@ -394,6 +476,13 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
                             className="inline-flex items-center gap-1.5 rounded-md bg-charcoal-900 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-charcoal-700">
                         <Crosshair className="h-3 w-3" />
                         {rotulo ? `Ir al ${rotulo}` : 'Ir a la cita'}
+                    </button>
+                )}
+                {estadoBusqueda === 'aproximado' && (
+                    <button onClick={irAlArticulo}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-charcoal-900/20 bg-white px-2.5 py-1 text-[11px] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/40">
+                        <Crosshair className="h-3 w-3" />
+                        Ir al pasaje más parecido
                     </button>
                 )}
                 {estadoBusqueda === 'no_encontrado' && (

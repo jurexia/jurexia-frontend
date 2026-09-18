@@ -1317,21 +1317,26 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         <p className="mt-0.5 text-xs text-charcoal-500">
                                             {processedContent.trim() ? processedContent.trim().split(/\s+/).length.toLocaleString('es-MX') : 0} palabras
                                             {docIdMap.size > 0 ? ` · ${docIdMap.size} ${docIdMap.size === 1 ? 'cita' : 'citas'}` : ''}
-                                            {citationMeta && citationMeta.valid > 0 ? ` · ${citationMeta.valid} verificadas` : ''}
+                                            {(() => {
+                                                const v = citationMeta ? Math.min(citationMeta.valid, docIdMap.size || citationMeta.valid) : 0;
+                                                return v > 0 ? ` · ${v} ${v === 1 ? 'verificada' : 'verificadas'}` : '';
+                                            })()}
                                         </p>
                                         {/* DE DÓNDE VINO CADA FUENTE, con el icono de la institución
                                             (David, 18-sep-2026): Cámara de Diputados para leyes federales
                                             y Constitución, Suprema Corte para las tesis del Semanario,
                                             Corte Interamericana cuando se cita. */}
                                         {(() => {
-                                            const consultadas = institucionesDe(citationMeta as unknown as MetaCitas | null);
+                                            // Sólo las fuentes que ESTA respuesta cita, no todas las del acervo recuperado.
+                                            const consultadas = institucionesDe(citationMeta as unknown as MetaCitas | null, docIdMap.keys());
                                             return consultadas.length > 0 ? (
-                                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                                <div className="mt-2.5 flex flex-wrap items-center gap-2">
                                                     {consultadas.map(({ institucion, fuentes }) => (
                                                         <span key={institucion.clave + institucion.nombre}
-                                                            className="inline-flex items-center gap-1.5 rounded-full border border-cream-300 bg-white px-2 py-0.5 text-[11px] text-charcoal-700">
-                                                            <IconoInstitucion inst={institucion} />
-                                                            <span className="truncate">{institucion.nombre}</span>
+                                                            title={`${institucion.nombre} · ${fuentes} ${fuentes === 1 ? 'fuente' : 'fuentes'}`}
+                                                            className="inline-flex max-w-full items-center gap-2 rounded-lg border border-cream-300 bg-white py-1 pl-1.5 pr-2.5 text-[11.5px] text-charcoal-800">
+                                                            <IconoInstitucion inst={institucion} tam={22} />
+                                                            <span className="truncate font-medium">{institucion.nombre}</span>
                                                             <span className="tabular-nums text-charcoal-400">{fuentes}</span>
                                                         </span>
                                                     ))}
@@ -1496,8 +1501,13 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             fuera de la pantalla. La etiqueta se oculta en pantallas
                             estrechas porque los iconos ya dicen qué hace cada uno. */}
                         {!isStreaming && message.content.length > 50 && (
-                            <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 px-4 sm:px-5 py-2 border-t border-cream-200 bg-cream-50">
-                                <span className="hidden sm:inline text-xs text-charcoal-500 mr-2">Exportar:</span>
+                            /* CON EL DOCUMENTO ABIERTO, SÓLO «A MI CARPETA» (David,
+                                18-sep-2026: «todos esos botones dejan de tener sentido
+                                excepto A mi carpeta»): descargar, copiar e ir al editor
+                                son operaciones de la hoja, y la hoja las tiene en su
+                                cabecera. Guardar en el expediente no: eso es del hilo. */
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 px-5 sm:px-6 py-2 border-t border-cream-200 bg-cream-50">
+                                {!enDocumento && <span className="hidden sm:inline text-xs text-charcoal-500 mr-2">Exportar:</span>}
                                 {!enDocumento && <button
                                     onClick={handleExportPDF}
                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 hover:bg-cream-200 rounded-md transition-colors"
@@ -1506,14 +1516,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     <FileDown className="w-3.5 h-3.5" />
                                     PDF
                                 </button>}
-                                <button
+                                {!enDocumento && <button
                                     onClick={handleExportDOCX}
                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 hover:bg-cream-200 rounded-md transition-colors"
                                     title="Exportar a Word"
                                 >
                                     <FileText className="w-3.5 h-3.5" />
                                     DOCX
-                                </button>
+                                </button>}
                                 {!enDocumento && <button
                                     onClick={handlePrint}
                                     className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 hover:bg-cream-200 rounded-md transition-colors"
@@ -1522,7 +1532,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     <Printer className="w-3.5 h-3.5" />
                                     Imprimir
                                 </button>}
-                                <button
+                                {!enDocumento && <button
                                     onClick={handleCopy}
                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
                                         copied
@@ -1533,7 +1543,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 >
                                     {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                                     {copied ? '¡Copiado!' : 'Copiar'}
-                                </button>
+                                </button>}
 
                                 {/* La consulta entra al expediente donde sirve, como en la
                                     app. El título sale del arranque de la respuesta limpia. */}
@@ -1566,7 +1576,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     este camino no puede dar, porque una nota al pie no se
                                     puede ver en la hoja y lo que aquí se descarga es
                                     exactamente lo que se ve. */}
-                                {onLlevarAlDocumento && (
+                                {onLlevarAlDocumento && !enDocumento && (
                                     <button
                                         onClick={() => onLlevarAlDocumento(message.content)}
                                         className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"

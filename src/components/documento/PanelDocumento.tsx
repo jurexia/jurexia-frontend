@@ -303,7 +303,10 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     <span>La primera respuesta se escribirá aquí.</span>
                 )}
                 <span className="ml-auto tabular-nums">{palabras.toLocaleString('es-MX')} palabras</span>
-                <span className="tabular-nums">{orden.length} {orden.length === 1 ? 'cita' : 'citas'}{meta && meta.valid > 0 ? ` · ${meta.valid} verificadas` : ''}</span>
+                <span className="tabular-nums">
+                    {orden.length} {orden.length === 1 ? 'cita' : 'citas'}
+                    {meta && meta.valid > 0 ? ` · ${meta.valid} ${meta.valid === 1 ? 'verificada' : 'verificadas'}` : ''}
+                </span>
             </footer>
 
             <div role="status" aria-live="polite" className={`pointer-events-none fixed bottom-14 z-50 flex justify-center px-4 ${disp.lateral ? 'right-0' : 'inset-x-0'}`} style={disp.lateral ? { width: disp.ancho } : undefined}>

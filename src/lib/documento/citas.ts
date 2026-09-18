@@ -12,7 +12,7 @@
  * el mismo `data-doc-id`. La numeración es por orden de aparición, como en
  * la burbuja, para que [3] sea la misma fuente en las dos.
  */
-import { markdownAHtml } from './marcado';
+import { markdownAHtml, separarTarjetas } from './marcado';
 
 export interface FuenteCita {
     docId: string;
@@ -50,6 +50,14 @@ export function metaDeCitas(markdown: string): MetaCitas | null {
  *  modelo (en cualquiera de sus dos marcadores) y bloques de síntesis. */
 function sinTrasfondo(markdown: string): string {
     let t = markdown || '';
+    /* LAS TARJETAS HTML DEL CHAT NO SON TEXTO DEL ESCRITO (18-sep-2026).
+       El chat pega al final «Doctrina consultada» y las fuentes web como HTML
+       con clases `fuentes-web`/`fw-*`. En la burbuja se pintan como tarjetas;
+       en la hoja, que escapa el HTML, salían crudas —«<div class="fuentes-web">
+       <div class="fw-cab">…»— dentro del documento del abogado. Se sacan y se
+       vuelven a poner como lista legible de referencias. */
+    const { sin, tarjetas } = separarTarjetas(t);
+    t = tarjetas ? `${sin}\n\n${tarjetas}` : sin;
     t = t.replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/g, '');
     const abierto = t.indexOf('<!--THINKING_START-->');
     if (abierto !== -1) t = t.slice(0, abierto);
@@ -162,7 +170,7 @@ export function referenciaAPA(f: FuenteCita): string {
    Suprema Corte (porque siempre se citan tesis del Semanario)». El icono es
    el del sitio oficial de cada institución, servido desde /fuentes. */
 export interface Institucion {
-    clave: 'diputados' | 'scjn' | 'corteidh' | 'congreso_estatal' | 'tratado' | 'otra';
+    clave: 'diputados' | 'scjn' | 'corteidh' | 'congreso' | 'congreso_estatal' | 'tratado' | 'otra';
     nombre: string;
     /** Icono local (public/fuentes/*.png); vacío = sin icono, sólo la inicial. */
     icono: string;
@@ -172,8 +180,9 @@ const INSTITUCIONES: Record<Institucion['clave'], Institucion> = {
     diputados: { clave: 'diputados', nombre: 'Cámara de Diputados', icono: '/fuentes/diputados.png' },
     scjn: { clave: 'scjn', nombre: 'Suprema Corte de Justicia de la Nación', icono: '/fuentes/scjn.png' },
     corteidh: { clave: 'corteidh', nombre: 'Corte Interamericana de Derechos Humanos', icono: '/fuentes/corteidh.png' },
+    congreso: { clave: 'congreso', nombre: 'Congreso de la Unión', icono: '/fuentes/senado.png' },
     congreso_estatal: { clave: 'congreso_estatal', nombre: 'Congreso del Estado', icono: '' },
-    tratado: { clave: 'tratado', nombre: 'Tratados internacionales', icono: '' },
+    tratado: { clave: 'tratado', nombre: 'Tratados internacionales', icono: '/fuentes/senado.png' },
     otra: { clave: 'otra', nombre: 'Otras fuentes', icono: '' },
 };
 
@@ -181,24 +190,38 @@ export function institucionDe(f: Partial<FuenteCita>): Institucion {
     const silo = (f.silo || '').toLowerCase();
     const origen = (f.origen || '').toLowerCase();
     const instancia = (f.instancia || '').toLowerCase();
-    if (/interamerican|corteidh|corte idh|pacto de san jos|convenci[oó]n americana/.test(origen) || /interamerican/.test(instancia)) return INSTITUCIONES.corteidh;
+    /* LA CORTE INTERAMERICANA, en todas sus formas: la Convención Americana,
+       el Pacto de San José, los cuadernillos de jurisprudencia y los casos
+       contenciosos («Caso Radilla Pacheco vs. México»). */
+    if (/interamerican|corte ?idh|coidh|pacto de san jos|convenci[oó]n americana|cuadernillo|vs\.? m[eé]xico|serie c no/.test(origen)
+        || /interamerican|corte ?idh/.test(instancia) || silo.includes('cidh') || silo.includes('corteidh')) return INSTITUCIONES.corteidh;
     if (silo.includes('jurisprudencia') || silo.includes('sentencias_ef') || f.tesis_num || f.registro || /semanario|tesis|jurisprudencia/.test(origen)) return INSTITUCIONES.scjn;
     if (silo.includes('constitu') || /cpeum|constituci[oó]n pol[ií]tica/.test(origen)) return INSTITUCIONES.diputados;
-    if (silo.includes('bloque') || /tratado|convenci[oó]n|pacto|protocolo|declaraci[oó]n universal/.test(origen)) return INSTITUCIONES.tratado;
-    if (silo.includes('federal') || silo.includes('codigo_nacional') || /c[oó]digo nacional|ley federal|ley general|c[oó]digo .*federal/.test(origen)) return INSTITUCIONES.diputados;
+    /* La Constitución la publica la Cámara de Diputados; los tratados los
+       ratifica el Senado. David pidió los dos logos, y es lo honrado: el
+       bloque de constitucionalidad son las dos cosas. */
+    if (/tratado|convenci[oó]n|pacto|protocolo|declaraci[oó]n universal/.test(origen)) return INSTITUCIONES.congreso;
+    if (silo.includes('bloque')) return INSTITUCIONES.diputados;
+    if (silo.includes('federal') || silo.includes('codigo_nacional') || /c[oó]digo nacional|ley (federal|general|de amparo|org[aá]nica)|c[oó]digo .*federal/.test(origen)) return INSTITUCIONES.diputados;
     if (silo.includes('estatal') || silo.startsWith('leyes_')) { const e = (f.entidad || '').trim(); return e ? { ...INSTITUCIONES.congreso_estatal, nombre: `Congreso de ${e}` } : INSTITUCIONES.congreso_estatal; }
     if (silo.includes('sentencia') || silo.includes('precedente') || /tribunal colegiado|circuito/.test(origen)) return INSTITUCIONES.scjn;
     return INSTITUCIONES.otra;
 }
 
 /** Las instituciones consultadas en una respuesta, con cuántas fuentes de cada una, en orden de peso. */
-export function institucionesDe(meta: MetaCitas | null): { institucion: Institucion; fuentes: number }[] {
+export function institucionesDe(
+    meta: MetaCitas | null,
+    /** Sólo estas fuentes (las citadas en la respuesta). Vacío = todas. */
+    soloEstas?: Iterable<string>,
+): { institucion: Institucion; fuentes: number }[] {
+    const filtro = soloEstas ? new Set(Array.from(soloEstas, (x) => x.toLowerCase())) : null;
     const cuenta = new Map<string, { institucion: Institucion; fuentes: number }>();
-    for (const f of Object.values(meta?.sources || {})) {
+    for (const [clave, f] of Object.entries(meta?.sources || {})) {
+        if (filtro && !filtro.has(clave.toLowerCase())) continue;
         const inst = institucionDe(f);
-        const clave = inst.clave === 'congreso_estatal' ? inst.nombre : inst.clave;
-        const previo = cuenta.get(clave);
-        if (previo) previo.fuentes += 1; else cuenta.set(clave, { institucion: inst, fuentes: 1 });
+        const grupo = inst.clave === 'congreso_estatal' ? inst.nombre : inst.clave;
+        const previo = cuenta.get(grupo);
+        if (previo) previo.fuentes += 1; else cuenta.set(grupo, { institucion: inst, fuentes: 1 });
     }
     return Array.from(cuenta.values()).sort((a, b) => b.fuentes - a.fuentes);
 }
@@ -212,7 +235,11 @@ export const SEP_DOSSIER = '⟦sep⟧';
 
 export function htmlDeDossier(partes: string[]): { segmentos: string[]; orden: string[] } {
     if (!partes.length) return { segmentos: [], orden: [] };
-    const { html, orden } = htmlDeDocumento(partes.join(`\n\n${SEP_DOSSIER}\n\n`));
+    /* CADA RESPUESTA SE LIMPIA ANTES DE UNIRLAS. Con el texto ya unido, la
+       lista de doctrina de la PRIMERA respuesta se movía al final del dossier
+       —detrás de la última— porque `separarTarjetas` la lleva al final de lo
+       que recibe. */
+    const { html, orden } = htmlDeDocumento(partes.map(sinTrasfondo).join(`\n\n${SEP_DOSSIER}\n\n`));
     const segmentos = html.split(/<p>⟦sep⟧<\/p>/);
     while (segmentos.length < partes.length) segmentos.push('');
     return { segmentos, orden };

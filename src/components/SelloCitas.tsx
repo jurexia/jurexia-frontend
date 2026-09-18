@@ -165,7 +165,7 @@ export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAc
 
     return (
         <div
-            className="mx-4 mb-2 mt-3 rounded-xl px-3 py-2.5"
+            className="mx-5 sm:mx-6 mb-2 mt-3 rounded-xl px-3 py-2.5"
             style={{ background: fondo, border: `1px solid ${borde}` }}
         >
             <div className="flex items-start gap-2">
