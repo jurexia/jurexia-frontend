@@ -202,7 +202,10 @@ export function FlujoAgente({
     const inicial = (nombreLimpio || 'I').charAt(0).toUpperCase();
 
     return (
-        <div className="animate-slide-up w-full max-w-[680px]">
+        /* Mismo ancho y mismo arranque que la burbuja de la respuesta que lo
+           sustituye (avatar de 32px + hueco de 16 desde sm): así el cambio
+           flujo → respuesta no salta. Antes medía 680px pegado al borde. */
+        <div className="animate-slide-up w-full sm:pl-12">
             {/* La consulta, anclada arriba en oscuro y con su autor. Ver su
                 propio nombre y su fotografía encabezando el trabajo convierte
                 una espera en un acto de servicio personal. */}
@@ -243,12 +246,21 @@ export function FlujoAgente({
                 </div>
             )}
 
-            {filas.length === 0 && (
-                <div className="flex items-center gap-3 py-3 pl-2">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" />
-                    <span className="text-sm text-charcoal-700">Leyendo la consulta…</span>
-                </div>
-            )}
+            {/* LA RUEDITA, SIEMPRE (17-sep-2026). David: «algunos navegadores no
+                tienen tecnología para visualizar la ramificación; no está de
+                más dejar la ruedita». Vive fuera de la rejilla, con colores
+                sólidos, margen en vez de `gap` y `animate-spin` a secas: es lo
+                que se ve aunque las ramas no se pinten. Antes sólo salía si no
+                había filas, y como la página exigía pasos para montar esto,
+                en la práctica nunca. */}
+            <div className="flex items-center py-2 pl-1">
+                <Loader2 className="h-4 w-4 animate-spin text-accent-brown mr-3 flex-shrink-0" />
+                <span className="text-sm text-charcoal-700">
+                    {filas.length === 0
+                        ? 'Leyendo la consulta…'
+                        : redactando ? 'Redactando la respuesta…' : 'Iurexia está trabajando en su consulta…'}
+                </span>
+            </div>
 
             {/* La espina y sus ramas. En pantallas anchas las etapas alternan
                 derecha e izquierda de la espina central; en móvil, columna
@@ -320,7 +332,7 @@ export function FlujoAgente({
                     const espina = !ultimaFila && (
                         <span
                             aria-hidden
-                            className={`absolute left-1/2 top-[21px] bottom-[-26px] w-[2px] -translate-x-1/2 rounded-full transition-colors duration-700 ${
+                            className={`absolute left-1/2 top-[21px] bottom-[-18px] w-[2px] -translate-x-1/2 rounded-full transition-colors duration-700 ${
                                 hecho ? 'bg-accent-gold/60' : 'bg-charcoal-900/10'
                             }`}
                         />
@@ -337,7 +349,7 @@ export function FlujoAgente({
                     );
 
                     return (
-                        <li key={fila.nombre} className="relative pb-6 last:pb-1">
+                        <li key={fila.nombre} className="relative pb-4 last:pb-1">
                             {/* ── Pantalla ancha: rama a un lado de la espina ── */}
                             <div className="hidden sm:grid sm:grid-cols-[1fr_44px_1fr]">
                                 <div className={izquierda ? 'pr-7' : ''}>{izquierda && tarjeta}</div>
@@ -357,7 +369,7 @@ export function FlujoAgente({
                                     {!ultimaFila && (
                                         <span
                                             aria-hidden
-                                            className={`absolute left-1/2 top-[21px] bottom-[-26px] w-[2px] -translate-x-1/2 rounded-full transition-colors duration-700 ${
+                                            className={`absolute left-1/2 top-[21px] bottom-[-18px] w-[2px] -translate-x-1/2 rounded-full transition-colors duration-700 ${
                                                 hecho ? 'bg-accent-gold/60' : 'bg-charcoal-900/10'
                                             }`}
                                         />

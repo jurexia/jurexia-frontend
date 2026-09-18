@@ -6,8 +6,9 @@
    JUREXIA - Global Styles (Harvey.AI Inspired)
    ══════════════════════════════════════════════════════════════════ */
 
-/* Google Fonts Import */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+/* Las fuentes (Inter y Playfair Display) las carga next/font en layout.tsx y
+   llegan como --font-sans / --font-serif en <html>. El @import que vivía aquí
+   quedaba a mitad del CSS compilado y los navegadores lo ignoraban. */
 
 :root {
   /* Colors */
@@ -18,13 +19,11 @@
   --accent-brown: #8b7355;
   --accent-gold: #c9a962;
 
-  /* Typography */
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  /* Typography: --font-serif y --font-sans las pone next/font en <html>. */
 
   /* Spacing */
   --container-max: 1280px;
-  --chat-max: 800px;
+  --chat-max: 50rem;          /* el hilo y el compositor del chat (800px) */
 }
 
 /* Base styles */
@@ -33,7 +32,7 @@ html {
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
   background-color: var(--cream-bg);
   color: var(--charcoal);
   line-height: 1.6;
@@ -1688,3 +1687,219 @@ h6 {
 .hoja-escrito table { width: 100%; border-collapse: collapse; margin: 0 0 1em; font-size: 0.92em; }
 .hoja-escrito td, .hoja-escrito th { border: 1px solid #999; padding: 0.2em 0.4em; }
 .hoja-escrito:empty::before { content: 'Escribe aquí, o usa los pasos para que Iurexia construya el escrito contigo.'; color: #9a958a; font-style: italic; }
+
+/* ══════════════════════════════════════════════════════════════════
+   LA RESPUESTA DEL CHAT (17-sep-2026)
+   ══════════════════════════════════════════════════════════════════
+   David: «está muy mezclado, hay espacios asimétricos, se ocupa una
+   ventanita». Medido antes de tocar nada: en una respuesta típica el
+   formateador dejaba 13 <br/> huérfanos y 11 párrafos vacíos, el texto iba
+   justificado sin guiones en una columna de 555px (ríos de espacio), y en un
+   mismo mensaje convivían ~15 tamaños de letra, cuatro gramáticas de título
+   y cinco colores de barra lateral.
+
+   `.respuesta` va SOBRE `.prose-legal` (que comparten /terminos, /privacidad
+   y el visor de documentos) y sólo se pone en la burbuja del chat: una escala
+   —un cuerpo, un ritmo vertical, una barra dorada, un color de acento— y
+   texto alineado a la izquierda con partición «pretty», que en pantalla lee
+   mejor que el justificado. Va al final del archivo para ganar la cascada a
+   las reglas de .prose-legal con la misma especificidad. */
+.respuesta {
+  font-size: 15.5px;
+  line-height: 1.6;
+  text-align: left;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+  color: #1f1f1f;
+}
+@media (min-width: 640px) {
+  .respuesta { font-size: 16px; line-height: 1.65; }
+}
+.respuesta > :first-child { margin-top: 0 !important; }
+.respuesta > :last-child { margin-bottom: 0 !important; }
+
+.respuesta p { margin: 0 0 0.8em; }
+.respuesta p:empty { display: none; }
+.respuesta strong { font-weight: 600; color: #1a1a1a; }
+.respuesta em { color: #2d2d2d; }
+
+/* Títulos: una sola familia, sin subrayados ni tracking negativo */
+.respuesta h1, .respuesta h2, .respuesta h3, .respuesta h4 {
+  text-align: left;
+  letter-spacing: 0;
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+}
+.respuesta h2 { font-size: 1.25em; font-weight: 600; line-height: 1.3; margin: 1.6em 0 0.5em; }
+.respuesta h2::after { display: none; }
+.respuesta h3 { font-size: 1.1em; font-weight: 600; line-height: 1.35; margin: 1.4em 0 0.4em; }
+
+/* La cabecera de sección (RESPUESTA DIRECTA, FUNDAMENTO LEGAL…): la misma
+   para todo «##». Puede partirse en dos líneas sin perder la barra. */
+.respuesta .iurexia-section-header {
+  margin: 1.75em 0 0.6em;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  align-items: flex-start;
+  text-align: left;
+}
+.respuesta .iurexia-section-header::before { margin-top: 0.1em; }
+.respuesta .iurexia-section-header .section-texto { flex: 0 1 auto; min-width: 0; }
+.respuesta .iurexia-section-header::after { align-self: center; min-width: 2rem; }
+.respuesta .iurexia-section-header:first-child { margin-top: 0.2em; }
+.respuesta .section-divider + .iurexia-section-header,
+.respuesta .section-divider-light + .iurexia-section-header { margin-top: 0.5em; }
+
+/* Listas de verdad (antes las numeradas salían sin <ol>) */
+.respuesta ul, .respuesta ol { margin: 0.2em 0 1em; padding-left: 1.5em; }
+.respuesta ul { list-style: disc; }
+.respuesta ol { list-style: decimal; }
+.respuesta li { margin: 0 0 0.35em; padding-left: 0.15em; }
+.respuesta li::marker { color: var(--accent-brown, #8b7355); }
+.respuesta li > p { margin: 0; }
+
+/* Citas de artículos y tesis: UNA barra dorada, un solo bloque por cita */
+.respuesta blockquote {
+  margin: 0.7em 0 1em;
+  padding: 0.55em 1em 0.6em;
+  border-left: 3px solid var(--accent-gold, #c9a962);
+  background: rgba(201, 169, 98, 0.07);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  font-size: 0.97em;
+  color: #2d2d2d;
+}
+.respuesta blockquote p { margin: 0 0 0.5em; }
+.respuesta blockquote p:last-child { margin-bottom: 0; }
+.respuesta .fuente-cita {
+  margin: -0.5em 0 1.1em;
+  padding-left: calc(1em + 3px);
+  font-size: 0.82em;
+  font-style: italic;
+  color: #5c5c5c;
+}
+
+/* Separadores: una línea fina, no otra barra */
+.respuesta hr.section-divider {
+  height: 1px;
+  margin: 1.2em 0;
+  background: linear-gradient(90deg, rgba(201, 169, 98, 0.6), transparent);
+}
+.respuesta hr.section-divider-light { margin: 0.9em 0; }
+
+/* «Fuentes citadas»: cabecera de sección, no banner negro */
+.respuesta .fuentes-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 1.75em 0 0.6em;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  color: #1a1a1a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.respuesta .fuentes-header::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 1.2em;
+  border-radius: 2px;
+  background: var(--accent-gold, #c9a962);
+  flex-shrink: 0;
+}
+
+/* La cita numerada [N]: en línea, sin inflar el interlineado, en el oro de
+   la casa. Sigue siendo un botón: se ve como etiqueta y cambia al pasar. */
+.respuesta .citation-badge {
+  display: inline;
+  position: relative;
+  top: -0.45em;
+  vertical-align: baseline;
+  font-size: 0.68em;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.1em 0.38em;
+  margin-left: 0.12em;
+  border-radius: 4px;
+  color: #7a5f24;
+  background: rgba(201, 169, 98, 0.16);
+}
+.respuesta .citation-badge:hover {
+  background: rgba(201, 169, 98, 0.38);
+  color: #1a1a1a;
+  text-decoration: none;
+  transform: none;
+}
+
+/* Código en línea: preceptos entrecomillados por el modelo */
+.respuesta code {
+  font-size: 0.88em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Tablas: cabecera crema, celdas a la izquierda, sin nowrap */
+.respuesta .table-wrapper { margin: 0.8em 0 1.1em; border-radius: 8px; }
+.respuesta .md-table { font-size: 0.9em; }
+.respuesta .md-table thead { background: #f1ede4; color: #1a1a1a; }
+.respuesta .md-table thead th {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: #5a4a2a;
+  white-space: normal;
+}
+.respuesta .md-table tbody td { text-align: left; }
+.respuesta .md-table tbody td:first-child { white-space: normal; min-width: 8rem; }
+
+/* Fuentes de internet: mismo radio y margen que el resto */
+.respuesta .fuentes-web { margin: 1.2em 0 0.4em; border-radius: 10px; }
+
+/* Precedentes: en la paleta de la casa (antes llevaban #b8860b y grises
+   propios con estilos en línea) */
+.respuesta .precedentes-nota { font-size: 0.86em; color: #5c5c5c; margin: 0 0 0.6em; }
+.respuesta .precedente-card {
+  cursor: pointer;
+  margin: 0 0 8px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent-gold, #c9a962);
+  background: rgba(201, 169, 98, 0.06);
+  border-radius: 0 8px 8px 0;
+  transition: background 0.15s ease;
+}
+.respuesta .precedente-card:hover { background: rgba(201, 169, 98, 0.15); }
+.respuesta .precedente-ref {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.86em;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.respuesta .precedente-materia {
+  font-size: 0.68em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(201, 169, 98, 0.2);
+  color: #5a4a2a;
+}
+.respuesta .precedente-holding { margin: 0; font-size: 0.86em; line-height: 1.5; font-style: italic; color: #404040; }
+.respuesta .precedente-ver { display: block; margin-top: 4px; text-align: right; font-size: 0.72em; font-weight: 600; color: #8a6d2e; }
+
+/* El razonamiento plegable: pequeño y uniforme (la clase no existía) */
+.prose-thinking { font-size: 12px; line-height: 1.55; text-align: left; }
+.prose-thinking h1, .prose-thinking h2, .prose-thinking h3 { font-size: 12px; font-weight: 600; margin: 8px 0 2px; letter-spacing: 0; }
+.prose-thinking h2::after { display: none; }
+.prose-thinking p { margin: 0 0 4px; }
+.prose-thinking .iurexia-section-header { font-size: 10px; margin: 8px 0 4px; }
+.prose-thinking blockquote { margin: 4px 0; padding: 2px 8px; border-left: 2px solid var(--accent-gold, #c9a962); }
+.prose-thinking ul, .prose-thinking ol { margin: 2px 0 6px; padding-left: 1.2em; }

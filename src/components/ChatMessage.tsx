@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, BookOpen, ChevronRight } from 'lucide-react';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
@@ -280,20 +280,21 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     ? (prec.holding.length > 250 ? prec.holding.slice(0, 250) + '...' : prec.holding)
                     : '';
                 cards.push(
-                    '<div class="precedente-card" data-prec-idx="' + pi + '" style="cursor:pointer;margin:8px 0;padding:12px 16px;border-left:3px solid #b8860b;background:linear-gradient(135deg,#faf6ee 0%,#fdf8f0 100%);border-radius:6px;transition:all 0.2s">' +
-                    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
-                    '<strong style="font-size:13px;color:#1a1a1a">' + cleanRef + '</strong>' +
-                    (materia ? '<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#e8e0d0;color:#5a4a2a;font-weight:600">' + materia + '</span>' : '') +
+                    '<div class="precedente-card" data-prec-idx="' + pi + '">' +
+                    '<div class="precedente-ref"><span>' + cleanRef + '</span>' +
+                    (materia ? '<span class="precedente-materia">' + materia + '</span>' : '') +
                     '</div>' +
-                    (holdingPreview ? '<p style="font-size:12px;color:#4a4a4a;line-height:1.5;margin:0;font-style:italic">"' + holdingPreview.replace(/"/g, '&quot;').replace(/</g, '&lt;') + '"</p>' : '') +
-                    '<span style="display:block;text-align:right;font-size:10px;color:#b8860b;margin-top:4px;font-weight:600">Ver sentencia completa →</span>' +
+                    (holdingPreview ? '<p class="precedente-holding">"' + holdingPreview.replace(/"/g, '&quot;').replace(/</g, '&lt;') + '"</p>' : '') +
+                    '<span class="precedente-ver">Ver sentencia completa →</span>' +
                     '</div>'
                 );
             }
 
-            const section = '\n\n<hr style="border:none;border-top:1px solid #e0d8c8;margin:24px 0 16px"/>\n' +
-                '<h3 style="color:#1a1a1a;font-size:16px;font-weight:700;margin-bottom:4px">Precedentes SCJN y de Colegiados de Circuito</h3>\n' +
-                '<p style="font-size:13px;color:#666;margin-bottom:12px">Los siguientes precedentes de la Suprema Corte y Tribunales Colegiados de Circuito están relacionados con su consulta:</p>\n' +
+            // Misma gramática que las demás secciones de la respuesta: cabecera
+            // de sección con barra dorada, no un h3 con estilos propios.
+            const section = '\n\n<hr class="section-divider-light" />\n' +
+                cabeceraSeccion('PRECEDENTES SCJN Y DE COLEGIADOS DE CIRCUITO') + '\n' +
+                '<p class="precedentes-nota">Los siguientes precedentes de la Suprema Corte y Tribunales Colegiados de Circuito están relacionados con su consulta:</p>\n' +
                 cards.join('\n') + '\n';
 
             // Try to insert before ### CONCLUSIÓN (case-insensitive)
@@ -1192,20 +1193,25 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     }
 
     return (
-        <div className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'} animate-slide-up`}>
-            {/* Avatar - Assistant */}
+        <div className={`flex gap-3 sm:gap-4 ${isUser ? 'justify-end' : 'justify-start'} animate-slide-up`}>
+            {/* Avatar - Assistant. Sólo desde sm: en un teléfono de 375px el
+                circulito y su hueco se comían 48px de una columna de 240. */}
             {!isUser && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-charcoal-900 flex items-center justify-center">
+                <div className="hidden sm:flex flex-shrink-0 w-8 h-8 rounded-full bg-charcoal-900 items-center justify-center">
                     <Scale className="w-4 h-4 text-white" />
                 </div>
             )}
 
             {/* Message Bubble */}
             <div
-                className={`max-w-[80%] ${isUser
-                    ? 'message-user px-4 py-3'
-                    : 'message-assistant'
-                    }`}
+                className={isUser
+                    ? 'max-w-[85%] sm:max-w-[80%] message-user px-4 py-3'
+                    /* LA VENTANITA. La respuesta medía el 80% de una columna
+                       de 736px: 555px de texto y 99px sin usar a la derecha.
+                       Ahora ocupa la columna entera (el ancho lo fija el hilo)
+                       y recorta sus esquinas para que la barra de acciones no
+                       pinte cuadrado sobre el radio. */
+                    : 'w-full min-w-0 message-assistant overflow-hidden'}
             >
                 {isUser ? (
                     /* La tarjeta del consultante, permanente en el historial.
@@ -1242,31 +1248,29 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                         {/* Insignia del escalón con el que se redactó la respuesta.
                             Platinum manda sobre Pro: el backend enciende ambas
                             banderas y aquí gana la que de verdad corrió. */}
-                        {message.isPlatinum ? (
-                            <div className="mx-4 mt-3 mb-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold tracking-wide rounded-full bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-[#e8e4dd] border border-slate-600 shadow-[0_0_6px_rgba(100,116,139,0.4)]">
-                                <Gem className="w-3 h-3 text-[#e8e4dd]" />
-                                <span>REDACCIÓN PLATINUM</span>
+                        {(message.isPlatinum || message.isPro || message.isProfesional) && (
+                            /* Una sola pastilla para los tres escalones: antes cada
+                               una traía su paleta (pizarra, ámbar, crema) y era el
+                               primer «mezclado» de la burbuja. Cambia el icono, no
+                               el estilo. Platinum manda sobre Pro: el backend
+                               enciende ambas banderas y aquí gana la que corrió. */
+                            <div className="mx-5 sm:mx-6 mt-4 inline-flex items-center gap-1.5 rounded-full border border-cream-400/70 bg-cream-100 px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-charcoal-700">
+                                {message.isPlatinum
+                                    ? <Gem className="w-3 h-3 text-charcoal-900" />
+                                    : message.isPro
+                                        ? <Sparkles className="w-3 h-3 text-accent-gold" />
+                                        : <PenTool className="w-3 h-3 text-charcoal-500" />}
+                                <span>{message.isPlatinum ? 'Redacción Platinum' : message.isPro ? 'Redacción Pro' : 'Redacción Profesional'}</span>
                             </div>
-                        ) : message.isPro ? (
-                            <div className="mx-4 mt-3 mb-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold tracking-wide rounded-full bg-gradient-to-r from-amber-50 via-white to-amber-50 text-[#8a6d2e] border border-[#c9a962] shadow-[0_0_6px_rgba(201,169,98,0.3)]">
-                                <Sparkles className="w-3 h-3 text-[#c9a962]" />
-                                <span>REDACCIÓN PRO</span>
-                            </div>
-                        ) : message.isProfesional ? (
-                            /* El escalón base también se declara. Antes salía sin
-                               insignia: el abogado no tenía cómo saber qué motor
-                               escribió su documento, y al ver PLATINUM en otra
-                               respuesta parecía que las funciones se mezclaban. */
-                            <div className="mx-4 mt-3 mb-1 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold tracking-wide rounded-full bg-cream-100 text-charcoal-700 border border-cream-400">
-                                <PenTool className="w-3 h-3 text-charcoal-500" />
-                                <span>REDACCIÓN PROFESIONAL</span>
-                            </div>
-                        ) : null}
+                        )}
                         {/* Thinking/Reasoning section (collapsible) */}
                         {thinkingContent && (
-                            <details className="mx-4 mt-3 mb-1 rounded-lg border border-cream-400/60 bg-cream-50/50 overflow-hidden">
+                            <details className="mx-5 sm:mx-6 mt-3 mb-1 rounded-lg border border-cream-400/60 bg-cream-50/50 overflow-hidden">
                                 <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-charcoal-500 hover:bg-cream-100/50 transition-colors select-none flex items-center gap-1.5">
-                                    <Loader2 className="w-3 h-3 animate-spin text-charcoal-400" />
+                                    {/* Giraba también en las respuestas terminadas del
+                                        historial, y una ruedita que gira siempre deja de
+                                        significar «cargando». */}
+                                    <Loader2 className={`w-3 h-3 text-charcoal-400 ${isStreaming ? 'animate-spin' : ''}`} />
                                     <span>Ver razonamiento jurídico</span>
                                     <span className="text-charcoal-400/50 ml-auto text-[10px]">{Math.round(thinkingContent.length / 4)} tokens</span>
                                 </summary>
@@ -1278,14 +1282,21 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                         )}
                         {/* Synthesis indicator (while DeepSeek is working) */}
                         {isSynthesizing && isStreaming && (
-                            <div className="mx-4 mt-3 mb-1 px-3 py-2 text-xs font-medium text-blue-800/80 bg-blue-50/50 rounded-lg border border-blue-200/60 flex items-center gap-2 animate-pulse">
-                                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600/60" />
+                            <div className="mx-5 sm:mx-6 mt-3 mb-1 px-3 py-2 text-xs font-medium text-charcoal-700 bg-cream-100 rounded-lg border border-cream-400/60 flex items-center gap-2 animate-pulse">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-accent-brown" />
                                 <span>Los Genios están deliberando. Sintetizando respuesta final...</span>
+                            </div>
+                        )}
+                        {/* Sin texto todavía: que se vea que se está escribiendo. */}
+                        {isStreaming && !processedContent.trim() && (
+                            <div className="flex items-center px-5 sm:px-6 py-4 text-sm text-charcoal-600">
+                                <Loader2 className="w-4 h-4 animate-spin text-accent-brown mr-2.5" />
+                                Redactando la respuesta…
                             </div>
                         )}
                         <div
                             ref={contentRef}
-                            className="prose-legal text-sm sm:text-base px-4 py-3"
+                            className="prose-legal respuesta px-5 py-4 sm:px-6"
                             dangerouslySetInnerHTML={{ __html: htmlFormateado }}
                             onClick={(e) => {
                                 const target = e.target as HTMLElement;
@@ -1331,6 +1342,18 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 }
                             }}
                         />
+                        {/* MIENTRAS LLEGA EL TEXTO: una ruedita al pie con la cuenta
+                            de palabras, en el sitio exacto donde luego aparece la
+                            barra de acciones, para que la burbuja no salte de alto
+                            al terminar. Es la señal de carga que no depende de la
+                            ramificación ni de ninguna animación avanzada. */}
+                        {isStreaming && processedContent.trim() && (
+                            <div className="flex items-center px-5 sm:px-6 py-2 border-t border-cream-200 text-[12px] text-charcoal-500">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-accent-brown mr-2" />
+                                <span>Redactando…</span>
+                                <span className="ml-auto tabular-nums">{processedContent.trim().split(/\s+/).length} palabras</span>
+                            </div>
+                        )}
                         {/* ── El sello de verificación ──────────────────────────
                             Hasta ahora, que el backend comprobara cada cita
                             contra el acervo sólo se veía en un log del
@@ -1351,16 +1374,16 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
                         {/* Citation Legend — collapsible source list */}
                         {!isStreaming && docIdMap.size > 0 && (
-                            <details className="mx-4 mb-2 mt-1 rounded-lg border border-cream-300 bg-cream-50/80 overflow-hidden group/sources">
+                            <details className="mx-5 sm:mx-6 mb-3 mt-1 rounded-lg border border-cream-300 bg-cream-50/80 overflow-hidden group/sources">
                                 <summary className="px-3 py-2.5 text-xs font-medium text-charcoal-600 flex items-center gap-2 cursor-pointer hover:bg-cream-100 transition-colors select-none">
-                                    <span>📚</span>
-                                    <span className="text-blue-600 font-semibold">{docIdMap.size} fuentes</span>
+                                    <BookOpen className="w-3.5 h-3.5 text-accent-brown" />
+                                    <span className="text-charcoal-900 font-semibold">{docIdMap.size} fuentes</span>
                                     {citationMeta && citationMeta.invalid > 0 && (
                                         <span className="text-[10px] text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
                                             ⚠ {citationMeta.invalid} sin verificar
                                         </span>
                                     )}
-                                    <span className="ml-auto text-charcoal-400 text-[10px] group-open/sources:rotate-90 transition-transform duration-200">▶</span>
+                                    <ChevronRight className="ml-auto w-3.5 h-3.5 text-charcoal-400 group-open/sources:rotate-90 transition-transform duration-200" />
                                 </summary>
                                 <div className="divide-y divide-cream-200 border-t border-cream-200">
                                     {Array.from(docIdMap.entries()).map(([uuid, num]) => {
@@ -1391,7 +1414,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                                             materia: src?.materia,
                                                         });
                                                     }}
-                                                    className="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-600 text-white text-[10px] font-bold flex-shrink-0 hover:bg-blue-700 transition-colors cursor-pointer"
+                                                    className="inline-flex items-center justify-center w-5 h-5 rounded bg-charcoal-900 text-white text-[10px] font-bold flex-shrink-0 hover:bg-charcoal-700 transition-colors cursor-pointer"
                                                     title="Ver documento y PDF completo"
                                                 >
                                                     {num}
@@ -1419,11 +1442,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             fuera de la pantalla. La etiqueta se oculta en pantallas
                             estrechas porque los iconos ya dicen qué hace cada uno. */}
                         {!isStreaming && message.content.length > 50 && (
-                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border-t border-cream-300 bg-cream-100/50">
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 px-4 sm:px-5 py-2 border-t border-cream-200 bg-cream-50">
                                 <span className="hidden sm:inline text-xs text-charcoal-500 mr-2">Exportar:</span>
                                 <button
                                     onClick={handleExportPDF}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 bg-cream-200 hover:bg-cream-300 rounded-md transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 hover:bg-cream-200 rounded-md transition-colors"
                                     title="Exportar a PDF"
                                 >
                                     <FileDown className="w-3.5 h-3.5" />
@@ -1431,7 +1454,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 </button>
                                 <button
                                     onClick={handleExportDOCX}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 bg-cream-200 hover:bg-cream-300 rounded-md transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 hover:bg-cream-200 rounded-md transition-colors"
                                     title="Exportar a Word"
                                 >
                                     <FileText className="w-3.5 h-3.5" />
@@ -1439,7 +1462,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 </button>
                                 <button
                                     onClick={handlePrint}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 bg-cream-200 hover:bg-cream-300 rounded-md transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-charcoal-700 hover:bg-cream-200 rounded-md transition-colors"
                                     title="Imprimir"
                                 >
                                     <Printer className="w-3.5 h-3.5" />
@@ -1450,7 +1473,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
                                         copied
                                         ? 'bg-green-100 text-green-700 border border-green-200'
-                                        : 'bg-cream-200 text-charcoal-700 hover:bg-cream-300'
+                                        : 'text-charcoal-700 hover:bg-cream-200'
                                     }`}
                                     title="Copiar texto de la respuesta"
                                 >
@@ -1521,6 +1544,21 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 /**
  * Simple markdown to HTML converter for legal responses
  */
+/** La cabecera de sección de Iurexia: barra dorada, versalitas y dos tonos
+ *  partidos en el primer « Y » (como «Iurex» + «ia» en el logo). Es la única
+ *  gramática de título de la respuesta: todo «##» pasa por aquí. */
+function cabeceraSeccion(titulo: string): string {
+    const t = titulo.trim();
+    const yIdx = t.indexOf(' Y ');
+    // Los dos tonos van dentro de UN solo hijo del flex: sueltos, cada span
+    // era una columna y «MARCO CONSTITUCIONAL Y DERECHOS HUMANOS» se partía
+    // en dos bloques lado a lado en vez de fluir como una línea de texto.
+    const texto = yIdx !== -1
+        ? `<span class="section-primary">${t.slice(0, yIdx)}</span><span class="section-secondary">${t.slice(yIdx)}</span>`
+        : `<span class="section-primary">${t}</span>`;
+    return `<div class="iurexia-section-header"><span class="section-texto">${texto}</span></div>`;
+}
+
 function formatMarkdown(text: string): string {
     // STEP 0: Strip any [SCJN_BUSCAR: ...] markers (feature removed)
     let processed = text.replace(
@@ -1778,64 +1816,84 @@ function formatMarkdown(text: string): string {
     // STEP 5: Style "Fuentes citadas" or "FUENTES" headers
     processed = processed.replace(
         /^##\s*(Fuentes\s+citadas|FUENTES\s+CITADAS|Referencias)$/gim,
-        '<div class="fuentes-header"><span>📚</span> <span>$1</span></div>'
+        '<div class="fuentes-header"><span>$1</span></div>'
     );
 
     // STEP 6: Style Iurexia main section headers — two-tone color split at " Y "
     processed = processed.replace(
         /^(?:##|###)\s*(RESPUESTA DIRECTA|MARCO CONSTITUCIONAL.*?|FUNDAMENTO LEGAL.*?|LEGISLACI\u00d3N FEDERAL.*?|JURISPRUDENCIA Y TESIS.*?|JURISPRUDENCIA.*?|LEGISLACI\u00d3N ESTATAL.*?|AN\u00c1LISIS INTEGRADO.*?|CONCLUSI\u00d3N.*?|FUERO APLICABLE.*?)$/gim,
-        (_, title: string) => {
-            const yIdx = title.indexOf(' Y ');
-            if (yIdx !== -1) {
-                const primary = title.slice(0, yIdx);
-                const secondary = title.slice(yIdx); // includes ' Y ...'
-                return `<div class="iurexia-section-header"><span class="section-primary">${primary}</span><span class="section-secondary">${secondary}</span></div>`;
-            }
-            return `<div class="iurexia-section-header"><span class="section-primary">${title}</span></div>`;
-        }
+        (_, title: string) => cabeceraSeccion(title)
     );
 
-    return processed
-        // Skip headers that contain "Iurexia" or already processed branded headers
-        // H4 headers (#### text) → bold text paragraph
-        .replace(/^#### (.*$)/gm, '<p class="mb-2"><strong class="font-semibold">$1</strong></p>')
-        // H3, H2, H1 headers
-        .replace(/^### (.*$)/gm, '<h3 class="text-lg font-serif font-medium mt-3 mb-1">$1</h3>')
-        // Skip "Respuesta Legal" or "Análisis Legal" H2s since they're already branded
-        .replace(/^## (?!.*(Respuesta|Análisis) Legal)(.*$)/gm, '<h2 class="text-xl font-serif font-medium mt-5 mb-3">$2</h2>')
-        .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-serif font-medium mt-6 mb-4">$1</h1>')
-        // Bold
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-        // Italic
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        // Inline code
-        .replace(/`([^`]+)`/g, '<code class="bg-cream-300 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
-        // Enlaces [texto](url) — NUNCA existió esta regla. Cualquier enlace que
-        // el modelo escribiera salía crudo como «[Ficha](https://…)», estirado
-        // además por el `text-align: justify` de .prose-legal (6-ago-2026).
-        // Exige el paréntesis con esquema http(s), así que las referencias
-        // sueltas tipo «[1]» y las citas internas siguen intactas.
+    // ═══════════════════════════════════════════════════════════════════
+    // DE LÍNEAS A BLOQUES (17-sep-2026)
+    // ═══════════════════════════════════════════════════════════════════
+    // Antes, el último paso convertía TODO salto de línea en <br/> después
+    // de haber creado cabeceras, citas y listas: el salto que separaba cada
+    // bloque del siguiente sobrevivía como una línea vacía de 24px. Medido
+    // sobre una respuesta real: 13 <br/> huérfanos y 11 párrafos vacíos; una
+    // cita de tres líneas eran tres blockquotes con la barra troceada; las
+    // numeradas salían sin <ol>. De ahí los «espacios asimétricos».
+    //
+    // Ahora: primero los bloques (cabeceras, citas agrupadas, listas
+    // agrupadas), y al final el texto se parte por línea en blanco; cada
+    // trozo que no es ya HTML se envuelve en <p>, y el salto simple sólo es
+    // <br/> DENTRO de un párrafo. Las clases de margen las pone el CSS
+    // (`.respuesta`), no el HTML: aquí las de antes no llegaban a aplicarse.
+    processed = processed
+        // H4 → párrafo en negrita (un cuarto nivel de título sería ruido)
+        .replace(/^#### (.*$)/gm, '<p><strong>$1</strong></p>')
+        // ### → subtítulo
+        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+        // ## libres → la misma cabecera de sección que las canónicas. Antes
+        // salían como h2 de 20px con subrayado negro: cuatro gramáticas de
+        // título en un mismo mensaje.
+        .replace(/^## (?!.*(?:Respuesta|Análisis) Legal)(.*$)/gm, (_m, t: string) => cabeceraSeccion(t))
+        .replace(/^# (.*$)/gm, '<h2>$1</h2>')
+        // Negritas antes que cursivas
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // «> *Fuente: …*» ANTES de la cursiva genérica: iba después y, como el
+        // modelo casi siempre escribe la fuente entre asteriscos, la regla no
+        // casaba nunca y la fuente caía a la cita marrón.
+        .replace(/^> \*?Fuente:\s*(.*?)\*?\s*$/gmi, '<p class="fuente-cita">Fuente: $1</p>')
+        // Cursiva: un asterisco pegado al texto, sin cruzar líneas ni comerse
+        // los «* » de las viñetas ni los «5*» de una nota
+        .replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)\*(?!\w)/g, '$1<em>$2</em>')
+        // Código en línea
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // Enlaces [texto](url). Exige el paréntesis con esquema http(s), así
+        // que las referencias sueltas tipo «[1]» siguen intactas.
         .replace(
             /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g,
             '<a href="$2" target="_blank" rel="noopener noreferrer" class="enlace-externo">$1</a>'
         )
-        // Blockquotes - special handling for "Fuente:" lines (add extra margin)
-        .replace(/^> \*?Fuente:(.*$)/gmi, '<div class="pl-4 border-l-4 border-accent-gold text-sm text-charcoal-600 mb-6"><em>Fuente:$1</em></div>')
-        // Regular blockquotes
-        .replace(/^> (.*$)/gm, '<blockquote class="pl-4 border-l-4 border-accent-brown italic text-charcoal-700 my-1">$1</blockquote>')
-        // Unordered lists
-        .replace(/^- (.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-        .replace(/((<li.*<\/li>\n?)+)/g, '<ul class="my-3">$1</ul>')
-        // Ordered lists
-        .replace(/^\d+\. (.*$)/gm, '<li class="ml-4 list-decimal">$1</li>')
-        // Line breaks
-        .replace(/\n\n/g, '</p><p class="mb-2">')
-        .replace(/\n/g, '<br/>')
-        // Wrap in paragraph (but not elements that start with HTML tags)
-        .replace(/^(.+)$/gm, (match) => {
-            if (match.startsWith('<')) return match;
-            return `<p class="mb-2">${match}</p>`;
-        });
+        // Citas: las líneas «>» consecutivas son UNA cita (un artículo de tres
+        // líneas era tres blockquotes con la barra troceada)
+        .replace(/^(?:> ?.*(?:\n|$))+/gm, (bloque: string) => {
+            const dentro = bloque.replace(/^> ?/gm, '').trim()
+                .replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br/>');
+            return dentro ? `<blockquote><p>${dentro}</p></blockquote>\n` : '';
+        })
+        // Viñetas y numeradas: las líneas consecutivas son una sola lista
+        .replace(/^(?:[-*•] .*(?:\n|$))+/gm, (bloque: string) =>
+            '<ul>' + bloque.trim().split('\n').map((l) => `<li>${l.replace(/^[-*•] /, '')}</li>`).join('') + '</ul>\n')
+        .replace(/^(?:\d+[.)] .*(?:\n|$))+/gm, (bloque: string) =>
+            '<ol>' + bloque.trim().split('\n').map((l) => `<li>${l.replace(/^\d+[.)] /, '')}</li>`).join('') + '</ol>\n');
+
+    return processed
+        .split(/\n{2,}/)
+        .map((bloque) => {
+            const t = bloque.trim();
+            if (!t) return '';
+            // Ya es HTML de bloque: se quitan los saltos entre etiquetas y no
+            // se envuelve. Los que empiezan por texto (o por una cita [N]) son
+            // un párrafo, con el salto simple como <br/>.
+            if (/^<(?:h[1-6]|div|ul|ol|blockquote|hr|table|p|details|section)\b/i.test(t) || t.startsWith('<!--')) {
+                return t.replace(/>\s*\n\s*</g, '><');
+            }
+            return `<p>${t.replace(/\n/g, '<br/>')}</p>`;
+        })
+        .join('');
 }
 
 // Typing indicator component with informative message

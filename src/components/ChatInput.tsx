@@ -23,7 +23,7 @@ import {
     Globe
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
-import { FileText, X, Network } from 'lucide-react';
+import { FileText, X, Network, ChevronUp } from 'lucide-react';
 import TextEnhanceModal from './TextEnhanceModal';
 import DraftModal, { DraftRequest } from './DraftModal';
 import SentenciaModal from './SentenciaModal';
@@ -167,6 +167,28 @@ export default function ChatInput({
     const [showUpgradeModal, setShowUpgradeModal] = useState<'pro' | 'platinum' | null>(null);
     const [showJurimetriaModal, setShowJurimetriaModal] = useState(false);
     const [attachedDocument, setAttachedDocument] = useState<{ file: File; fileName: string } | null>(null);
+
+    /* EL COMPOSITOR SE PLIEGA MIENTRAS SE LEE (17-sep-2026). Seis filas
+       siempre visibles medían ≈320px al pie: en un portátil de 800px de alto
+       quedaban 424 para leer la respuesta. Al arrancar una respuesta las filas
+       de opciones (fuero/materia, modo y herramientas, Genios, Agente) se
+       recogen a una línea-resumen; vuelven al tocar el cuadro de texto, la
+       línea, o cuando la guía las necesita. Nada desaparece: se pliega. */
+    const [plegado, setPlegado] = useState(false);
+    useEffect(() => { if (isLoading) setPlegado(true); }, [isLoading]);
+    useEffect(() => {
+        const desplegar = () => setPlegado(false);
+        window.addEventListener('iurexia:desplegar-compositor', desplegar);
+        return () => window.removeEventListener('iurexia:desplegar-compositor', desplegar);
+    }, []);
+    const resumenPlegado = [
+        selectedFuero.length
+            ? selectedFuero.map((k) => ({ constitucional: 'Const.', federal: 'Federal', estatal: 'Estatal' } as Record<string, string>)[k] ?? k).join(' + ')
+            : 'Fuero auto',
+        ({ '': 'Materia auto', civil: 'Civil', penal: 'Penal', familiar: 'Familiar', administrativo: 'Admin' } as Record<string, string>)[selectedMateria] ?? selectedMateria,
+        chatMode === 'buscar' ? 'Buscar' : `Redactar · ${nivelRedaccion}`,
+        activeGenios.length ? `Genios: ${activeGenios.join(', ')}` : null,
+    ].filter(Boolean).join(' · ');
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const recognitionRef = useRef<any>(null);
@@ -640,14 +662,14 @@ ${draftRequest.descripcion}`;
                     animation: textMirror 3s ease-in-out infinite alternate;
                 }
             `}</style>
-            <div className="w-full max-w-3xl mx-auto relative z-20">
+            <div className="w-full max-w-[var(--chat-max)] mx-auto relative z-20">
 
 
 
                 {/* Main Input Container - Harvey Style */}
                 <div className="chat-input-container p-3">
                     {/* Fuero + Materia Toggle — Same row, compact pills above textarea */}
-                    {(onFueroChange || onMateriaChange) && (
+                    {!plegado && (onFueroChange || onMateriaChange) && (
                         <div data-guide="fuero-materia-filter" className="flex items-center gap-1 sm:gap-1.5 mb-2 pb-1.5 border-b border-gray-100/60 flex-nowrap overflow-x-auto">
                             {/* Fuero section */}
                             {onFueroChange && (
@@ -730,6 +752,7 @@ ${draftRequest.descripcion}`;
                                 onChange={(e) => setMessage(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 onInput={handleInput}
+                                onFocus={() => setPlegado(false)}
                                 placeholder={attachedDocument
                                     ? "Escribe qué quieres hacer con el documento..."
                                     : chatMode === 'redactar'
@@ -790,6 +813,15 @@ ${draftRequest.descripcion}`;
                                 <Paperclip className="w-5 h-5" />
                             </button>
 
+                            {/* LA RUEDITA QUE NO DEPENDE DE NADA: ni de la
+                                ramificación ni de que llegue un solo byte. Un
+                                anillo CSS y una palabra, en cualquier navegador. */}
+                            {isLoading && (
+                                <span className="hidden sm:inline-flex items-center text-[11px] font-medium text-charcoal-600 mr-1">
+                                    <span className="w-3.5 h-3.5 mr-1.5 rounded-full border-2 border-charcoal-900 border-t-transparent animate-spin" />
+                                    Consultando…
+                                </span>
+                            )}
                             {/* Submit / Stop Button */}
                             {isLoading ? (
                                 <button
@@ -812,7 +844,21 @@ ${draftRequest.descripcion}`;
                         </div>
                     </div>
 
+                    {plegado && (
+                        <button
+                            type="button"
+                            onClick={() => setPlegado(false)}
+                            title="Mostrar fuero, materia, modo y Genios"
+                            className="mt-2 flex w-full items-center gap-2 border-t border-gray-100 pt-2 text-left text-[11px] text-charcoal-500 transition-colors hover:text-charcoal-900"
+                        >
+                            <ChevronUp className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span className="text-[10px] font-semibold uppercase tracking-wider">Opciones</span>
+                            <span className="min-w-0 truncate">{resumenPlegado}</span>
+                        </button>
+                    )}
+
                     {/* Action Cards Row — Blue Cards */}
+                    {!plegado && (
                     <div className="mt-2 pt-2 border-t border-gray-100">
                         {/* Buscar / Redactar toggle + Pro — stays compact */}
                         {/* LA FILA DEL MODO. Buscar/Redactar a la izquierda y Toulmin al
@@ -1046,9 +1092,10 @@ ${draftRequest.descripcion}`;
 
                         </div>
                     </div>
+                    )}
 
                     {/* ── MODO PRECEDENTES: corte (SCJN/TCC/Ambas) → filtros ────────── */}
-                    {activeMode === 'precedentes' && (
+                    {!plegado && activeMode === 'precedentes' && (
                         <div className="mt-2 pt-2 border-t border-[#c9a962]/20 space-y-2">
 
                             {/* Fila 0: Selector de Corte (SCJN | TCC | Ambas) */}
@@ -1262,6 +1309,7 @@ ${draftRequest.descripcion}`;
                     )}
 
                     {/* ── Genio Premium Horizontal Row ───────────────────────────── */}
+                    {!plegado && (
                     <div
                         data-guide="genios-container"
                         className="
@@ -1350,9 +1398,11 @@ ${draftRequest.descripcion}`;
                             <p className="text-[8px] text-red-500 ml-1 whitespace-nowrap">{genioError}</p>
                         )}
                     </div>
+                    )}
 
                     {/* El agente: plan aprobable antes de redactar. Va junto al
                         Secretario porque los dos son trabajo largo, no consulta. */}
+                    {!plegado && (
                     <a
                         href="/agente"
                         className="mt-2 flex items-center gap-2 rounded-md border border-[#c9a962]/25 bg-[#1a1a1a] px-3 py-1 transition-colors duration-200 hover:border-[#c9a962]/50"
@@ -1363,6 +1413,7 @@ ${draftRequest.descripcion}`;
                         </span>
                         <span className="flex-shrink-0 text-[7px] font-bold uppercase tracking-wider text-[#c9a962]/60">Beta</span>
                     </a>
+                    )}
 
                     {/* El Secretario del PJF ya NO vive aquí (6-ago-2026). Es
                         una función exclusiva de Platinum y trabajo largo, no

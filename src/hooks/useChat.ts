@@ -38,6 +38,8 @@ interface UseChatReturn {
     sourcesCount: number | null;
     /** Etapas reales del pipeline, en orden de llegada (<!--PASO:nombre|detalle-->). */
     pasos: Paso[];
+    /** Vacía los pasos de la ramificación (el análisis de documento no pasa por sendMessage). */
+    limpiarPasos: () => void;
 }
 
 export type Paso = { nombre: string; detalle?: string };
@@ -556,6 +558,11 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setRetryType(null);
     }, []);
 
+    /* Los pasos de una consulta no valen para la siguiente por otro camino
+       (el análisis de documento no pasa por sendMessage y heredaba la
+       ramificación anterior entera). */
+    const limpiarPasos = useCallback(() => setPasos([]), []);
+
     return {
         messages,
         isLoading,
@@ -568,5 +575,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         retryType,
         sourcesCount,
         pasos,
+        limpiarPasos,
     };
 }

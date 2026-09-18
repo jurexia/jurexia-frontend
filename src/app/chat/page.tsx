@@ -164,6 +164,8 @@ export default function ChatPage() {
     const [showConfigModal, setShowConfigModal] = useState(false);
     const estadoInitializedRef = useRef(false);
     const [showPromptGuide, setShowPromptGuide] = useState(false);     // ChatTour (Guía Rápida)
+    /* La guía mide los controles del compositor: si está plegado, que se despliegue en el mismo clic. */
+    const abrirGuia = () => { if (typeof window !== 'undefined') window.dispatchEvent(new Event('iurexia:desplegar-compositor')); setShowPromptGuide(true); };
     const [showPromptGuideModal, setShowPromptGuideModal] = useState(false); // PromptGuide (¿Cómo hacer mejores consultas?)
     const [showVisualGuide, setShowVisualGuide] = useState(false);
     const [selectedFuero, setSelectedFuero] = useState<string[]>([]);
@@ -362,7 +364,7 @@ export default function ChatPage() {
     }, [user?.id, handleQueryCompleted]);
 
     // Chat Hook
-    const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos } = useChat({
+    const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos, limpiarPasos } = useChat({
         estado: selectedEstado || undefined,
         topK: 30,
         fuero: selectedFuero.length ? selectedFuero : undefined,
@@ -374,6 +376,10 @@ export default function ChatPage() {
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const mainRef = useRef<HTMLElement>(null);
+    const pieRef = useRef<HTMLDivElement>(null);
+    /* La altura real del pie (compositor), medida: el hilo reserva eso y no 500px fijos. */
+    const [pieAltura, setPieAltura] = useState(340);
     const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
     const [queriesUsed, setQueriesUsed] = useState<number>(0);
     const [queriesLimit, setQueriesLimit] = useState<number>(3);
@@ -473,7 +479,7 @@ export default function ChatPage() {
     // Identidad estable: ChatSidebar va envuelto en memo, así que una
     // función anónima aquí lo volvería a renderizar en cada token del
     // streaming (6-ago-2026).
-    const handleToggleGuide = useCallback(() => setShowPromptGuide(true), []);
+    const handleToggleGuide = useCallback(() => abrirGuia(), []);
 
     const handleNewConversation = useCallback(async () => {
         // Lazy creation: just reset the UI. The conversation row in DB
@@ -629,6 +635,9 @@ export default function ChatPage() {
         // Add user message to chat
         const userMsg = { role: 'user' as const, content: displayMessage };
         setMessages(prev => [...prev, userMsg]);
+        // Los pasos son de la consulta ANTERIOR: sin esto la ramificación vieja
+        // se pintaba entera mientras se analizaba el documento.
+        limpiarPasos();
         setIsDocumentAnalyzing(true);
 
         // Ensure conversation exists — track convId for post-streaming save
@@ -830,6 +839,40 @@ export default function ChatPage() {
     }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages]);
 
     const hasMessages = messages.length > 0;
+
+    /* LA RESERVA BAJO EL HILO, MEDIDA (17-sep-2026). Era pb-[500px] fijos
+       para un pie de ≈320px: 180px de crema vacía al llegar al final; y con
+       el panel de precedentes abierto (≈540px) el pie tapaba texto. Ahora se
+       mide el pie y el hilo reserva exactamente eso más un respiro. */
+    useEffect(() => {
+        const el = pieRef.current;
+        if (!el || typeof ResizeObserver === 'undefined') return;
+        const medir = () => setPieAltura(Math.ceil(el.getBoundingClientRect().height));
+        medir();
+        const ro = new ResizeObserver(medir);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [hasMessages]);
+
+    /* SEGUIR LA RESPUESTA MIENTRAS SE ESCRIBE. El desplazamiento sólo ocurría
+       al AÑADIR un mensaje; durante los 20-60 s de una respuesta larga la
+       vista se quedaba arriba y el abogado bajaba a mano. Se sigue sólo si ya
+       estaba cerca del final: si subió a releer, no se le arrastra. */
+    const seguirRef = useRef(true);
+    const alDesplazar = useCallback(() => {
+        const m = mainRef.current;
+        if (!m) return;
+        // Se decide con la posición ANTES de que llegue el siguiente trozo: si
+        // se midiera después, un bloque grande (una tabla) dejaría al lector
+        // «lejos del final» y el seguimiento se apagaría solo.
+        seguirRef.current = m.scrollHeight - m.scrollTop - m.clientHeight < 160;
+    }, []);
+    useEffect(() => {
+        if (!isLoading && !isDocumentAnalyzing) return;
+        const m = mainRef.current;
+        if (!m || !seguirRef.current) return;
+        m.scrollTop = m.scrollHeight;
+    }, [messages, pasos, isLoading, isDocumentAnalyzing]);
     const selectedEstadoLabel = getEstadoLabel(selectedEstado);
     const queriesRemaining = Math.max(0, queriesLimit - queriesUsed);
 
@@ -1038,7 +1081,7 @@ export default function ChatPage() {
                     se ve el trabajo avanzar era ruido — y ocupaba la franja
                     superior tapando el contenido. */}
 
-                <main className="flex-1 pt-14 overflow-y-auto">
+                <main ref={mainRef} onScroll={alDesplazar} className="flex-1 pt-14 overflow-y-auto">
                     {!hasMessages ? (
                         /* min-h-full + my-auto en el hijo, NO justify-center:
                            con justify-center, cuando el interior es más alto
@@ -1047,7 +1090,7 @@ export default function ChatPage() {
                            quedaba decapitado bajo la barra. Con my-auto se
                            centra cuando cabe y se desplaza cuando no. */
                         <div className="min-h-full flex flex-col items-center px-3 sm:px-4 py-4">
-                            <div className="max-w-2xl w-full text-center my-auto">
+                            <div className="max-w-[var(--chat-max)] w-full text-center my-auto">
                                 <div className="mb-2 sm:mb-4">
                                     <Link href="/" className="cursor-pointer hover:opacity-90 transition-opacity">
                                         <span className="font-serif text-3xl sm:text-5xl font-semibold text-charcoal-900">
@@ -1177,13 +1220,13 @@ export default function ChatPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="max-w-3xl mx-auto px-4 py-6 pb-[500px] space-y-4">
+                        <div className="mx-auto w-full max-w-[var(--chat-max)] px-4 py-6 space-y-5" style={{ paddingBottom: pieAltura + 24 }}>
                             {messages.map((message, index) => {
                                 // Count assistant messages up to this point
                                 const assistantCount = messages.slice(0, index + 1).filter(m => m.role === 'assistant').length;
                                 const showNudge = !isPro && message.role === 'assistant' && assistantCount > 0 && assistantCount % 3 === 0 && index !== messages.length - 1;
                                 return (
-                                    <div key={index}>
+                                    <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
                                         <ChatMessage message={message} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
                                         {showNudge && <UpgradeNudge messageIndex={assistantCount} />}
                                     </div>
@@ -1200,7 +1243,12 @@ export default function ChatPage() {
                                 fuentes en línea se ven ~1.5 s. Si hace falta que
                                 queden a mano, su sitio es el panel «N fuentes» de
                                 la respuesta, que sí permanece. */}
-                            {pasos.length > 0 && (isLoading || isDocumentAnalyzing)
+                            {/* SIN `pasos.length > 0` (17-sep-2026): con el globo web
+                                apagado, `pasos` está vacío hasta el primer marcador del
+                                servidor —y en navegadores que bufferean el flujo, hasta
+                                el final—, así que no se pintaba NADA mientras cargaba.
+                                FlujoAgente lleva ahora su propia ruedita, siempre. */}
+                            {(isLoading || isDocumentAnalyzing)
                                 && (messages[messages.length - 1]?.role === 'user'
                                     || !messages[messages.length - 1]?.content?.trim()) && (
                                 /* Sin `consulta`: la tarjeta del consultante ya
@@ -1228,7 +1276,7 @@ export default function ChatPage() {
                 </main>
 
                 {hasMessages && (
-                    <div className="fixed bottom-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] bg-gradient-to-t from-cream-300 via-cream-300 pt-8 pb-6 px-4 z-20">
+                    <div ref={pieRef} className="fixed bottom-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] bg-gradient-to-t from-cream-300 via-cream-300 pt-3 pb-3 px-4 z-20">
                         <ChatInput
                             onSubmit={handleSendMessage}
                             onDocumentSubmit={handleDocumentSubmit}
@@ -1268,7 +1316,7 @@ export default function ChatPage() {
                             setTimeout(() => handleSendMessage(content, reasoning), 200);
                         }
                     }}
-                    onStartTour={() => setShowPromptGuide(true)}
+                    onStartTour={() => abrirGuia()}
                 />
             )}
             {showStateModal && user && <StateSelectorModal userId={user.id} onSelectEstado={(e) => {

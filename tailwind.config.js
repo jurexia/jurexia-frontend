@@ -40,8 +40,8 @@ module.exports = {
                 },
             },
             fontFamily: {
-                serif: ['Playfair Display', 'Georgia', 'serif'],
-                sans: ['Inter', 'system-ui', 'sans-serif'],
+                serif: ['var(--font-serif)', 'Playfair Display', 'Georgia', 'serif'],
+                sans: ['var(--font-sans)', 'Inter', 'system-ui', 'sans-serif'],
             },
             animation: {
                 'fade-in': 'fadeIn 0.5s ease-out',

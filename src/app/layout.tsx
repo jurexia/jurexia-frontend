@@ -1,5 +1,22 @@
 import type { Metadata } from 'next'
+import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
+
+/* LAS FUENTES, POR FIN CARGADAS (17-sep-2026). globals.css las pedía con un
+   @import de Google Fonts que, al compilar, quedaba a mitad de la hoja
+   (byte 113.342 de 184.479 en producción): los navegadores ignoran un
+   @import que no va al principio, así que Inter y Playfair Display no se
+   cargaban nunca —cero @font-face en el CSS servido— y toda la tipografía
+   salía en las fuentes del sistema. next/font las sirve desde el propio
+   dominio, sin petición a Google, y las expone como variables. */
+const inter = Inter({
+    subsets: ['latin'], weight: ['300', '400', '500', '600', '700'],
+    display: 'swap', variable: '--font-sans',
+})
+const playfair = Playfair_Display({
+    subsets: ['latin'], weight: ['400', '500', '600', '700'],
+    display: 'swap', variable: '--font-serif',
+})
 import { AuthProvider } from '@/components/AuthProvider'
 import { AvisoCookies } from '@/components/AvisoCookies'
 import { WakeUpProvider } from '@/components/WakeUpProvider'
@@ -58,7 +75,7 @@ export default function RootLayout({
     children: React.ReactNode
 }) {
     return (
-        <html lang="es">
+        <html lang="es" className={`${inter.variable} ${playfair.variable}`}>
             <head>
                 <link rel="icon" href="/favicon.ico" />
                 {/* Content categorization for web filters */}
