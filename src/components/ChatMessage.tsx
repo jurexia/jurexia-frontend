@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature } from 'lucide-react';
+import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X } from 'lucide-react';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
@@ -19,6 +19,10 @@ interface ChatMessageProps {
     onCitationClick?: (source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }) => void;
     /** Lleva esta respuesta al documento: al constructor si está abierto, o al panel Documento. */
     onLlevarAlDocumento?: (markdown: string) => void;
+    /** «Desarrollar a partir de este fundamento»: el abogado escribe qué quiere
+     *  y Iurexia lo redacta apoyada en las fuentes que esta respuesta ya trae
+     *  firmadas. Ver `fijarFuentesVerificadas` en `@/lib/api`. */
+    onDesarrollar?: (instruccion: string) => void;
     /** La respuesta vive en el panel Documento: aquí sólo se resume y se enlaza. */
     enDocumento?: boolean;
     onVerDocumento?: () => void;
@@ -89,7 +93,7 @@ function filterDocumentContent(content: string): string {
 
 
 
-export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, enDocumento = false, onVerDocumento , basico = false }: ChatMessageProps) {
+export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, onDesarrollar, enDocumento = false, onVerDocumento , basico = false }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
@@ -1156,6 +1160,21 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const [copied, setCopied] = useState(false);
     // Contenido listo para mandar a una carpeta inteligente; null = modal cerrado.
     const [paraCarpeta, setParaCarpeta] = useState<ContenidoParaCarpeta | null>(null);
+    // ── DESARROLLAR A PARTIR DE ESTE FUNDAMENTO (19-sep-2026) ──────────────
+    // David: «una ventana de texto en la que el usuario pueda ingresar su
+    // prompt para generar el documento completo que quiere con ese fundamento».
+    //
+    // La gracia no es el botón, es lo que hay detrás: la consulta sale con los
+    // identificadores de las fuentes que esta respuesta ya citó y el sello ya
+    // firmó, así que el buscador no las busca otra vez. Sin eso, medido en
+    // producción, la segunda vuelta salía con diez citas acusadas de no
+    // corresponder al acervo. Con eso, cero.
+    const [desarrollando, setDesarrollando] = useState(false);
+    const [instruccion, setInstruccion] = useState('');
+    const cajaInstruccion = useRef<HTMLTextAreaElement>(null);
+    useEffect(() => {
+        if (desarrollando) cajaInstruccion.current?.focus();
+    }, [desarrollando]);
     const handleCopy = useCallback(() => {
         // Clean up internal tags, metadata, and HTML comments before copying
         let cleanContent = message.content
@@ -1504,6 +1523,18 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
                                 {/* La consulta entra al expediente donde sirve, como en la
                                     app. El título sale del arranque de la respuesta limpia. */}
+                                {onDesarrollar && (
+                                    <button
+                                        onClick={() => setDesarrollando((v) => !v)}
+                                        aria-expanded={desarrollando}
+                                        className="inline-flex items-center gap-1.5 rounded-md bg-charcoal-900 px-2.5 py-1.5 text-xs font-semibold text-cream-100 transition-colors hover:bg-charcoal-800"
+                                        title="Redactar un escrito completo apoyado en las fuentes que esta respuesta ya verificó"
+                                    >
+                                        <Wand2 className="w-3.5 h-3.5" />
+                                        Desarrollar a partir de este fundamento
+                                    </button>
+                                )}
+
                                 <button
                                     onClick={() => {
                                         const markdown = cleanContentForExport(message.content);
@@ -1543,6 +1574,82 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         Word
                                     </button>
                                 )}
+                            </div>
+                        )}
+
+                        {/* LA VENTANITA. Se abre debajo de la barra, no encima de
+                            la respuesta: el abogado tiene que poder LEER el
+                            fundamento mientras escribe qué quiere hacer con él. */}
+                        {onDesarrollar && desarrollando && !isStreaming && (
+                            <div className="border-t border-cream-200 bg-cream-50 px-5 py-4 sm:px-6">
+                                <div className="mb-2 flex items-start gap-2">
+                                    <p className="flex-1 text-xs leading-relaxed text-charcoal-600">
+                                        Dile qué escrito quieres. Se redactará sobre las
+                                        {citationMeta?.valid ? ` ${citationMeta.valid} fuentes` : ' fuentes'} que
+                                        esta respuesta ya verificó, sin volver a buscarlas.
+                                    </p>
+                                    <button
+                                        onClick={() => setDesarrollando(false)}
+                                        className="rounded p-0.5 text-charcoal-400 transition-colors hover:bg-cream-200 hover:text-charcoal-700"
+                                        aria-label="Cerrar"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+
+                                <div className="mb-2.5 flex flex-wrap gap-1.5">
+                                    {[
+                                        'Un amparo indirecto, con proemio, hechos, conceptos de violación y puntos petitorios',
+                                        'Un escrito de agravios para la revisión',
+                                        'Una demanda inicial con este fundamento',
+                                    ].map((sug) => (
+                                        <button
+                                            key={sug}
+                                            onClick={() => { setInstruccion(sug); cajaInstruccion.current?.focus(); }}
+                                            className="rounded-full border border-cream-300 bg-white px-2.5 py-1 text-[11px] text-charcoal-600 transition-colors hover:border-accent-gold/50 hover:text-charcoal-900"
+                                        >
+                                            {sug.split(',')[0]}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-end">
+                                    <textarea
+                                        id="caja-desarrollar"
+                                        ref={cajaInstruccion}
+                                        value={instruccion}
+                                        onChange={(e) => setInstruccion(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            // Enter envía; Mayús+Enter parte línea. Es lo que
+                                            // hace el compositor de abajo, y una caja de texto
+                                            // que se comporta distinto a la de al lado confunde.
+                                            if (e.key === 'Enter' && !e.shiftKey && instruccion.trim()) {
+                                                e.preventDefault();
+                                                onDesarrollar(instruccion.trim());
+                                                setInstruccion('');
+                                                setDesarrollando(false);
+                                            }
+                                            if (e.key === 'Escape') setDesarrollando(false);
+                                        }}
+                                        rows={2}
+                                        placeholder="Por ejemplo: redacta la demanda de amparo con estos criterios y transcribe los artículos"
+                                        className="min-h-[2.75rem] w-full min-w-0 flex-1 resize-y rounded-lg border border-cream-300 bg-white px-3 py-2 text-sm text-charcoal-900 placeholder:text-charcoal-400 focus:border-accent-gold focus:outline-none focus:ring-1 focus:ring-accent-gold"
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            if (!instruccion.trim()) return;
+                                            onDesarrollar(instruccion.trim());
+                                            setInstruccion('');
+                                            setDesarrollando(false);
+                                        }}
+                                        disabled={!instruccion.trim()}
+                                        className="inline-flex h-[2.75rem] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-accent-gold px-3.5 text-sm font-semibold text-charcoal-900 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        Redactar
+                                        <CornerDownLeft className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                                <p className="mt-1.5 text-[11px] text-charcoal-500">Cuenta como una consulta.</p>
                             </div>
                         )}
 

@@ -998,6 +998,21 @@ export default function ChatPage() {
         return primera ? tituloDeRespuesta(sinMarcadoresDeUsuario(primera.content)) : 'Documento de Iurexia';
     }, [messages]);
 
+    /* DESARROLLAR A PARTIR DE ESTE FUNDAMENTO (19-sep-2026)
+       David: «una ventana de texto en la que el usuario pueda ingresar su
+       prompt para generar el documento completo que quiere con ese fundamento».
+
+       Va por el mismo camino que cualquier consulta —`handleSendMessage`— con
+       el marcador de redacción delante. Lo que la hace distinta no se escribe
+       aquí: es que el efecto de abajo ya registró las fuentes verificadas de
+       esta conversación, y `streamChat` las adjunta sola. Sin eso, medido en
+       producción, esta misma segunda vuelta salía con diez citas acusadas. */
+    const desarrollarDesdeFundamento = useCallback((instruccion: string) => {
+        const limpio = instruccion.trim();
+        if (!limpio) return;
+        handleSendMessage(`[MODO_REDACCION] ${limpio}`, false);
+    }, [handleSendMessage]);
+
     /* LO QUE EL SELLO YA FIRMÓ SE DA POR BUENO EN LA SIGUIENTE PREGUNTA.
        Ver `fijarFuentesVerificadas` en `@/lib/api`. Se registran las fuentes
        que las respuestas terminadas de ESTA conversación citaron y el backend
@@ -1473,7 +1488,7 @@ export default function ChatPage() {
                                 const showNudge = !isPro && message.role === 'assistant' && assistantCount > 0 && assistantCount % 3 === 0 && index !== messages.length - 1;
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
-                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} basico={modoBasico} onVerDocumento={verDocumento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
+                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} basico={modoBasico} onVerDocumento={verDocumento} onDesarrollar={modoBasico ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
                                         {showNudge && <UpgradeNudge messageIndex={assistantCount} />}
                                     </div>
                                 );
