@@ -4,8 +4,8 @@ import { TesisVerificada } from '@/components/TesisVerificada';
 import { VisorArticulo } from '@/components/VisorArticulo';
 import { AccionesPdf } from '@/components/documento/AccionesPdf';
 
-import { useEffect, useRef, useMemo } from 'react';
-import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel } from 'lucide-react';
+import { useEffect, useRef, useMemo, useState } from 'react';
+import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel, ChevronDown, Copy, Check } from 'lucide-react';
 import { findLawPdfUrl } from '@/lib/lawPdfLookup';
 
 interface PdfSource {
@@ -288,6 +288,13 @@ function parseLeyArticuloTexto(texto: string, source: PdfSource): LeyArticuloPar
     let seccionTitulo: string | null = null;
     let seccionDescripcion: string | null = null;
     let articuloLabel: string | null = null;
+
+    // El buscador antepone marcadores suyos —«[MATERIA: constitucional]»— que
+    // esta función tomaba por la cabecera de la ley y pintaba como si fueran
+    // la sección del precepto. Al abogado le aparecía una caja que decía
+    // «MATERIA: constitucional» encima del artículo 7 de la Convención.
+    // Se quitan antes de leer nada.
+    texto = sinMarcadores(texto);
     let articuloTexto = texto;
 
     // Try to parse the bracketed header block: [Ley | TITULO\n\nDesc\n\nArtículo | ...]
@@ -352,6 +359,253 @@ function parseLeyArticuloTexto(texto: string, source: PdfSource): LeyArticuloPar
     return { leyName, seccionTitulo, seccionDescripcion, articuloLabel, articuloTexto };
 }
 
+// ── EL ARTÍCULO, MAQUETADO Y PLEGADO (19-sep-2026) ───────────────────────────
+// David: «La ficha de la cita arriba del visor pdf está muy mal presentada,
+// sin formato, toda amontonada. Debe verse profesional, tal cual aparece en el
+// pdf de su fuente y solo visible si se da click […] ya que el pdf inferior es
+// superior».
+//
+// Tenía razón en las dos cosas. El texto guardado viene impecable —«Artículo
+// 7. Derecho a la Libertad Personal\n1. Toda persona tiene derecho…\n2. Nadie
+// puede ser privado…»— y la ficha lo metía entero en un solo <p>, donde los
+// saltos de línea se colapsan a espacios. Los siete numerales del art. 7 CADH
+// salían como un párrafo de trece renglones: ilegible justo en el sitio donde
+// el abogado comprueba si la cita dice lo que la respuesta afirma.
+//
+// Y sobra por encima del PDF: el documento oficial está abajo, es la fuente
+// auténtica y ocupa el espacio. Así que el artículo va plegado, y quien lo
+// quiera lo despliega o lo copia al escrito sin salir del visor.
+
+/** Una pieza del artículo, ya reconocida: el título, un numeral o un párrafo. */
+type PiezaArticulo =
+    | { clase: 'titulo'; texto: string }
+    | { clase: 'encabezado'; marca: string; texto: string }
+    | { clase: 'numeral'; marca: string; texto: string }
+    | { clase: 'parrafo'; texto: string };
+
+/** Marcadores que el buscador antepone al texto y que el abogado no debe ver. */
+function sinMarcadores(t: string): string {
+    return (t || '')
+        .replace(/\[(?:MATERIA|TIPO|INSTANCIA|TESIS|REGISTRO|ÉPOCA|EPOCA|SILO|ENTIDAD)\s*:[^\]]*\]/gi, '')
+        // La cabecera de las leyes: «[Ley Sobre el Contrato de Seguro | TITULO III …]».
+        // Su contenido ya se pinta arriba en las pastillas y la sección.
+        .replace(/^\s*\[[^\]]*\|[^\]]*\]/, '')
+        .replace(/^\s+/, '');
+}
+
+/**
+ * Del texto corrido a la estructura que tiene el documento oficial.
+ *
+ * Se reconocen las tres formas en que se numera un precepto en español:
+ * arábigos de los tratados («1.», «2.»), romanos de las fracciones mexicanas
+ * («I.», «II.») y literales de los incisos («a)», «b)»). Un renglón que no
+ * abre marca y viene detrás de uno que sí, es su continuación: así no se parte
+ * una fracción larga en dos bloques sueltos.
+ */
+function piezasDelArticulo(texto: string): PiezaArticulo[] {
+    const limpio = sinMarcadores(texto);
+    if (!limpio.trim()) return [];
+
+    const piezas: PiezaArticulo[] = [];
+    const renglones = limpio.split(/\n+/).map(l => l.trim()).filter(Boolean);
+
+    renglones.forEach((linea, i) => {
+        if (i === 0) {
+            // «Artículo 7. Derecho a la Libertad Personal» lleva título; el
+            // «Artículo 335.- Cuando la materia objeto de la patente…» NO: eso
+            // es el encabezado del precepto, la frase que abre y a la que se
+            // cuelgan las fracciones. Centrar en negrita seis renglones de
+            // texto normativo, como pasaba al principio, no lo hace ningún
+            // documento oficial. Se distinguen por el largo y por si la frase
+            // se cierra: un título ni pasa de setenta caracteres ni lleva
+            // punto ni dos puntos dentro.
+            const cabeza = linea.match(
+                /^(Art[íi]culo\s+\d+[\wºo°]*(?:\s+(?:[Bb]is|[Tt]er|[Qq]u[áa]ter))?)\s*[.\-–—]*\s*(.*)$/i);
+            if (cabeza) {
+                const resto = cabeza[2].trim();
+                const esTitulo = resto.length > 0 && resto.length <= 70 && !/[.;:]/.test(resto);
+                if (esTitulo || !resto) {
+                    piezas.push({ clase: 'titulo', texto: linea });
+                } else {
+                    piezas.push({ clase: 'encabezado', marca: cabeza[1], texto: resto });
+                }
+                return;
+            }
+        }
+        // El guion tras el punto es de uso corriente en la ley mexicana
+        // —«I.- El producto obtenido…»— y sin contemplarlo las fracciones
+        // caían a párrafo suelto, sin sangría y sin su número destacado.
+        const arabigo = linea.match(/^(\d{1,3})\s*[.)]\s*[-–—]?\s*(.+)$/);
+        const romano = linea.match(/^([IVXLCDM]{1,7})\s*[.)]\s*[-–—]?\s*(.+)$/);
+        const literal = linea.match(/^([a-zñ])\s*\)\s*[-–—]?\s*(.+)$/);
+        const m = arabigo || romano || literal;
+        if (m) {
+            piezas.push({ clase: 'numeral', marca: `${m[1]}${literal ? ')' : '.'}`, texto: m[2] });
+            return;
+        }
+        const ultima = piezas[piezas.length - 1];
+        if (ultima && ultima.clase === 'numeral') {
+            ultima.texto = `${ultima.texto} ${linea}`;
+            return;
+        }
+        piezas.push({ clase: 'parrafo', texto: linea });
+    });
+
+    return piezas;
+}
+
+/** El artículo tal cual, para pegarlo en un escrito con su fuente al pie. */
+function paraElPortapapeles(texto: string, ley: string | null, ref: string | null): string {
+    const cuerpo = sinMarcadores(texto).trim();
+    const pie = [ley, ref].filter(Boolean).join(' — ');
+    return pie ? `${cuerpo}\n\n${pie}` : cuerpo;
+}
+
+function ArticuloPlegado({ texto, etiqueta, ley, cita }: {
+    texto: string;
+    etiqueta: string | null;
+    ley: string | null;
+    /** No se llama `ref`: React lo reservó y nunca llegaría como prop. */
+    cita: string | null;
+}) {
+    const [abierto, setAbierto] = useState(false);
+    const [copia, setCopia] = useState<'quieto' | 'hecho' | 'falló'>('quieto');
+    const piezas = useMemo(() => piezasDelArticulo(texto), [texto]);
+
+    // Hay navegadores y vistas incrustadas que niegan el portapapeles moderno
+    // —medido aquí mismo: «Write permission denied»— y entonces el botón se
+    // quedaba muerto sin decir nada. Se intenta la vía vieja, que no pide
+    // permiso, y si tampoco se puede se dice, que es mejor que fingir.
+    const copiar = async () => {
+        const contenido = paraElPortapapeles(texto, ley, cita);
+        const avisar = (r: 'hecho' | 'falló') => {
+            setCopia(r);
+            window.setTimeout(() => setCopia('quieto'), r === 'hecho' ? 2000 : 3500);
+        };
+        try {
+            await navigator.clipboard.writeText(contenido);
+            avisar('hecho');
+            return;
+        } catch {
+            /* se sigue por la vía vieja */
+        }
+        try {
+            const caja = document.createElement('textarea');
+            caja.value = contenido;
+            caja.setAttribute('readonly', '');
+            caja.style.position = 'fixed';
+            caja.style.opacity = '0';
+            document.body.appendChild(caja);
+            caja.select();
+            const fue = document.execCommand('copy');
+            document.body.removeChild(caja);
+            avisar(fue ? 'hecho' : 'falló');
+        } catch {
+            avisar('falló');
+        }
+    };
+
+    if (!piezas.length) return null;
+
+    return (
+        <div className="bg-white border border-cream-300 rounded-2xl shadow-sm overflow-hidden">
+            {/* La barra ES el interruptor: toda ella responde al clic. */}
+            <button
+                type="button"
+                onClick={() => setAbierto(v => !v)}
+                aria-expanded={abierto}
+                className="w-full bg-charcoal-900 px-4 sm:px-5 py-3 flex items-center gap-2.5 text-left transition-colors hover:bg-charcoal-800"
+            >
+                <Gavel className="w-3.5 h-3.5 text-accent-gold shrink-0" />
+                {etiqueta && (
+                    <span className="text-xs font-bold text-white tracking-wide shrink-0">
+                        {etiqueta}
+                    </span>
+                )}
+                <span className="ml-auto flex items-center gap-1.5 text-[11px] font-semibold text-accent-gold">
+                    {abierto ? 'Ocultar el artículo' : 'Desplegar y copiar el artículo'}
+                    <ChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-200 ${abierto ? 'rotate-180' : ''}`}
+                    />
+                </span>
+            </button>
+
+            {abierto && (
+                <div className="px-5 sm:px-7 pt-5 pb-4">
+                    {piezas.map((pieza, i) => {
+                        if (pieza.clase === 'titulo') {
+                            return (
+                                <h4
+                                    key={i}
+                                    className="mb-5 pb-3 border-b border-cream-300 text-center text-[15px] font-semibold leading-snug text-charcoal-900"
+                                    style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                                >
+                                    {pieza.texto}
+                                </h4>
+                            );
+                        }
+                        if (pieza.clase === 'encabezado') {
+                            return (
+                                <p
+                                    key={i}
+                                    className="mb-4 text-[13.5px] leading-[1.75] text-justify text-charcoal-800"
+                                    style={{ fontFamily: 'Georgia, "Times New Roman", serif', hyphens: 'auto' }}
+                                >
+                                    <strong className="text-charcoal-900">{pieza.marca}.</strong>{' '}{pieza.texto}
+                                </p>
+                            );
+                        }
+                        if (pieza.clase === 'numeral') {
+                            return (
+                                // Sangría francesa: el número fuera del bloque de texto,
+                                // que es como se lee un precepto en el documento oficial.
+                                <div key={i} className="flex gap-3 mb-3 last:mb-0">
+                                    <span
+                                        className="shrink-0 w-7 pt-[1px] text-right text-[13px] font-semibold text-accent-brown tabular-nums"
+                                        style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                                    >
+                                        {pieza.marca}
+                                    </span>
+                                    <p
+                                        className="flex-1 text-[13.5px] leading-[1.75] text-justify text-charcoal-800"
+                                        style={{ fontFamily: 'Georgia, "Times New Roman", serif', hyphens: 'auto' }}
+                                    >
+                                        {pieza.texto}
+                                    </p>
+                                </div>
+                            );
+                        }
+                        return (
+                            <p
+                                key={i}
+                                className="mb-3 last:mb-0 text-[13.5px] leading-[1.75] text-justify text-charcoal-800"
+                                style={{ fontFamily: 'Georgia, "Times New Roman", serif', hyphens: 'auto' }}
+                            >
+                                {pieza.texto}
+                            </p>
+                        );
+                    })}
+
+                    <div className="mt-5 pt-3 border-t border-cream-200 flex items-center justify-between gap-3">
+                        <span className="text-[10.5px] text-charcoal-500 truncate">
+                            Coteja el texto oficial en el documento de abajo.
+                        </span>
+                        <button
+                            type="button"
+                            onClick={copiar}
+                            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-cream-400 bg-cream-100 px-3 py-1.5 text-[11.5px] font-semibold text-charcoal-700 transition-colors hover:bg-cream-200"
+                        >
+                            {copia === 'hecho' && <><Check className="w-3.5 h-3.5 text-green-700" /> Copiado</>}
+                            {copia === 'falló' && <span className="text-accent-brown">Selecciona el texto y cópialo</span>}
+                            {copia === 'quieto' && <><Copy className="w-3.5 h-3.5" /> Copiar el artículo</>}
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ── LeyArticuloView component ─────────────────────────────────────────────────
 interface LeyArticuloViewProps {
     source: PdfSource;
@@ -407,27 +661,13 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, urlParaVisor, hasPd
                     </div>
                 )}
 
-                {/* ── Artículo body ── */}
-                <div className="bg-white border border-cream-300 rounded-2xl shadow-sm overflow-hidden">
-                    {/* Artículo header bar */}
-                    {parsed.articuloLabel && (
-                        <div className="bg-charcoal-900 px-5 py-3 flex items-center gap-2">
-                            <Gavel className="w-3.5 h-3.5 text-accent-gold shrink-0" />
-                            <span className="text-xs font-bold text-white tracking-wide">
-                                {parsed.articuloLabel}
-                            </span>
-                        </div>
-                    )}
-                    {/* Article text */}
-                    <div className="p-5">
-                        <p
-                            className="text-[13.5px] text-charcoal-800 leading-7 text-justify"
-                            style={{ fontFamily: 'Georgia, "Times New Roman", serif', hyphens: 'auto' }}
-                        >
-                            {parsed.articuloTexto || source.texto || 'Sin texto disponible.'}
-                        </p>
-                    </div>
-                </div>
+                {/* ── El artículo, plegado tras su botón ── */}
+                <ArticuloPlegado
+                    texto={source.texto || parsed.articuloTexto || ''}
+                    etiqueta={parsed.articuloLabel}
+                    ley={displayLey}
+                    cita={source.ref || null}
+                />
 
                 {/* ── Source attribution ── */}
                 <div className="flex items-center gap-1.5 text-[11px] text-charcoal-500 pt-0.5">
