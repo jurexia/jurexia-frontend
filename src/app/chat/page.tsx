@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { Message, fuentesWebActivas } from '@/lib/api';
+import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
 import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
@@ -31,7 +31,7 @@ import PanelBasico from '@/components/PanelBasico';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
 import type { VersionDocumento } from '@/components/documento/PanelDocumento';
-import { SEP_DOSSIER } from '@/lib/documento/citas';
+import { SEP_DOSSIER, metaDeCitas } from '@/lib/documento/citas';
 import { markdownAHtml, limpiarMarcadores } from '@/lib/documento/marcado';
 import { estadoPiloto } from '@/components/sentencia/api';
 
@@ -997,6 +997,30 @@ export default function ChatPage() {
         const primera = messages.find((m) => m.role === 'user');
         return primera ? tituloDeRespuesta(sinMarcadoresDeUsuario(primera.content)) : 'Documento de Iurexia';
     }, [messages]);
+
+    /* LO QUE EL SELLO YA FIRMÓ SE DA POR BUENO EN LA SIGUIENTE PREGUNTA.
+       Ver `fijarFuentesVerificadas` en `@/lib/api`. Se registran las fuentes
+       que las respuestas terminadas de ESTA conversación citaron y el backend
+       resolvió: sólo esas, porque una cita que el sello no pudo trazar no es
+       algo que convenga dar por hecho en la vuelta siguiente. */
+    useEffect(() => {
+        const citados: string[] = [];
+        const resolubles: Record<string, true> = {};
+        const patron = /\[Doc ID:\s*([0-9a-fA-F-]{30,40})\]/g;
+        for (let i = 0; i < bloquesDocumento.length; i++) {
+            const md = bloquesDocumento[i].markdown;
+            patron.lastIndex = 0;
+            let m: RegExpExecArray | null;
+            while ((m = patron.exec(md)) !== null) {
+                const id = m[1].toLowerCase();
+                if (citados.indexOf(id) === -1) citados.push(id);
+            }
+            const meta = metaDeCitas(md);
+            const fuentes = meta?.sources ?? {};
+            Object.keys(fuentes).forEach((k) => { resolubles[k.toLowerCase()] = true; });
+        }
+        fijarFuentesVerificadas(citados.filter((i) => resolubles[i] === true));
+    }, [bloquesDocumento]);
 
     // Cada respuesta terminada deja una versión del dossier (las últimas doce).
     useEffect(() => {

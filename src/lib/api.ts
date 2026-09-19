@@ -93,6 +93,40 @@ export function fuentesWebActivas(): boolean {
     try { return localStorage.getItem('iurexia-fuentes-web') === '1'; } catch { return false; }
 }
 
+/* ── LO QUE ESTA CONVERSACIÓN YA TIENE VERIFICADO (19-sep-2026) ───────────
+   David: «sería bueno que solo busque lo que no tiene y lo verificado lo dé
+   por hecho».
+
+   Cuando el abogado pregunta otra vez sobre la misma respuesta —«desarróllame
+   un amparo con esto»—, el buscador arrancaba de cero y volvía a rastrear
+   cuatro silos para reencontrar documentos que ya había encontrado y que el
+   sello ya había firmado. Peor que lento: medido dos veces sobre la respuesta
+   del arraigo, la segunda vuelta salía con NUEVE citas acusadas de no
+   corresponder al acervo, porque el modelo copiaba identificadores de la
+   respuesta anterior que el mapa nuevo ya no resolvía.
+
+   Ahora viajan los identificadores —nunca el texto, que lo vuelve a leer el
+   servidor de su propia base— y allí se dan por buenos. Con eso, cero
+   acusadas en tres corridas.
+
+   Vive aquí y no como parámetro por lo mismo que `fuentesWebActivas`: son
+   seis los sitios que llaman a `streamChat`, y un dato que cada uno tenga que
+   acordarse de pasar es un dato que alguno perderá en silencio. */
+let _verificadasDeLaConversacion: string[] = [];
+
+/** La pantalla del chat registra aquí lo que el sello ya firmó. */
+export function fijarFuentesVerificadas(ids: string[]): void {
+    const vistos = new Set<string>();
+    _verificadasDeLaConversacion = (ids || [])
+        .map((i) => String(i).trim().toLowerCase())
+        .filter((i) => /^[a-f0-9-]{32,36}$/.test(i) && !vistos.has(i) && vistos.add(i))
+        .slice(0, 40);
+}
+
+export function fuentesVerificadas(): string[] {
+    return _verificadasDeLaConversacion;
+}
+
 async function* streamChatInternal(
     messages: Message[],
     estado?: string,
@@ -136,6 +170,7 @@ async function* streamChatInternal(
             genio_ids: genioIds || [],
             user_id: userId,
             fuentes_web: fuentesWebActivas(),
+            ...(fuentesVerificadas().length ? { fuentes_previas: fuentesVerificadas() } : {}),
             ...(fuero ? { fuero } : {}),
             ...(materia ? { materia } : {}),
         }),
