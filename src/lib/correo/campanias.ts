@@ -687,12 +687,14 @@ export function correoActualizacion(d: Destinatario): Correo {
             'siguió el motor —qué buscó, en qué acervos y qué recuperó—, con el emblema de cada ' +
             'institución de donde salió una fuente.',
         ) +
+        /* OJO: `listado` ESCAPA sus renglones. Nada de etiquetas aquí dentro o
+           salen impresas como texto en el correo del abogado. */
         listado([
-            `${fuerte('Las citas numeradas abren su fuente.')} Al pulsar una, se abre el artículo o la tesis en el documento oficial, resaltado en el pasaje citado.`,
-            `${fuerte('Las fuentes se agrupan por quien las publica:')} Cámara de Diputados, Suprema Corte, Corte Interamericana, Congreso de la Unión o del Estado.`,
-            `${fuerte('El documento se acumula.')} Cada consulta nueva se escribe a continuación, con la numeración de las citas siguiendo de una a otra.`,
-            `${fuerte('Se exporta a Word tal como lo ve')}, con las citas convertidas en notas al pie en formato APA y sin membrete nuestro: el escrito es suyo.`,
-            `${fuerte('Puede arrastrar un documento')} a cualquier punto de la pantalla para consultarlo, sin buscar el clip.`,
+            'Las citas numeradas abren su fuente: al pulsar una se abre el artículo o la tesis en el documento oficial, resaltado en el pasaje citado.',
+            'Las fuentes se agrupan por quien las publica: Cámara de Diputados, Suprema Corte, Corte Interamericana, Congreso de la Unión o del Estado.',
+            'El documento se acumula: cada consulta nueva se escribe a continuación, con la numeración de las citas siguiendo de una a otra.',
+            'Se exporta a Word tal como lo ve, con las citas convertidas en notas al pie en formato APA y sin membrete nuestro: el escrito es suyo.',
+            'Puede arrastrar un documento a cualquier punto de la pantalla para consultarlo, sin buscar el clip.',
         ]) +
         rotulo('Lo que su plan ya incluye') +
         caja(
@@ -702,10 +704,10 @@ export function correoActualizacion(d: Destinatario): Correo {
                 : `<p style="margin:0 0 14px;">Su plan incluye almacenamiento en su cuenta. No es un archivero ` +
                   `suelto: es lo que sostiene el resto.</p>`) +
             listado([
-                `${fuerte('Carpetas inteligentes.')} Cada asunto con su objetivo declarado, sus documentos y lo que la plataforma va encontrando para él.`,
-                `${fuerte('Seguimiento de expedientes del Poder Judicial de la Federación,')} con aviso por correo cuando hay movimiento en el suyo.`,
-                `${fuerte('Normativa federal y de los estados,')} para consultar y citar el texto vigente.`,
-                `${fuerte('Lo último:')} el Diario Oficial, las tesis de la semana del Semanario Judicial, los comunicados de la Corte y lo que ocurre en inteligencia artificial.`,
+                'Carpetas inteligentes: cada asunto con su objetivo declarado, sus documentos y lo que la plataforma va encontrando para él.',
+                'Seguimiento de expedientes del Poder Judicial de la Federación, con aviso por correo cuando hay movimiento en el suyo.',
+                'Normativa federal y de los estados, para consultar y citar el texto vigente.',
+                'Lo último: el Diario Oficial, las tesis de la semana del Semanario Judicial, los comunicados de la Corte y lo que ocurre en inteligencia artificial.',
             ]) +
             `<p style="margin:16px 0 0;font-size:13px;color:#404040;">` +
             `<a href="${esc(SITIO)}/carpetas" style="color:#8b7355;text-decoration:underline;">Carpetas y seguimiento</a> &middot; ` +
