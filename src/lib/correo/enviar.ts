@@ -273,10 +273,24 @@ export async function enviarCampania(opciones: {
     lote?: number;
     /** Espera entre lotes, en milisegundos. */
     pausaMs?: number;
+    /**
+     * REPARTIR LA TANDA EN EL TIEMPO (19-sep-2026, David: «envíalos en
+     * exactamente 7 horas, cada uno con ese intervalo»).
+     *
+     * Con `programadoPara` y esta ventana, cada correo recibe SU propia hora:
+     * el primero a la hora de inicio y el último justo al cerrar la ventana,
+     * repartidos por igual. No hay proceso vivo esperando —las horas viajan a
+     * Resend, que es quien los suelta—, así que la tanda sobrevive a que la
+     * función termine, y un envío programado todavía se puede cancelar.
+     *
+     * Para qué: un goteo parejo no tiene la forma de ráfaga que los filtros
+     * de correo leen como envío masivo.
+     */
+    ventanaMs?: number;
 }): Promise<Resultado> {
     const {
         campania, destinatarios, construir, simulacro = true, maximo = 500,
-        plazoHasta, programadoPara, lote: tamanoLote = LOTE, pausaMs = PAUSA_MS,
+        plazoHasta, programadoPara, lote: tamanoLote = LOTE, pausaMs = PAUSA_MS, ventanaMs,
     } = opciones;
 
     // El bloque de hoy es lo menor entre lo que pide quien llama y lo que
@@ -337,13 +351,23 @@ export async function enviarCampania(opciones: {
     const resend = new Resend(process.env.RESEND_API_KEY!);
     const hoy = new Date().toISOString().slice(0, 10);
 
+    /* La hora de CADA correo. Sin ventana, todos comparten la de `programadoPara`
+       (o ninguna). Con ventana, se reparten por igual entre el inicio y el
+       cierre: con 219 correos en siete horas, uno cada 115 segundos. */
+    const inicio = programadoPara ? Date.parse(programadoPara) : 0;
+    const paso = ventanaMs && aEnviar.length > 1 ? ventanaMs / (aEnviar.length - 1) : 0;
+    const cuando = (indice: number) => {
+        if (!programadoPara) return {};
+        return { scheduledAt: new Date(inicio + Math.round(indice * paso)).toISOString() };
+    };
+
     for (let i = 0; i < aEnviar.length; i += tamanoLote) {
         if (plazoHasta && Date.now() > plazoHasta) { res.detenido_por_tiempo = true; break; }
         const lote = aEnviar.slice(i, i + tamanoLote);
 
         let correos;
         try {
-            correos = lote.map((d) => {
+            correos = lote.map((d, k) => {
                 const c = construir(d);
                 return {
                     from: remitente,
@@ -354,7 +378,7 @@ export async function enviarCampania(opciones: {
                     text: c.texto,
                     headers: cabecerasBaja(d.email),
                     tags: [{ name: 'campania', value: campania.replace(/[^A-Za-z0-9_-]/g, '_') }],
-                    ...(programadoPara ? { scheduledAt: programadoPara } : {}),
+                    ...cuando(i + k),
                 };
             });
         } catch (e) {

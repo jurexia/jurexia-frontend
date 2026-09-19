@@ -159,6 +159,15 @@ export async function POST(req: NextRequest) {
            lo impide. */
         const lote = Math.max(1, Math.min(100, Number(req.nextUrl.searchParams.get('lote') ?? 100)));
         const pausaMs = Math.max(0, Math.min(30_000, Number(req.nextUrl.searchParams.get('pausa') ?? 600)));
+        /* `ventana=7` con `entregar`: los correos se reparten por igual en esas
+           siete horas, cada uno con su hora, en vez de salir todos juntos. */
+        const ventanaHoras = Number(req.nextUrl.searchParams.get('ventana') ?? 0);
+        if (ventanaHoras && !entregar) {
+            return NextResponse.json({ error: 'ventana necesita entregar: sin hora de inicio no hay de dónde repartir' }, { status: 400 });
+        }
+        if (ventanaHoras < 0 || ventanaHoras > 240) {
+            return NextResponse.json({ error: 'ventana debe ir de 0 a 240 horas' }, { status: 400 });
+        }
 
         const resultado = await enviarCampania({
             campania: cual,
@@ -169,6 +178,7 @@ export async function POST(req: NextRequest) {
             programadoPara,
             lote,
             pausaMs,
+            ventanaMs: ventanaHoras ? ventanaHoras * 3_600_000 : undefined,
             plazoHasta: Date.now() + 280_000,
         });
 
