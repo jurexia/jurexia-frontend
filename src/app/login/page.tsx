@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { signInWithEmail, signInWithGoogle, signInWithApple, resetPassword } from '@/lib/supabase';
 import { destinoTrasEntrar, recordarDestino } from '@/lib/destino-tras-entrar';
 import { EntrarConCodigo } from '@/components/EntradaConCodigo';
+import BotonProbar from '@/components/BotonProbar';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -306,6 +307,19 @@ export default function LoginPage() {
                             >
                                 Entrar con un código por correo
                             </button>
+
+                            {/* ENTRAR SIN NADA (18-sep-2026). Aquí es donde se
+                                pierde la gente: de 2,320 cuentas creadas, sólo 438
+                                llegaron a escribir una consulta. Quien no quiere dar
+                                su correo todavía, que pase y pregunte. */}
+                            <div className="mt-5 border-t border-gray-100 pt-5 text-center">
+                                <BotonProbar
+                                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-accent-gold/50 bg-accent-gold/10 px-5 text-[15px] font-semibold text-charcoal-900 transition-colors hover:bg-accent-gold/20"
+                                    sub="Sin correo ni tarjeta. Versión básica."
+                                >
+                                    Probar Iurexia ahora
+                                </BotonProbar>
+                            </div>
 
                             {/* Register Link */}
                             <p className="text-center text-sm text-charcoal-500 mt-6">

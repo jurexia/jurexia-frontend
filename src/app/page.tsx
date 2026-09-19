@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { HeroCTA } from '@/components/HeroCTA';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { AnimatedSection } from '@/components/AnimatedSection';
+import BotonProbar from '@/components/BotonProbar';
 
 export default function HomePage() {
     return (
@@ -551,6 +552,12 @@ export default function HomePage() {
                     <p className="text-lg text-gray-300 mb-8">
                         Únete a los profesionales del derecho que ya utilizan IA especializada.
                     </p>
+                    <BotonProbar
+                        className="inline-flex items-center gap-2 px-8 py-4 bg-accent-gold text-charcoal-900 font-bold rounded-lg hover:opacity-90 transition-opacity"
+                        sub="Sin correo, sin tarjeta. Entras y preguntas."
+                    >
+                        Probar sin registrarme
+                    </BotonProbar>
                     <Link
                         href="/login"
                         className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-lg hover:bg-gray-100 transition-colors"

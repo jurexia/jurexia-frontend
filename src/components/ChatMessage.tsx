@@ -22,6 +22,11 @@ interface ChatMessageProps {
     /** La respuesta vive en el panel Documento: aquí sólo se resume y se enlaza. */
     enDocumento?: boolean;
     onVerDocumento?: () => void;
+    /** MODO BÁSICO (18-sep-2026): la respuesta se lee EN EL HILO y nada más.
+     *  Sin hoja de Word, sin exportar, sin carpeta y sin sello de citas: aquí
+     *  no hay verificación contra el acervo que sellar, y las fuentes ya van
+     *  escritas con su registro al pie de la respuesta. Ver `@/lib/gratis`. */
+    basico?: boolean;
 }
 
 // UUID regex for document IDs
@@ -84,7 +89,7 @@ function filterDocumentContent(content: string): string {
 
 
 
-export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, enDocumento = false, onVerDocumento }: ChatMessageProps) {
+export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, enDocumento = false, onVerDocumento , basico = false }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
@@ -1421,7 +1426,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             comprueba contra el Semanario cada registro de
                             tesis citado en la prosa —lo único que el
                             validador del backend NO miraba. (7-ago-2026) */}
-                        {!isStreaming && (
+                        {!isStreaming && !basico && (
                             <SelloCitas
                                 trazadas={citationMeta?.valid ?? 0}
                                 noTrazadas={citationMeta?.invalid ?? 0}
@@ -1452,7 +1457,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             fila de 272 en móvil, y «A mi carpeta» terminaba 197 px
                             fuera de la pantalla. La etiqueta se oculta en pantallas
                             estrechas porque los iconos ya dicen qué hace cada uno. */}
-                        {!isStreaming && message.content.length > 50 && (
+                        {!isStreaming && !basico && message.content.length > 50 && (
                             /* CON EL DOCUMENTO ABIERTO, SÓLO «A MI CARPETA» (David,
                                 18-sep-2026: «todos esos botones dejan de tener sentido
                                 excepto A mi carpeta»): descargar, copiar e ir al editor

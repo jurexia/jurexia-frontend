@@ -120,6 +120,11 @@ interface ChatInputProps {
     onAbrirConstructor?: (paso: 'caso' | 'toulmin') => void;
     /** Si el constructor está desplegado: el botón Toulmin se ve pulsado. */
     constructorAbierto?: boolean;
+    /** MODO BÁSICO: sin cuenta, o cuenta gratuita ya agotada. Las herramientas
+     *  no desaparecen, se ven con candado: el abogado tiene que VER lo que se
+     *  está perdiendo, que es lo único que convierte una prueba en una
+     *  suscripción. Ver `@/lib/gratis`. */
+    basico?: boolean;
 }
 
 /* Fuentes de internet encendidas EN ESTA VISITA. A nivel de módulo a
@@ -147,6 +152,7 @@ export default function ChatInput({
     onMateriaChange,
     onAbrirConstructor,
     constructorAbierto = false,
+    basico = false,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -488,6 +494,12 @@ export default function ChatInput({
     };
 
 
+    /* En básico, cualquier herramienta lleva al mismo sitio: los planes. No se
+       esconde el botón —verlo es el punto—, pero no hace su trabajo. */
+    const tocoCandado = () => {
+        if (typeof window !== 'undefined') window.location.href = '/precios';
+    };
+
     const handleSubmit = () => {
         if (isListening && recognitionRef.current) {
             recognitionRef.current.stop();
@@ -778,7 +790,7 @@ ${draftRequest.descripcion}`;
                 {/* Main Input Container - Harvey Style */}
                 <div className="chat-input-container p-3">
                     {/* Fuero + Materia Toggle — Same row, compact pills above textarea */}
-                    {!plegado && (onFueroChange || onMateriaChange) && (
+                    {!basico && !plegado && (onFueroChange || onMateriaChange) && (
                         <div data-guide="fuero-materia-filter" className="flex items-center gap-1 sm:gap-1.5 mb-2 pb-1.5 border-b border-gray-100/60 flex-nowrap overflow-x-auto">
                             {/* Fuero section */}
                             {onFueroChange && (
@@ -911,7 +923,7 @@ ${draftRequest.descripcion}`;
                                 type="button"
                                 disabled={isLoading}
                                 data-guide="adjuntar"
-                                onClick={() => handleModeClick('files')}
+                                onClick={() => (basico ? tocoCandado() : handleModeClick('files'))}
                                 className={`p-2 rounded-full transition-all duration-200 flex-shrink-0 ${attachedDocument
                                     ? 'bg-blue-100 text-blue-600 border border-blue-200'
                                     : 'text-gray-400 hover:text-charcoal-700 hover:bg-gray-100 border border-transparent disabled:opacity-50'
@@ -957,6 +969,27 @@ ${draftRequest.descripcion}`;
                         buscar dónde se cierra lo que se acaba de abrir. Plegado
                         lleva además el resumen de lo elegido —fuero, materia,
                         modo—, que si no queda invisible. */}
+                    {basico && (
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-2">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                Con un plan
+                            </span>
+                            {['Genios', 'Toulmin', 'Redactar', 'Jurimetría', 'Precedentes', 'Expedientes', 'Carpetas'].map((h) => (
+                                <button
+                                    key={h}
+                                    type="button"
+                                    onClick={tocoCandado}
+                                    title={`${h} está disponible en los planes de Iurexia`}
+                                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-[10.5px] font-medium text-gray-400 transition-colors hover:border-[#c9a962]/60 hover:text-charcoal-700"
+                                >
+                                    <Lock className="h-2.5 w-2.5" />
+                                    {h}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {!basico && (
                     <button
                         type="button"
                         data-guide="herramientas"
@@ -975,9 +1008,10 @@ ${draftRequest.descripcion}`;
                         </span>
                         {plegado && <span className="hidden min-w-0 truncate sm:inline">{resumenPlegado}</span>}
                     </button>
+                    )}
 
                     {/* Action Cards Row — Blue Cards */}
-                    {!plegado && (
+                    {!basico && !plegado && (
                     <div className="mt-2 pt-2 border-t border-gray-100">
                         {/* Buscar / Redactar toggle + Pro — stays compact */}
                         {/* LA FILA DEL MODO. Buscar/Redactar a la izquierda y Toulmin al
@@ -1214,7 +1248,7 @@ ${draftRequest.descripcion}`;
                     )}
 
                     {/* ── MODO PRECEDENTES: corte (SCJN/TCC/Ambas) → filtros ────────── */}
-                    {!plegado && activeMode === 'precedentes' && (
+                    {!basico && !plegado && activeMode === 'precedentes' && (
                         <div className="mt-2 pt-2 border-t border-[#c9a962]/20 space-y-2">
 
                             {/* Fila 0: Selector de Corte (SCJN | TCC | Ambas) */}
@@ -1428,7 +1462,7 @@ ${draftRequest.descripcion}`;
                     )}
 
                     {/* ── Genio Premium Horizontal Row ───────────────────────────── */}
-                    {!plegado && (
+                    {!basico && !plegado && (
                     <div
                         data-guide="genios-container"
                         className="
@@ -1521,7 +1555,7 @@ ${draftRequest.descripcion}`;
 
                     {/* El agente: plan aprobable antes de redactar. Va junto al
                         Secretario porque los dos son trabajo largo, no consulta. */}
-                    {!plegado && (
+                    {!basico && !plegado && (
                     <a
                         href="/agente"
                         className="mt-2 flex items-center gap-2 rounded-md border border-[#c9a962]/25 bg-[#1a1a1a] px-3 py-1 transition-colors duration-200 hover:border-[#c9a962]/50"

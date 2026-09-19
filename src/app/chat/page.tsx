@@ -25,7 +25,9 @@ import { useChat } from '@/hooks/useChat';
 import { useInsignia } from '@/hooks/useInsignia';
 import { CeremoniaInsignia } from '@/components/CeremoniaInsignia';
 import { UserAvatar } from '@/components/UserAvatar';
-import { useRequireAuth } from '@/lib/useAuth';
+import { useAuthOBasico } from '@/lib/useAuth';
+import { hayTestigoBasico, preguntarBasico, markdownDeBasico, BLOQUEADO_POR_OMISION } from '@/lib/gratis';
+import PanelBasico from '@/components/PanelBasico';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
 import type { VersionDocumento } from '@/components/documento/PanelDocumento';
@@ -106,8 +108,18 @@ function tituloDeRespuesta(markdown: string): string {
 }
 
 export default function ChatPage() {
-    // Auth protection - redirects to login if not authenticated
-    const { loading: authLoading, isAuthenticated, user, profile } = useRequireAuth();
+    /* ═══ QUIÉN PUEDE ENTRAR ═══
+       Además de quien tiene cuenta, entra quien pulsó «Probar Iurexia»: una
+       visita sin correo ni tarjeta. Es el cuello de embudo más grande que hay
+       —2,320 cuentas registradas y sólo 438 que escribieron algo—, y no se
+       rompe pidiendo más por delante. Ver `@/lib/gratis`. */
+    /* TRES ESTADOS, NO DOS: `null` es «todavía no sé». localStorage sólo se
+       puede leer después de montar, y con `false` de partida la puerta mandaba
+       al acceso en el primer render, antes de enterarse de que había visita
+       abierta. Se redirige sólo cuando consta que NO hay testigo. */
+    const [hayTestigo, setHayTestigo] = useState<boolean | null>(null);
+    useEffect(() => { setHayTestigo(hayTestigoBasico()); }, []);
+    const { loading: authLoading, isAuthenticated, user, profile } = useAuthOBasico(hayTestigo !== false);
     const router = useRouter();
 
     // La entrega de la insignia del plan. Vive aquí y no en la pantalla de
@@ -187,6 +199,13 @@ export default function ChatPage() {
     const [showVisualGuide, setShowVisualGuide] = useState(false);
     const [selectedFuero, setSelectedFuero] = useState<string[]>([]);
     const [selectedMateria, setSelectedMateria] = useState<string>('');
+    /* ═══ EL MODO BÁSICO ═══
+       Dos maneras de llegar: sin cuenta por el botón de prueba, o con cuenta
+       gratuita que ya gastó sus consultas normales. En los dos casos es el
+       MISMO chat, con el motor recortado y las herramientas con candado. Lo
+       que limita es la capacidad, no la cantidad. */
+    const [bloqueado, setBloqueado] = useState<string[]>(BLOQUEADO_POR_OMISION);
+    const [usoBasico, setUsoBasico] = useState<{ usadas: number; tope: number } | null>(null);
     const [activePdfSource, setActivePdfSource] = useState<{
         docId: string; origen: string; ref: string; texto: string;
         pdf_url?: string | null; silo?: string;
@@ -399,6 +418,8 @@ export default function ChatPage() {
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const corriendoBasico = useRef(false);
+    const [basicoCargando, setBasicoCargando] = useState(false);
     const mainRef = useRef<HTMLElement>(null);
     const messagesRef = useRef(messages);
     messagesRef.current = messages;
@@ -541,7 +562,42 @@ export default function ChatPage() {
         setActivePdfSource(source);
     }, []);
 
+    /* Sin cuenta es básico siempre. Con cuenta gratuita, en cuanto se acaban
+       las consultas normales: no se le cierra la puerta, se le baja el motor. */
+    const sinCuenta = !authLoading && !isAuthenticated && hayTestigo === true;
+    const gratuitoAgotado = isAuthenticated
+        && (profile?.subscription_type || 'gratuito') === 'gratuito'
+        && !isAdmin(user?.email)
+        && queriesLimit > 0 && queriesUsed >= queriesLimit;
+    const modoBasico = sinCuenta || gratuitoAgotado;
+
+    /* La consulta del carril básico. Vive fuera de `useChat` a propósito: no
+       hay flujo, ni acervo completo, ni historial que mandar de vuelta. Una
+       pregunta, una respuesta con sus criterios, y los candados a la vista. */
+    const enviarBasico = useCallback(async (content: string) => {
+        const texto = content.trim();
+        if (!texto || corriendoBasico.current) return;
+        corriendoBasico.current = true;
+        setMessages((prev) => [...prev, { role: 'user' as const, content: texto }]);
+        setBasicoCargando(true);
+        try {
+            const r = await preguntarBasico(texto, isAuthenticated ? (user?.email || undefined) : undefined);
+            setBloqueado(r.bloqueado);
+            setUsoBasico({ usadas: r.usadas, tope: r.tope });
+            setMessages((prev) => [...prev, { role: 'assistant' as const, content: markdownDeBasico(r) }]);
+        } catch (e) {
+            setMessages((prev) => [...prev, {
+                role: 'assistant' as const,
+                content: `**${e instanceof Error ? e.message : 'No pudimos consultar el acervo.'}**`,
+            }]);
+        } finally {
+            setBasicoCargando(false);
+            corriendoBasico.current = false;
+        }
+    }, [isAuthenticated, user?.email, setMessages]);
+
     const handleSendMessage = useCallback(async (content: string, enableReasoning = false) => {
+        if (modoBasico) { void enviarBasico(content); return; }
         if (!user) return;
 
         // If no estado selected, show lightweight state selector before sending
@@ -556,6 +612,14 @@ export default function ChatPage() {
         const isAdminUser = isAdmin(user?.email);
         const remaining = queriesLimit - queriesUsed;
         if (remaining <= 0 && !isAdminUser) {
+            /* AL GRATUITO NO SE LE CIERRA LA PUERTA. Antes salía un muro con
+               «se acabaron tus consultas»; ahora sigue preguntando en el mismo
+               chat con el motor básico, viendo con candado lo que se pierde.
+               A quien ya paga sí se le ofrece la recarga, que es lo suyo. */
+            if ((profile?.subscription_type || 'gratuito') === 'gratuito') {
+                void enviarBasico(content);
+                return;
+            }
             setShowLimitModal(true);
             return;
         }
@@ -649,7 +713,8 @@ export default function ChatPage() {
         }
 
         lastSentUserMsgRef.current = null;
-    }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed]);
+    }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed,
+        modoBasico, enviarBasico, profile?.subscription_type]);
 
     // Document analysis via Gemini Flash (streaming from /analyze-document)
     const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
@@ -996,7 +1061,10 @@ export default function ChatPage() {
     const selectedEstadoLabel = getEstadoLabel(selectedEstado);
     const queriesRemaining = Math.max(0, queriesLimit - queriesUsed);
 
-    if (authLoading || !isAuthenticated) return null;
+    /* La pantalla en blanco mientras se resuelve la sesión. El modo básico
+       también tiene derecho a entrar: sin esto, quien pulsó «Probar Iurexia»
+       veía una página vacía. */
+    if (authLoading || (!isAuthenticated && !sinCuenta)) return null;
 
     return (
         <div className="min-h-screen bg-cream-300">
@@ -1146,6 +1214,19 @@ export default function ChatPage() {
                                 <span className="max-w-[90px] truncate">{selectedEstado ? selectedEstadoLabel : 'Todas'}</span>
                             </button>
 
+                            {sinCuenta ? (
+                                /* Sin cuenta no hay consultas que contar. En ese hueco
+                                   va lo único que importa: qué está usando y cómo pasa
+                                   a lo demás. */
+                                <Link
+                                    href="/registro"
+                                    title="Crea tu cuenta para el motor completo"
+                                    className={`${panelAbierto ? 'hidden' : 'hidden lg:inline-flex'} h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-accent-gold/40 bg-accent-gold/10 px-2.5 text-[11.5px] font-semibold text-charcoal-900 transition-colors hover:bg-accent-gold/20`}
+                                >
+                                    <Lock className="h-3 w-3 text-accent-brown" />
+                                    Versión básica · Crear cuenta
+                                </Link>
+                            ) : (
                             <div
                                 className={`${panelAbierto ? 'hidden' : 'hidden lg:flex'} h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] transition-all duration-300 ${counterPulse ? 'ring-2 ring-accent-gold/40' : ''}`}
                                 title={`Consultas usadas este mes: ${queriesUsed} de ${queriesLimit}`}
@@ -1160,6 +1241,7 @@ export default function ChatPage() {
                                     />
                                 </span>
                             </div>
+                            )}
                             <UserAvatar />
                         </div>
                     </div>
@@ -1263,8 +1345,11 @@ export default function ChatPage() {
                                     onSubmit={handleSendMessage}
                                     onDocumentSubmit={handleDocumentSubmit}
                                     onStop={stopGeneration}
-                                    isLoading={isLoading}
-                                    placeholder="Escribe tu consulta legal..."
+                                    isLoading={isLoading || basicoCargando}
+                                    basico={modoBasico}
+                                    placeholder={modoBasico
+                                        ? 'Pregunta y te doy los criterios aplicables…'
+                                        : 'Escribe tu consulta legal...'}
                                     estado={selectedEstado}
                                     activeGenios={activeGenios}
                                     setActiveGenios={handleToggleGenios}
@@ -1280,6 +1365,12 @@ export default function ChatPage() {
                                     onAbrirConstructor={abrirConstructor}
                                     constructorAbierto={constructorAbierto}
                                 />
+
+                                {modoBasico && (
+                                    <div className="mt-5 text-left">
+                                        <PanelBasico bloqueado={bloqueado} sinCuenta={sinCuenta} />
+                                    </div>
+                                )}
 
                                 <div className="mt-4 text-center">
                                     <p className="text-xs text-charcoal-500 mb-2">Mejor pregunta = mejor resultado.</p>
@@ -1358,7 +1449,7 @@ export default function ChatPage() {
                                 const showNudge = !isPro && message.role === 'assistant' && assistantCount > 0 && assistantCount % 3 === 0 && index !== messages.length - 1;
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
-                                        <ChatMessage message={message} enDocumento={message.role === 'assistant'} onVerDocumento={verDocumento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
+                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} basico={modoBasico} onVerDocumento={verDocumento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
                                         {showNudge && <UpgradeNudge messageIndex={assistantCount} />}
                                     </div>
                                 );
@@ -1403,6 +1494,11 @@ export default function ChatPage() {
             )}
 
                 {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
+                            {modoBasico && (
+                                <div className="pt-2">
+                                    <PanelBasico bloqueado={bloqueado} sinCuenta={sinCuenta} compacto />
+                                </div>
+                            )}
                             <div ref={messagesEndRef} />
                         </div>
                     </>)}
@@ -1414,7 +1510,8 @@ export default function ChatPage() {
                             onSubmit={handleSendMessage}
                             onDocumentSubmit={handleDocumentSubmit}
                             onStop={stopGeneration}
-                            isLoading={isLoading}
+                            isLoading={isLoading || basicoCargando}
+                            basico={modoBasico}
                             estado={selectedEstado}
                             activeGenios={activeGenios}
                             setActiveGenios={handleToggleGenios}
@@ -1428,7 +1525,9 @@ export default function ChatPage() {
                             onMateriaChange={setSelectedMateria}
 
                             onAbrirConstructor={abrirConstructor}
-                            placeholder={documentoAbierto ? 'Pide un cambio al documento o haz otra consulta…' : undefined}
+                            placeholder={modoBasico
+                                ? 'Pregunta y te doy los criterios aplicables…'
+                                : documentoAbierto ? 'Pide un cambio al documento o haz otra consulta…' : undefined}
                                     constructorAbierto={constructorAbierto}
                         />
                     </div>
