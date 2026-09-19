@@ -47,6 +47,13 @@ const ETAPAS: { nombre: string; titulo: string; glosa: string }[] = [
     { nombre: 'jurisdiccion', titulo: 'Fijando la jurisdicción', glosa: 'Para no mezclar legislación de otro estado' },
     { nombre: 'expandir', titulo: 'Ampliando la búsqueda', glosa: 'Sinónimos jurídicos y figuras equivalentes' },
     { nombre: 'buscar', titulo: 'Recorriendo el acervo', glosa: 'Artículo por artículo, con su fuente' },
+    // LA ETAPA QUE SE EMITÍA Y NO SE VEÍA (19-sep-2026)
+    // El backend manda `PASO:verificadas|15` desde que la segunda vuelta de una
+    // conversación reaprovecha lo que el sello ya firmó. Esta lista es cerrada
+    // —línea 173: se filtra ETAPAS, no lo que llegó— así que el paso entraba,
+    // se guardaba y se tiraba. David, mirando la pantalla: «no veo los cambios».
+    // Tenía razón: el trabajo estaba hecho y no se veía por ningún lado.
+    { nombre: 'verificadas', titulo: 'Reusando lo ya verificado', glosa: 'Las fuentes que esta conversación ya comprobó no se vuelven a buscar' },
     { nombre: 'precedentes', titulo: 'Buscando precedentes', glosa: 'Jurisprudencia y tesis aisladas' },
     { nombre: 'doctrina', titulo: 'Consultando doctrina', glosa: 'Obras jurídicas de referencia, con autor y página' },
     { nombre: 'web', titulo: 'Buscando en internet', glosa: 'Las fuentes aparecen conforme se consultan — sólo dominios oficiales' },
@@ -72,6 +79,12 @@ function fichasDe(nombre: string, detalle: string | undefined, fuentes: number |
         ];
         if (fuentes !== null) f.push({ texto: `${fuentes} fuentes`, icono: 'enlace' });
         return f;
+    }
+    if (nombre === 'verificadas' && detalle && detalle !== '0') {
+        return [
+            { texto: `${detalle} ${detalle === '1' ? 'fuente ya firmada' : 'fuentes ya firmadas'}`, icono: 'balanza' },
+            { texto: 'Sin volver a buscarlas', icono: 'enlace' },
+        ];
     }
     if (nombre === 'precedentes' && detalle && detalle !== '0') {
         return [
