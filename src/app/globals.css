@@ -1952,3 +1952,140 @@ h6 {
 @media (prefers-reduced-motion: reduce) {
   .bloque-revelado { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAS LOSAS DEL REDACTOR DE ESCRITOS (19-sep-2026)
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «un botón negro, con textura como si fuera tangible o tocable, que en
+   cada uno de sus rubros aparezcan letras blancas con un fondo incandescente
+   […] algo completamente distinto a lo que tenemos».
+
+   Lo que había era una rejilla de iconos de librería —una casita para
+   arrendamiento, un carrito para compraventa— que en un despacho se lee como
+   una aplicación de reparto, no como una herramienta jurídica. Los iconos se
+   van enteros. Lo que queda es el nombre del escrito y, debajo, qué produce.
+
+   TANGIBLE es un efecto de tres capas y ninguna imagen: un degradado vertical
+   muy corto que insinúa el volumen, una línea de luz de un píxel en el canto
+   de arriba —así se ve un metal mecanizado— y una sombra dura debajo. Encima,
+   una trama diagonal de una décima de opacidad que sólo se nota al pasar el
+   dedo, que es exactamente lo que se busca: que se sienta antes de verse.
+
+   INCANDESCENTE es literal: al elegir, la losa se calienta desde el borde
+   izquierdo hacia dentro, como una barra de hierro sacada de la fragua. No es
+   un color de relleno plano; es un rescoldo que se apaga hacia la derecha para
+   que las letras blancas se sigan leyendo sobre él.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.losa {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0) 42%),
+        #141315;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+        0 1px 2px rgba(0, 0, 0, 0.6);
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 200ms ease;
+}
+
+/* La trama. Va en un pseudo-elemento para no tocar el fondo de la losa, que
+   cambia cuando se elige. */
+.losa::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: repeating-linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.028) 0px,
+        rgba(255, 255, 255, 0.028) 1px,
+        transparent 1px,
+        transparent 4px
+    );
+    pointer-events: none;
+}
+
+/* El rescoldo: crece desde el canto izquierdo. Apagado, no ocupa nada. */
+.losa::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+        90deg,
+        rgba(241, 176, 64, 0.85) 0%,
+        rgba(193, 108, 24, 0.55) 26%,
+        rgba(120, 52, 6, 0.22) 58%,
+        transparent 88%
+    );
+    opacity: 0;
+    transition: opacity 220ms ease;
+    pointer-events: none;
+}
+
+.losa:hover {
+    transform: translateY(-1px);
+    border-color: rgba(201, 169, 98, 0.35);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.11),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+        0 6px 18px -10px rgba(241, 176, 64, 0.45);
+}
+
+.losa:hover::after { opacity: 0.28; }
+
+.losa:focus-visible {
+    outline: 2px solid rgba(201, 169, 98, 0.8);
+    outline-offset: 2px;
+}
+
+.losa[aria-pressed='true'],
+.losa[data-encendida='1'] {
+    border-color: rgba(241, 176, 64, 0.55);
+    transform: none;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 0 0 1px rgba(241, 176, 64, 0.18),
+        0 10px 30px -14px rgba(241, 176, 64, 0.7);
+}
+
+.losa[aria-pressed='true']::after,
+.losa[data-encendida='1']::after { opacity: 1; }
+
+/* SOBRE EL RESCOLDO, EL GRIS SE PIERDE. La glosa se escribe a 55% de blanco
+   porque sobre negro es suficiente; sobre el ámbar encendido deja de leerse.
+   Se sube al encender, que es el único momento en que el fondo es claro. */
+.losa[aria-pressed='true'] .glosa,
+.losa[data-encendida='1'] .glosa {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+/* La brasa del canto: un filo de luz que sólo aparece encendido. */
+.losa[aria-pressed='true'] .filo,
+.losa[data-encendida='1'] .filo { opacity: 1; }
+
+.filo {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #ffd27a, #f1b040 45%, #b9670f);
+    opacity: 0;
+    transition: opacity 220ms ease;
+}
+
+/* Quien no puede usarse no se calienta: se queda fría y dicha. */
+.losa[disabled] { opacity: 0.45; cursor: not-allowed; }
+.losa[disabled]:hover { transform: none; border-color: rgba(255, 255, 255, 0.07); }
+.losa[disabled]:hover::after { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+    .losa, .losa::after, .filo { transition: none; }
+    .losa:hover { transform: none; }
+}

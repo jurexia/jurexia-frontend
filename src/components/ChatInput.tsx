@@ -726,7 +726,7 @@ ${draftRequest.descripcion}`;
         } else {
             draftMessage = `${escalon}[REDACTAR_DOCUMENTO]
 Tipo: ${draftRequest.tipo}
-Subtipo: ${draftRequest.subtipo}
+Subtipo: ${draftRequest.subtipo}${draftRequest.via ? `\nVía: ${draftRequest.via}` : ''}
 Jurisdicción: ${draftRequest.estado}
 
 Descripción del caso:
