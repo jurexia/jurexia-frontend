@@ -36,6 +36,8 @@ import { ADMINS, type Destinatario } from './enviar';
 import type { NombreCampania } from './campanias';
 
 const COLUMNAS = 'id, email, full_name, estado, queries_used';
+/** El plan viaja con el destinatario: el aviso de producto nombra lo que ese plan incluye. */
+const COLUMNAS_PLAN = `${COLUMNAS}, tratamiento, subscription_type`;
 /** `tratamiento` vive en el perfil; la vista `cuentas_dormidas` no lo expone. */
 const COLUMNAS_PERFIL = `${COLUMNAS}, tratamiento`;
 
@@ -106,6 +108,22 @@ function filtrar(q: any, campania: NombreCampania) {
                 .or(`subscription_type.in.(basico_monthly,pro_monthly,pro_annual,platinum_monthly,platinum_annual,ultra_secretarios),last_query_at.gte."${hace60}"`); // entre comillas: la fecha lleva «:» y «.», reservados en `or`
     }
 
+
+    // ── ACTUALIZACIÓN DE LA PANTALLA (18-sep-2026) ───────────────────────
+    // Un aviso de producto a quien paga: los seis planes con la cuenta viva.
+    // No se excluye a nadie aquí. A quien pidió darse de baja —o cancelar su
+    // cuenta— lo para `correo_bajas`, que es el freno que ya existe y que vale
+    // para todas las campañas; escribir un correo suelto en el código sería
+    // dejar el nombre de una persona en el repositorio y olvidarlo ahí.
+    if (campania === 'actualizacion') {
+        return q.eq('is_active', true)
+                .is('suspendido_at', null)
+                .in('subscription_type', [
+                    'basico_monthly', 'basico_annual',
+                    'pro_monthly', 'pro_annual',
+                    'platinum_monthly', 'platinum_annual',
+                ]);
+    }
 
     if (campania === 'referidos') {
         // ABIERTO A QUIEN YA USÓ LA PLATAFORMA (cambio del 7-ago-2026).
@@ -209,7 +227,8 @@ export async function segmento(campania: NombreCampania): Promise<Destinatario[]
     const filas: Destinatario[] = [];
 
     for (let desde = 0; ; desde += TAMANO) {
-        const columnas = origen(campania) === 'user_profiles' ? COLUMNAS_PERFIL : COLUMNAS;
+        const columnas = origen(campania) !== 'user_profiles' ? COLUMNAS
+            : campania === 'actualizacion' ? COLUMNAS_PLAN : COLUMNAS_PERFIL;
         const q = filtrar(admin().from(origen(campania)).select(columnas), campania);
         // Orden estable al paginar, o las páginas pueden solaparse y perder gente.
         const { data, error } = await q.order('id', { ascending: true }).range(desde, desde + TAMANO - 1);

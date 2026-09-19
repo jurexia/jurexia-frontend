@@ -92,6 +92,8 @@ export interface Destinatario {
     queries_used?: number | null;
     /** Cómo prefiere ser nombrado: 'lic' (neutro, por omisión), 'licenciado' o 'licenciada'. */
     tratamiento?: string | null;
+    /** El plan contratado. Lo usa la plantilla que nombra lo que ese plan incluye. */
+    subscription_type?: string | null;
 }
 
 export interface Correo {
@@ -261,8 +263,21 @@ export async function enviarCampania(opciones: {
      * de la puntualidad del cron, y un envío encolado se puede cancelar.
      */
     programadoPara?: string;
+    /**
+     * Correos por petición. 100 —el máximo de Resend— es lo que conviene para
+     * las campañas grandes. Con `lote: 1` sale uno a uno: más lento, pero sin
+     * la ráfaga que los filtros de Gmail leen como envío masivo. Se usa en los
+     * avisos a clientes de pago, donde llegar a la bandeja principal importa
+     * más que terminar rápido.
+     */
+    lote?: number;
+    /** Espera entre lotes, en milisegundos. */
+    pausaMs?: number;
 }): Promise<Resultado> {
-    const { campania, destinatarios, construir, simulacro = true, maximo = 500, plazoHasta, programadoPara } = opciones;
+    const {
+        campania, destinatarios, construir, simulacro = true, maximo = 500,
+        plazoHasta, programadoPara, lote: tamanoLote = LOTE, pausaMs = PAUSA_MS,
+    } = opciones;
 
     // El bloque de hoy es lo menor entre lo que pide quien llama y lo que
     // permite la cuota. En simulacro se calcula igual, para que el reporte
@@ -322,9 +337,9 @@ export async function enviarCampania(opciones: {
     const resend = new Resend(process.env.RESEND_API_KEY!);
     const hoy = new Date().toISOString().slice(0, 10);
 
-    for (let i = 0; i < aEnviar.length; i += LOTE) {
+    for (let i = 0; i < aEnviar.length; i += tamanoLote) {
         if (plazoHasta && Date.now() > plazoHasta) { res.detenido_por_tiempo = true; break; }
-        const lote = aEnviar.slice(i, i + LOTE);
+        const lote = aEnviar.slice(i, i + tamanoLote);
 
         let correos;
         try {
@@ -346,7 +361,7 @@ export async function enviarCampania(opciones: {
             // Una plantilla que revienta con un destinatario raro no debe
             // tumbar el lote entero sin dejar rastro.
             res.fallidos += lote.length;
-            res.errores.push(`plantilla, lote ${i / LOTE + 1}: ${e instanceof Error ? e.message : String(e)}`);
+            res.errores.push(`plantilla, lote ${i / tamanoLote + 1}: ${e instanceof Error ? e.message : String(e)}`);
             continue;
         }
 
@@ -357,7 +372,7 @@ export async function enviarCampania(opciones: {
             });
             if (error) {
                 res.fallidos += lote.length;
-                res.errores.push(`lote ${i / LOTE + 1}: ${error.message}`);
+                res.errores.push(`lote ${i / tamanoLote + 1}: ${error.message}`);
                 await admin().from('correo_envios').insert(
                     lote.map((d) => ({ usuario_id: d.id ?? null, email: d.email, campania, estado: 'fallido' })),
                 );
@@ -373,13 +388,13 @@ export async function enviarCampania(opciones: {
                         resend_id: ids[k]?.id ?? null, estado: 'enviado',
                     })),
                 );
-                if (eLog) res.errores.push(`bitácora lote ${i / LOTE + 1}: ${eLog.message}`);
+                if (eLog) res.errores.push(`bitácora lote ${i / tamanoLote + 1}: ${eLog.message}`);
             }
         } catch (e) {
             res.fallidos += lote.length;
-            res.errores.push(`lote ${i / LOTE + 1}: ${e instanceof Error ? e.message : String(e)}`);
+            res.errores.push(`lote ${i / tamanoLote + 1}: ${e instanceof Error ? e.message : String(e)}`);
         }
-        await new Promise((r) => setTimeout(r, PAUSA_MS));
+        await new Promise((r) => setTimeout(r, pausaMs));
     }
     return res;
 }

@@ -570,21 +570,97 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="py-12 bg-cream-300 border-t border-black/5">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
+            {/* ═══ EL PIE ═══
+                Cuatro enlaces en una fila no dicen de qué es capaz Iurexia.
+                Aquí se enseña el catálogo entero por columnas: cualquiera que
+                llegue al final de la portada ve la plataforma completa y
+                encuentra por dónde entrar. Sólo se enlaza a rutas que existen
+                —se comprobó una por una—, porque un pie lleno de enlaces
+                muertos es peor que un pie corto. */}
+            <footer className="border-t border-black/5 bg-cream-300 pt-16 pb-10">
+                <div className="mx-auto max-w-6xl px-4">
+                    <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+                        <div className="max-w-xs">
+                            <span className="font-serif text-2xl font-semibold tracking-wide">
+                                Iurex<span className="text-accent-gold">ia</span>
+                            </span>
+                            <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-brown">
+                                Legal Tech
+                            </div>
+                            <p className="mt-4 text-[13.5px] leading-relaxed text-charcoal-600">
+                                Inteligencia artificial jurídica para México. Legislación federal y de
+                                las 32 entidades, jurisprudencia del Semanario y cada cita verificada
+                                contra su fuente.
+                            </p>
+                            <div className="mt-5 flex items-center gap-2.5">
+                                <a
+                                    href="https://www.facebook.com/profile.php?id=61588222127518"
+                                    target="_blank" rel="noopener noreferrer" aria-label="Iurexia en Facebook"
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/10 text-charcoal-600 transition-colors hover:border-charcoal-900 hover:text-charcoal-900"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                                        <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94Z" />
+                                    </svg>
+                                </a>
+                                <a
+                                    href="https://www.instagram.com/iurex.ia"
+                                    target="_blank" rel="noopener noreferrer" aria-label="Iurexia en Instagram"
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/10 text-charcoal-600 transition-colors hover:border-charcoal-900 hover:text-charcoal-900"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4" aria-hidden="true">
+                                        <rect x="3" y="3" width="18" height="18" rx="5" />
+                                        <circle cx="12" cy="12" r="3.6" />
+                                        <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+                                    </svg>
+                                </a>
+                            </div>
                         </div>
-                        <div className="flex gap-8 text-sm text-charcoal-600">
-                            <Link href="/privacidad" className="hover:text-charcoal-900 transition-colors">Privacidad</Link>
-                            <Link href="/terminos" className="hover:text-charcoal-900 transition-colors">Términos</Link>
-                            <Link href="/conocenos" className="hover:text-charcoal-900 transition-colors">Conócenos</Link>
-                            <a href="mailto:soporte@iurexia.com" className="hover:text-charcoal-900 transition-colors">Contacto</a>
-                        </div>
-                        <p className="text-sm text-charcoal-500">
+
+                        <ColumnaPie
+                            titulo="Plataforma"
+                            enlaces={[
+                                ['Consulta jurídica', '/chat'],
+                                ['Redacción de escritos', '/plataforma'],
+                                ['Taller de sentencias', '/redaccionsentencias'],
+                                ['Agente de amparo', '/agente'],
+                                ['Jurimetría y precedentes', '/soluciones'],
+                                ['Normativa', '/normativa'],
+                                ['Leyes estatales', '/leyesestatales'],
+                                ['Lo último', '/ultimo'],
+                            ]}
+                        />
+                        <ColumnaPie
+                            titulo="Para quién"
+                            enlaces={[
+                                ['Abogados y despachos', '/soluciones'],
+                                ['Secretarios del PJF', '/secretarios'],
+                                ['Directorio Connect', '/connect'],
+                                ['Vitrina de despachos', '/vitrina'],
+                                ['Sálvame', '/salvame'],
+                                ['Planes y precios', '/precios'],
+                            ]}
+                        />
+                        <ColumnaPie
+                            titulo="Iurexia"
+                            enlaces={[
+                                ['Conócenos', '/conocenos'],
+                                ['Seguridad', '/seguridad'],
+                                ['Aviso de privacidad', '/privacidad'],
+                                ['Términos y condiciones', '/terminos'],
+                                ['Crear cuenta', '/registro'],
+                                ['Iniciar sesión', '/login'],
+                                ['soporte@iurexia.com', 'mailto:soporte@iurexia.com'],
+                            ]}
+                        />
+                    </div>
+
+                    <div className="mt-12 flex flex-col gap-3 border-t border-black/5 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-[12.5px] text-charcoal-500">
                             © 2026 Iurexia. Todos los derechos reservados.
+                        </p>
+                        <p className="max-w-xl text-[12px] leading-relaxed text-charcoal-500">
+                            Iurexia orienta y fortalece el análisis jurídico. No sustituye la asesoría
+                            de un profesional del derecho ni constituye asesoría legal.
                         </p>
                     </div>
                 </div>
@@ -699,5 +775,33 @@ function ComparisonChatRow({
                 </span>
             </td>
         </tr>
+    );
+}
+
+function ColumnaPie({ titulo, enlaces }: {
+    titulo: string;
+    enlaces: ReadonlyArray<readonly [string, string]>;
+}) {
+    return (
+        <div>
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-charcoal-500">
+                {titulo}
+            </h3>
+            <ul className="mt-4 space-y-2.5">
+                {enlaces.map(([texto, href]) => (
+                    <li key={href + texto}>
+                        {href.startsWith('mailto:') ? (
+                            <a href={href} className="text-[13.5px] text-charcoal-700 transition-colors hover:text-charcoal-900">
+                                {texto}
+                            </a>
+                        ) : (
+                            <Link href={href} className="text-[13.5px] text-charcoal-700 transition-colors hover:text-charcoal-900">
+                                {texto}
+                            </Link>
+                        )}
+                    </li>
+                ))}
+            </ul>
+        </div>
     );
 }

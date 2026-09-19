@@ -695,12 +695,25 @@ export default function ChatInput({
     };
 
     const handleDraft = (draftRequest: DraftRequest) => {
+        /* ═══ EL ESCRITO SE REDACTA CON EL MOTOR DE REDACCIÓN (19-sep-2026) ═══
+           Esta tarjeta mandaba sólo `[REDACTAR_DOCUMENTO]`, que enciende el
+           PROMPT de redacción pero no el MOTOR: sin marcador de escalón, el
+           servidor cae al modelo de chat de siempre. O sea que el mismo
+           abogado, pidiendo la misma demanda, recibía un escrito peor por
+           usar el botón que por escribirlo a mano con «Redactar» encendido.
+           Ahora viaja el escalón que le toca por su plan, igual que el
+           compositor. */
+        const escalon = draftRequest.nivel === 'platinum'
+            ? '[MODO_REDACCION_PLATINUM] '
+            : draftRequest.nivel === 'pro'
+                ? '[MODO_REDACCION_PRO] '
+                : '[MODO_REDACCION] ';
         // Create a special message that triggers draft mode in the backend
         let draftMessage: string;
 
         if (draftRequest.tipo === 'denuncia_administrativa') {
             // Formato enriquecido para denuncia administrativa
-            draftMessage = `[REDACTAR_DOCUMENTO]
+            draftMessage = `${escalon}[REDACTAR_DOCUMENTO]
 Tipo: ${draftRequest.tipo}
 Subtipo: ${draftRequest.subtipo}
 Nivel: ${draftRequest.nivel_autoridad === 'estatal' ? `Estatal (${draftRequest.estado})` : 'Federal'}
@@ -711,7 +724,7 @@ Jurisdicción: ${draftRequest.estado}
 Descripción del caso:
 ${draftRequest.descripcion}`;
         } else {
-            draftMessage = `[REDACTAR_DOCUMENTO]
+            draftMessage = `${escalon}[REDACTAR_DOCUMENTO]
 Tipo: ${draftRequest.tipo}
 Subtipo: ${draftRequest.subtipo}
 Jurisdicción: ${draftRequest.estado}
@@ -1596,6 +1609,7 @@ ${draftRequest.descripcion}`;
             />
 
             <DraftModal
+                isPro={isPro}
                 isOpen={showDraftModal}
                 onClose={() => {
                     setShowDraftModal(false);

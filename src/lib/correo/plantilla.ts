@@ -103,6 +103,28 @@ export function videoChat(): string {
         `</a>`;
 }
 
+/**
+ * LA PANTALLA NUEVA (18-sep-2026): el hilo a la izquierda y la hoja tipo Word
+ * escribiéndose a la derecha, con las citas numeradas y los emblemas de las
+ * instituciones apareciendo conforme se cita cada una.
+ *
+ * Nueve segundos rodados sobre los componentes REALES del producto, un
+ * fotograma por dirección, a 600 px y 6 por segundo: 178 KB, una décima parte
+ * del GIF del vídeo del chat, porque casi todo el cuadro está quieto y el
+ * paletizado por diferencias lo aprovecha. En Outlook de escritorio, que sólo
+ * pinta el primer fotograma, queda la pregunta ya escrita y la hoja en blanco:
+ * una imagen que se entiende sola.
+ */
+export const GIF_DOCUMENTO = `${SITIO}/correo/iurexia-documento.gif`;
+
+export function vistaDocumento(): string {
+    return `<a href="${esc(SITIO)}/chat" style="display:block;text-decoration:none;border:0;">` +
+        `<img src="${esc(GIF_DOCUMENTO)}" width="600" height="338" ` +
+        `alt="La nueva pantalla de Iurexia: a la izquierda la consulta y las instituciones consultadas; a la derecha, una hoja tipo Word donde la respuesta se escribe con sus citas numeradas." ` +
+        `style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;background-color:${PALETA.cremaFondo};" />` +
+        `</a>`;
+}
+
 export interface OpcionesCorreo {
     /** Cuerpo ya compuesto con los ayudantes de arriba. */
     cuerpo: string;

@@ -50,13 +50,24 @@ async function mandarARevision(soloEstas?: string[]) {
     const resend = new Resend(process.env.RESEND_API_KEY!);
     const remitente = process.env.FROM_EMAIL || 'Iurexia <noreply@iurexia.com>';
 
-    const ejemplo: Destinatario = {
+    /* CON SU PERFIL DE VERDAD (18-sep-2026). La muestra llevaba datos
+       inventados y `id: null`, así que las plantillas que dependen del perfil
+       —el enlace de invitación, el código, el plan contratado y con él lo que
+       ese plan incluye— se veían vacías o genéricas en la revisión y
+       completas en el envío real. Se revisa lo que se va a mandar. */
+    let ejemplo: Destinatario = {
         id: null,
         email: REVISOR,
         full_name: 'David Alcantar',
         estado: 'OAXACA',
         queries_used: 5,
     };
+    const { data: perfil } = await admin()
+        .from('user_profiles')
+        .select('id, email, full_name, estado, queries_used, tratamiento, subscription_type')
+        .eq('email', REVISOR)
+        .maybeSingle();
+    if (perfil) ejemplo = perfil as Destinatario;
 
     const salidas: { campania: string; asunto: string; enviado: boolean; error?: string }[] = [];
 
@@ -118,7 +129,7 @@ export async function POST(req: NextRequest) {
 
         // Igual que el cron: el enlace de invitación apunta a un código que
         // tiene que estar GUARDADO antes de enviar, o el referido se pierde.
-        if (cual === 'referidos' && modo === 'real') {
+        if ((cual === 'referidos' || cual === 'actualizacion') && modo === 'real') {
             const { asegurarCodigo } = await import('@/lib/referidos-backend');
             await Promise.all(
                 destinatarios.filter(d => d.id).map(d => asegurarCodigo(d.id as string).catch(() => null)),
@@ -140,6 +151,15 @@ export async function POST(req: NextRequest) {
             programadoPara = new Date(t).toISOString();
         }
 
+        /* UNO A UNO CUANDO IMPORTA LA BANDEJA (18-sep-2026). `lote=1&pausa=4000`
+           manda un correo cada cuatro segundos en vez de cien de golpe: más
+           lento, pero sin la ráfaga que los filtros leen como envío masivo. La
+           corrida se corta a los 280 s —la función muere a los 300— y lo que
+           falte sale en la siguiente llamada, sin repetir a nadie: la bitácora
+           lo impide. */
+        const lote = Math.max(1, Math.min(100, Number(req.nextUrl.searchParams.get('lote') ?? 100)));
+        const pausaMs = Math.max(0, Math.min(30_000, Number(req.nextUrl.searchParams.get('pausa') ?? 600)));
+
         const resultado = await enviarCampania({
             campania: cual,
             destinatarios,
@@ -147,6 +167,9 @@ export async function POST(req: NextRequest) {
             simulacro: modo !== 'real',
             maximo,
             programadoPara,
+            lote,
+            pausaMs,
+            plazoHasta: Date.now() + 280_000,
         });
 
         return NextResponse.json(resultado);

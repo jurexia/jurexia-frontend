@@ -1,16 +1,25 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { X, FileEdit, Scale, Gavel, Users, Briefcase, Home, ShoppingCart, FileText, Shield, Mail, Building, UserCheck, Scroll, Landmark, BookOpen, AlertTriangle, ArrowUpDown, RotateCcw, HelpCircle, Eye, Wheat, Flag } from 'lucide-react';
+import { X, FileEdit, Scale, Gavel, Users, Briefcase, Home, ShoppingCart, FileText, Shield, Mail, Building, UserCheck, Scroll, Landmark, BookOpen, AlertTriangle, ArrowUpDown, RotateCcw, HelpCircle, Eye, Wheat, Flag, Lock } from 'lucide-react';
 
 interface DraftModalProps {
     isOpen: boolean;
     onClose: () => void;
     onDraft: (draftRequest: DraftRequest) => void;
     estado?: string;
+    /** Plan Pro o superior: habilita los escalones de redacción. */
+    isPro?: boolean;
 }
 
+/** Con qué motor se escribe. Es la misma escalera del compositor: mandarlo
+ *  desde aquí es lo que hace que el botón redacte tan bien como escribirlo a
+ *  mano con «Redactar» encendido. */
+export type NivelEscrito = 'profesional' | 'pro' | 'platinum';
+
 export interface DraftRequest {
+    /** Con qué motor se redacta. Ver `NivelEscrito`. */
+    nivel: NivelEscrito;
     tipo: 'contrato' | 'demanda' | 'amparo' | 'impugnacion' | 'peticion_oficio' | 'denuncia_administrativa';
     subtipo: string;
     estado: string;
@@ -21,6 +30,17 @@ export interface DraftRequest {
     materia_denuncia?: string;
     faltas?: string[];
 }
+
+/** Una línea por tipo: qué produce y para quién. Sin esto la rejilla es un
+ *  menú de iconos donde el abogado adivina. */
+const GLOSAS: Record<string, string> = {
+    contrato: 'Con cláusulas, obligaciones y penas',
+    demanda: 'Hechos, derecho, pruebas y puntos petitorios',
+    amparo: 'Acto reclamado, autoridades y conceptos de violación',
+    impugnacion: 'Agravios construidos contra la resolución',
+    peticion_oficio: 'Escritos del artículo 8º y comunicaciones oficiales',
+    denuncia_administrativa: 'Queja ante el Consejo de la Judicatura',
+};
 
 const DOCUMENT_TYPES = {
     contrato: {
@@ -144,7 +164,12 @@ function estadoDelSelector(estado?: string): string {
     return ESTADOS_DENUNCIA.some(([valor]) => valor === v) ? v : '';
 }
 
-export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL' }: DraftModalProps) {
+export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL', isPro = false }: DraftModalProps) {
+    /* CON QUÉ MOTOR SE ESCRIBE. Profesional entra en todos los planes; Pro y
+       Platinum piden suscripción. Se manda con la petición: sin esto el
+       servidor enciende el prompt de redacción pero deja el motor de chat, y
+       el escrito sale peor que escribiéndolo a mano. */
+    const [nivel, setNivel] = useState<NivelEscrito>('profesional');
     const [selectedType, setSelectedType] = useState<DocumentType | null>(null);
     const [selectedSubtipo, setSelectedSubtipo] = useState<string>('');
     const [descripcion, setDescripcion] = useState('');
@@ -173,6 +198,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
             if (nivelAutoridad === 'estatal' && !estadoDenuncia) return;
 
             onDraft({
+                nivel,
                 tipo: 'denuncia_administrativa',
                 subtipo: faltasSeleccionadas.join(','),
                 estado: nivelAutoridad === 'estatal' ? estadoDenuncia : 'FEDERAL',
@@ -186,6 +212,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
             if (!selectedSubtipo || !descripcion.trim()) return;
 
             onDraft({
+                nivel,
                 tipo: selectedType,
                 subtipo: selectedSubtipo,
                 estado: selectedEstado,
@@ -233,21 +260,24 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-charcoal-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-charcoal-700/50">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-charcoal-700/50 bg-gradient-to-r from-charcoal-900 to-charcoal-800">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-gold/20 to-accent-brown/20 flex items-center justify-center border border-accent-gold/30">
-                            <FileEdit className="w-5 h-5 text-accent-gold" />
+            <div className="bg-charcoal-900 rounded-2xl shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)] w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden border border-white/10">
+                {/* ═══ CABECERA ═══
+                    Una barra dorada de tres píxeles en vez de tres degradados
+                    superpuestos: la identidad de Iurexia es la barra y la
+                    Playfair, no el brillo. */}
+                <div className="relative flex items-start justify-between gap-4 px-6 py-5 border-b border-white/10">
+                    <span aria-hidden className="absolute left-0 top-0 h-full w-[3px] bg-accent-gold" />
+                    <div className="min-w-0">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-gold/80">
+                            Redacción asistida
                         </div>
-                        <div>
-                            <h2 className="font-serif text-xl font-semibold text-cream-100">
-                                Redactar Documento Legal
-                            </h2>
-                            <p className="text-sm text-charcoal-400">
-                                Genera documentos legales completos con fundamento
-                            </p>
-                        </div>
+                        <h2 className="mt-1 font-serif text-[22px] leading-tight font-semibold text-cream-100">
+                            Nuevo escrito
+                        </h2>
+                        <p className="mt-1 text-[13px] leading-relaxed text-cream-100/50">
+                            Iurexia lo redacta completo, con los preceptos y criterios de tu jurisdicción.
+                            Después lo editas en la hoja y lo bajas en Word.
+                        </p>
                     </div>
                     <button
                         onClick={handleClose}
@@ -259,12 +289,19 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-charcoal-900">
-                    {/* Step 1: Document Type */}
+                    {/* ═══ 1 · QUÉ SE VA A ESCRIBIR ═══
+                        Las tarjetas miden lo mismo pase lo que pase con la
+                        etiqueta: antes «Petición u Oficio» y «Denuncia
+                        Disciplinaria» partían en dos renglones y la fila
+                        quedaba coja. Y cada una dice qué produce, que es lo
+                        que un menú de seis iconos no dice. */}
                     <div>
-                        <label className="block text-sm font-medium text-accent-gold/80 mb-3 tracking-wide uppercase">
-                            1. Tipo de documento
-                        </label>
-                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        <div className="flex items-baseline justify-between gap-3 mb-3">
+                            <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cream-100/40">
+                                Paso 1 · Qué se va a escribir
+                            </label>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {(Object.keys(DOCUMENT_TYPES) as Array<DocumentType>).map((type) => {
                                 const config = DOCUMENT_TYPES[type];
                                 const Icon = config.icon;
@@ -279,7 +316,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                             setSelectedSubtipo('');
                                             setFaltasSeleccionadas([]);
                                         }}
-                                        className={`p-3 rounded-xl border transition-all text-center group
+                                        className={`flex h-full min-h-[104px] flex-col items-start gap-1.5 rounded-xl border p-3.5 text-left transition-colors group
                                             ${isSelected
                                                 ? isDenunciaType
                                                     ? 'border-red-500/70 bg-gradient-to-br from-red-500/15 to-red-900/10 text-red-400 shadow-lg shadow-red-500/10'
@@ -289,8 +326,11 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                                     : 'border-charcoal-600 hover:border-accent-gold/50 text-cream-300 hover:text-cream-100 bg-charcoal-700/60 hover:bg-charcoal-700'
                                             }`}
                                     >
-                                        <Icon className={`w-7 h-7 mx-auto mb-1.5 transition-transform group-hover:scale-110 ${isSelected ? (isDenunciaType ? 'text-red-400' : 'text-accent-gold') : 'text-cream-200'}`} />
-                                        <span className="font-medium text-xs leading-tight">{config.label}</span>
+                                        <Icon className={`w-5 h-5 flex-shrink-0 ${isSelected ? (isDenunciaType ? 'text-red-400' : 'text-accent-gold') : 'text-cream-200'}`} />
+                                        <span className="font-semibold text-[13.5px] leading-tight">{config.label}</span>
+                                        <span className="text-[11.5px] leading-snug text-cream-100/40">
+                                            {GLOSAS[type]}
+                                        </span>
                                     </button>
                                 );
                             })}
@@ -300,8 +340,8 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                     {/* Step 2: Standard Subtipo (for non-denuncia types) */}
                     {selectedType && !isDenuncia && currentTypeConfig && currentTypeConfig.subtipos.length > 0 && (
                         <div className="animate-fadeIn">
-                            <label className="block text-sm font-medium text-accent-gold/80 mb-3 tracking-wide uppercase">
-                                2. Subtipo de {currentTypeConfig.label.toLowerCase()}
+                            <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-cream-100/40 mb-3">
+                                Paso 2 · Subtipo de {currentTypeConfig.label.toLowerCase()}
                             </label>
                             <div className="grid grid-cols-2 gap-2">
                                 {currentTypeConfig.subtipos.map((subtipo) => {
@@ -332,7 +372,7 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                         <div className="animate-fadeIn space-y-5">
                             {/* Nivel de Autoridad */}
                             <div>
-                                <label className="block text-sm font-medium text-red-400/80 mb-2 tracking-wide uppercase">
+                                <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-red-400/60 mb-2">
                                     2. Nivel de autoridad denunciada
                                 </label>
                                 <div className="grid grid-cols-2 gap-2">
@@ -380,8 +420,8 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                             {/* Cargo + Materia en fila */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-red-400/80 mb-2 tracking-wide uppercase">
-                                        3. Cargo del denunciado
+                                    <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-red-400/60 mb-2">
+                                        Paso 3 · Cargo del denunciado
                                     </label>
                                     <select
                                         value={cargoDenunciado}
@@ -395,8 +435,8 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-red-400/80 mb-2 tracking-wide uppercase">
-                                        4. Materia
+                                    <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-red-400/60 mb-2">
+                                        Paso 4 · Materia
                                     </label>
                                     <select
                                         value={materiaDenuncia}
@@ -415,8 +455,8 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
 
                             {/* Tipo de Falta (Checkboxes) */}
                             <div>
-                                <label className="block text-sm font-medium text-red-400/80 mb-2 tracking-wide uppercase">
-                                    5. Tipo de falta (selecciona una o más)
+                                <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-red-400/60 mb-2">
+                                    Paso 5 · Tipo de falta (una o más)
                                 </label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {FALTAS_DISPONIBLES.map((falta) => {
@@ -446,8 +486,8 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                     {/* Step: Jurisdicción (non-denuncia types) */}
                     {selectedSubtipo && !isDenuncia && (
                         <div className="animate-fadeIn">
-                            <label className="block text-sm font-medium text-accent-gold/80 mb-3 tracking-wide uppercase">
-                                3. Jurisdicción
+                            <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-cream-100/40 mb-3">
+                                Paso 3 · Jurisdicción
                             </label>
                             <select
                                 value={selectedEstado}
@@ -495,10 +535,10 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                     {/* Step: Descripción / Relato */}
                     {((selectedSubtipo && !isDenuncia) || (isDenuncia && faltasSeleccionadas.length > 0)) && (
                         <div className="animate-fadeIn">
-                            <label className="block text-sm font-medium mb-3 tracking-wide uppercase"
-                                style={{ color: isDenuncia ? 'rgb(248 113 113 / 0.8)' : 'rgb(201 169 98 / 0.8)' }}
+                            <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] mb-3"
+                                style={{ color: isDenuncia ? 'rgb(248 113 113 / 0.6)' : 'rgb(253 251 247 / 0.4)' }}
                             >
-                                {isDenuncia ? '6. Relato de los hechos' : '4. Describe el caso o proporciona los datos'}
+                                {isDenuncia ? 'Paso 6 · Relato de los hechos' : 'Paso 4 · El caso, con sus datos'}
                             </label>
                             <textarea
                                 value={descripcion}
@@ -513,45 +553,86 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
                                     : 'border-charcoal-700 focus:ring-2 focus:ring-accent-gold/50 focus:border-accent-gold'
                                     }`}
                             />
-                            <p className="text-xs text-charcoal-500 mt-2">
+                            <p className="mt-2 text-[12px] leading-relaxed text-cream-100/40">
                                 {isDenuncia
-                                    ? '⚖️ Entre más detalles proporciones (fechas, expedientes, resoluciones), más contundente será la denuncia.'
-                                    : '💡 Entre más detalles proporciones, mejor será el documento generado.'
+                                    ? 'Fechas, número de expediente y qué resolvió el juzgador: con eso la denuncia se funda sola. Sin eso, se llena de huecos.'
+                                    : 'Nombres, fechas, montos y qué pide tu cliente. Lo que no le des, Iurexia lo deja marcado para que tú lo completes.'
                                 }
                             </p>
                         </div>
                     )}
                 </div>
 
-                {/* Footer */}
-                <div className="px-6 py-4 border-t border-charcoal-700/50 bg-charcoal-800/80 flex items-center justify-between">
+                {/* ═══ EL PIE: CON QUÉ SE ESCRIBE Y QUÉ CUESTA ═══
+                    Antes decía «Generar Documento» y nada más. El abogado no
+                    sabía con qué motor iba a escribirse ni que le costaba una
+                    consulta, y las dos cosas las quiere saber ANTES. */}
+                <div className="border-t border-white/10 bg-charcoal-900/95 px-6 py-4">
+                    <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                        <span className="mr-1 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-cream-100/35">
+                            Motor
+                        </span>
+                        {([
+                            ['profesional', 'Profesional', 'Incluido en todos los planes'],
+                            ['pro', 'Pro', 'Razonamiento alto'],
+                            ['platinum', 'Platinum', 'El motor más capaz'],
+                        ] as ReadonlyArray<readonly [NivelEscrito, string, string]>).map(([id, etiqueta, glosa]) => {
+                            const bloqueado = id !== 'profesional' && !isPro;
+                            const activo = nivel === id;
+                            return (
+                                <button
+                                    key={id}
+                                    type="button"
+                                    title={bloqueado ? `${etiqueta} está en los planes de Iurexia` : glosa}
+                                    onClick={() => { if (!bloqueado) setNivel(id); }}
+                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11.5px] font-medium transition-colors ${
+                                        activo
+                                            ? 'border-accent-gold bg-accent-gold/15 text-accent-gold'
+                                            : bloqueado
+                                                ? 'border-white/10 bg-white/[0.03] text-cream-100/25 cursor-not-allowed'
+                                                : 'border-white/15 bg-white/[0.04] text-cream-100/60 hover:border-accent-gold/50 hover:text-cream-100'
+                                    }`}
+                                >
+                                    {bloqueado && <Lock className="h-2.5 w-2.5" />}
+                                    {etiqueta}
+                                </button>
+                            );
+                        })}
+                        <span className="ml-auto text-[11.5px] text-cream-100/35">
+                            Cuenta como una consulta
+                        </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
                     <button
                         onClick={handleClose}
-                        className="px-4 py-2 text-charcoal-400 hover:text-cream-100 font-medium transition-colors rounded-lg hover:bg-charcoal-700"
+                        className="px-4 py-2 text-cream-100/45 hover:text-cream-100 font-medium transition-colors rounded-lg hover:bg-white/5"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={!canSubmit}
-                        className={`px-6 py-2.5 font-medium rounded-xl border transition-all flex items-center gap-2
+                        className={`inline-flex items-center gap-2 rounded-xl px-6 py-2.5 text-[14px] font-bold transition-all
+                            disabled:cursor-not-allowed disabled:opacity-35
                             ${isDenuncia
-                                ? 'bg-gradient-to-r from-red-900/60 to-red-800/40 text-red-300 border-red-600/40 hover:border-red-500 hover:from-red-800/60 hover:to-red-700/40 hover:shadow-lg hover:shadow-red-500/10'
-                                : 'bg-gradient-to-r from-charcoal-700 to-charcoal-800 text-accent-gold border-accent-gold/30 hover:border-accent-gold hover:from-accent-gold/20 hover:to-accent-brown/20 hover:shadow-lg hover:shadow-accent-gold/10'
+                                ? 'bg-red-600 text-white hover:bg-red-500 enabled:shadow-[0_10px_28px_-12px_rgba(220,38,38,0.8)] hover:shadow-lg hover:shadow-red-500/10'
+                                : 'bg-gradient-to-b from-[#e3c98a] to-accent-gold text-charcoal-900 hover:opacity-90 enabled:shadow-[0_10px_28px_-12px_rgba(201,169,98,0.85)] hover:to-accent-brown/20 hover:shadow-lg hover:shadow-accent-gold/10'
                             } disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none`}
                     >
                         {isDenuncia ? (
                             <>
                                 <Flag className="w-4 h-4" />
-                                Generar Denuncia
+                                Redactar la denuncia
                             </>
                         ) : (
                             <>
                                 <FileEdit className="w-4 h-4" />
-                                Generar Documento
+                                Redactar el escrito
                             </>
                         )}
                     </button>
+                    </div>
                 </div>
             </div>
         </div>

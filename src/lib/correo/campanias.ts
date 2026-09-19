@@ -23,6 +23,7 @@
 
 import {
     boton, caja, envolver, esc, fuerte, listado, nombrePila, parrafo, rotulo, SITIO, videoChat,
+    vistaDocumento,
 } from './plantilla';
 import { urlActivacion } from './activar';
 import { urlBaja } from './baja';
@@ -642,6 +643,126 @@ export function correoRegistroPendiente(d: Destinatario): Correo {
 }
 
 
+// ─────────────────────────────────────────────────────────────────────────
+// 9. ACTUALIZACIÓN — a los clientes de pago, qué cambió en la pantalla.
+//
+//    No vende nada: es un aviso de producto a quien ya paga. Por eso el
+//    asunto lleva su nombre y no una oferta, va una sola imagen y un solo
+//    botón, y el enlace de invitación es el suyo —no un «entérese aquí»—.
+//    Un correo con cinco botones y tres promesas cae en Promociones por su
+//    propio peso; éste está escrito para la bandeja principal.
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * Cuánto guarda cada plan. La cifra manda desde `lib/expedientes.ts`
+ * (`CUOTA_MB`); aquí se repite en palabras para no arrastrar ese módulo
+ * —que trae el cliente de Supabase del navegador— hasta el correo.
+ */
+const ALMACENAMIENTO: Record<string, { plan: string; espacio: string }> = {
+    basico_monthly: { plan: 'Básico', espacio: '100 MB' },
+    basico_annual: { plan: 'Básico', espacio: '100 MB' },
+    pro_monthly: { plan: 'Pro', espacio: '500 MB' },
+    pro_annual: { plan: 'Pro', espacio: '500 MB' },
+    platinum_monthly: { plan: 'Platinum', espacio: '2 GB' },
+    platinum_annual: { plan: 'Platinum', espacio: '2 GB' },
+    ultra_secretarios: { plan: 'Platinum', espacio: '2 GB' },
+};
+
+export function correoActualizacion(d: Destinatario): Correo {
+    const nombre = capitalizar(nombrePila(d.full_name, d.email));
+    const enlace = d.id ? enlaceInvitacion(d.id) : `${SITIO}/registro`;
+    const codigo = d.id ? codigoReferido(d.id) : '';
+    const suyo = ALMACENAMIENTO[d.subscription_type ?? ''];
+
+    const cuerpo =
+        parrafo(saludo(d, nombre), '0 0 22px 0') +
+        parrafo(
+            'La pantalla con la que trabaja cambió esta semana. Conviene que sepa dónde quedó cada ' +
+            'cosa antes de su próxima consulta, porque lo que se movió es justo lo que más se usa.',
+        ) +
+        rotulo('Cómo quedó la pantalla') +
+        parrafo(
+            `La respuesta ya no se lee dentro de una burbuja de chat: ${fuerte('se escribe frente a usted, ' +
+            'párrafo a párrafo, en una hoja tipo Word')}. A un lado queda la consulta con la ruta que ` +
+            'siguió el motor —qué buscó, en qué acervos y qué recuperó—, con el emblema de cada ' +
+            'institución de donde salió una fuente.',
+        ) +
+        listado([
+            `${fuerte('Las citas numeradas abren su fuente.')} Al pulsar una, se abre el artículo o la tesis en el documento oficial, resaltado en el pasaje citado.`,
+            `${fuerte('Las fuentes se agrupan por quien las publica:')} Cámara de Diputados, Suprema Corte, Corte Interamericana, Congreso de la Unión o del Estado.`,
+            `${fuerte('El documento se acumula.')} Cada consulta nueva se escribe a continuación, con la numeración de las citas siguiendo de una a otra.`,
+            `${fuerte('Se exporta a Word tal como lo ve')}, con las citas convertidas en notas al pie en formato APA y sin membrete nuestro: el escrito es suyo.`,
+            `${fuerte('Puede arrastrar un documento')} a cualquier punto de la pantalla para consultarlo, sin buscar el clip.`,
+        ]) +
+        rotulo('Lo que su plan ya incluye') +
+        caja(
+            (suyo
+                ? `<p style="margin:0 0 14px;">Su plan ${fuerte(suyo.plan)} incluye ${fuerte(suyo.espacio)} ` +
+                  `de almacenamiento en su cuenta. No es un archivero suelto: es lo que sostiene el resto.</p>`
+                : `<p style="margin:0 0 14px;">Su plan incluye almacenamiento en su cuenta. No es un archivero ` +
+                  `suelto: es lo que sostiene el resto.</p>`) +
+            listado([
+                `${fuerte('Carpetas inteligentes.')} Cada asunto con su objetivo declarado, sus documentos y lo que la plataforma va encontrando para él.`,
+                `${fuerte('Seguimiento de expedientes del Poder Judicial de la Federación,')} con aviso por correo cuando hay movimiento en el suyo.`,
+                `${fuerte('Normativa federal y de los estados,')} para consultar y citar el texto vigente.`,
+                `${fuerte('Lo último:')} el Diario Oficial, las tesis de la semana del Semanario Judicial, los comunicados de la Corte y lo que ocurre en inteligencia artificial.`,
+            ]) +
+            `<p style="margin:16px 0 0;font-size:13px;color:#404040;">` +
+            `<a href="${esc(SITIO)}/carpetas" style="color:#8b7355;text-decoration:underline;">Carpetas y seguimiento</a> &middot; ` +
+            `<a href="${esc(SITIO)}/normativa" style="color:#8b7355;text-decoration:underline;">Normativa</a> &middot; ` +
+            `<a href="${esc(SITIO)}/ultimo" style="color:#8b7355;text-decoration:underline;">Lo último</a></p>`,
+        ) +
+        rotulo('Lo que viene') +
+        parrafo(
+            'En los próximos días, los modelos de razonamiento de la plataforma aumentan su capacidad, ' +
+            'cada plan en la medida que le corresponde. No hay nada que instalar ni que pedir: la mejora ' +
+            'entra sola en su cuenta.',
+        ) +
+        rotulo('Regala Iurexia') +
+        parrafo(
+            `Puede regalar ${fuerte('25 consultas')} a un colega, sin tarjeta y sin que a usted le cueste nada. ` +
+            `Y si ese colega se suscribe a cualquier plan, usted gana ${fuerte('30 días de su plan sin cargo')}; ` +
+            'con tres colegas suscritos, dos meses. Su recibo no cambia: los meses regalados se suman a su ' +
+            'cuenta, no a su cobro.',
+        ) +
+        (codigo
+            ? caja(
+                `<p style="margin:0 0 10px;word-break:break-all;">Su enlace: ` +
+                `<a href="${esc(enlace)}" style="color:#8b7355;text-decoration:underline;">${esc(enlace)}</a></p>` +
+                `<p style="margin:0;font-size:13px;color:#404040;">O que su colega escriba el código ` +
+                `<strong style="color:#1a1a1a;letter-spacing:1px;">${esc(codigo)}</strong> al registrarse.</p>`,
+            )
+            : '') +
+        rotulo('Su despacho, en la portada') +
+        parrafo(
+            'Mantenemos abierta la vitrina de firmas: su despacho, con su logotipo y el enlace a su sitio, ' +
+            'en la portada de Iurexia, debajo del vídeo principal. Es notoriedad ante quienes ya buscan ' +
+            `abogado que trabaje con herramientas serias. ` +
+            `<a href="${esc(SITIO)}/vitrina" style="color:#8b7355;text-decoration:underline;">Reservar el lugar de mi firma</a>.`,
+        ) +
+        rotulo('Y un espacio para pensar') +
+        parrafo(
+            'Pronto abriremos un apartado para la publicación de artículos académicos. Lo abrimos por ' +
+            `convicción: ${fuerte('ningún modelo debe reemplazar la capacidad de pensar de los juristas')}. ` +
+            'La plataforma busca, ordena, cita y redacta; el criterio, la estrategia y la responsabilidad ' +
+            'siguen siendo de quien firma.',
+        ) +
+        parrafo('', '4px 0 0 0') +
+        boton('Entrar a la nueva pantalla', CHAT) +
+        parrafo(
+            'Si algo no se comporta como espera, respóndame a este mismo correo: lo leemos nosotros.',
+            '24px 0 0 0',
+        );
+
+    const html = envolver({ cuerpo, urlBaja: urlBaja(d.email), visual: vistaDocumento() });
+    return {
+        asunto: `${trato(d)} ${nombre}, así quedó la nueva pantalla de Iurexia`,
+        html,
+        texto: aTexto(cuerpo) + `\n\n${CHAT}\nSu enlace de invitación: ${enlace}\nDarse de baja: ${urlBaja(d.email)}`,
+    };
+}
+
+
 export const CAMPANIAS = {
     entrada: { construir: correoEntrada, etiqueta: 'Entrada — nunca inició sesión' },
     activacion: { construir: correoActivacion, etiqueta: 'Activación — nunca consultó' },
@@ -651,6 +772,7 @@ export const CAMPANIAS = {
     vitrina: { construir: correoVitrina, etiqueta: 'Vitrina de despachos — todos los planes de pago' },
     descuento_pro: { construir: correoDescuentoPro, etiqueta: 'Descuento Pro 50 % — consultó y no contrató' },
     registro_pendiente: { construir: correoRegistroPendiente, etiqueta: 'Registro pendiente — pidió el código y no entró' },
+    actualizacion: { construir: correoActualizacion, etiqueta: 'Actualización de la pantalla — clientes de pago' },
 } as const;
 
 export type NombreCampania = keyof typeof CAMPANIAS;
