@@ -134,18 +134,49 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
        una nueva se INSERTA al final, sin tocar lo que el abogado editó. */
     const insertados = useRef(0);
     const claveMontada = useRef<string | null>(null);
+    /* LA HOJA VACÍA SE RELLENA SOLA (20-sep-2026).
+       ---------------------------------------------------------------------
+       Un abogado estuvo cuatro días con un dictamen que no podía abrir. En su
+       pantalla el pie contaba 1,880 palabras y 30 citas, y la hoja enseñaba una
+       línea: «Estimado abogado». El Word bajaba lo mismo, porque se exporta
+       desde el DOM de la hoja. El texto no se había perdido —los 57,706
+       caracteres estaban enteros en la base— pero la hoja nunca los recibió.
+
+       El reparto de aquí abajo da por hecho que la hoja ya tiene lo suyo: al
+       montar se le pasa `htmlInicial` y después sólo se le AÑADE lo nuevo.
+       Cuando ese supuesto falla —por el camino que sea— nadie lo comprueba y no
+       hay vuelta atrás: la hoja se queda vacía para siempre y el documento se
+       vuelve inalcanzable aunque esté guardado. Medido en el banco de pruebas
+       del 20-sep con el mensaje real: las cuatro secuencias de props conocidas
+       llenaban la hoja, así que el fallo entra por una quinta que no sabemos
+       cuál es. Esto no la busca: la cubre.
+
+       Una hoja vacía no tiene edición del abogado que perder, así que
+       rellenarla no puede pisarle el trabajo. Una sola vez por conversación,
+       para que quien la borre a propósito pueda dejarla en blanco. */
+    const sanada = useRef<string | null>(null);
     useEffect(() => {
-        if (claveMontada.current !== clave) {
+        const otraConversacion = claveMontada.current !== clave;
+        if (otraConversacion) {
             claveMontada.current = clave;
             insertados.current = bloques.length;
             setNombre('');
             setVersionElegida('');
+        }
+
+        if (bloques.length && sanada.current !== clave && hoja.current?.vacia()) {
+            sanada.current = clave;
+            hoja.current.reemplazar(segmentos.slice(0, bloques.length).join('<hr>'));
+            insertados.current = bloques.length;
             return;
         }
+        if (otraConversacion) return;
+
         if (bloques.length > insertados.current) {
             const nuevos = segmentos.slice(insertados.current, bloques.length).join('<hr>');
             hoja.current?.insertar((insertados.current > 0 ? '<hr>' : '') + nuevos, 'final');
             insertados.current = bloques.length;
+            sanada.current = clave;   // ya tiene contenido: no hay nada que sanar
         }
     }, [clave, bloques.length, segmentos]);
 

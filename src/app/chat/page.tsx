@@ -813,6 +813,7 @@ export default function ChatPage() {
 
             const decoder = new TextDecoder();
             let buffer = '';
+            let tramasPerdidas = 0;
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -862,9 +863,25 @@ export default function ChatPage() {
                                 });
                                 setIsDocumentAnalyzing(false);
                             }
-                        } catch {}
+                        } catch (e) {
+                            /* UNA TRAMA QUE NO SE PUEDE LEER NO SE TIRA EN
+                               SILENCIO (20-sep-2026). Este `catch` estaba vacío:
+                               si una trama fallaba al parsear, ese trozo del
+                               análisis se perdía sin dejar rastro. El servidor
+                               guarda la respuesta entera, así que la base queda
+                               completa y el cliente con un pedazo — y nadie se
+                               entera de nada. Al menos que se vea en la consola
+                               y se cuente. */
+                            tramasPerdidas++;
+                            console.error('[analyze-document] trama SSE ilegible',
+                                { perdidas: tramasPerdidas, largo: line.length, error: e });
+                        }
                     }
                 }
+            }
+            if (tramasPerdidas > 0) {
+                console.error(`[analyze-document] ${tramasPerdidas} trama(s) perdida(s): `
+                    + 'el análisis que se ve puede estar incompleto.');
             }
         } catch (err: any) {
             // Map technical errors to user-friendly Spanish messages
