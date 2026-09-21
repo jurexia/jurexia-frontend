@@ -222,6 +222,24 @@ export default function ChatPage() {
     const cacheTimerRef = useRef<NodeJS.Timeout | null>(null);
     const genioErrorTimerRef = useRef<NodeJS.Timeout | null>(null);
     const [isDocumentAnalyzing, setIsDocumentAnalyzing] = useState(false);
+    /* ¿SIGUE LLEGANDO EL ANÁLISIS? (21-sep-2026)
+       -------------------------------------------------------------------
+       `isDocumentAnalyzing` hacía dos trabajos a la vez y se estorbaban. Uno
+       es enseñar el indicador de «escribiendo», que debe apagarse en cuanto
+       llega el primer token —y así estaba escrito—. El otro es decirle al
+       panel del documento que la respuesta AÚN NO ESTÁ TERMINADA.
+
+       Al apagarse en el primer token, `bloquesDocumento` daba por acabada una
+       respuesta que llevaba 25 caracteres, la hoja escribía ese trozo
+       —«Estimado abogado, he anal»— y, como el número de bloques ya no volvía
+       a crecer, NUNCA se actualizaba: el texto seguía llegando hasta las 1,576
+       palabras y la hoja se quedaba con el fragmento. El Word, que sale de la
+       hoja, bajaba lo mismo. Cuatro días de un abogado.
+
+       Esto sólo se apaga cuando el stream termina de verdad. El indicador
+       sigue con su bandera de siempre. En el chat corriente no pasaba porque
+       ahí manda `isLoading`, que no se apaga hasta el final. */
+    const [analisisEnVuelo, setAnalisisEnVuelo] = useState(false);
     /* Por dónde va el análisis del documento: lo cuenta el servidor mientras
        lee, reconoce el texto y consulta el acervo. */
     const [pasoDocumento, setPasoDocumento] = useState('');
@@ -609,6 +627,7 @@ export default function ChatPage() {
 
         // Reset document analyzing state in case it was stuck from a previous analysis
         setIsDocumentAnalyzing(false);
+        setAnalisisEnVuelo(false);
         const isAdminUser = isAdmin(user?.email);
         const remaining = queriesLimit - queriesUsed;
         if (remaining <= 0 && !isAdminUser) {
@@ -736,6 +755,7 @@ export default function ChatPage() {
         // se pintaba entera mientras se analizaba el documento.
         limpiarPasos();
         setIsDocumentAnalyzing(true);
+        setAnalisisEnVuelo(true);
 
         // Ensure conversation exists — track convId for post-streaming save
         let docConvId = activeConversationId;
@@ -758,6 +778,7 @@ export default function ChatPage() {
                 { role: 'assistant' as const, content: `⚠️ **Archivo demasiado grande** (${sizeMB} MB)\n\nEl límite es de 25 MB. Por favor, reduce el tamaño del archivo o divide el documento en partes más pequeñas.` }
             ]);
             setIsDocumentAnalyzing(false);
+            setAnalisisEnVuelo(false);   // salida temprana: no hay stream que esperar
             return;
         }
 
@@ -933,6 +954,9 @@ export default function ChatPage() {
             setPasoDocumento('');
             // ALWAYS reset — guarantees export bar (PDF/DOCX/Print) appears after response
             setIsDocumentAnalyzing(false);
+            // Y aquí, y sólo aquí, la respuesta pasa a estar TERMINADA para el
+            // panel del documento: ya no llega ni un token más.
+            setAnalisisEnVuelo(false);
 
             // ── SAVE document analysis messages to conversation history ──
             // FIX 2026-05-22: Same Promise-based state reading as handleSendMessage
@@ -995,7 +1019,7 @@ export default function ChatPage() {
        Todas las respuestas terminadas de la conversación, en orden, y aparte
        la que está llegando (vista previa). El panel las escribe seguidas. */
     const bloquesDocumento = useMemo(() => {
-        const trabajando = isLoading || isDocumentAnalyzing;
+        const trabajando = isLoading || isDocumentAnalyzing || analisisEnVuelo;
         const salida: { id: string; markdown: string }[] = [];
         messages.forEach((m, i) => {
             if (m.role !== 'assistant' || !m.content.trim()) return;
@@ -1003,12 +1027,12 @@ export default function ChatPage() {
             salida.push({ id: `m${i}`, markdown: m.content });
         });
         return salida;
-    }, [messages, isLoading, isDocumentAnalyzing]);
+    }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
     const vivoDocumento = useMemo(() => {
-        if (!(isLoading || isDocumentAnalyzing)) return null;
+        if (!(isLoading || isDocumentAnalyzing || analisisEnVuelo)) return null;
         const ultimo = messages[messages.length - 1];
         return ultimo?.role === 'assistant' ? ultimo.content : '';
-    }, [messages, isLoading, isDocumentAnalyzing]);
+    }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
     const hayDocumento = bloquesDocumento.length > 0 || vivoDocumento !== null;
     const tituloDocumento = useMemo(() => {
         const primera = messages.find((m) => m.role === 'user');
