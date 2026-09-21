@@ -60,12 +60,16 @@ interface Props {
     bloques: BloqueDocumento[];
     /** La respuesta que está llegando (markdown parcial), o null. */
     vivo: string | null;
+    /** Por dónde va el servidor antes del primer token: «Reconociendo el texto
+     *  de 50 páginas…». Sin esto el panel enseñaba una hoja en blanco y un pie
+     *  que decía «Escribiendo… 0 palabras» durante todo el reconocimiento. */
+    paso?: string;
     versiones: VersionDocumento[];
     onCerrar: () => void;
     onCita?: (fuente: FuenteCita) => void;
 }
 
-export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, versiones, onCerrar, onCita }: Props) {
+export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, paso, versiones, onCerrar, onCita }: Props) {
     const hoja = useRef<HojaAPI | null>(null);
     const raizRef = useRef<HTMLDivElement | null>(null);
     const [nombre, setNombre] = useState('');
@@ -151,24 +155,45 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
        llenaban la hoja, así que el fallo entra por una quinta que no sabemos
        cuál es. Esto no la busca: la cubre.
 
-       Una hoja vacía no tiene edición del abogado que perder, así que
-       rellenarla no puede pisarle el trabajo. Una sola vez por conversación,
-       para que quien la borre a propósito pueda dejarla en blanco. */
-    const sanada = useRef<string | null>(null);
+       El primer intento (20-sep) sólo miraba si la hoja estaba VACÍA, y por eso
+       no sirvió: al día siguiente el mismo fallo la dejó con un trozo —«A
+       continuación, presento un análisis jurídico exhaustivo del», cortado a
+       mitad de frase— y un trozo no es vacío, así que el guardia ni se enteró.
+
+       LO QUE SE VIGILA AHORA ES OTRA COSA: que la hoja diga lo que el dossier
+       dice. Se recuerda EXACTAMENTE el HTML que escribimos nosotros; si el
+       dossier ha cambiado y la hoja sigue teniendo palabra por palabra lo que
+       dejamos, se reescribe. Da igual por qué se quedó atrás —bloque que creció
+       después de darse por terminado, hoja que nunca recibió nada, bandera mal
+       apagada—: la comparación no pregunta la causa.
+
+       Y no puede pisarle el trabajo a nadie: en cuanto el abogado toca una
+       letra, la hoja deja de coincidir con lo que escribimos y no se vuelve a
+       tocar nunca. Sólo se reescribe lo que es nuestro y está desactualizado. */
+    const escrito = useRef<string | null>(null);   // el HTML que pusimos nosotros
     useEffect(() => {
+        const raiz = hoja.current?.raiz();
         const otraConversacion = claveMontada.current !== clave;
         if (otraConversacion) {
             claveMontada.current = clave;
             insertados.current = bloques.length;
+            // La hoja acaba de montarse con `htmlInicial`: eso es lo nuestro.
+            escrito.current = raiz ? raiz.innerHTML : null;
             setNombre('');
             setVersionElegida('');
         }
 
-        if (bloques.length && sanada.current !== clave && hoja.current?.vacia()) {
-            sanada.current = clave;
-            hoja.current.reemplazar(segmentos.slice(0, bloques.length).join('<hr>'));
-            insertados.current = bloques.length;
-            return;
+        if (raiz && bloques.length) {
+            const deseado = segmentos.slice(0, bloques.length).join('<hr>');
+            const intacta = escrito.current === null
+                ? !raiz.innerHTML.trim()          // nunca escribimos: sólo si está en blanco
+                : raiz.innerHTML === escrito.current;
+            if (deseado && deseado !== escrito.current && intacta) {
+                hoja.current?.reemplazar(deseado);
+                escrito.current = hoja.current?.raiz()?.innerHTML ?? deseado;
+                insertados.current = bloques.length;
+                return;
+            }
         }
         if (otraConversacion) return;
 
@@ -176,7 +201,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
             const nuevos = segmentos.slice(insertados.current, bloques.length).join('<hr>');
             hoja.current?.insertar((insertados.current > 0 ? '<hr>' : '') + nuevos, 'final');
             insertados.current = bloques.length;
-            sanada.current = clave;   // ya tiene contenido: no hay nada que sanar
+            escrito.current = hoja.current?.raiz()?.innerHTML ?? null;
         }
     }, [clave, bloques.length, segmentos]);
 
@@ -335,14 +360,21 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
 
             {/* ── EL PIE: qué hay y en qué estado ──────────────────────── */}
             <footer className="flex h-9 shrink-0 items-center gap-3 border-t border-charcoal-900/10 bg-cream-100 px-4 text-[11.5px] text-charcoal-900/65">
-                {enVivo ? (
+                {paso && !palabras ? (
+                    /* Aún no hay ni una palabra: se dice qué está pasando en vez
+                       de «Escribiendo… 0 palabras», que era mentira y dejaba al
+                       abogado mirando una hoja en blanco sin señal de vida. */
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>{paso}</span></>
+                ) : enVivo ? (
                     <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>Escribiendo en el documento…</span></>
                 ) : partes.length ? (
                     <><Check className="h-3.5 w-3.5 text-accent-gold" /><span>Listo para editar</span></>
                 ) : (
                     <span>La primera respuesta se escribirá aquí.</span>
                 )}
-                <span className="ml-auto tabular-nums">{palabras.toLocaleString('es-MX')} palabras</span>
+                <span className="ml-auto tabular-nums">
+                    {palabras ? `${palabras.toLocaleString('es-MX')} palabras` : ''}
+                </span>
                 <span className="tabular-nums">
                     {orden.length} {orden.length === 1 ? 'cita' : 'citas'}
                     {meta && meta.valid > 0 ? ` · ${meta.valid} ${meta.valid === 1 ? 'verificada' : 'verificadas'}` : ''}

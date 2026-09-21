@@ -1031,7 +1031,16 @@ export default function ChatPage() {
     const vivoDocumento = useMemo(() => {
         if (!(isLoading || isDocumentAnalyzing || analisisEnVuelo)) return null;
         const ultimo = messages[messages.length - 1];
-        return ultimo?.role === 'assistant' ? ultimo.content : '';
+        /* NULL, NO CADENA VACÍA (21-sep-2026). Mientras el servidor lee el
+           documento, lo reconoce y busca en el acervo —minutos en un escaneado—
+           no ha llegado ni un token y el último mensaje sigue siendo el del
+           abogado. Devolver '' metía al panel en modo «vista previa» con nada
+           que enseñar: la hoja editable se escondía detrás de un nodo vacío, el
+           CSS sacaba su «Aquí se genera tu respuesta» y el pie cantaba
+           «Escribiendo en el documento… 0 palabras». Una hoja en blanco y sin
+           una señal de vida durante todo el reconocimiento. Con null el panel
+           no finge: la hoja se queda como está y el pie dice por dónde va. */
+        return ultimo?.role === 'assistant' ? ultimo.content : null;
     }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
     const hayDocumento = bloquesDocumento.length > 0 || vivoDocumento !== null;
     const tituloDocumento = useMemo(() => {
@@ -1884,6 +1893,7 @@ export default function ChatPage() {
                 titulo={tituloDocumento}
                 bloques={bloquesDocumento}
                 vivo={vivoDocumento}
+                paso={(isDocumentAnalyzing || analisisEnVuelo) ? pasoDocumento : ''}
                 versiones={versiones}
                 onCerrar={() => setDocumentoAbierto(false)}
                 onCita={handleCitationClick}
