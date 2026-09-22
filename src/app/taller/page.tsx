@@ -46,7 +46,8 @@ import {
     generarAdelanto, descargar, consultarAcervo, resolverConCriterio,
     resolverConSentidoGlobal,
     proponerSolucion, aportarContexto, resolverEnVivo,
-    type RespuestaPropuesta,
+    repartirCriterios, corregirProblema,
+    type RespuestaPropuesta, type CriterioEnviado,
     estadoPiloto, descargarProyecto,
     sisePendiente, generarDesdeExpediente, NecesitaNotificacion, razonarSentido,
     contextoDelAsunto, asuntosEnCurso, descargarDelAlmacen,
@@ -508,7 +509,7 @@ export default function TallerDeSentencias() {
     const autoEnCurso = paso === 'adelanto' && !!delAsunto
         && avanceAuto.propuesta !== 'listo' && avanceAuto.propuesta !== 'fallo';
     const pedirAcervoRef = useRef<((usarContexto?: boolean) => Promise<void>) | null>(null);
-    const pedirPropuestaRef = useRef<((opts?: { sinContexto?: boolean }) => Promise<void>) | null>(null);
+    const pedirPropuestaRef = useRef<((opts?: { sinContexto?: boolean; contextoTexto?: string }) => Promise<void>) | null>(null);
     const autoLanzado = useRef(false);
     useEffect(() => {
         if (!autoEnCurso || corriendo || !encargo.numero) return;
@@ -865,6 +866,53 @@ export default function TallerDeSentencias() {
         setGlobalDictado(!!s);
     }, []);
 
+    /* ═══ EL PRINCIPAL DICTA LA SUERTE DE LOS ACCESORIOS ═══
+       David (22-sep-2026): «si cambio de sentido o el sentido de la resolución
+       principal es uno, los accesorios caen por su propio peso cuando tienen
+       estrecha relación o cuando a ningún fin práctico produce su análisis».
+
+       Al cambiar la pastilla del PRINCIPAL se le pide al servidor el reparto
+       —la misma regla que aplicará al generar— y los accesorios que él no
+       marcó a mano se actualizan solos, con su razón y con la etiqueta
+       «sigue al principal». Lo que él marcó no se toca: la regla vive en el
+       servidor y aquí sólo se pinta. */
+    const repartirRef = useRef<(id: string, valor: string) => Promise<void>>(async () => {});
+    const repartirTrasCambio = useCallback((id: string, valor: string) => repartirRef.current(id, valor), []);
+    const [avisosReparto, setAvisosReparto] = useState<string[]>([]);
+    repartirRef.current = async (id: string, valor: string) => {
+        if (!encargo.numero || !valor) return;
+        const esPrincipal = (problemas.find((p) => p.id === id)?.jerarquia ?? '') === 'principal'
+            || (problemas[0]?.id === id && !problemas.some((p) => p.jerarquia === 'principal'));
+        if (!esPrincipal) return;
+        const criterios: CriterioEnviado[] = problemas.map((p) => ({
+            problema: p.pregunta,
+            sentido: p.id === id ? valor : (p.sentido ?? ''),
+            razonamiento: p.criterio ?? '',
+            jerarquia: p.jerarquia ?? 'accesorio',
+            tocado: p.id === id || tocados.has(p.id),
+        }));
+        try {
+            const r = await repartirCriterios(encargo.numero, correo, criterios, propuesta?.global ?? null);
+            setAvisosReparto(r.avisos);
+            setProblemas((prev) => prev.map((p) => {
+                const c = r.criterios.find((x) => x.problema === p.pregunta);
+                if (!c || p.id === id || tocados.has(p.id)) return p;
+                if (!c.sentido) return p;
+                const valido = (['fundado', 'esencialmente_fundado',
+                                 'sustancialmente_fundado', 'parcialmente_fundado',
+                                 'fundado_insuficiente', 'infundado', 'inoperante',
+                                 'inatendible', 'ineficaz', 'sin_materia', 'innecesario'] as const)
+                    .find((x) => x === c.sentido);
+                if (!valido) return p;
+                const cambia = valido !== p.sentido;
+                return { ...p, sentido: valido,
+                         criterio: cambia ? (c.razonamiento || '') : (p.criterio || c.razonamiento || ''),
+                         razonDe: cambia ? { sentido: valido, delMotor: true } : p.razonDe,
+                         de: c.de || 'motor', porQue: c.por_que || '' };
+            }));
+        } catch { /* si el reparto no sale, las pastillas se quedan como estaban */ }
+    };
+
     const cambiarCriterio = useCallback((id: string, campo: 'criterio' | 'sentido', valor: string) => {
         setProblemas((prev) => prev.map((p) => {
             if (p.id !== id) return p;
@@ -891,13 +939,15 @@ export default function TallerDeSentencias() {
                redactó para otro sentido, con un botón para reemplazarla. */
             const _s = valor as ProblemaJuridico['sentido'];
             const suya = p.criterio.trim() && p.razonDe && !p.razonDe.delMotor;
-            if (suya) return { ...p, sentido: _s };
-            return { ...p, sentido: _s, criterio: '', razonDe: undefined };
+            if (suya) return { ...p, sentido: _s, de: 'tuya', porQue: '' };
+            return { ...p, sentido: _s, criterio: '', razonDe: undefined, de: 'tuya', porQue: '' };
         }));
         if (campo === 'sentido' && valor) {
             setTocados((prev) => new Set(prev).add(id));
+            void repartirTrasCambio(id, valor);
         }
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     // LA PROPUESTA DE SOLUCIÓN. El motor sugiere el sentido de cada problema
     // con su razón y los registros que lo apoyan; el secretario la acepta tal
@@ -1051,11 +1101,13 @@ export default function TallerDeSentencias() {
         } finally { setCorriendo(false); }
     }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados]);
 
-    const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean }) => {
+    const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean; contextoTexto?: string }) => {
         setError(''); setCorriendo(true); setProponiendo(true);
         try {
+            // EL CONTEXTO RECIÉN APORTADO viaja por argumento: `setContexto`
+            // es asíncrono y el estado de esta función es el de antes.
             const p = await proponerSolucion(encargo.numero, correo,
-                                             opts?.sinContexto ? '' : contexto);
+                                             opts?.sinContexto ? '' : (opts?.contextoTexto ?? contexto));
             setPropuesta(p);
             /* SE ENTRA DIRECTO A LA DECISIÓN, con la propuesta del motor ya
                puesta. Es lo que automatiza el trabajo: el caso frecuente es
@@ -1102,9 +1154,18 @@ export default function TallerDeSentencias() {
                 if (tocados.has(q.id)) {
                     return { ...base, criterio: q.criterio || s?.razon || '' };
                 }
-                return s && s.alcanza && valido
-                    ? { ...base, sentido: valido, criterio: q.criterio || s.razon }
-                    : base;
+                if (!(s && s.alcanza && valido)) return base;
+                // LA RAZÓN SE VA CON EL SENTIDO. Al volver a proponer —tras
+                // aportar la reclamación, en el 93/2026— el sentido nuevo
+                // (infundado) se pegaba sobre la razón vieja (la del fundado).
+                // Lo que escribió la máquina para otro sentido se tira; lo
+                // que escribió ÉL no se destruye nunca.
+                const suya = q.criterio.trim() && q.razonDe && !q.razonDe.delMotor;
+                const mismaRazon = q.razonDe?.sentido === valido && q.criterio.trim();
+                return { ...base, sentido: valido,
+                         criterio: suya || mismaRazon ? q.criterio : s.razon,
+                         razonDe: suya || mismaRazon ? q.razonDe : { sentido: valido, delMotor: true },
+                         de: 'motor', porQue: '' };
             }));
             if (!p.propuestas.length) {
                 setError('El motor no propuso ningún sentido. Dicta tu criterio.');
@@ -1173,24 +1234,57 @@ export default function TallerDeSentencias() {
     }, [pedirPropuesta, pedirAcervo, material, problemas.length]);   // eslint-disable-line react-hooks/exhaustive-deps
 
 
+    /* Qué es lo último que se aportó, para decirlo en pantalla: si fue la
+       resolución que decidió una violación procesal, el motor la trata como
+       la razón toral a confrontar. */
+    const [claseContexto, setClaseContexto] = useState<{ clase: string; rotulo: string } | null>(null);
+
+    /* ═══ EL PROBLEMA JURÍDICO SE CORRIGE ANTES DE DECIDIRLO ═══
+       David (22-sep-2026): «Desde fijar si el problema jurídico es el correcto
+       y dar la opción de modificarlo». Se corrige en la fuente —la fase 3 del
+       servidor, persistida— y la propuesta se vuelve a pedir sobre la
+       pregunta corregida: el contraste, la propuesta y el estudio se
+       emparejan por el texto de la pregunta, así que editarla sólo aquí los
+       habría dejado huérfanos. */
+    const [editandoProblema, setEditandoProblema] = useState<string | null>(null);
+    const corregirYProponer = useCallback(async (id: string, pregunta: string, jerarquia?: 'principal' | 'accesorio') => {
+        const indice = problemas.findIndex((p) => p.id === id);
+        if (indice < 0 || !encargo.numero) return;
+        setError(''); setEditandoProblema(id);
+        try {
+            const r = await corregirProblema(encargo.numero, correo, indice, pregunta, jerarquia);
+            setProblemas((prev) => prev.map((p, i) => {
+                const q = r.problemas[i];
+                if (!q) return p;
+                return { ...p, pregunta: q.pregunta,
+                         jerarquia: (q.jerarquia as 'principal' | 'accesorio') ?? p.jerarquia,
+                         editada: q.editado || p.editada,
+                         // La calificación era de la pregunta anterior.
+                         sentido: undefined, criterio: '', razonDe: undefined, de: undefined, porQue: '' };
+            }));
+            setTocados(new Set());
+            setPropuesta(null);
+            setSentidoGlobal(''); setGlobalDictado(false); setRazonGlobal('');
+            setModo('por_problema');
+            await pedirPropuestaRef.current?.({});
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo corregir el problema jurídico.');
+        } finally { setEditandoProblema(null); }
+    }, [problemas, encargo.numero, correo]);
+
     const aportarYProponer = useCallback(async (doc: File | null, texto: string) => {
         setError(''); setAportando(true);
         try {
-            const c = await aportarContexto(correo, doc, texto);
+            // CONTRA EL EXPEDIENTE. Sin `numero` el servidor no lo guardaba y
+            // la búsqueda del acervo no se enteraba de lo aportado.
+            const c = await aportarContexto(correo, doc, texto, encargo.numero);
             setContexto(c.texto);
-            const p = await proponerSolucion(encargo.numero, correo, c.texto);
-            setPropuesta(p);
-            setProblemas((prev) => prev.map((q, i) => {
-                const s2 = p.propuestas[i];
-                const valido = (['fundado', 'esencialmente_fundado',
-                                 'sustancialmente_fundado', 'parcialmente_fundado',
-                                 'fundado_insuficiente', 'infundado', 'inoperante',
-                                 'inatendible', 'ineficaz', 'sin_materia'] as const)
-                    .find((x) => x === s2?.sentido);
-                return s2 && s2.alcanza && valido
-                    ? { ...q, sentido: valido, criterio: q.criterio || s2.razon }
-                    : q;
-            }));
+            setClaseContexto({ clase: c.clase, rotulo: c.rotulo });
+            // POR LA MISMA PUERTA QUE LA PROPUESTA. Este camino tenía su propio
+            // volcado: dejaba el modo global con el eco del motor ANTERIOR y
+            // conservaba la razón vieja bajo el sentido nuevo. Una sola
+            // manera de recibir una propuesta, y es `pedirPropuesta`.
+            await pedirPropuestaRef.current?.({ contextoTexto: c.texto });
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo leer el documento.');
         } finally { setAportando(false); }
@@ -1254,6 +1348,7 @@ export default function TallerDeSentencias() {
                                   grupo: grupos[p.id] ?? '',
                                   jerarquia: p.jerarquia ?? 'accesorio',
                                   prediccion: p.prediccion ?? {},
+                                  tocado: true,
                               })))
                             : undefined,
                         // Qué resolvió el órgano recurrido, del contexto que
@@ -1306,6 +1401,10 @@ export default function TallerDeSentencias() {
                       // reconstruye una lista y descarta lo que otro sembró.
                       jerarquia: p.jerarquia ?? 'accesorio',
                       prediccion: p.prediccion ?? {},
+                      // QUIÉN LO PUSO. Lo que él marcó a mano el servidor no lo
+                      // toca; lo que puso la pantalla con la propuesta o con el
+                      // reparto sigue la suerte del principal.
+                      tocado: tocados.has(p.id),
                   })))
                 : undefined;
             setAvance('');
@@ -1339,7 +1438,7 @@ export default function TallerDeSentencias() {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
         } finally { setCorriendo(false); }
     }, [problemas, encargo.numero, encargo.responsable, correo, contexto, modo,
-        sentidoGlobal, razonGlobal, decision, motivoDecision]);
+        sentidoGlobal, razonGlobal, decision, motivoDecision, tocados]);
 
     const asunto: Asunto = useMemo(() => ({
         numero: encargo.numero || '—',
@@ -2648,6 +2747,10 @@ export default function TallerDeSentencias() {
                               conceptosViolacion={conceptosViolacion}
                               onConceptosViolacion={setConceptosViolacion}
                               contextoAportado={contexto.length}
+                              claseContexto={claseContexto}
+                              onCorregirProblema={corregirYProponer}
+                              corrigiendoProblema={editandoProblema}
+                              avisosReparto={avisosReparto}
                               esRecurso={encargo.tipoAsunto !== 'amparo_directo'}
                               extemporanea={extemporanea} oportunidadDecidida={decision !== ''} />
                     )}

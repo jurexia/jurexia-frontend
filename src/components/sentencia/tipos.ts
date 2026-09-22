@@ -101,6 +101,14 @@ export interface ProblemaJuridico {
      *  conservaba una razón que argumentaba lo contrario —y sobre ella se
      *  construía el estudio—. */
     razonDe?: { sentido: string; delMotor: boolean };
+    /** DE QUIÉN ES LA CALIFICACIÓN QUE HAY AHORA: «tuya» (la marcó él),
+     *  «motor» (la propuesta), «principal» (la puso el árbol de decisión al
+     *  fijar el principal), «distinto» / «propio» (se estudia por su cuenta),
+     *  «mayor_beneficio». Y por qué, en una frase que la pantalla enseña. */
+    de?: 'tuya' | 'motor' | 'principal' | 'distinto' | 'propio' | 'mayor_beneficio' | '';
+    porQue?: string;
+    /** El secretario corrigió la pregunta en pantalla (y en el servidor). */
+    editada?: boolean;
     /* «esencialmente fundado» es el 23% de los agravios en las revisiones que
      * revocan de este circuito, medido sobre su acervo. Prospera igual que el
      * fundado; lo que cambia es que el proyecto acota en qué medida. */

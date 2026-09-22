@@ -329,7 +329,7 @@ export async function aportarContexto(
     /** Contra qué expediente. Sin esto el servidor no puede guardarlo,
      *  y entonces la BÚSQUEDA no se entera de lo que el secretario sabe. */
     numero = ''
-): Promise<{ texto: string; caracteres: number }> {
+): Promise<{ texto: string; caracteres: number; clase: ClaseDeContexto; rotulo: string }> {
     const fd = new FormData();
     fd.append('user_email', userEmail);
     if (texto.trim()) fd.append('texto', texto.trim());
@@ -338,7 +338,73 @@ export async function aportarContexto(
     const res = await fetch(`${BASE}/taller/contexto`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
-    return { texto: j.texto ?? '', caracteres: j.caracteres ?? 0 };
+    return { texto: j.texto ?? '', caracteres: j.caracteres ?? 0,
+             clase: (j.clase as ClaseDeContexto) ?? 'otro', rotulo: j.rotulo ?? '' };
+}
+
+/** QUÉ ES LO QUE EL SECRETARIO APORTÓ. El servidor lo clasifica: si es la
+ *  resolución que decidió una violación procesal —la interlocutoria de la
+ *  reclamación, el acuerdo de preclusión— el motor la trata como la razón
+ *  toral a confrontar, no como un papel más. ADC 93/2026. */
+export type ClaseDeContexto = 'resolucion_procesal' | 'constancia' | 'otro';
+
+/** Un criterio tal como viaja a /taller/reparto y a /taller/resolver: con la
+ *  marca de si lo puso el secretario a mano (`tocado`), que es lo que el
+ *  árbol de decisión del servidor no toca. */
+export interface CriterioEnviado {
+    problema: string;
+    sentido: string;
+    razonamiento: string;
+    jerarquia: 'principal' | 'accesorio';
+    tocado: boolean;
+    grupo?: string;
+    prediccion?: PrediccionAcervo | Record<string, never>;
+}
+
+/** Lo que devuelve /taller/reparto por criterio: el sentido ya ajustado a la
+ *  suerte del principal, de quién es y por qué. */
+export interface CriterioRepartido extends CriterioEnviado {
+    de: 'principal' | 'tuya' | 'distinto' | 'propio' | 'mayor_beneficio' | '';
+    por_que: string;
+}
+
+/** LA SUERTE DE LOS ACCESORIOS CUANDO CAMBIA EL PRINCIPAL. No llama a ningún
+ *  modelo: aplica en el servidor la MISMA regla que el resolver aplicará al
+ *  generar —principal que prospera deja sin materia a los que dependen de
+ *  él; principal que cae arrastra a los que descansaban en su premisa— y
+ *  devuelve cada criterio con su sentido, de quién es y por qué. */
+export async function repartirCriterios(
+    numero: string, userEmail: string, criterios: CriterioEnviado[],
+    global: SolucionGlobal | null,
+): Promise<{ criterios: CriterioRepartido[]; avisos: string[] }> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    fd.append('criterios_json', JSON.stringify(criterios));
+    if (global) fd.append('global_json', JSON.stringify(global));
+    const res = await fetch(`${BASE}/taller/reparto`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    const j = await res.json();
+    return { criterios: (j.criterios ?? []) as CriterioRepartido[], avisos: j.avisos ?? [] };
+}
+
+/** EL PROBLEMA JURÍDICO SE CORRIGE ANTES DE DECIDIRLO. Se corrige en la
+ *  fuente —la fase 3 del servidor— y se persiste: la propuesta anterior se
+ *  descarta y hay que volver a pedirla sobre la pregunta corregida. */
+export async function corregirProblema(
+    numero: string, userEmail: string, indice: number,
+    pregunta: string, jerarquia?: 'principal' | 'accesorio',
+): Promise<{ problemas: { pregunta: string; jerarquia: string; editado: boolean }[]; aviso: string }> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    fd.append('indice', String(indice));
+    if (pregunta.trim()) fd.append('pregunta', pregunta.trim());
+    if (jerarquia) fd.append('jerarquia', jerarquia);
+    const res = await fetch(`${BASE}/taller/problema`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    const j = await res.json();
+    return { problemas: j.problemas ?? [], aviso: j.aviso ?? '' };
 }
 
 
@@ -421,6 +487,12 @@ export interface SolucionGlobal {
         con_propuesta: string;
         con_alternativa: string;
         tema_distinto?: boolean;
+        /** LA SUERTE CONDICIONAL, estructurada: qué le pasa a este tema si
+         *  el principal prospera y si no. Es lo que el árbol de decisión
+         *  aplica solo cuando el secretario fija el principal. */
+        relacion?: 'depende' | 'distinto';
+        si_prospera?: { sentido: string; razon: string };
+        si_no_prospera?: { sentido: string; razon: string };
     }[];
 }
 

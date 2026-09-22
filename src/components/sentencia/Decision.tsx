@@ -139,6 +139,8 @@ export default function Decision({
     onAportar, aportando, contextoAportado = 0,
     esRecurso = false, abrirCorreccion = 0,
     extemporanea = false, oportunidadDecidida = true,
+    claseContexto = null, onCorregirProblema, corrigiendoProblema = null,
+    avisosReparto = [],
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -175,12 +177,25 @@ export default function Decision({
      *  («Dejarlo así» / «Fue oportuna» / «Estudio en reserva»); true en
      *  cualquiera de los tres casos, incluido dejarlo como está a propósito. */
     oportunidadDecidida?: boolean;
+    /** Qué fue lo último que se aportó, según el servidor: si es la
+     *  resolución que decidió una violación procesal, se dice —el motor la
+     *  trata como la razón toral a confrontar—. */
+    claseContexto?: { clase: string; rotulo: string } | null;
+    /** EL PROBLEMA JURÍDICO SE CORRIGE ANTES DE DECIDIRLO. La pregunta se
+     *  corrige en el servidor y la propuesta se vuelve a pedir. */
+    onCorregirProblema?: (id: string, pregunta: string, jerarquia?: 'principal' | 'accesorio') => void;
+    corrigiendoProblema?: string | null;
+    /** Lo que dijo el servidor al repartir la suerte de los accesorios tras
+     *  cambiar el principal. */
+    avisosReparto?: string[];
 }) {
     const [corrigiendo, setCorrigiendo] = useState(false);
     const [porQue, setPorQue] = useState(false);
     const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
     const [textoAporte, setTextoAporte] = useState('');
     const [ficheroAporte, setFicheroAporte] = useState<File | null>(null);
+    /* El problema que se está corrigiendo y su texto en curso. */
+    const [editando, setEditando] = useState<{ id: string; texto: string } | null>(null);
     useEffect(() => { if (abrirCorreccion > 0) setCorrigiendo(true); }, [abrirCorreccion]);
 
     const global = propuesta?.global ?? null;
@@ -479,13 +494,61 @@ export default function Decision({
                                     <div key={p.id}
                                          className={cn('rounded-2xl border bg-black/20 p-4 transition-colors',
                                              seAparta[i] ? 'border-accent-gold/35' : 'border-white/[0.07]')}>
+                                        {editando?.id === p.id ? (
+                                            /* ── CORREGIR LA PREGUNTA ── David: «fijar si el problema
+                                               jurídico es el correcto y dar la opción de modificarlo». */
+                                            <div>
+                                                <textarea value={editando.texto} rows={2} autoFocus
+                                                          onChange={(e) => setEditando({ id: p.id, texto: e.target.value })}
+                                                          className="w-full resize-y rounded-xl border border-accent-gold/40 bg-black/30 px-3 py-2 text-[14px] leading-snug text-white/90 outline-none focus:border-accent-gold" />
+                                                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px]">
+                                                    <button type="button"
+                                                            disabled={!!corrigiendoProblema || editando.texto.trim().length < 15 || !editando.texto.trim().endsWith('?')}
+                                                            onClick={() => { onCorregirProblema?.(p.id, editando.texto.trim()); setEditando(null); }}
+                                                            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent-gold px-3 font-medium text-charcoal-900 disabled:opacity-40">
+                                                        <Check className="h-3.5 w-3.5" /> Corregir y volver a proponer
+                                                    </button>
+                                                    {(p.jerarquia ?? '') !== 'principal' && (
+                                                        <button type="button" disabled={!!corrigiendoProblema}
+                                                                onClick={() => { onCorregirProblema?.(p.id, editando.texto.trim(), 'principal'); setEditando(null); }}
+                                                                className="h-8 rounded-lg border border-white/15 px-3 text-white/75 hover:text-white disabled:opacity-40">
+                                                            …y hacerlo el principal
+                                                        </button>
+                                                    )}
+                                                    <button type="button" onClick={() => setEditando(null)} className="h-8 px-2 text-white/45 hover:text-white">cancelar</button>
+                                                    <span className="text-white/35">Escríbelo como pregunta: empieza por «¿» y termina en «?». La propuesta se rehace sobre la pregunta corregida.</span>
+                                                </div>
+                                            </div>
+                                        ) : (
                                         <p className="text-[14px] leading-snug text-white/90">
                                             <span className="mr-2 text-[12px] font-semibold text-accent-gold">{String(i + 1).padStart(2, '0')}</span>
                                             {(p.jerarquia ?? '') === 'principal' && (
                                                 <span className="mr-2 rounded-lg border border-accent-gold/30 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent-gold/90">principal</span>
                                             )}
                                             {p.pregunta}
+                                            {p.editada && <span className="ml-2 text-[10px] uppercase tracking-wide text-white/40">corregida por ti</span>}
+                                            {onCorregirProblema && (
+                                                <button type="button" title="Corregir el problema jurídico"
+                                                        disabled={!!corrigiendoProblema}
+                                                        onClick={() => setEditando({ id: p.id, texto: p.pregunta })}
+                                                        className="ml-2 inline-flex items-center gap-1 align-middle text-[11px] text-white/40 hover:text-accent-gold disabled:opacity-40">
+                                                    {corrigiendoProblema === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <PenLine className="h-3 w-3" />}
+                                                    {corrigiendoProblema === p.id ? 'corrigiendo…' : 'corregir'}
+                                                </button>
+                                            )}
                                         </p>
+                                        )}
+                                        {/* DE QUIÉN ES LA CALIFICACIÓN. Cuando el principal cambia, los
+                                            accesorios que él no marcó siguen su suerte, y aquí se dice
+                                            por qué: «sigue al principal · descansa en la premisa…». */}
+                                        {p.sentido && p.de && p.de !== 'tuya' && p.de !== 'motor' && (
+                                            <p className="mt-1 text-[12px] text-accent-gold/85">
+                                                {p.de === 'principal' ? 'Sigue al principal' : p.de === 'distinto' ? 'Tema distinto: se estudia aparte'
+                                                    : p.de === 'mayor_beneficio' ? 'Pide más que el principal: se estudia' : 'Se estudia por su cuenta'}
+                                                {p.porQue ? <span className="text-white/55"> · {p.porQue}</span> : null}
+                                                <span className="text-white/40"> · márcalo tú si no estás de acuerdo</span>
+                                            </p>
+                                        )}
                                         <p className="mt-1 text-[12px] text-white/45">
                                             {motor?.sentido ? `El motor propone ${legible(motor.sentido).toLowerCase()}` : 'Sin propuesta del motor'}
                                             {p.prediccion?.frase && <> · <span className="text-white/60">El acervo: {p.prediccion.frase}</span></>}
@@ -526,6 +589,13 @@ export default function Decision({
                                     </div>
                                 );
                             })}
+                            {avisosReparto.length > 0 && (
+                                <ul className="space-y-1 px-1 text-[12px] leading-relaxed text-white/55">
+                                    {avisosReparto.map((a, k) => (
+                                        <li key={k} className="flex gap-2"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-gold/70" /><span>{a}</span></li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     )}
                 </div>
@@ -549,7 +619,21 @@ export default function Decision({
                         <Pliegue titulo={`Lo que sabes y los papeles no dicen${contextoAportado ? ` · ${contextoAportado.toLocaleString('es-MX')} caracteres aportados` : ''}`}>
                             <p className="mb-2 text-[12px] leading-relaxed text-white/45">
                                 Opcional. Un dato del expediente, una constancia, o el hecho que cambia el análisis. El motor vuelve a proponer con eso delante.
+                                Si es la resolución que decidió una violación procesal —la interlocutoria de la reclamación, el acuerdo de preclusión—,
+                                el estudio confronta sus razones una por una: son la razón toral, no un papel más.
                             </p>
+                            {claseContexto && contextoAportado > 0 && (
+                                <p className={cn('mb-2 rounded-xl border px-3 py-2 text-[12px]',
+                                    claseContexto.clase === 'resolucion_procesal'
+                                        ? 'border-accent-gold/35 bg-accent-gold/[0.06] text-accent-gold/90'
+                                        : 'border-white/10 text-white/60')}>
+                                    {claseContexto.clase === 'resolucion_procesal'
+                                        ? 'Lo aportado se leyó como la resolución que decidió la violación procesal: el motor confrontará sus razones.'
+                                        : claseContexto.clase === 'constancia'
+                                            ? 'Lo aportado se leyó como una constancia de autos.'
+                                            : 'Lo aportado entra como material del expediente.'}
+                                </p>
+                            )}
                             <textarea rows={3} value={textoAporte} onChange={(e) => setTextoAporte(e.target.value)}
                                       className="w-full resize-y rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-[14px] leading-relaxed text-white/90 outline-none focus:border-accent-gold/45" />
                             <div className="mt-2 flex flex-wrap items-center gap-2">
