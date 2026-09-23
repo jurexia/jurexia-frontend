@@ -380,9 +380,17 @@ export default function TallerDeSentencias() {
     const leerAdmision = useCallback(async (archivo: File) => {
         setError(''); setFichando(true); setFichado([]);
         try {
-            const { ficha, leidos, avisos } = await fichaDesdeAdmision(correo, archivo);
+            const { ficha, leidos, avisos, reglas } = await fichaDesdeAdmision(correo, archivo);
             setEncargo((prev) => {
                 const x = { ...prev };
+                // LA REGLA DE NOTIFICACIÓN DEL FUERO. Leída la responsable, el
+                // servidor dice qué regla le corresponde por la ley del acto
+                // —el TFJA notifica por Boletín Jurisdiccional y surte al
+                // tercer día hábil, art. 65 LFPCA—. Se preselecciona si el
+                // secretario no había elegido otra a propósito.
+                if (reglas?.por_omision && (!prev.reglaSurtimiento || prev.reglaSurtimiento === 'personal')) {
+                    x.reglaSurtimiento = reglas.por_omision;
+                }
                 const poner = (k: keyof Encargo, v?: string) => {
                     if (v && !String((x as unknown as Record<string, string>)[k] ?? '').trim()) {
                         (x as unknown as Record<string, string>)[k] = v;
@@ -397,6 +405,10 @@ export default function TallerDeSentencias() {
                    la ficha en blanco: lo leído estaba, pero no se veía. */
                 poner('tipoAsunto', ficha.tipo_asunto);
                 poner('numero', ficha.numero);
+                // EL ENCABEZADO YA SE SABE: lo compone el servidor con tipo,
+                // materia y número. David: «sigue pidiendo el encabezado
+                // cuando ese ya se sabe en automático del auto de admisión».
+                poner('encabezado', ficha.encabezado);
                 poner('quejoso', ficha.quejoso);
                 poner('responsable', ficha.responsable);
                 poner('tercero', ficha.tercero_interesado);

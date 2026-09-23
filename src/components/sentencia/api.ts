@@ -1532,9 +1532,37 @@ export async function contextoDelAsunto(
    No crea sesión, no guarda nada y no gasta cuota: devuelve una PROPUESTA que
    la pantalla pone en los campos y el secretario corrige. Es el único papel
    del expediente que dice quién es quién en su primera página. */
+/** UNA REGLA DE NOTIFICACIÓN, tal como la ofrece el servidor para ESTE
+ *  asunto. La lista vive en `fase0_oportunidad.reglas_para`: depende de la
+ *  ley que rige el acto —para el TFJA, el Boletín Jurisdiccional al tercer
+ *  día hábil (art. 65 LFPCA)— y no de Querétaro. */
+export interface ReglaSurtimiento {
+    clave: string;
+    etiqueta: string;
+    dias_habiles: number;
+    fundamento: string;
+}
+export interface ReglasOfrecidas {
+    fuero: string;
+    por_omision: string;
+    reglas: ReglaSurtimiento[];
+}
+
+export async function reglasSurtimiento(
+    tipoAsunto: string, responsable: string,
+): Promise<ReglasOfrecidas> {
+    const q = new URLSearchParams({ tipo_asunto: tipoAsunto || '', responsable: responsable || '' });
+    const res = await fetch(`${BASE}/taller/reglas-surtimiento?${q.toString()}`);
+    if (!res.ok) return _fallo(res);
+    return (await res.json()) as ReglasOfrecidas;
+}
+
 export interface FichaLeida {
     numero?: string;
     tipo_asunto?: string;
+    /** Compuesto por el servidor —tipo, materia y número— para que no se
+     *  pida lo que ya se sabe. */
+    encabezado?: string;
     tribunal?: string;
     ciudad?: string;
     quejoso?: string;
@@ -1551,7 +1579,7 @@ export interface FichaLeida {
 
 export async function fichaDesdeAdmision(
     userEmail: string, archivo: File,
-): Promise<{ ficha: FichaLeida; leidos: string[]; avisos: string[] }> {
+): Promise<{ ficha: FichaLeida; leidos: string[]; avisos: string[]; reglas: ReglasOfrecidas | null }> {
     const fd = new FormData();
     fd.append('user_email', userEmail);
     fd.append('admision', archivo);
@@ -1563,5 +1591,7 @@ export async function fichaDesdeAdmision(
         ficha: (j.ficha ?? {}) as FichaLeida,
         leidos: (j.leidos ?? []) as string[],
         avisos: (j.avisos ?? []) as string[],
+        // La regla de notificación que corresponde a la responsable leída.
+        reglas: (j.reglas_surtimiento ?? null) as ReglasOfrecidas | null,
     };
 }

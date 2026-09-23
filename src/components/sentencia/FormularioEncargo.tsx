@@ -35,7 +35,7 @@
 
 import React from 'react';
 import { Tarjeta, Rotulo, cn } from './primitivas';
-import { obtenerTipos, type TipoAsunto } from './api';
+import { obtenerTipos, reglasSurtimiento, type TipoAsunto, type ReglaSurtimiento } from './api';
 import Calendario, { comprimirTramos, expandirTramos } from './Calendario';
 
 export interface Encargo {
@@ -118,12 +118,18 @@ export const ENCARGO_VACIO: Encargo = {
  *  elija por descuido en un asunto de otro estado; el servidor además la
  *  rechaza si la materia es administrativa y el estado declarado no es
  *  Querétaro. */
-const VIAS = [
-    { v: 'personal', t: 'Personal — surte al día hábil siguiente' },
-    { v: 'lista', t: 'Por lista — surte al día hábil siguiente' },
-    { v: 'lfpca', t: 'LFPCA — al día hábil siguiente' },
-    { v: 'tja_qro_boletin', t: 'Boletín del TJA de Querétaro — al tercer día (sólo asuntos de Querétaro)' },
-    { v: 'otra', t: 'Otra regla — yo declaro cuándo surtió efectos' },
+/* LAS REGLAS LAS DICE EL SERVIDOR, SEGÚN LA LEY DEL ACTO. Esta lista fija
+   ofrecía siempre las mismas cinco —con la del boletín de Querétaro para
+   todos—. David (22-sep-2026): «este redactor no es exclusivamente para
+   Querétaro (…) en materia federal no hay duda: la LFPCA establece que la
+   notificación por boletín surte efectos a los tres días. Esa es la opción
+   que debe desplegarse». Se pide a /taller/reglas-surtimiento con el tipo y
+   la responsable; esto queda sólo como respaldo mientras llega o si falla. */
+const VIAS_RESPALDO: ReglaSurtimiento[] = [
+    { clave: 'personal', etiqueta: 'Personal — surte al día hábil siguiente', dias_habiles: 1, fundamento: '' },
+    { clave: 'lista', etiqueta: 'Por lista — surte al día hábil siguiente', dias_habiles: 1, fundamento: '' },
+    { clave: 'lfpca_boletin', etiqueta: 'Boletín Jurisdiccional del TFJA — surte al tercer día hábil (art. 65 LFPCA)', dias_habiles: 3, fundamento: '' },
+    { clave: 'otra', etiqueta: 'Otra regla — yo declaro cuándo surtió efectos', dias_habiles: -1, fundamento: '' },
 ];
 
 const campo = 'w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 ' +
@@ -279,6 +285,42 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
         onCambiar({ ...valor, [k]: v });
 
     const tipo = tipos.find((t) => t.clave === valor.tipoAsunto);
+
+    /* ═══ LAS REGLAS DE NOTIFICACIÓN, SEGÚN TIPO Y RESPONSABLE ═══
+       Cada vez que cambia uno de los dos se le pregunta al servidor qué
+       reglas ofrece y cuál va por omisión; si la que hay puesta es la
+       genérica («personal») o ya no está entre las ofrecidas, se cambia a la
+       del fuero. Lo que el secretario eligió a propósito entre las ofrecidas
+       no se toca. */
+    const [vias, setVias] = React.useState<ReglaSurtimiento[]>(VIAS_RESPALDO);
+    const [fueroReglas, setFueroReglas] = React.useState('');
+    const reglaActual = React.useRef(valor.reglaSurtimiento);
+    reglaActual.current = valor.reglaSurtimiento;
+    const onCambiarRef = React.useRef(onCambiar);
+    onCambiarRef.current = onCambiar;
+    const valorRef = React.useRef(valor);
+    valorRef.current = valor;
+    React.useEffect(() => {
+        if (!valor.tipoAsunto) return;
+        let vivo = true;
+        const t = setTimeout(() => {
+            reglasSurtimiento(valor.tipoAsunto, valor.responsable || '')
+                .then((r) => {
+                    if (!vivo || !r?.reglas?.length) return;
+                    setVias(r.reglas);
+                    setFueroReglas(r.fuero || '');
+                    const claves = r.reglas.map((x) => x.clave);
+                    const actual = reglaActual.current;
+                    if (r.por_omision && (!actual || actual === 'personal' || !claves.includes(actual))) {
+                        if (actual !== r.por_omision) {
+                            onCambiarRef.current({ ...valorRef.current, reglaSurtimiento: r.por_omision });
+                        }
+                    }
+                })
+                .catch(() => { /* se queda el respaldo */ });
+        }, 350);
+        return () => { vivo = false; clearTimeout(t); };
+    }, [valor.tipoAsunto, valor.responsable]);
     /* EL TIPO SUBE. La pantalla de arriba lo necesita para rotular los dos
        documentos con el nombre que les corresponde: en un recurso no se sube
        «el acto reclamado» sino la SENTENCIA RECURRIDA, y no se suben
@@ -401,9 +443,15 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                         <input className={campo} value={valor.numero} placeholder="174/2026"
                                onChange={(e) => set('numero', e.target.value)} />
                     </Campo>
-                    <Campo etiqueta="Encabezado">
-                        <input className={campo} value={valor.encabezado}
-                               placeholder={`${tipo.nombre.toUpperCase()}: 174/2026`}
+                    {/* EL ENCABEZADO NO SE PIDE: se compone del tipo y el
+                        número —el servidor lo hace al generar si va vacío, y
+                        lo trae leído del auto de admisión—. Se enseña lo que
+                        va a salir y se puede corregir, pero no es un hueco
+                        que rellenar. */}
+                    <Campo etiqueta="Encabezado" ayuda="Se compone solo; tócalo sólo si hace falta">
+                        <input className={campo}
+                               value={valor.encabezado}
+                               placeholder={`${tipo.nombre.toUpperCase()} ${valor.numero.trim() || '174/2026'}`}
                                onChange={(e) => set('encabezado', e.target.value)} />
                     </Campo>
                 </div>
@@ -497,11 +545,17 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                 </div>
 
                 <Campo etiqueta="Cómo se notificó"
-                       ayuda="No se adivina: mueve el cómputo un día entero">
+                       ayuda={fueroReglas === 'tfja'
+                           ? 'Tribunal Federal de Justicia Administrativa: el Boletín Jurisdiccional surte al tercer día hábil (art. 65 LFPCA)'
+                           : fueroReglas === 'tja_estatal'
+                               ? 'Tribunal estatal: cómo surte efectos lo dice la ley de esa entidad; declara tú la fecha'
+                               : 'No se adivina: mueve el cómputo hasta tres días'}>
                     <select className={campo} value={valor.reglaSurtimiento}
                             onChange={(e) => set('reglaSurtimiento', e.target.value)}>
-                        {VIAS.map(({ v, t }) => (
-                            <option key={v} value={v} className="bg-charcoal-900">{t}</option>
+                        {(vias.some((x) => x.clave === valor.reglaSurtimiento) ? vias
+                            : [...vias, { clave: valor.reglaSurtimiento, etiqueta: valor.reglaSurtimiento, dias_habiles: 0, fundamento: '' }]
+                        ).map(({ clave, etiqueta }) => (
+                            <option key={clave} value={clave} className="bg-charcoal-900">{etiqueta}</option>
                         ))}
                     </select>
                 </Campo>
