@@ -14,6 +14,10 @@ export interface EncargoAdelanto {
     numero: string;                 // «512/2026»
     encabezado: string;             // «AMPARO DIRECTO ADMINISTRATIVO: 512/2026»
     quejoso: string;
+    /** Quien recurre, cuando NO es el quejoso (23-sep-2026, 711/2025: recurrió
+     *  la UIF contra la concesión). El amparo se concede o niega al quejoso;
+     *  el recurso se califica al recurrente. Vacío = son la misma persona. */
+    recurrente?: string;
     magistrado: string;
     secretario: string;
     notificacion: string;           // ISO, 2026-05-11
@@ -76,6 +80,7 @@ export async function generarAdelanto(
     fd.append('numero', encargo.numero);
     fd.append('encabezado', encargo.encabezado);
     fd.append('quejoso', encargo.quejoso);
+    if (encargo.recurrente?.trim()) fd.append('recurrente', encargo.recurrente.trim());
     fd.append('magistrado', encargo.magistrado);
     fd.append('secretario', encargo.secretario);
     fd.append('notificacion', encargo.notificacion);
@@ -1589,6 +1594,7 @@ export interface FichaLeida {
     tribunal?: string;
     ciudad?: string;
     quejoso?: string;
+    recurrente?: string;
     responsable?: string;
     responsable_ejecutora?: string;
     tercero_interesado?: string;

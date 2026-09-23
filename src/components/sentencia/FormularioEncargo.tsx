@@ -43,6 +43,9 @@ export interface Encargo {
     numero: string;
     encabezado: string;
     quejoso: string;
+    /** Quien recurre, cuando NO es el quejoso (23-sep-2026, 711/2025: recurrió
+     *  la UIF contra la concesión). Vacío = son la misma persona. */
+    recurrente?: string;
     magistrado: string;
     secretario: string;
     notificacion: string;
@@ -105,7 +108,7 @@ export interface Encargo {
 }
 
 export const ENCARGO_VACIO: Encargo = {
-    tipoAsunto: '', numero: '', encabezado: '', quejoso: '', magistrado: '',
+    tipoAsunto: '', numero: '', encabezado: '', quejoso: '', recurrente: '', magistrado: '',
     secretario: '', notificacion: '', presentacion: '',
     reglaSurtimiento: 'personal', surteEfectos: '', plazo: 0, diasInhabilesExtra: [],
     inhabilesResponsable: '', materia: '',

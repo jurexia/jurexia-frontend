@@ -412,6 +412,7 @@ export default function TallerDeSentencias() {
                 // cuando ese ya se sabe en automático del auto de admisión».
                 poner('encabezado', ficha.encabezado);
                 poner('quejoso', ficha.quejoso);
+                poner('recurrente', ficha.recurrente);
                 poner('responsable', ficha.responsable);
                 poner('tercero', ficha.tercero_interesado);
                 poner('tribunal', ficha.tribunal);
