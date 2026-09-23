@@ -33,6 +33,8 @@ import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
 import AnilloDeFases from '@/components/sentencia/AnilloDeFases';
 import Espinazo from '@/components/sentencia/Espinazo';
 import type { PasoDelEspinazo } from '@/components/sentencia/Espinazo';
+import ConfirmarVolver from '@/components/sentencia/ConfirmarVolver';
+import type { DestinoVuelta } from '@/components/sentencia/ConfirmarVolver';
 import Decision from '@/components/sentencia/Decision';
 import FormularioEncargo, { ENCARGO_VACIO, faltaEnEncargo } from '@/components/sentencia/FormularioEncargo';
 import type { TipoAsunto } from '@/components/sentencia/api';
@@ -540,6 +542,14 @@ export default function TallerDeSentencias() {
     const [confirmaBorrar, setConfirmaBorrar] = useState(false);
     const [ficheros, setFicheros] = useState<Partial<Record<RolDocumento | 'plantilla', File>>>({});
     const [material, setMaterial] = useState<MaterialDelCaso | null>(null);
+    /* ═══ CON QUÉ FICHA SE LEYÓ EL EXPEDIENTE ═══
+       Ahora se puede volver al paso 1 y corregir la ficha. Pero el servidor
+       guarda la sesión con los datos de la vuelta anterior: si el secretario
+       cambia la fecha de notificación —o la regla, o el plazo— y salta directo
+       al acervo sin regenerar el adelanto, el cómputo del documento sale con
+       el dato viejo y nadie lo dice. Se guarda la huella de los campos que
+       mueven el cómputo y se compara: si cambió, la pantalla lo avisa. */
+    const [fichaDelAdelanto, setFichaDelAdelanto] = useState<string>('');
     const [problemas, setProblemas] = useState<ProblemaJuridico[]>([]);
     const [proyecto, setProyecto] = useState<ResultadoProyecto | null>(null);
     /* Se preguntan al abrir un asunto y al terminar de generar: son los dos
@@ -548,6 +558,23 @@ export default function TallerDeSentencias() {
         if (!num || !correo) { setGuardados(null); return; }
         setGuardados(await documentosDelAsunto(num, correo));
     }, [correo]);
+
+    /* Los campos de la ficha que mueven el cómputo o el documento. Si uno
+       cambia después del adelanto, hay que releer el expediente. */
+    const huellaFicha = useMemo(() => JSON.stringify([
+        encargo.tipoAsunto, encargo.notificacion, encargo.presentacion,
+        encargo.reglaSurtimiento, encargo.surteEfectos, encargo.plazo,
+        encargo.responsable, encargo.inhabilesResponsable,
+        (encargo.diasInhabilesExtra ?? []).join(','),
+    ]), [encargo]);
+    const fichaCambiada = !!fichaDelAdelanto && fichaDelAdelanto !== huellaFicha;
+    /* AL REANUDAR, lo leído corresponde a la ficha que acaba de recuperarse:
+       se sella en cuanto está puesta, para no acusar un cambio que no hubo. */
+    useEffect(() => {
+        if (paso !== 'ficha' && !fichaDelAdelanto && encargo.notificacion) {
+            setFichaDelAdelanto(huellaFicha);
+        }
+    }, [paso, fichaDelAdelanto, huellaFicha, encargo.notificacion]);
 
     const olvidar = useCallback(async () => {
         if (!confirmaOlvidar) { setConfirmaOlvidar(true); return; }
@@ -619,6 +646,9 @@ export default function TallerDeSentencias() {
                descarga—, que es lo que David pidió; si no, en el adelanto, con
                el botón rojo pendiente. */
             void traerGuardados(numero);
+            // La huella se sella sola en cuanto la ficha recuperada esté puesta
+            // (el efecto de abajo): aquí el `encargo` todavía es el de antes.
+            setFichaDelAdelanto('');
             if (c.proyecto) {
                 setPrevio(c.proyecto);
                 setPaso('proyecto');
@@ -708,6 +738,7 @@ export default function TallerDeSentencias() {
             setEncargo((e) => ({ ...e, numero: elegido }));
             setSabemos(null);
             setPaso('adelanto');
+            setFichaDelAdelanto(huellaFicha);
             void traerContexto(elegido);
         } catch (e) {
             if (e instanceof NecesitaNotificacion) {
@@ -763,6 +794,7 @@ export default function TallerDeSentencias() {
                 setError('El cómputo da EXTEMPORÁNEA. Compruébalo antes de seguir: si es correcto, el asunto no se resuelve en el fondo.');
             }
             setPaso('adelanto');
+            setFichaDelAdelanto(huellaFicha);
             autoLanzado.current = false;
             void traerContexto(encargo.numero);
         } catch (e) {
@@ -997,6 +1029,7 @@ export default function TallerDeSentencias() {
                 correo);
             descargar(ade);
             setPaso('adelanto');
+            setFichaDelAdelanto(huellaFicha);
             autoLanzado.current = false;
             void traerContexto(encargo.numero);
 
@@ -1244,6 +1277,104 @@ export default function TallerDeSentencias() {
             void pedirAcervo();
         }
     }, [pedirPropuesta, pedirAcervo, material, problemas.length]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       VOLVER ATRÁS Y SALIR: EL CAMINO NO ES DE UNA SOLA DIRECCIÓN
+       ═══════════════════════════════════════════════════════════════════════
+       David (22-sep-2026): «no es posible salir de un proyecto y volver a la
+       ventana de historial (…) el usuario no puede corregir ni regresar a la
+       etapa de adelanto con el click. Deberíamos dar libertad de regresar a
+       los pasos y volver a generar».
+
+       El espinazo pintaba los cuatro pasos y dejaba pulsar los hechos, pero
+       `irAlPaso` sólo hacía scroll: el estado se quedaba donde estaba. Quien
+       se equivocaba en una fecha, o quería releer el expediente con un
+       documento más, no tenía más salida que recargar la página.
+
+       Cada vuelta recoge SU mesa y nada más: volver a decidir no tira el
+       acervo, que ya se consultó y se pagó; volver al adelanto no tira la
+       ficha ni los documentos. Lo que cuesta se lee antes, en el diálogo. */
+    const [vuelta, setVuelta] = useState<DestinoVuelta | null>(null);
+
+    /** Lo que se borra en CUALQUIER vuelta atrás: lo que cuelga de la
+     *  decisión. Ni el acervo ni la lectura del expediente. */
+    const limpiarDecision = useCallback(() => {
+        setProyecto(null);
+        setPrevio(null);
+        setAvance('');
+        setError('');
+        setPropuesta(null);
+        setTocados(new Set());
+        setRazonando(new Set());
+        setGrupos({});
+        setRazonGlobal('');
+        setSentidoGlobal('');
+        setGlobalDictado(false);
+        setModo('por_problema');
+        setMarcoEntero(false);
+        setTesisAbierta(null);
+        setAvisosReparto([]);
+        setProblemas((ps) => ps.map((x) => ({
+            ...x, sentido: undefined, criterio: '', razonDe: undefined,
+            de: undefined, porQue: '',
+        })));
+    }, []);
+
+    /** Volver al paso `n` de verdad. El 3 ya tenía su camino —«cambiar el
+     *  sentido y regenerar»— y se reutiliza entero. */
+    const volverAlPaso = useCallback((n: PasoDelEspinazo) => {
+        if (n === 3) { volverAEstudiar(); return; }
+        limpiarDecision();
+        setMaterial(null);
+        setProponiendo(false);
+        setCorriendo(false);
+        if (n === 2) {
+            // La lectura del expediente se conserva: desde aquí se vuelve a
+            // buscar en el acervo, o se regenera el adelanto si hace falta.
+            setPaso('adelanto');
+            irA('recorrido', 80);
+            return;
+        }
+        // Paso 1: la ficha, para corregirla. Los documentos y lo tecleado se
+        // quedan; el adelanto leído también, pero con el aviso de que un
+        // cambio no entra hasta volver a generarlo.
+        setPasoArchivos('formulario');
+        setPaso('ficha');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [volverAEstudiar, limpiarDecision]);
+
+    /** Salir del asunto y volver a la ventana de entrada: el historial con los
+     *  asuntos en curso y la elección de por dónde empezar. No consume nada;
+     *  el asunto vive en el servidor y se reanuda desde ahí. */
+    const salirAlHistorial = useCallback(() => {
+        limpiarDecision();
+        setMaterial(null);
+        setProblemas([]);
+        setDelAsunto(null);
+        setContexto('');
+        setClaseContexto(null);
+        setConstanciasAportadas(new Set());
+        setConceptosViolacion('');
+        setDecision(''); setMotivoDecision('');
+        setExtemporanea(false);
+        setGuardados(null);
+        setFichado([]);
+        setDocumentos([]);
+        setFicheros({});
+        setEncargo(ENCARGO_VACIO);
+        setFichaDelAdelanto('');
+        setPasoArchivos(null);
+        setVia(null);
+        setPaso('ficha');
+        setProponiendo(false);
+        setCorriendo(false);
+        // El historial se relee: puede traer el asunto que se acaba de dejar.
+        if (correo) {
+            asuntosEnCurso(correo).then(setEnCurso).catch(() => {});
+            estadoPiloto(correo).then(setPiloto).catch(() => {});
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [limpiarDecision, correo]);
 
 
     /* Qué es lo último que se aportó, para decirlo en pantalla: si fue la
@@ -1515,7 +1646,28 @@ export default function TallerDeSentencias() {
     const pasoEspinazo: PasoDelEspinazo =
         paso === 'ficha' ? 1 : paso === 'adelanto' ? 2 : paso === 'proyecto' ? 4 : 3;
     const hechosEspinazo = ([1, 2, 3, 4] as PasoDelEspinazo[]).filter((n) => n < pasoEspinazo);
+    /* ADELANTE TAMBIÉN SE ANDA. Al volver al paso 1 para corregir la ficha, los
+       pasos 2, 3 y 4 quedaban cerrados aunque su trabajo siguiera intacto: el
+       secretario tenía que repetir cuatro minutos de lectura para volver a
+       donde estaba. Se abre lo que TIENE contenido —el adelanto leído, el
+       acervo consultado, el proyecto escrito—, y hacia adelante no se pregunta
+       nada porque no se pierde nada. */
+    const abiertosEspinazo = ([
+        delAsunto ? 2 : 0,
+        (material && problemas.length > 0) ? 3 : 0,
+        (proyecto || previo) ? 4 : 0,
+    ].filter((n) => n && n > pasoEspinazo) as PasoDelEspinazo[]);
     const irAlPaso = (n: PasoDelEspinazo) => {
+        /* HACIA ATRÁS SE PREGUNTA; hacia el paso en curso sólo se baja. Volver
+           deshace trabajo hecho y, al generar otra vez, consume un proyecto
+           del contador: eso se lee antes de pulsar, no después. */
+        if (n !== 4 && n < pasoEspinazo) { setVuelta(n); return; }
+        if (n > pasoEspinazo) {
+            // Volver a donde ya se había llegado: gratis y sin preguntar.
+            if (n === 2 && delAsunto) setPaso('adelanto');
+            if (n === 3 && material && problemas.length > 0) setPaso('acervo');
+            if (n === 4 && (proyecto || previo)) setPaso('proyecto');
+        }
         if (n === 1) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
         irA(['', 'recorrido', 'criterio', 'proyecto'][n - 1], 80);
     };
@@ -1544,6 +1696,20 @@ export default function TallerDeSentencias() {
             <div aria-hidden className="taller-aurora"><i /><i /><i /></div>
             <BarraSuperior asunto={asunto} proyectos={piloto?.proyectos} />
 
+            {/* LA PUERTA DE VOLVER ATRÁS. Dice qué se conserva, qué se pierde y
+                qué se consume; sin aceptar, no se mueve nada. */}
+            <ConfirmarVolver destino={vuelta}
+                             restantes={piloto?.proyectos?.restantes}
+                             sinLimite={piloto?.proyectos?.sin_limite}
+                             corriendo={corriendo}
+                             onCancelar={() => setVuelta(null)}
+                             onAceptar={() => {
+                                 const d = vuelta;
+                                 setVuelta(null);
+                                 if (d === 'historial') salirAlHistorial();
+                                 else if (d) volverAlPaso(d);
+                             }} />
+
             <main className={cn(
                 'relative mx-auto grid max-w-[1500px] gap-4 px-4 py-5 sm:px-6',
                 /* SIN CAMINO ELEGIDO NO HAY DOS COLUMNAS QUE REPARTIR: la
@@ -1555,9 +1721,12 @@ export default function TallerDeSentencias() {
                 <div className="flex flex-col gap-4 lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)] lg:overflow-y-auto lg:pr-1">
                     {(paso !== 'ficha' || via || pendientes.length > 0) && (
                         <Espinazo activo={pasoEspinazo} hechos={hechosEspinazo}
+                                  abiertos={abiertosEspinazo}
                                   corriendo={corriendo} onIr={irAlPaso}
-                                  nota={<><span className="text-white/60">Un paso a la vez.</span> Lo hecho se
-                                        puede reabrir para leerlo; lo que no toca todavía está cerrado.</>} />
+                                  onSalir={() => setVuelta('historial')}
+                                  nota={<><span className="text-white/60">Un paso a la vez.</span> Puedes volver
+                                        a un paso hecho para corregir y generar de nuevo; se te dirá antes qué
+                                        se pierde y qué cuesta.</>} />
                     )}
                     {piloto && !piloto.proyectos?.sin_limite && (
                         <AvisoPiloto delPiloto={piloto.del_piloto}
@@ -2258,6 +2427,23 @@ export default function TallerDeSentencias() {
                             llegar la propuesta los desplegables se cierran solos
                             —para no empujar la decisión fuera de la vista— y él
                             los reabre cuando quiera comprobar algo. */}
+                        {/* ═══ LA FICHA CAMBIÓ DESPUÉS DE LEER EL EXPEDIENTE ═══
+                            Volver al paso 1 y corregir una fecha no basta: el
+                            servidor guarda la sesión con los datos de la vuelta
+                            anterior y el cómputo del documento saldría con el
+                            dato viejo. Se dice aquí, donde está el botón. */}
+                        {fichaCambiada && delAsunto && (
+                            <div className="mt-4 flex items-start gap-2 rounded-xl border border-accent-gold/40
+                                            bg-accent-gold/[0.07] px-3.5 py-3">
+                                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent-gold" />
+                                <p className="text-[13px] leading-relaxed text-accent-gold/90">
+                                    Cambiaste la ficha después de leer el expediente.
+                                    <span className="text-white/65"> El cómputo del plazo y los datos del
+                                    documento se quedaron con los de la vuelta anterior: vuelve a
+                                    generar el adelanto para que el cambio entre.</span>
+                                </p>
+                            </div>
+                        )}
                         {paso !== 'ficha' && delAsunto && (
                             <div className="mt-4 space-y-3 border-t border-white/[0.07] pt-4">
                                 <p className="text-[12px] uppercase tracking-wide text-accent-gold">

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Check, Lock } from 'lucide-react';
+import { Check, Lock, LogOut, RotateCcw } from 'lucide-react';
 import { cn } from './primitivas';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -14,9 +14,11 @@ import { cn } from './primitivas';
    activo, los hechos en verde y los que aún no tocan cerrados. Lo demás queda
    plegado detrás.
 
-   Un paso a la vez. Lo hecho se puede reabrir para LEER —el botón lleva a la
-   tarjeta—, no para deshacer: el estado de la página no cambia por pulsar
-   aquí. */
+   Un paso a la vez. Y LO HECHO SE PUEDE DESHACER, desde el 22-sep-2026: el
+   botón de un paso anterior vuelve a él de verdad —antes sólo hacía scroll y
+   el estado no se movía, así que no había manera de corregir la ficha ni de
+   volver al adelanto—. Lo que cuesta volver se lee antes de volver, en
+   `ConfirmarVolver`. */
 
 export type PasoDelEspinazo = 1 | 2 | 3 | 4;
 
@@ -30,7 +32,7 @@ const PASOS: { n: PasoDelEspinazo; titulo: string; sub: string }[] = [
 type Estado = 'activo' | 'hecho' | 'listo' | 'cerrado';
 
 export default function Espinazo({
-    activo, hechos, abiertos, corriendo, onIr, nota,
+    activo, hechos, abiertos, corriendo, onIr, nota, onSalir,
 }: {
     /** El paso en el que está el secretario. */
     activo: PasoDelEspinazo;
@@ -41,6 +43,10 @@ export default function Espinazo({
     corriendo?: boolean;
     onIr: (n: PasoDelEspinazo) => void;
     nota?: React.ReactNode;
+    /** Salir del asunto y volver a la ventana de entrada —el historial, con
+     *  los asuntos en curso y la elección de por dónde empezar—. Sin esto no
+     *  había forma de salir de un proyecto sin recargar la página. */
+    onSalir?: () => void;
 }) {
     const estadoDe = (n: PasoDelEspinazo): Estado =>
         n === activo ? 'activo'
@@ -85,7 +91,16 @@ export default function Espinazo({
                         <span className={cn('text-[10px] uppercase tracking-[0.08em]',
                             e === 'activo' ? 'text-accent-gold' : e === 'hecho' ? 'text-emerald-300' : 'text-white/45')}>
                             {e === 'activo' ? (corriendo ? 'en curso' : 'ahora')
-                                : e === 'hecho' ? 'hecho' : e === 'listo' ? 'listo' : '—'}
+                                : e === 'hecho'
+                                    /* AL PASAR EL RATÓN DICE QUÉ HACE. «Hecho» invita a leer;
+                                       lo que ocurre al pulsar es volver, y eso cuesta. */
+                                    ? (<>
+                                        <span className="group-hover:hidden">hecho</span>
+                                        <span className="hidden items-center gap-1 text-accent-gold group-hover:inline-flex">
+                                            <RotateCcw className="h-3 w-3" />volver
+                                        </span>
+                                      </>)
+                                    : e === 'listo' ? 'listo' : '—'}
                         </span>
                     </button>
                 );
@@ -94,6 +109,15 @@ export default function Espinazo({
                 <div className="mt-1 rounded-xl border border-dashed border-white/10 px-3.5 py-3 text-[12px] leading-relaxed text-white/45">
                     {nota}
                 </div>
+            )}
+            {onSalir && (
+                <button type="button" onClick={onSalir}
+                        className={cn('mt-1 inline-flex items-center justify-center gap-2 rounded-xl border',
+                            'border-white/[0.09] px-3.5 py-2.5 text-[13px] text-white/55',
+                            'transition hover:border-white/20 hover:bg-white/[0.04] hover:text-white/85')}>
+                    <LogOut className="h-3.5 w-3.5" />
+                    Salir a mis asuntos
+                </button>
             )}
         </nav>
     );
