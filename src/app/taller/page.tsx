@@ -910,6 +910,30 @@ export default function TallerDeSentencias() {
         setGlobalDictado(!!s);
     }, []);
 
+    /* EL CRITERIO GLOBAL, REDACTADO EN PANTALLA (23-sep-2026).
+       David, 711/2025: «al introducir manual la solución no me da la opción
+       para generar el criterio en pantalla y ver cómo va a salir. Este es un
+       fallo del pipeline». Por problema ya existía; en «todo el asunto» el
+       secretario escribía dos líneas y tenía que generar el proyecto entero
+       —cuatro minutos y una consulta— para ver qué hacía el motor con ellas.
+
+       Se pide sobre el problema PRINCIPAL, que es el que decide, con el
+       sentido global y lo que haya en el cuadro como directriz. Lo que vuelve
+       SUSTITUYE el cuadro: es lo que él pidió ver, y puede corregirlo. */
+    const [razonandoGlobal, setRazonandoGlobal] = useState(false);
+    const razonarGlobal = useCallback(async () => {
+        const pral = problemas.find((p) => (p.jerarquia ?? '') === 'principal') ?? problemas[0];
+        if (!encargo.numero || !sentidoGlobal || !pral) return;
+        setRazonandoGlobal(true);
+        try {
+            const r = await razonarSentido(encargo.numero, correo, pral.pregunta, sentidoGlobal, razonGlobal);
+            if (r) setRazonGlobal(r);
+            else setError('El motor no devolvió un criterio utilizable. Escríbelo tú o vuelve a intentarlo.');
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo redactar el criterio.');
+        } finally { setRazonandoGlobal(false); }
+    }, [encargo.numero, correo, problemas, sentidoGlobal, razonGlobal]);
+
     /* ═══ EL PRINCIPAL DICTA LA SUERTE DE LOS ACCESORIOS ═══
        David (22-sep-2026): «si cambio de sentido o el sentido de la resolución
        principal es uno, los accesorios caen por su propio peso cuando tienen
@@ -2948,6 +2972,8 @@ export default function TallerDeSentencias() {
                               onSentidoGlobal={elegirGlobal}
                               razonGlobal={razonGlobal}
                               onRazonGlobal={setRazonGlobal}
+                              onRazonarGlobal={razonarGlobal}
+                              razonandoGlobal={razonandoGlobal}
                               globalDictado={globalDictado}
                               abrirCorreccion={vueltaCriterio}
                               tocados={tocados}

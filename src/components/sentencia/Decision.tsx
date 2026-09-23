@@ -134,6 +134,7 @@ export default function Decision({
     propuesta, proponiendo, onProponer,
     modo = 'por_problema', onModo,
     sentidoGlobal = '', onSentidoGlobal, razonGlobal = '', onRazonGlobal, globalDictado = false,
+    onRazonarGlobal, razonandoGlobal = false,
     tocados, onRazonar, razonando,
     conceptosViolacion = '', onConceptosViolacion,
     onAportar, aportando, contextoAportado = 0,
@@ -155,6 +156,12 @@ export default function Decision({
     onSentidoGlobal?: (s: string) => void;
     razonGlobal?: string;
     onRazonGlobal?: (t: string) => void;
+    /** GENERAR EL CRITERIO EN PANTALLA, en modo global (23-sep-2026). David:
+     *  «al introducir manual la solución no me da la opción para generar el
+     *  criterio en pantalla y ver cómo va a salir». Por problema existía
+     *  (`onRazonar`); en «todo el asunto» sólo había el cuadro en blanco. */
+    onRazonarGlobal?: () => void;
+    razonandoGlobal?: boolean;
     globalDictado?: boolean;
     tocados?: Set<string>;
     onRazonar?: (id: string, pregunta: string, sentido: string) => void;
@@ -480,6 +487,34 @@ export default function Decision({
                                       className={cn('mt-1.5 w-full resize-y rounded-xl border bg-black/30 px-3.5 py-2.5 text-[14px] leading-relaxed',
                                           'text-white/90 placeholder:text-white/45 outline-none',
                                           globalSeAparta ? 'border-accent-gold/40 focus:border-accent-gold' : 'border-white/10 focus:border-accent-gold/45')} />
+                            {/* VER CÓMO VA A SALIR ANTES DE GENERAR. Con el sentido
+                                marcado y lo que haya en el cuadro como base, el
+                                motor redacta el criterio aquí mismo. Si el cuadro
+                                trae dos líneas del secretario, construye sobre
+                                ellas; si está vacío, propone. Lo que salga se puede
+                                corregir antes de que llegue al proyecto. */}
+                            {onRazonarGlobal && !!sentidoGlobal && (
+                                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                                    <button type="button"
+                                            onClick={onRazonarGlobal}
+                                            disabled={razonandoGlobal}
+                                            className={cn('inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[12px] font-semibold transition-colors',
+                                                razonandoGlobal
+                                                    ? 'cursor-wait border-white/10 text-white/40'
+                                                    : 'border-accent-gold/40 text-accent-gold hover:bg-accent-gold/10')}>
+                                        {razonandoGlobal
+                                            ? 'Redactando el criterio…'
+                                            : (razonGlobal || '').trim()
+                                                ? 'Desarrollar mi criterio con el acervo'
+                                                : 'Redactar un criterio para este sentido'}
+                                    </button>
+                                    <span className="text-[11.5px] text-white/40">
+                                        {(razonGlobal || '').trim()
+                                            ? 'Toma lo que escribiste como base y lo lleva hasta la calificación.'
+                                            : 'Propone una razón que después puedes corregir.'}
+                                    </span>
+                                </div>
+                            )}
                             <p className="mt-2 text-[12px] leading-relaxed text-white/45">
                                 Los {problemas.length} planteamientos no se califican uno a uno: el principal decide y los
                                 accesorios quedan como consecuencia suya. Si prefieres calificarlos por separado, elige arriba

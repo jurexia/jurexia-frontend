@@ -1273,12 +1273,18 @@ export async function descartarPendiente(numero: string, userEmail: string): Pro
  */
 export async function razonarSentido(
     numero: string, userEmail: string, problema: string, sentido: string,
+    /** LA BASE QUE ESCRIBIÓ EL SECRETARIO (23-sep-2026). David, 711/2025:
+     *  «si yo le di un criterio y una directriz, el motor debe ser capaz de
+     *  generar el razonamiento para validar por qué resolverá así». Viaja
+     *  como `directriz` y el motor construye sobre ella en vez de ignorarla. */
+    directriz = '',
 ): Promise<string> {
     const fd = new FormData();
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
     fd.append('problema', problema);
     fd.append('sentido', sentido);
+    if (directriz.trim()) fd.append('directriz', directriz.trim());
     const res = await fetch(`${BASE}/taller/razonar`, { method: 'POST', body: fd });
     if (!res.ok) return '';
     const j = await res.json().catch(() => ({}));
