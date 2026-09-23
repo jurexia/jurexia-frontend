@@ -421,6 +421,27 @@ export const DIAS_HASTA_SUSPENDER = Number(process.env.DIAS_HASTA_SUSPENDER || 1
  * Stripe seguía reintentando en los diez, y una factura que se revisó acabó
  * pagándose al octavo intento. Cortar antes es cortarle a quien iba a pagar.
  */
+/**
+ * Deja escrito desde cuándo hay una factura sin pagar —o lo borra al entrar el
+ * pago—. Es lo único que el frontend necesita para avisar en pantalla: la
+ * cuenta de días se hace contra `DIAS_HASTA_SUSPENDER`.
+ *
+ * No toca `suspendido_at`: marcar el adeudo y cortar el acceso son dos cosas
+ * distintas, separadas por catorce días.
+ */
+export async function marcarImpago(email: string, desde: Date | null) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const { error } = await getSupabaseAdmin()
+        .from('user_profiles')
+        .update({ impago_desde: desde ? desde.toISOString() : null, updated_at: new Date().toISOString() } as any)
+        .eq('email', normalizedEmail);
+    if (error) {
+        console.error(`❌ No pude marcar el impago de ${normalizedEmail}:`, error);
+        return false;
+    }
+    return true;
+}
+
 export async function suspenderPorImpago(email: string, motivo = 'impago') {
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -453,7 +474,10 @@ export async function levantarSuspension(email: string) {
 
     const { data, error } = await getSupabaseAdmin()
         .from('user_profiles')
-        .update({ suspendido_at: null, updated_at: new Date().toISOString() } as any)
+        // `impago_desde` se borra con la suspensión: si volvió, no debe nada, y
+        // dejarlo puesto mantendría el aviso de «se suspende en N días» en la
+        // pantalla de alguien que acaba de pagar.
+        .update({ suspendido_at: null, impago_desde: null, updated_at: new Date().toISOString() } as any)
         .eq('email', normalizedEmail)
         .not('suspendido_at', 'is', null)
         .select();

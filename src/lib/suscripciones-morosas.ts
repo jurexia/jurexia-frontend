@@ -23,7 +23,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe';
-import { suspenderPorImpago, levantarSuspension, DIAS_HASTA_SUSPENDER } from '@/lib/supabase-admin';
+import { suspenderPorImpago, levantarSuspension, marcarImpago, DIAS_HASTA_SUSPENDER } from '@/lib/supabase-admin';
 
 function admin() {
     return createClient(
@@ -47,13 +47,17 @@ function correoDe(sub: Stripe.Subscription): string {
     return String(sub.metadata?.userEmail || '').toLowerCase().trim();
 }
 
-/** Días desde la factura abierta más antigua de esa suscripción. -1 si no hay. */
-async function diasDeImpago(stripe: Stripe, subId: string): Promise<number> {
+/** La factura abierta más antigua de esa suscripción, o null si no debe nada.
+ *  Se devuelve la FECHA y no sólo los días porque de ella sale el aviso que ve
+ *  el usuario: «se suspende en N días» se cuenta desde aquí. */
+async function adeudoMasViejo(stripe: Stripe, subId: string): Promise<Date | null> {
     const facturas = await stripe.invoices.list({ subscription: subId, status: 'open', limit: 20 });
-    if (!facturas.data.length) return -1;
+    if (!facturas.data.length) return null;
     const masVieja = Math.min(...facturas.data.map(i => i.created ?? Math.floor(Date.now() / 1000)));
-    return Math.floor((Date.now() / 1000 - masVieja) / 86400);
+    return new Date(masVieja * 1000);
 }
+
+const diasDesde = (d: Date) => Math.floor((Date.now() - d.getTime()) / 86400000);
 
 export async function revisarMorosos({ ensayo = false } = {}): Promise<ResultadoBarrido> {
     const stripe = getStripe();
@@ -71,10 +75,15 @@ export async function revisarMorosos({ ensayo = false } = {}): Promise<Resultado
                 continue;
             }
             try {
-                const dias = await diasDeImpago(stripe, sub.id);
-                if (dias < 0) continue;                       // sin factura abierta: nada que cobrar
+                const desde = await adeudoMasViejo(stripe, sub.id);
+                if (!desde) { if (!ensayo) await marcarImpago(email, null); continue; }   // sin factura abierta: nada que cobrar
+                const dias = diasDesde(desde);
                 if (dias < DIAS_HASTA_SUSPENDER) {
                     r.en_gracia.push({ email, dias });
+                    // QUE SE ENTERE ANTES DE QUEDARSE FUERA. Hasta hoy esta
+                    // lista sólo se escribía en el reporte del barrido: el
+                    // usuario no sabía que debía hasta que dejaba de entrar.
+                    if (!ensayo) await marcarImpago(email, desde);
                     continue;
                 }
                 if (ensayo) { r.suspendidos.push(`${email} (ensayo, ${dias} d)`); continue; }

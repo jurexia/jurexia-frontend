@@ -165,6 +165,12 @@ export interface UserProfile {
      *  tenga valor, el muro de `CuentaSuspendida` cubre toda la aplicación y
      *  `consume_query` rechaza cualquier consulta. */
     suspendido_at: string | null;
+    /** Fecha de la factura abierta más antigua. NULL = sin adeudo. Con valor
+     *  y SIN `suspendido_at`, el usuario está en el periodo de gracia: la
+     *  plataforma le avisa cuántos días le quedan y le abre su facturación.
+     *  Antes esto sólo existía en el registro del barrido diario, así que el
+     *  primero en enterarse de que debía era el que ya no podía entrar. */
+    impago_desde: string | null;
     created_at: string;
     updated_at: string;
 }

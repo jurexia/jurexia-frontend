@@ -8,6 +8,7 @@ import {
     resetUserQueries,
     suspenderPorImpago,
     levantarSuspension,
+    marcarImpago,
     bloquearPorDisputa,
     DIAS_HASTA_SUSPENDER,
     PlanType,
@@ -699,6 +700,10 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     if (email) {
         try {
             await levantarSuspension(email);
+            // Y se borra la marca del adeudo aunque NO estuviera suspendido:
+            // quien pagó dentro del periodo de gracia no puede seguir viendo
+            // en pantalla que su cuenta se suspende en N días.
+            await marcarImpago(email, null);
         } catch (e) {
             console.error(`⚠️ Entró el pago de ${email} pero no pude levantar su suspensión:`, e);
         }
@@ -771,6 +776,16 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     // Ahora manda el calendario: catorce días desde que se emitió la factura
     // que no entró. Es la misma vara que usa el barrido diario.
     const diasDeImpago = Math.floor((Date.now() / 1000 - (invoice.created ?? 0)) / 86400);
+
+    // EL AVISO EMPIEZA HOY, no mañana. El barrido diario también escribe esta
+    // marca, pero corre a las 08:00: sin esto, quien falla el cobro por la
+    // tarde no vería el aviso hasta el día siguiente. De aquí sale la banda
+    // «su cuenta se suspende en N días» con el botón para cambiar la tarjeta.
+    try {
+        await marcarImpago(email, new Date((invoice.created ?? Math.floor(Date.now() / 1000)) * 1000));
+    } catch (e) {
+        console.error(`⚠️ No pude marcar el impago de ${email}:`, e);
+    }
 
     if (diasDeImpago >= DIAS_HASTA_SUSPENDER) {
         console.warn(`🚨 ${email} lleva ${diasDeImpago} días sin pagar (${attemptCount} intentos) — se suspende`);

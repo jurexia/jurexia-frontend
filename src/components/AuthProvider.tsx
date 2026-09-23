@@ -4,6 +4,7 @@ import { createContext, useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { supabase, getUserProfile, getBloqueo, UserProfile, BloqueoCuenta } from '@/lib/supabase';
 import { CuentaSuspendida } from '@/components/CuentaSuspendida';
+import { AvisoImpago } from '@/components/AvisoImpago';
 import { CuentaBloqueada } from '@/components/CuentaBloqueada';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -209,6 +210,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 />
             )}
             {!bloqueado && suspendido && <CuentaSuspendida email={authState.profile?.email} />}
+            {/* El que todavía NO cae: se le dicen los días que le quedan y se le
+                abre su facturación. Va aquí, junto al muro, porque es el mismo
+                asunto en dos momentos y porque así aparece en toda la
+                aplicación, no sólo en la pantalla donde alguien se acordó. */}
+            {!bloqueado && !suspendido && (
+                <AvisoImpago impagoDesde={authState.profile?.impago_desde} />
+            )}
         </AuthContext.Provider>
     );
 }
