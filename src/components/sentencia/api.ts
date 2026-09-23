@@ -328,13 +328,18 @@ export async function aportarContexto(
     userEmail: string, documento: File | null, texto: string,
     /** Contra qué expediente. Sin esto el servidor no puede guardarlo,
      *  y entonces la BÚSQUEDA no se entera de lo que el secretario sabe. */
-    numero = ''
+    numero = '',
+    /** A qué constancia responde, cuando el motor la pidió por su nombre: el
+     *  aporte viaja rotulado «[CONSTANCIA · …]» y así el estudio sabe cuál
+     *  llegó y cuál sigue faltando. */
+    etiqueta = ''
 ): Promise<{ texto: string; caracteres: number; clase: ClaseDeContexto; rotulo: string }> {
     const fd = new FormData();
     fd.append('user_email', userEmail);
     if (texto.trim()) fd.append('texto', texto.trim());
     if (documento) fd.append('documento', documento);
     if (numero) fd.append('numero', numero);
+    if (etiqueta) fd.append('etiqueta', etiqueta);
     const res = await fetch(`${BASE}/taller/contexto`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
@@ -475,6 +480,11 @@ export interface SolucionGlobal {
         efecto: string;
         apoyos: string[];
     };
+    /** LAS CONSTANCIAS DEL JUICIO DE ORIGEN QUE HARÍA FALTA VER para decidir
+     *  con fidelidad: el motor las declara con su porqué; la pantalla las
+     *  pide una por una (texto o documento); el estudio recibe las que no
+     *  llegaron con la orden de no suponer su contenido. */
+    constancias?: ConstanciaPedida[];
     /** LA LISTA DE COMPROBACIÓN. Todos los temas con su suerte en las DOS
      *  vías. El servidor la completa contra los problemas reales: si el modelo
      *  omitió uno, aparece con la suerte SIN DETERMINAR. */
@@ -507,6 +517,13 @@ export interface ContrasteDelPlanteamiento {
     sobrevive: boolean;
     veredicto_previo: string;
     por_que: string;
+}
+
+export interface ConstanciaPedida {
+    que: string;
+    para_que: string;
+    indispensable: boolean;
+    problema: number;
 }
 
 export interface RespuestaPropuesta {

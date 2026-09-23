@@ -1284,23 +1284,33 @@ export default function TallerDeSentencias() {
         } finally { setEditandoProblema(null); }
     }, [problemas, encargo.numero, correo]);
 
-    const aportarYProponer = useCallback(async (doc: File | null, texto: string) => {
+    /* Las constancias que ya se aportaron, por su nombre: la pantalla las
+       tacha y el estudio las recibe rotuladas. */
+    const [constanciasAportadas, setConstanciasAportadas] = useState<Set<string>>(new Set());
+
+    const aportarYProponer = useCallback(async (doc: File | null, texto: string, etiqueta?: string) => {
         setError(''); setAportando(true);
         try {
             // CONTRA EL EXPEDIENTE. Sin `numero` el servidor no lo guardaba y
             // la búsqueda del acervo no se enteraba de lo aportado.
-            const c = await aportarContexto(correo, doc, texto, encargo.numero);
-            setContexto(c.texto);
+            const c = await aportarContexto(correo, doc, texto, encargo.numero, etiqueta || '');
+            // SE ACUMULA, NO SE SUSTITUYE. Cada aporte reemplazaba al
+            // anterior: la segunda constancia borraba la primera. Lo
+            // aportado viaja entero con cada petición, así que aquí se
+            // suma y se manda todo.
+            const junto = contexto.trim() ? `${contexto.trim()}\n\n${c.texto}` : c.texto;
+            setContexto(junto);
+            if (etiqueta) setConstanciasAportadas((prev) => new Set(prev).add(etiqueta));
             setClaseContexto({ clase: c.clase, rotulo: c.rotulo });
             // POR LA MISMA PUERTA QUE LA PROPUESTA. Este camino tenía su propio
             // volcado: dejaba el modo global con el eco del motor ANTERIOR y
             // conservaba la razón vieja bajo el sentido nuevo. Una sola
             // manera de recibir una propuesta, y es `pedirPropuesta`.
-            await pedirPropuestaRef.current?.({ contextoTexto: c.texto });
+            await pedirPropuestaRef.current?.({ contextoTexto: junto });
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo leer el documento.');
         } finally { setAportando(false); }
-    }, [correo, encargo.numero]);
+    }, [correo, encargo.numero, contexto]);
 
     const pedirProyecto = useCallback(async () => {
         // EL AVANCE ARRANCA LIMPIO. Si se genera dos veces —cambiando el
@@ -2760,6 +2770,7 @@ export default function TallerDeSentencias() {
                               onConceptosViolacion={setConceptosViolacion}
                               contextoAportado={contexto.length}
                               claseContexto={claseContexto}
+                              constanciasAportadas={constanciasAportadas}
                               onCorregirProblema={corregirYProponer}
                               corrigiendoProblema={editandoProblema}
                               avisosReparto={avisosReparto}

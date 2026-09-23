@@ -140,7 +140,7 @@ export default function Decision({
     esRecurso = false, abrirCorreccion = 0,
     extemporanea = false, oportunidadDecidida = true,
     claseContexto = null, onCorregirProblema, corrigiendoProblema = null,
-    avisosReparto = [],
+    avisosReparto = [], constanciasAportadas,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -161,7 +161,9 @@ export default function Decision({
     razonando?: Set<string>;
     conceptosViolacion?: string;
     onConceptosViolacion?: (t: string) => void;
-    onAportar?: (documento: File | null, texto: string) => void;
+    onAportar?: (documento: File | null, texto: string, etiqueta?: string) => void;
+    /** Las constancias pedidas que ya se aportaron, por su nombre. */
+    constanciasAportadas?: Set<string>;
     aportando?: boolean;
     contextoAportado?: number;
     esRecurso?: boolean;
@@ -196,6 +198,10 @@ export default function Decision({
     const [ficheroAporte, setFicheroAporte] = useState<File | null>(null);
     /* El problema que se está corrigiendo y su texto en curso. */
     const [editando, setEditando] = useState<{ id: string; texto: string } | null>(null);
+    /* Lo que se está tecleando/adjuntando para cada constancia pedida. */
+    const [aporteConstancia, setAporteConstancia] = useState<Record<string, { texto: string; fichero: File | null }>>({});
+    const constancias = propuesta?.global?.constancias ?? [];
+    const faltanIndispensables = constancias.filter((c) => c.indispensable && !constanciasAportadas?.has(c.que));
     useEffect(() => { if (abrirCorreccion > 0) setCorrigiendo(true); }, [abrirCorreccion]);
 
     const global = propuesta?.global ?? null;
@@ -615,6 +621,61 @@ export default function Decision({
                                       className="w-full resize-y rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-[14px] leading-relaxed text-white/90 placeholder:text-white/45 outline-none focus:border-accent-gold/45" />
                         </Pliegue>
                     )}
+                    {/* ═══ LAS CONSTANCIAS QUE EL MOTOR NECESITA VER ═══
+                        David: «es vital que el modelo detecte cuándo resulte
+                        estrictamente indispensable, para dar solución,
+                        información sobre alguna constancia —ya sea que la
+                        detalle en un cuadro de texto o que adjunte el
+                        documento faltante—». Las declara la propuesta; aquí
+                        se piden una por una y cada aporte viaja rotulado. */}
+                    {onAportar && constancias.length > 0 && (
+                        <Pliegue titulo={`Constancias del juicio de origen que el motor necesita ver · ${constancias.length}${faltanIndispensables.length ? ` · faltan ${faltanIndispensables.length} indispensable${faltanIndispensables.length === 1 ? '' : 's'}` : ''}`}
+                                 abierto={faltanIndispensables.length > 0}>
+                            <p className="mb-3 text-[12px] leading-relaxed text-white/45">
+                                Un tribunal terminal no resuelve sólo con la sentencia y el escrito. El motor dice qué constancia
+                                haría falta ver y para qué; pégala como texto o adjunta el documento. Lo que no se aporte, el
+                                estudio lo tratará como no acreditado —no lo supondrá—.
+                            </p>
+                            <div className="space-y-3">
+                                {constancias.map((c) => {
+                                    const hecha = !!constanciasAportadas?.has(c.que);
+                                    const a = aporteConstancia[c.que] ?? { texto: '', fichero: null };
+                                    return (
+                                        <div key={c.que} className={cn('rounded-xl border p-3', hecha ? 'border-emerald-400/30 bg-emerald-400/[0.05]' : c.indispensable ? 'border-accent-gold/35 bg-accent-gold/[0.04]' : 'border-white/[0.08]')}>
+                                            <p className="text-[13px] text-white/90">
+                                                {hecha ? <Check className="mr-1.5 inline h-3.5 w-3.5 text-emerald-300" /> : null}
+                                                {c.que}
+                                                {c.indispensable && !hecha && <span className="ml-2 rounded-lg border border-accent-gold/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-accent-gold">indispensable</span>}
+                                                {c.problema ? <span className="ml-2 text-[11px] text-white/40">· problema {c.problema}</span> : null}
+                                            </p>
+                                            {c.para_que && <p className="mt-0.5 text-[12px] text-white/50">{c.para_que}</p>}
+                                            {!hecha && (
+                                                <div className="mt-2">
+                                                    <textarea rows={2} value={a.texto}
+                                                              onChange={(e) => setAporteConstancia((prev) => ({ ...prev, [c.que]: { ...a, texto: e.target.value } }))}
+                                                              placeholder="Pega aquí lo que dice la constancia…"
+                                                              className="w-full resize-y rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[13px] leading-relaxed text-white/90 placeholder:text-white/40 outline-none focus:border-accent-gold/45" />
+                                                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-white/20 px-2.5 py-1.5 text-[12px] text-white/60 transition hover:border-accent-gold/35 hover:text-white">
+                                                            <input type="file" accept=".pdf,.docx" className="hidden"
+                                                                   onChange={(e) => setAporteConstancia((prev) => ({ ...prev, [c.que]: { ...a, fichero: e.target.files?.[0] ?? null } }))} />
+                                                            {a.fichero ? a.fichero.name : 'o adjuntar el documento'}
+                                                        </label>
+                                                        <button type="button" disabled={aportando || (!a.texto.trim() && !a.fichero)}
+                                                                onClick={() => { onAportar(a.fichero, a.texto, c.que); }}
+                                                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-3 text-[12px] font-medium text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40">
+                                                            {aportando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                                                            Aportar y volver a proponer
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </Pliegue>
+                    )}
                     {onAportar && (
                         <Pliegue titulo={`Lo que sabes y los papeles no dicen${contextoAportado ? ` · ${contextoAportado.toLocaleString('es-MX')} caracteres aportados` : ''}`}>
                             <p className="mb-2 text-[12px] leading-relaxed text-white/45">
@@ -657,6 +718,14 @@ export default function Decision({
             {(problemas.length > 0 || sentidoGlobal) && (
                 <div id="asi-sale" className={cn('rounded-2xl border p-4 sm:p-5',
                     alguienSeAparta ? 'border-accent-gold/45 bg-accent-gold/[0.06]' : 'border-white/10 bg-white/[0.03]')}>
+                    {faltanIndispensables.length > 0 && (
+                        <p className="mb-3 rounded-xl border border-accent-gold/35 bg-accent-gold/[0.06] px-3 py-2 text-[12px] leading-relaxed text-accent-gold/90">
+                            <AlertTriangle className="mr-1.5 inline h-3.5 w-3.5" />
+                            Faltan {faltanIndispensables.length} constancia{faltanIndispensables.length === 1 ? '' : 's'} que el motor considera
+                            indispensable{faltanIndispensables.length === 1 ? '' : 's'}: el proyecto puede generarse, pero lo que dependa de
+                            ellas irá como no acreditado.
+                        </p>
+                    )}
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">Así va a salir el proyecto</p>
                         <p className="text-[12px] text-white/45">
