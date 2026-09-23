@@ -707,6 +707,21 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         } catch (e) {
             console.error(`⚠️ Entró el pago de ${email} pero no pude levantar su suspensión:`, e);
         }
+
+        /* EL RECIBO, CON EL NOMBRE QUE VERÁ EN SU BANCO (23-sep-2026).
+           Un cliente dejó de pagar porque en su estado de cuenta el cargo salió
+           como «STR*AGREGADOR …» y no encontró prueba de que fuera nuestro.
+           Stripe mandó bien el descriptor —se comprobaron sus cinco cargos—,
+           pero el banco imprimió otra cosa, y eso no lo decide el comercio. Lo
+           que sí podemos es avisar del cobro y decir cómo se verá. Va después
+           de todo lo que toca la cuenta: un correo que falle no puede
+           estropear el registro de un pago que entró. */
+        try {
+            const { enviarReciboDeCobro } = await import('@/lib/correo/recibo');
+            await enviarReciboDeCobro(invoice, invoice.customer_name ?? null);
+        } catch (e) {
+            console.error(`⚠️ No salió el recibo de ${email}:`, e);
+        }
     }
 }
 
