@@ -65,22 +65,39 @@ export async function redirectToCheckout(priceId: string, userEmail?: string, pr
     }
 }
 
-// Open Stripe Customer Portal
-export async function openCustomerPortal() {
+/**
+ * La dirección del portal de facturación del usuario CON SESIÓN.
+ *
+ * Va aquí y no repetida en cada pantalla porque la ruta exige el token de
+ * Supabase: las tres llamadas que había —`/perfil` con `customerId`, la cuenta
+ * suspendida y ésta, las dos sin cuerpo— mandaban lo que la ruta no leía y
+ * recibían 401. Un solo sitio que sepa pedirlo bien.
+ *
+ * Devuelve null cuando no hay portal que abrir (sin sesión, o nunca pagó): el
+ * que llama decide si manda a iniciar sesión o a la página de alta.
+ */
+export async function urlPortalFacturacion(): Promise<string | null> {
     try {
-        const response = await fetch('/api/stripe/portal', {
+        const { getSession } = await import('@/lib/supabase');
+        const sesion = await getSession();
+        const token = sesion?.access_token;
+        if (!token) return null;
+        const r = await fetch('/api/stripe/portal', {
             method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
         });
-
-        const { url, error } = await response.json();
-
-        if (error) {
-            throw new Error(error);
-        }
-
-        window.location.href = url;
+        const d = await r.json().catch(() => ({}));
+        return d?.url || null;
     } catch (err) {
-        console.error('Error opening customer portal:', err);
-        throw err;
+        console.error('portal de facturación:', err);
+        return null;
     }
+}
+
+/** Abre el portal en esta misma pestaña. Devuelve false si no había portal. */
+export async function openCustomerPortal(): Promise<boolean> {
+    const url = await urlPortalFacturacion();
+    if (!url) return false;
+    window.location.href = url;
+    return true;
 }

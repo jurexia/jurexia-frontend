@@ -462,15 +462,15 @@ export default function PerfilPage() {
         setLoadingPortal(true);
 
         try {
-            const response = await fetch('/api/stripe/portal', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ customerId: profile.stripe_customer_id }),
-            });
-
-            const { url } = await response.json();
+            // El cliente NO viaja en el cuerpo: la ruta lo saca del token de la
+            // sesión. Mandar `customerId` era además pedirle al servidor que
+            // confiara en el navegador sobre de quién es la facturación.
+            const { urlPortalFacturacion } = await import('@/lib/stripe-client');
+            const url = await urlPortalFacturacion();
             if (url) {
                 window.open(url, '_blank');
+            } else {
+                alert('No pudimos abrir su facturación. Vuelva a iniciar sesión e inténtelo de nuevo.');
             }
         } catch (error) {
             console.error('Error opening portal:', error);

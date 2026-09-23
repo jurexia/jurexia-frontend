@@ -30,10 +30,13 @@ export function CuentaSuspendida({ email }: { email?: string | null }) {
     const irAPagar = async () => {
         setAbriendo(true);
         try {
-            const res = await fetch('/api/stripe/portal', { method: 'POST' });
-            const datos = await res.json();
-            if (datos?.url) {
-                window.location.href = datos.url;
+            // Con el token de la sesión: la ruta lo exige y sin él respondía 401,
+            // así que este atajo nunca se tomaba y todo el mundo acababa en la
+            // página de alta, a reconstruir una suscripción que ya existía.
+            const { urlPortalFacturacion } = await import('@/lib/stripe-client');
+            const url = await urlPortalFacturacion();
+            if (url) {
+                window.location.href = url;
                 return;
             }
         } catch {
