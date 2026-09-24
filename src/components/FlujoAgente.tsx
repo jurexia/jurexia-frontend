@@ -142,6 +142,9 @@ function fichasDe(nombre: string, detalle: string | undefined, fuentes: number |
         if (detalle.includes(':')) {
             const NOMBRES: Record<string, string> = {
                 vigencia: 'Vigencia', criterios: 'Criterios', local: 'Ámbito local',
+                // La búsqueda que corre sola donde el acervo de la entidad
+                // está flojo (24-sep-2026): trae la ley estatal que falta.
+                acervo_local: 'Ley estatal en internet',
             };
             return detalle.split(';').filter(Boolean).slice(0, 3).map((par) => {
                 const [agente, doms] = par.split(':');
