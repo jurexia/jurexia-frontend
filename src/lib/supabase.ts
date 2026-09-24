@@ -171,6 +171,12 @@ export interface UserProfile {
      *  Antes esto sólo existía en el registro del barrido diario, así que el
      *  primero en enterarse de que debía era el que ya no podía entrar. */
     impago_desde: string | null;
+    /** Ruta interna a la que se lleva al usuario al entrar, una vez por sesión
+     *  del navegador. NULL = el chat de siempre. La pone el administrador:
+     *  «/tcc-beta» para quien se invita al taller de sentencias. */
+    pagina_inicio?: string | null;
+    /** Aviso de bienvenida que se muestra al llegar, hasta que lo cierra. */
+    aviso_inicio?: string | null;
     created_at: string;
     updated_at: string;
 }

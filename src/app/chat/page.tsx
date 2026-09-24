@@ -125,6 +125,22 @@ export default function ChatPage() {
     const { loading: authLoading, isAuthenticated, user, profile } = useAuthOBasico(hayTestigo !== false);
     const router = useRouter();
 
+    /* EL INICIO DE CADA QUIEN (24-sep-2026). David, sobre una usuaria que
+       vuelve: «habilítala en el taller de sentencias y cuando entre a Iurexia
+       redirígela allí». El destino lo pone el administrador en el perfil
+       (`pagina_inicio`). Se aplica UNA vez por sesión del navegador: si
+       después pulsa «Chat» en el taller, se queda en el chat en vez de
+       rebotar. Sólo rutas internas —«/algo», nunca «//dominio»—. */
+    useEffect(() => {
+        const destino = profile?.pagina_inicio;
+        if (!destino || !destino.startsWith('/') || destino.startsWith('//')) return;
+        try {
+            if (sessionStorage.getItem('iurexia_inicio_aplicado') === destino) return;
+            sessionStorage.setItem('iurexia_inicio_aplicado', destino);
+        } catch { /* sin almacenamiento de sesión se aplica igual */ }
+        router.replace(destino);
+    }, [profile?.pagina_inicio, router]);
+
     // La entrega de la insignia del plan. Vive aquí y no en la pantalla de
     // pago: ahí el webhook de Stripe aún no ha escrito el plan nuevo y se
     // entregaría la insignia vieja a quien acaba de pagar.

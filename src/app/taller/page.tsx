@@ -25,6 +25,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, Download, Search, FileText, AlertCircle, Zap, Upload, Check } from 'lucide-react';
 import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
+import AvisoDeInicio from '@/components/sentencia/AvisoDeInicio';
 import EntradaTaller from '@/components/sentencia/EntradaTaller';
 import type { ViaEntrada, PasoArchivos } from '@/components/sentencia/EntradaTaller';
 import type { AsuntoEnCurso, FichaProyecto, DocumentosDelAsunto }
@@ -256,7 +257,7 @@ function Pliegue({ titulo, nota, abierto, children }: {
 
 
 export default function TallerDeSentencias() {
-    const { user, loading: authLoading } = useRequireAuth();
+    const { user, profile, loading: authLoading } = useRequireAuth();
     const correo = user?.email ?? '';
 
     const [paso, setPaso] = useState<Paso>('ficha');
@@ -1720,6 +1721,7 @@ export default function TallerDeSentencias() {
 
             <div aria-hidden className="taller-aurora"><i /><i /><i /></div>
             <BarraSuperior asunto={asunto} proyectos={piloto?.proyectos} />
+            <AvisoDeInicio texto={profile?.aviso_inicio} />
 
             {/* LA PUERTA DE VOLVER ATRÁS. Dice qué se conserva, qué se pierde y
                 qué se consume; sin aceptar, no se mueve nada. */}
