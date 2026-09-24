@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Check, Loader2, PenLine, Sparkles, ChevronRight, AlertTriangle } from 'lucide-react';
 import { cn, Pastilla } from './primitivas';
 import type { ProblemaJuridico } from './tipos';
-import type { RespuestaPropuesta } from './api';
+import type { RespuestaPropuesta, ViaProtectora } from './api';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LA PANTALLA DE DECISIÓN: UNA FRASE, DOS BOTONES, Y LA TARJETA FINAL
@@ -59,6 +59,46 @@ function grupoDe(sentido: string | undefined): Grupo | '' {
 function legible(sentido: string | undefined): string {
     const f = FINAS.find((x) => x.id === (sentido || '').toLowerCase());
     return f ? f.etiqueta : (sentido || '').replace(/_/g, ' ');
+}
+
+/* ═══ LA VÍA PROTECTORA (24-sep-2026) ═══
+   David, sobre el 711/2025: «sólo operan ese tipo de interpretaciones en
+   favor de la persona y en supuestos de alternativas para mayor acceso… si
+   cambio de alternativa, señalar cuándo sería posible una interpretación
+   conforme o pro persona». La propuesta dice qué calificación favorece a
+   quien reclama el derecho y si en ella cabe esa lectura; aquí se enseña al
+   elegir. Coincide por GRUPO, no por palabra: si la vía protectora es «no
+   prospera», lo es también «inoperante». */
+function AvisoViaProtectora({ via, sentido }: { via?: ViaProtectora | null; sentido: string }) {
+    if (!via?.sentido || !sentido || grupoDe(via.sentido) === '' || grupoDe(sentido) === 'sm') return null;
+    if (grupoDe(sentido) === grupoDe(via.sentido)) {
+        return via.posible ? (
+            <div className="mt-2.5 rounded-xl border border-accent-gold/30 bg-accent-gold/[0.06] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-white/80">
+                <p className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-accent-gold/90">
+                    Cabe interpretación conforme o pro persona
+                </p>
+                <p><span className="text-white/90">{via.norma}</span>{via.lectura ? ` — ${via.lectura}` : ''}</p>
+                {via.limite && <p className="mt-1 text-white/55">Límite: {via.limite}</p>}
+                <p className="mt-1 text-white/50">
+                    Esta calificación favorece a quien reclama el derecho: el criterio que redacte el motor partirá de esa lectura.
+                </p>
+            </div>
+        ) : (
+            <p className="mt-2.5 text-[12px] leading-relaxed text-white/50">
+                Esta calificación favorece a quien reclama el derecho, pero ningún precepto admite aquí una lectura más favorable
+                {via.lectura ? `: ${via.lectura}` : '.'}
+            </p>
+        );
+    }
+    return (
+        <p className="mt-2.5 text-[12px] leading-relaxed text-white/50">
+            Con esta calificación no se invocan el pro persona ni la interpretación conforme: operan sólo a favor de quien reclama el derecho.
+            {via.posible && (
+                <> Si resolvieras «{legible(via.sentido)}», cabría: <span className="text-white/70">{via.norma}</span>
+                    {via.lectura ? ` — ${via.lectura}` : ''}</>
+            )}
+        </p>
+    );
 }
 
 /* La frase grande: lo que el resolutivo va a hacer, no la etiqueta. */
@@ -427,6 +467,13 @@ export default function Decision({
                                 La otra salida · {legible(global.alternativa.sentido)}
                             </p>
                             <p className="text-[13px] leading-relaxed text-white/60">{global.alternativa.razon}</p>
+                            {global.via_protectora?.posible
+                                && grupoDe(global.via_protectora.sentido) === grupoDe(global.alternativa.sentido) && (
+                                <p className="mt-1.5 text-[12px] leading-relaxed text-accent-gold/85">
+                                    En esta salida cabe interpretación conforme o pro persona: {global.via_protectora.norma}
+                                    {global.via_protectora.lectura ? ` — ${global.via_protectora.lectura}` : ''}
+                                </p>
+                            )}
                             <button type="button"
                                     onClick={() => {
                                         onModo?.('global');
@@ -478,6 +525,7 @@ export default function Decision({
                             </p>
                             <Calificativas elegido={sentidoGlobal}
                                            onElegir={(s) => { onSentidoGlobal?.(s); if (grupoDe(s) !== grupoDe(global?.sentido)) onRazonGlobal?.(''); }} />
+                            <AvisoViaProtectora via={global?.via_protectora} sentido={sentidoGlobal} />
                             <label htmlFor="razon-global" className="mt-3 block text-[12px] font-medium text-white/60">
                                 Por qué {globalSeAparta && <span className="text-accent-gold/90">· te apartas de la propuesta: escríbelo en dos líneas</span>}
                             </label>

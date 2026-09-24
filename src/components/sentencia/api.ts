@@ -485,6 +485,11 @@ export interface SolucionGlobal {
         efecto: string;
         apoyos: string[];
     };
+    /** LA VÍA PROTECTORA (24-sep-2026): cuál calificación favorece a quien
+     *  reclama el derecho y si en ella cabe una interpretación conforme o pro
+     *  persona. En la vía que valida una restricción esos principios no se
+     *  invocan; la pantalla lo dice al cambiar de alternativa. */
+    via_protectora?: ViaProtectora;
     /** LAS CONSTANCIAS DEL JUICIO DE ORIGEN QUE HARÍA FALTA VER para decidir
      *  con fidelidad: el motor las declara con su porqué; la pantalla las
      *  pide una por una (texto o documento); el estudio recibe las que no
@@ -522,6 +527,17 @@ export interface ContrasteDelPlanteamiento {
     sobrevive: boolean;
     veredicto_previo: string;
     por_que: string;
+}
+
+/** La calificación que favorece a quien reclama el derecho y si en ella cabe
+ *  una lectura más favorable de algún precepto. */
+export interface ViaProtectora {
+    sentido: string;
+    posible: boolean;
+    norma: string;
+    lectura: string;
+    limite: string;
+    apoyos: string[];
 }
 
 export interface ConstanciaPedida {
