@@ -1,7 +1,9 @@
 'use client';
 
 /* ═══ EL BOTÓN «FUENTES» (23-sep-2026) ════════════════════════════════════
-   A la izquierda de la caja de consulta. Pulsado despliega las cuatro fuentes
+   Abajo a la izquierda de la caja de consulta, en la fila de «Desplegar
+   herramientas» —en la fila del texto le robaba el ancho a lo que se
+   escribe—. Pulsado despliega las cuatro fuentes
    con su emblema; cada una se enciende y se apaga con un clic y se combinan
    libremente. Lo apagado no se consulta ni se cita —eso lo garantiza el
    servidor, no esta pantalla—. La elección vive en `@/lib/fuentes`.
@@ -69,7 +71,7 @@ function fichas(estado?: string): Ficha[] {
 }
 
 function Emblema({ src, grande = false }: { src: string | null; grande?: boolean }) {
-    const caja = grande ? 'h-9 w-9' : 'h-[18px] w-[18px]';
+    const caja = grande ? 'h-9 w-9' : 'h-4 w-4';
     if (!src) {
         return (
             <span className={`${caja} grid flex-shrink-0 place-items-center rounded-full bg-cream-100 ring-1 ring-charcoal-900/10`}>
@@ -80,7 +82,7 @@ function Emblema({ src, grande = false }: { src: string | null; grande?: boolean
     return (
         <span className={`${caja} grid flex-shrink-0 place-items-center overflow-hidden rounded-full bg-white ring-1 ring-charcoal-900/10`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt="" className={grande ? 'h-7 w-7 object-contain' : 'h-[14px] w-[14px] object-contain'} />
+            <img src={src} alt="" className={grande ? 'h-7 w-7 object-contain' : 'h-3 w-3 object-contain'} />
         </span>
     );
 }
@@ -132,7 +134,7 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
         : encendidas.map((f) => f.titulo).join(' · ');
 
     return (
-        <div ref={caja} className="relative flex-shrink-0 self-end">
+        <div ref={caja} className="relative flex-shrink-0">
             <button
                 type="button"
                 data-guide="fuero-filter"
@@ -142,19 +144,19 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                 aria-expanded={abierto}
                 aria-label={`Fuentes de la consulta: ${resumen}`}
                 title={`Fuentes: ${resumen}`}
-                /* En el teléfono sólo los emblemas: con palabra, cuenta y flecha
-                   el botón le dejaba al cuadro de texto una sola palabra de
-                   ancho (medido a 375 px). Los emblemas ya dicen qué está
-                   encendido. */
-                className={`flex h-9 items-center gap-1.5 rounded-full border px-1.5 transition-colors disabled:opacity-50 sm:px-2
+                /* Vive en la fila de herramientas, bajo el texto: de ahí la
+                   altura de 28 px, la misma línea que «Desplegar
+                   herramientas». En el teléfono, sólo los emblemas —ya dicen
+                   qué está encendido— para que la fila quepa entera. */
+                className={`flex h-7 items-center gap-1.5 rounded-full border px-1.5 transition-colors disabled:opacity-50 sm:px-2
                     ${abierto || !todas
                         ? 'border-accent-gold/70 bg-accent-gold/10 text-charcoal-900'
                         : 'border-charcoal-900/15 bg-white text-charcoal-700 hover:border-charcoal-900/30 hover:text-charcoal-900'}`}
             >
-                <span className="flex items-center -space-x-2 sm:-space-x-1.5">
+                <span className="flex items-center -space-x-1.5">
                     {encendidas.map((f) => <Emblema key={f.clave} src={f.emblema} />)}
                 </span>
-                <span className="hidden text-[12px] font-semibold sm:inline">Fuentes</span>
+                <span className="hidden text-[11px] font-semibold sm:inline">Fuentes</span>
                 {!todas && (
                     <span className="hidden rounded-full bg-charcoal-900 px-1.5 text-[10px] font-semibold leading-4 text-white tabular-nums sm:inline">
                         {elegidas.length}/{FUENTES.length}

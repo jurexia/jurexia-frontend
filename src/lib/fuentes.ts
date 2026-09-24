@@ -98,3 +98,46 @@ export function escudoDe(estado?: string | null): string | null {
     const clave = claveEntidad(estado);
     return clave ? `/escudos/${clave.toLowerCase().replace(/_/g, '-')}.png` : null;
 }
+
+/* ── LO QUE LA CONSULTA RECORRIÓ ─────────────────────────────────────────
+   El servidor lo informa en el paso «buscar»: «federal,jurisprudencia,
+   estatal=HIDALGO» (o «estatal=32» si abrió todas las entidades). Llega una
+   vez por búsqueda y una consulta hace varias, así que se juntan. */
+export interface Recorrido {
+    fuentes: Fuente[];
+    /** La entidad, si se recorrió exactamente una; el número si fueron varias. */
+    entidad: string | null;
+    entidades: number;
+}
+
+export function leerRecorrido(detalle?: string | null): Recorrido | null {
+    // Formato viejo —sólo un número— o vacío: no dice qué se recorrió.
+    if (!detalle || !/[a-z]/i.test(detalle)) return null;
+    const r: Recorrido = { fuentes: [], entidad: null, entidades: 0 };
+    for (const t of detalle.split(',')) {
+        const [k, v] = t.trim().split('=');
+        if (k === 'estatal') {
+            if (!r.fuentes.includes('estatal')) r.fuentes.push('estatal');
+            if (v && /^\d+$/.test(v)) r.entidades = Math.max(r.entidades, Number(v));
+            else if (v) { r.entidad = v; r.entidades = Math.max(r.entidades, 1); }
+        } else if ((FUENTES as readonly string[]).includes(k) && !r.fuentes.includes(k as Fuente)) {
+            r.fuentes.push(k as Fuente);
+        }
+    }
+    r.fuentes = FUENTES.filter((f) => r.fuentes.includes(f));
+    if (r.entidades > 1) r.entidad = null;
+    return r;
+}
+
+export function unirRecorrido(a: string, b: string): string {
+    const ra = leerRecorrido(a);
+    const rb = leerRecorrido(b);
+    if (!ra || !rb) return b;
+    const fuentes = FUENTES.filter((f) => ra.fuentes.includes(f) || rb.fuentes.includes(f));
+    const entidadesDistintas = new Set([ra.entidad, rb.entidad].filter(Boolean)).size;
+    const n = Math.max(ra.entidades, rb.entidades, entidadesDistintas);
+    const entidad = n <= 1 ? (ra.entidad || rb.entidad) : null;
+    return fuentes
+        .map((f) => (f !== 'estatal' ? f : entidad ? `estatal=${entidad}` : n ? `estatal=${n}` : 'estatal'))
+        .join(',');
+}

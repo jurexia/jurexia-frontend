@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Message, streamChat, SearchResult, fuentesWebActivas } from '@/lib/api';
+import { unirRecorrido } from '@/lib/fuentes';
 import { getSession } from '@/lib/supabase';
 import { checkCanQuery, getSubscriptionInfo } from '@/lib/supabase';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
@@ -316,10 +317,19 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     });
                     if (nuevos.length) {
                         // Si una etapa se repite (reintento), se queda la última:
-                        // su detalle es el bueno.
+                        // su detalle es el bueno. Salvo «buscar»: llega una vez
+                        // por cada búsqueda de la consulta —la principal y las
+                        // secundarias— y lo recorrido es la UNIÓN de todas. Con
+                        // la última, una búsqueda constitucional secundaria
+                        // borraba de la pantalla la federal principal.
                         setPasos((prev) => {
                             const mapa = new Map(prev.map((x) => [x.nombre, x]));
-                            nuevos.forEach((x) => mapa.set(x.nombre, x));
+                            nuevos.forEach((x) => {
+                                const antes = mapa.get(x.nombre);
+                                mapa.set(x.nombre, x.nombre === 'buscar' && antes?.detalle && x.detalle
+                                    ? { ...x, detalle: unirRecorrido(antes.detalle, x.detalle) }
+                                    : x);
+                            });
                             return Array.from(mapa.values());
                         });
                     }

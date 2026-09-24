@@ -25,7 +25,7 @@ const PROMPT_TIPS = [
         icon: Scale,
         category: '⚖️ Fuentes',
         title: 'Elige de dónde responde Iurexia',
-        description: 'El botón «Fuentes», a la izquierda de la caja de consulta, enciende y apaga cada fuente. Lo apagado no se consulta ni se cita.',
+        description: 'El botón «Fuentes», abajo a la izquierda de la caja de consulta, enciende y apaga cada fuente. Lo apagado no se consulta ni se cita.',
         tips: [
             'Las cuatro encendidas — búsqueda en todo el acervo (por defecto)',
             'Bloque de constitucionalidad — Constitución, tratados de derechos humanos y Corte Interamericana',

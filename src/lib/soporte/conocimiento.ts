@@ -137,7 +137,8 @@ export const TEMAS: Tema[] = [
  */
 export const MAPA_PLATAFORMA = `
 LA CAJA DE CONSULTA (pantalla del chat)
-· Fuentes — el botón a la IZQUIERDA de la caja de consulta. Al pulsarlo se
+· Fuentes — el botón ABAJO A LA IZQUIERDA de la caja de consulta, junto a
+  «Desplegar herramientas». Al pulsarlo se
   despliegan cuatro fuentes, cada una con su emblema: Bloque de
   constitucionalidad (Corte Interamericana), Jurisprudencia nacional (SCJN),
   Leyes federales (Congreso de la Unión) y Leyes estatales (el escudo de su

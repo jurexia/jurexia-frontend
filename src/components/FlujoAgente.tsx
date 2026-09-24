@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { BookText, Check, Globe, Loader2, Scale, Link2, Landmark, Search } from 'lucide-react';
 import { ESTADOS_MEXICO } from '@/lib/estados';
+import { claveEntidad, escudoDe, fuentesElegidas, leerRecorrido, type Fuente } from '@/lib/fuentes';
 
 /**
  * El pipeline, visible mientras trabaja — versión ramificada.
@@ -70,13 +71,35 @@ const ICONOS = {
     sede: Landmark,
 } as const;
 
+/* LO RECORRIDO, NO UNA LISTA FIJA (23-sep-2026). La etapa decía siempre
+   «Legislación federal · 32 entidades», se buscara lo que se buscara. Con el
+   selector de fuentes eso mentía: David apagó todo menos lo federal y la
+   pantalla le seguía anunciando las 32 entidades. Ahora las fichas salen de
+   lo que el servidor dice que recorrió; con un servidor viejo, de lo que el
+   abogado dejó encendido. */
+const FICHA_FUENTE: Record<Exclude<Fuente, 'estatal'>, Ficha> = {
+    constitucional: { texto: 'Bloque de constitucionalidad', icono: 'balanza', imagen: '/fuentes/corteidh.png' },
+    jurisprudencia: { texto: 'Jurisprudencia', icono: 'balanza', imagen: '/fuentes/scjn.png' },
+    federal: { texto: 'Legislación federal', icono: 'ley', imagen: '/fuentes/diputados.png' },
+};
+
+function fichasDelRecorrido(detalle: string | undefined): Ficha[] {
+    const r = leerRecorrido(detalle) ?? { fuentes: fuentesElegidas(), entidad: null, entidades: 0 };
+    return r.fuentes.map((f): Ficha => {
+        if (f !== 'estatal') return FICHA_FUENTE[f];
+        if (r.entidad) {
+            const clave = claveEntidad(r.entidad);
+            const etiqueta = ESTADOS_MEXICO.find((e) => e.value === clave)?.label ?? r.entidad;
+            return { texto: etiqueta, icono: 'sede', imagen: escudoDe(r.entidad) ?? undefined };
+        }
+        return { texto: r.entidades > 1 ? `${r.entidades} entidades` : 'Legislación estatal', icono: 'sede' };
+    });
+}
+
 /** Las fichas de cada etapa, construidas con lo que el backend informó. */
 function fichasDe(nombre: string, detalle: string | undefined, fuentes: number | null): Ficha[] {
     if (nombre === 'buscar') {
-        const f: Ficha[] = [
-            { texto: 'Legislación federal', icono: 'ley', imagen: '/fuentes/diputados.png' },
-            { texto: '32 entidades', icono: 'sede' },
-        ];
+        const f = fichasDelRecorrido(detalle);
         if (fuentes !== null) f.push({ texto: `${fuentes} fuentes`, icono: 'enlace' });
         return f;
     }

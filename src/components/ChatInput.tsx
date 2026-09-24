@@ -838,13 +838,15 @@ ${draftRequest.descripcion}`;
 
                     {/* Attached Document Chip (Legacy location - removing this as it's handled in the input now) */}
 
-                    {/* Text Input */}
-                    <div className="flex items-end gap-2 sm:gap-3">
-                        {/* Las fuentes, a la izquierda del texto y a la vista:
-                            ver SelectorFuentes. En el modo básico no: ese
-                            carril no consulta estas colecciones. */}
-                        {!basico && <SelectorFuentes estado={estado} disabled={isLoading} />}
-                        <div className="flex-1 relative">
+                    {/* Text Input — EL TEXTO A TODO LO ANCHO (23-sep-2026). El botón
+                        «Fuentes» estuvo aquí unas horas y en el panel estrecho
+                        dejaba escribir en una columna de una palabra; David: «hay
+                        que guardar simetría y organización, la ventana ya de por
+                        sí está limitada». Vive en la fila de herramientas.
+                        `min-w-0`: sin él, el cuadro de texto no encoge por debajo
+                        de su ancho natural y empuja los botones fuera del borde. */}
+                    <div className="flex items-end gap-3">
+                        <div className="relative min-w-0 flex-1">
                             <textarea
                                 ref={textareaRef}
                                 value={message}
@@ -881,12 +883,17 @@ ${draftRequest.descripcion}`;
                                 </div>
                             )}
 
-                            {/* Mic Button */}
+                            {/* Micrófono y clip sólo en reposo: consultando están
+                                deshabilitados, y su hueco lo ocupa la ruedita. Así
+                                el grupo de la derecha mide lo mismo en los dos
+                                estados y nada se sale del cuadro (antes, en el
+                                panel estrecho, el botón de detener quedaba medio
+                                fuera del borde). */}
+                            {!isLoading && (
                             <button
                                 type="button"
                                 data-guide="dictado"
                                 onClick={toggleListening}
-                                disabled={isLoading}
                                 className={`p-2 rounded-full transition-all duration-200 flex-shrink-0 ${isListening
                                     ? 'bg-red-100 text-red-600 border border-red-200 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.4)]'
                                     : 'text-gray-400 hover:text-charcoal-700 hover:bg-gray-100 border border-transparent disabled:opacity-50'
@@ -895,11 +902,11 @@ ${draftRequest.descripcion}`;
                             >
                                 <Mic className="w-5 h-5" />
                             </button>
+                            )}
 
-                            {/* Paperclip Button */}
+                            {!isLoading && (
                             <button
                                 type="button"
-                                disabled={isLoading}
                                 data-guide="adjuntar"
                                 onClick={() => (basico ? tocoCandado() : handleModeClick('files'))}
                                 className={`p-2 rounded-full transition-all duration-200 flex-shrink-0 ${attachedDocument
@@ -910,14 +917,17 @@ ${draftRequest.descripcion}`;
                             >
                                 <Paperclip className="w-5 h-5" />
                             </button>
+                            )}
 
                             {/* LA RUEDITA QUE NO DEPENDE DE NADA: ni de la
                                 ramificación ni de que llegue un solo byte. Un
-                                anillo CSS y una palabra, en cualquier navegador. */}
+                                anillo CSS y una palabra, en cualquier navegador.
+                                La palabra se pliega en el teléfono; la ruedita,
+                                nunca. */}
                             {isLoading && (
-                                <span className="hidden sm:inline-flex items-center text-[11px] font-medium text-charcoal-600 mr-1">
-                                    <span className="w-3.5 h-3.5 mr-1.5 rounded-full border-2 border-charcoal-900 border-t-transparent animate-spin" />
-                                    Consultando…
+                                <span className="inline-flex items-center text-[11px] font-medium text-charcoal-700">
+                                    <span className="w-3.5 h-3.5 rounded-full border-2 border-charcoal-900 border-t-transparent animate-spin sm:mr-1.5" />
+                                    <span className="hidden sm:inline">Consultando…</span>
                                 </span>
                             )}
                             {/* Submit / Stop Button */}
@@ -967,25 +977,32 @@ ${draftRequest.descripcion}`;
                         </div>
                     )}
 
+                    {/* LA FILA DE HERRAMIENTAS: «Fuentes» a la izquierda —donde
+                        David lo pidió— y a su lado el mismo interruptor de
+                        siempre. En la fila del texto le robaba el ancho a lo que
+                        el abogado escribe; aquí ocupa un hueco que ya existía. */}
                     {!basico && (
-                    <button
-                        type="button"
-                        data-guide="herramientas"
-                        onClick={() => setPlegado((v) => !v)}
-                        aria-expanded={!plegado}
-                        title={plegado
-                            ? 'Mostrar materia, modo, Genios y el resto de herramientas'
-                            : 'Ocultar las herramientas y dejar la caja sencilla'}
-                        className="mt-2 flex w-full items-center gap-2 border-t border-gray-100 pt-2 text-left text-[11px] text-charcoal-500 transition-colors hover:text-charcoal-900"
-                    >
-                        {plegado
-                            ? <ChevronUp className="h-3.5 w-3.5 flex-shrink-0" />
-                            : <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />}
-                        <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
-                            {plegado ? 'Desplegar herramientas' : 'Plegar herramientas'}
-                        </span>
-                        {plegado && <span className="hidden min-w-0 truncate sm:inline">{resumenPlegado}</span>}
-                    </button>
+                    <div className="mt-2 flex items-center gap-2.5 border-t border-gray-100 pt-2">
+                        <SelectorFuentes estado={estado} disabled={isLoading} />
+                        <button
+                            type="button"
+                            data-guide="herramientas"
+                            onClick={() => setPlegado((v) => !v)}
+                            aria-expanded={!plegado}
+                            title={plegado
+                                ? 'Mostrar materia, modo, Genios y el resto de herramientas'
+                                : 'Ocultar las herramientas y dejar la caja sencilla'}
+                            className="flex min-w-0 flex-1 items-center gap-2 text-left text-[11px] text-gray-500 transition-colors hover:text-charcoal-900"
+                        >
+                            {plegado
+                                ? <ChevronUp className="h-3.5 w-3.5 flex-shrink-0" />
+                                : <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />}
+                            <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
+                                {plegado ? 'Desplegar herramientas' : 'Plegar herramientas'}
+                            </span>
+                            {plegado && <span className="hidden min-w-0 truncate sm:inline">{resumenPlegado}</span>}
+                        </button>
+                    </div>
                     )}
 
                     {/* Action Cards Row — Blue Cards */}
