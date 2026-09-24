@@ -2,6 +2,8 @@
  * API Client for Iurexia FastAPI Backend
  */
 
+import { fuentesElegidas } from './fuentes';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
 export interface Message {
@@ -170,6 +172,9 @@ async function* streamChatInternal(
             genio_ids: genioIds || [],
             user_id: userId,
             fuentes_web: fuentesWebActivas(),
+            // El selector «Fuentes»: se lee al enviar, como el globo. Con las
+            // cuatro encendidas el servidor se comporta como siempre.
+            fuentes: fuentesElegidas(),
             ...(fuentesVerificadas().length ? { fuentes_previas: fuentesVerificadas() } : {}),
             ...(fuero ? { fuero } : {}),
             ...(materia ? { materia } : {}),

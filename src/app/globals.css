@@ -74,6 +74,15 @@ h6 {
     0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
+/* El botón «Fuentes» le quita ancho al cuadro de texto (23-sep-2026): el
+   texto de ayuda va en UNA línea, recortado, y no con media segunda línea
+   asomando por debajo del borde. */
+.chat-input-container textarea::placeholder {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Chat Message Bubbles */
 .message-user {
   background: var(--charcoal);

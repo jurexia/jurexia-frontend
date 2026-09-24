@@ -23,14 +23,15 @@ const PROMPT_TIPS = [
     },
     {
         icon: Scale,
-        category: '⚖️ Filtro de Fuero',
-        title: 'Enfoca tu búsqueda por ámbito legal',
-        description: 'El selector de fuero prioriza el tipo de normatividad que Iurexia revisa al responder tu consulta.',
+        category: '⚖️ Fuentes',
+        title: 'Elige de dónde responde Iurexia',
+        description: 'El botón «Fuentes», a la izquierda de la caja de consulta, enciende y apaga cada fuente. Lo apagado no se consulta ni se cita.',
         tips: [
-            'Todos — búsqueda amplia en todo el corpus (recomendado por defecto)',
-            'Constitucional — prioriza CPEUM, tratados internacionales y derechos humanos',
-            'Federal — leyes federales: LGTOC, LFT, Código Civil Federal, etc.',
-            'Estatal — legislación del estado que seleccionaste al iniciar sesión',
+            'Las cuatro encendidas — búsqueda en todo el acervo (por defecto)',
+            'Bloque de constitucionalidad — Constitución, tratados de derechos humanos y Corte Interamericana',
+            'Jurisprudencia nacional — tesis y precedentes de la SCJN y los tribunales colegiados',
+            'Leyes federales — leyes federales y generales: LGTOC, LFT, Código Civil Federal, etc.',
+            'Leyes estatales — la legislación de la entidad que eligió; apáguela para trabajar sólo en el fuero federal',
         ],
     },
     {

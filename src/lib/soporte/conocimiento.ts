@@ -137,7 +137,16 @@ export const TEMAS: Tema[] = [
  */
 export const MAPA_PLATAFORMA = `
 LA CAJA DE CONSULTA (pantalla del chat)
-· Fuero — acota a Constitucional, Federal o Estatal. Sin marcar, busca en todos.
+· Fuentes — el botón a la IZQUIERDA de la caja de consulta. Al pulsarlo se
+  despliegan cuatro fuentes, cada una con su emblema: Bloque de
+  constitucionalidad (Corte Interamericana), Jurisprudencia nacional (SCJN),
+  Leyes federales (Congreso de la Unión) y Leyes estatales (el escudo de su
+  entidad). Se encienden y apagan con un clic y se pueden combinar: con dos
+  encendidas responde sólo con esas dos; con una, sólo con esa. Lo apagado no
+  se consulta ni se cita. Para trabajar SÓLO con derecho federal, se apaga
+  «Leyes estatales». La elección se queda guardada para las siguientes
+  consultas. NO existe una opción «Federal» en la barra superior: la entidad de
+  la barra superior sólo dice qué escudo y qué leyes estatales se usan.
 · Materia — Civil, Penal, Familiar o Administrativa. En Auto se detecta sola.
 · Rayo (Respuesta rápida) — la cita al grano, sin desarrollo. Todos los planes.
 · Globo (Fuentes de internet) — añade búsqueda en dominios oficiales: poderes
@@ -169,7 +178,7 @@ textuales y conecta normas como un especialista.
 · Se activan con un clic en la fila de Genios, bajo la caja de consulta.
 · Desde plan Pro. Hasta DOS a la vez. La sesión dura 3 minutos tras activarse.
 · No se pueden combinar con el modo Redacción cuando hay dos activos.
-· Si no necesita tanta profundidad, los filtros de Fuero y Materia ya dan
+· Si no necesita tanta profundidad, el selector de Fuentes y el filtro de Materia ya dan
   respuestas muy completas sin consumir una sesión de Genio.
 
 LA BARRA SUPERIOR
@@ -180,8 +189,10 @@ LA BARRA SUPERIOR
 · Mi trabajo — sus carpetas. Ahí se guarda lo que produce, organizado por
   asunto. Cada respuesta tiene «A mi carpeta» para archivarla.
 · Normativa — el acervo de leyes navegable.
-· El estado (jurisdicción) — filtra toda consulta hacia la legislación de esa
-  entidad. Se cambia con un clic.
+· El estado (jurisdicción) — la entidad cuyas leyes estatales se consultan
+  cuando «Leyes estatales» está encendida en Fuentes. Se cambia con un clic.
+  No tiene opción «Federal»: para excluir la ley local se apaga «Leyes
+  estatales» en el botón Fuentes.
 
 OTRAS PANTALLAS
 · Agente — arma una demanda de amparo indirecto por pasos, con un plan que usted

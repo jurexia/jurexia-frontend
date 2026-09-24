@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
+import { fuentesElegidas } from '@/lib/fuentes';
 import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import UpgradeNudge from '@/components/UpgradeNudge';
@@ -88,6 +89,8 @@ function sinMarcadoresDeUsuario(texto: string): string {
     return (texto || '')
         .replace(/^(?:\s*\[[A-Z_]+(?::[^\]]*)?\])+\s*/g, '')
         .replace(/^📄 \*\*Documento adjunto:\*\* [^\n]*\n+/, '')
+        // El texto leído del adjunto viaja oculto en el mensaje: no es título.
+        .replace(/<!-- DOCUMENTO_INICIO -->[\s\S]*?(<!-- DOCUMENTO_FIN -->|$)/g, '')
         .trim();
 }
 
@@ -750,6 +753,10 @@ export default function ChatPage() {
 
         // Add user message to chat
         const userMsg = { role: 'user' as const, content: displayMessage };
+        /* Lo que se guarda puede no ser `userMsg` tal cual: si el servidor
+           devuelve el texto que leyó del documento, viaja oculto dentro de este
+           mensaje (ver el evento `documento` más abajo). */
+        let userMsgGuardado: Message = userMsg;
         setMessages(prev => [...prev, userMsg]);
         // Los pasos son de la consulta ANTERIOR: sin esto la ramificación vieja
         // se pintaba entera mientras se analizaba el documento.
@@ -797,6 +804,8 @@ export default function ChatPage() {
         if (fuentesWebActivas()) {
             formData.append('fuentes_web', '1');
         }
+        // El selector «Fuentes» vale también con documento adjunto.
+        formData.append('fuentes', fuentesElegidas().join(','));
 
         // El análisis de un documento adjunto también nace en el panel.
         if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
@@ -868,6 +877,26 @@ export default function ChatPage() {
                                 });
                             } else if (data.progreso) {
                                 setPasoDocumento(String(data.progreso));
+                            } else if (data.documento?.texto) {
+                                /* EL DOCUMENTO SE QUEDA EN LA CONVERSACIÓN
+                                   (23-sep-2026). Antes el texto leído se usaba
+                                   para este análisis y se perdía: la siguiente
+                                   pregunta iba al chat con sólo «📄 Documento
+                                   adjunto: nombre», y el modelo contestaba que no
+                                   tenía el decreto que el abogado acababa de
+                                   subir. Ahora el texto queda oculto dentro de su
+                                   mensaje —la burbuja no lo enseña— y viaja en el
+                                   historial de los turnos siguientes. */
+                                const d = data.documento as { nombre?: string; texto: string; recortado?: boolean };
+                                const aviso = d.recortado ? '; es la primera parte, el documento es más largo' : '';
+                                userMsgGuardado = {
+                                    ...userMsg,
+                                    content: `${displayMessage}\n\n<!-- DOCUMENTO_INICIO -->\n`
+                                        + `CONTENIDO DEL DOCUMENTO ADJUNTO «${d.nombre || file.name}» (texto leído por Iurexia${aviso}):\n\n`
+                                        + `${d.texto}\n<!-- DOCUMENTO_FIN -->`,
+                                };
+                                const conTexto = userMsgGuardado;
+                                setMessages(prev => prev.map(m => (m === userMsg ? conTexto : m)));
                             } else if (data.error) {
                                 setMessages(prev => {
                                     const updated = [...prev];
@@ -971,9 +1000,9 @@ export default function ChatPage() {
 
                     const lastMsg = latestMessages[latestMessages.length - 1];
                     if (lastMsg && lastMsg.role === 'assistant' && lastMsg.content.trim().length > 0) {
-                        await addMessageBatch(docConvId, userMsg, lastMsg);
+                        await addMessageBatch(docConvId, userMsgGuardado, lastMsg);
                     } else {
-                        await addMessageToConversation(docConvId, userMsg);
+                        await addMessageToConversation(docConvId, userMsgGuardado);
                     }
 
                     const updatedConvs = await getConversations();

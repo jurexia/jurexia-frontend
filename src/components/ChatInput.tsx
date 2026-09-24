@@ -23,6 +23,7 @@ import {
     Globe
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
+import SelectorFuentes from './SelectorFuentes';
 import { FileText, X, Network, ChevronUp, ChevronDown, UploadCloud } from 'lucide-react';
 import { validarAdjunto, EXTENSIONES_ADJUNTO, LIMITE_ADJUNTO_MB } from '@/lib/documento/adjuntos';
 import TextEnhanceModal from './TextEnhanceModal';
@@ -138,7 +139,7 @@ export default function ChatInput({
     onDocumentSubmit,
     onStop,
     isLoading = false,
-    placeholder = "Escribe tu consulta legal o sube tu documento para análisis",
+    placeholder = "Escribe tu consulta o sube un documento",
     estado,
     activeGenios = [],
     setActiveGenios,
@@ -193,10 +194,8 @@ export default function ChatInput({
         window.addEventListener('iurexia:desplegar-compositor', desplegar);
         return () => window.removeEventListener('iurexia:desplegar-compositor', desplegar);
     }, []);
+    // El fuero ya no se resume aquí: lo dice el botón «Fuentes», a la vista.
     const resumenPlegado = [
-        selectedFuero.length
-            ? selectedFuero.map((k) => ({ constitucional: 'Const.', federal: 'Federal', estatal: 'Estatal' } as Record<string, string>)[k] ?? k).join(' + ')
-            : 'Fuero auto',
         ({ '': 'Materia auto', civil: 'Civil', penal: 'Penal', familiar: 'Familiar', administrativo: 'Admin' } as Record<string, string>)[selectedMateria] ?? selectedMateria,
         chatMode === 'buscar' ? 'Buscar' : `Redactar · ${nivelRedaccion}`,
         activeGenios.length ? `Genios: ${activeGenios.join(', ')}` : null,
@@ -802,49 +801,11 @@ ${draftRequest.descripcion}`;
 
                 {/* Main Input Container - Harvey Style */}
                 <div className="chat-input-container p-3">
-                    {/* Fuero + Materia Toggle — Same row, compact pills above textarea */}
-                    {!basico && !plegado && (onFueroChange || onMateriaChange) && (
+                    {/* Materia — compact pills above textarea. El fuero salió de
+                        aquí el 23-sep-2026: lo sustituye el botón «Fuentes», a la
+                        izquierda del texto y siempre a la vista. */}
+                    {!basico && !plegado && onMateriaChange && (
                         <div data-guide="fuero-materia-filter" className="flex items-center gap-1 sm:gap-1.5 mb-2 pb-1.5 border-b border-gray-100/60 flex-nowrap overflow-x-auto">
-                            {/* Fuero section */}
-                            {onFueroChange && (
-                                <div data-guide="fuero-filter" className="flex items-center gap-1.5 flex-shrink-0">
-                                    <Scale className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0" />
-                                    <span className="hidden sm:inline text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Fuero</span>
-                                    <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-px sm:gap-0.5">
-                                        {[
-                                            { key: 'constitucional', label: 'Const.' },
-                                            { key: 'federal', label: 'Federal' },
-                                            { key: 'estatal', label: 'Estatal' },
-                                        ].map((f) => {
-                                            const isActive = selectedFuero.includes(f.key);
-                                            return (
-                                            <button
-                                                key={f.key}
-                                                onClick={() => {
-                                                    if (isActive) {
-                                                        onFueroChange(selectedFuero.filter(k => k !== f.key));
-                                                    } else {
-                                                        onFueroChange([...selectedFuero, f.key]);
-                                                    }
-                                                }}
-                                                className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-medium transition-all duration-200 whitespace-nowrap ${isActive
-                                                    ? 'bg-charcoal-900 text-white shadow-sm'
-                                                    : 'text-gray-500 hover:text-charcoal-700 hover:bg-white/60'
-                                                    }`}
-                                            >
-                                                {f.label}
-                                            </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Divider */}
-                            {onFueroChange && onMateriaChange && (
-                                <div className="w-px h-4 sm:h-5 bg-gray-200 mx-0.5 sm:mx-1 flex-shrink-0" />
-                            )}
-
                             {/* Materia section */}
                             {onMateriaChange && (
                                 <div data-guide="materia-filter" className="flex items-center gap-1.5 flex-shrink-0">
@@ -878,7 +839,11 @@ ${draftRequest.descripcion}`;
                     {/* Attached Document Chip (Legacy location - removing this as it's handled in the input now) */}
 
                     {/* Text Input */}
-                    <div className="flex items-end gap-3">
+                    <div className="flex items-end gap-2 sm:gap-3">
+                        {/* Las fuentes, a la izquierda del texto y a la vista:
+                            ver SelectorFuentes. En el modo básico no: ese
+                            carril no consulta estas colecciones. */}
+                        {!basico && <SelectorFuentes estado={estado} disabled={isLoading} />}
                         <div className="flex-1 relative">
                             <textarea
                                 ref={textareaRef}
@@ -1009,7 +974,7 @@ ${draftRequest.descripcion}`;
                         onClick={() => setPlegado((v) => !v)}
                         aria-expanded={!plegado}
                         title={plegado
-                            ? 'Mostrar fuero, materia, modo, Genios y el resto de herramientas'
+                            ? 'Mostrar materia, modo, Genios y el resto de herramientas'
                             : 'Ocultar las herramientas y dejar la caja sencilla'}
                         className="mt-2 flex w-full items-center gap-2 border-t border-gray-100 pt-2 text-left text-[11px] text-charcoal-500 transition-colors hover:text-charcoal-900"
                     >

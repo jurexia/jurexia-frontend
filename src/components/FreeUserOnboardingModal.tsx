@@ -28,9 +28,9 @@ const TOUR_STEPS: TourStep[] = [
     },
     {
         selector: '[data-guide="fuero-filter"]',
-        title: '⚖️ Filtro de Fuero',
+        title: '⚖️ Fuentes',
         description:
-            'Define el ámbito normativo: Constitucional, Federal o Estatal. Si no estás seguro, déjalo en Automático.',
+            'Elige de dónde responde Iurexia: bloque de constitucionalidad, jurisprudencia, leyes federales o las de tu entidad. Si no estás seguro, déjalas todas encendidas.',
         timestamp: 15,
         padding: 10,
         preferBelow: true,
