@@ -12,7 +12,7 @@ import {
     FileEdit,
     Gavel,
     Brain,
-    Scale,
+    Landmark,
     PenTool,
     Lock,
     Mic,
@@ -1259,7 +1259,7 @@ ${draftRequest.descripcion}`;
                                                 : 'bg-white text-gray-600 hover:text-[#c9a962]'
                                         }`}
                                     >
-                                        <Scale className="w-3 h-3" />
+                                        <Landmark className="w-3 h-3" />
                                         SCJN
                                     </button>
                                     <button

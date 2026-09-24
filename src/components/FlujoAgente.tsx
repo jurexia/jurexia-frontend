@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
-import { BookText, Check, Globe, Loader2, Scale, Link2, Landmark, Search } from 'lucide-react';
+import { BadgeCheck, BookText, Check, Globe, Loader2, Link2, Landmark, Search } from 'lucide-react';
 import { ESTADOS_MEXICO } from '@/lib/estados';
 import { claveEntidad, escudoDe, fuentesElegidas, leerRecorrido, type Fuente } from '@/lib/fuentes';
 
@@ -34,9 +34,10 @@ import { claveEntidad, escudoDe, fuentesElegidas, leerRecorrido, type Fuente } f
  * el neutro «Lic.» es el valor por omisión porque el nombre no dice el género
  * y equivocarse en cada consulta es peor que no personalizar.
  *
- * Sobre el Semanario: balanza genérica y nombre escrito, NO el emblema del
- * SJF. Reproducir la marca de un órgano del Estado en material comercial es
- * un problema que no hace falta tener.
+ * SIN BALANZAS (David, 23-sep-2026): la balanza es el tópico gráfico del
+ * derecho y la marca no la usa. Las instituciones van con su emblema oficial
+ * (/fuentes/*.png, a petición de David el 18-sep) y lo verificado con un
+ * sello.
  */
 
 export type Paso = { nombre: string; detalle?: string };
@@ -65,7 +66,9 @@ const ETAPAS: { nombre: string; titulo: string; glosa: string }[] = [
 
 const ICONOS = {
     ley: BookText,
-    balanza: Scale,
+    // Sin balanzas (David, 23-sep-2026): el sello dice «verificado» sin el
+    // tópico gráfico del derecho.
+    balanza: BadgeCheck,
     web: Globe,
     enlace: Link2,
     sede: Landmark,

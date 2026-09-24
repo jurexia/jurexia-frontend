@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Scale, Briefcase, Users, Zap } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Landmark, BookOpen, Briefcase, Users, Zap } from 'lucide-react';
 
 interface PromptGuideProps {
     isOpen: boolean;
@@ -22,7 +22,7 @@ const PROMPT_TIPS = [
         ],
     },
     {
-        icon: Scale,
+        icon: Landmark,
         category: '⚖️ Fuentes',
         title: 'Elige de dónde responde Iurexia',
         description: 'El botón «Fuentes», abajo a la izquierda de la caja de consulta, enciende y apaga cada fuente. Lo apagado no se consulta ni se cita.',
@@ -35,7 +35,7 @@ const PROMPT_TIPS = [
         ],
     },
     {
-        icon: Scale,
+        icon: BookOpen,
         category: '⚖️ Para profesionales',
         title: 'Consultas técnicas y jurisprudencia',
         description: 'Iurexia contiene criterios jurisprudenciales, legislación federal y estatal actualizada. Aprovecha su profundidad con preguntas técnicas y específicas.',

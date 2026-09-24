@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import {
-    X, ArrowLeft, ArrowRight, MapPin, Gavel, FolderClosed, Scale, Library,
+    X, ArrowLeft, ArrowRight, MapPin, Gavel, FolderClosed, Landmark, Library,
     Zap, Globe, PenLine, FileText, ClipboardCheck, BookOpen, BarChart3,
     Brain, Paperclip, Mic,
 } from 'lucide-react';
@@ -62,7 +62,7 @@ const TOUR_STEPS: TourStep[] = [
     {
         id: 'fuero-filter',
         selector: '[data-guide="fuero-filter"]',
-        icono: Scale,
+        icono: Landmark,
         title: 'Fuentes',
         description: 'Elige de dónde responde Iurexia: bloque de constitucionalidad, jurisprudencia nacional, leyes federales y las leyes de su entidad.\n\nLo que apague no se consulta ni se cita; con las cuatro encendidas busca en todo. La elección se queda guardada.',
         padding: 10,

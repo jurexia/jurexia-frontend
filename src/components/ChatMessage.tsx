@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, Scale, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X } from 'lucide-react';
+import { User, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X } from 'lucide-react';
+import { AvatarIurexia } from '@/components/AvatarIurexia';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
@@ -1234,9 +1235,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             {/* Avatar - Assistant. Sólo desde sm: en un teléfono de 375px el
                 circulito y su hueco se comían 48px de una columna de 240. */}
             {!isUser && (
-                <div className="hidden sm:flex flex-shrink-0 w-8 h-8 rounded-full bg-charcoal-900 items-center justify-center">
-                    <Scale className="w-4 h-4 text-white" />
-                </div>
+                <AvatarIurexia className="hidden sm:flex w-8 h-8" />
             )}
 
             {/* Message Bubble */}
@@ -2047,9 +2046,7 @@ export function TypingIndicator({ retryMessage, retryType }: { retryMessage?: st
         const isColdStart = retryType === 'cold';
         return (
             <div className="flex gap-4 justify-start animate-slide-up">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center">
-                    <Scale className="w-4 h-4 text-white animate-pulse" />
-                </div>
+                <AvatarIurexia latido />
                 <div className="message-assistant px-4 py-4 border-l-4 border-amber-500">
                     <div className="flex flex-col gap-1.5">
                         <span className="text-amber-900 font-semibold text-sm">
@@ -2073,9 +2070,7 @@ export function TypingIndicator({ retryMessage, retryType }: { retryMessage?: st
 
     return (
         <div className="flex gap-4 justify-start animate-slide-up">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-charcoal-900 flex items-center justify-center">
-                <Scale className="w-4 h-4 text-white" />
-            </div>
+            <AvatarIurexia />
             <div className="message-assistant px-4 py-4">
                 <div className="flex items-start gap-2">
                     {/* Animated Message */}
