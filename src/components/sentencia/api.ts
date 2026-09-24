@@ -320,6 +320,51 @@ export interface ResultadoProyecto {
      *  desobedecido su instrucción. */
     textoAvisos: string[];
     textoHuecos: string[];
+    /** Con qué número de versión se archivó. Es la llave de la opinión del
+     *  secretario: se opina sobre ESA versión, no sobre el expediente. */
+    version?: number;
+}
+
+/* ═══ LA OPINIÓN DEL SECRETARIO SOBRE CADA PROYECTO ═══
+   David (24-sep-2026): «al término de cada proyecto abrir un cuadro de texto
+   con formato visual profesional para que el usuario escriba sus puntos de
+   vista y aspectos a mejorar en el taller y, particularmente, en la calidad
+   de las sentencias que entrega». Se guarda contra la versión exacta, con la
+   foto de sus avisos, y la lee el auditor del panel de administración. */
+export type Correccion = 'nada' | 'poco' | 'mucho' | 'rehecho';
+export interface OpinionProyecto {
+    calificacion: number | null;
+    correccion: Correccion | null;
+    aspectos: Record<string, 'bien' | 'mejorar'>;
+    sobre_sentencia: string;
+    sobre_taller: string;
+}
+export interface AspectoCalificable { clave: string; etiqueta: string }
+
+export async function leerOpinion(
+    numero: string, userEmail: string, version = 0,
+): Promise<{ opinion: (OpinionProyecto & { version: number }) | null; aspectos: AspectoCalificable[] }> {
+    const q = new URLSearchParams({ numero, user_email: userEmail, version: String(version || 0) });
+    const res = await fetch(`${BASE}/taller/opinion?${q.toString()}`);
+    if (!res.ok) return _fallo(res);
+    const j = await res.json();
+    return { opinion: j.opinion ?? null, aspectos: (j.aspectos ?? []) as AspectoCalificable[] };
+}
+
+export async function guardarOpinion(
+    numero: string, userEmail: string, version: number, o: OpinionProyecto,
+): Promise<void> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    fd.append('version', String(version || 0));
+    if (o.calificacion) fd.append('calificacion', String(o.calificacion));
+    if (o.correccion) fd.append('correccion', o.correccion);
+    fd.append('aspectos_json', JSON.stringify(o.aspectos || {}));
+    fd.append('sobre_sentencia', o.sobre_sentencia || '');
+    fd.append('sobre_taller', o.sobre_taller || '');
+    const res = await fetch(`${BASE}/taller/opinion`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
 }
 
 /** Lo que el acervo no tiene y el secretario sí.
@@ -714,6 +759,7 @@ async function recuperarProyecto(
                 tieneAdvertencias: f.advertencias,
                 textoAvisos: f.avisos,
                 textoHuecos: f.huecos,
+                version: f.version ?? undefined,
             };
         }
         if (Date.now() >= limite) {
@@ -928,6 +974,7 @@ export async function resolverEnVivo(
         tieneAdvertencias: Boolean(listo.advertencias),
         textoAvisos: avisos.map(String),
         textoHuecos: huecos.map(String),
+        version: Number(listo.version || 0) || undefined,
     };
 }
 

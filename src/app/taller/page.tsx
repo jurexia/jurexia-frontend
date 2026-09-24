@@ -22,7 +22,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, Download, Search, FileText, AlertCircle, Zap, Upload, Check } from 'lucide-react';
+import { Loader2, Download, Search, FileText, AlertCircle, Zap, Upload, Check, Star } from 'lucide-react';
 import { useRequireAuth } from '@/lib/useAuth';
 import BarraSuperior from '@/components/sentencia/BarraSuperior';
 import AvisoDeInicio from '@/components/sentencia/AvisoDeInicio';
@@ -35,6 +35,7 @@ import AnilloDeFases from '@/components/sentencia/AnilloDeFases';
 import Espinazo from '@/components/sentencia/Espinazo';
 import type { PasoDelEspinazo } from '@/components/sentencia/Espinazo';
 import ConfirmarVolver from '@/components/sentencia/ConfirmarVolver';
+import OpinionProyecto from '@/components/sentencia/OpinionProyecto';
 import type { DestinoVuelta } from '@/components/sentencia/ConfirmarVolver';
 import Decision from '@/components/sentencia/Decision';
 import FormularioEncargo, { ENCARGO_VACIO, faltaEnEncargo } from '@/components/sentencia/FormularioEncargo';
@@ -554,6 +555,27 @@ export default function TallerDeSentencias() {
     const [fichaDelAdelanto, setFichaDelAdelanto] = useState<string>('');
     const [problemas, setProblemas] = useState<ProblemaJuridico[]>([]);
     const [proyecto, setProyecto] = useState<ResultadoProyecto | null>(null);
+    /* ═══ LA OPINIÓN AL TERMINAR CADA PROYECTO ═══
+       David (24-sep-2026): «al término de cada proyecto abrir un cuadro de
+       texto con formato visual profesional para que el usuario escriba sus
+       puntos de vista y aspectos a mejorar». Se abre SOLA cuando llega un
+       proyecto recién generado —una vez por versión: si la cierra, no vuelve
+       a saltar en esa versión— y queda el botón para abrirla cuando quiera. */
+    const [opinion, setOpinion] = useState<{ version: number } | null>(null);
+    const [opinadas, setOpinadas] = useState<Set<string>>(new Set());
+    useEffect(() => {
+        try {
+            const v = JSON.parse(localStorage.getItem('iurexia.taller.opiniones') || '[]');
+            if (Array.isArray(v)) setOpinadas(new Set(v.map(String)));
+        } catch { /* sin almacenamiento: se pregunta cada vez, que es lo menos malo */ }
+    }, []);
+    const marcarOpinion = useCallback((clave: string) => {
+        setOpinadas((prev) => {
+            const n = new Set(prev); n.add(clave);
+            try { localStorage.setItem('iurexia.taller.opiniones', JSON.stringify(Array.from(n).slice(-200))); } catch { /* nada */ }
+            return n;
+        });
+    }, []);
     /* Se preguntan al abrir un asunto y al terminar de generar: son los dos
        momentos en que la respuesta cambia. */
     const traerGuardados = useCallback(async (num: string) => {
@@ -1303,6 +1325,17 @@ export default function TallerDeSentencias() {
             void pedirAcervo();
         }
     }, [pedirPropuesta, pedirAcervo, material, problemas.length]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+    // AL TERMINAR, SE ABRE SOLA. Un segundo después de llegar el proyecto,
+    // para que antes se vean el documento descargado y sus avisos.
+    useEffect(() => {
+        const v = proyecto?.version;
+        if (!v || !encargo.numero) return;
+        const clave = `${encargo.numero}|${v}`;
+        if (opinadas.has(clave)) return;
+        const t = setTimeout(() => setOpinion({ version: v }), 1200);
+        return () => clearTimeout(t);
+    }, [proyecto?.version, encargo.numero]);   // eslint-disable-line react-hooks/exhaustive-deps
 
     /* ═══════════════════════════════════════════════════════════════════════
        VOLVER ATRÁS Y SALIR: EL CAMINO NO ES DE UNA SOLA DIRECCIÓN
@@ -3163,6 +3196,10 @@ export default function TallerDeSentencias() {
                                 y el secretario no sabría cuáles, que es exactamente el
                                 fallo que este recuadro vino a cerrar. */}
                             {!previo.parcial && (
+                                <BotonOpinion hecha={opinadas.has(`${encargo.numero}|${previo.version ?? 0}`)}
+                                              onAbrir={() => setOpinion({ version: previo.version ?? 0 })} />
+                            )}
+                            {!previo.parcial && (
                             <AvisoBorrador datos={{
                                 palabras: previo.palabras,
                                 avisos: previo.avisos.length,
@@ -3230,6 +3267,8 @@ export default function TallerDeSentencias() {
                                     </p>
                                 </div>
                             </Tarjeta>
+                            <BotonOpinion hecha={opinadas.has(`${encargo.numero}|${proyecto.version ?? 0}`)}
+                                          onAbrir={() => setOpinion({ version: proyecto.version ?? 0 })} />
                             <AvisoBorrador datos={{
                                 palabras: proyecto.palabras, avisos: proyecto.avisos,
                                 huecos: proyecto.huecos, tieneAdvertencias: proyecto.tieneAdvertencias,
@@ -3251,6 +3290,39 @@ export default function TallerDeSentencias() {
                 </div>
             </main>
             <VentanaTesis tesis={tesisAbierta} onCerrar={() => setTesisAbierta(null)} />
+            <OpinionProyecto abierto={!!opinion} numero={encargo.numero} correo={correo}
+                             version={opinion?.version ?? 0}
+                             // Cerrar sin enviar TAMBIÉN la da por vista: no se
+                             // vuelve a abrir sola en esa versión. El botón sigue.
+                             onCerrar={() => {
+                                 if (opinion) marcarOpinion(`${encargo.numero}|${opinion.version}`);
+                                 setOpinion(null);
+                             }}
+                             onGuardada={() => {
+                                 if (opinion) marcarOpinion(`${encargo.numero}|${opinion.version}`);
+                             }} />
         </div>
+    );
+}
+
+/** El botón que abre la opinión desde la tarjeta del proyecto. */
+function BotonOpinion({ hecha, onAbrir }: { hecha: boolean; onAbrir: () => void }) {
+    return (
+        <button type="button" onClick={onAbrir}
+                className={cn('flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition',
+                    'border-accent-gold/25 bg-accent-gold/[0.05] hover:border-accent-gold/45 hover:bg-accent-gold/[0.08]')}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-accent-gold/35 bg-accent-gold/[0.1]">
+                <Star className="h-4 w-4 text-accent-gold" />
+            </span>
+            <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-medium text-white/90">
+                    {hecha ? 'Tu opinión sobre este proyecto' : '¿Qué tal salió? Danos tu opinión'}
+                </span>
+                <span className="block text-[12px] text-white/50">
+                    {hecha ? 'Ábrela para revisarla o cambiarla.'
+                           : 'Un minuto: la nota, cuánto corregiste y qué mejorarías. Con eso se afina el redactor.'}
+                </span>
+            </span>
+        </button>
     );
 }

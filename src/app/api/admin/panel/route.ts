@@ -26,6 +26,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { esAdmin } from '@/lib/admins';
+import { usuarios as auditarUsuarios, avisosPorFamilia, resumenOpiniones } from '@/lib/auditoriaTaller';
+import type { Evento, Perfil, Opinion } from '@/lib/auditoriaTaller';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -183,6 +185,74 @@ async function seguridad(params: URLSearchParams) {
 }
 
 /** Vitrina: las autorizaciones que esperan revisión, con sus archivos. */
+/**
+ * EL AUDITOR DEL TALLER (24-sep-2026). David: «debemos implementar un auditor
+ * para verificar la experiencia de todos los usuarios para aprovechar la
+ * calidad de sus sentencias».
+ *
+ * Tres fuentes, cruzadas: lo que HIZO cada secretario (taller_piloto_uso),
+ * lo que DIJO de sus sentencias (taller_opiniones) y lo que la MÁQUINA le
+ * avisó en cada proyecto (los avisos guardados en taller_sesiones). Las
+ * banderas y las sumas las calcula `lib/auditoriaTaller`, que es puro.
+ */
+async function taller() {
+    const db = admin();
+    // LOS EVENTOS PASAN DE MIL, y supabase-js corta en mil sin avisar: se
+    // piden por páginas hasta que no vuelva nada.
+    const eventos: Evento[] = [];
+    for (let desde = 0; desde < 50000; desde += 1000) {
+        const { data, error } = await db.from('taller_piloto_uso')
+            .select('email, expediente, etapa, creado_en')
+            .order('id', { ascending: true }).range(desde, desde + 999);
+        if (error) throw error;
+        eventos.push(...((data ?? []) as Evento[]));
+        if (!data || data.length < 1000) break;
+    }
+    const correos = Array.from(new Set(eventos.map((e) => (e.email || '').toLowerCase()).filter(Boolean)));
+    const [{ data: perfiles }, { data: opiniones }, { data: sesiones }] = await Promise.all([
+        correos.length
+            ? db.from('user_profiles').select('email, subscription_type, proyectos_mes_usados, '
+                + 'proyectos_mes_limite, proyectos_recargados, proyectos_prueba_usados').in('email', correos)
+            : Promise.resolve({ data: [] as Perfil[] }),
+        db.from('taller_opiniones').select('*').order('actualizado_en', { ascending: false }).limit(500),
+        // SÓLO LA PILA DE PROYECTOS, no el estado entero: ése lleva los dos
+        // documentos leídos y pesa megas por sesión.
+        db.from('taller_sesiones').select('email, expediente, proyectos:estado->proyectos')
+            .not('estado->proyectos', 'is', null),
+    ]);
+    const ops = (opiniones ?? []) as Opinion[];
+    const filas = auditarUsuarios(eventos, (perfiles ?? []) as Perfil[], ops);
+    const fichas: { email: string; expediente: string; version: number; avisos: string[] }[] = [];
+    for (const s of (sesiones ?? []) as any[]) {
+        for (const p of (Array.isArray(s.proyectos) ? s.proyectos : [])) {
+            if (!p || typeof p !== 'object') continue;
+            fichas.push({ email: s.email, expediente: s.expediente,
+                          version: Number(p.version || 0),
+                          avisos: Array.isArray(p.avisos) ? p.avisos.map(String) : [] });
+        }
+    }
+    const ahora = Date.now();
+    const clientes = filas.filter((f) => !f.sinLimite);
+    return {
+        cifras: {
+            usuarios: filas.length,
+            clientes: clientes.length,
+            activos7: filas.filter((f) => f.diasSinUso <= 7).length,
+            proyectos: filas.reduce((a, f) => a + f.proyectos, 0),
+            proyectos7: filas.reduce((a, f) => a + f.proyectos7, 0),
+            proyectosAuditados: fichas.length,
+            conBandera: clientes.filter((f) => f.banderas.some((b) => b.tono === 'malo')).length,
+        },
+        opiniones: resumenOpiniones(ops),
+        usuarios: filas,
+        avisos: avisosPorFamilia(fichas).slice(0, 25),
+        recientes: ops.slice(0, 40).map((o) => ({
+            ...o, cuenta: (o.email || '').split('@')[0],
+            dias: Math.floor((ahora - new Date(o.actualizado_en || o.creado_en).getTime()) / 864e5),
+        })),
+    };
+}
+
 async function vitrina() {
     const db = admin();
     const { data } = await db.from('vitrina_autorizaciones')
@@ -299,6 +369,7 @@ export async function GET(req: NextRequest) {
             case 'soporte': datos = await soporte(p); break;
             case 'seguridad': datos = await seguridad(p); break;
             case 'vitrina': datos = await vitrina(); break;
+            case 'taller': datos = await taller(); break;
             default: return NextResponse.json({ error: 'sección desconocida' }, { status: 400 });
         }
         // El tiempo va en la respuesta a propósito: el panel viejo era lento y

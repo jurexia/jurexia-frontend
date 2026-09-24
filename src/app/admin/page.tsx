@@ -29,10 +29,10 @@ import { supabase } from '@/lib/supabase';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import {
     LayoutDashboard, Users, CreditCard, Megaphone, LifeBuoy, ShieldAlert,
-    Gem, Search, Loader2, ChevronLeft, ChevronRight, X, Check, RefreshCw,
+    Gem, Search, Loader2, ChevronLeft, ChevronRight, X, Check, RefreshCw, Scale, Star,
 } from 'lucide-react';
 
-type Seccion = 'resumen' | 'cuentas' | 'finanzas' | 'campanias' | 'soporte' | 'seguridad' | 'vitrina';
+type Seccion = 'resumen' | 'cuentas' | 'finanzas' | 'campanias' | 'soporte' | 'seguridad' | 'vitrina' | 'taller';
 
 const SECCIONES: { id: Seccion; nombre: string; icono: typeof Users }[] = [
     { id: 'resumen', nombre: 'Resumen', icono: LayoutDashboard },
@@ -40,6 +40,9 @@ const SECCIONES: { id: Seccion; nombre: string; icono: typeof Users }[] = [
     { id: 'finanzas', nombre: 'Finanzas', icono: CreditCard },
     { id: 'campanias', nombre: 'Campañas', icono: Megaphone },
     { id: 'soporte', nombre: 'Soporte', icono: LifeBuoy },
+    // EL AUDITOR DEL TALLER (24-sep-2026): quién lo usa, qué opina de sus
+    // sentencias y qué le avisó la máquina, con banderas que se levantan solas.
+    { id: 'taller', nombre: 'Taller', icono: Scale },
     { id: 'vitrina', nombre: 'Vitrina', icono: Gem },
     { id: 'seguridad', nombre: 'Seguridad', icono: ShieldAlert },
 ];
@@ -431,6 +434,219 @@ export default function PanelAdmin() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* ── TALLER: EL AUDITOR ─────────────────────────────────────
+                    David (24-sep-2026): «un auditor para verificar la
+                    experiencia de todos los usuarios para aprovechar la
+                    calidad de sus sentencias». Tres fuentes cruzadas: lo que
+                    hizo cada secretario, lo que dijo de sus sentencias y lo
+                    que la máquina le avisó en cada proyecto. */}
+                {seccion === 'taller' && d && (
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <Cifra etiqueta="Secretarios" valor={d.cifras.usuarios}
+                                pie={`${d.cifras.clientes} clientes · ${d.cifras.activos7} activos en 7 días`} />
+                            <Cifra etiqueta="Proyectos" valor={d.cifras.proyectos} acento="oro"
+                                pie={`${d.cifras.proyectos7} en los últimos 7 días`} />
+                            <Cifra etiqueta="Firmables con poca corrección"
+                                valor={d.opiniones.firmables === null ? '—' : `${d.opiniones.firmables}%`}
+                                acento="azul"
+                                pie={`${d.opiniones.total} opinión(es) · media ${d.opiniones.califMedia ?? '—'}/5`} />
+                            <Cifra etiqueta="Clientes con bandera roja" valor={d.cifras.conBandera}
+                                acento={d.cifras.conBandera ? 'rojo' : undefined}
+                                pie={`${d.cifras.proyectosAuditados} proyectos auditados`} />
+                        </div>
+
+                        {/* QUÉ OPINAN DE SUS SENTENCIAS, aspecto por aspecto */}
+                        <div className="rounded-xl border border-cream-400 bg-white p-5">
+                            <p className="text-[11px] uppercase tracking-wider text-accent-brown mb-3">
+                                Qué opinan de sus sentencias
+                            </p>
+                            {d.opiniones.total === 0 ? (
+                                <p className="text-sm text-charcoal-700">
+                                    Todavía no hay opiniones. Se piden solas al terminar cada proyecto.
+                                </p>
+                            ) : (
+                                <div className="grid gap-5 lg:grid-cols-2">
+                                    <div className="space-y-2">
+                                        {d.opiniones.aspectos.map((a: any) => {
+                                            const tot = a.bien + a.mejorar;
+                                            return (
+                                                <div key={a.clave} className="flex items-center gap-3">
+                                                    <span className="text-sm text-charcoal-700 w-32 shrink-0">{a.etiqueta}</span>
+                                                    <div className="flex-1 h-2 rounded-full bg-cream-200 overflow-hidden flex">
+                                                        {tot > 0 && <div className="h-full bg-green-600" style={{ width: `${(a.bien / tot) * 100}%` }} />}
+                                                        {tot > 0 && <div className="h-full bg-red-500" style={{ width: `${(a.mejorar / tot) * 100}%` }} />}
+                                                    </div>
+                                                    <span className="text-xs tabular-nums w-24 text-right text-charcoal-700">
+                                                        {tot ? `${a.bien} bien · ${a.mejorar} mejorar` : 'sin datos'}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-charcoal-700 mb-2">Cuánto tuvieron que corregir para firmar</p>
+                                        {(['nada', 'poco', 'mucho', 'rehecho'] as const).map((k) => {
+                                            const n = d.opiniones.correccion[k] || 0;
+                                            const tot = Object.values(d.opiniones.correccion as Record<string, number>).reduce((x, y) => x + y, 0) || 1;
+                                            return (
+                                                <div key={k} className="flex items-center gap-3 mb-1.5">
+                                                    <span className="text-sm text-charcoal-700 w-28 shrink-0">
+                                                        {{ nada: 'Nada', poco: 'Poco', mucho: 'Mucho', rehecho: 'Lo rehízo' }[k]}
+                                                    </span>
+                                                    <div className="flex-1 h-2 rounded-full bg-cream-200 overflow-hidden">
+                                                        <div className={`h-full rounded-full ${k === 'nada' || k === 'poco' ? 'bg-accent-gold' : 'bg-charcoal-700'}`}
+                                                            style={{ width: `${(n / tot) * 100}%` }} />
+                                                    </div>
+                                                    <span className="text-sm tabular-nums w-8 text-right text-charcoal-900">{n}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* CADA SECRETARIO, con sus banderas */}
+                        <div className="rounded-xl border border-cream-400 bg-white overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="text-left text-[11px] uppercase tracking-wider text-accent-brown border-b border-cream-400">
+                                        <th className="px-4 py-3">Cuenta</th>
+                                        <th className="px-3 py-3">Plan</th>
+                                        <th className="px-3 py-3 text-right">Proyectos</th>
+                                        <th className="px-3 py-3 text-right">Último uso</th>
+                                        <th className="px-3 py-3 text-right">Le quedan</th>
+                                        <th className="px-3 py-3 text-right">Opinión</th>
+                                        <th className="px-4 py-3">Banderas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {d.usuarios.map((u: any) => (
+                                        <tr key={u.email} className="border-b border-cream-200 align-top">
+                                            <td className="px-4 py-3">
+                                                <p className="text-charcoal-900">{u.email.split('@')[0]}</p>
+                                                <p className="text-xs text-charcoal-700">
+                                                    {u.expedientes} expediente(s){u.delPiloto ? ' · piloto' : ''}
+                                                </p>
+                                            </td>
+                                            <td className="px-3 py-3 text-charcoal-700">{NOMBRE_PLAN[u.plan] ?? u.plan}</td>
+                                            <td className="px-3 py-3 text-right tabular-nums">
+                                                <span className="text-charcoal-900">{u.proyectos}</span>
+                                                <span className="block text-xs text-charcoal-700">{u.proyectos7} en 7 d</span>
+                                            </td>
+                                            <td className="px-3 py-3 text-right tabular-nums">
+                                                <span className={u.diasSinUso >= 7 && !u.sinLimite ? 'text-red-600' : 'text-charcoal-900'}>
+                                                    {u.diasSinUso === 0 ? 'hoy' : `hace ${u.diasSinUso} d`}
+                                                </span>
+                                                <span className="block text-xs text-charcoal-700">{fecha(u.ultimoUso)}</span>
+                                            </td>
+                                            <td className="px-3 py-3 text-right tabular-nums">
+                                                {u.restantes === null ? <span className="text-charcoal-700">sin tope</span> : (
+                                                    <>
+                                                        <span className={u.restantes <= 1 ? 'text-red-600' : 'text-charcoal-900'}>{u.restantes}</span>
+                                                        <span className="block text-xs text-charcoal-700">
+                                                            mes {u.mesUsados}/{u.mesLimite}{u.recargados ? ` · +${u.recargados}` : ''}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </td>
+                                            <td className="px-3 py-3 text-right tabular-nums text-charcoal-900">
+                                                {u.opiniones ? `${u.califMedia ?? '—'}/5` : '—'}
+                                                {u.opiniones > 0 && <span className="block text-xs text-charcoal-700">{u.opiniones} opinión(es)</span>}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex flex-wrap gap-1.5 max-w-[420px]">
+                                                    {u.banderas.map((b: any) => (
+                                                        <Insignia key={b.clave} texto={b.texto}
+                                                            tono={b.tono === 'malo' ? 'malo' : b.tono === 'aviso' ? 'aviso' : 'neutro'} />
+                                                    ))}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* LO QUE AVISA LA MÁQUINA, por familia */}
+                        <div className="rounded-xl border border-cream-400 bg-white p-5">
+                            <p className="text-[11px] uppercase tracking-wider text-accent-brown mb-1">
+                                Lo que avisa la máquina
+                            </p>
+                            <p className="text-xs text-charcoal-700 mb-3">
+                                Los avisos que el propio pipeline puso en cada proyecto, agrupados. Lo que se repite en
+                                muchos proyectos es un defecto del redactor, no del asunto.
+                            </p>
+                            <div className="space-y-1.5">
+                                {d.avisos.map((a: any) => (
+                                    <div key={a.familia} className="flex items-center gap-3" title={a.ejemplo}>
+                                        <span className="text-sm tabular-nums w-10 text-right text-charcoal-900">{a.proyectos}</span>
+                                        <div className="w-24 h-1.5 rounded-full bg-cream-200 overflow-hidden shrink-0">
+                                            <div className="h-full bg-accent-brown"
+                                                style={{ width: `${(a.proyectos / Math.max(1, d.cifras.proyectosAuditados)) * 100}%` }} />
+                                        </div>
+                                        <span className="text-sm text-charcoal-900 flex-1 min-w-0 truncate">{a.familia}</span>
+                                        <span className="text-xs text-charcoal-700 shrink-0">{a.usuarios} usuario(s)</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* LAS OPINIONES, tal como las escribieron */}
+                        {d.recientes.length > 0 && (
+                            <div className="space-y-3">
+                                <p className="text-[11px] uppercase tracking-wider text-accent-brown">Opiniones recientes</p>
+                                {d.recientes.map((o: any) => (
+                                    <div key={`${o.email}-${o.expediente}-${o.version}`} className="rounded-xl border border-cream-400 bg-white p-4">
+                                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                                            <span className="text-sm font-medium text-charcoal-900">{o.cuenta}</span>
+                                            <span className="text-xs text-charcoal-700">
+                                                {o.expediente} · v{o.version}{o.tipo_asunto ? ` · ${o.tipo_asunto.replace(/_/g, ' ')}` : ''}
+                                                {o.sentido ? ` · ${o.sentido.replace(/_/g, ' ')}` : ''}
+                                            </span>
+                                            {o.calificacion && (
+                                                <span className="inline-flex items-center gap-0.5 ml-2">
+                                                    {[1, 2, 3, 4, 5].map((i) => (
+                                                        <Star key={i} className={`w-3.5 h-3.5 ${i <= o.calificacion ? 'fill-accent-gold text-accent-gold' : 'text-cream-500'}`} />
+                                                    ))}
+                                                </span>
+                                            )}
+                                            {o.correccion && (
+                                                <Insignia texto={`corrección: ${o.correccion === 'rehecho' ? 'lo rehízo' : o.correccion}`}
+                                                    tono={o.correccion === 'nada' || o.correccion === 'poco' ? 'ok' : 'malo'} />
+                                            )}
+                                            <span className="text-xs text-charcoal-700 ml-auto">
+                                                {o.dias === 0 ? 'hoy' : `hace ${o.dias} d`} · {o.avisos_n} aviso(s) de la máquina
+                                            </span>
+                                        </div>
+                                        {Object.keys(o.aspectos || {}).length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5 mb-2">
+                                                {Object.entries(o.aspectos as Record<string, string>).map(([k, v]) => (
+                                                    <Insignia key={k} texto={`${k}: ${v === 'bien' ? 'bien' : 'a mejorar'}`}
+                                                        tono={v === 'bien' ? 'ok' : 'aviso'} />
+                                                ))}
+                                            </div>
+                                        )}
+                                        {o.sobre_sentencia && (
+                                            <p className="text-sm text-charcoal-900 whitespace-pre-wrap mb-1.5">
+                                                <span className="text-xs uppercase tracking-wider text-accent-brown mr-1.5">Sentencia</span>
+                                                {o.sobre_sentencia}
+                                            </p>
+                                        )}
+                                        {o.sobre_taller && (
+                                            <p className="text-sm text-charcoal-900 whitespace-pre-wrap">
+                                                <span className="text-xs uppercase tracking-wider text-accent-brown mr-1.5">Taller</span>
+                                                {o.sobre_taller}
+                                            </p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
