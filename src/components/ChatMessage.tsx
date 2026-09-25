@@ -1296,7 +1296,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                     : message.isPro
                                         ? <Sparkles className="w-3 h-3 text-accent-gold" />
                                         : <PenTool className="w-3 h-3 text-charcoal-500" />}
-                                <span>{message.isPlatinum ? 'Redacción Platinum' : message.isPro ? 'Redacción Pro' : 'Redacción Profesional'}</span>
+                                <span>{message.isPlatinum ? 'Redacción Platinum' : message.isPro ? 'Redacción Pro' : 'Redacción Básica'}</span>
                             </div>
                         )}
                         {/* Thinking/Reasoning section (collapsible) */}

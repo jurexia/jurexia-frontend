@@ -37,6 +37,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { X, ChevronRight, ArrowLeft, Lock, Check } from 'lucide-react';
+import { useAuth } from '@/lib/useAuth';
+import { type Esfuerzo, esfuerzoParaEnviar, permitido, techoDelPlan } from '@/lib/esfuerzo';
 
 interface DraftModalProps {
     isOpen: boolean;
@@ -44,6 +46,8 @@ interface DraftModalProps {
     onDraft: (draftRequest: DraftRequest) => void;
     estado?: string;
     /** Plan Pro o superior: habilita los escalones de redacción. */
+    /** Ya no decide nada: el techo sale del plan (`techoDelPlan`). Se deja
+     *  para no romper a quien lo pase. */
     isPro?: boolean;
 }
 
@@ -258,11 +262,15 @@ const FLUJOS: Record<DocumentType, Paso[]> = {
     ],
 };
 
-const MOTORES: { valor: NivelEscrito; nombre: string; glosa: string; requierePro: boolean }[] = [
-    { valor: 'profesional', nombre: 'Profesional', glosa: 'En todos los planes', requierePro: false },
-    { valor: 'pro', nombre: 'Pro', glosa: 'Más extensión y criterios', requierePro: true },
-    { valor: 'platinum', nombre: 'Platinum', glosa: 'El más desarrollado', requierePro: true },
+/* Los mismos tres esfuerzos del desplegable del compositor (25-sep-2026),
+   con el mismo techo por plan. `profesional` es el nombre interno del
+   escalón Básico: viaja como `[MODO_REDACCION]`. */
+const MOTORES: { valor: NivelEscrito; esfuerzo: Esfuerzo; nombre: string; glosa: string; bloqueo: string }[] = [
+    { valor: 'profesional', esfuerzo: 'basico', nombre: 'Básico', glosa: 'En todos los planes', bloqueo: '' },
+    { valor: 'pro', esfuerzo: 'pro', nombre: 'Pro', glosa: 'Razona a fondo cada argumento', bloqueo: 'Requiere plan Pro' },
+    { valor: 'platinum', esfuerzo: 'platinum', nombre: 'Platinum', glosa: 'El motor más potente', bloqueo: 'Requiere plan Platinum' },
 ];
+const NIVEL_DE: Record<Esfuerzo, NivelEscrito> = { basico: 'profesional', pro: 'pro', platinum: 'platinum' };
 
 /* LOS ESTADOS Y CUÁL VALE.
    Una denuncia de nivel estatal salió al API como «Nivel: Estatal ()», sin
@@ -380,14 +388,17 @@ function Losa({ nombre, glosa, encendida, bloqueada, onClick, insignia, compacta
 }
 
 // ── El asistente ───────────────────────────────────────────────────────────
-export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL', isPro = false }: DraftModalProps) {
+export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL' }: DraftModalProps) {
     const [tipo, setTipo] = useState<DocumentType | null>(null);
     const [elegido, setElegido] = useState<Record<string, string>>({});
     const [faltas, setFaltas] = useState<string[]>([]);
     const [indice, setIndice] = useState(0);
     const [enHechos, setEnHechos] = useState(false);
     const [descripcion, setDescripcion] = useState('');
-    const [nivel, setNivel] = useState<NivelEscrito>('profesional');
+    const { user, profile } = useAuth();
+    const techo = techoDelPlan(profile?.subscription_type, user?.email);
+    // Arranca en el esfuerzo del desplegable del compositor.
+    const [nivel, setNivel] = useState<NivelEscrito>(() => NIVEL_DE[esfuerzoParaEnviar() ?? 'basico']);
     const [selectedEstado, setSelectedEstado] = useState(() => estadoDelSelector(estado));
 
     // El estado del chat puede llegar DESPUÉS de montar. Se toma al abrir si
@@ -647,17 +658,17 @@ export default function DraftModal({ isOpen, onClose, onDraft, estado = 'FEDERAL
 
                             <div className="mt-4">
                                 <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">
-                                    Con qué motor se escribe
+                                    Esfuerzo de redacción
                                 </div>
                                 <div className="grid gap-2 sm:grid-cols-3">
                                     {MOTORES.map((m) => {
-                                        const bloqueado = m.requierePro && !isPro;
+                                        const bloqueado = !permitido(m.esfuerzo, techo);
                                         return (
                                             <Losa
                                                 key={m.valor}
                                                 compacta
                                                 nombre={m.nombre}
-                                                glosa={bloqueado ? 'Requiere plan Pro' : m.glosa}
+                                                glosa={bloqueado ? m.bloqueo : m.glosa}
                                                 encendida={nivel === m.valor}
                                                 bloqueada={bloqueado}
                                                 onClick={() => setNivel(m.valor)}

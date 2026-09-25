@@ -148,14 +148,19 @@ LA CAJA DE CONSULTA (pantalla del chat)
   «Leyes estatales». La elección se queda guardada para las siguientes
   consultas. NO existe una opción «Federal» en la barra superior: la entidad de
   la barra superior sólo dice qué escudo y qué leyes estatales se usan.
-· Materia — Civil, Penal, Familiar o Administrativa. En Auto se detecta sola.
 · Rayo (Respuesta rápida) — la cita al grano, sin desarrollo. Todos los planes.
 · Globo (Fuentes de internet) — añade búsqueda en dominios oficiales: poderes
   judiciales, congresos, diarios oficiales. Desde plan Pro. Se enciende con un
   clic y se apaga al recargar, para no gastar cuando no hace falta.
-· Buscar / Redactar — Buscar halla la norma con cita verificable; Redactar
-  construye el argumento articulado. Al elegir Redactar aparecen tres escalones:
-  Profesional (todos los planes), Pro y Platinum, con razonamiento más profundo.
+· Redactar — no hay botón: basta pedirlo en el mensaje («Redacta una demanda
+  de…», «Elabora los agravios contra…») y Iurexia entrega el escrito en vez de
+  una consulta. Después se puede pedir «agrega…», «corrige…», «amplía…» y
+  retoca ese mismo escrito. La materia también se deduce sola de la consulta.
+· Esfuerzo — el desplegable junto a «Fuentes» dice con qué fuerza se redacta:
+  Básico (todos los planes), Pro (desde plan Pro: razona a fondo cada
+  argumento) y Platinum (plan Platinum: el motor más potente, escritos más
+  extensos y argumentos en capas). Sólo cuenta cuando se pide un escrito; las
+  consultas no cambian. Se queda guardado para las siguientes consultas.
 · Micrófono — dicta la consulta en vez de escribirla. Chrome y Safari.
 · Clip — sube un PDF, Word o TXT y Iurexia lo lee completo. El límite de páginas
   crece con el plan.
@@ -172,15 +177,10 @@ LOS MODOS DE TRABAJO
   como el suyo, en qué sentido y con qué frecuencia. Exclusivo Platinum.
 
 LOS GENIOS
-Especialistas por materia: CIDH, Amparo, Civil, Penal, Laboral, Agrario, Fiscal,
-Mercantil y Administrativo. Cada uno lleva en memoria el corpus completo de su
-materia —códigos, leyes orgánicas, reglamentos—, así que cita artículos
-textuales y conecta normas como un especialista.
-· Se activan con un clic en la fila de Genios, bajo la caja de consulta.
-· Desde plan Pro. Hasta DOS a la vez. La sesión dura 3 minutos tras activarse.
-· No se pueden combinar con el modo Redacción cuando hay dos activos.
-· Si no necesita tanta profundidad, el selector de Fuentes y el filtro de Materia ya dan
-  respuestas muy completas sin consumir una sesión de Genio.
+Se retiraron el 25-sep-2026: la búsqueda del chat con todo el acervo y las
+fuentes de internet ya da respuestas más completas. Si alguien los busca, se le
+dice que ya no existen y que basta con preguntar; para escritos largos, los
+flujos de trabajo (desde plan Pro).
 
 LA BARRA SUPERIOR
 · Sálvame — el amparo por salud, con su propio flujo de urgencia.

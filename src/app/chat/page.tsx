@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
 import { fuentesElegidas } from '@/lib/fuentes';
+import { esfuerzoParaEnviar, marcadorDeEsfuerzo } from '@/lib/esfuerzo';
 import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
@@ -1325,7 +1326,8 @@ export default function ChatPage() {
     const desarrollarDesdeFundamento = useCallback((instruccion: string) => {
         const limpio = instruccion.trim();
         if (!limpio) return;
-        handleSendMessage(`[MODO_REDACCION] ${limpio}`, false);
+        // Con el esfuerzo del desplegable (25-sep-2026); antes, siempre el base.
+        handleSendMessage(`${marcadorDeEsfuerzo(esfuerzoParaEnviar())} ${limpio}`, false);
     }, [handleSendMessage]);
 
     /* LO QUE EL SELLO YA FIRMÓ SE DA POR BUENO EN LA SIGUIENTE PREGUNTA.
@@ -1672,8 +1674,8 @@ export default function ChatPage() {
                                     placeholder={modoBasico
                                         ? 'Pregunta y te doy los criterios aplicables…'
                                         : carpetaActivaId
-                                            ? 'Pregunta sobre el asunto de la carpeta…'
-                                            : 'Escribe tu consulta legal...'}
+                                            ? 'Consulta o pide un escrito sobre la carpeta…'
+                                            : 'Consulta o pide un escrito…'}
                                     estado={selectedEstado}
                                     activeGenios={activeGenios}
                                     setActiveGenios={handleToggleGenios}

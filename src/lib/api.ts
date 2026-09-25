@@ -3,6 +3,7 @@
  */
 
 import { fuentesElegidas, FUENTES } from './fuentes';
+import { esfuerzoParaEnviar } from './esfuerzo';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
@@ -11,7 +12,7 @@ export interface Message {
     content: string;
     isPro?: boolean;  // True when the assistant message was generated in Redacción Pro mode
     isPlatinum?: boolean;  // Redacción Platinum: el escalón superior (también trae isPro)
-    isProfesional?: boolean;  // Redacción Profesional: el escalón base, incluido en todos los planes
+    isProfesional?: boolean;  // Esfuerzo Básico: el escalón base, incluido en todos los planes
     /** Registros digitales citados que NO estaban en el acervo recuperado. */
     registrosFuera?: string[];
 }
@@ -183,6 +184,9 @@ async function* streamChatInternal(
             // El selector «Fuentes»: se lee al enviar, como el globo. Con las
             // cuatro encendidas el servidor se comporta como siempre.
             fuentes: extra?.todoElAcervo ? [...FUENTES] : fuentesElegidas(),
+            // El desplegable «Esfuerzo»: sólo cuenta si el mensaje pide un
+            // escrito, y el servidor lo acota al plan. Ver `./esfuerzo`.
+            ...(esfuerzoParaEnviar() ? { esfuerzo: esfuerzoParaEnviar() } : {}),
             ...(fuentesVerificadas().length ? { fuentes_previas: fuentesVerificadas() } : {}),
             ...(fuero ? { fuero } : {}),
         }),

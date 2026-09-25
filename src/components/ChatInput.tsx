@@ -6,23 +6,20 @@ import {
     ArrowRight,
     Square,
     Paperclip,
-    Search,
-    Sparkles,
     Shield,
     FileEdit,
     Gavel,
     Landmark,
-    PenTool,
     Lock,
     Mic,
     BookOpen,
     BarChart2,
-    Gem,
     Zap,
     Globe
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import SelectorFuentes from './SelectorFuentes';
+import SelectorEsfuerzo from './SelectorEsfuerzo';
 import { FileText, X, Network, ChevronUp, ChevronDown, UploadCloud } from 'lucide-react';
 import { validarAdjunto, EXTENSIONES_ADJUNTO, LIMITE_ADJUNTO_MB } from '@/lib/documento/adjuntos';
 import TextEnhanceModal from './TextEnhanceModal';
@@ -32,72 +29,6 @@ import JurimetriaModal from './JurimetriaModal';
 import { enhanceText } from '@/lib/api';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
-
-// ── Los tres escalones de redacción ──────────────────────────────────────────
-//
-// Profesional lo tiene todo el mundo; Pro viene con el plan Pro; Platinum con
-// el plan Platinum. Ojo con el nombre: «Redacción Platinum» es el escalón de
-// este botón y no tiene relación con el futuro Platinum del redactor de
-// sentencias — son productos distintos que comparten palabra.
-//
-// La tabla vive fuera del componente para que las tres tarjetas se declaren
-// igual y ninguna se quede sin candado o sin título por descuido.
-type NivelRedaccion = 'profesional' | 'pro' | 'platinum';
-
-interface AccesoRedaccion {
-    pro: boolean;
-    platinum: boolean;
-}
-
-const NIVELES_REDACCION: {
-    id: NivelRedaccion;
-    etiqueta: string;
-    icono: typeof PenTool;
-    permitido: (a: AccesoRedaccion) => boolean;
-    titulo: string;
-    tituloBloqueado: string;
-    claseActiva: string;
-    claseHover: string;
-    claseIcono: string;
-    clasePunto: string;
-}[] = [
-    {
-        id: 'profesional',
-        etiqueta: 'Profesional',
-        icono: PenTool,
-        permitido: () => true,
-        titulo: 'Redacción Profesional — incluida en todos los planes',
-        tituloBloqueado: '',
-        claseActiva: 'bg-charcoal-900 text-white border-charcoal-900',
-        claseHover: 'hover:border-charcoal-400 hover:text-charcoal-700',
-        claseIcono: 'text-white',
-        clasePunto: 'bg-white',
-    },
-    {
-        id: 'pro',
-        etiqueta: 'Pro',
-        icono: Sparkles,
-        permitido: a => a.pro,
-        titulo: 'Redacción Pro — razonamiento profundo, mayor calidad jurídica',
-        tituloBloqueado: 'Redacción Pro disponible en plan Pro',
-        claseActiva: 'bg-gradient-to-r from-amber-50 via-white to-amber-50 text-[#8a6d2e] border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.35)]',
-        claseHover: 'hover:border-[#c9a962]/50 hover:text-[#8a6d2e]',
-        claseIcono: 'text-[#c9a962]',
-        clasePunto: 'bg-[#c9a962]',
-    },
-    {
-        id: 'platinum',
-        etiqueta: 'Platinum',
-        icono: Gem,
-        permitido: a => a.platinum,
-        titulo: 'Redacción Platinum — el motor de máxima calidad de Iurexia',
-        tituloBloqueado: 'Redacción Platinum disponible en plan Platinum',
-        claseActiva: 'bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-[#e8e4dd] border-slate-600 shadow-[0_0_10px_rgba(100,116,139,0.45)]',
-        claseHover: 'hover:border-slate-400 hover:text-slate-700',
-        claseIcono: 'text-[#e8e4dd]',
-        clasePunto: 'bg-[#e8e4dd]',
-    },
-];
 
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
@@ -136,7 +67,7 @@ export default function ChatInput({
     onDocumentSubmit,
     onStop,
     isLoading = false,
-    placeholder = "Escribe tu consulta o sube un documento",
+    placeholder = "Consulta o pide un escrito…",
     estado,
     activeGenios = [],
     setActiveGenios,
@@ -153,11 +84,7 @@ export default function ChatInput({
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
     const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes' | 'flash'>('search');
-    const [chatMode, setChatMode] = useState<'buscar' | 'redactar'>('buscar');
     const [fuentesWeb, setFuentesWeb] = useState(false);
-    // Se guarda el escalón elegido, no una bandera por escalón: así no existe
-    // el estado imposible «Pro y Platinum a la vez».
-    const [nivelRedaccion, setNivelRedaccion] = useState<NivelRedaccion>('profesional');
     const [selectedCircuit, setSelectedCircuit] = useState<number | 'ALL' | null>(null);
     const [tribunalFilter, setTribunalFilter] = useState<string | null>(null);
     // Precedentes: corte (SCJN | TCC | ALL) y sala SCJN (PLENO | PRIMERA_SALA | SEGUNDA_SALA | null=todas)
@@ -189,10 +116,12 @@ export default function ChatInput({
         window.addEventListener('iurexia:desplegar-compositor', desplegar);
         return () => window.removeEventListener('iurexia:desplegar-compositor', desplegar);
     }, []);
-    // El fuero ya no se resume aquí: lo dice el botón «Fuentes», a la vista.
+    // Las fuentes y el esfuerzo ya no se resumen aquí: los dicen sus botones,
+    // a la vista. Sólo lo que está encendido dentro del panel plegado.
     const resumenPlegado = [
-        chatMode === 'buscar' ? 'Buscar' : `Redactar · ${nivelRedaccion}`,
-        activeGenios.length ? `Genios: ${activeGenios.join(', ')}` : null,
+        activeMode === 'flash' ? 'Respuesta rápida' : null,
+        fuentesWeb ? 'Fuentes de internet' : null,
+        activeMode === 'precedentes' ? 'Precedentes' : null,
     ].filter(Boolean).join(' · ');
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -317,15 +246,6 @@ export default function ChatInput({
     const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
     // (El Secretario del PJF se mudó a la barra superior del chat; su
     //  comprobación de plan vive ahora en app/chat/page.tsx.)
-    const canAccessRedactarPro = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
-    // Platinum: planes Platinum y superiores. El backend lo vuelve a comprobar,
-    // porque el marcador se puede escribir a mano en el cuadro de texto.
-    const canAccessRedactarPlatinum = isAdmin(user?.email)
-        || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
-    const accesoRedaccion: AccesoRedaccion = {
-        pro: canAccessRedactarPro,
-        platinum: canAccessRedactarPlatinum,
-    };
 
 
     useEffect(() => {
@@ -373,24 +293,6 @@ export default function ChatInput({
             }
         };
     }, []);
-
-    // ── El escalón vuelve a Profesional CUANDO TERMINA la respuesta ──────
-    // Antes se reiniciaba en el instante del envío. El resultado: el abogado
-    // pulsaba Platinum, mandaba, y el botón saltaba a «Profesional» mientras
-    // el motor Platinum escribía. La insignia de la respuesta decía PLATINUM y
-    // el botón decía Profesional — parecía que las funciones estaban
-    // mezcladas. No lo estaban: la pantalla mentía.
-    //
-    // Se conserva el reinicio (los escalones altos cuestan y dejarlos
-    // encendidos gasta sin que se pida), pero al terminar, que es cuando el
-    // abogado ya vio con qué motor se le escribió.
-    const cargandoAntes = useRef(false);
-    useEffect(() => {
-        if (cargandoAntes.current && !isLoading && nivelRedaccion !== 'profesional') {
-            setNivelRedaccion('profesional');
-        }
-        cargandoAntes.current = isLoading;
-    }, [isLoading, nivelRedaccion]);
 
     // Default to global search when entering Precedentes mode; reset tribunal on exit
     useEffect(() => {
@@ -467,15 +369,9 @@ export default function ChatInput({
             // en los caminos que no pasaban por aquí —documentos, sugerencias—
             // y además se colaba en los títulos del historial.
 
-            // Marcador del escalón: Profesional, Pro o Platinum
-            if (chatMode === 'redactar') {
-                const marcador = nivelRedaccion === 'platinum'
-                    ? '[MODO_REDACCION_PLATINUM]'
-                    : nivelRedaccion === 'pro'
-                        ? '[MODO_REDACCION_PRO]'
-                        : '[MODO_REDACCION]';
-                finalMessage = `${marcador} ${finalMessage}`;
-            }
+            // Sin marcador de redacción (25-sep-2026): el servidor reconoce el
+            // encargo en el propio mensaje y el esfuerzo viaja como campo
+            // `esfuerzo` del request. Ver `@/lib/esfuerzo`.
 
             // Prepend [MODO_PRECEDENTES] marker when in Precedentes mode
             if (activeMode === 'precedentes') {
@@ -494,10 +390,6 @@ export default function ChatInput({
             onSubmit(finalMessage, true);
             setMessage('');
             
-            // El regreso a Profesional NO va aquí. Ver el efecto de abajo:
-            // reiniciarlo en este punto hacía que el botón dijera «Profesional»
-            // mientras la respuesta Platinum se estaba escribiendo.
-
             if (textareaRef.current) {
                 textareaRef.current.style.height = 'auto';
             }
@@ -752,9 +644,7 @@ ${draftRequest.descripcion}`;
                                 onInput={handleInput}
                                 placeholder={attachedDocument
                                     ? "Escribe qué quieres hacer con el documento..."
-                                    : chatMode === 'redactar'
-                                        ? "Describe qué argumento jurídico necesitas..."
-                                        : placeholder
+                                    : placeholder
                                 }
                                 disabled={isLoading}
                                 rows={1}
@@ -859,7 +749,7 @@ ${draftRequest.descripcion}`;
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                                 Con un plan
                             </span>
-                            {['Flujos', 'Toulmin', 'Redactar', 'Jurimetría', 'Precedentes', 'Expedientes', 'Carpetas'].map((h) => (
+                            {['Flujos', 'Toulmin', 'Redacción', 'Jurimetría', 'Precedentes', 'Expedientes', 'Carpetas'].map((h) => (
                                 <button
                                     key={h}
                                     type="button"
@@ -879,8 +769,9 @@ ${draftRequest.descripcion}`;
                         siempre. En la fila del texto le robaba el ancho a lo que
                         el abogado escribe; aquí ocupa un hueco que ya existía. */}
                     {!basico && (
-                    <div className="mt-2 flex items-center gap-2.5 border-t border-gray-100 pt-2">
+                    <div className="mt-2 flex items-center gap-2 border-t border-gray-100 pt-2">
                         <SelectorFuentes estado={estado} disabled={isLoading} />
+                        <SelectorEsfuerzo disabled={isLoading} />
                         <button
                             type="button"
                             data-guide="herramientas"
@@ -894,8 +785,11 @@ ${draftRequest.descripcion}`;
                             {plegado
                                 ? <ChevronUp className="h-3.5 w-3.5 flex-shrink-0" />
                                 : <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />}
+                            {/* En el teléfono basta «Herramientas»: la flecha ya dice
+                                hacia dónde, y con el desplegable del esfuerzo al lado
+                                la frase entera se salía del cuadro. */}
                             <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
-                                {plegado ? 'Desplegar herramientas' : 'Plegar herramientas'}
+                                <span className="hidden sm:inline">{plegado ? 'Desplegar ' : 'Plegar '}</span>herramientas
                             </span>
                             {plegado && <span className="hidden min-w-0 truncate sm:inline">{resumenPlegado}</span>}
                         </button>
@@ -905,12 +799,12 @@ ${draftRequest.descripcion}`;
                     {/* Action Cards Row — Blue Cards */}
                     {!basico && !plegado && (
                     <div className="mt-2 pt-2 border-t border-gray-100">
-                        {/* Buscar / Redactar toggle + Pro — stays compact */}
-                        {/* LA FILA DEL MODO. Buscar/Redactar a la izquierda y Toulmin al
-                            final, alineado con el borde derecho de la rejilla de
-                            abajo (David, 15-sep-2026). En teléfono los tres
-                            escalones de Redactar bajan a su propio renglón para que
-                            nada se salga del cuadro. */}
+                        {/* LA FILA DEL MODO. El rayo y el globo a la izquierda y
+                            Toulmin al final, alineado con el borde derecho de la
+                            rejilla de abajo (David, 15-sep-2026). Buscar/Redactar
+                            y sus tres escalones salieron el 25-sep-2026: el
+                            encargo lo reconoce el mensaje y el esfuerzo vive en
+                            su desplegable, junto a «Fuentes». */}
                         <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 mb-2">
                             {/* Consulta rápida: sólo el rayo. Se enciende en el
                                 dorado de la casa —el amarillo de Iurexia— y el
@@ -964,76 +858,6 @@ ${draftRequest.descripcion}`;
                                     <Lock className="absolute -top-1 -right-1 w-2 h-2 text-gray-400" />
                                 )}
                             </button>
-
-                            <div
-                                data-guide="buscar-redactar"
-                                className="inline-flex items-center rounded-md border border-gray-200 overflow-hidden flex-shrink-0 mr-1"
-                            >
-                                <button
-                                    onClick={() => { setChatMode('buscar'); setNivelRedaccion('profesional'); }}
-                                    className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${chatMode === 'buscar'
-                                        ? 'bg-charcoal-900 text-white'
-                                        : 'bg-white text-gray-500 hover:text-gray-700'
-                                        }`}
-                                    title="Modo búsqueda"
-                                >
-                                    <Search className="w-3 h-3" />
-                                    Buscar
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        if (activeGenios.length >= 2) {
-                                            alert("Modo redacción no disponible con 2 genios activos, desactiva al menos uno.");
-                                            return;
-                                        }
-                                        setChatMode('redactar');
-                                    }}
-                                    className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all duration-200 ${chatMode === 'redactar'
-                                        ? 'bg-charcoal-900 text-white'
-                                        : 'bg-white text-gray-500 hover:text-gray-700'
-                                        }`}
-                                    title="Modo redacción — genera argumentos jurídicos"
-                                >
-                                    <PenTool className="w-3 h-3" />
-                                    Redactar
-                                </button>
-                            </div>
-
-                            {/* Los tres escalones de redacción. Sólo en modo Redactar.
-                                Uno siempre está elegido —Profesional por omisión— para que
-                                el abogado sepa con qué motor va a escribir, en vez de
-                                deducirlo de un interruptor apagado. */}
-                            {chatMode === 'redactar' && (
-                                <div className="order-last flex basis-full flex-wrap items-center gap-1 sm:order-none sm:basis-auto sm:flex-nowrap sm:flex-shrink-0">
-                                    {NIVELES_REDACCION.map(nivel => {
-                                        const elegido = nivelRedaccion === nivel.id;
-                                        const bloqueado = !nivel.permitido(accesoRedaccion);
-                                        const Icono = nivel.icono;
-                                        return (
-                                            <button
-                                                key={nivel.id}
-                                                onClick={() => {
-                                                    if (bloqueado) { setShowUpgradeModal('pro'); return; }
-                                                    setNivelRedaccion(nivel.id);
-                                                }}
-                                                aria-pressed={elegido}
-                                                className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-lg border
-                                                    transition-all duration-300 flex-shrink-0
-                                                    ${elegido ? nivel.claseActiva : 'bg-white text-gray-500 border-gray-200 ' + nivel.claseHover}
-                                                    ${bloqueado ? 'opacity-60' : ''}`}
-                                                title={bloqueado ? nivel.tituloBloqueado : nivel.titulo}
-                                            >
-                                                <Icono className={`w-3 h-3 ${elegido ? nivel.claseIcono : ''}`} />
-                                                <span>{nivel.etiqueta}</span>
-                                                {elegido && (
-                                                    <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${nivel.clasePunto}`} />
-                                                )}
-                                                {bloqueado && <Lock className="w-2.5 h-2.5 ml-0.5" />}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
 
                             {onAbrirConstructor && (
                                 <button
