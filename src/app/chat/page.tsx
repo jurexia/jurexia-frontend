@@ -686,22 +686,34 @@ export default function ChatPage() {
             return;
         }
 
-        // Ensure conversation exists BEFORE sending (sequential, no race condition)
+        /* LA PANTALLA REACCIONA EN EL MISMO CLIC (25-sep-2026).
+           David: «el tiempo de reacción entre que presiono enviar y veo la
+           primera reacción de la plataforma». En una consulta nueva se
+           esperaba aquí a que Supabase creara la conversación —varias idas y
+           vueltas de 0.2-0.35 s, medidas desde su Mac— y hasta entonces no se
+           pintaba ni su mensaje ni el flujo. Ahora la conversación se crea EN
+           PARALELO: `sendMessage` pinta al instante y el guardado de abajo
+           espera a que exista. Crear tarda ~1 s y el primer texto ~9 s, así que
+           el id llega antes que la respuesta; y como se marca como «recién
+           creada», el panel del documento no se cierra al recibirlo. */
         let convId = activeConversationId;
+        let creacion: Promise<string | null> | null = null;
         if (!convId && !creatingConvRef.current) {
             creatingConvRef.current = true;
-            try {
-                const newConv = await createConversation(selectedEstado || undefined);
-                if (newConv) {
-                    convId = newConv.id;
+            creacion = createConversation(selectedEstado || undefined)
+                .then((newConv) => {
+                    if (!newConv) return null;
                     vincularNueva(newConv.id);
-                    setActiveConvId(newConv.id);
                     convRecienCreadaRef.current = newConv.id;
+                    setActiveConvId(newConv.id);
                     setActiveConversationId(newConv.id);
-                }
-            } finally {
-                creatingConvRef.current = false;
-            }
+                    return newConv.id;
+                })
+                .catch((errConv) => {
+                    console.error('[Chat] No se pudo crear la conversación:', errConv);
+                    return null;
+                })
+                .finally(() => { creatingConvRef.current = false; });
         }
 
         if (!isAdminUser && !esParteDeFlujo) {
@@ -719,6 +731,7 @@ export default function ChatPage() {
         // Send the message (streaming). Devuelve el texto final de la
         // respuesta: es la fuente de verdad para el historial.
         const respuesta = await sendMessage(content, enableReasoning);
+        if (creacion) convId = await creacion;
 
         // ── DIRECT SAVE: Save user+assistant pair AFTER streaming completes ──
         // FIX 2026-05-22: Use Promise-based state reading to get the ACTUAL latest

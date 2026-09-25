@@ -250,9 +250,9 @@ export default function HomePage() {
                                                 iurexia="Auditoría con fortalezas, debilidades y mejoras"
                                             />
                                             <ComparisonChatRow
-                                                feature="Genios especializados por materia"
+                                                feature="Flujos de trabajo"
                                                 chatgpt="No tiene"
-                                                iurexia="Expertos en Amparo, CIDH, Civil, Penal, etc."
+                                                iurexia="Demandas y escritos completos, parte por parte"
                                             />
                                             <ComparisonChatRow
                                                 feature="Precio"
@@ -380,28 +380,33 @@ export default function HomePage() {
                         <div>
                             <AnimatedSection animation="slide-up">
                                 <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold tracking-widest uppercase mb-6">
-                                    ✦ Exclusivo PRO
+                                    ✦ Pro y Platinum
                                 </span>
                             </AnimatedSection>
 
+                            {/* FLUJOS DE TRABAJO (25-sep-2026): sustituye a la
+                                «Arquitectura Multi-Genio». Los Genios se retiraron
+                                del producto; lo que esta sección vende ahora es lo
+                                que el chat hace de verdad: un escrito completo,
+                                parte por parte. */}
                             <AnimatedSection animation="slide-up" delay={100}>
                                 <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
-                                    Arquitectura <span className="text-accent-gold">Multi-Genio</span>
+                                    Flujos de <span className="text-accent-gold">trabajo</span>
                                 </h2>
                             </AnimatedSection>
 
                             <AnimatedSection animation="fade-in" delay={200}>
                                 <p className="text-lg text-gray-300 mb-6 leading-relaxed">
-                                    Tu copiloto de inteligencia artificial impulsado por <span className="text-accent-gold font-medium">expertos especializados por materia</span>. Nuestros Genios (Amparo, CIDH, Civil, Penal, etc.) analizan, razonan y generan argumentos jurídicos con fundamento verificado — en tiempo real mientras trabajas.
+                                    Del encargo al <span className="text-accent-gold font-medium">escrito terminado</span>. Iurexia construye contigo la demanda de amparo, la contestación, el escrito de agravios o la revisión del contrato, parte por parte y con todo el acervo a la vista.
                                 </p>
                                 <p className="text-base text-gray-400 mb-8 leading-relaxed">
-                                    Activa hasta <span className="text-white font-medium">dos Genios simultáneamente</span> en tu chat para analizar tu caso desde múltiples perspectivas legales. El modelo avanzado procesa el contexto complejo integrando legislación, jurisprudencia y tratados de tu jurisdicción.
+                                    En cada parte propone lo que deduce de tu encargo y de tu carpeta —<span className="text-white font-medium">ya marcado, para que sólo confirmes</span>—, te pide lo que falta y, si hace falta un documento, te lo pide en vez de suponerlo. Lo que escribe cae en tu documento, con sus citas.
                                 </p>
                             </AnimatedSection>
 
                             <AnimatedSection animation="slide-up" delay={300}>
                                 <ul className="space-y-3 mb-8">
-                                    {['Razonamiento jurídico interdisciplinario de precisión', 'Uso simultáneo de hasta 2 expertos virtuales', 'Fundamentación automatizada con artículos y tesis verificadas', 'Análisis contextual especializado por materia y jurisdicción'].map((item, i) => (
+                                    {['Amparo indirecto y directo, contestación, agravios, contratos, teoría del caso y dictamen', 'Cada dato propuesto y marcado: tú sólo confirmas', 'Pide el documento que falta en vez de inventar el dato', 'Redacta con todo el acervo y con sus citas'].map((item, i) => (
                                         <li key={i} className="flex items-start gap-3">
                                             <span className="text-accent-gold font-bold mt-0.5">—</span>
                                             <span className="text-gray-300 text-sm">{item}</span>
@@ -416,7 +421,7 @@ export default function HomePage() {
                                         href="/precios"
                                         className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent-gold text-charcoal-900 font-semibold rounded-lg hover:bg-accent-gold/90 transition-all shadow-lg shadow-accent-gold/10 hover:shadow-accent-gold/20"
                                     >
-                                        Desbloquear Genios PRO →
+                                        Ver planes con flujos →
                                     </Link>
                                     <Link
                                         href="/plataforma"
@@ -428,69 +433,83 @@ export default function HomePage() {
                             </AnimatedSection>
                         </div>
 
-                        {/* Visual Card — Mock chat */}
+                        {/* La tarjeta imita al agente real: partes del escrito,
+                            su proceso, los datos ya marcados y el botón. */}
                         <AnimatedSection animation="scale-in" delay={300}>
                             <div className="relative">
                                 <div className="absolute -inset-4 bg-gradient-to-br from-accent-gold/10 to-accent-brown/5 rounded-3xl blur-xl" />
-                                <div className="relative bg-charcoal-800 rounded-3xl p-8 border border-white/10">
-                                    {/* Header */}
-                                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
-                                        <div className="w-10 h-10 rounded-xl bg-accent-gold/20 flex flex-col items-center justify-center relative">
-                                            <div className="flex gap-0.5">
-                                                <span className="w-2 h-2 rounded-full bg-accent-gold"></span>
-                                                <span className="w-2 h-2 rounded-full bg-accent-gold/50"></span>
+                                <div className="relative bg-charcoal-800 rounded-3xl p-6 sm:p-8 border border-white/10">
+                                    {/* Cabecera: el escrito y sus partes */}
+                                    <div className="mb-5 pb-4 border-b border-white/5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-accent-gold/20 flex items-center justify-center">
+                                                <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden="true">
+                                                    <rect x="3" y="3" width="8" height="8" rx="2" />
+                                                    <path d="M7 11v4a2 2 0 0 0 2 2h4" />
+                                                    <rect x="13" y="13" width="8" height="8" rx="2" />
+                                                </svg>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-white font-medium text-sm">Demanda de amparo indirecto</p>
+                                                <p className="text-accent-gold/70 text-xs">Parte 2 de 4 · Antecedentes y preceptos violados</p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 grid grid-cols-4 gap-1.5" aria-hidden="true">
+                                            <span className="h-1.5 rounded-full bg-emerald-400/80" />
+                                            <span className="h-1.5 rounded-full bg-accent-gold" />
+                                            <span className="h-1.5 rounded-full bg-white/10" />
+                                            <span className="h-1.5 rounded-full bg-white/10" />
+                                        </div>
+                                    </div>
+
+                                    {/* El proceso */}
+                                    <div className="rounded-xl bg-white/[0.04] px-3.5 py-3 mb-4">
+                                        <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1.5">Proceso</p>
+                                        <ul className="space-y-1">
+                                            {[
+                                                'Tomé del encargo el acto reclamado y la fecha del oficio',
+                                                'De la carpeta: la sentencia que acredita el concubinato',
+                                                'Falta la fecha de notificación para computar el plazo',
+                                            ].map((l) => (
+                                                <li key={l} className="flex items-start gap-2 text-[11.5px] leading-snug text-gray-400">
+                                                    <span className="mt-[6px] h-1 w-1 flex-shrink-0 rounded-full bg-gray-500" />
+                                                    {l}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Los datos, ya marcados */}
+                                    <div className="space-y-3">
+                                        <div>
+                                            <p className="text-white text-xs font-semibold mb-1.5">Preceptos violados <span className="ml-1 rounded-full bg-accent-gold/15 px-1.5 py-px text-[9px] font-bold text-accent-gold">Sugerido</span></p>
+                                            <div className="space-y-1">
+                                                {[['Artículos 1o. y 4o. constitucionales', true], ['Artículo 123, apartado A, fracción XXIX', true], ['Artículo 24 de la Convención Americana', false]].map(([t, marcado]) => (
+                                                    <div key={t as string} className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11.5px] ${marcado ? 'border-accent-gold/60 bg-accent-gold/10 text-white' : 'border-white/10 text-gray-400'}`}>
+                                                        <span className={`grid h-3 w-3 place-items-center rounded-[3px] border ${marcado ? 'border-accent-gold bg-accent-gold' : 'border-gray-500'}`}>
+                                                            {marcado && <svg className="h-2 w-2 text-charcoal-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>}
+                                                        </span>
+                                                        {t as string}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                         <div>
-                                            <p className="text-white font-medium text-sm">Genios Especializados</p>
-                                            <p className="text-accent-gold/70 text-xs">Amparo + CIDH Activos</p>
-                                        </div>
-                                        <span className="ml-auto px-2.5 py-1 rounded-lg bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-[10px] font-bold tracking-wide">PRO</span>
-                                    </div>
-
-                                    {/* Chat bubbles.
-                                        Los pasos del agente son los que el chat
-                                        pinta de verdad; antes esta tarjeta sólo
-                                        mostraba pregunta y respuesta y se perdía
-                                        lo que distingue a Iurexia: que enseña por
-                                        dónde pasó antes de responder. */}
-                                    <div className="space-y-3">
-                                        <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                                            <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1">Tu consulta</p>
-                                            <p className="text-white text-sm leading-relaxed">¿Cómo impugno una orden de aprehensión sin fundamentación considerando los criterios interamericanos?</p>
-                                        </div>
-
-                                        <ol className="space-y-1.5 px-1">
-                                            {[
-                                                'Entendiendo la consulta',
-                                                'Revisando el bloque de constitucionalidad',
-                                                'Buscando jurisprudencia y precedentes',
-                                                'Con los genios de Amparo y CIDH',
-                                                '18 fuentes encontradas',
-                                            ].map((paso) => (
-                                                <li key={paso} className="flex items-center gap-2">
-                                                    <span className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full bg-accent-gold/20">
-                                                        <svg className="h-2 w-2 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    </span>
-                                                    <span className="text-[11px] text-gray-400">{paso}</span>
-                                                </li>
-                                            ))}
-                                        </ol>
-
-                                        <div className="p-3 rounded-xl bg-accent-gold/5 border border-accent-gold/10">
-                                            <p className="text-gray-300 text-sm leading-relaxed">Vía amparo indirecto alegando violación al debido proceso. La Corte IDH en <i>Caso Cabrera García</i> establece que toda restricción a la libertad personal debe…</p>
-                                            <div className="mt-2 flex flex-wrap gap-1.5">
-                                                <span className="rounded-md border border-accent-gold/30 px-1.5 py-0.5 text-[10px] text-accent-gold/90">Artículo 107 · Ley de Amparo</span>
-                                                <span className="rounded-md border border-accent-gold/30 px-1.5 py-0.5 text-[10px] text-accent-gold/90">Corte IDH · Cabrera García</span>
-                                            </div>
+                                            <p className="text-white text-xs font-semibold mb-1.5">Fecha de notificación <span className="ml-1 rounded-full bg-amber-400/15 px-1.5 py-px text-[9px] font-bold text-amber-300">Falta</span></p>
+                                            <div className="h-8 rounded-lg border border-amber-300/40 bg-white/[0.02]" />
                                         </div>
                                     </div>
 
-                                    {/* Free user notice */}
+                                    <div className="mt-5 flex items-center justify-between gap-3">
+                                        <span className="text-[11px] text-amber-300/80">Falta 1 dato</span>
+                                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[11.5px] font-semibold text-charcoal-900 opacity-60">
+                                            Redactar esta parte →
+                                        </span>
+                                    </div>
+
+                                    {/* Cupo */}
                                     <div className="mt-6 p-3 rounded-xl bg-charcoal-900/60 border border-white/5 text-center">
-                                        <p className="text-gray-500 text-xs">Los usuarios gratuitos no tienen acceso a Genios Especializados. <span className="text-accent-gold font-medium">Actualiza a PRO</span> para desbloquear.</p>
+                                        <p className="text-gray-500 text-xs">30 flujos al mes en <span className="text-accent-gold font-medium">Pro</span> · 60 en <span className="text-accent-gold font-medium">Platinum</span>, sin gastar consultas.</p>
                                     </div>
                                 </div>
                             </div>
