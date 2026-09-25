@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, AlertTriangle } from 'lucide-react';
 import { fuenteDeCita, institucionesDe, type FuenteCita, type Institucion, type MetaCitas } from '@/lib/documento/citas';
+import { esCoidh, rotuloCoidh } from '@/lib/coidh';
 import { IconoInstitucion } from './IconoInstitucion';
 
 /**
@@ -111,9 +112,13 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                                     </span>
                                     <span className="min-w-0 flex-1 text-[11.5px] leading-snug text-charcoal-700">
                                         <span className="font-medium text-charcoal-900">
-                                            {desplegada.sinFicha ? `Cita ${n ?? ''} sin ficha de origen` : f.origen}
+                                            {desplegada.sinFicha
+                                                ? `Cita ${n ?? ''} sin ficha de origen`
+                                                // La Corte IDH se nombra por su caso y párrafo,
+                                                // no por el `origen` del marcador.
+                                                : esCoidh(f) ? rotuloCoidh(f) : f.origen}
                                         </span>
-                                        {!desplegada.sinFicha && f.ref ? <span className="text-charcoal-500"> — {f.ref}</span> : null}
+                                        {!desplegada.sinFicha && f.ref && !esCoidh(f) ? <span className="text-charcoal-500"> — {f.ref}</span> : null}
                                     </span>
                                 </button>
                             </li>

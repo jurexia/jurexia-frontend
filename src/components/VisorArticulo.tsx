@@ -35,10 +35,21 @@
  * Y SI NADA CASA CON CERTEZA, NO SE PINTA NADA. Se dice que no se pudo
  * localizar y se deja el documento abierto en la página 1. Preferimos no
  * ayudar a ayudar mal.
+ *
+ * LAS SENTENCIAS DE LA CORTE IDH (25-sep-2026)
+ * --------------------------------------------
+ * Con `parrafo`, `pagina` y `ancla` el visor no busca un artículo: abre en la
+ * página que midió el troceador, localiza el «124.» que abre renglón,
+ * confirma con las palabras del ancla y pinta hasta el «125.» (o hasta el
+ * final del texto guardado), aunque el párrafo siga en la página siguiente.
+ * La lógica vive en `@/lib/visor/parrafoPdf`, que se prueba en Node sobre los
+ * PDF oficiales (`comprobaciones/visor_coidh.mjs`): de los 16,825 puntos del
+ * piloto, 16,822 se localizan, todos en su página.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Crosshair, Loader2, AlertTriangle, SearchX } from 'lucide-react';
+import { Crosshair, Loader2, AlertTriangle, SearchX, ExternalLink } from 'lucide-react';
+import { itemsDelTramo, localizarParrafo, planoDeItems, type PlanoPagina } from '@/lib/visor/parrafoPdf';
 
 interface Props {
     /** El panel resuelve la URL antes de llegar aquí; si viene vacía no hay PDF que abrir. */
@@ -49,6 +60,22 @@ interface Props {
     textoArticulo?: string | null;
     /** Alto del visor. El panel lateral usa 440px. */
     alto?: number;
+    /** Corte IDH: el número del párrafo («124»). Con él, `articulo` va en null. */
+    parrafo?: string | number | null;
+    /** Corte IDH: la página del PDF, en base 1, donde empieza el párrafo. */
+    pagina?: number | null;
+    /** Corte IDH: las ~15 primeras palabras literales del párrafo. */
+    ancla?: string | null;
+    /** Lo que va tras «Ir al…»: «párr. 124», «resolutivo 8», «voto de X, párr. 12». */
+    rotuloParrafo?: string | null;
+    /** false si `textoArticulo` llegó recortado (las fuentes previas del stream). */
+    textoCompleto?: boolean;
+    /**
+     * La dirección ORIGINAL del PDF, no la del proxy: es la del enlace de
+     * respaldo cuando pdf.js no puede abrirlo. Mandarlo por el proxy, como
+     * se hacía, era mandarlo por el mismo camino que acababa de fallar.
+     */
+    urlOriginal?: string | null;
 }
 
 /** Sin acentos, sin mayúsculas, sin puntuación y con los espacios colapsados. */
@@ -84,7 +111,14 @@ function numeroDe(etiqueta: string): string {
 }
 
 type Trozo = { inicio: number; fin: number; indice: number };
-type Objetivo = { pagina: number; desde: number; hasta: number; certeza: 'texto' | 'rotulo' | 'aproximado' };
+type Objetivo = {
+    pagina: number;
+    desde: number;
+    hasta: number;
+    certeza: 'texto' | 'rotulo' | 'aproximado';
+    /** Corte IDH: los fragmentos que se pintan en cada página; el párrafo puede seguir en la siguiente. */
+    porPagina?: Record<number, number[]>;
+};
 
 /**
  * LA FRASE LITERAL, CON SUS PALABRAS CORTAS (18-sep-2026).
@@ -174,11 +208,17 @@ function palabrasClave(cuerpo: string): string[] {
     return cuerpo.split(' ').filter((w) => w.length > 3).slice(0, 24);
 }
 
-export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Props) {
+export function VisorArticulo({
+    url, articulo, textoArticulo, alto = 440,
+    parrafo = null, pagina = null, ancla = null, rotuloParrafo = null, textoCompleto = true, urlOriginal = null,
+}: Props) {
+    /** Modo párrafo (Corte IDH): se sabe la página y hay número o ancla con qué confirmar. */
+    const modoParrafo = Boolean(pagina && (parrafo !== null || ancla));
     const scroller = useRef<HTMLDivElement | null>(null);
     const documento = useRef<any>(null);
     const dibujadas = useRef<Set<number>>(new Set());
     const objetivo = useRef<Objetivo | null>(null);
+    const saltoPendiente = useRef(false);
 
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -187,8 +227,10 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
     const [estadoBusqueda, setEstadoBusqueda] =
         useState<'buscando' | 'encontrado' | 'aproximado' | 'no_encontrado' | 'sin_articulo'>('buscando');
     const [dims, setDims] = useState<{ ancho: number; alto: number } | null>(null);
+    /** Pasados 20 s sin abrir, se ofrece el PDF en su sitio: el proxy sigue intentando. */
+    const [lento, setLento] = useState(false);
 
-    const rotulo = useMemo(() => (articulo || '').trim(), [articulo]);
+    const rotulo = useMemo(() => (modoParrafo ? rotuloParrafo || '' : articulo || '').trim(), [modoParrafo, rotuloParrafo, articulo]);
 
     // ── Texto plano de una página, con el mapa de qué fragmento es cada letra ──
     const planoDe = useCallback(async (page: any) => {
@@ -240,16 +282,27 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
         await page.render({ canvasContext: ctx, viewport }).promise;
 
         // ── El resaltado, sólo en la página del objetivo ─────────────────
+        // (o en las páginas por las que sigue el párrafo de la Corte IDH)
         const obj = objetivo.current;
         capa.innerHTML = '';
         capa.style.width = `${Math.floor(viewport.width)}px`;
         capa.style.height = `${Math.floor(viewport.height)}px`;
-        if (!obj || obj.pagina !== n) return;
-
-        const { trozos, items } = await planoDe(page);
-        const tocados = trozos.filter((t) => t.fin > obj.desde && t.inicio < obj.hasta);
-        for (const t of tocados) {
-            const it = items[t.indice];
+        if (!obj) return;
+        let indices: number[] = [];
+        let items: any[] = [];
+        if (obj.porPagina) {
+            if (!obj.porPagina[n]?.length) return;
+            indices = obj.porPagina[n];
+            items = (await page.getTextContent()).items as any[];
+        } else {
+            if (obj.pagina !== n) return;
+            const plano = await planoDe(page);
+            items = plano.items;
+            indices = plano.trozos.filter((t) => t.fin > obj.desde && t.inicio < obj.hasta).map((t) => t.indice);
+        }
+        for (const i of indices) {
+            const it = items[i];
+            if (!it) continue;
             const m = pdfjs.Util.transform(viewport.transform, it.transform);
             const h = Math.abs(it.height ? it.height * escala : Math.hypot(m[2], m[3]));
             const w = Math.abs((it.width || 0) * escala);
@@ -267,11 +320,19 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
             ].join(';');
             capa.appendChild(marca);
         }
+        if (saltoPendiente.current && n === obj.pagina && capa.firstElementChild) {
+            saltoPendiente.current = false;
+            const cont = scroller.current;
+            const primero = capa.firstElementChild as HTMLElement;
+            if (cont) cont.scrollTo({ top: Math.max(0, hueco.offsetTop + primero.offsetTop - 48), behavior: 'smooth' });
+        }
     }, [planoDe]);
 
     // ── Abrir, medir y localizar ─────────────────────────────────────────
     useEffect(() => {
         let vivo = true;
+        setLento(false);
+        const reloj = setTimeout(() => { if (vivo) setLento(true); }, 20000);
         (async () => {
             if (!url) { setError('sin_pdf'); setCargando(false); return; }
             setCargando(true);
@@ -300,6 +361,31 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
                 const p1 = await doc.getPage(1);
                 const v1 = p1.getViewport({ scale: 1 });
                 setDims({ ancho: v1.width, alto: v1.height });
+
+                // ── Corte IDH: el párrafo en su página, confirmado por el ancla ──
+                if (modoParrafo) {
+                    const leidas: Record<number, PlanoPagina> = {};
+                    const leer = async (n: number) =>
+                        (leidas[n] = leidas[n] || planoDeItems((await (await doc.getPage(n)).getTextContent()).items as any[]));
+                    const loc = await localizarParrafo({
+                        total: doc.numPages, pagina, parrafo, ancla,
+                        texto: textoArticulo, textoCompleto, leer,
+                    });
+                    if (!vivo) return;
+                    if (loc) {
+                        const porPagina: Record<number, number[]> = {};
+                        for (const t of loc.tramos) porPagina[t.pagina] = itemsDelTramo(await leer(t.pagina), t);
+                        objetivo.current = { pagina: loc.pagina, desde: 0, hasta: 0, certeza: loc.confirmado ? 'texto' : 'rotulo', porPagina };
+                        setEstadoBusqueda('encontrado');
+                    } else {
+                        // Sin confirmar no se pinta nada; pero la página la midió el
+                        // troceador sobre este mismo archivo, así que se abre ahí.
+                        objetivo.current = { pagina: Math.min(pagina || 1, doc.numPages), desde: 0, hasta: 0, certeza: 'rotulo', porPagina: {} };
+                        setEstadoBusqueda('no_encontrado');
+                    }
+                    setCargando(false);
+                    return;
+                }
 
                 if (!rotulo && !textoArticulo) {
                     setEstadoBusqueda('sin_articulo');
@@ -405,19 +491,33 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
                 setCargando(false);
             } catch (e) {
                 if (!vivo) return;
+                // A la consola, para saber si falló el proxy, el origen o pdf.js:
+                // la pantalla sólo ofrece el enlace de respaldo.
+                console.warn('[visor] pdf.js no abrió el documento', url, e);
                 setError(e instanceof Error ? e.message : 'No se pudo abrir el documento');
                 setCargando(false);
             }
         })();
-        return () => { vivo = false; };
-    }, [url, rotulo, textoArticulo, planoDe]);
+        return () => { vivo = false; clearTimeout(reloj); };
+    }, [url, rotulo, textoArticulo, planoDe, modoParrafo, pagina, parrafo, ancla, textoCompleto]);
 
-    const irAlArticulo = useCallback(() => {
+    /* AL PÁRRAFO, NO SÓLO A SU PÁGINA (25-sep-2026). Si la página ya está
+       dibujada, se baja hasta el primer trazo amarillo: el ¶124 de Almonacid
+       empieza a media pág. 53 y una página entera no cabe en los 440 px del
+       panel. Si todavía no, se baja a la página y, en cuanto se pinte, el
+       resaltado termina el salto (`saltoPendiente`). */
+    const irAlArticulo = useCallback((suave = true) => {
         const obj = objetivo.current;
         const cont = scroller.current;
         if (!obj || !cont) return;
         const hueco = cont.querySelector<HTMLElement>(`[data-pagina="${obj.pagina}"]`);
-        if (hueco) cont.scrollTo({ top: Math.max(0, hueco.offsetTop - 8), behavior: 'smooth' });
+        if (!hueco) return;
+        const trazo = hueco.querySelector<HTMLElement>('[data-capa] > div');
+        const arriba = trazo ? hueco.offsetTop + trazo.offsetTop - 48 : hueco.offsetTop - 8;
+        saltoPendiente.current = !trazo;
+        // El primer salto, en seco: deslizarse suave por 67 páginas (el voto de
+        // García Ramírez en C-158 está en la 68) tardaba segundos en llegar.
+        cont.scrollTo({ top: Math.max(0, arriba), behavior: suave ? 'smooth' : 'auto' });
     }, []);
 
     // ── Dibujar lo que se acerca a la ventana, y sólo eso ────────────────
@@ -428,11 +528,7 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
         const obs = new IntersectionObserver(
             (entradas) => {
                 for (const e of entradas) {
-                    const n = Number((e.target as HTMLElement).dataset.pagina);
-                    if (e.isIntersecting) {
-                        dibujarPagina(n);
-                        if (e.intersectionRatio > 0.35) setPaginaVisible(n);
-                    }
+                    if (e.isIntersecting) dibujarPagina(Number((e.target as HTMLElement).dataset.pagina));
                 }
             },
             // 600 px de margen: la página siguiente ya está dibujada cuando el
@@ -442,20 +538,53 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
 
         cont.querySelectorAll('[data-pagina]').forEach((n) => obs.observe(n));
 
+        /* EL CONTADOR DE PÁGINA, POR LA POSICIÓN (25-sep-2026). Lo llevaba el
+           observador, pero sus proporciones se miden contra la ventana
+           AGRANDADA por los 600 px de margen: la página siguiente contaba como
+           entera a la vista y el contador decía «Página 54 de 77» con el ¶124
+           de la 53 en pantalla (medido en el navegador). Manda la página que
+           ocupa el tercio de arriba del visor. */
+        let cuadro = 0;
+        const alDesplazar = () => {
+            cancelAnimationFrame(cuadro);
+            cuadro = requestAnimationFrame(() => {
+                const y = cont.scrollTop + cont.clientHeight / 3;
+                const huecos = cont.querySelectorAll<HTMLElement>('[data-pagina]');
+                for (let i = 0; i < huecos.length; i++) {
+                    if (huecos[i].offsetTop + huecos[i].offsetHeight > y) {
+                        setPaginaVisible(Number(huecos[i].dataset.pagina));
+                        break;
+                    }
+                }
+            });
+        };
+        cont.addEventListener('scroll', alDesplazar, { passive: true });
+
         // Al terminar de abrir, saltar al artículo.
-        const t = setTimeout(irAlArticulo, 120);
-        return () => { obs.disconnect(); clearTimeout(t); };
+        const t = setTimeout(() => irAlArticulo(false), 120);
+        return () => {
+            obs.disconnect();
+            clearTimeout(t);
+            cancelAnimationFrame(cuadro);
+            cont.removeEventListener('scroll', alDesplazar);
+        };
     }, [total, cargando, dibujarPagina, irAlArticulo]);
+
+    /* El respaldo va DIRECTO a la fuente, en su página: si pdf.js no pudo
+       abrirlo, el proxy o el origen ya fallaron y reenviar por ahí no sirve. */
+    const enlaceDirecto = urlOriginal
+        ? `${urlOriginal.split('#')[0]}${pagina ? `#page=${pagina}` : ''}`
+        : url;
 
     if (error) {
         return (
             <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
                 <AlertTriangle className="h-5 w-5 text-amber-600" />
                 <p className="text-xs text-charcoal-600">No se pudo abrir el PDF aquí.</p>
-                {url && (
-                    <a href={url} target="_blank" rel="noopener noreferrer"
+                {enlaceDirecto && (
+                    <a href={enlaceDirecto} target="_blank" rel="noopener noreferrer"
                        className="text-xs underline text-charcoal-900">
-                        Abrirlo en una pestaña nueva
+                        {pagina ? `Abrirlo en la fuente oficial, en la pág. ${pagina}` : 'Abrirlo en una pestaña nueva'}
                     </a>
                 )}
             </div>
@@ -472,14 +601,14 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
                 </span>
 
                 {estadoBusqueda === 'encontrado' && (
-                    <button onClick={irAlArticulo}
+                    <button onClick={() => irAlArticulo(true)}
                             className="inline-flex items-center gap-1.5 rounded-md bg-charcoal-900 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-charcoal-700">
                         <Crosshair className="h-3 w-3" />
                         {rotulo ? `Ir al ${rotulo}` : 'Ir a la cita'}
                     </button>
                 )}
                 {estadoBusqueda === 'aproximado' && (
-                    <button onClick={irAlArticulo}
+                    <button onClick={() => irAlArticulo(true)}
                             className="inline-flex items-center gap-1.5 rounded-md border border-charcoal-900/20 bg-white px-2.5 py-1 text-[11px] font-medium text-charcoal-800 transition-colors hover:border-charcoal-900/40">
                         <Crosshair className="h-3 w-3" />
                         Ir al pasaje más parecido
@@ -488,7 +617,9 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
                 {estadoBusqueda === 'no_encontrado' && (
                     <span className="inline-flex items-center gap-1.5 text-[11px] text-charcoal-500">
                         <SearchX className="h-3 w-3" />
-                        No se localizó {rotulo || 'la cita'} en el PDF
+                        {modoParrafo
+                            ? `No se localizó el ${rotulo || 'pasaje'}; abierto en la pág. ${pagina}`
+                            : `No se localizó ${rotulo || 'la cita'} en el PDF`}
                     </span>
                 )}
             </div>
@@ -501,6 +632,13 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
                         <p className="text-[11px] text-charcoal-600">
                             {rotulo ? `Buscando el ${rotulo}…` : 'Abriendo el documento…'}
                         </p>
+                        {lento && enlaceDirecto && (
+                            <a href={enlaceDirecto} target="_blank" rel="noopener noreferrer"
+                               className="pointer-events-auto inline-flex items-center gap-1 text-[11px] text-charcoal-700 underline">
+                                <ExternalLink className="h-3 w-3" />
+                                Tarda en abrir: verlo en la fuente oficial{pagina ? `, pág. ${pagina}` : ''}
+                            </a>
+                        )}
                     </div>
                 )}
 
@@ -518,7 +656,7 @@ export function VisorArticulo({ url, articulo, textoArticulo, alto = 440 }: Prop
 
             {estadoBusqueda === 'encontrado' && objetivo.current?.certeza === 'rotulo' && (
                 <p className="border-t border-cream-400 bg-cream-100 px-3 py-1 text-[10px] text-charcoal-500">
-                    Localizado por el número de artículo; coteja el texto por tu cuenta.
+                    Localizado por el número de {modoParrafo ? 'párrafo' : 'artículo'}; coteja el texto por tu cuenta.
                 </p>
             )}
         </div>

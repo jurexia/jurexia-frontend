@@ -72,6 +72,7 @@ import {
 } from '@/lib/flujo-agente';
 import { categoriasDe, nombreCarpeta, subirDocumento } from '@/lib/expedientes';
 import { contextoDeCarpeta, contextoDeConsulta, olvidarContextoCarpeta } from '@/lib/contexto-carpeta';
+import type { CamposCoidh } from '@/lib/coidh';
 
 
 /* Identifica una respuesta por su propio texto. `Message` no lleva id y el
@@ -211,13 +212,14 @@ export default function ChatPage() {
        que limita es la capacidad, no la cantidad. */
     const [bloqueado, setBloqueado] = useState<string[]>(BLOQUEADO_POR_OMISION);
     const [usoBasico, setUsoBasico] = useState<{ usadas: number; tope: number } | null>(null);
-    const [activePdfSource, setActivePdfSource] = useState<{
+    const [activePdfSource, setActivePdfSource] = useState<({
         docId: string; origen: string; ref: string; texto: string;
         pdf_url?: string | null; silo?: string;
         registro?: string | null; tesis_num?: string | null;
         tipo_criterio?: string | null; instancia?: string | null;
         materia?: string | null;
-    } | null>(null);
+        // Corte IDH: caso, párrafo, página y ancla (`@/lib/coidh`).
+    } & CamposCoidh) | null>(null);
 
     // Genio Multi-Domain states
     const [activeGenios, setActiveGenios] = useState<string[]>([]);

@@ -7,8 +7,15 @@ import { AccionesPdf } from '@/components/documento/AccionesPdf';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel, ChevronDown, Copy, Check } from 'lucide-react';
 import { findLawPdfUrl } from '@/lib/lawPdfLookup';
+import { urlProxyPdf } from '@/lib/proxyPdf';
+import {
+    type CamposCoidh, autorVoto, enlaceOficialCoidh, esCoidh, fechaLarga, lugarConVoto, rotuloCoidh,
+    serieCoidh, textoCoidh, textoEstaCompleto, urlOficialCoidh,
+} from '@/lib/coidh';
 
-interface PdfSource {
+/** La fuente que abre el panel. Las de la Corte IDH (`silo: "coidh"`) traen
+ *  caso, párrafo, página y ancla: ver `@/lib/coidh`. */
+interface PdfSource extends CamposCoidh {
     origen: string;
     ref: string;
     texto: string;
@@ -461,12 +468,14 @@ function paraElPortapapeles(texto: string, ley: string | null, ref: string | nul
     return pie ? `${cuerpo}\n\n${pie}` : cuerpo;
 }
 
-function ArticuloPlegado({ texto, etiqueta, ley, cita }: {
+function ArticuloPlegado({ texto, etiqueta, ley, cita, sustantivo = 'el artículo' }: {
     texto: string;
     etiqueta: string | null;
     ley: string | null;
     /** No se llama `ref`: React lo reservó y nunca llegaría como prop. */
     cita: string | null;
+    /** «el artículo» o, para la Corte IDH, «el párrafo». */
+    sustantivo?: string;
 }) {
     const [abierto, setAbierto] = useState(false);
     const [copia, setCopia] = useState<'quieto' | 'hecho' | 'falló'>('quieto');
@@ -523,7 +532,7 @@ function ArticuloPlegado({ texto, etiqueta, ley, cita }: {
                     </span>
                 )}
                 <span className="ml-auto flex items-center gap-1.5 text-[11px] font-semibold text-accent-gold">
-                    {abierto ? 'Ocultar el artículo' : 'Desplegar y copiar el artículo'}
+                    {abierto ? `Ocultar ${sustantivo}` : `Desplegar y copiar ${sustantivo}`}
                     <ChevronDown
                         className={`w-3.5 h-3.5 transition-transform duration-200 ${abierto ? 'rotate-180' : ''}`}
                     />
@@ -597,7 +606,7 @@ function ArticuloPlegado({ texto, etiqueta, ley, cita }: {
                         >
                             {copia === 'hecho' && <><Check className="w-3.5 h-3.5 text-green-700" /> Copiado</>}
                             {copia === 'falló' && <span className="text-accent-brown">Selecciona el texto y cópialo</span>}
-                            {copia === 'quieto' && <><Copy className="w-3.5 h-3.5" /> Copiar el artículo</>}
+                            {copia === 'quieto' && <><Copy className="w-3.5 h-3.5" /> Copiar {sustantivo}</>}
                         </button>
                     </div>
                 </div>
@@ -768,6 +777,7 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, urlParaVisor, hasPd
                                 url={urlParaVisor}
                                 articulo={parsed.articuloLabel}
                                 textoArticulo={parsed.articuloTexto}
+                                urlOriginal={resolvedPdfUrl}
                                 alto={440}
                             />
                         </div>
@@ -784,6 +794,155 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, urlParaVisor, hasPd
                         <BookOpen className="w-5 h-5 mx-auto mb-2 text-charcoal-400" />
                         PDF oficial en preparación.<br />
                         Pronto disponible en el repositorio de Normativa Nacional.
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+// ── LA SENTENCIA DE LA CORTE IDH, ABIERTA EN SU PÁRRAFO (25-sep-2026) ──────────
+// Antes de `LeyArticuloView`, que la trataría como una ley: rótulo «Fuente
+// gubernamental», un «Artículo» sacado del texto y el visor escondido en el
+// teléfono. Aquí el rótulo es el caso y el párrafo; el visor abre la página
+// que midió el troceador y resalta de «124.» a «125.»; y el visor va también
+// en el teléfono, porque en iOS un PDF dentro de un iframe no se pinta y
+// pdf.js es la única manera de enseñar el párrafo.
+
+interface SentenciaCoidhViewProps {
+    source: PdfSource;
+    /** La dirección oficial de corteidh.or.cr, sin `#page`. */
+    urlOficial: string | null;
+    /** La misma, servida desde nuestro dominio para pdf.js. */
+    urlParaVisor: string | null;
+}
+
+function SentenciaCoidhView({ source, urlOficial, urlParaVisor }: SentenciaCoidhViewProps) {
+    const lugar = lugarConVoto(source);
+    const autor = autorVoto(source);
+    const serie = serieCoidh(source);
+    const fecha = fechaLarga(source.fecha);
+    const texto = textoCoidh(source.texto);
+    const enlace = enlaceOficialCoidh(source);
+    const caso = (source.caso || '').trim();
+    const esOC = source.tipo === 'oc_coidh' || /^OC-\d/i.test(caso);
+    const base = caso ? (esOC || /^caso\b/i.test(caso) ? caso : `Caso ${caso}`) : (source.origen || 'Corte Interamericana de Derechos Humanos');
+    const nombre = source.tipo === 'supervision_coidh' ? `${base} · Supervisión de cumplimiento` : base;
+    const lugarMayuscula = lugar.charAt(0).toUpperCase() + lugar.slice(1);
+
+    return (
+        <>
+            <div className="p-5 space-y-4">
+                <div className="flex flex-wrap items-start gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-accent-gold/15 text-accent-gold border border-accent-gold/30 leading-tight">
+                        <Gavel className="w-3 h-3 shrink-0" />
+                        Corte IDH
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-charcoal-900 text-white border border-charcoal-800 leading-tight">
+                        {lugarMayuscula}
+                    </span>
+                    {(serie || fecha) && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium bg-cream-200 text-charcoal-700 border border-cream-400 leading-tight">
+                            {[serie, fecha].filter(Boolean).join(' · ')}
+                        </span>
+                    )}
+                </div>
+
+                <p className="text-sm font-semibold text-charcoal-900 leading-snug" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+                    {nombre}
+                </p>
+
+                {/* Plan de ingesta, §3.7: «un voto no es la Corte». Quien lee
+                    un voto razonado tiene que saberlo antes de citarlo. */}
+                {autor && (
+                    <p className="rounded-xl border border-cream-400 bg-cream-200 px-4 py-2.5 text-[11.5px] leading-snug text-charcoal-700">
+                        Es el voto de {autor}, no la decisión de la Corte.
+                    </p>
+                )}
+
+                {texto && (
+                    <ArticuloPlegado
+                        texto={texto}
+                        etiqueta={lugarMayuscula}
+                        ley={null}
+                        cita={source.cita_canonica || null}
+                        sustantivo="el párrafo"
+                    />
+                )}
+
+                {source.cita_canonica && (
+                    <p className="text-[11px] leading-snug text-charcoal-500">
+                        {source.cita_canonica}
+                    </p>
+                )}
+            </div>
+
+            <div className="mx-5 border-t border-cream-400" />
+
+            {urlOficial ? (
+                <div className="p-5">
+                    <div className="flex items-center justify-between mb-3 gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-0.5 h-4 bg-accent-gold rounded-full shrink-0" />
+                            {/* En el teléfono no cabe junto a los tres botones: quedaba «COTE…». */}
+                            <span className="hidden sm:inline text-xs font-semibold text-charcoal-900 uppercase tracking-widest truncate">
+                                Coteja el párrafo en la sentencia
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            {urlParaVisor && <AccionesPdf url={urlParaVisor} nombre={nombre} />}
+                            {/* Directo a la Corte y en la página del párrafo: `#page`
+                                va en el enlace, nunca dentro de `pdf_url`. */}
+                            <a
+                                href={enlace || urlOficial}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-charcoal-900 text-white rounded-lg text-xs font-semibold hover:bg-charcoal-700 transition-colors shadow-sm"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Abrir en la Corte IDH</span>
+                                <span className="sm:hidden">Abrir</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div className="bg-white border border-cream-400 rounded-2xl p-4 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-xl bg-accent-gold/10 flex items-center justify-center shrink-0">
+                                <Gavel className="w-5 h-5 text-accent-gold" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-charcoal-900 truncate">{nombre}</p>
+                                <p className="text-xs text-charcoal-600">
+                                    PDF oficial · Corte Interamericana de Derechos Humanos
+                                </p>
+                            </div>
+                        </div>
+                        <div className="rounded-xl overflow-hidden border border-cream-400 bg-cream-200" style={{ height: '440px' }}>
+                            <VisorArticulo
+                                url={urlParaVisor}
+                                articulo={null}
+                                textoArticulo={source.texto || null}
+                                textoCompleto={textoEstaCompleto(source.texto)}
+                                parrafo={source.parrafo ?? null}
+                                pagina={source.pagina ?? null}
+                                ancla={source.ancla || null}
+                                rotuloParrafo={lugar}
+                                urlOriginal={urlOficial}
+                                alto={440}
+                            />
+                        </div>
+                        <p className="mt-2 text-[10px] text-charcoal-500 text-center">
+                            {source.pagina
+                                ? `Abierto en el ${lugar} · pág. ${source.pagina} del PDF de corteidh.or.cr`
+                                : 'Fuente oficial · corteidh.or.cr'}
+                        </p>
+                    </div>
+                </div>
+            ) : (
+                <div className="p-5">
+                    <div className="bg-cream-200 rounded-2xl p-4 text-xs text-charcoal-600 text-center">
+                        <Gavel className="w-5 h-5 mx-auto mb-2 text-charcoal-400" />
+                        Esta cita de la Corte IDH no trae la dirección de su sentencia.
                     </div>
                 </div>
             )}
@@ -838,6 +997,9 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
     // Parse tesis metadata if applicable
     const tesisMeta = useMemo(() => {
         if (!source) return null;
+        // Una sentencia de la Corte IDH no es una tesis, aunque su `tipo`
+        // viaje como `tipo_criterio` («sentencia_coidh»).
+        if (esCoidh(source)) return null;
         // Match actual backend silo values + fallback text detection
         const isTesisSilo = source.silo === 'jurisprudencia_nacional'
             || source.silo === 'jurisprudencia_nacional_v2'
@@ -868,12 +1030,16 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
        incrustar un archivo de otro dominio queda a merced del navegador del
        usuario, y un bloqueador o la opción de «descargar en vez de abrir» dejan
        el visor con el icono de documento roto. Mismo origen, y deja de pasar. */
-    const porNuestroDominio = (u: string | null) =>
-        u && /^https:\/\//.test(u) ? `/api/ley/pdf?u=${encodeURIComponent(u)}` : u;
+    /* La dirección la arma `urlProxyPdf` (`@/lib/proxyPdf`), la misma función
+       con la que el proxy decide si redirige: para la Corte IDH, la forma
+       canónica (https://www., con `&v=` si se conoce el sha1) y así una sola
+       llave de CDN por archivo; para lo demás, lo de siempre. */
 
     // Resolve PDF URL: direct from backend, or lookup from estadosData for state/federal laws
     const resolvedPdfUrl = useMemo(() => {
         if (!source) return null;
+        // La Corte IDH: la dirección oficial, sin `#page` (la página viaja aparte).
+        if (esCoidh(source)) return urlOficialCoidh(source);
         if (source.pdf_url) return source.pdf_url;
         // Try lawPdfLookup for state laws (e.g. Querétaro codes)
         if (source.entidad && source.origen) {
@@ -901,7 +1067,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
 
     /* Lo que ve el visor. El enlace «abrir en otra pestaña» conserva la
        dirección original, que es la que el abogado querrá copiar o citar. */
-    const urlParaVisor = useMemo(() => porNuestroDominio(resolvedPdfUrl), [resolvedPdfUrl]);
+    const urlParaVisor = useMemo(() => urlProxyPdf(resolvedPdfUrl, source?.pdf_sha1), [resolvedPdfUrl, source?.pdf_sha1]);
 
     if (!isOpen || !source) return null;
 
@@ -914,7 +1080,10 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
             !source.origen
             || /cpeum|constitución\s+pol[ií]tica/i.test(source.origen)
         );
-    const leyLabel = isCpeum
+    const coidh = esCoidh(source);
+    const leyLabel = coidh
+        ? rotuloCoidh(source)
+        : isCpeum
         ? 'Constitución Política de los Estados Unidos Mexicanos'
         : isTesis
             ? (tesisMeta?.tesis || source.ref || source.origen || 'Tesis')
@@ -1099,6 +1268,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                             url={urlParaVisor}
                                             articulo={tesisMeta?.tesis || null}
                                             textoArticulo={tesisMeta?.rubro || null}
+                                            urlOriginal={resolvedPdfUrl}
                                             alto={460}
                                         />
                                     </div>
@@ -1153,6 +1323,9 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                                 </div>
                             )}
                         </div>
+                    ) : coidh ? (
+                        /* ════════════ CORTE IDH: LA SENTENCIA EN SU PÁRRAFO ════════════ */
+                        <SentenciaCoidhView source={source} urlOficial={resolvedPdfUrl} urlParaVisor={urlParaVisor} />
                     ) : (
                         /* ════════════════ STANDARD LEY VIEW ════════════════ */
                         <LeyArticuloView source={source} leyLabel={leyLabel} resolvedPdfUrl={resolvedPdfUrl} urlParaVisor={urlParaVisor} hasPdf={hasPdf} />

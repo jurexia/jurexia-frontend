@@ -13,8 +13,11 @@
  * la burbuja, para que [3] sea la misma fuente en las dos.
  */
 import { markdownAHtml, separarTarjetas } from './marcado';
+import { type CamposCoidh, camposCoidh, esCoidh, referenciaCoidh } from '@/lib/coidh';
 
-export interface FuenteCita {
+/** Una fuente citada. Las de la Corte IDH (`silo: "coidh"`) traen además
+ *  caso, párrafo, página y ancla: ver `@/lib/coidh`. */
+export interface FuenteCita extends CamposCoidh {
     docId: string;
     origen: string;
     ref: string;
@@ -118,6 +121,7 @@ export function fuenteDeCita(meta: MetaCitas | null, docId: string): FuenteCita 
         tipo_criterio: s?.tipo_criterio,
         instancia: s?.instancia,
         materia: s?.materia,
+        ...camposCoidh(s),
     };
 }
 
@@ -132,15 +136,40 @@ export function palabrasDe(markdown: string): number {
 }
 
 /* ═══ LA REFERENCIA APA, la misma que el DOCX del chat (portada de la burbuja) ═══ */
-export function referenciaAPA(f: FuenteCita): string {
+
+/** Lo que hace falta para una referencia: lo que traen los marcadores de fuentes, con sus null. */
+export type FuenteReferencia = {
+    origen?: string | null;
+    ref?: string | null;
+    silo?: string | null;
+    entidad?: string | null;
+    instancia?: string | null;
+    registro?: string | null;
+    tesis_num?: string | null;
+    tipo_criterio?: string | null;
+} & CamposCoidh;
+
+/** «art. 2o» de «Art. 2o CPEUM (parte 3)»; lo demás («Sección 7 Protocolo Estambul»), sin «(parte N)». */
+function lugarDeLaRef(ref: string, sigla?: RegExp): string {
+    const limpia = ref.replace(/\s*\(parte \d+\)\s*$/i, '').trim();
+    const art = limpia.match(/^art(?:[íi]culo)?\.?\s*(.+)$/i);
+    if (!art) return limpia;
+    return `art. ${(sigla ? art[1].replace(sigla, '') : art[1]).trim()}`;
+}
+
+export function referenciaAPA(f: FuenteReferencia): string {
     const origen = (f.origen || '').trim();
     const ref = (f.ref || '').trim();
     const silo = (f.silo || '').toLowerCase();
+    const tipo = (f.tipo_criterio || '').toLowerCase();
     const entidad = (f.entidad || '').trim();
     const instancia = (f.instancia || '').trim();
     const registro = (f.registro || '').trim();
     const tesisNum = (f.tesis_num || '').trim();
     const anio = new Date().getFullYear();
+    // LA CORTE IDH, ANTES QUE NADA (25-sep-2026): su cita canónica es la forma
+    // en que la propia Corte se cita, con caso, Serie y párrafo.
+    if (esCoidh(f)) return referenciaCoidh(f);
     if (silo.includes('jurisprudencia') || tesisNum || registro) {
         const corte = instancia || 'Suprema Corte de Justicia de la Nación';
         const titulo = origen || ref || 'Tesis sin rubro';
@@ -149,11 +178,38 @@ export function referenciaAPA(f: FuenteCita): string {
     if (silo.includes('sentencia') || silo.includes('precedente') || silo.includes('holding')) {
         return `${origen || 'Tribunal Colegiado de Circuito'}${ref ? `, Expediente ${ref}` : ''}. Poder Judicial de la Federación.`;
     }
-    if (silo.includes('constitu') || /CPEUM|Constituci[oó]n/i.test(origen)) {
-        return `Constitución Política de los Estados Unidos Mexicanos${ref ? `, art. ${ref}` : ''}. (${anio}). Cámara de Diputados del H. Congreso de la Unión.`;
+    /* EL BLOQUE DE CONSTITUCIONALIDAD NO ES SÓLO LA CONSTITUCIÓN (25-sep-2026).
+       `bloque_constitucional` guarda la CPEUM (355 trozos), pero también 5,212
+       trozos de cuadernillos de la Corte IDH, 950 de tratados y 306 de fichas
+       de casos y opiniones consultivas (lectura de Qdrant del 25-sep-2026). La
+       condición `silo.includes('constitu')` los convertía TODOS en
+       «Constitución Política de los Estados Unidos Mexicanos, art. CoIDH,
+       Cuadernillo No. 4, Párr. 115». Ahora decide el `tipo` del trozo. */
+    if (tipo === 'cuadernillo' || /^cuadernillo/i.test(origen)) {
+        // Sin el «párr.»: en los cuadernillos ese número es el de la sentencia
+        // citada, y el caso que lo acompaña está corrido al siguiente en el
+        // 96.9 % de los trozos comprobables. Se cita el cuadernillo, no el caso.
+        const titulo = origen.replace(/[\s:]+$/, '').replace(/\bCoIDH\b/, 'de la Corte Interamericana de Derechos Humanos');
+        return `Corte Interamericana de Derechos Humanos. (s.f.). ${titulo || 'Cuadernillo de Jurisprudencia'}. San José, Costa Rica: Corte IDH.`;
     }
-    if (silo.includes('bloque') || /tratado|convenci[oó]n|pacto|protocolo|declaraci[oó]n/i.test(origen)) {
-        return `${origen}${ref ? `, art. ${ref}` : ''}. Tratado internacional ratificado por México.`;
+    if (tipo === 'sentencia_cidh' || tipo === 'opinion_consultiva' || /^CoIDH,/i.test(origen)) {
+        const nombre = origen.replace(/^CoIDH,\s*/i, '').trim();
+        return tipo === 'opinion_consultiva' || /^OC-/i.test(nombre)
+            ? `Corte IDH. Opinión Consultiva ${nombre}.`
+            : `Corte IDH. ${nombre || 'Caso contencioso'}.`;
+    }
+    if (tipo === 'constitucion' || /CPEUM|Constituci[oó]n Pol[ií]tica de los Estados Unidos Mexicanos/i.test(origen)
+        || (silo === 'bloque_constitucional' && !origen)) {
+        const lugar = ref ? lugarDeLaRef(ref, /\s*CPEUM\s*$/i) : '';
+        return `Constitución Política de los Estados Unidos Mexicanos${lugar ? `, ${lugar}` : ''}. (${anio}). Cámara de Diputados del H. Congreso de la Unión.`;
+    }
+    if (tipo === 'convencion' || silo.includes('bloque') || /tratado|convenci[oó]n|pacto|protocolo|declaraci[oó]n/i.test(origen)) {
+        // «Art. 2 CBdP» ya dice «art.»: antes salía «, art. Art. 2 CBdP».
+        const lugar = ref ? lugarDeLaRef(ref) : '';
+        const naturaleza = /reglas|principios|manual|protocolo de estambul|declaraci[oó]n/i.test(origen)
+            ? 'Instrumento internacional de derechos humanos.'
+            : 'Tratado internacional ratificado por México.';
+        return `${origen || 'Instrumento internacional'}${lugar ? `, ${lugar}` : ''}. ${naturaleza}`;
     }
     if (silo.includes('federal') || silo.includes('codigo_nacional')) {
         return `${origen}${ref ? `, art. ${ref}` : ''}. (${anio}). Cámara de Diputados del H. Congreso de la Unión.`;
@@ -194,7 +250,9 @@ export function institucionDe(f: Partial<FuenteCita>): Institucion {
        el Pacto de San José, los cuadernillos de jurisprudencia y los casos
        contenciosos («Caso Radilla Pacheco vs. México»). */
     if (/interamerican|corte ?idh|coidh|pacto de san jos|convenci[oó]n americana|cuadernillo|vs\.? m[eé]xico|serie c no/.test(origen)
-        || /interamerican|corte ?idh/.test(instancia) || silo.includes('cidh') || silo.includes('corteidh')) return INSTITUCIONES.corteidh;
+        || /interamerican|corte ?idh/.test(instancia) || silo.includes('cidh') || silo.includes('corteidh')
+        // `coidh` —la colección de sentencias al párrafo— no contiene «cidh».
+        || esCoidh(f)) return INSTITUCIONES.corteidh;
     if (silo.includes('jurisprudencia') || silo.includes('sentencias_ef') || f.tesis_num || f.registro || /semanario|tesis|jurisprudencia/.test(origen)) return INSTITUCIONES.scjn;
     if (silo.includes('constitu') || /cpeum|constituci[oó]n pol[ií]tica/.test(origen)) return INSTITUCIONES.diputados;
     /* La Constitución la publica la Cámara de Diputados; los tratados los

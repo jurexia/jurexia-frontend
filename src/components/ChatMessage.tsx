@@ -7,8 +7,13 @@ import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/G
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
 import { recortarABloque, useRevelado } from '@/lib/documento/revelado';
-import { type MetaCitas } from '@/lib/documento/citas';
+import { type MetaCitas, referenciaAPA } from '@/lib/documento/citas';
+import { type CamposCoidh, camposCoidh, enlaceOficialCoidh, esCoidh } from '@/lib/coidh';
 import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
+
+/** Una fuente tal como llega en `FUENTES_PREVIAS` / `CITATION_META`. Las de
+ *  la Corte IDH traen además caso, párrafo, página y ancla (`@/lib/coidh`). */
+type FuenteMarcador = { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null } & CamposCoidh;
 
 interface ChatMessageProps {
     message: Message;
@@ -17,7 +22,7 @@ interface ChatMessageProps {
     nombre?: string | null;
     avatarUrl?: string | null;
     tratamiento?: string | null;
-    onCitationClick?: (source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }) => void;
+    onCitationClick?: (source: { docId: string } & FuenteMarcador) => void;
     /** Lleva esta respuesta al documento: al constructor si está abierto, o al panel Documento. */
     onLlevarAlDocumento?: (markdown: string) => void;
     /** «Desarrollar a partir de este fundamento»: el abogado escribe qué quiere
@@ -100,7 +105,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // Extract unique document IDs, thinking content, and create numbered references
     const { processedContent, docIdMap, thinkingContent, citationMeta, isSynthesizing, precedentesMeta } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }> } | null, isSynthesizing: false, precedentesMeta: null as Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string; pdf_url?:string|null}> | null };
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, FuenteMarcador> } | null, isSynthesizing: false, precedentesMeta: null as Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string; pdf_url?:string|null}> | null };
 
         let content = message.content || '';
 
@@ -230,7 +235,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         content = content.replace(/^\s+/, '').trim();
 
         // Parse and strip <!-- CITATION_META:{...} --> from content
-        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null }> } | null = null;
+        let citationMeta: { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, FuenteMarcador> } | null = null;
         const metaMatch = content.match(/<!-- CITATION_META:(\{[\s\S]*?\}) -->/);
         if (metaMatch) {
             try {
@@ -465,77 +470,15 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
 
     // ── APA-style reference builder ──────────────────────────────────────────
-    // Constructs a properly formatted APA reference from CitationMeta source.
-    // Returns plain-text reference suitable for both PDF (HTML) and DOCX (text).
-    type CitSource = {
-        origen: string;
-        ref: string;
-        texto: string;
-        pdf_url?: string | null;
-        silo?: string;
-        entidad?: string | null;
-        registro?: string | null;
-        tesis_num?: string | null;
-        tipo_criterio?: string | null;
-        instancia?: string | null;
-        materia?: string | null;
-    };
+    // UNA SOLA REFERENCIA APA (25-sep-2026). Ésta era una copia a mano de
+    // `referenciaAPA` (`@/lib/documento/citas`), la de la hoja tipo Word, y
+    // las dos arrastraban el mismo error: todo el bloque de constitucionalidad
+    // —cuadernillos y tratados incluidos— salía como «Constitución Política…».
+    // Se corrige en un solo sitio y aquí se usa ése, con la rama de la Corte
+    // IDH delante.
+    type CitSource = FuenteMarcador;
 
-    const buildAPAReference = useCallback((src: CitSource): string => {
-        const origen = (src.origen || '').trim();
-        const ref = (src.ref || '').trim();
-        const silo = (src.silo || '').toLowerCase();
-        const entidad = (src.entidad || '').trim();
-        const instancia = (src.instancia || '').trim();
-        const registro = (src.registro || '').trim();
-        const tesisNum = (src.tesis_num || '').trim();
-        const year = new Date().getFullYear();
-
-        // Jurisprudencia / Tesis (SCJN, TCC, plenos)
-        if (silo.includes('jurisprudencia') || tesisNum || registro) {
-            const corte = instancia || 'Suprema Corte de Justicia de la Nación';
-            const titulo = origen || ref || 'Tesis sin rubro';
-            const tesisLabel = tesisNum ? ` Tesis ${tesisNum}.` : '';
-            const regLabel = registro ? ` Registro digital: ${registro}.` : '';
-            return `${corte}. (s.f.). ${titulo}.${tesisLabel}${regLabel} Semanario Judicial de la Federación.`;
-        }
-
-        // Sentencias de TCC (precedentes)
-        if (silo.includes('sentencia') || silo.includes('precedente') || silo.includes('holding')) {
-            const tribunal = origen || 'Tribunal Colegiado de Circuito';
-            const expediente = ref ? `, Expediente ${ref}` : '';
-            return `${tribunal}${expediente}. Poder Judicial de la Federación.`;
-        }
-
-        // Constitución
-        if (silo.includes('constitu') || /CPEUM|Constituci[oó]n/i.test(origen)) {
-            const articulo = ref ? `, art. ${ref}` : '';
-            return `Constitución Política de los Estados Unidos Mexicanos${articulo}. (${year}). Cámara de Diputados del H. Congreso de la Unión.`;
-        }
-
-        // Tratados internacionales / DDHH
-        if (silo.includes('bloque') || /tratado|convenci[oó]n|pacto|protocolo|declaraci[oó]n/i.test(origen)) {
-            const articulo = ref ? `, art. ${ref}` : '';
-            return `${origen}${articulo}. Tratado internacional ratificado por México.`;
-        }
-
-        // Leyes federales / código nacional
-        if (silo.includes('federal') || silo.includes('codigo_nacional')) {
-            const articulo = ref ? `, art. ${ref}` : '';
-            return `${origen}${articulo}. (${year}). Cámara de Diputados del H. Congreso de la Unión.`;
-        }
-
-        // Leyes estatales
-        if (silo.includes('estatal') || silo.startsWith('leyes_')) {
-            const articulo = ref ? `, art. ${ref}` : '';
-            const lugar = entidad ? ` Congreso del Estado de ${entidad}.` : '';
-            return `${origen}${articulo}. (${year}).${lugar}`;
-        }
-
-        // Fallback genérico
-        const articulo = ref ? `, art. ${ref}` : '';
-        return `${origen || 'Fuente legal'}${articulo}. (${year}).`;
-    }, []);
+    const buildAPAReference = useCallback((src: CitSource): string => referenciaAPA(src), []);
 
     // Build ordered list of APA references from citationMeta + docIdMap.
     // Returns array of { num, reference, pdfUrl } sorted by citation number.
@@ -560,7 +503,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             list.push({
                 num,
                 reference: buildAPAReference(src),
-                pdfUrl: src.pdf_url || null,
+                // La Corte IDH, en la página del párrafo (el enlace del escrito
+                // sí lleva `#page`; el campo `pdf_url`, nunca).
+                pdfUrl: (esCoidh(src) ? enlaceOficialCoidh(src) : src.pdf_url) || null,
             });
         }
         return list;
@@ -1404,6 +1349,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         tipo_criterio: src?.tipo_criterio,
                                         instancia: src?.instancia,
                                         materia: src?.materia,
+                                        // La Corte IDH: caso, párrafo, página y ancla para
+                                        // que el visor abra la sentencia en el párrafo.
+                                        ...camposCoidh(src),
                                     });
                                 }
                                 // Handle precedente card clicks
