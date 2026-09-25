@@ -349,7 +349,7 @@ export default function Decision({
         <button type="button" onClick={() => { setFormatoPulsado('moderna'); onGenerar('moderna'); }}
                 disabled={!puedeGenerar}
                 className={cn(
-                    'inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-5 text-[14px] font-semibold transition',
+                    'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 py-2 text-center text-[14px] font-semibold leading-snug transition',
                     'border-accent-gold/45 bg-accent-gold/[0.06] text-accent-gold',
                     'hover:-translate-y-px hover:border-accent-gold/70 hover:bg-accent-gold/[0.1]',
                     'disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40')}>
