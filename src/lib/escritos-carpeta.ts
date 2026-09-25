@@ -347,7 +347,6 @@ export async function generarEscrito(
         userIdQuePide,
         undefined,
         undefined,
-        expediente.materia ?? undefined,
         signal
     )) {
         respuesta += trozo

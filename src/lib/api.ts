@@ -138,7 +138,6 @@ async function* streamChatInternal(
     userId?: string,
     fuero?: string,
     genioIds?: string[],
-    materia?: string,
     signal?: AbortSignal,
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
@@ -177,7 +176,6 @@ async function* streamChatInternal(
             fuentes: fuentesElegidas(),
             ...(fuentesVerificadas().length ? { fuentes_previas: fuentesVerificadas() } : {}),
             ...(fuero ? { fuero } : {}),
-            ...(materia ? { materia } : {}),
         }),
     });
 
@@ -216,7 +214,6 @@ export async function* streamChat(
     userId?: string,
     fuero?: string,
     genioIds?: string[],
-    materia?: string,
     signal?: AbortSignal,
 ): AsyncGenerator<string, void, unknown> {
     const maxRetries = 3;
@@ -225,7 +222,7 @@ export async function* streamChat(
     while (attempt < maxRetries) {
         try {
             // Attempt to stream chat
-            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, materia, signal);
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, signal);
             return; // Success - exit
         } catch (err) {
             // User-initiated stop — exit silently without retry

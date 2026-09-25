@@ -115,8 +115,6 @@ interface ChatInputProps {
     isPro?: boolean;
     selectedFuero?: string[];
     onFueroChange?: (fueros: string[]) => void;
-    selectedMateria?: string;
-    onMateriaChange?: (materia: string) => void;
     /** Despliega o recoge el constructor de escritos —demanda o recurso— (editor Word + pasos + Toulmin). */
     onAbrirConstructor?: (paso: 'caso' | 'toulmin') => void;
     /** Si el constructor está desplegado: el botón Toulmin se ve pulsado. */
@@ -149,8 +147,6 @@ export default function ChatInput({
     isPro = false,
     selectedFuero = [],
     onFueroChange,
-    selectedMateria = '',
-    onMateriaChange,
     onAbrirConstructor,
     constructorAbierto = false,
     basico = false,
@@ -196,7 +192,6 @@ export default function ChatInput({
     }, []);
     // El fuero ya no se resume aquí: lo dice el botón «Fuentes», a la vista.
     const resumenPlegado = [
-        ({ '': 'Materia auto', civil: 'Civil', penal: 'Penal', familiar: 'Familiar', administrativo: 'Admin' } as Record<string, string>)[selectedMateria] ?? selectedMateria,
         chatMode === 'buscar' ? 'Buscar' : `Redactar · ${nivelRedaccion}`,
         activeGenios.length ? `Genios: ${activeGenios.join(', ')}` : null,
     ].filter(Boolean).join(' · ');
@@ -801,40 +796,9 @@ ${draftRequest.descripcion}`;
 
                 {/* Main Input Container - Harvey Style */}
                 <div className="chat-input-container p-3">
-                    {/* Materia — compact pills above textarea. El fuero salió de
-                        aquí el 23-sep-2026: lo sustituye el botón «Fuentes», a la
-                        izquierda del texto y siempre a la vista. */}
-                    {!basico && !plegado && onMateriaChange && (
-                        <div data-guide="fuero-materia-filter" className="flex items-center gap-1 sm:gap-1.5 mb-2 pb-1.5 border-b border-gray-100/60 flex-nowrap overflow-x-auto">
-                            {/* Materia section */}
-                            {onMateriaChange && (
-                                <div data-guide="materia-filter" className="flex items-center gap-1.5 flex-shrink-0">
-                                    <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 flex-shrink-0" />
-                                    <span className="hidden sm:inline text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 mr-0.5">Materia</span>
-                                    <div className="flex bg-gray-100/80 p-0.5 rounded-lg gap-px sm:gap-0.5">
-                                        {[
-                                            { key: '', label: 'Auto' },
-                                            { key: 'civil', label: 'Civil' },
-                                            { key: 'penal', label: 'Penal' },
-                                            { key: 'familiar', label: 'Familiar' },
-                                            { key: 'administrativo', label: 'Admin' },
-                                        ].map((m) => (
-                                            <button
-                                                key={m.key}
-                                                onClick={() => onMateriaChange(m.key)}
-                                                className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-medium transition-all duration-200 whitespace-nowrap ${selectedMateria === m.key
-                                                    ? 'bg-charcoal-900 text-white shadow-sm'
-                                                    : 'text-gray-500 hover:text-charcoal-700 hover:bg-white/60'
-                                                    }`}
-                                            >
-                                                {m.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {/* La materia ya no se elige aquí (25-sep-2026): se deduce de la
+                        consulta. El selector Auto·Civil·Penal·Familiar·Admin salió a
+                        petición de David — «que la selección de la materia vaya implícita». */}
 
                     {/* Attached Document Chip (Legacy location - removing this as it's handled in the input now) */}
 

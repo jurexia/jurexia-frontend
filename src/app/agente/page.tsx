@@ -80,7 +80,6 @@ export default function AgentePage() {
                 sesion?.user?.id,
                 undefined,
                 undefined,
-                undefined,
                 abortRef.current.signal
             )) {
                 // El agente se apoya en el chat existente, así que llegan sus

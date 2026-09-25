@@ -506,7 +506,7 @@ ${esRecurso ? `Escrito: ${nombreEscrito}\n\n` : ''}${cuerpoCaso}${argumentos}`;
             const sesion = await getSession();
             for await (const trozo of streamChat(
                 [{ role: 'user', content: mensaje }], caso.estado || undefined, 30,
-                sesion?.access_token, false, sesion?.user?.id, undefined, undefined, undefined, control.signal,
+                sesion?.access_token, false, sesion?.user?.id, undefined, undefined, control.signal,
             )) {
                 // Un reintento de streamChat vuelve a mandar la respuesta ENTERA: lo de antes se tira.
                 if (trozo.includes('<!--RETRY:')) { texto = ''; continue; }
@@ -586,7 +586,7 @@ ${texto.slice(0, 60000)}`;
             const sesion = await getSession();
             for await (const trozo of streamChat(
                 [{ role: 'user', content: mensaje }], caso.estado || undefined, 30,
-                sesion?.access_token, false, sesion?.user?.id, undefined, undefined, undefined, control.signal,
+                sesion?.access_token, false, sesion?.user?.id, undefined, undefined, control.signal,
             )) {
                 if (trozo.includes('<!--RETRY:')) { salida = ''; continue; }
                 salida += trozo;

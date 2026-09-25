@@ -217,7 +217,6 @@ export default function ChatPage() {
     const [showPromptGuideModal, setShowPromptGuideModal] = useState(false); // PromptGuide (¿Cómo hacer mejores consultas?)
     const [showVisualGuide, setShowVisualGuide] = useState(false);
     const [selectedFuero, setSelectedFuero] = useState<string[]>([]);
-    const [selectedMateria, setSelectedMateria] = useState<string>('');
     /* ═══ EL MODO BÁSICO ═══
        Dos maneras de llegar: sin cuenta por el botón de prueba, o con cuenta
        gratuita que ya gastó sus consultas normales. En los dos casos es el
@@ -447,7 +446,6 @@ export default function ChatPage() {
         estado: selectedEstado || undefined,
         topK: 30,
         fuero: selectedFuero.length ? selectedFuero : undefined,
-        materia: selectedMateria || undefined,
         onQuotaExceeded: handleQuotaExceeded,
         onQueryCompleted: handleQueryCompleted,
         genioIds: activeGenios,
@@ -1493,8 +1491,6 @@ export default function ChatPage() {
                                     isPro={isPro}
                                     selectedFuero={selectedFuero}
                                     onFueroChange={setSelectedFuero}
-                                    selectedMateria={selectedMateria}
-                                    onMateriaChange={setSelectedMateria}
 
                                     onAbrirConstructor={abrirConstructor}
                                     constructorAbierto={constructorAbierto}
@@ -1655,8 +1651,6 @@ export default function ChatPage() {
                             isPro={isPro}
                             selectedFuero={selectedFuero}
                             onFueroChange={setSelectedFuero}
-                            selectedMateria={selectedMateria}
-                            onMateriaChange={setSelectedMateria}
 
                             onAbrirConstructor={abrirConstructor}
                             placeholder={modoBasico

@@ -997,7 +997,6 @@ export async function generarResumenCaso(
         userIdQuePide,
         undefined,
         undefined,
-        expediente.materia ?? undefined
     )) {
         respuesta += trozo
     }

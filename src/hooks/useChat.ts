@@ -11,7 +11,6 @@ interface UseChatOptions {
     estado?: string;
     topK?: number;
     fuero?: string[];  // Filtro por fuero: multi-select ['constitucional', 'federal', 'estatal']
-    materia?: string; // Filtro por materia: civil, penal, familiar, administrativo
     onQuotaExceeded?: (remaining: number) => void;
     onQueryCompleted?: (used: number, limit: number) => void;  // Sync counter with DB after each query
     genioIds?: string[];  // IDs de los genios activos: ['amparo', 'mercantil'], etc.
@@ -273,7 +272,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 userId,
                 options.fuero?.length ? options.fuero.join(',') : undefined,
                 options.genioIds,
-                options.materia,
                 signal,
             )) {
                 // Filter keepalive heartbeat from backend (<!--PING-->)
@@ -559,7 +557,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             sendingRef.current = false;
         }
         return respuestaFinal;
-    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.materia, options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive]);
+    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

@@ -36,15 +36,6 @@ const TOUR_STEPS: TourStep[] = [
         preferBelow: true,
     },
     {
-        selector: '[data-guide="materia-filter"]',
-        title: '📚 Filtro de Materia',
-        description:
-            'Enfoca la búsqueda a una rama jurídica específica: Civil, Penal, Familiar, Laboral, Mercantil y más. Combínalo con el fuero para resultados precisos.',
-        timestamp: 30,
-        padding: 10,
-        preferBelow: true,
-    },
-    {
         selector: '[data-guide="buscar-redactar"]',
         title: '🔍 Modo Consulta',
         description:
