@@ -212,8 +212,12 @@ export function VisorArticulo({
     url, articulo, textoArticulo, alto = 440,
     parrafo = null, pagina = null, ancla = null, rotuloParrafo = null, textoCompleto = true, urlOriginal = null,
 }: Props) {
-    /** Modo párrafo (Corte IDH): se sabe la página y hay número o ancla con qué confirmar. */
-    const modoParrafo = Boolean(pagina && (parrafo !== null || ancla));
+    /**
+     * Modo párrafo (Corte IDH): se sabe la página. Con número, ancla o texto se
+     * confirma el pasaje; sin nada de eso (una ficha de supervisión sin
+     * extracto) se abre ahí sin pintar, que es mejor que la pág. 1.
+     */
+    const modoParrafo = Boolean(pagina);
     const scroller = useRef<HTMLDivElement | null>(null);
     const documento = useRef<any>(null);
     const dibujadas = useRef<Set<number>>(new Set());
@@ -337,6 +341,7 @@ export function VisorArticulo({
             if (!url) { setError('sin_pdf'); setCargando(false); return; }
             setCargando(true);
             setError(null);
+            setPaginaVisible(1);
             dibujadas.current.clear();
             objetivo.current = null;
 
@@ -363,6 +368,12 @@ export function VisorArticulo({
                 setDims({ ancho: v1.width, alto: v1.height });
 
                 // ── Corte IDH: el párrafo en su página, confirmado por el ancla ──
+                if (modoParrafo && parrafo === null && !ancla && !textoArticulo) {
+                    objetivo.current = { pagina: Math.min(pagina || 1, doc.numPages), desde: 0, hasta: 0, certeza: 'rotulo', porPagina: {} };
+                    setEstadoBusqueda('sin_articulo');
+                    setCargando(false);
+                    return;
+                }
                 if (modoParrafo) {
                     const leidas: Record<number, PlanoPagina> = {};
                     const leer = async (n: number) =>
@@ -560,8 +571,10 @@ export function VisorArticulo({
         };
         cont.addEventListener('scroll', alDesplazar, { passive: true });
 
-        // Al terminar de abrir, saltar al artículo.
-        const t = setTimeout(() => irAlArticulo(false), 120);
+        // Al terminar de abrir, saltar al artículo. Y el contador, aunque el
+        // salto no mueva nada (objetivo en la pág. 1): sin evento de scroll
+        // se quedaba con la página del documento anterior.
+        const t = setTimeout(() => { irAlArticulo(false); alDesplazar(); }, 120);
         return () => {
             obs.disconnect();
             clearTimeout(t);
@@ -572,8 +585,11 @@ export function VisorArticulo({
 
     /* El respaldo va DIRECTO a la fuente, en su página: si pdf.js no pudo
        abrirlo, el proxy o el origen ya fallaron y reenviar por ahí no sirve. */
-    const enlaceDirecto = urlOriginal
-        ? `${urlOriginal.split('#')[0]}${pagina ? `#page=${pagina}` : ''}`
+    // Sólo http(s) en el `href`; sin página, la dirección original tal cual
+    // (con su fragmento, si lo traía).
+    const original = urlOriginal && /^https?:\/\//i.test(urlOriginal) ? urlOriginal : null;
+    const enlaceDirecto = original
+        ? (pagina ? `${original.split('#')[0]}#page=${pagina}` : original)
         : url;
 
     if (error) {

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { HOSTS_CORTEIDH, puertaCorteIDH } from '@/lib/proxyPdf';
+import { HOSTS_CORTEIDH, puertaCorteIDH, traerCorteIDH } from '@/lib/proxyPdf';
 
 /**
  * Sirve el PDF de una ley desde el propio dominio de Iurexia.
@@ -130,7 +130,7 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const r = await fetch(destino.toString(), {
+        const peticion: RequestInit = {
             headers: {
                 Accept: 'application/pdf,*/*',
                 // Algunos portales de gobierno cortan las peticiones que no
@@ -148,7 +148,22 @@ export async function GET(req: NextRequest) {
             // seguiría sirviendo la copia vieja hasta 30 días. El CDN, que sí
             // indexa `&v=`, ya hace de caché.
             ...(esCorte ? { cache: 'no-store' as const } : { next: { revalidate: 86400 } }),
-        });
+        } as RequestInit;
+        // La Corte, con las redirecciones seguidas a mano y por la misma puerta
+        // (`traerCorteIDH`): un salto fuera de `/docs/(casos|opiniones|
+        // supervisiones)` da 502 en vez de servirse. Las leyes, como siempre.
+        const traida = esCorte
+            ? await traerCorteIDH(destino.toString(), peticion)
+            : await fetch(destino.toString(), peticion);
+        // Sin `instanceof Response`: la respuesta del fetch parcheado de Next
+        // no tiene por qué ser de la misma clase global.
+        if ('bloqueada' in traida) {
+            return new Response('El origen redirigió fuera de lo permitido', {
+                status: 502,
+                headers: { 'X-Origen-Estado': `${traida.bloqueada} redireccion` },
+            });
+        }
+        const r = traida;
 
         // El estado del origen viaja en `X-Origen-Estado` para poder distinguir
         // un bloqueo de Cloudflare (403) de un origen caído (522, 5xx) sin

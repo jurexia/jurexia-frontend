@@ -9,8 +9,8 @@ import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel, Chevro
 import { findLawPdfUrl } from '@/lib/lawPdfLookup';
 import { urlProxyPdf } from '@/lib/proxyPdf';
 import {
-    type CamposCoidh, autorVoto, enlaceOficialCoidh, esCoidh, fechaLarga, lugarConVoto, rotuloCoidh,
-    serieCoidh, textoCoidh, textoEstaCompleto, urlOficialCoidh,
+    type CamposCoidh, anclaDeFicha, autorVoto, enlaceOficialCoidh, esCoidh, esFichaCoidh, extractoDeFicha, fechaLarga,
+    lugarConVoto, rotuloCoidh, serieCoidh, textoCoidh, textoEstaCompleto, urlOficialCoidh,
 } from '@/lib/coidh';
 
 /** La fuente que abre el panel. Las de la Corte IDH (`silo: "coidh"`) traen
@@ -823,6 +823,10 @@ function SentenciaCoidhView({ source, urlOficial, urlParaVisor }: SentenciaCoidh
     const serie = serieCoidh(source);
     const fecha = fechaLarga(source.fecha);
     const texto = textoCoidh(source.texto);
+    // Una ficha (resolución que no está en la colección) trae una nota, no un
+    // párrafo: ni se ofrece copiarla como párrafo ni se busca en el PDF.
+    const ficha = esFichaCoidh(source);
+    const ancla = source.ancla || (ficha ? anclaDeFicha(source.texto) : null);
     const enlace = enlaceOficialCoidh(source);
     const caso = (source.caso || '').trim();
     const esOC = source.tipo === 'oc_coidh' || /^OC-\d/i.test(caso);
@@ -860,7 +864,12 @@ function SentenciaCoidhView({ source, urlOficial, urlParaVisor }: SentenciaCoidh
                     </p>
                 )}
 
-                {texto && (
+                {texto && ficha && (
+                    <p className="rounded-xl border border-cream-400 bg-cream-200 px-4 py-2.5 text-[11.5px] leading-snug text-charcoal-700 whitespace-pre-line">
+                        {texto}
+                    </p>
+                )}
+                {texto && !ficha && (
                     <ArticuloPlegado
                         texto={texto}
                         etiqueta={lugarMayuscula}
@@ -921,11 +930,14 @@ function SentenciaCoidhView({ source, urlOficial, urlParaVisor }: SentenciaCoidh
                             <VisorArticulo
                                 url={urlParaVisor}
                                 articulo={null}
-                                textoArticulo={source.texto || null}
+                                // Sin página no hay dónde confirmar: se abre la
+                                // sentencia sin recorrerla buscando una nota. De
+                                // una ficha sólo sirve su extracto literal.
+                                textoArticulo={!source.pagina ? null : ficha ? extractoDeFicha(source.texto) : source.texto || null}
                                 textoCompleto={textoEstaCompleto(source.texto)}
                                 parrafo={source.parrafo ?? null}
                                 pagina={source.pagina ?? null}
-                                ancla={source.ancla || null}
+                                ancla={ancla}
                                 rotuloParrafo={lugar}
                                 urlOriginal={urlOficial}
                                 alto={440}

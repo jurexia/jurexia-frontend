@@ -62,6 +62,12 @@ export function canonCorteIDH(cruda: string | null | undefined): string | null {
     // el de omisión de su esquema (80 en http, 443 en https).
     if (u.port !== '' || u.username !== '' || u.password !== '') return null;
     if (!RUTA_CORTEIDH.test(u.pathname)) return null;
+    // `URL` resuelve `..` y `%2e%2e`, pero NO decodifica `%2F` ni `%5C`:
+    // `/docs/casos/..%2F..%2Fotra.pdf` pasaba la puerta y el servidor de la
+    // Corte podía entenderlo como un salto fuera de `/docs/casos` (revisión
+    // del 25-sep-2026). Ninguna de las 2,320 URL del catálogo los usa (sí
+    // `%20` y `%c3%b1`, que se quedan), así que se cierran.
+    if (/%2f|%5c|%00/i.test(u.pathname)) return null;
     return `https://www.corteidh.or.cr${u.pathname}`;
 }
 
@@ -87,13 +93,67 @@ export function consultaProxy(canonica: string, version?: string | null): string
  *  - Corte IDH: la forma canónica, con `&v=` si se conoce el sha1 del PDF que
  *    se troceó (así un PDF que la Corte reemplace abre una llave nueva en vez
  *    de servir 30 días la copia vieja).
+ *  - Corte IDH FUERA de la puerta (`/docs/medidas`, `/docs/asuntos`: 794 de
+ *    las 2,320 resoluciones del catálogo, y el backend las manda como fichas):
+ *    null. Pedirlas al proxy era pedir un 403 seguro y esperar a que pdf.js
+ *    fallara para enseñar el enlace directo; con null el visor lo enseña de
+ *    entrada (revisión del 25-sep-2026).
  *  - Lo demás: como siempre, sólo si es https; si no, la dirección tal cual.
  */
 export function urlProxyPdf(u: string | null | undefined, version?: string | null): string | null {
     if (!u) return null;
     const canon = canonCorteIDH(u);
     if (canon) return `/api/ley/pdf${consultaProxy(canon, version)}`;
+    if (esDeLaCorte(u)) return null;
     return /^https:\/\//.test(u) ? `/api/ley/pdf?u=${encodeURIComponent(u)}` : u;
+}
+
+/** ¿La dirección es de corteidh.or.cr, pase o no la puerta? */
+function esDeLaCorte(u: string): boolean {
+    try {
+        return HOSTS_CORTEIDH.includes(new URL(u).hostname);
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * EL PROXY NO SIGUE REDIRECCIONES A CIEGAS (revisión del 25-sep-2026).
+ *
+ * `fetch` sigue las redirecciones por omisión: la puerta miraba la primera
+ * dirección y el proxy podía acabar sirviendo lo que la Corte —o quien
+ * controlara una redirección suya— mandara después, fuera de
+ * `/docs/(casos|opiniones|supervisiones)` o fuera de corteidh.or.cr. Aquí se
+ * sigue a mano, hasta tres saltos, y sólo si el destino pasa la MISMA puerta.
+ * Una redirección DENTRO de la puerta (un PDF renombrado en la misma carpeta)
+ * se sigue igual que antes; sólo cambia lo que sale de ella. Que la forma
+ * canónica no redirija hoy no está medido: el fetch anterior seguía los
+ * saltos sin dejar rastro, y las mediciones de la vista previa sólo vieron
+ * el 200 final.
+ *
+ * Devuelve la respuesta final, o `{ bloqueada }` con el estado de la
+ * redirección que no pasó la puerta. `traer` se inyecta para probarlo sin red.
+ */
+export async function traerCorteIDH(
+    canonica: string,
+    init: RequestInit,
+    traer: typeof fetch = fetch,
+): Promise<Response | { bloqueada: number }> {
+    let destino = canonica;
+    for (let salto = 0; salto <= 3; salto++) {
+        const r = await traer(destino, { ...init, redirect: 'manual' });
+        if (r.status < 300 || r.status >= 400 || r.status === 304) return r;
+        const ubicacion = r.headers.get('location');
+        let siguiente: string | null = null;
+        try {
+            siguiente = ubicacion ? canonCorteIDH(new URL(ubicacion, destino).toString()) : null;
+        } catch {
+            siguiente = null;
+        }
+        if (!siguiente || salto === 3) return { bloqueada: r.status };
+        destino = siguiente;
+    }
+    return { bloqueada: 0 };
 }
 
 /**

@@ -12,7 +12,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { puertaCorteIDH, urlProxyPdf } = await import(path.join(RAIZ, 'src/lib/proxyPdf.ts'));
+const { puertaCorteIDH, urlProxyPdf, traerCorteIDH } = await import(path.join(RAIZ, 'src/lib/proxyPdf.ts'));
 
 const CANON = 'https://www.corteidh.or.cr/docs/casos/articulos/seriec_154_esp.pdf';
 const q = (u, extra = '') => `?u=${encodeURIComponent(u)}${extra}`;
@@ -55,6 +55,13 @@ const casos = [
     [q('https://www.corteidh.or.cr/docs/casos/../../index.cfm?.pdf'), 'prohibe'],
     [q('https://www.corteidh.or.cr/docs/casos/%2e%2e/%2e%2e/index.cfm'), 'prohibe'],
     [q('ftp://www.corteidh.or.cr/docs/casos/articulos/seriec_154_esp.pdf'), 'prohibe'],
+    // `%2F` y `%5C` no los decodifica `URL`: pasaban la puerta (revisión del 25-sep-2026).
+    [q('https://www.corteidh.or.cr/docs/casos/..%2F..%2Fsitios%2Fx.pdf'), 'prohibe'],
+    [q('https://www.corteidh.or.cr/docs/casos/..%2f..%2fsitios%2fx.pdf'), 'prohibe'],
+    [q('https://www.corteidh.or.cr/docs/casos/..%5C..%5Cx.pdf'), 'prohibe'],
+    // `%20` y `%c3%b1` sí vienen en el catálogo y siguen pasando.
+    [q('https://www.corteidh.or.cr/docs/supervisiones/casta%c3%b1eda_28_08_13.pdf'), 'sirve', 'https://www.corteidh.or.cr/docs/supervisiones/casta%c3%b1eda_28_08_13.pdf'],
+    [q('https://www.corteidh.or.cr/docs/supervisiones/gomez_%2021_12_10.pdf'), 'sirve', 'https://www.corteidh.or.cr/docs/supervisiones/gomez_%2021_12_10.pdf'],
 ];
 
 let fallos = 0;
@@ -91,5 +98,36 @@ const bienLey = urlProxyPdf(ley) === `/api/ley/pdf?u=${encodeURIComponent(ley)}`
 if (!bienLey) fallos++;
 console.log(bienLey ? 'ok   ' : 'FALLA', 'leyes    sin cambio');
 
-console.log(fallos ? `${fallos} FALLOS` : `todo bien (${casos.length + delVisor.length + 1} casos)`);
+// La Corte fuera de la puerta (medidas, asuntos): el visor no la pide al proxy.
+const bienFuera = urlProxyPdf('https://www.corteidh.or.cr/docs/medidas/algo.pdf') === null
+    && urlProxyPdf('http://corteidh.or.cr/docs/asuntos/algo.pdf') === null;
+if (!bienFuera) fallos++;
+console.log(bienFuera ? 'ok   ' : 'FALLA', 'visor    medidas/asuntos → null (enlace directo)');
+
+// Las redirecciones del origen, seguidas sólo si pasan la misma puerta.
+const falso = (mapa) => async (u, init) => {
+    if (init.redirect !== 'manual') throw new Error('sin redirect manual');
+    const r = mapa[u];
+    if (!r) return new Response('%PDF', { status: 200, headers: { 'content-type': 'application/pdf' } });
+    return new Response(null, { status: r[0], headers: { location: r[1] } });
+};
+const redirecciones = [
+    // [mapa de redirecciones, esperado]
+    [{}, 'sirve'],
+    [{ [CANON]: [301, '/docs/casos/articulos/seriec_154_esp1.pdf'] }, 'sirve'],
+    [{ [CANON]: [302, 'http://127.0.0.1/interno.pdf'] }, 'bloquea'],
+    [{ [CANON]: [302, 'https://www.corteidh.or.cr/ver_ficha_tecnica.cfm?id=1'] }, 'bloquea'],
+    [{ [CANON]: [302, 'https://www.corteidh.or.cr/docs/medidas/x.pdf'] }, 'bloquea'],
+    [{ [CANON]: [302, CANON] }, 'bloquea'],
+    [{ [CANON]: [302, ''] }, 'bloquea'],
+];
+for (const [mapa, esperado] of redirecciones) {
+    const r = await traerCorteIDH(CANON, {}, falso(mapa));
+    const obtenido = 'bloqueada' in r ? 'bloquea' : r.status === 200 ? 'sirve' : String(r.status);
+    const bien = obtenido === esperado;
+    if (!bien) fallos++;
+    console.log(bien ? 'ok   ' : 'FALLA', 'redirige', esperado.padEnd(8), obtenido.padEnd(8), JSON.stringify(Object.values(mapa)[0] || 'sin redirección'));
+}
+
+console.log(fallos ? `${fallos} FALLOS` : `todo bien (${casos.length + delVisor.length + 2 + redirecciones.length} casos)`);
 process.exit(fallos ? 1 : 0);

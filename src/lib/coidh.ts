@@ -98,7 +98,10 @@ export function serieCoidh(f: CamposCoidh): string {
  * Trindade, párr. 1»), que conserva los acentos y la cedilla.
  */
 export function autorVoto(f: CamposCoidh & { ref?: string | null }): string | null {
-    const v = (f.voto_autor || '').trim();
+    // Sin `voto_autor`, la llave también lo dice («C-101|v:garcia-ramirez|27»).
+    // Un voto sin autor se rotularía «párr. 27» y la referencia se lo
+    // atribuiría a la Corte: el plan (§3.7) exige que «un voto no es la Corte».
+    const v = (f.voto_autor || (f.llave || '').match(/\|v:([a-z0-9+-]+)\|/)?.[1] || '').trim();
     if (!v) return null;
     if (/[A-ZÁÉÍÓÚÑ ]/.test(v)) return v;
     const m = (f.ref || '').match(/^Voto de (.+?)(?:,\s*(?:p[aá]rr\.|sin numerar).*)?$/i);
@@ -126,10 +129,17 @@ export function lugarCoidh(f: CamposCoidh): string {
 }
 
 /** Lo que va tras «Ir al…»: «párr. 124», «voto de García Ramírez, párr. 12», «resolutivo 8». */
-export function lugarConVoto(f: CamposCoidh & { ref?: string | null }): string {
+export function lugarConVoto(f: CamposCoidh & { ref?: string | null; texto?: string | null; silo?: string | null }): string {
     const autor = autorVoto(f);
     const n = numeroCoidh(f);
     if (autor) return n ? `voto de ${autor}, párr. ${n}` : `voto de ${autor}`;
+    // Una ficha sin número no tiene «pasaje citado»: tiene su extracto
+    // verificado, o su página, o nada más que la ficha. Va tras «Ir al…» y
+    // «Buscando el…», de ahí el masculino.
+    if (!n && esFichaCoidh(f)) {
+        if (!f.pagina) return 'ficha del catálogo';
+        return extractoDeFicha(f.texto) ? 'extracto verificado' : `pasaje de la pág. ${f.pagina}`;
+    }
     return lugarCoidh(f);
 }
 
@@ -148,7 +158,7 @@ function nombreCorto(f: CamposCoidh): string {
  *   Corte IDH · Caso Tzompaxtle Tecpile y otros Vs. México · resolutivo 8
  *   Corte IDH · OC-24/17 · párr. 26
  */
-export function rotuloCoidh(f: CamposCoidh & { ref?: string | null }): string {
+export function rotuloCoidh(f: CamposCoidh & { ref?: string | null; texto?: string | null; silo?: string | null }): string {
     const partes = ['Corte IDH'];
     const nombre = nombreCorto(f);
     if (nombre) partes.push(nombre);
@@ -189,10 +199,14 @@ export function referenciaCoidh(f: CamposCoidh & { ref?: string | null; origen?:
     return partes.join(' ');
 }
 
-/** La dirección oficial, sin fragmento: `url_oficial` o, si falta, `pdf_url`. */
+/**
+ * La dirección oficial, sin fragmento: `url_oficial` o, si falta, `pdf_url`.
+ * Sólo http(s): va a un `href` y a `window.open`, y un `javascript:` que se
+ * colara en un payload sería código en la página (revisión del 25-sep-2026).
+ */
 export function urlOficialCoidh(f: CamposCoidh & { pdf_url?: string | null }): string | null {
-    const u = (f.url_oficial || f.pdf_url || '').trim();
-    return u ? u.split('#')[0] : null;
+    const u = (f.url_oficial || f.pdf_url || '').trim().split('#')[0];
+    return /^https?:\/\//i.test(u) ? u : null;
 }
 
 /**
@@ -205,12 +219,50 @@ export function urlOficialCoidh(f: CamposCoidh & { pdf_url?: string | null }): s
 export function enlaceOficialCoidh(f: CamposCoidh & { pdf_url?: string | null }): string | null {
     const u = urlOficialCoidh(f);
     if (!u) return null;
-    return f.pagina ? `${u}#page=${f.pagina}` : u;
+    const pag = Number(f.pagina);
+    return Number.isInteger(pag) && pag > 0 ? `${u}#page=${pag}` : u;
 }
 
 /** El párrafo sin la cabecera «[Corte IDH | Caso … | párr. 124]» con que se vectoriza. */
 export function textoCoidh(texto: string | null | undefined): string {
     return (texto || '').replace(/^\s*\[Corte IDH[^\]]*\]\s*/i, '').trim();
+}
+
+/**
+ * LAS FICHAS NO SON PÁRRAFOS (revisión del 25-sep-2026).
+ *
+ * El backend también manda con `silo: "coidh"` resoluciones que NO están en
+ * la colección (`linea_coidh.ficha_catalogo`, `ficha_hito`,
+ * `ficha_supervision`): su `texto` es una nota —«Ficha del catálogo oficial
+ * de la Corte IDH: …», «Hito de la línea curada; el texto completo … no está
+ * ingerido»—, sin `ancla` y, en las del catálogo, sin `pagina`. Tratarlas como
+ * párrafo ofrecía «Copiar el párrafo» sobre la nota y, sin página, mandaba al
+ * visor a recorrer hasta 500 páginas buscando la nota en el PDF (y a pintar
+ * «el pasaje más parecido»: la portada, que trae las mismas palabras). La
+ * nota empieza justo tras la cabecera, así que se reconoce también en el
+ * texto recortado a 350 de `FUENTES_PREVIAS`.
+ */
+export function esFichaCoidh(f: { texto?: string | null; ancla?: string | null; silo?: string | null }): boolean {
+    if (!esCoidh(f) || (f.ancla || '').trim()) return false;
+    return /^(ficha del cat[aá]logo oficial|hito de la l[ií]nea curada)/i.test(textoCoidh(f.texto));
+}
+
+/**
+ * El ancla de una ficha de hito o de supervisión: su extracto, que SÍ es
+ * literal («Extracto verificado en la pág. 15 del PDF oficial: «…»»), en sus
+ * primeras 15 palabras. Con él el visor confirma el pasaje en su página en
+ * vez de fiarse de un número suelto. Tolera el extracto cortado por el
+ * recorte de `FUENTES_PREVIAS` (sin el «»» final).
+ */
+export function extractoDeFicha(texto: string | null | undefined): string | null {
+    const m = (texto || '').match(/Extracto verificado en la p[aá]g\.\s*\d+ del PDF oficial:\s*«([^»]+)/i);
+    const e = m ? m[1].replace(/^[\s.…]+/, '').trim() : '';
+    return e.split(/\s+/).length >= 5 ? e : null;
+}
+
+export function anclaDeFicha(texto: string | null | undefined): string | null {
+    const e = extractoDeFicha(texto);
+    return e ? e.split(/\s+/).slice(0, 15).join(' ') : null;
 }
 
 /**
@@ -223,5 +275,7 @@ export function textoCoidh(texto: string | null | undefined): string {
  */
 export const LARGO_FUENTES_PREVIAS = 350;
 export function textoEstaCompleto(texto: string | null | undefined): boolean {
-    return (texto || '').length !== LARGO_FUENTES_PREVIAS;
+    // Python corta por puntos de código y `.length` cuenta unidades UTF-16:
+    // un carácter fuera del plano básico hacía 351 de un texto recortado.
+    return Array.from(texto || '').length !== LARGO_FUENTES_PREVIAS;
 }
