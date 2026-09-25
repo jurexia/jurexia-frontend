@@ -15,6 +15,11 @@ interface UseChatOptions {
     onQueryCompleted?: (used: number, limit: number) => void;  // Sync counter with DB after each query
     genioIds?: string[];  // IDs de los genios activos: ['amparo', 'mercantil'], etc.
     onCacheActive?: () => void;  // Fired when backend confirms cache is serving
+    /** La carpeta y el flujo de la consulta, como mensaje de sistema (25-sep-2026).
+     *  Se pide en cada envío y se antepone SÓLO a lo que viaja al servidor: no
+     *  entra al estado, así que ni se pinta en el hilo ni se guarda en el
+     *  historial. `primerTurno` es verdadero si aún no hay ninguna respuesta. */
+    contextoSistema?: (primerTurno: boolean) => Promise<string | null>;
 }
 
 interface UseChatReturn {
@@ -263,8 +268,20 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                congele el stream entero. */
             let colaMarcador = '';
 
+            // La carpeta y el flujo viajan delante, como sistema. Si armarlos
+            // falla, la consulta sale sin ellos: nunca se queda sin enviar.
+            let paraEnviar: Message[] = updatedMessages;
+            if (options.contextoSistema) {
+                try {
+                    const contexto = await options.contextoSistema(!messages.some(m => m.role === 'assistant'));
+                    if (contexto) paraEnviar = [{ role: 'system', content: contexto }, ...updatedMessages];
+                } catch (errCtx) {
+                    console.warn('[useChat] contexto de carpeta omitido:', errCtx);
+                }
+            }
+
             for await (let chunk of streamChat(
-                updatedMessages,
+                paraEnviar,
                 options.estado,
                 options.topK,
                 accessToken,
@@ -557,7 +574,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             sendingRef.current = false;
         }
         return respuestaFinal;
-    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive]);
+    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive, options.contextoSistema]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

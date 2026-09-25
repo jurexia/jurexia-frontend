@@ -1,9 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import {
     AlertTriangle,
+    MessagesSquare,
+    SquarePen,
+    Workflow,
     ArrowLeft,
     ChevronRight,
     Download,
@@ -38,6 +42,8 @@ import {
     type Expediente,
     type ProgresoResumen,
 } from '@/lib/expedientes'
+import { consultasDeCarpeta, tituloLimpio, type ConsultaDeCarpeta } from '@/lib/consultas-carpeta'
+import { flujoPorId } from '@/lib/flujos'
 
 /**
  * Dentro de una carpeta.
@@ -73,6 +79,16 @@ function Detalle() {
     const [redactando, setRedactando] = useState(false)
     const [editandoObjetivo, setEditandoObjetivo] = useState(false)
     const [borradorObjetivo, setBorradorObjetivo] = useState('')
+    /* Las consultas que viven en esta carpeta (25-sep-2026). `null`: la base
+       todavía no guarda el vínculo, y la sección no se enseña. */
+    const [consultas, setConsultas] = useState<ConsultaDeCarpeta[] | null>(null)
+
+    useEffect(() => {
+        if (!id) return
+        let vigente = true
+        consultasDeCarpeta(id).then((c) => { if (vigente) setConsultas(c) })
+        return () => { vigente = false }
+    }, [id])
 
     const entradaArchivo = useRef<HTMLInputElement>(null)
     const gavetaDestino = useRef<CategoriaDocumento>('base')
@@ -459,6 +475,71 @@ function Detalle() {
                         </p>
                     ) : null}
                 </section>
+
+                {/* ── Consultas de la carpeta ───────────────────────────────
+                    Como un asunto en Astra for Law: la consulta que nace aquí
+                    lleva al modelo el objetivo, el análisis y los documentos
+                    leídos, y se queda guardada en la carpeta. */}
+                {consultas !== null ? (
+                    <section className="mb-8 rounded-xl border border-cream-400 bg-white p-5">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-accent-brown">
+                                <MessagesSquare className="h-4 w-4" />
+                                Consultas de esta carpeta
+                            </h2>
+                            <div className="flex flex-wrap gap-2">
+                                <Link
+                                    href={`/chat?carpeta=${id}&flujos=1`}
+                                    className="flex items-center gap-2 rounded-lg border border-cream-400 px-3.5 py-2 text-sm font-semibold text-charcoal-800 transition hover:bg-cream-100">
+                                    <Workflow className="h-4 w-4 text-accent-brown" />
+                                    Iniciar un flujo
+                                </Link>
+                                <Link
+                                    href={`/chat?carpeta=${id}`}
+                                    className="flex items-center gap-2 rounded-lg bg-charcoal-900 px-3.5 py-2 text-sm font-semibold text-cream-50 transition hover:bg-charcoal-800">
+                                    <SquarePen className="h-4 w-4 text-accent-gold" />
+                                    Nueva consulta
+                                </Link>
+                            </div>
+                        </div>
+                        <p className="mt-2.5 text-sm leading-relaxed text-charcoal-700/80">
+                            Lo que preguntes aquí, Iurexia lo responde con el objetivo, el análisis y los
+                            documentos leídos de esta carpeta, y la consulta se queda guardada en ella.
+                        </p>
+                        {consultas.length > 0 ? (
+                            <ul className="mt-4 divide-y divide-cream-400/70 overflow-hidden rounded-lg border border-cream-400">
+                                {consultas.map((c) => {
+                                    const flujo = flujoPorId(c.flujo)
+                                    return (
+                                        <li key={c.id}>
+                                            <Link
+                                                href={`/chat?c=${c.id}`}
+                                                className="flex items-center gap-3 px-4 py-3 transition hover:bg-cream-100">
+                                                {flujo ? (
+                                                    <Workflow className="h-4 w-4 shrink-0 text-accent-brown" />
+                                                ) : (
+                                                    <MessagesSquare className="h-4 w-4 shrink-0 text-charcoal-700/40" />
+                                                )}
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="block truncate text-sm font-medium text-charcoal-900">
+                                                        {tituloLimpio(c.title)}
+                                                    </span>
+                                                    {flujo ? (
+                                                        <span className="block truncate text-xs text-charcoal-700/55">{flujo.nombre}</span>
+                                                    ) : null}
+                                                </span>
+                                                <span className="shrink-0 text-xs text-charcoal-700/45">
+                                                    {new Date(c.updatedAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                                                </span>
+                                                <ChevronRight className="h-4 w-4 shrink-0 text-charcoal-700/30" />
+                                            </Link>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                        ) : null}
+                    </section>
+                ) : null}
 
                 {/* ── Redactar ─────────────────────────────────────────────
                     Sección propia y no un botón dentro del análisis: para

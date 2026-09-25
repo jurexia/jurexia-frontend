@@ -15,7 +15,7 @@ import type { TipoCarpeta } from '@/lib/expedientes'
  * banda de avance sólo aparece cuando la IA ya leyó la carpeta.
  */
 
-const COLORES: Record<TipoCarpeta, { lomo: string; tapaAlta: string; tapaBaja: string }> = {
+export const COLORES: Record<TipoCarpeta, { lomo: string; tapaAlta: string; tapaBaja: string }> = {
     cliente: { lomo: '#3d6ea3', tapaAlta: '#6fa3d8', tapaBaja: '#4f86c0' },
     asunto: { lomo: '#a8863f', tapaAlta: '#dcc078', tapaBaja: '#c9a962' },
     academico: { lomo: '#4a8560', tapaAlta: '#7dbb95', tapaBaja: '#5da179' },

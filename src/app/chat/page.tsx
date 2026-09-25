@@ -55,8 +55,17 @@ import {
     addMessageBatch,
     recoverPendingMessages,
     setActiveConversationId,
-    generateTitle
+    generateTitle,
+    updateConversationTitle
 } from '@/lib/conversations';
+/* Carpetas y flujos de trabajo en el chat (25-sep-2026): ver ChatSidebar. */
+import FlujosDeTrabajo, { type InicioDeFlujo } from '@/components/FlujosDeTrabajo';
+import ContextoConsulta from '@/components/ContextoConsulta';
+import NuevaCarpetaModal from '@/components/NuevaCarpetaModal';
+import { getExpedientes, type Expediente } from '@/lib/expedientes';
+import { getVinculos, vincularConsulta, type Vinculos } from '@/lib/consultas-carpeta';
+import { contextoDeConsulta } from '@/lib/contexto-carpeta';
+import { mensajeDeFlujo } from '@/lib/flujos';
 
 // Suggestion questions — defined outside component for referential stability
 const SUGGESTIONS = [
@@ -441,6 +450,17 @@ export default function ChatPage() {
         } catch { /* el contador se corrige en la siguiente consulta */ }
     }, [user?.id, handleQueryCompleted]);
 
+    /* LA CARPETA Y EL FLUJO DE LA CONSULTA, para el modelo. El ref se llena en
+       cada render más abajo (cuando ya existen los estados de la consulta
+       activa); el hook lo lee al enviar, así que siempre ve lo vigente sin
+       rehacer `sendMessage` en cada cambio. */
+    const consultaCtxRef = useRef<{ expedienteId: string | null; flujo: string | null }>({ expedienteId: null, flujo: null });
+    const contextoSistema = useCallback(async (primerTurno: boolean) => {
+        const { expedienteId, flujo } = consultaCtxRef.current;
+        if (!expedienteId && !flujo) return null;
+        return contextoDeConsulta({ expedienteId, flujo, primerTurno });
+    }, []);
+
     // Chat Hook
     const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos, limpiarPasos } = useChat({
         estado: selectedEstado || undefined,
@@ -450,6 +470,7 @@ export default function ChatPage() {
         onQueryCompleted: handleQueryCompleted,
         genioIds: activeGenios,
         onCacheActive: handleCacheActive,
+        contextoSistema,
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -470,6 +491,46 @@ export default function ChatPage() {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeConversationId, setActiveConvId] = useState<string | null>(null);
     const [conversationsLoading, setConversationsLoading] = useState(true);
+
+    /* ═══ CARPETAS Y FLUJOS (25-sep-2026) ═══
+       `carpetas` es null mientras la base no tenga el vínculo (o no cargue):
+       la barra se queda entonces como antes, sin sección de carpetas.
+       `carpetaNueva` y `flujoNuevo` son de la consulta que está por empezar;
+       las que ya existen llevan los suyos en `vinculos`. */
+    const [carpetas, setCarpetas] = useState<Expediente[] | null>(null);
+    const [vinculos, setVinculos] = useState<Vinculos>({});
+    const [carpetaNueva, setCarpetaNueva] = useState<string | null>(null);
+    const [flujoNuevo, setFlujoNuevo] = useState<string | null>(null);
+    const [flujosAbierto, setFlujosAbierto] = useState(false);
+    const [nuevaCarpeta, setNuevaCarpeta] = useState<{ abierta: boolean; paraConsulta?: string }>({ abierta: false });
+    const [lanzamiento, setLanzamiento] = useState<{ mensaje: string; titulo: string } | null>(null);
+
+    const carpetaDeActiva = activeConversationId ? (vinculos[activeConversationId]?.expedienteId ?? null) : carpetaNueva;
+    // Una carpeta borrada deja de contar aunque el vínculo siga en memoria.
+    const carpetaActivaId = carpetaDeActiva && carpetas?.some(c => c.id === carpetaDeActiva) ? carpetaDeActiva : null;
+    const flujoActivo = activeConversationId ? (vinculos[activeConversationId]?.flujo ?? null) : flujoNuevo;
+    consultaCtxRef.current = { expedienteId: carpetaActivaId, flujo: flujoActivo };
+    // Lo que se le pondrá a la consulta cuando nazca (se lee dentro de
+    // callbacks que no se rehacen en cada cambio).
+    const pendienteRef = useRef<{ expedienteId: string | null; flujo: string | null }>({ expedienteId: null, flujo: null });
+    pendienteRef.current = { expedienteId: carpetaActivaId && !activeConversationId ? carpetaActivaId : null, flujo: activeConversationId ? null : flujoNuevo };
+
+    const cargarCarpetas = useCallback(async () => {
+        const v = await getVinculos();
+        if (v === null) { setCarpetas(null); setVinculos({}); return; }
+        setVinculos(v);
+        try { setCarpetas(await getExpedientes()); } catch { setCarpetas([]); }
+    }, []);
+
+    /* La consulta recién creada nace con su carpeta y su flujo: se anota en
+       memoria de inmediato (para que la primera pregunta ya viaje con el
+       expediente) y en la base sin esperar. */
+    const vincularNueva = useCallback((convId: string) => {
+        const { expedienteId, flujo } = pendienteRef.current;
+        if (!expedienteId && !flujo) return;
+        setVinculos(prev => ({ ...prev, [convId]: { expedienteId, flujo } }));
+        void vincularConsulta(convId, { expedienteId, flujo });
+    }, []);
 
     // Sync query counts and estado from profile
     useEffect(() => {
@@ -531,6 +592,7 @@ export default function ChatPage() {
                 await recoverPendingMessages();
                 const loadedConversations = await getConversations();
                 setConversations(loadedConversations);
+                void cargarCarpetas();
             } catch (err) {
                 console.error('Error loading conversations:', err);
             } finally {
@@ -559,18 +621,45 @@ export default function ChatPage() {
     //  sendMessage() resolves. See handleSendMessage below.)
     const lastSentUserMsgRef = useRef<Message | null>(null);
 
-    // Identidad estable: ChatSidebar va envuelto en memo, así que una
-    // función anónima aquí lo volvería a renderizar en cada token del
-    // streaming (6-ago-2026).
-    const handleToggleGuide = useCallback(() => abrirGuia(), []);
-
-    const handleNewConversation = useCallback(async () => {
+    // Identidad estable en todos los manejadores de la barra: ChatSidebar va
+    // envuelto en memo, así que una función anónima aquí lo volvería a
+    // renderizar en cada token del streaming (6-ago-2026).
+    const handleNewConversation = useCallback(async (expedienteId?: string | null) => {
         // Lazy creation: just reset the UI. The conversation row in DB
         // will be created when the user sends their first message.
         setActiveConvId(null);
         setActiveConversationId(null);
         clearMessages();
+        // Desde una carpeta, la consulta nueva nace dentro de ella.
+        setCarpetaNueva(expedienteId ?? null);
+        setFlujoNuevo(null);
     }, [clearMessages]);
+
+    const handleMoverConsulta = useCallback(async (id: string, expedienteId: string | null) => {
+        let previo: Vinculos[string] | undefined;
+        setVinculos(prev => {
+            previo = prev[id];
+            return { ...prev, [id]: { expedienteId, flujo: prev[id]?.flujo ?? null } };
+        });
+        const ok = await vincularConsulta(id, { expedienteId });
+        if (!ok) {
+            setVinculos(prev => {
+                const sig = { ...prev };
+                if (previo) sig[id] = previo; else delete sig[id];
+                return sig;
+            });
+        }
+    }, []);
+
+    const handleRenombrarConsulta = useCallback(async (id: string, titulo: string) => {
+        setConversations(prev => prev.map(c => (c.id === id ? { ...c, title: titulo } : c)));
+        const ok = await updateConversationTitle(id, titulo);
+        if (!ok) setConversations(await getConversations());
+    }, []);
+
+    const handleAbrirFlujos = useCallback(() => setFlujosAbierto(true), []);
+    const handleNuevaCarpeta = useCallback((paraConsulta?: string) => setNuevaCarpeta({ abierta: true, paraConsulta }), []);
+    const cerrarNuevaCarpeta = useCallback(() => setNuevaCarpeta({ abierta: false }), []);
 
     const handleSelectConversation = useCallback(async (id: string) => {
         const conv = await getConversation(id);
@@ -668,6 +757,7 @@ export default function ChatPage() {
                 const newConv = await createConversation(selectedEstado || undefined);
                 if (newConv) {
                     convId = newConv.id;
+                    vincularNueva(newConv.id);
                     setActiveConvId(newConv.id);
                     convRecienCreadaRef.current = newConv.id;
                     setActiveConversationId(newConv.id);
@@ -750,7 +840,7 @@ export default function ChatPage() {
 
         lastSentUserMsgRef.current = null;
     }, [user, sendMessage, activeConversationId, selectedEstado, queriesLimit, queriesUsed,
-        modoBasico, enviarBasico, profile?.subscription_type]);
+        modoBasico, enviarBasico, profile?.subscription_type, vincularNueva]);
 
     // Document analysis via Gemini Flash (streaming from /analyze-document)
     const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
@@ -784,6 +874,7 @@ export default function ChatPage() {
             const newConv = await createConversation(selectedEstado || undefined);
             if (newConv) {
                 docConvId = newConv.id;
+                vincularNueva(newConv.id);
                 setActiveConvId(newConv.id);
                 convRecienCreadaRef.current = newConv.id;
                     setActiveConversationId(newConv.id);
@@ -1040,7 +1131,57 @@ export default function ChatPage() {
                 } catch {}
             }
         }
-    }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages]);
+    }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva]);
+
+    /* ═══ ARRANCAR UN FLUJO ═══
+       Se limpia la consulta, se fijan carpeta y flujo, y el envío espera al
+       render siguiente: enviar en el mismo tick usaría el `handleSendMessage`
+       de la consulta anterior y el flujo caería dentro de ella. */
+    const handleIniciarFlujo = useCallback(({ flujo, encargo, expedienteId }: InicioDeFlujo) => {
+        setFlujosAbierto(false);
+        setActiveConvId(null);
+        setActiveConversationId(null);
+        clearMessages();
+        setCarpetaNueva(expedienteId);
+        setFlujoNuevo(flujo.id);
+        const primera = encargo.split('\n').find(l => l.trim())?.trim() ?? flujo.nombre;
+        setLanzamiento({
+            mensaje: mensajeDeFlujo(flujo, encargo),
+            titulo: primera.length > 70 ? primera.slice(0, 67).trimEnd() + '…' : primera,
+        });
+    }, [clearMessages]);
+
+    const activeConvIdRef = useRef(activeConversationId);
+    activeConvIdRef.current = activeConversationId;
+    useEffect(() => {
+        if (!lanzamiento || activeConversationId || messages.length > 0 || isLoading) return;
+        const { mensaje, titulo } = lanzamiento;
+        setLanzamiento(null);
+        (async () => {
+            await handleSendMessage(mensaje);
+            // El título automático sale del primer mensaje, que aquí empieza
+            // con el rótulo del flujo: se le pone el del encargo.
+            const id = activeConvIdRef.current;
+            if (id && await updateConversationTitle(id, titulo)) {
+                setConversations(prev => prev.map(c => (c.id === id ? { ...c, title: titulo } : c)));
+            }
+        })();
+    }, [lanzamiento, activeConversationId, messages.length, isLoading, handleSendMessage]);
+
+    /* Desde la carpeta se llega con `/chat?carpeta=<id>` (consulta nueva dentro
+       de ella) y `&flujos=1` (con el estudio de flujos abierto). */
+    useEffect(() => {
+        if (authLoading || !isAuthenticated) return;
+        const p = new URLSearchParams(window.location.search);
+        const carpeta = p.get('carpeta');
+        const flujos = p.get('flujos');
+        const consulta = p.get('c');
+        if (!carpeta && !flujos && !consulta) return;
+        if (consulta) void handleSelectConversation(consulta);
+        else if (carpeta) void handleNewConversation(carpeta);
+        if (flujos) setFlujosAbierto(true);
+        window.history.replaceState(null, '', window.location.pathname);
+    }, [authLoading, isAuthenticated, handleNewConversation, handleSelectConversation]);
 
     const hasMessages = messages.length > 0;
 
@@ -1206,7 +1347,13 @@ export default function ChatPage() {
                 onSelectConversation={handleSelectConversation}
                 onNewConversation={handleNewConversation}
                 onDeleteConversation={handleDeleteConversation}
-                onToggleGuide={handleToggleGuide}
+                carpetas={carpetas}
+                vinculos={vinculos}
+                carpetaActivaId={carpetaActivaId}
+                onMoverConsulta={handleMoverConsulta}
+                onRenombrarConsulta={handleRenombrarConsulta}
+                onAbrirFlujos={handleAbrirFlujos}
+                onNuevaCarpeta={handleNuevaCarpeta}
             />
 
             <div className="flex flex-col h-screen md:ml-[var(--sidebar-w,18rem)] lg:mr-[var(--constructor-w,0px)] transition-[margin] duration-300">
@@ -1433,7 +1580,9 @@ export default function ChatPage() {
                                     </Link>
                                 </div>
                                 <h2 className="font-serif text-lg sm:text-2xl font-medium text-charcoal-900 mb-3 sm:mb-4">
-                                    ¿En qué te puedo ayudar{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}?
+                                    {carpetaActivaId
+                                        ? '¿Qué necesitas de esta carpeta?'
+                                        : <>¿En qué te puedo ayudar{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}?</>}
                                 </h2>
 
                                 {/* Typewriter suggestion — fades in/out progressively */}
@@ -1473,6 +1622,21 @@ export default function ChatPage() {
                                 </div>
 
 
+                                {!modoBasico && (
+                                    <div className="mx-auto mb-2.5 w-full max-w-[var(--chat-max)]">
+                                        <ContextoConsulta
+                                            carpetas={carpetas}
+                                            carpetaId={carpetaActivaId}
+                                            flujoId={flujoActivo}
+                                            editable
+                                            onCambiarCarpeta={setCarpetaNueva}
+                                            onAbrirFlujos={handleAbrirFlujos}
+                                            onNuevaCarpeta={handleNuevaCarpeta}
+                                            centrado
+                                        />
+                                    </div>
+                                )}
+
                                 <ChatInput
                                     onSubmit={handleSendMessage}
                                     onDocumentSubmit={handleDocumentSubmit}
@@ -1481,7 +1645,9 @@ export default function ChatPage() {
                                     basico={modoBasico}
                                     placeholder={modoBasico
                                         ? 'Pregunta y te doy los criterios aplicables…'
-                                        : 'Escribe tu consulta legal...'}
+                                        : carpetaActivaId
+                                            ? 'Pregunta sobre el asunto de la carpeta…'
+                                            : 'Escribe tu consulta legal...'}
                                     estado={selectedEstado}
                                     activeGenios={activeGenios}
                                     setActiveGenios={handleToggleGenios}
@@ -1636,6 +1802,19 @@ export default function ChatPage() {
 
                 {hasMessages && (
                     <div ref={pieRef} className="fixed bottom-0 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] bg-gradient-to-t from-cream-300 via-cream-300 pt-3 pb-3 px-4 z-20">
+                        {(carpetaActivaId || flujoActivo) && !modoBasico && (
+                            <div className="mx-auto mb-2 w-full max-w-[var(--chat-max)]">
+                                <ContextoConsulta
+                                    carpetas={carpetas}
+                                    carpetaId={carpetaActivaId}
+                                    flujoId={flujoActivo}
+                                    editable={false}
+                                    onCambiarCarpeta={setCarpetaNueva}
+                                    onAbrirFlujos={handleAbrirFlujos}
+                                    onNuevaCarpeta={handleNuevaCarpeta}
+                                />
+                            </div>
+                        )}
                         <ChatInput
                             onSubmit={handleSendMessage}
                             onDocumentSubmit={handleDocumentSubmit}
@@ -1907,6 +2086,27 @@ export default function ChatPage() {
             )}
 
             <PromptGuide isOpen={showPromptGuideModal} onClose={() => setShowPromptGuideModal(false)} />
+
+            <FlujosDeTrabajo
+                abierto={flujosAbierto}
+                onCerrar={() => setFlujosAbierto(false)}
+                carpetas={carpetas}
+                carpetaInicial={carpetaActivaId}
+                onIniciar={handleIniciarFlujo}
+            />
+            <NuevaCarpetaModal
+                abierto={nuevaCarpeta.abierta}
+                onCerrar={cerrarNuevaCarpeta}
+                onCreada={(exp) => {
+                    const para = nuevaCarpeta.paraConsulta;
+                    setNuevaCarpeta({ abierta: false });
+                    setCarpetas(prev => [exp, ...(prev ?? [])]);
+                    // Desde el menú de una consulta: la consulta se va adentro.
+                    // Si no, se empieza a trabajar en la carpeta recién hecha.
+                    if (para) void handleMoverConsulta(para, exp.id);
+                    else void handleNewConversation(exp.id);
+                }}
+            />
             <ChatTour
                 isOpen={showPromptGuide || showPrecedentesTour}
                 onClose={() => { setShowPromptGuide(false); setShowPrecedentesTour(false); }}
