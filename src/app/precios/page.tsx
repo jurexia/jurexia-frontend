@@ -149,7 +149,7 @@ export default function PreciosPage() {
                                     "Filtros de jurisdicción",
                                     "Acceso a base documental completa",
                                     "Lee documentos de hasta 20 hojas",
-                                    <span className="text-gray-400">Sin acceso a Genios Especializados ni Análisis</span>
+                                    <span className="text-gray-400">Sin flujos de trabajo ni análisis de documentos</span>
                                 ]}
                                 buttonText="Comenzar Gratis"
                                 buttonHref="/chat"
@@ -194,8 +194,8 @@ export default function PreciosPage() {
                                 savingsBadge={isAnnual ? 'Ahorras $298 MXN' : undefined}
                                 features={[
                                     <span className="font-semibold text-white">140 consultas/mes</span>,
+                                    <><span className="font-semibold text-white">30 flujos de trabajo/mes</span> <span className="text-gray-500">· escritos completos paso a paso</span></>,
                                     "IA Jurídica Avanzada (análisis complejo y deducción)",
-                                    "Arquitectura Multi-Genio",
                                     "Análisis de documentos (auditoría y mejoras)",
                                     <>Lee documentos de hasta <span className="font-semibold text-white">100 hojas</span></>,
                                     <>Precedentes Judiciales por Circuito <span className="text-gray-500">· 6 circuitos activos</span></>,
@@ -223,8 +223,8 @@ export default function PreciosPage() {
                                 savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
                                 features={[
                                     <span className="font-semibold text-white">560 consultas/mes — cuatro veces el volumen de Pro</span>,
+                                    <><span className="font-semibold text-white">60 flujos de trabajo/mes</span> <span className="text-gray-500">· escritos completos paso a paso</span></>,
                                     <span className="font-semibold text-white">IA Jurídica de Élite (máxima precisión argumentativa)</span>,
-                                    "Arquitectura Multi-Genio",
                                     "Análisis de documentos y auditoría",
                                     <>Precedentes Judiciales por Circuito <span className="text-gray-500">· 6 circuitos activos</span></>,
                                     "Redacción Pro — motor de razonamiento profundo",
@@ -492,7 +492,7 @@ export default function PreciosPage() {
                                     <ComparisonRow feature="Directorio de abogados (Connect)" free="✓" basico="✓" pro="✓" platinum="✓" />
                                     <ComparisonRow feature="Registro connect para captar clientes" free="—" basico="—" pro="✓" platinum="✓" />
                                     <ComparisonRow feature="Análisis y auditoría de documentos" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
-                                    <ComparisonRow feature="Genios Especializados (IA avanzada)" free="—" basico="—" pro="✓" platinum="✓" goldFeature={true} />
+                                    <ComparisonRow feature="Flujos de trabajo (escritos completos paso a paso)" free="—" basico="—" pro="30 al mes" platinum="60 al mes" goldFeature={true} />
                                     <ComparisonRow
                                         feature="Precedentes Judiciales por Circuito"
                                         free="—" basico="—"
@@ -553,7 +553,7 @@ export default function PreciosPage() {
                             { question: '¿Qué es Redacción Pro y en qué planes está disponible?', answer: 'Redacción Pro es el modo de redacción más avanzado de Iurexia. Utiliza un motor de razonamiento profundo de última generación que produce textos legales de calidad significativamente superior al modo de redacción normal: argumentación más coherente, subsunción jurídica completa y prosa de nivel SCJN. Está disponible exclusivamente en los planes Pro y Platinum.' },
                             { question: '¿Qué es Jurimetría y en qué plan está disponible?', answer: 'Jurimetría es la herramienta más avanzada de Iurexia: predice el sentido probable de un asunto (Concede / Niega / Sobresee) analizando los precedentes del corpus completo. En modo básico basta describir el asunto; en modo Secretario puedes adjuntar el acto reclamado y los agravios como PDF y la IA analiza argumento por argumento, señalando cuáles son probablemente inoperantes, infundados o fundados — con base en sentencias reales, no en suposiciones. Está disponible exclusivamente en el plan Platinum.' },
                             { question: '¿Qué incluye una consulta?', answer: 'Una consulta es cada pregunta o solicitud que haces a Iurexia. Incluye la búsqueda en la base documental, el análisis con IA y la respuesta fundamentada. El análisis de documentos también cuenta como consultas según la complejidad del archivo.' },
-                            { question: '¿Qué son los Genios Especializados y por qué son exclusivos PRO?', answer: 'Los Genios son una capa de inteligencia artificial avanzada especializada en materias específicas (Amparo, CIDH, Civil, Penal, etc.). Se activan con un clic dentro del chat (pudiendo usar hasta 2 al mismo tiempo) y utilizan un modelo de IA más potente para generar razonamientos jurídicos interdisciplinarios con fundamento verificado. Debido al alto costo computacional de este procesamiento complejo simultáneo, los Genios están disponibles exclusivamente para usuarios de los planes Pro y Platinum. Los usuarios gratuitos no tienen acceso a esta función.' },
+                            { question: '¿Qué son los flujos de trabajo y cuántos incluye mi plan?', answer: 'Un flujo de trabajo construye contigo un escrito completo —una demanda de amparo, una contestación, un escrito de agravios, una revisión de contrato— parte por parte: Iurexia lee tu encargo y tu carpeta, te propone cada dato ya marcado, te pide sólo lo que falta y redacta cada parte con todo el acervo, dejándola en el documento. Cada flujo iniciado cuenta uno de tu mes, sin gastar consultas: el Plan Pro incluye 30 al mes y el Plan Platinum 60. Los planes Gratuito y Básico no incluyen flujos.' },
                             { question: '¿Qué incluye el Plan Platinum?', answer: 'El Plan Platinum incluye todo lo del Plan Pro con capacidades premium máximas (jurimetría avanzada y expedientes completos de hasta 600 hojas), bajo nuestra política de uso justo, y asesoría personalizada con el equipo legal de Iurexia vía correo electrónico. Es ideal para despachos y corporativos que necesitan la máxima potencia y volumen.' },
                             { question: '¿De qué tamaño pueden ser los documentos que subo?', answer: 'Cada plan lee documentos hasta cierto número de hojas: Gratuito 20, Básico 50, Pro 100 y Platinum 600. El límite existe porque leer un documento —sobre todo escaneado, que exige reconocimiento de texto página por página— es la operación más costosa de la plataforma. Si un documento supera el límite de tu plan te lo decimos ANTES de procesarlo, sin consumirte ninguna consulta, y te indicamos qué plan sí lo cubre. También puedes dividirlo y subirlo por partes: dentro de una carpeta, Iurexia lo analiza todo junto.' },
                             { question: '¿Puedo cambiar de plan en cualquier momento?', answer: 'Sí, puedes actualizar o cambiar tu plan en cualquier momento. Si subes de plan, el cambio es inmediato. Si bajas, el cambio aplica al siguiente ciclo de facturación.' },
@@ -583,7 +583,7 @@ export default function PreciosPage() {
                             Más de 600 abogados ya confían en Iurexia para sus investigaciones jurídicas.
                         </p>
                         <p className="text-gray-500 mb-8 max-w-2xl mx-auto text-sm">
-                            Comienza gratis o activa el Plan Pro para acceder a la Arquitectura Multi-Genio.
+                            Comienza gratis o activa el Plan Pro para construir escritos completos con los flujos de trabajo.
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.3} direction="scale">
@@ -985,7 +985,7 @@ function PricingCard({
                             Aviso Importante
                         </h3>
                         <p className="text-charcoal-600 mb-6 text-sm">
-                            El <strong>Plan Básico</strong> es excelente para búsquedas rápidas en nuestra base de datos, pero <span className="font-semibold text-charcoal-900">NO incluye el acceso a los Genios Especializados ni las Auditorías de Sentencias.</span>
+                            El <strong>Plan Básico</strong> es excelente para búsquedas rápidas en nuestra base de datos, pero <span className="font-semibold text-charcoal-900">NO incluye los flujos de trabajo ni las auditorías de sentencias.</span>
                             <br /><br />
                             Si necesitas razonamiento jurídico avanzado, te recomendamos el <strong className="text-accent-gold">Plan Pro</strong>.
                         </p>

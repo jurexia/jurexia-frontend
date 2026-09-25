@@ -51,7 +51,7 @@ export interface RespuestaBasica {
 /** Lo que el carril básico NO hace. El servidor manda la lista; ésta es el
  *  respaldo para pintar los candados antes de la primera consulta. */
 export const BLOQUEADO_POR_OMISION = [
-    'Redacción de escritos', 'Genios', 'Toulmin', 'Modo consulta', 'Modo redacción',
+    'Redacción de escritos', 'Flujos de trabajo', 'Toulmin', 'Modo consulta', 'Modo redacción',
     'Jurimetría', 'Precedentes', 'Legislación de tu estado', 'Seguimiento de expedientes',
     'Carpetas', 'Memoria de consultas', 'Editor Word', 'Descarga del PDF de la tesis',
 ];

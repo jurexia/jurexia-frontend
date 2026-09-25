@@ -11,7 +11,6 @@ import {
     Shield,
     FileEdit,
     Gavel,
-    Brain,
     Landmark,
     PenTool,
     Lock,
@@ -291,7 +290,6 @@ export default function ChatInput({
     const canAccessRedactor = isAdmin(user?.email) || profile?.subscription_type === 'ultra_secretarios' || profile?.can_access_sentencia === true;
     const canAccessSentencia = profile?.subscription_type && !['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const isFreeUser = !profile?.subscription_type || ['gratuito', 'basico_monthly'].includes(profile.subscription_type);
-    const isGenioLocked = isFreeUser && !isAdmin(user?.email);
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     // La capa web sólo desde Pro: cuesta dinero por consulta.
     const canAccessWeb = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
@@ -329,71 +327,6 @@ export default function ChatInput({
         platinum: canAccessRedactarPlatinum,
     };
 
-    const geniosList = [
-        {
-            id: 'cidh', label: 'CIDH', dot: 'bg-cyan-500',
-            activeOn: 'bg-gradient-to-r from-cyan-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-cyan-600 to-blue-700 text-white border-cyan-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-cyan-600'
-        },
-        {
-            id: 'amparo', label: 'Amparo', dot: 'bg-purple-500',
-            activeOn: 'bg-gradient-to-r from-purple-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-purple-600 to-indigo-700 text-white border-purple-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-purple-600'
-        },
-        {
-            id: 'civil', label: 'Civil', dot: 'bg-blue-500',
-            activeOn: 'bg-gradient-to-r from-blue-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-blue-600 to-cyan-700 text-white border-blue-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-blue-600'
-        },
-        {
-            id: 'penal', label: 'Penal', dot: 'bg-rose-500',
-            activeOn: 'bg-gradient-to-r from-rose-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-rose-600 to-red-700 text-white border-rose-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-rose-600'
-        },
-        {
-            id: 'laboral', label: 'Laboral', dot: 'bg-amber-500',
-            activeOn: 'bg-gradient-to-r from-amber-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-amber-600 to-orange-700 text-white border-amber-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-amber-600'
-        },
-        {
-            id: 'agrario', label: 'Agrario', dot: 'bg-lime-500',
-            activeOn: 'bg-gradient-to-r from-lime-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-lime-600 to-green-700 text-white border-lime-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-lime-600'
-        },
-        {
-            id: 'fiscal', label: 'Fiscal', dot: 'bg-violet-500',
-            activeOn: 'bg-gradient-to-r from-violet-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-violet-600 to-purple-700 text-white border-violet-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-violet-600'
-        },
-        {
-            id: 'mercantil', label: 'Mercantil', dot: 'bg-amber-500',
-            activeOn: 'bg-gradient-to-r from-amber-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-amber-600 to-yellow-700 text-white border-amber-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-amber-600'
-        },
-        {
-            id: 'administrativo', label: 'Adtvo', dot: 'bg-teal-500',
-            activeOn: 'bg-gradient-to-r from-teal-50 to-white border-[#c9a962] shadow-[0_0_8px_rgba(201,169,98,0.2)]',
-            activating: 'bg-gradient-to-r from-teal-600 to-cyan-700 text-white border-teal-400',
-            idle: 'bg-white text-gray-600 border-gray-200 hover:border-[#c9a962]/40 hover:bg-gray-50',
-            spinnerBorder: 'border-[#c9a962]', iconOn: 'text-teal-600'
-        },
-    ];
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -926,7 +859,7 @@ ${draftRequest.descripcion}`;
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                                 Con un plan
                             </span>
-                            {['Genios', 'Toulmin', 'Redactar', 'Jurimetría', 'Precedentes', 'Expedientes', 'Carpetas'].map((h) => (
+                            {['Flujos', 'Toulmin', 'Redactar', 'Jurimetría', 'Precedentes', 'Expedientes', 'Carpetas'].map((h) => (
                                 <button
                                     key={h}
                                     type="button"
@@ -954,7 +887,7 @@ ${draftRequest.descripcion}`;
                             onClick={() => setPlegado((v) => !v)}
                             aria-expanded={!plegado}
                             title={plegado
-                                ? 'Mostrar materia, modo, Genios y el resto de herramientas'
+                                ? 'Mostrar el modo y el resto de herramientas'
                                 : 'Ocultar las herramientas y dejar la caja sencilla'}
                             className="flex min-w-0 flex-1 items-center gap-2 text-left text-[11px] text-gray-500 transition-colors hover:text-charcoal-900"
                         >
@@ -1420,112 +1353,12 @@ ${draftRequest.descripcion}`;
                         </div>
                     )}
 
-                    {/* ── Genio Premium Horizontal Row ───────────────────────────── */}
-                    {!basico && !plegado && (
-                    <div
-                        data-guide="genios-container"
-                        className="
-                            flex flex-nowrap items-center justify-between
-                            w-full mt-2 pt-2 pb-1 border-t border-gray-100/60
-                            gap-0.5 sm:gap-1 overflow-hidden
-                        "
-                    >
-                        <div
-                            className="flex items-center flex-shrink-0 gap-0.5 pr-1 sm:pr-1.5 border-r border-gray-200/40"
-                        >
-                            <Brain className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ animation: 'iconMirror 3s ease-in-out infinite alternate' }} />
-                            <span className="hidden sm:inline text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider mirror-genios-text">
-                                Genios
-                            </span>
-                            {(isGenioLocked && !isPro) && (
-                                <span className="text-[7px] font-bold text-charcoal-900 bg-[#c9a962]/20 px-1 py-0.5 rounded ml-0.5" style={{ animation: 'iconMirror 3s ease-in-out infinite alternate' }}>PRO</span>
-                            )}
-                        </div>
-
-                        {geniosList.map((g, index) => [
-                            <button
-                                key={g.id}
-                                onClick={() => {
-                                    if (isGenioLocked && !isPro) { setShowUpgradeModal('pro'); return; }
-                                    if (!setActiveGenios) return;
-
-                                    if (activeGenios.includes(g.id)) {
-                                        // Ya está activo → desactivar
-                                        setActiveGenios(activeGenios.filter(id => id !== g.id));
-                                    } else if (activeGenios.length < 2) {
-                                        // Hay espacio → agregar
-                                        setActiveGenios([...activeGenios, g.id]);
-                                    } else {
-                                        // Ya hay 2 → reemplazar el más antiguo
-                                        setActiveGenios([activeGenios[1], g.id]);
-                                    }
-                                }}
-                                disabled={isCacheLoading || (isGenioLocked && !isPro)}
-                                className={`group flex items-center justify-center gap-0.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] transition-all duration-300 flex-shrink min-w-0 bg-transparent outline-none
-                                    ${(isGenioLocked && !isPro)
-                                        ? 'text-gray-400 cursor-not-allowed opacity-70 font-medium'
-                                        : (isCacheLoading && activeGenios.includes(g.id))
-                                            ? 'text-amber-600 cursor-wait font-medium'
-                                            : genioError && activeGenios.includes(g.id)
-                                                ? 'text-red-500 font-medium'
-                                                : activeGenios.includes(g.id)
-                                                    ? isCacheActive
-                                                        ? `text-[#c9a962] font-bold drop-shadow-sm`
-                                                        : `text-[#c9a962] font-bold opacity-80 animate-pulse`
-                                                    : `text-gray-500 font-medium hover:text-charcoal-900`
-                                    }`}
-                                style={(activeGenios.includes(g.id) && isCacheActive && !(isGenioLocked && !isPro))
-                                    ? { animation: 'genioActiveGlow 2.5s ease-in-out infinite' }
-                                    : undefined}
-                                title={(isGenioLocked && !isPro) ? 'Función exclusiva para plan Pro' : activeGenios.includes(g.id) ? `Desactivar Genio ${g.label}` : `Activar Genio ${g.label}`}
-                            >
-                                {(isGenioLocked && !isPro) ? (
-                                    <>
-                                        <Lock className="w-2 h-2 flex-shrink-0 text-gray-400" />
-                                        <span className="truncate">{g.label}</span>
-                                    </>
-                                ) : (isCacheLoading && activeGenios.includes(g.id)) ? (
-                                    <>
-                                        <div className={`w-2 h-2 border-[1.5px] ${g.spinnerBorder} border-t-transparent rounded-full animate-spin`} />
-                                        <span>...</span>
-                                    </>
-                                ) : (genioError && activeGenios.includes(g.id)) ? (
-                                    <>
-                                        <span className="text-[10px]">&#x26A0;</span>
-                                        <span>Err</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="truncate">
-                                            {g.label}
-                                        </span>
-                                    </>
-                                )}
-                            </button>,
-                            index < geniosList.length - 1 && (
-                                <span key={`${g.id}-sep`} className="text-gray-300 mx-0.5 sm:mx-1 select-none text-[10px] font-light flex-shrink-0">|</span>
-                            )
-                        ])}
-                        {genioError && (
-                            <p className="text-[8px] text-red-500 ml-1 whitespace-nowrap">{genioError}</p>
-                        )}
-                    </div>
-                    )}
-
-                    {/* El agente: plan aprobable antes de redactar. Va junto al
-                        Secretario porque los dos son trabajo largo, no consulta. */}
-                    {!basico && !plegado && (
-                    <a
-                        href="/agente"
-                        className="mt-2 flex items-center gap-2 rounded-md border border-[#c9a962]/25 bg-[#1a1a1a] px-3 py-1 transition-colors duration-200 hover:border-[#c9a962]/50"
-                    >
-                        <Sparkles className="w-3 h-3 text-[#c9a962]/70 flex-shrink-0" />
-                        <span className="flex-1 text-[10px] text-white/60">
-                            Agente — <span className="font-semibold text-[#c9a962]/80">Demanda de amparo con plan aprobable</span>
-                        </span>
-                        <span className="flex-shrink-0 text-[7px] font-bold uppercase tracking-wider text-[#c9a962]/60">Beta</span>
-                    </a>
-                    )}
+                    {/* SIN GENIOS NI «AGENTE — DEMANDA DE AMPARO» (25-sep-2026).
+                        David: los Genios ya no son rentables —el RAG con
+                        gpt-6-luna y la búsqueda en internet los supera— y el
+                        agente de demanda lo sustituyen los flujos de trabajo,
+                        que viven en la barra lateral. La caja queda en lo
+                        esencial. */}
 
                     {/* El Secretario del PJF ya NO vive aquí (6-ago-2026). Es
                         una función exclusiva de Platinum y trabajo largo, no

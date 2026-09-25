@@ -9,7 +9,7 @@ interface WelcomeExperienceProps {
     userId: string;
     userName?: string;
     onComplete: (estado: string) => void;
-    onStartTour: () => void;
+    onStartTour?: () => void;
 }
 
 export default function WelcomeExperience({ userId, userName, onComplete }: WelcomeExperienceProps) {

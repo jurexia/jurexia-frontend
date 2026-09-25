@@ -14,13 +14,13 @@
 
 import Link from 'next/link';
 import {
-    Lock, Brain, Network, Search, PenTool, BarChart2, BookOpen, Scale,
+    Lock, Workflow, Network, Search, PenTool, BarChart2, BookOpen, Scale,
     FolderPlus, History, FileSignature, FileDown, MapPin, ArrowRight,
 } from 'lucide-react';
 
 const ICONOS: Record<string, typeof Lock> = {
     'Redacción de escritos': PenTool,
-    'Genios': Brain,
+    'Flujos de trabajo': Workflow,
     'Toulmin': Network,
     'Modo consulta': Search,
     'Modo redacción': PenTool,
@@ -60,7 +60,7 @@ export default function PanelBasico({
             </p>
 
             <ul className={`mt-4 grid gap-x-4 gap-y-2 ${compacto ? 'grid-cols-1' : 'sm:grid-cols-2'}`}>
-                {bloqueado.map((n) => {
+                {bloqueado.map((x) => (x === 'Genios' ? 'Flujos de trabajo' : x)).map((n) => {
                     const Icono = ICONOS[n] ?? Lock;
                     return (
                         <li key={n} className="flex items-center gap-2.5 text-[13.5px] text-charcoal-600">

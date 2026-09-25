@@ -8,7 +8,6 @@ import {
     type DocumentoExpediente,
     type Expediente,
 } from './expedientes'
-import { flujoPorId, instruccionesDeFlujo } from './flujos'
 
 /**
  * Lo que el modelo sabe de la carpeta cuando la consulta vive dentro de ella.
@@ -189,18 +188,17 @@ export async function contextoDeCarpeta(expedienteId: string): Promise<ContextoC
 }
 
 /**
- * El mensaje de sistema completo de una consulta: la carpeta (si la hay) y el
- * flujo (si lo hay). `null` si no hay ninguno de los dos: la consulta viaja
- * exactamente como antes del 25-sep.
+ * El mensaje de sistema completo de una consulta: la instrucción de la parte
+ * que el agente de un flujo está redactando (si la hay) y la carpeta (si la
+ * hay). `null` si no hay ninguna: la consulta viaja exactamente como antes del
+ * 25-sep. Las preguntas sueltas dentro de un flujo sólo llevan la carpeta.
  */
 export async function contextoDeConsulta(opciones: {
     expedienteId: string | null
-    flujo: string | null
-    primerTurno: boolean
+    extra?: string | null
 }): Promise<string | null> {
     const partes: string[] = []
-    const flujo = flujoPorId(opciones.flujo)
-    if (flujo) partes.push(instruccionesDeFlujo(flujo, opciones.primerTurno))
+    if (opciones.extra) partes.push(opciones.extra)
     if (opciones.expedienteId) {
         const c = await contextoDeCarpeta(opciones.expedienteId)
         if (c) partes.push(c.texto)

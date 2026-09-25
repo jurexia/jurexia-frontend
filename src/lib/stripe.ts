@@ -108,8 +108,11 @@ export const PLANS = {
         currency: 'MXN',
         interval: 'month' as const,
         queryLimit: 140,
+        /** Flujos de trabajo al mes. Espejo de `limite_flujos` en Supabase. */
+        flujosMes: 30,
         features: [
             '140 consultas/mes',
+            '30 flujos de trabajo/mes: escritos completos paso a paso',
             'IA Jurídica Avanzada (Análisis complejo y deducción)',
             'Búsqueda jurídica precisa y fundamentada',
             'Análisis de documentos',
@@ -126,6 +129,7 @@ export const PLANS = {
         queryLimit: 140, // per month
         features: [
             '140 consultas/mes (1,680/año)',
+            '30 flujos de trabajo/mes: escritos completos paso a paso',
             'IA Jurídica Avanzada (Análisis complejo y deducción)',
             'Todo lo del Plan Pro incluido',
             'Ahorro de $910 MXN al año',
@@ -142,6 +146,7 @@ export const PLANS = {
         queryLimit: 560,
         features: [
             '560 consultas/mes — ideal para despachos',
+            '60 flujos de trabajo/mes: escritos completos paso a paso',
             'IA Jurídica de Élite (Máxima precisión argumentativa)',
             'Todo lo del Plan Pro incluido',
             'Consulta con equipo legal',
@@ -158,6 +163,7 @@ export const PLANS = {
         queryLimit: 560,
         features: [
             '560 consultas/mes (6,720/año)',
+            '60 flujos de trabajo/mes: escritos completos paso a paso',
             'IA Jurídica de Élite (Máxima precisión argumentativa)',
             'Todo lo del Plan Platinum incluido',
             'Ahorro de $4,810 MXN al año',
@@ -179,6 +185,7 @@ export const PLANS = {
         proyectosMes: 40,
         features: [
             '560 consultas/mes al chat, como Platinum',
+            '60 flujos de trabajo/mes: escritos completos paso a paso',
             '40 proyectos de sentencia al mes',
             'Recargas de 10 proyectos por $250 MXN, sin caducidad',
             'Taller de sentencias completo: adelanto, acervo, criterio y proyecto',

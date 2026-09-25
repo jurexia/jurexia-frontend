@@ -68,6 +68,8 @@ interface ChatSidebarProps {
     onAbrirFlujos?: () => void;
     /** `paraConsulta`: al crearla, esa consulta se mueve adentro. */
     onNuevaCarpeta?: (paraConsulta?: string) => void;
+    /** Flujos que quedan este mes (Pro 30, Platinum 60). */
+    saldoFlujos?: { restantes: number; limite: number; ilimitado?: boolean };
 }
 
 const SIN_VINCULOS: Vinculos = {};
@@ -248,6 +250,7 @@ function ChatSidebar({
     onRenombrarConsulta,
     onAbrirFlujos,
     onNuevaCarpeta = nada,
+    saldoFlujos,
 }: ChatSidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -261,7 +264,6 @@ function ChatSidebar({
     const [menu, setMenu] = useState<Menu | null>(null);
     const [abiertas, setAbiertas] = useState<Set<string>>(() => new Set());
     const [verTodas, setVerTodas] = useState(false);
-    const [flujosVistos, setFlujosVistos] = useState(true);
 
     // El estado de colapso vive en localStorage y se publica como variable CSS
     // (--sidebar-w) para que el encabezado, el pie y el área de mensajes del
@@ -269,7 +271,6 @@ function ChatSidebar({
     useEffect(() => {
         try {
             if (localStorage.getItem('iurexia-sidebar-colapsada') === '1') setIsCollapsed(true);
-            setFlujosVistos(localStorage.getItem('iurexia-flujos-vistos') === '1');
             const guardadas = JSON.parse(localStorage.getItem('iurexia-carpetas-abiertas') || '[]');
             if (Array.isArray(guardadas)) setAbiertas(new Set(guardadas.filter((x) => typeof x === 'string')));
         } catch { }
@@ -421,10 +422,6 @@ function ChatSidebar({
     const abrirFlujos = () => {
         setMenu(null);
         cerrarMovil();
-        if (!flujosVistos) {
-            setFlujosVistos(true);
-            try { localStorage.setItem('iurexia-flujos-vistos', '1'); } catch { }
-        }
         onAbrirFlujos?.();
     };
 
@@ -562,10 +559,16 @@ function ChatSidebar({
                     >
                         <Workflow className="h-4 w-4 flex-shrink-0 text-white/50" />
                         Flujos de trabajo
-                        {!flujosVistos && (
-                            <span className="ml-auto rounded-full bg-[#c9a962]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[#c9a962]">
-                                Nuevo
-                            </span>
+                        {saldoFlujos && !saldoFlujos.ilimitado && (
+                            saldoFlujos.limite > 0 ? (
+                                <span className="ml-auto text-[11px] text-white/35" title={`Te quedan ${saldoFlujos.restantes} de ${saldoFlujos.limite} este mes`}>
+                                    {saldoFlujos.restantes}/{saldoFlujos.limite}
+                                </span>
+                            ) : (
+                                <span className="ml-auto rounded-full bg-[#c9a962]/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-[#c9a962]">
+                                    Pro
+                                </span>
+                            )
                         )}
                     </button>}
                     <Link

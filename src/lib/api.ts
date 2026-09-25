@@ -2,7 +2,7 @@
  * API Client for Iurexia FastAPI Backend
  */
 
-import { fuentesElegidas } from './fuentes';
+import { fuentesElegidas, FUENTES } from './fuentes';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
@@ -129,6 +129,14 @@ export function fuentesVerificadas(): string[] {
     return _verificadasDeLaConversacion;
 }
 
+/** Lo que un envío concreto pide aparte del estado de la pantalla. */
+export interface OpcionesEnvio {
+    /** Los flujos de trabajo leen TODO el acervo, diga lo que diga el
+     *  selector «Fuentes» (25-sep-2026): con la legislación federal apagada,
+     *  el primer flujo de amparo no pudo citar la Ley de Amparo. */
+    todoElAcervo?: boolean;
+}
+
 async function* streamChatInternal(
     messages: Message[],
     estado?: string,
@@ -139,6 +147,7 @@ async function* streamChatInternal(
     fuero?: string,
     genioIds?: string[],
     signal?: AbortSignal,
+    extra?: OpcionesEnvio,
 ): AsyncGenerator<string, void, unknown> {
     console.log('[API] Calling chat endpoint:', API_URL + '/chat');
     console.log('[API] Messages:', messages);
@@ -173,7 +182,7 @@ async function* streamChatInternal(
             fuentes_web: fuentesWebActivas(),
             // El selector «Fuentes»: se lee al enviar, como el globo. Con las
             // cuatro encendidas el servidor se comporta como siempre.
-            fuentes: fuentesElegidas(),
+            fuentes: extra?.todoElAcervo ? [...FUENTES] : fuentesElegidas(),
             ...(fuentesVerificadas().length ? { fuentes_previas: fuentesVerificadas() } : {}),
             ...(fuero ? { fuero } : {}),
         }),
@@ -215,6 +224,7 @@ export async function* streamChat(
     fuero?: string,
     genioIds?: string[],
     signal?: AbortSignal,
+    extra?: OpcionesEnvio,
 ): AsyncGenerator<string, void, unknown> {
     const maxRetries = 3;
     let attempt = 0;
@@ -222,7 +232,7 @@ export async function* streamChat(
     while (attempt < maxRetries) {
         try {
             // Attempt to stream chat
-            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, signal);
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, signal, extra);
             return; // Success - exit
         } catch (err) {
             // User-initiated stop — exit silently without retry

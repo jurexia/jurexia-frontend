@@ -5,26 +5,17 @@ import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
 import { fuentesElegidas } from '@/lib/fuentes';
 import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
-import UpgradeNudge from '@/components/UpgradeNudge';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage from '@/components/ChatMessage';
 import { FlujoAgente } from '@/components/FlujoAgente';
 import DocumentModal from '@/components/DocumentModal';
 import ChatSidebar from '@/components/ChatSidebar';
-import VisualGuideOverlay from '@/components/VisualGuideOverlay';
-import PromptGuide from '@/components/PromptGuide';
-import ChatTour, { pasoPorId } from '@/components/ChatTour';
 import StateSelectorModal from '@/components/StateSelectorModal';
 import WelcomeExperience from '@/components/WelcomeExperience';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
-import WelcomeVideoModal from '@/components/WelcomeVideoModal';
-import InvitacionBetaAndroidModal, { BotonBetaAndroid } from '@/components/InvitacionBetaAndroidModal';
 import FeedbackWidget from '@/components/FeedbackWidget';
 // FreeUserOnboardingModal removed — was causing 43% user abandonment (audio-modal blocker)
-import { markWelcomeVideoSeen } from '@/lib/supabase';
 import { useChat } from '@/hooks/useChat';
-import { useInsignia } from '@/hooks/useInsignia';
-import { CeremoniaInsignia } from '@/components/CeremoniaInsignia';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useAuthOBasico } from '@/lib/useAuth';
 import { hayTestigoBasico, preguntarBasico, markdownDeBasico, BLOQUEADO_POR_OMISION } from '@/lib/gratis';
@@ -64,26 +55,23 @@ import ContextoConsulta from '@/components/ContextoConsulta';
 import NuevaCarpetaModal from '@/components/NuevaCarpetaModal';
 import { getExpedientes, type Expediente } from '@/lib/expedientes';
 import { getVinculos, vincularConsulta, type Vinculos } from '@/lib/consultas-carpeta';
-import { contextoDeConsulta } from '@/lib/contexto-carpeta';
-import { mensajeDeFlujo } from '@/lib/flujos';
+import { flujoPorId, instruccionDeParte, mensajeDeFlujo, mensajeDeParte } from '@/lib/flujos';
+import AgenteFlujo from '@/components/AgenteFlujo';
+import {
+    AgenteNoDisponible,
+    agenteNuevo,
+    deducirParte,
+    guardarAgente,
+    iniciarFlujo,
+    leerAgente,
+    saldoFlujos,
+    type EstadoAgente,
+    type SaldoFlujos,
+    type Valor,
+} from '@/lib/flujo-agente';
+import { categoriasDe, nombreCarpeta, subirDocumento } from '@/lib/expedientes';
+import { contextoDeCarpeta, contextoDeConsulta, olvidarContextoCarpeta } from '@/lib/contexto-carpeta';
 
-// Suggestion questions — defined outside component for referential stability
-const SUGGESTIONS = [
-    { text: '¿Procede el amparo indirecto contra la negativa de acceso a un expediente judicial?', label: 'AMPARO' },
-    { text: '¿Cuándo se actualiza la guarda y custodia compartida y qué criterios aplica el juez?', label: 'FAMILIAR' },
-    { text: '¿Qué consecuencias tiene el despido injustificado durante una incapacidad médica?', label: 'LABORAL' },
-    { text: '¿En qué casos es procedente la suspensión provisional en el juicio de amparo?', label: 'CONSTITUCIONAL' },
-    { text: '¿Cómo se tramita un divorcio incausado y qué documentos necesito?', label: 'FAMILIAR' },
-    { text: '¿Qué requisitos debe cumplir una pensión alimenticia y cómo se calcula?', label: 'FAMILIAR' },
-    { text: '¿Cuál es el procedimiento para el reconocimiento de paternidad?', label: 'FAMILIAR' },
-    { text: '¿Qué derechos tiene el padre no custodio respecto al régimen de convivencia?', label: 'FAMILIAR' },
-    { text: '¿Cómo se impugna una resolución que niega la guarda y custodia?', label: 'FAMILIAR' },
-    { text: '¿Qué pasa si me despiden sin liquidación estando embarazada?', label: 'LABORAL' },
-    { text: '¿Qué es el derecho a la libertad de expresión y cuál es su fundamento constitucional?', label: 'CONSTITUCIONAL' },
-    { text: '¿Cómo registro una marca en México y qué protección otorga?', label: 'MERCANTIL' },
-    { text: '¿Qué recursos existen contra una sentencia de amparo directo?', label: 'AMPARO' },
-    { text: '¿En qué consiste la adopción plena y cuáles son sus efectos jurídicos?', label: 'FAMILIAR' },
-];
 
 /* Identifica una respuesta por su propio texto. `Message` no lleva id y el
    índice de la lista se mueve al llegar mensajes nuevos; la huella del texto,
@@ -153,7 +141,6 @@ export default function ChatPage() {
     // La entrega de la insignia del plan. Vive aquí y no en la pantalla de
     // pago: ahí el webhook de Stripe aún no ha escrito el plan nuevo y se
     // entregaría la insignia vieja a quien acaba de pagar.
-    const { insigniaPendiente, cerrarInsignia } = useInsignia(profile);
 
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
     const isPro = _PRO_PLUS.includes(profile?.subscription_type || '');
@@ -200,11 +187,6 @@ export default function ChatPage() {
     // pasan a este menú en vez de quedarse fuera de la pantalla.
     const [menuMas, setMenuMas] = useState(false);
     const [quotaExceeded, setQuotaExceeded] = useState(false);
-    const [nudgeBannerDismissed, setNudgeBannerDismissed] = useState(false);
-    const [showPrecedentesTour, setShowPrecedentesTour] = useState(false);
-    // El índice se pide por id: codificarlo a mano hacía que cualquier cambio
-    // en el orden del recorrido apuntara el foco al botón equivocado.
-    const PRECEDENTES_TOUR_STEP = pasoPorId('precedentes');
     const [selectedEstado, setSelectedEstado] = useState<string>('');
     // ── Constructor de demanda (editor Word + pasos + Toulmin) ──
     const [constructorMontado, setConstructorMontado] = useState(false);
@@ -220,11 +202,6 @@ export default function ChatPage() {
     const [showStateModal, setShowStateModal] = useState(false);
     const [showConfigModal, setShowConfigModal] = useState(false);
     const estadoInitializedRef = useRef(false);
-    const [showPromptGuide, setShowPromptGuide] = useState(false);     // ChatTour (Guía Rápida)
-    /* La guía mide los controles del compositor: si está plegado, que se despliegue en el mismo clic. */
-    const abrirGuia = () => { if (typeof window !== 'undefined') window.dispatchEvent(new Event('iurexia:desplegar-compositor')); setShowPromptGuide(true); };
-    const [showPromptGuideModal, setShowPromptGuideModal] = useState(false); // PromptGuide (¿Cómo hacer mejores consultas?)
-    const [showVisualGuide, setShowVisualGuide] = useState(false);
     const [selectedFuero, setSelectedFuero] = useState<string[]>([]);
     /* ═══ EL MODO BÁSICO ═══
        Dos maneras de llegar: sin cuenta por el botón de prueba, o con cuenta
@@ -270,17 +247,11 @@ export default function ChatPage() {
     /* Por dónde va el análisis del documento: lo cuenta el servidor mientras
        lee, reconoce el texto y consulta el acervo. */
     const [pasoDocumento, setPasoDocumento] = useState('');
-    const [showWelcomeVideo, setShowWelcomeVideo] = useState(false);
     // showFreeOnboarding removed — onboarding now inline via Quick Start buttons
     const creatingConvRef = useRef(false); // Mutex to prevent duplicate conversation creation
     const [showWelcomeExperience, setShowWelcomeExperience] = useState(false);
     const pendingMessageRef = useRef<{ content: string; reasoning: boolean } | null>(null);
 
-    // Suggestion rotation state (SUGGESTIONS defined outside component for referential stability)
-    const [suggestionIndex, setSuggestionIndex] = useState(0);
-    const [displayedText, setDisplayedText] = useState('');
-    const [suggestionPhase, setSuggestionPhase] = useState<'typing' | 'visible' | 'fading'>('typing');
-    const suggestionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Auto-deactivate cache after 3 minutes of inactivity (safety: evita costos excesivos)
     const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
@@ -350,39 +321,6 @@ export default function ChatPage() {
         }
     }, [resetCacheTimer]);
 
-    // Typewriter animation engine
-    useEffect(() => {
-        const fullText = SUGGESTIONS[suggestionIndex].text;
-        let charIndex = 0;
-
-        if (suggestionPhase === 'typing') {
-            setDisplayedText('');
-            const typeChar = () => {
-                charIndex++;
-                setDisplayedText(fullText.slice(0, charIndex));
-                if (charIndex < fullText.length) {
-                    // Variable speed: fast start, slight pause on punctuation
-                    const char = fullText[charIndex - 1];
-                    const delay = char === '?' || char === ',' || char === '.' ? 80 : 28;
-                    suggestionTimerRef.current = setTimeout(typeChar, delay);
-                } else {
-                    // Typing complete → hold visible
-                    suggestionTimerRef.current = setTimeout(() => setSuggestionPhase('fading'), 2500);
-                }
-            };
-            suggestionTimerRef.current = setTimeout(typeChar, 400);
-        } else if (suggestionPhase === 'fading') {
-            // After fade-out animation completes, move to next
-            suggestionTimerRef.current = setTimeout(() => {
-                setSuggestionIndex((prev) => (prev + 1) % SUGGESTIONS.length);
-                setSuggestionPhase('typing');
-            }, 700);
-        }
-
-        return () => {
-            if (suggestionTimerRef.current) clearTimeout(suggestionTimerRef.current);
-        };
-    }, [suggestionIndex, suggestionPhase]);
 
     // Cleanup timers on unmount
     useEffect(() => {
@@ -454,12 +392,19 @@ export default function ChatPage() {
        cada render más abajo (cuando ya existen los estados de la consulta
        activa); el hook lo lee al enviar, así que siempre ve lo vigente sin
        rehacer `sendMessage` en cada cambio. */
-    const consultaCtxRef = useRef<{ expedienteId: string | null; flujo: string | null }>({ expedienteId: null, flujo: null });
-    const contextoSistema = useCallback(async (primerTurno: boolean) => {
-        const { expedienteId, flujo } = consultaCtxRef.current;
-        if (!expedienteId && !flujo) return null;
-        return contextoDeConsulta({ expedienteId, flujo, primerTurno });
+    const consultaCtxRef = useRef<{ expedienteId: string | null }>({ expedienteId: null });
+    /* Mientras el agente de un flujo redacta una parte, su instrucción viaja
+       aquí y el envío lee TODO el acervo. Fuera de eso, nada. */
+    const redaccionFlujoRef = useRef<string | null>(null);
+    const contextoSistema = useCallback(async () => {
+        const { expedienteId } = consultaCtxRef.current;
+        const extra = redaccionFlujoRef.current;
+        if (!expedienteId && !extra) return null;
+        return contextoDeConsulta({ expedienteId, extra });
     }, []);
+    const todoElAcervo = useCallback(() => redaccionFlujoRef.current !== null, []);
+    // Las partes de un flujo ya se pagaron con el flujo: no descuentan consultas.
+    const sinCobro = todoElAcervo;
 
     // Chat Hook
     const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos, limpiarPasos } = useChat({
@@ -471,6 +416,8 @@ export default function ChatPage() {
         genioIds: activeGenios,
         onCacheActive: handleCacheActive,
         contextoSistema,
+        todoElAcervo,
+        sinCobro,
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -503,13 +450,23 @@ export default function ChatPage() {
     const [flujoNuevo, setFlujoNuevo] = useState<string | null>(null);
     const [flujosAbierto, setFlujosAbierto] = useState(false);
     const [nuevaCarpeta, setNuevaCarpeta] = useState<{ abierta: boolean; paraConsulta?: string }>({ abierta: false });
-    const [lanzamiento, setLanzamiento] = useState<{ mensaje: string; titulo: string } | null>(null);
+    /* El agente del flujo de la consulta abierta (ver AgenteFlujo). */
+    const [agente, setAgente] = useState<{ convId: string; estado: EstadoAgente } | null>(null);
+    const [subiendoDoc, setSubiendoDoc] = useState(false);
+    /* Flujos del mes: del perfil al cargar, del servidor tras gastar uno. */
+    const [saldoTrasIniciar, setSaldoTrasIniciar] = useState<SaldoFlujos | null>(null);
+    const saldoDeFlujos = useMemo(
+        () => (isAdmin(user?.email)
+            ? { usados: 0, limite: 0, restantes: 0, ilimitado: true }
+            : { ...(saldoTrasIniciar ?? saldoFlujos(profile)), ilimitado: false }),
+        [user?.email, profile, saldoTrasIniciar]
+    );
 
     const carpetaDeActiva = activeConversationId ? (vinculos[activeConversationId]?.expedienteId ?? null) : carpetaNueva;
     // Una carpeta borrada deja de contar aunque el vínculo siga en memoria.
     const carpetaActivaId = carpetaDeActiva && carpetas?.some(c => c.id === carpetaDeActiva) ? carpetaDeActiva : null;
     const flujoActivo = activeConversationId ? (vinculos[activeConversationId]?.flujo ?? null) : flujoNuevo;
-    consultaCtxRef.current = { expedienteId: carpetaActivaId, flujo: flujoActivo };
+    consultaCtxRef.current = { expedienteId: carpetaActivaId };
     // Lo que se le pondrá a la consulta cuando nazca (se lee dentro de
     // callbacks que no se rehacen en cada cambio).
     const pendienteRef = useRef<{ expedienteId: string | null; flujo: string | null }>({ expedienteId: null, flujo: null });
@@ -548,17 +505,6 @@ export default function ChatPage() {
         }
     }, [profile]);
 
-    // Welcome video — show once for Pro+ users who haven't seen it
-    // Uses localStorage as fallback to prevent infinite loops if Supabase update fails
-    useEffect(() => {
-        if (!profile || !user) return;
-        const isProUser = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile.subscription_type || '');
-        const isAdminUser = isAdmin(user.email);
-        const localDismissed = typeof window !== 'undefined' && localStorage.getItem(`iurexia_welcome_video_seen_${user.id}`) === '1';
-        if (isProUser && !isAdminUser && !profile.has_seen_welcome_video && !localDismissed) {
-            setShowWelcomeVideo(true);
-        }
-    }, [profile, user]);
 
     // El walkthrough de «Nuevas herramientas» se retiró el 3-ago-2026 a
     // petición de David: las funciones que anunciaba ya no son nuevas y el
@@ -568,17 +514,6 @@ export default function ChatPage() {
     // Free user onboarding removed — was causing 43% user abandonment
     // Now handled inline via Quick Start suggestion buttons in empty state
 
-    const handleWelcomeVideoClose = useCallback(async () => {
-        setShowWelcomeVideo(false);
-        // Always save to localStorage first (instant, never fails)
-        if (user?.id && typeof window !== 'undefined') {
-            localStorage.setItem(`iurexia_welcome_video_seen_${user.id}`, '1');
-        }
-        // Then try Supabase (may fail silently)
-        if (user?.id) {
-            await markWelcomeVideoSeen(user.id);
-        }
-    }, [user]);
 
 
 
@@ -736,7 +671,9 @@ export default function ChatPage() {
         setAnalisisEnVuelo(false);
         const isAdminUser = isAdmin(user?.email);
         const remaining = queriesLimit - queriesUsed;
-        if (remaining <= 0 && !isAdminUser) {
+        // La parte de un flujo no gasta consultas: el flujo ya se pagó.
+        const esParteDeFlujo = redaccionFlujoRef.current !== null;
+        if (remaining <= 0 && !isAdminUser && !esParteDeFlujo) {
             /* AL GRATUITO NO SE LE CIERRA LA PUERTA. Antes salía un muro con
                «se acabaron tus consultas»; ahora sigue preguntando en el mismo
                chat con el motor básico, viendo con candado lo que se pierde.
@@ -767,7 +704,7 @@ export default function ChatPage() {
             }
         }
 
-        if (!isAdminUser) {
+        if (!isAdminUser && !esParteDeFlujo) {
             setQueriesUsed(prev => prev + 1);
         }
 
@@ -1133,40 +1070,171 @@ export default function ChatPage() {
         }
     }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva]);
 
-    /* ═══ ARRANCAR UN FLUJO ═══
-       Se limpia la consulta, se fijan carpeta y flujo, y el envío espera al
-       render siguiente: enviar en el mismo tick usaría el `handleSendMessage`
-       de la consulta anterior y el flujo caería dentro de ella. */
-    const handleIniciarFlujo = useCallback(({ flujo, encargo, expedienteId }: InicioDeFlujo) => {
-        setFlujosAbierto(false);
-        setActiveConvId(null);
-        setActiveConversationId(null);
-        clearMessages();
-        setCarpetaNueva(expedienteId);
-        setFlujoNuevo(flujo.id);
-        const primera = encargo.split('\n').find(l => l.trim())?.trim() ?? flujo.nombre;
-        setLanzamiento({
-            mensaje: mensajeDeFlujo(flujo, encargo),
-            titulo: primera.length > 70 ? primera.slice(0, 67).trimEnd() + '…' : primera,
-        });
-    }, [clearMessages]);
+    /* ═══ EL AGENTE DE LOS FLUJOS (25-sep-2026) ═══════════════════════════
+       El flujo ya no es una consulta con pasos escritos: es un agente que
+       construye el escrito por partes. Cada parte se DEDUCE (la API propone
+       los datos), se PREGUNTA (el abogado confirma) y se REDACTA (con /chat,
+       todo el acervo, y cae en el documento). Ver lib/flujo-agente.ts. */
+    const cambiarAgente = useCallback((f: (e: EstadoAgente) => EstadoAgente) => {
+        setAgente(prev => (prev ? { convId: prev.convId, estado: f(prev.estado) } : prev));
+    }, []);
 
-    const activeConvIdRef = useRef(activeConversationId);
-    activeConvIdRef.current = activeConversationId;
+    // Cada consulta trae su agente (si lo tiene) al abrirse.
     useEffect(() => {
-        if (!lanzamiento || activeConversationId || messages.length > 0 || isLoading) return;
-        const { mensaje, titulo } = lanzamiento;
-        setLanzamiento(null);
+        if (!activeConversationId) { setAgente(null); return; }
+        setAgente(prev => {
+            if (prev?.convId === activeConversationId) return prev;
+            const e = leerAgente(activeConversationId);
+            return e ? { convId: activeConversationId, estado: e } : null;
+        });
+    }, [activeConversationId]);
+
+    useEffect(() => {
+        if (agente) guardarAgente(agente.convId, agente.estado);
+    }, [agente]);
+
+    const handleIniciarFlujo = useCallback(async ({ flujo, encargo, expedienteId }: InicioDeFlujo) => {
+        // Primero se gasta el flujo del mes. Si el servidor lo rechaza (sin
+        // plan, sin saldo), el error sube al estudio y ahí se enseña.
+        const r = await iniciarFlujo();
+        if (!r.ilimitado) setSaldoTrasIniciar({ usados: r.usados, limite: r.limite, restantes: r.restantes ?? 0 });
+        setFlujosAbierto(false);
+        const conv = await createConversation(selectedEstado || undefined);
+        if (!conv) return;
+        const primer: Message = { role: 'user', content: mensajeDeFlujo(flujo, encargo) };
+        const inicial = agenteNuevo(flujo, encargo, expedienteId);
+        guardarAgente(conv.id, inicial);
+        setVinculos(prev => ({ ...prev, [conv.id]: { expedienteId, flujo: flujo.id } }));
+        void vincularConsulta(conv.id, { expedienteId, flujo: flujo.id });
+        setCarpetaNueva(null);
+        setFlujoNuevo(null);
+        setActiveConvId(conv.id);
+        setActiveConversationId(conv.id);
+        setMessages([primer]);
+        setAgente({ convId: conv.id, estado: inicial });
+        // Se guarda el encargo como primer mensaje y se le pone de título su
+        // primera línea: el rótulo del flujo no dice de qué asunto se trata.
+        await addMessageToConversation(conv.id, primer);
+        const primera = encargo.split('\n').find(l => l.trim())?.trim() ?? flujo.nombre;
+        await updateConversationTitle(conv.id, primera.length > 70 ? primera.slice(0, 67).trimEnd() + '…' : primera);
+        setConversations(await getConversations());
+    }, [selectedEstado, setMessages]);
+
+    /* DEDUCIR: cada vez que el agente entra en «deduciendo», se le pide a la
+       API. La clave evita pedir dos veces lo mismo; el `nonce` permite volver
+       a pedirlo («Volver a deducir», o tras subir un documento). */
+    const deduccionEnCursoRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!agente || agente.estado.fase !== 'deduciendo') return;
+        const flujo = flujoPorId(agente.estado.flujoId);
+        if (!flujo) return;
+        const { convId, estado } = agente;
+        const clave = `${convId}:${estado.parte}:${estado.nonce ?? 0}`;
+        if (deduccionEnCursoRef.current === clave) return;
+        deduccionEnCursoRef.current = clave;
+        const control = new AbortController();
         (async () => {
-            await handleSendMessage(mensaje);
-            // El título automático sale del primer mensaje, que aquí empieza
-            // con el rótulo del flujo: se le pone el del encargo.
-            const id = activeConvIdRef.current;
-            if (id && await updateConversationTitle(id, titulo)) {
-                setConversations(prev => prev.map(c => (c.id === id ? { ...c, title: titulo } : c)));
+            const carpeta = estado.expedienteId ? (await contextoDeCarpeta(estado.expedienteId))?.texto ?? null : null;
+            const documento = messagesRef.current
+                .filter(m => m.role === 'assistant')
+                .map(m => limpiarMarcadores(m.content || ''))
+                .join('\n\n');
+            try {
+                const deduccion = await deducirParte({
+                    flujo, estado, carpeta, documento, entidad: selectedEstado || undefined, signal: control.signal,
+                });
+                setAgente(prev => (prev?.convId === convId && prev.estado.fase === 'deduciendo'
+                    ? { convId, estado: { ...prev.estado, fase: 'preguntando', deduccion, aviso: deduccion.aviso } }
+                    : prev));
+            } catch (err) {
+                if ((err as Error)?.name === 'AbortError') return;
+                // Sin agente el flujo sigue: el formulario sale vacío y el
+                // abogado llena lo que falte.
+                const aviso = err instanceof AgenteNoDisponible
+                    ? err.message
+                    : 'No pude deducir los datos de esta parte; llénalos y continúa.';
+                setAgente(prev => (prev?.convId === convId
+                    ? { convId, estado: { ...prev.estado, fase: 'preguntando', deduccion: null, aviso } }
+                    : prev));
+            } finally {
+                if (deduccionEnCursoRef.current === clave) deduccionEnCursoRef.current = null;
             }
         })();
-    }, [lanzamiento, activeConversationId, messages.length, isLoading, handleSendMessage]);
+        return () => control.abort();
+    }, [agente?.convId, agente?.estado.fase, agente?.estado.parte, agente?.estado.nonce, selectedEstado]);
+
+    /* REDACTAR: la parte confirmada se escribe con /chat. Si no se escribió
+       (sin consultas, sin entidad, detenida), el agente vuelve a preguntar. */
+    const handleConfirmarParte = useCallback(async (valoresParte: Record<string, Valor>) => {
+        if (!agente) return;
+        const flujo = flujoPorId(agente.estado.flujoId);
+        if (!flujo) return;
+        if (!selectedEstado) {
+            setShowStateModal(true);
+            cambiarAgente(e => ({ ...e, aviso: 'Elige tu entidad y vuelve a pulsar «Redactar esta parte».' }));
+            return;
+        }
+        const { convId } = agente;
+        const indice = agente.estado.parte;
+        const valores = { ...agente.estado.valores, ...valoresParte };
+        cambiarAgente(e => ({ ...e, valores, fase: 'redactando', aviso: undefined }));
+        const antes = messagesRef.current.filter(m => m.role === 'assistant').length;
+        redaccionFlujoRef.current = instruccionDeParte(flujo, indice, valores);
+        try {
+            await handleSendMessage(mensajeDeParte(flujo, indice, agente.estado.deduccion?.consulta ?? ''));
+        } finally {
+            redaccionFlujoRef.current = null;
+        }
+        const despues = messagesRef.current.filter(m => m.role === 'assistant');
+        const escrita = despues.length > antes && !!despues[despues.length - 1]?.content?.trim();
+        setAgente(prev => {
+            if (!prev || prev.convId !== convId) return prev;
+            if (!escrita) {
+                return { convId, estado: { ...prev.estado, fase: 'preguntando', aviso: 'La parte no se redactó. Revisa tus consultas disponibles e inténtalo de nuevo.' } };
+            }
+            const hechas = Array.from(new Set([...prev.estado.hechas, indice]));
+            const ultima = indice >= flujo.partes.length - 1;
+            return {
+                convId,
+                estado: {
+                    ...prev.estado,
+                    hechas,
+                    parte: ultima ? indice : indice + 1,
+                    fase: ultima ? 'terminado' : 'deduciendo',
+                    deduccion: ultima ? prev.estado.deduccion : null,
+                    aviso: undefined,
+                },
+            };
+        });
+    }, [agente, selectedEstado, handleSendMessage, cambiarAgente]);
+
+    /* Un documento que el agente pidió: se sube a la carpeta (se lee y se
+       guarda su texto) y el agente vuelve a deducir con él a la vista. */
+    const handleSubirDocumentoFlujo = useCallback(async (archivo: File) => {
+        const expId = agente?.estado.expedienteId;
+        const carpeta = carpetas?.find(c => c.id === expId);
+        if (!expId || !carpeta) return;
+        setSubiendoDoc(true);
+        try {
+            await subirDocumento(expId, categoriasDe(carpeta.tipo)[0].value, archivo, profile?.subscription_type);
+            olvidarContextoCarpeta(expId);
+            cambiarAgente(e => ({ ...e, fase: 'deduciendo', deduccion: null, nonce: (e.nonce ?? 0) + 1, aviso: undefined }));
+        } catch (err) {
+            cambiarAgente(e => ({ ...e, aviso: err instanceof Error ? err.message : 'No se pudo subir el documento.' }));
+        } finally {
+            setSubiendoDoc(false);
+        }
+    }, [agente?.estado.expedienteId, carpetas, profile?.subscription_type, cambiarAgente]);
+
+    const handleReintentarFlujo = useCallback(() => {
+        cambiarAgente(e => ({ ...e, fase: 'deduciendo', deduccion: null, nonce: (e.nonce ?? 0) + 1, aviso: undefined }));
+    }, [cambiarAgente]);
+
+    const handleDetenerFlujo = useCallback(() => {
+        if (!agente) return;
+        guardarAgente(agente.convId, null);
+        setAgente(null);
+    }, [agente]);
 
     /* Desde la carpeta se llega con `/chat?carpeta=<id>` (consulta nueva dentro
        de ella) y `&flujos=1` (con el estudio de flujos abierto). */
@@ -1354,6 +1422,7 @@ export default function ChatPage() {
                 onRenombrarConsulta={handleRenombrarConsulta}
                 onAbrirFlujos={handleAbrirFlujos}
                 onNuevaCarpeta={handleNuevaCarpeta}
+                saldoFlujos={saldoDeFlujos}
             />
 
             <div className="flex flex-col h-screen md:ml-[var(--sidebar-w,18rem)] lg:mr-[var(--constructor-w,0px)] transition-[margin] duration-300">
@@ -1526,32 +1595,8 @@ export default function ChatPage() {
                     </div>
                 </header>
 
-                {/* Progressive Nudge Banner — shows when queries running low */}
-                {!isPro && !nudgeBannerDismissed && queriesRemaining > 0 && queriesRemaining <= 2 && hasMessages && (
-                    <div className="fixed top-14 left-0 right-0 md:left-[var(--sidebar-w,18rem)] lg:right-[var(--constructor-w,0px)] z-25 animate-in slide-in-from-top duration-500">
-                        <div className="bg-gradient-to-r from-amber-50 via-amber-100/80 to-yellow-50 border-b border-accent-gold/20 px-4 py-2.5">
-                            <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2 min-w-0">
-                                    <div className="w-6 h-6 rounded-full bg-accent-gold/15 flex items-center justify-center flex-shrink-0">
-                                        <Zap className="w-3.5 h-3.5 text-accent-gold" />
-                                    </div>
-                                    <p className="text-sm text-charcoal-700 truncate">
-                                        {queriesRemaining === 1
-                                            ? <><strong>Última consulta</strong> — no pierdas el impulso de tu investigación</>
-                                            : <>Te quedan <strong>{queriesRemaining} consultas</strong> este mes · Activa Pro para no quedarte sin respuestas</>
-                                        }
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                    <Link href="/precios" className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-accent-gold text-white text-xs font-bold hover:bg-accent-gold/90 transition-colors">
-                                        Conocer planes <ArrowRight className="w-3 h-3" />
-                                    </Link>
-                                    <button onClick={() => setNudgeBannerDismissed(true)} className="text-charcoal-400 hover:text-charcoal-600 transition-colors text-lg leading-none">×</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {/* Sin el banner de «te quedan N consultas» (25-sep-2026): el contador
+                    del encabezado ya lo dice, y David pidió quitar los avisos. */}
 
                 {/* Anuncio de Precedentes Judiciales removido — sustituido por NewFeaturesAnnouncementModal
                     que cubre Redacción Pro + Precedentes en un solo walkthrough. */}
@@ -1585,41 +1630,9 @@ export default function ChatPage() {
                                         : <>¿En qué te puedo ayudar{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}?</>}
                                 </h2>
 
-                                {/* Typewriter suggestion — fades in/out progressively */}
-                                <div className="mb-6 sm:mb-10 max-w-lg mx-auto min-h-[3rem] flex items-center justify-center">
-                                    <button
-                                        onClick={() => handleSendMessage(SUGGESTIONS[suggestionIndex].text, true)}
-                                        className="group cursor-pointer text-center px-4 py-2 rounded-xl hover:bg-white/50 transition-all duration-300"
-                                    >
-                                        <span
-                                            className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] transition-all duration-500 block mb-1 ${
-                                                suggestionPhase === 'fading' ? 'opacity-0' : 'opacity-60'
-                                            } text-accent-gold`}
-                                        >
-                                            {SUGGESTIONS[suggestionIndex].label}
-                                        </span>
-                                        <span
-                                            className={`font-serif italic text-charcoal-900/50 group-hover:text-charcoal-900/80 text-sm sm:text-base leading-relaxed transition-opacity duration-700 ${
-                                                suggestionPhase === 'fading' ? 'opacity-0' : 'opacity-100'
-                                            }`}
-                                        >
-                                            &ldquo;{displayedText}
-                                            {suggestionPhase === 'typing' && (
-                                                <span className="inline-block w-[2px] h-[1em] bg-accent-gold/60 ml-[1px] align-text-bottom" style={{ animation: 'blink 0.8s step-end infinite' }} />
-                                            )}
-                                            {suggestionPhase !== 'typing' && '\u201D'}
-                                        </span>
-                                        <span className="block mt-1.5 text-[10px] text-charcoal-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            Haz clic para consultar →
-                                        </span>
-                                    </button>
-                                    <style>{`
-                                        @keyframes blink {
-                                            0%, 100% { opacity: 1; }
-                                            50% { opacity: 0; }
-                                        }
-                                    `}</style>
-                                </div>
+                                {/* Sin la sugerencia que se escribía sola (25-sep-2026): el
+                                    saludo y la caja bastan. */}
+                                <div className="mb-6 sm:mb-8" />
 
 
                                 {!modoBasico && (
@@ -1668,36 +1681,10 @@ export default function ChatPage() {
                                     </div>
                                 )}
 
+                                {/* Sin «Mejor pregunta = mejor resultado» ni «¿Cómo hacer
+                                    mejores consultas?» (David, 25-sep-2026): minimalismo;
+                                    los flujos de trabajo guían lo que antes guiaba el aviso. */}
                                 <div className="mt-4 text-center">
-                                    <p className="text-xs text-charcoal-500 mb-2">Mejor pregunta = mejor resultado.</p>
-                                    <button
-                                        onClick={() => setShowPromptGuideModal(true)}
-                                        className="flex items-center gap-1.5 mx-auto"
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                                    >
-                                        <span style={{
-                                            display: 'inline-block',
-                                            width: 8, height: 8, borderRadius: '50%',
-                                            background: '#dc2626',
-                                            animation: 'redPulse 1.4s ease-in-out infinite',
-                                            flexShrink: 0,
-                                        }} />
-                                        <span style={{
-                                            fontSize: '12px', fontWeight: 800,
-                                            color: '#dc2626',
-                                            letterSpacing: '0.01em',
-                                            textDecoration: 'none',
-                                        }}>
-                                            ¿Cómo hacer mejores consultas?
-                                        </span>
-                                    </button>
-                                    <style>{`
-                                        @keyframes redPulse {
-                                            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
-                                            50% { opacity: 0.7; box-shadow: 0 0 0 5px rgba(220,38,38,0); }
-                                        }
-                                    `}</style>
-
                                     {/* EL REDACTOR DE SENTENCIAS DE PRIMERA INSTANCIA,
                                         APARTADO (3-sep-2026).
 
@@ -1742,11 +1729,9 @@ export default function ChatPage() {
                             {messages.map((message, index) => {
                                 // Count assistant messages up to this point
                                 const assistantCount = messages.slice(0, index + 1).filter(m => m.role === 'assistant').length;
-                                const showNudge = !isPro && message.role === 'assistant' && assistantCount > 0 && assistantCount % 3 === 0 && index !== messages.length - 1;
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
                                         <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} basico={modoBasico} onVerDocumento={verDocumento} onDesarrollar={modoBasico ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
-                                        {showNudge && <UpgradeNudge messageIndex={assistantCount} />}
                                     </div>
                                 );
                             })}
@@ -1781,13 +1766,25 @@ export default function ChatPage() {
                                     retryType={retryType || undefined}
                                 />
                             )}
-                        {insigniaPendiente && (
-                <CeremoniaInsignia
-                    nivel={insigniaPendiente.nivel}
-                    esAscenso={insigniaPendiente.esAscenso}
-                    onCerrar={cerrarInsignia}
-                />
-            )}
+                            {/* El agente del flujo va al pie del hilo: ahí pregunta,
+                                ahí enseña su proceso, y lo escrito cae en el documento. */}
+                            {agente && agente.convId === activeConversationId && flujoPorId(agente.estado.flujoId) && (
+                                <AgenteFlujo
+                                    flujo={flujoPorId(agente.estado.flujoId)!}
+                                    estado={agente.estado}
+                                    carpetaNombre={carpetas?.find(c => c.id === agente.estado.expedienteId)
+                                        ? nombreCarpeta(carpetas.find(c => c.id === agente.estado.expedienteId)!)
+                                        : null}
+                                    ocupado={isLoading || isDocumentAnalyzing}
+                                    subiendo={subiendoDoc}
+                                    pendientesEnDocumento={messages.reduce((n, m) => n + (m.role === 'assistant' ? (m.content.match(/\[DATO PENDIENTE/g)?.length ?? 0) : 0), 0)}
+                                    onConfirmar={handleConfirmarParte}
+                                    onSubirDocumento={handleSubirDocumentoFlujo}
+                                    onReintentar={handleReintentarFlujo}
+                                    onVerDocumento={verDocumento}
+                                    onDetener={handleDetenerFlujo}
+                                />
+                            )}
 
                 {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">Error: {error}</div>}
                             {modoBasico && (
@@ -1856,7 +1853,6 @@ export default function ChatPage() {
                             setTimeout(() => handleSendMessage(content, reasoning), 200);
                         }
                     }}
-                    onStartTour={() => abrirGuia()}
                 />
             )}
             {showStateModal && user && <StateSelectorModal userId={user.id} onSelectEstado={(e) => {
@@ -1903,8 +1899,8 @@ export default function ChatPage() {
                                 <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
                                     <span className="text-accent-gold text-sm mt-0.5">⚡</span>
                                     <div>
-                                        <p className="text-white text-xs font-semibold">Genios Especializados de IA</p>
-                                        <p className="text-white/40 text-[11px]">Amparo, Civil, Penal, CIDH — análisis que tomaría 3+ horas</p>
+                                        <p className="text-white text-xs font-semibold">Flujos de trabajo</p>
+                                        <p className="text-white/40 text-[11px]">Demandas, contestaciones y agravios completos, paso a paso</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
@@ -1990,8 +1986,8 @@ export default function ChatPage() {
                                 <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
                                     <span className="text-accent-gold text-sm mt-0.5">⚡</span>
                                     <div>
-                                        <p className="text-white text-xs font-semibold">Genios Especializados de IA</p>
-                                        <p className="text-white/40 text-[11px]">Amparo, Civil, Penal, CIDH — análisis multi-genio avanzado</p>
+                                        <p className="text-white text-xs font-semibold">Flujos de trabajo</p>
+                                        <p className="text-white/40 text-[11px]">30 al mes en Pro: escritos completos con todo el acervo</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-2.5 bg-white/[0.03] rounded-lg px-3 py-2.5">
@@ -2085,7 +2081,6 @@ export default function ChatPage() {
                 </div>
             )}
 
-            <PromptGuide isOpen={showPromptGuideModal} onClose={() => setShowPromptGuideModal(false)} />
 
             <FlujosDeTrabajo
                 abierto={flujosAbierto}
@@ -2093,6 +2088,7 @@ export default function ChatPage() {
                 carpetas={carpetas}
                 carpetaInicial={carpetaActivaId}
                 onIniciar={handleIniciarFlujo}
+                saldo={saldoDeFlujos}
             />
             <NuevaCarpetaModal
                 abierto={nuevaCarpeta.abierta}
@@ -2106,11 +2102,6 @@ export default function ChatPage() {
                     if (para) void handleMoverConsulta(para, exp.id);
                     else void handleNewConversation(exp.id);
                 }}
-            />
-            <ChatTour
-                isOpen={showPromptGuide || showPrecedentesTour}
-                onClose={() => { setShowPromptGuide(false); setShowPrecedentesTour(false); }}
-                startStep={showPrecedentesTour ? PRECEDENTES_TOUR_STEP : 0}
             />
 
             {constructorMontado && (
@@ -2139,15 +2130,11 @@ export default function ChatPage() {
             />
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 
-            <WelcomeVideoModal isOpen={showWelcomeVideo} onClose={handleWelcomeVideoClose} />
 
-            {/*
-                La invitación al grupo fundador de la beta de Android. Sólo la
-                ven los veinte marcados en `beta_android_invitado`, y sólo una
-                vez: el propio componente recuerda que ya se cerró.
-            */}
-            <InvitacionBetaAndroidModal invitado={profile?.beta_android_invitado === true} />
-            <BotonBetaAndroid invitado={profile?.beta_android_invitado === true} />
+            {/* Sin vídeo de bienvenida, recorrido guiado, ceremonia de insignia ni
+                invitación a la beta de Android (David, 25-sep-2026): «quita todos
+                los avisos, tutoriales o cualquier cosa de bienvenida. Buscamos
+                minimalismo y facilidad». Los componentes siguen en el repo. */}
 
             {/* FreeUserOnboardingModal + old WelcomeGuidePrompt REMOVED — replaced by WelcomeExperience */}
 

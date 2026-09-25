@@ -165,6 +165,10 @@ export interface UserProfile {
      *  tenga valor, el muro de `CuentaSuspendida` cubre toda la aplicación y
      *  `consume_query` rechaza cualquier consulta. */
     suspendido_at: string | null;
+    /** Flujos de trabajo usados en el mes de `flujos_periodo` (Pro 30,
+     *  Platinum 60). Sólo el backend los mueve (`consumir_flujo`). */
+    flujos_mes_usados?: number;
+    flujos_periodo?: string | null;
     /** Fecha de la factura abierta más antigua. NULL = sin adeudo. Con valor
      *  y SIN `suspendido_at`, el usuario está en el periodo de gracia: la
      *  plataforma le avisa cuántos días le quedan y le abre su facturación.

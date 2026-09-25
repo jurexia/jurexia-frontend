@@ -2,14 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, Zap, HelpCircle, HardDrive, FolderOpen } from 'lucide-react'
+import { Plus, Search, Zap, HardDrive, FolderOpen } from 'lucide-react'
 
 import Navbar from '@/components/Navbar'
 import SeguimientoPanel from '@/components/SeguimientoPanel'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { CarpetaIcono } from '@/components/CarpetaIcono'
 import NuevaCarpetaModal from '@/components/NuevaCarpetaModal'
-import TutorialCarpetas from '@/components/TutorialCarpetas'
 import { useAuth } from '@/lib/useAuth'
 import {
     ExpedientesNoConfigurado,
@@ -50,7 +49,6 @@ function Escritorio() {
     const [error, setError] = useState<string | null>(null)
     const [busqueda, setBusqueda] = useState('')
     const [nuevaAbierta, setNuevaAbierta] = useState(false)
-    const [tutorialAbierto, setTutorialAbierto] = useState(false)
     const [uso, setUso] = useState<UsoAlmacenamiento | null>(null)
 
     const limite = profile?.queries_limit ?? 5
@@ -80,14 +78,7 @@ function Escritorio() {
         void usoAlmacenamiento(profile?.subscription_type).then(setUso)
     }, [profile?.subscription_type, carpetas.length])
 
-    // La primera visita se explica; las siguientes no molestan.
-    useEffect(() => {
-        if (cargando || carpetas.length > 0) return
-        if (typeof window === 'undefined') return
-        if (window.localStorage.getItem('iurexia.tutorial.carpetas.v1') === '1') return
-        const id = setTimeout(() => setTutorialAbierto(true), 500)
-        return () => clearTimeout(id)
-    }, [cargando, carpetas.length])
+    // Sin tutorial de bienvenida (David, 25-sep-2026): minimalismo.
 
     const filtradas = useMemo(() => {
         const q = busqueda.trim().toLowerCase()
@@ -162,13 +153,6 @@ function Escritorio() {
                             <Zap className="h-4 w-4 text-accent-brown" />
                             {restantes}
                         </div>
-
-                        <button
-                            onClick={() => setTutorialAbierto(true)}
-                            title="Cómo funcionan las carpetas inteligentes"
-                            className="rounded-lg border border-cream-400 bg-cream-100 p-2 text-charcoal-700 transition hover:bg-cream-200">
-                            <HelpCircle className="h-4 w-4" />
-                        </button>
 
                         <button
                             onClick={() => setNuevaAbierta(true)}
@@ -258,14 +242,6 @@ function Escritorio() {
                 }}
             />
 
-            <TutorialCarpetas
-                abierto={tutorialAbierto}
-                onCerrar={() => setTutorialAbierto(false)}
-                onCrear={() => {
-                    setTutorialAbierto(false)
-                    setNuevaAbierta(true)
-                }}
-            />
         </div>
     )
 }

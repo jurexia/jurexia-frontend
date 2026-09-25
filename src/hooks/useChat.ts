@@ -20,6 +20,13 @@ interface UseChatOptions {
      *  entra al estado, así que ni se pinta en el hilo ni se guarda en el
      *  historial. `primerTurno` es verdadero si aún no hay ninguna respuesta. */
     contextoSistema?: (primerTurno: boolean) => Promise<string | null>;
+    /** Si devuelve verdadero, el envío lee TODO el acervo aunque el selector
+     *  «Fuentes» tenga algo apagado (lo usan los flujos de trabajo). */
+    todoElAcervo?: () => boolean;
+    /** Si devuelve verdadero, el envío no descuenta consultas: va sin
+     *  `user_id` (el servidor sólo cobra cuando lo recibe). Lo usan las partes
+     *  de un flujo, que ya se pagó con UN flujo del mes al empezar. */
+    sinCobro?: () => boolean;
 }
 
 interface UseChatReturn {
@@ -231,7 +238,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             // Get Supabase session for auth token
             const session = await getSession();
             const accessToken = session?.access_token;
-            const userId = session?.user?.id;
+            const sinCobro = options.sinCobro?.() ?? false;
+            const userId = sinCobro ? undefined : session?.user?.id;
 
             // ── Quota enforcement ──
             const isAdminUser = isAdmin(session?.user?.email);
@@ -290,6 +298,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 options.fuero?.length ? options.fuero.join(',') : undefined,
                 options.genioIds,
                 signal,
+                { todoElAcervo: options.todoElAcervo?.() ?? false },
             )) {
                 // Filter keepalive heartbeat from backend (<!--PING-->)
                 // This is sent immediately to prevent mobile carriers from
@@ -574,7 +583,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             sendingRef.current = false;
         }
         return respuestaFinal;
-    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive, options.contextoSistema]);
+    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive, options.contextoSistema, options.todoElAcervo, options.sinCobro]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

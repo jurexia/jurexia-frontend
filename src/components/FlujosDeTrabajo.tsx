@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, FolderClosed, Workflow, X } from 'lucide-react';
-import { FLUJOS, ROTULO_EJECUTA, type FlujoTrabajo } from '@/lib/flujos';
+import Link from 'next/link';
+import { ArrowLeft, ArrowRight, FolderClosed, Loader2, Lock, Workflow, X } from 'lucide-react';
+import { FLUJOS, esObligatorio, type FlujoTrabajo } from '@/lib/flujos';
 import { nombreCarpeta, type Expediente } from '@/lib/expedientes';
 
 /* ═══ FLUJOS DE TRABAJO (25-sep-2026) ══════════════════════════════════════
@@ -13,12 +14,6 @@ import { nombreCarpeta, type Expediente } from '@/lib/expedientes';
    ═════════════════════════════════════════════════════════════════════════ */
 
 const CATEGORIAS = ['Todos', 'Amparo', 'Litigio', 'Contratos', 'Penal', 'Investigación'] as const;
-
-const ESTILO_EJECUTA: Record<string, string> = {
-    abogado: 'bg-charcoal-900/[0.06] text-charcoal-800',
-    iurexia: 'bg-[#c9a962]/[0.16] text-[#6f5725]',
-    revision: 'bg-charcoal-900 text-white',
-};
 
 export interface InicioDeFlujo {
     flujo: FlujoTrabajo;
@@ -32,13 +27,18 @@ export default function FlujosDeTrabajo({
     carpetas,
     carpetaInicial,
     onIniciar,
+    saldo,
 }: {
     abierto: boolean;
     onCerrar: () => void;
     /** `null`: las carpetas aún no pueden vincularse a consultas. */
     carpetas: Expediente[] | null;
     carpetaInicial: string | null;
-    onIniciar: (inicio: InicioDeFlujo) => void;
+    /** Lanza el flujo; si el servidor lo rechaza (sin plan, sin saldo), lanza
+     *  un error con el mensaje para el abogado. */
+    onIniciar: (inicio: InicioDeFlujo) => Promise<void>;
+    /** Flujos del mes. `ilimitado` para la casa; `limite` 0 = el plan no los trae. */
+    saldo: { restantes: number; limite: number; ilimitado?: boolean };
 }) {
     const [categoria, setCategoria] = useState<(typeof CATEGORIAS)[number]>('Todos');
     const [elegido, setElegido] = useState<string>(FLUJOS[0].id);
@@ -47,11 +47,16 @@ export default function FlujosDeTrabajo({
     // En pantallas chicas se ve una cosa a la vez: la lista o el detalle.
     const [enDetalle, setEnDetalle] = useState(false);
     const campoRef = useRef<HTMLTextAreaElement>(null);
+    const [iniciando, setIniciando] = useState(false);
+    const [rechazo, setRechazo] = useState<string | null>(null);
+    const conPlan = saldo.ilimitado || saldo.limite > 0;
+    const sinSaldo = !saldo.ilimitado && saldo.limite > 0 && saldo.restantes <= 0;
 
     useEffect(() => {
         if (!abierto) return;
         setCarpeta(carpetaInicial ?? '');
         setEnDetalle(false);
+        setRechazo(null);
     }, [abierto, carpetaInicial]);
 
     useEffect(() => {
@@ -70,13 +75,22 @@ export default function FlujosDeTrabajo({
 
     if (!abierto) return null;
 
-    const iniciar = () => {
+    const iniciar = async () => {
         if (!listo) {
             campoRef.current?.focus();
             return;
         }
-        onIniciar({ flujo, encargo: encargo.trim(), expedienteId: carpeta || null });
-        setEncargo('');
+        if (iniciando) return;
+        setIniciando(true);
+        setRechazo(null);
+        try {
+            await onIniciar({ flujo, encargo: encargo.trim(), expedienteId: carpeta || null });
+            setEncargo('');
+        } catch (err) {
+            setRechazo(err instanceof Error ? err.message : 'No se pudo iniciar el flujo.');
+        } finally {
+            setIniciando(false);
+        }
     };
 
     return (
@@ -96,9 +110,16 @@ export default function FlujosDeTrabajo({
                                 <Workflow className="h-[18px] w-[18px]" />
                             </span>
                             <div>
-                                <h2 className="font-serif text-[1.35rem] leading-tight text-charcoal-900">Flujos de trabajo</h2>
+                                <h2 className="flex flex-wrap items-center gap-2 font-serif text-[1.35rem] leading-tight text-charcoal-900">
+                                    Flujos de trabajo
+                                    {conPlan && !saldo.ilimitado && (
+                                        <span className={`rounded-full px-2 py-0.5 font-sans text-[11.5px] font-semibold ${sinSaldo ? 'bg-amber-50 text-amber-800 ring-1 ring-amber-200' : 'bg-charcoal-900/[0.06] text-charcoal-900/70'}`}>
+                                            {saldo.restantes} de {saldo.limite} este mes
+                                        </span>
+                                    )}
+                                </h2>
                                 <p className="mt-0.5 text-[13px] text-charcoal-900/55">
-                                    Procesos jurídicos con sus pasos a la vista: lo que aportas, lo que hace Iurexia y lo que revisas.
+                                    Iurexia construye el escrito contigo, parte por parte: propone lo que deduce, te pide lo que falta y redacta con todo el acervo.
                                 </p>
                             </div>
                         </div>
@@ -159,7 +180,9 @@ export default function FlujosDeTrabajo({
                                         {f.categoria}
                                     </span>
                                     <span className="mt-1 block text-[13.5px] font-semibold leading-snug text-charcoal-900">{f.nombre}</span>
-                                    <span className="mt-1 block text-[12px] leading-snug text-charcoal-900/55">{f.entrega}</span>
+                                    <span className="mt-1 block text-[12px] leading-snug text-charcoal-900/55">
+                                        {f.entrega !== f.nombre ? `${f.entrega} · ` : ''}{f.partes.length} partes
+                                    </span>
                                 </button>
                             );
                         })}
@@ -182,16 +205,18 @@ export default function FlujosDeTrabajo({
                             <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[#8b7355]">{flujo.categoria}</p>
                             <h3 className="mt-1 font-serif text-[1.5rem] leading-tight text-charcoal-900">{flujo.nombre}</h3>
                             <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-charcoal-900/65">{flujo.descripcion}</p>
+{flujo.entrega !== flujo.nombre && (
                             <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-[12.5px] text-charcoal-900/70 ring-1 ring-charcoal-900/[0.08]">
                                 <span className="font-semibold uppercase tracking-[0.08em] text-charcoal-900/45">Entrega</span>
                                 <span className="font-medium text-charcoal-900">{flujo.entrega}</span>
                             </p>
+                            )}
 
-                            {/* Los pasos */}
+                            {/* Las partes del escrito y lo que pedirá cada una */}
                             <ol className="mt-5 overflow-hidden rounded-xl bg-white ring-1 ring-charcoal-900/[0.08]">
-                                {flujo.pasos.map((p, i) => (
+                                {flujo.partes.map((p, i) => (
                                     <li
-                                        key={p.titulo}
+                                        key={p.id}
                                         className="flex gap-3.5 border-b border-charcoal-900/[0.06] px-4 py-3 last:border-b-0"
                                     >
                                         <span className="mt-0.5 w-6 flex-shrink-0 font-mono text-[12px] text-charcoal-900/35">
@@ -199,16 +224,40 @@ export default function FlujosDeTrabajo({
                                         </span>
                                         <div className="min-w-0 flex-1">
                                             <p className="text-[13.5px] font-semibold text-charcoal-900">{p.titulo}</p>
-                                            <p className="mt-0.5 text-[12.5px] leading-relaxed text-charcoal-900/60">{p.detalle}</p>
+                                            <p className="mt-0.5 text-[12.5px] leading-relaxed text-charcoal-900/60">{p.resumen}</p>
+                                            <div className="mt-2 flex flex-wrap gap-1">
+                                                {p.campos.map((c) => (
+                                                    <span
+                                                        key={c.id}
+                                                        className={`rounded-full px-2 py-0.5 text-[11px] ${
+                                                            esObligatorio(c)
+                                                                ? 'bg-charcoal-900/[0.06] text-charcoal-900/70'
+                                                                : 'bg-charcoal-900/[0.03] text-charcoal-900/45'
+                                                        }`}
+                                                    >
+                                                        {c.etiqueta}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
-                                        <span
-                                            className={`mt-0.5 h-fit flex-shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${ESTILO_EJECUTA[p.ejecuta]}`}
-                                        >
-                                            {ROTULO_EJECUTA[p.ejecuta]}
-                                        </span>
                                     </li>
                                 ))}
                             </ol>
+
+                            <div className="mt-4 grid gap-2 text-[12.5px] leading-snug text-charcoal-900/65 sm:grid-cols-3">
+                                <p className="rounded-lg bg-white px-3 py-2.5 ring-1 ring-charcoal-900/[0.06]">
+                                    <span className="block font-semibold text-charcoal-900">1 · Deduce</span>
+                                    Lee tu encargo, la carpeta y lo ya escrito, y te propone cada dato ya marcado.
+                                </p>
+                                <p className="rounded-lg bg-white px-3 py-2.5 ring-1 ring-charcoal-900/[0.06]">
+                                    <span className="block font-semibold text-charcoal-900">2 · Pregunta</span>
+                                    Lo que no consta te lo pide; si falta un documento clave, te pide el documento o su texto.
+                                </p>
+                                <p className="rounded-lg bg-white px-3 py-2.5 ring-1 ring-charcoal-900/[0.06]">
+                                    <span className="block font-semibold text-charcoal-900">3 · Redacta</span>
+                                    Escribe la parte con todo el acervo y la deja en el documento; luego sigue la siguiente.
+                                </p>
+                            </div>
 
                             {/* El encargo */}
                             <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-charcoal-900/[0.08] sm:p-5">
@@ -262,25 +311,47 @@ export default function FlujosDeTrabajo({
                                         <p className="mt-1.5 text-[12px] leading-snug text-charcoal-900/50">
                                             {carpeta
                                                 ? 'Iurexia trabaja con la ficha, el análisis y los documentos leídos de la carpeta, y la consulta queda guardada en ella.'
-                                                : 'Con una carpeta, Iurexia trabaja con su expediente y la consulta queda guardada en ella.'}
+                                                : 'Con una carpeta, Iurexia trabaja con su expediente, puedes subirle los documentos que te pida y el escrito queda guardado en ella.'}
                                         </p>
                                     </div>
                                 )}
 
-                                <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <p className="text-[12px] leading-snug text-charcoal-900/50">
-                                        Iurexia recorre los pasos en una respuesta, con citas del acervo · 1 consulta
+                                {rechazo && (
+                                    <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[12.5px] leading-snug text-amber-900 ring-1 ring-amber-200">
+                                        {rechazo}
                                     </p>
-                                    <button
-                                        type="button"
-                                        onClick={iniciar}
-                                        disabled={!listo}
-                                        className="inline-flex h-10 flex-shrink-0 items-center justify-center gap-2 rounded-lg bg-charcoal-900 px-4 text-[13.5px] font-semibold text-white transition-colors hover:bg-charcoal-800 disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
-                                        Iniciar en el chat
-                                        <ArrowRight className="h-4 w-4 text-[#c9a962]" />
-                                    </button>
-                                </div>
+                                )}
+
+                                {conPlan ? (
+                                    <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <p className="text-[12px] leading-snug text-charcoal-900/50">
+                                            {flujo.partes.length} partes · usa 1 flujo de tu mes, sin gastar consultas
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => void iniciar()}
+                                            disabled={!listo || iniciando || sinSaldo}
+                                            className="inline-flex h-10 flex-shrink-0 items-center justify-center gap-2 rounded-lg bg-charcoal-900 px-4 text-[13.5px] font-semibold text-white transition-colors hover:bg-charcoal-800 disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            {iniciando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                            {sinSaldo ? 'Sin flujos este mes' : 'Iniciar el flujo'}
+                                            {!iniciando && <ArrowRight className="h-4 w-4 text-[#c9a962]" />}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="mt-4 flex flex-col gap-3 rounded-lg bg-cream-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <p className="flex items-start gap-2 text-[13px] leading-snug text-charcoal-900/75">
+                                            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[#a8863f]" />
+                                            Los flujos de trabajo están en Pro (30 al mes) y Platinum (60 al mes).
+                                        </p>
+                                        <Link
+                                            href="/precios"
+                                            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-charcoal-900 px-4 text-[13.5px] font-semibold text-white hover:bg-charcoal-800"
+                                        >
+                                            Ver planes <ArrowRight className="h-4 w-4 text-[#c9a962]" />
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </section>

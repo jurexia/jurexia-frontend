@@ -15,7 +15,7 @@ const PLAN_FEATURES: Record<string, PlanFeatures> = {
         label: 'PLATINUM',
         queries: '560 consultas/mes',
         highlights: [
-            '⚡ Arquitectura Multi-Genio — Activa hasta 2 Genios Especializados (Amparo, CIDH, Civil, Penal y más) para razonamiento jurídico avanzado e interdisciplinario',
+            '⚡ Flujos de trabajo — Iurexia construye contigo demandas, contestaciones y agravios completos, parte por parte',
             '🔍 Análisis y Auditoría de Documentos — Sube contratos, sentencias o cualquier documento legal para obtener un análisis detallado con sugerencias de mejora',
         ],
         features: [
@@ -30,7 +30,7 @@ const PLAN_FEATURES: Record<string, PlanFeatures> = {
         label: 'PLATINUM ANUAL',
         queries: '560 consultas/mes',
         highlights: [
-            '⚡ Arquitectura Multi-Genio — Activa hasta 2 Genios Especializados (Amparo, CIDH, Civil, Penal y más) para razonamiento jurídico avanzado e interdisciplinario',
+            '⚡ Flujos de trabajo — Iurexia construye contigo demandas, contestaciones y agravios completos, parte por parte',
             '🔍 Análisis y Auditoría de Documentos — Sube contratos, sentencias o cualquier documento legal para obtener un análisis detallado con sugerencias de mejora',
         ],
         features: [
@@ -45,7 +45,7 @@ const PLAN_FEATURES: Record<string, PlanFeatures> = {
         label: 'PRO',
         queries: '140 consultas/mes',
         highlights: [
-            '⚡ Arquitectura Multi-Genio — Activa hasta 2 Genios Especializados (Amparo, CIDH, Civil, Penal y más) para razonamiento jurídico avanzado e interdisciplinario',
+            '⚡ Flujos de trabajo — Iurexia construye contigo demandas, contestaciones y agravios completos, parte por parte',
             '🔍 Análisis y Auditoría de Documentos — Sube contratos, sentencias o cualquier documento legal para obtener un análisis detallado con sugerencias de mejora',
         ],
         features: [
@@ -59,7 +59,7 @@ const PLAN_FEATURES: Record<string, PlanFeatures> = {
         label: 'PRO ANUAL',
         queries: '140 consultas/mes',
         highlights: [
-            '⚡ Arquitectura Multi-Genio — Activa hasta 2 Genios Especializados (Amparo, CIDH, Civil, Penal y más) para razonamiento jurídico avanzado e interdisciplinario',
+            '⚡ Flujos de trabajo — Iurexia construye contigo demandas, contestaciones y agravios completos, parte por parte',
             '🔍 Análisis y Auditoría de Documentos — Sube contratos, sentencias o cualquier documento legal para obtener un análisis detallado con sugerencias de mejora',
         ],
         features: [
@@ -84,7 +84,7 @@ const PLAN_FEATURES: Record<string, PlanFeatures> = {
         label: 'ULTRA SECRETARIOS',
         queries: '140 consultas/mes',
         highlights: [
-            '⚡ Arquitectura Multi-Genio — Genios Especializados para razonamiento jurídico avanzado',
+            '⚡ Flujos de trabajo — escritos completos, parte por parte',
             '🔍 Análisis y Auditoría de Documentos',
         ],
         features: [
