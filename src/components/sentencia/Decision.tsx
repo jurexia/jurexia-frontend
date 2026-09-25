@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Loader2, PenLine, Sparkles, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Check, Loader2, PenLine, Sparkles, ChevronRight, AlertTriangle, Zap } from 'lucide-react';
 import { cn, Pastilla } from './primitivas';
 import type { ProblemaJuridico } from './tipos';
-import type { RespuestaPropuesta, ViaProtectora } from './api';
+import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia } from './api';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LA PANTALLA DE DECISIÓN: UNA FRASE, DOS BOTONES, Y LA TARJETA FINAL
@@ -185,7 +185,8 @@ export default function Decision({
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
-    onGenerar: () => void;
+    /** 'estandar' es el botón de siempre; 'moderna', el segundo. */
+    onGenerar: (formato: FormatoSentencia) => void;
     generando?: boolean;
     propuesta: RespuestaPropuesta | null;
     proponiendo?: boolean;
@@ -242,6 +243,8 @@ export default function Decision({
     const [porQue, setPorQue] = useState(false);
     const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
     const [textoAporte, setTextoAporte] = useState('');
+    // Cuál de los dos botones se pulsó: el giro va en ése, no en los dos.
+    const [formatoPulsado, setFormatoPulsado] = useState<FormatoSentencia>('estandar');
     const [ficheroAporte, setFicheroAporte] = useState<File | null>(null);
     /* El problema que se está corrigiendo y su texto en curso. */
     const [editando, setEditando] = useState<{ id: string; texto: string } | null>(null);
@@ -320,8 +323,14 @@ export default function Decision({
         );
     }
 
+    /* ═══ DOS FORMAS DE SENTENCIA (David, 25-sep-2026) ═══
+       «Vamos a dar dos opciones de sentencia (la actual se queda como es) y
+       "Generar sentencia en versión moderna"». El botón dorado de siempre es la
+       estándar; el segundo, la moderna. Los dos consumen lo mismo: un proyecto.
+       Se recuerda cuál se pulsó para que el giro lo lleve ése y no el otro. */
     const botonGenerar = (grande: boolean) => (
-        <button type="button" onClick={onGenerar} disabled={!puedeGenerar}
+        <button type="button" onClick={() => { setFormatoPulsado('estandar'); onGenerar('estandar'); }}
+                disabled={!puedeGenerar}
                 className={cn(
                     'inline-flex items-center justify-center gap-2 rounded-xl px-5 text-[14px] font-semibold text-charcoal-900 transition',
                     grande ? 'h-11' : 'h-10',
@@ -329,10 +338,25 @@ export default function Decision({
                     'shadow-[0_10px_30px_-12px_rgba(201,169,98,0.7)]',
                     'hover:-translate-y-px hover:shadow-[0_16px_40px_-14px_rgba(201,169,98,0.9)]',
                     'disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none')}>
-            {generando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {generando ? 'Escribiendo el proyecto…'
+            {generando && formatoPulsado === 'estandar'
+                ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {generando && formatoPulsado === 'estandar' ? 'Escribiendo el proyecto…'
                 : alguienSeAparta ? 'Generar con mi criterio'
                 : global ? 'Aceptar y generar el proyecto' : 'Generar el proyecto'}
+        </button>
+    );
+    const botonModerna = (
+        <button type="button" onClick={() => { setFormatoPulsado('moderna'); onGenerar('moderna'); }}
+                disabled={!puedeGenerar}
+                className={cn(
+                    'inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-5 text-[14px] font-semibold transition',
+                    'border-accent-gold/45 bg-accent-gold/[0.06] text-accent-gold',
+                    'hover:-translate-y-px hover:border-accent-gold/70 hover:bg-accent-gold/[0.1]',
+                    'disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40')}>
+            {generando && formatoPulsado === 'moderna'
+                ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+            {generando && formatoPulsado === 'moderna'
+                ? 'Escribiendo la versión moderna…' : 'Generar sentencia en versión moderna'}
         </button>
     );
 
@@ -873,7 +897,33 @@ export default function Decision({
                     )}
                     <div className="mt-3 flex flex-wrap items-center gap-2.5">
                         {botonGenerar(true)}
+                        {botonModerna}
                     </div>
+                    {/* QUÉ ENTREGA CADA UNO, dicho antes de pulsar. */}
+                    <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                        <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5">
+                            <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">Formato estándar</dt>
+                            <dd className="mt-1 text-[12.5px] leading-relaxed text-white/60">
+                                Concepto por concepto, con la fórmula del oficio: «Sobre el primer
+                                {esRecurso ? ' agravio' : ' concepto de violación'}, en el que
+                                {esRecurso ? ' la parte recurrente' : ' la quejosa'} sostiene… Se considera
+                                infundado. Lo anterior…». Extensión y resúmenes completos.
+                            </dd>
+                        </div>
+                        <div className="rounded-xl border border-accent-gold/25 bg-accent-gold/[0.04] px-3.5 py-2.5">
+                            <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent-gold/85">Versión moderna</dt>
+                            <dd className="mt-1 text-[12.5px] leading-relaxed text-white/65">
+                                Atiende el problema jurídico central de forma exhaustiva y con
+                                argumentación de alto nivel, pero prescinde de lo irrelevante: cada
+                                punto abre con su pregunta y enseguida se responde. Hechos, sentencia y
+                                {esRecurso ? ' agravios' : ' conceptos'} se sintetizan a lo que es materia
+                                de estudio. Contesta todos los planteamientos, con menos texto.
+                            </dd>
+                        </div>
+                    </dl>
+                    <p className="mt-2 text-[11.5px] text-white/40">
+                        Cualquiera de las dos consume un proyecto de tu contador.
+                    </p>
                 </div>
             )}
         </div>

@@ -28,7 +28,7 @@ import BarraSuperior from '@/components/sentencia/BarraSuperior';
 import AvisoDeInicio from '@/components/sentencia/AvisoDeInicio';
 import EntradaTaller from '@/components/sentencia/EntradaTaller';
 import type { ViaEntrada, PasoArchivos } from '@/components/sentencia/EntradaTaller';
-import type { AsuntoEnCurso, FichaProyecto, DocumentosDelAsunto }
+import type { AsuntoEnCurso, FichaProyecto, DocumentosDelAsunto, FormatoSentencia }
     from '@/components/sentencia/api';
 import PanelDocumentos from '@/components/sentencia/PanelDocumentos';
 import AnilloDeFases from '@/components/sentencia/AnilloDeFases';
@@ -1502,7 +1502,11 @@ export default function TallerDeSentencias() {
         } finally { setAportando(false); }
     }, [correo, encargo.numero, contexto]);
 
-    const pedirProyecto = useCallback(async () => {
+    const pedirProyecto = useCallback(async (formatoPedido?: FormatoSentencia) => {
+        // LA FORMA DE LA SENTENCIA (David, 25-sep-2026): el botón de siempre
+        // es la estándar; «versión moderna» es el segundo. Se normaliza aquí
+        // porque un `onClick={pedirProyecto}` pasaría el evento del ratón.
+        const formato: FormatoSentencia = formatoPedido === 'moderna' ? 'moderna' : 'estandar';
         // EL AVANCE ARRANCA LIMPIO. Si se genera dos veces —cambiando el
         // criterio, que es lo normal—, lo que se veía escribirse era el
         // estudio nuevo pegado detrás del viejo.
@@ -1580,6 +1584,7 @@ export default function TallerDeSentencias() {
                         // compone no es el que leyó el expediente.
                         oportunidadDecision: decision,
                         oportunidadMotivo: motivoDecision,
+                        formato,
                     },
                     (t) => setAvance((x) => x + t),
                     () => setAvance((x) => x + '\n\n… componiendo el documento'));
@@ -1634,6 +1639,7 @@ export default function TallerDeSentencias() {
                     // Por este camino también: los dos componen el documento.
                     oportunidadDecision: decision,
                     oportunidadMotivo: motivoDecision,
+                    formato,
                 },
                 (t) => setAvance((x) => {
                     // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la

@@ -777,6 +777,9 @@ async function recuperarProyecto(
     }
 }
 
+/** Las dos formas de la sentencia. Ver `formato_sentencia.py` en el API. */
+export type FormatoSentencia = 'estandar' | 'moderna';
+
 export async function resolverEnVivo(
     numero: string, userEmail: string,
     opciones: {
@@ -807,6 +810,11 @@ export async function resolverEnVivo(
          *  lo que él mismo calculó. Nadie revisa el sentido: es el riesgo que
          *  el botón amarillo anuncia. */
         porJurimetria?: boolean;
+        /** LA FORMA DE LA SENTENCIA (David, 25-sep-2026). 'estandar' va
+         *  concepto por concepto con la extensión de siempre; 'moderna' abre
+         *  cada punto con su pregunta, la responde enseguida y condensa lo que
+         *  no es materia de estudio. Vacío = estándar. */
+        formato?: FormatoSentencia;
     },
     onTexto?: (trozo: string) => void,
     onComponiendo?: () => void,
@@ -849,6 +857,7 @@ export async function resolverEnVivo(
         fd.append('oportunidad_decision', o.oportunidadDecision.trim());
     if (o.oportunidadMotivo?.trim())
         fd.append('oportunidad_motivo', o.oportunidadMotivo.trim());
+    fd.append('formato', o.formato === 'moderna' ? 'moderna' : 'estandar');
 
     /* ═══ LA LÍNEA PUEDE MORIRSE A MEDIAS, Y EL PROYECTO NO (17-sep-2026) ═══
        El 536/2025: el servidor escribió el estudio entero y lo archivó, y esta
@@ -1443,6 +1452,8 @@ export interface AsuntoEnCurso {
     versiones: {
         version: number; generadoEn: string; palabras: number;
         avisos: number; sentidoGlobal: string; modo: string; nombre: string;
+        /** 'moderna' | 'estandar' | '' (los anteriores al 25-sep-2026). */
+        formato: string;
         /** Consta lo que se resolvió, pero su .docx ya no existe: es el
          *  proyecto anterior a que se archivara una copia por versión, y el
          *  siguiente lo pisó en la ruta sin número. No se ofrece abrirlo. */
@@ -1483,6 +1494,7 @@ export async function asuntosEnCurso(userEmail: string): Promise<AsuntoEnCurso[]
                 sentidoGlobal: String(v.sentido_global ?? ''),
                 modo: String(v.modo ?? ''),
                 nombre: String(v.nombre ?? ''),
+                formato: String(v.formato ?? ''),
                 sinCopia: !!v.sin_copia,
             })).filter((v) => v.version > 0),
         })).filter((a) => a.numero);

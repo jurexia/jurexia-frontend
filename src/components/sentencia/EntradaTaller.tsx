@@ -258,6 +258,11 @@ function Reanudar({ asuntos, onAbrir, onDescargar }: {
                                             </span>
                                             <span className="min-w-0 flex-1 truncate text-white/60">
                                                 {(v.sentidoGlobal || 'sin sentido').replace(/_/g, ' ')}
+                                                {v.formato === 'moderna' && (
+                                                    <span className="ml-1.5 rounded border border-accent-gold/30 px-1 py-px text-[10px] uppercase tracking-[0.08em] text-accent-gold/80">
+                                                        moderna
+                                                    </span>
+                                                )}
                                                 <span className="text-white/35">
                                                     {v.palabras
                                                         ? ` · ${v.palabras.toLocaleString('es-MX')} palabras`
