@@ -148,10 +148,11 @@ LA CAJA DE CONSULTA (pantalla del chat)
   «Leyes estatales». La elección se queda guardada para las siguientes
   consultas. NO existe una opción «Federal» en la barra superior: la entidad de
   la barra superior sólo dice qué escudo y qué leyes estatales se usan.
-· Rayo (Respuesta rápida) — la cita al grano, sin desarrollo. Todos los planes.
-· Globo (Fuentes de internet) — añade búsqueda en dominios oficiales: poderes
-  judiciales, congresos, diarios oficiales. Desde plan Pro. Se enciende con un
-  clic y se apaga al recargar, para no gastar cuando no hace falta.
+  Debajo de las cuatro hay una quinta, Internet (esfera azul): añade búsqueda
+  en sitios oficiales —DOF, Suprema Corte, congresos, tribunales—. Desde plan
+  Pro. Siempre arranca apagada: se enciende en ese menú y se apaga sola al
+  recargar la página. El rayo (Respuesta rápida) y el globo que había junto a
+  las herramientas ya no existen (25-sep-2026).
 · Redactar — no hay botón: basta pedirlo en el mensaje («Redacta una demanda
   de…», «Elabora los agravios contra…») y Iurexia entrega el escrito en vez de
   una consulta. Después se puede pedir «agrega…», «corrige…», «amplía…» y
@@ -175,6 +176,10 @@ LOS MODOS DE TRABAJO
   tribunal. Cada criterio llega con su registro digital verificado. Desde Pro.
 · Jurimetría — estadística judicial: cómo han resuelto los tribunales asuntos
   como el suyo, en qué sentido y con qué frecuencia. Exclusivo Platinum.
+· Toulmin — el constructor de escritos: arma una demanda o un recurso con
+  argumentos citados y lo lleva a Word. Está en la misma fila, junto a
+  Jurimetría; el mismo botón lo despliega y lo recoge.
+Estas cinco están en «Desplegar herramientas», bajo la caja de consulta.
 
 LOS GENIOS
 Se retiraron el 25-sep-2026: la búsqueda del chat con todo el acervo y las

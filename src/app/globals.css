@@ -2098,3 +2098,33 @@ h6 {
     .losa, .losa::after, .filo { transition: none; }
     .losa:hover { transform: none; }
 }
+
+/* ═══ LA REJILLA DE HERRAMIENTAS DEL COMPOSITOR (25-sep-2026) ═══════════════
+   Cinco mosaicos iguales —Escrito legal, Sentencia, Precedentes, Jurimetría y
+   Toulmin— desde que el rayo y el globo salieron de la fila de arriba. Lo que
+   decide si caben NO es la pantalla sino el compositor: junto al documento
+   abierto, el chat se queda en 420 px aun en un monitor ancho, y ahí cada
+   mosaico mide ~68 px. Por eso una consulta de CONTENEDOR y no de pantalla:
+   por debajo de 500 px el icono va encima de la palabra, «Escrito legal» se
+   dice «Escrito» y el candado se calla (el gris ya dice que está cerrado). */
+.herramientas { container-type: inline-size; }
+.herramientas .mosaico-corto { display: none; }
+@container (max-width: 500px) {
+  .herramientas .mosaico { flex-direction: column; gap: 2px; padding-left: 2px; padding-right: 2px; }
+  .herramientas .mosaico-candado,
+  .herramientas .mosaico-largo { display: none; }
+  .herramientas .mosaico-corto { display: inline; }
+}
+
+/* La fila de «Fuentes», «Esfuerzo» y «Herramientas», con el mismo criterio:
+   se mide el compositor, no la pantalla. Estrecha, la fila dice
+   «Herramientas» en vez de «Desplegar herramientas»; más estrecha aún, el
+   desplegable del esfuerzo dice sólo el escalón. */
+.fila-fuentes { container-type: inline-size; }
+@container (max-width: 480px) {
+  .fila-fuentes .prefijo-plegar { display: none; }
+}
+@container (max-width: 400px) {
+  .fila-fuentes .palabra-esfuerzo { display: none; }
+}
+

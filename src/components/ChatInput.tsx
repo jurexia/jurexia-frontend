@@ -14,8 +14,6 @@ import {
     Mic,
     BookOpen,
     BarChart2,
-    Zap,
-    Globe
 } from 'lucide-react';
 import FileUploadModal from './FileUploadModal';
 import SelectorFuentes from './SelectorFuentes';
@@ -56,12 +54,6 @@ interface ChatInputProps {
     basico?: boolean;
 }
 
-/* Fuentes de internet encendidas EN ESTA VISITA. A nivel de módulo a
-   propósito: sobrevive al remontaje de ChatInput —que ocurre cuando se
-   crea la conversación— pero se reinicia al recargar la página, así que
-   el botón no se queda pulsado para siempre desde el primer uso. */
-let webDeEstaVisita = false;
-
 export default function ChatInput({
     onSubmit,
     onDocumentSubmit,
@@ -83,8 +75,7 @@ export default function ChatInput({
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
-    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes' | 'flash'>('search');
-    const [fuentesWeb, setFuentesWeb] = useState(false);
+    const [activeMode, setActiveMode] = useState<'search' | 'files' | 'enhance' | 'draft' | 'sentencia' | 'precedentes'>('search');
     const [selectedCircuit, setSelectedCircuit] = useState<number | 'ALL' | null>(null);
     const [tribunalFilter, setTribunalFilter] = useState<string | null>(null);
     // Precedentes: corte (SCJN | TCC | ALL) y sala SCJN (PLENO | PRIMERA_SALA | SEGUNDA_SALA | null=todas)
@@ -116,11 +107,9 @@ export default function ChatInput({
         window.addEventListener('iurexia:desplegar-compositor', desplegar);
         return () => window.removeEventListener('iurexia:desplegar-compositor', desplegar);
     }, []);
-    // Las fuentes y el esfuerzo ya no se resumen aquí: los dicen sus botones,
-    // a la vista. Sólo lo que está encendido dentro del panel plegado.
+    // Las fuentes (Internet incluida) y el esfuerzo ya no se resumen aquí: los
+    // dicen sus botones, a la vista. Sólo lo encendido dentro del panel plegado.
     const resumenPlegado = [
-        activeMode === 'flash' ? 'Respuesta rápida' : null,
-        fuentesWeb ? 'Fuentes de internet' : null,
         activeMode === 'precedentes' ? 'Precedentes' : null,
     ].filter(Boolean).join(' · ');
 
@@ -220,28 +209,6 @@ export default function ChatInput({
     const canAccessSentencia = profile?.subscription_type && !['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const isFreeUser = !profile?.subscription_type || ['gratuito', 'basico_monthly'].includes(profile.subscription_type);
     const _PRO_PLUS = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
-    // La capa web sólo desde Pro: cuesta dinero por consulta.
-    const canAccessWeb = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
-
-    /* Fuentes de internet, OPT-IN y sólo desde Pro.
-
-       El interruptor vive en `webDeEstaVisita` (nivel de módulo): sobrevive al
-       remontaje de ChatInput —que ocurre al crearse la conversación, y que
-       antes lo apagaba justo después de usarlo— pero MUERE al recargar la
-       página. Antes se leía de localStorage y quien lo encendía una vez lo
-       dejaba encendido para siempre, en cada consulta de cada día; esta capa
-       cuesta dinero real (15 USD en un solo día). localStorage queda sólo como
-       transporte hacia api.ts. */
-    useEffect(() => {
-        const encendida = canAccessWeb && webDeEstaVisita;
-        setFuentesWeb(encendida);
-        try { localStorage.setItem('iurexia-fuentes-web', encendida ? '1' : '0'); } catch { }
-    }, [canAccessWeb]);
-    const cambiarFuentesWeb = (v: boolean) => {
-        webDeEstaVisita = v;
-        setFuentesWeb(v);
-        try { localStorage.setItem('iurexia-fuentes-web', v ? '1' : '0'); } catch { }
-    };
     const canAccessPrecedentes = isAdmin(user?.email) || _PRO_PLUS.includes(profile?.subscription_type ?? '');
     const canAccessJurimetria  = isAdmin(user?.email) || ['platinum_monthly', 'platinum_annual', 'ultra_secretarios'].includes(profile?.subscription_type ?? '');
     // (El Secretario del PJF se mudó a la barra superior del chat; su
@@ -357,17 +324,15 @@ export default function ChatInput({
                 return;
             }
 
-            // Consulta rápida: va delante de todo. Si el abogado pidió el
-            // rayo, quiere el artículo ya — no un análisis en modo redacción.
-            if (activeMode === 'flash') {
-                finalMessage = `[MODO_FLASH] ${finalMessage}`;
-            }
+            // La consulta rápida (el rayo, `[MODO_FLASH]`) salió el 25-sep-2026
+            // por minimalismo; el servidor aún entiende el marcador de los
+            // bundles viejos.
 
-            // Fuentes de internet: ya NO se antepone «[FUENTES_WEB]» al texto.
-            // La señal viaja como campo `fuentes_web` del request (api.ts la
-            // lee de localStorage al enviar). El marcador en el texto se perdía
-            // en los caminos que no pasaban por aquí —documentos, sugerencias—
-            // y además se colaba en los títulos del historial.
+            // Internet: ya NO se antepone «[FUENTES_WEB]» al texto. Se enciende
+            // en «Fuentes» y viaja como campo `fuentes_web` del request (api.ts
+            // lo lee al enviar). El marcador en el texto se perdía en los
+            // caminos que no pasaban por aquí —documentos, sugerencias— y
+            // además se colaba en los títulos del historial.
 
             // Sin marcador de redacción (25-sep-2026): el servidor reconoce el
             // encargo en el propio mensaje y el esfuerzo viaja como campo
@@ -769,7 +734,7 @@ ${draftRequest.descripcion}`;
                         siempre. En la fila del texto le robaba el ancho a lo que
                         el abogado escribe; aquí ocupa un hueco que ya existía. */}
                     {!basico && (
-                    <div className="mt-2 flex items-center gap-2 border-t border-gray-100 pt-2">
+                    <div className="fila-fuentes mt-2 flex items-center gap-2 border-t border-gray-100 pt-2">
                         <SelectorFuentes estado={estado} disabled={isLoading} />
                         <SelectorEsfuerzo disabled={isLoading} />
                         <button
@@ -778,18 +743,20 @@ ${draftRequest.descripcion}`;
                             onClick={() => setPlegado((v) => !v)}
                             aria-expanded={!plegado}
                             title={plegado
-                                ? 'Mostrar el modo y el resto de herramientas'
+                                ? 'Mostrar las herramientas'
                                 : 'Ocultar las herramientas y dejar la caja sencilla'}
                             className="flex min-w-0 flex-1 items-center gap-2 text-left text-[11px] text-gray-500 transition-colors hover:text-charcoal-900"
                         >
                             {plegado
                                 ? <ChevronUp className="h-3.5 w-3.5 flex-shrink-0" />
                                 : <ChevronDown className="h-3.5 w-3.5 flex-shrink-0" />}
-                            {/* En el teléfono basta «Herramientas»: la flecha ya dice
-                                hacia dónde, y con el desplegable del esfuerzo al lado
-                                la frase entera se salía del cuadro. */}
+                            {/* En un compositor estrecho basta «Herramientas»: la
+                                flecha ya dice hacia dónde, y con el desplegable del
+                                esfuerzo al lado la frase entera se salía del cuadro
+                                —en el teléfono y en el chat de 420 px junto al
+                                documento—. Ver `.fila-fuentes` en globals.css. */}
                             <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
-                                <span className="hidden sm:inline">{plegado ? 'Desplegar ' : 'Plegar '}</span>herramientas
+                                <span className="prefijo-plegar">{plegado ? 'Desplegar ' : 'Plegar '}</span>herramientas
                             </span>
                             {plegado && <span className="hidden min-w-0 truncate sm:inline">{resumenPlegado}</span>}
                         </button>
@@ -798,97 +765,23 @@ ${draftRequest.descripcion}`;
 
                     {/* Action Cards Row — Blue Cards */}
                     {!basico && !plegado && (
-                    <div className="mt-2 pt-2 border-t border-gray-100">
-                        {/* LA FILA DEL MODO. El rayo y el globo a la izquierda y
-                            Toulmin al final, alineado con el borde derecho de la
-                            rejilla de abajo (David, 15-sep-2026). Buscar/Redactar
-                            y sus tres escalones salieron el 25-sep-2026: el
-                            encargo lo reconoce el mensaje y el esfuerzo vive en
-                            su desplegable, junto a «Fuentes». */}
-                        <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 mb-2">
-                            {/* Consulta rápida: sólo el rayo. Se enciende en el
-                                dorado de la casa —el amarillo de Iurexia— y el
-                                nombre vive en el tooltip, que es lo que pidió
-                                David: un control, no una etiqueta. */}
-                            <button
-                                data-guide="flash"
-                                type="button"
-                                onClick={() => setActiveMode(activeMode === 'flash' ? 'search' : 'flash')}
-                                title="Respuesta rápida"
-                                aria-label="Respuesta rápida"
-                                aria-pressed={activeMode === 'flash'}
-                                className={`flex items-center justify-center w-[26px] h-[26px] rounded-md border flex-shrink-0 mr-1
-                                    transition-colors duration-200
-                                    ${activeMode === 'flash'
-                                        ? 'bg-accent-gold border-accent-gold text-charcoal-900'
-                                        : 'bg-white border-gray-200 text-gray-500 hover:text-charcoal-900 hover:border-gray-300'
-                                    }`}
-                            >
-                                <Zap className={`w-3.5 h-3.5 ${activeMode === 'flash' ? 'fill-charcoal-900' : ''}`} />
-                            </button>
-
-                            {/* Fuentes de internet: opt-in. Dorado al activarse,
-                                como el rayo. La búsqueda web dejó de correr por
-                                defecto porque añadía ~2s a todas las consultas;
-                                quien la enciende sabe qué pide. */}
-                            <button
-                                data-guide="fuentes-web"
-                                type="button"
-                                onClick={() => {
-                                    if (!canAccessWeb) { setShowUpgradeModal('pro'); return; }
-                                    cambiarFuentesWeb(!fuentesWeb);
-                                }}
-                                title={canAccessWeb
-                                    ? 'Agregar fuentes de internet'
-                                    : 'Fuentes de internet — desde el plan Pro'}
-                                aria-label="Agregar fuentes de internet"
-                                aria-pressed={canAccessWeb && fuentesWeb}
-                                className={`relative flex items-center justify-center w-[26px] h-[26px] rounded-md border flex-shrink-0 mr-1
-                                    transition-colors duration-200
-                                    ${canAccessWeb && fuentesWeb
-                                        ? 'bg-blue-50 border-blue-400'
-                                        : 'bg-white border-gray-200 hover:border-gray-300'
-                                    }`}
-                            >
-                                {/* Azul y no dorado, a petición de David: la
-                                    esfera azul es el lenguaje universal de
-                                    internet, y así se distingue del rayo. */}
-                                <Globe className={`w-3.5 h-3.5 ${canAccessWeb && fuentesWeb ? 'text-blue-600' : 'text-gray-500'}`} />
-                                {!canAccessWeb && (
-                                    <Lock className="absolute -top-1 -right-1 w-2 h-2 text-gray-400" />
-                                )}
-                            </button>
-
-                            {onAbrirConstructor && (
-                                <button
-                                    type="button"
-                                    data-guide="toulmin"
-                                    onClick={() => onAbrirConstructor('toulmin')}
-                                    aria-pressed={constructorAbierto}
-                                    title={constructorAbierto
-                                        ? 'Recoger el constructor'
-                                        : 'Toulmin: construir una demanda o un recurso con argumentos citados y llevarlo a Word'}
-                                    className={`ml-auto flex h-[26px] flex-shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-semibold tracking-wide text-white transition-all duration-200
-                                        ${constructorAbierto
-                                            ? 'bg-charcoal-900 ring-2 ring-accent-gold/70'
-                                            : 'bg-charcoal-900 hover:bg-charcoal-800'}`}
-                                >
-                                    <Network className="h-3 w-3 text-accent-gold" />
-                                    Toulmin
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Action Buttons — Elegant Black Pills */}
-                        {/* La consulta rápida salió de esta rejilla: ahora vive
-                            junto a Buscar, que es donde el abogado decide CÓMO
-                            quiere la respuesta, no QUÉ herramienta abre. */}
-                        <div className="grid grid-cols-4 gap-1.5 w-full">
+                    <div className="herramientas mt-2 pt-2 border-t border-gray-100">
+                        {/* LAS HERRAMIENTAS, EN UNA SOLA FILA (25-sep-2026). El rayo
+                            y el globo salieron —la consulta rápida se fue e
+                            Internet es ahora una fuente más, en «Fuentes»— y la
+                            fila del modo se quedó con Toulmin solo. David: «podemos
+                            incorporarlo simétricamente del lado de jurimetría».
+                            Cinco columnas iguales cuando hay constructor; cuatro
+                            donde no lo hay. Cuando el compositor es estrecho —el
+                            teléfono, o el chat reducido a 420 px junto al
+                            documento— cada mosaico pone el icono encima de la
+                            palabra: ver `.herramientas` en globals.css. */}
+                        <div className={`grid ${onAbrirConstructor ? 'grid-cols-5' : 'grid-cols-4'} gap-1.5 w-full`}>
 
                             <button
                                 data-guide="escrito"
                                 onClick={() => handleModeClick('draft')}
-                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
                                     transition-all duration-200
                                     ${activeMode === 'draft'
                                         ? 'bg-charcoal-900 text-white shadow-sm ring-1 ring-charcoal-900'
@@ -896,14 +789,14 @@ ${draftRequest.descripcion}`;
                                     }`}
                             >
                                 <FileEdit className="w-2.5 h-2.5 flex-shrink-0" />
-                                <span className="truncate">Escrito legal</span>
+                                <span className="truncate"><span className="mosaico-corto">Escrito</span><span className="mosaico-largo">Escrito legal</span></span>
                             </button>
 
                             <button
                                 data-guide="sentencia"
                                 onClick={() => canAccessSentencia ? handleModeClick('sentencia') : setShowUpgradeModal('pro')}
                                 title={!canAccessSentencia ? 'Plan Pro' : 'Revisa una sentencia'}
-                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
                                     transition-all duration-200
                                     ${!canAccessSentencia
                                         ? 'bg-gray-200 text-gray-400 cursor-pointer'
@@ -914,7 +807,7 @@ ${draftRequest.descripcion}`;
                             >
                                 <Gavel className="w-2.5 h-2.5 flex-shrink-0" />
                                 <span className="truncate">Sentencia</span>
-                                {!canAccessSentencia && <Lock className="w-2 h-2 flex-shrink-0 opacity-60" />}
+                                {!canAccessSentencia && <Lock className="mosaico-candado w-2 h-2 flex-shrink-0 opacity-60" />}
                             </button>
 
                             <button
@@ -926,7 +819,7 @@ ${draftRequest.descripcion}`;
                                     if (!next) { setSelectedCircuit(null); setTribunalFilter(null); }
                                 }}
                                 title={!canAccessPrecedentes ? 'Plan Pro' : 'Precedentes federales'}
-                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
                                     transition-all duration-200
                                     ${!canAccessPrecedentes
                                         ? 'bg-gray-200 text-gray-400 cursor-pointer'
@@ -937,7 +830,7 @@ ${draftRequest.descripcion}`;
                             >
                                 <BookOpen className="w-2.5 h-2.5 flex-shrink-0" />
                                 <span className="truncate">Precedentes</span>
-                                {!canAccessPrecedentes && <Lock className="w-2 h-2 flex-shrink-0 opacity-60" />}
+                                {!canAccessPrecedentes && <Lock className="mosaico-candado w-2 h-2 flex-shrink-0 opacity-60" />}
                             </button>
 
                             <button
@@ -947,7 +840,7 @@ ${draftRequest.descripcion}`;
                                     setShowJurimetriaModal(true);
                                 }}
                                 title={!canAccessJurimetria ? 'Plan Platinum' : 'Jurimetría'}
-                                className={`flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
                                     transition-all duration-200
                                     ${!canAccessJurimetria
                                         ? 'bg-gray-200 text-gray-400 cursor-pointer'
@@ -956,8 +849,29 @@ ${draftRequest.descripcion}`;
                             >
                                 <BarChart2 className="w-2.5 h-2.5 flex-shrink-0" />
                                 <span className="truncate">Jurimetría</span>
-                                {!canAccessJurimetria && <Lock className="w-2 h-2 flex-shrink-0 opacity-60" />}
+                                {!canAccessJurimetria && <Lock className="mosaico-candado w-2 h-2 flex-shrink-0 opacity-60" />}
                             </button>
+
+                            {onAbrirConstructor && (
+                                <button
+                                    type="button"
+                                    data-guide="toulmin"
+                                    onClick={() => onAbrirConstructor('toulmin')}
+                                    aria-pressed={constructorAbierto}
+                                    title={constructorAbierto
+                                        ? 'Recoger el constructor'
+                                        : 'Toulmin: construir una demanda o un recurso con argumentos citados y llevarlo a Word'}
+                                    className={`mosaico flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[9px] sm:text-[10px] font-medium whitespace-nowrap
+                                        transition-all duration-200
+                                        ${constructorAbierto
+                                            ? 'bg-charcoal-900 text-white shadow-sm ring-2 ring-accent-gold/70'
+                                            : 'bg-charcoal-900/90 text-white/90 hover:bg-charcoal-900 hover:text-white'
+                                        }`}
+                                >
+                                    <Network className="w-2.5 h-2.5 flex-shrink-0 text-accent-gold" />
+                                    <span className="truncate">Toulmin</span>
+                                </button>
+                            )}
 
                         </div>
                     </div>

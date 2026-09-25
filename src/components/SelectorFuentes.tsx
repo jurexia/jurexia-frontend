@@ -14,15 +14,26 @@
    barra superior que nunca existió. Un control que no se ve no existe.
 
    Plegado, el botón ya dice lo esencial: los emblemas de lo que está
-   encendido. Si falta alguna fuente, lo dice con palabras. */
+   encendido. Si falta alguna fuente, lo dice con palabras.
+
+   Desde el 25-sep-2026 hay una quinta fila, Internet —el antiguo globo de la
+   fila de herramientas—, separada de las cuatro del acervo: arranca apagada
+   en cada visita y sólo se enciende desde el plan Pro. */
 
 import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, MapPin } from 'lucide-react';
+import Link from 'next/link';
+import { Check, ChevronDown, Globe, Lock, MapPin } from 'lucide-react';
 import {
-    EVENTO_FUENTES, FUENTES, type Fuente,
-    escudoDe, fuentesElegidas, guardarFuentes, todasLasFuentes,
+    EVENTO_FUENTES, EVENTO_INTERNET, FUENTES, type Fuente,
+    escudoDe, fijarInternet, fuentesElegidas, guardarFuentes, internetEncendido, todasLasFuentes,
 } from '@/lib/fuentes';
 import { getEstadoLabel } from '@/lib/estados';
+import { useAuth } from '@/lib/useAuth';
+import { isAdmin } from '@/app/leyesestatales/adminGuard';
+
+// Internet, desde el plan Pro: cuesta dinero en cada consulta. El servidor
+// vuelve a comprobarlo (`fuentes_web` sin plan Pro se ignora).
+const PLANES_INTERNET = ['pro_monthly', 'pro_annual', 'platinum_monthly', 'platinum_annual', 'ultra_secretarios'];
 
 interface Props {
     /** La entidad de la barra superior (la del perfil, salvo que la cambie). */
@@ -70,6 +81,18 @@ function fichas(estado?: string): Ficha[] {
     ];
 }
 
+/* El emblema de Internet: la esfera azul, que es como David quiso el globo
+   —«el lenguaje universal de internet»—, en el mismo círculo que los demás. */
+function EmblemaInternet({ grande = false, apagado = false }: { grande?: boolean; apagado?: boolean }) {
+    const caja = grande ? 'h-9 w-9' : 'h-4 w-4';
+    return (
+        <span className={`${caja} grid flex-shrink-0 place-items-center rounded-full ring-1 ring-charcoal-900/10
+            ${apagado ? 'bg-gray-50' : 'bg-blue-50'}`}>
+            <Globe className={`${grande ? 'h-4 w-4' : 'h-2.5 w-2.5'} ${apagado ? 'text-gray-400' : 'text-blue-600'}`} />
+        </span>
+    );
+}
+
 function Emblema({ src, grande = false }: { src: string | null; grande?: boolean }) {
     const caja = grande ? 'h-9 w-9' : 'h-4 w-4';
     if (!src) {
@@ -91,8 +114,11 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
     // Las cuatro hasta leer el navegador: así el servidor y el cliente pintan
     // lo mismo en el primer cuadro.
     const [elegidas, setElegidas] = useState<Fuente[]>([...FUENTES]);
+    const [internet, setInternet] = useState(false);
     const [abierto, setAbierto] = useState(false);
     const caja = useRef<HTMLDivElement>(null);
+    const { user, profile } = useAuth();
+    const puedeInternet = isAdmin(user?.email) || PLANES_INTERNET.includes(profile?.subscription_type ?? '');
 
     useEffect(() => {
         setElegidas(fuentesElegidas());
@@ -100,9 +126,21 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
             const detalle = (e as CustomEvent<Fuente[]>).detail;
             setElegidas(Array.isArray(detalle) ? detalle : fuentesElegidas());
         };
+        const sincronizarInternet = (e: Event) => setInternet(Boolean((e as CustomEvent<boolean>).detail));
         window.addEventListener(EVENTO_FUENTES, sincronizar);
-        return () => window.removeEventListener(EVENTO_FUENTES, sincronizar);
+        window.addEventListener(EVENTO_INTERNET, sincronizarInternet);
+        return () => {
+            window.removeEventListener(EVENTO_FUENTES, sincronizar);
+            window.removeEventListener(EVENTO_INTERNET, sincronizarInternet);
+        };
     }, []);
+
+    // Encendida sólo si el plan la paga: si el perfil tarda en llegar o el
+    // plan baja, se apaga también para el request.
+    useEffect(() => {
+        setInternet(puedeInternet && internetEncendido());
+        if (!puedeInternet && internetEncendido()) fijarInternet(false);
+    }, [puedeInternet]);
 
     // Se cierra al pulsar fuera o con Escape, como cualquier menú.
     useEffect(() => {
@@ -129,9 +167,9 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
         setElegidas(guardarFuentes(esta ? elegidas.filter((x) => x !== f) : [...elegidas, f]));
     };
 
-    const resumen = todas
+    const resumen = (todas
         ? 'Todas las fuentes'
-        : encendidas.map((f) => f.titulo).join(' · ');
+        : encendidas.map((f) => f.titulo).join(' · ')) + (internet ? ' · Internet' : '');
 
     return (
         <div ref={caja} className="relative flex-shrink-0">
@@ -149,12 +187,13 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                    herramientas». En el teléfono, sólo los emblemas —ya dicen
                    qué está encendido— para que la fila quepa entera. */
                 className={`flex h-7 items-center gap-1.5 rounded-full border px-1.5 transition-colors disabled:opacity-50 sm:px-2
-                    ${abierto || !todas
+                    ${abierto || !todas || internet
                         ? 'border-accent-gold/70 bg-accent-gold/10 text-charcoal-900'
                         : 'border-charcoal-900/15 bg-white text-charcoal-700 hover:border-charcoal-900/30 hover:text-charcoal-900'}`}
             >
                 <span className="flex items-center -space-x-1.5">
                     {encendidas.map((f) => <Emblema key={f.clave} src={f.emblema} />)}
+                    {internet && <EmblemaInternet />}
                 </span>
                 <span className="hidden text-[11px] font-semibold sm:inline">Fuentes</span>
                 {!todas && (
@@ -220,12 +259,65 @@ export default function SelectorFuentes({ estado, disabled = false }: Props) {
                                 </li>
                             );
                         })}
+
+                        {/* INTERNET: separada de las cuatro del acervo porque no
+                            es acervo —se busca en vivo— y porque arranca apagada
+                            en cada visita. Ver `@/lib/fuentes`. */}
+                        <li className="mt-1.5 border-t border-charcoal-900/10 pt-1.5">
+                            {puedeInternet ? (
+                                <button
+                                    type="button"
+                                    role="menuitemcheckbox"
+                                    aria-checked={internet}
+                                    onClick={() => setInternet(fijarInternet(!internet))}
+                                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
+                                >
+                                    <EmblemaInternet grande apagado={!internet} />
+                                    <span className="min-w-0 flex-1">
+                                        <span className={`block text-[13px] font-semibold leading-snug ${internet ? 'text-charcoal-900' : 'text-gray-500'}`}>
+                                            Internet
+                                        </span>
+                                        <span className="block text-[11.5px] leading-snug text-gray-500">
+                                            Sitios oficiales al día: DOF, Suprema Corte, congresos y tribunales
+                                        </span>
+                                    </span>
+                                    <span
+                                        aria-hidden="true"
+                                        className={`grid h-5 w-5 flex-shrink-0 place-items-center rounded-md border transition-colors
+                                            ${internet ? 'border-charcoal-900 bg-charcoal-900 text-white' : 'border-charcoal-900/25 bg-white text-transparent'}`}
+                                    >
+                                        <Check className="h-3 w-3" strokeWidth={3} />
+                                    </span>
+                                </button>
+                            ) : (
+                                <Link
+                                    href="/precios"
+                                    role="menuitem"
+                                    title="Internet está disponible desde el plan Pro"
+                                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-cream-100/70 focus-visible:bg-cream-100/70 focus-visible:outline-none"
+                                >
+                                    <EmblemaInternet grande apagado />
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block text-[13px] font-semibold leading-snug text-gray-500">Internet</span>
+                                        <span className="block text-[11.5px] leading-snug text-gray-500">
+                                            Sitios oficiales al día: DOF, Suprema Corte, congresos y tribunales
+                                        </span>
+                                    </span>
+                                    <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full border border-accent-gold/40 px-2 py-0.5 text-[10px] font-semibold text-accent-brown">
+                                        <Lock className="h-2.5 w-2.5" />
+                                        Plan Pro
+                                    </span>
+                                </Link>
+                            )}
+                        </li>
                     </ul>
 
                     <p className="border-t border-charcoal-900/10 bg-cream-100/50 px-4 py-2.5 text-[11.5px] leading-snug text-gray-600">
-                        {todas
-                            ? 'Iurexia consulta las cuatro y elige lo que aplica a su pregunta.'
-                            : 'Iurexia responde sólo con las fuentes encendidas: lo apagado no se consulta ni se cita.'}
+                        {internet
+                            ? 'Con Internet, Iurexia completa el acervo con sitios oficiales. Se apaga al recargar la página.'
+                            : todas
+                                ? 'Iurexia consulta todo el acervo y elige lo que aplica a su pregunta.'
+                                : 'Iurexia responde sólo con las fuentes encendidas: lo apagado no se consulta ni se cita.'}
                     </p>
                 </div>
             )}

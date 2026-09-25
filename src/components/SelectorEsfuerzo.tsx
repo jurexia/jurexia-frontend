@@ -128,7 +128,7 @@ export default function SelectorEsfuerzo({ disabled = false }: Props) {
                         : 'border-charcoal-900/15 bg-white text-charcoal-700 hover:border-charcoal-900/30 hover:text-charcoal-900'}`}
             >
                 <actual.Icono className={`h-3.5 w-3.5 flex-shrink-0 ${actual.tinta}`} />
-                <span className="hidden text-[11px] font-medium text-gray-500 sm:inline">Esfuerzo</span>
+                <span className="palabra-esfuerzo text-[11px] font-medium text-gray-500">Esfuerzo</span>
                 <span className="text-[11px] font-semibold">{actual.nombre}</span>
                 <ChevronDown className={`h-3 w-3 flex-shrink-0 transition-transform ${abierto ? 'rotate-180' : ''}`} />
             </button>

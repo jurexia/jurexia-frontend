@@ -56,6 +56,44 @@ export function todasLasFuentes(lista: readonly Fuente[]): boolean {
     return FUENTES.every((f) => lista.includes(f));
 }
 
+/* ── INTERNET, LA QUINTA FUENTE (25-sep-2026) ─────────────────────────────
+   David: «búsqueda web se agregará como una fuente a las fuentes
+   desplegables. Siempre aparecerá deshabilitada». Era el globo de la fila de
+   herramientas; ahora es una fila más del menú «Fuentes».
+
+   NO se guarda como las otras cuatro, a propósito: cada consulta con
+   Internet lanza tres agentes de búsqueda y hace unas cinco búsquedas (~5
+   centavos de dólar, medido el 25-sep-2026). Por eso arranca APAGADA en cada
+   carga de página: se enciende para lo que hace falta y no se queda pulsada
+   para siempre desde el primer uso. Dentro de la visita sí sobrevive al
+   remontaje del compositor —que ocurre al crearse la conversación—.
+
+   Sólo desde el plan Pro; el servidor lo vuelve a comprobar. Viaja como
+   campo `fuentes_web` del request: api.ts lee la clave del navegador al
+   enviar, igual que antes leía la del globo. */
+const CLAVE_INTERNET = 'iurexia-fuentes-web';
+
+/** Lo dispara `fijarInternet`: el botón «Fuentes» lo escucha. */
+export const EVENTO_INTERNET = 'iurexia:internet';
+
+let internetDeEstaVisita = false;
+if (typeof window !== 'undefined') {
+    // Al cargar la página, apagada, aunque la visita anterior la dejara
+    // encendida en el navegador.
+    try { localStorage.setItem(CLAVE_INTERNET, '0'); } catch { /* ventana privada */ }
+}
+
+export function internetEncendido(): boolean {
+    return internetDeEstaVisita;
+}
+
+export function fijarInternet(encendida: boolean): boolean {
+    internetDeEstaVisita = encendida;
+    try { localStorage.setItem(CLAVE_INTERNET, encendida ? '1' : '0'); } catch { /* ventana privada */ }
+    try { window.dispatchEvent(new CustomEvent(EVENTO_INTERNET, { detail: encendida })); } catch { /* sin ventana */ }
+    return encendida;
+}
+
 /* ── LOS ESCUDOS ────────────────────────────────────────────────────────
    Los 32, de Wikimedia Commons, todos en dominio público (descargados el
    23-sep-2026 a 128 px; p. ej. «Coat of arms of Hidalgo.svg»). Se nombran

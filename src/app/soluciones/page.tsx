@@ -84,7 +84,7 @@ export default function SolucionesPage() {
                                 perfil: 'Abogado in-house',
                                 titulo: 'Resuelve dentro antes de pagar fuera',
                                 texto: 'Responde a las consultas de las demás áreas con fundamento propio y baja el gasto en despachos externos en las primeras fases.',
-                                herramientas: ['Consulta rápida', 'Normativa', 'Carpetas'],
+                                herramientas: ['Fuentes', 'Normativa', 'Carpetas'],
                             },
                             {
                                 perfil: 'Secretario del PJF',
