@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStripe } from '@/lib/stripe';
+import { finDelAcceso, getStripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
@@ -55,12 +55,12 @@ export async function POST(request: NextRequest) {
 
         // Check if subscription is already scheduled for cancellation
         if (subscription.cancel_at_period_end) {
-            const periodEnd = new Date((subscription as any).current_period_end * 1000);
-            console.log(`ℹ️ Subscription ${subscriptionId} already scheduled for cancellation at ${periodEnd.toISOString()} for user ${user.email}`);
+            const fin = finDelAcceso(subscription);
+            console.log(`ℹ️ Subscription ${subscriptionId} already scheduled for cancellation at ${fin?.toISOString() ?? '(sin fecha)'} for user ${user.email}`);
             return NextResponse.json({
                 success: true,
                 message: 'Tu suscripción ya estaba programada para cancelarse al final del periodo actual',
-                cancelAt: periodEnd.toISOString(),
+                cancelAt: fin?.toISOString() ?? null,
                 alreadyCancelled: true,
             });
         }
@@ -68,16 +68,21 @@ export async function POST(request: NextRequest) {
         // Cancel at period end (user keeps access until the billing period ends)
         const updated = await stripe.subscriptions.update(subscriptionId, {
             cancel_at_period_end: true,
-        }) as unknown as { current_period_end: number; id: string };
+        });
 
-        const periodEnd = new Date(updated.current_period_end * 1000);
+        // DESDE AQUÍ LA CANCELACIÓN YA ESTÁ HECHA: nada de lo que sigue puede
+        // convertirla en error. La fecha sale de `finDelAcceso`, que nunca
+        // lanza (ver lib/stripe.ts: `current_period_end` ya no viene en la
+        // suscripción y leerlo aquí era lo que respondía «no pudimos procesar
+        // la cancelación» a quien acababa de cancelar).
+        const fin = finDelAcceso(updated);
 
-        console.log(`✅ Subscription ${subscriptionId} scheduled for cancellation at ${periodEnd.toISOString()} for user ${user.email}`);
+        console.log(`✅ Subscription ${subscriptionId} scheduled for cancellation at ${fin?.toISOString() ?? '(sin fecha)'} for user ${user.email}`);
 
         return NextResponse.json({
             success: true,
             message: 'Tu suscripción se cancelará al final del periodo actual',
-            cancelAt: periodEnd.toISOString(),
+            cancelAt: fin?.toISOString() ?? null,
         });
     } catch (error) {
         console.error('Cancel subscription error:', error);
@@ -88,12 +93,12 @@ export async function POST(request: NextRequest) {
             const stripe = getStripe();
             const currentSub = await stripe.subscriptions.retrieve(subscriptionId);
             if (currentSub.cancel_at_period_end) {
-                const periodEnd = new Date((currentSub as any).current_period_end * 1000);
+                const fin = finDelAcceso(currentSub);
                 console.log(`🔄 Recovery: Subscription ${subscriptionId} is actually cancelled — returning success`);
                 return NextResponse.json({
                     success: true,
                     message: 'Tu suscripción se cancelará al final del periodo actual',
-                    cancelAt: periodEnd.toISOString(),
+                    cancelAt: fin?.toISOString() ?? null,
                 });
             }
         } catch (recoveryError) {

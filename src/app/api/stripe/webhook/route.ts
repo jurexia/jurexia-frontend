@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { getStripe, getPlanFromSubscription, PLANS, PlanId, isUpgrade, getPlanIdFromPriceId } from '@/lib/stripe';
+import { finDelAcceso, getStripe, getPlanFromSubscription, PLANS, PlanId, isUpgrade, getPlanIdFromPriceId } from '@/lib/stripe';
 import {
     updateUserSubscription,
     downgradeToFree,
@@ -629,8 +629,11 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 
     // FIX #3: Handle cancel_at_period_end — but DON'T block if the plan changed (upgrade)
     if (subscription.cancel_at_period_end) {
-        const periodEnd = new Date((subscription as any).current_period_end * 1000);
-        console.log(`⏳ User ${email} scheduled cancellation — access until ${periodEnd.toISOString()}`);
+        // `finDelAcceso` y no `current_period_end`, que ya no viene en la
+        // suscripción: leerlo aquí lanzaba y el aviso de Stripe fallaba entero
+        // (26-sep-2026, ver lib/stripe.ts).
+        const periodEnd = finDelAcceso(subscription);
+        console.log(`⏳ User ${email} scheduled cancellation — access until ${periodEnd?.toISOString() ?? '(sin fecha)'}`);
         // Only skip further processing if the plan hasn't changed.
         // If the user upgraded (different price), we need to process the update.
         if (subscription.status !== 'active') {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exigirAdmin } from '@/lib/guardia-admin';
-import { getStripe } from '@/lib/stripe';
+import { finDelPeriodo, getStripe, inicioDelPeriodo } from '@/lib/stripe';
 
 function safeDate(ts: any): string {
     if (!ts) return '';
@@ -40,8 +40,10 @@ export async function GET(request: NextRequest) {
             subscriptions[subId] = {
                 status: sub.status || 'unknown',
                 created: safeDate(sub.created),
-                current_period_end: safeDate(sub.current_period_end),
-                current_period_start: safeDate(sub.current_period_start),
+                // Las fechas viven en la partida desde la API 2025-03-31: con
+                // `sub.current_period_*` estas dos columnas salían vacías.
+                current_period_end: safeDate(finDelPeriodo(sub)),
+                current_period_start: safeDate(inicioDelPeriodo(sub)),
                 cancel_at_period_end: !!sub.cancel_at_period_end,
                 amount: item?.price?.unit_amount || item?.plan?.amount || 0,
                 currency: item?.price?.currency || item?.plan?.currency || 'mxn',

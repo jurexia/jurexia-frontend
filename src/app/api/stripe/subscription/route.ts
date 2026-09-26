@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStripe, getPlanFromSubscription } from '@/lib/stripe';
+import { finDelAcceso, finDelPeriodo, getStripe, getPlanFromSubscription } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
@@ -85,12 +85,19 @@ export async function GET(request: NextRequest) {
         // Sin ellos no se distinguía «aún no ha cancelado» de «ya canceló y no
         // se lo hemos dicho», y un cliente recorrió el diálogo cinco veces
         // creyendo que no funcionaba.
+        //
+        // Las fechas, con `finDelPeriodo`/`finDelAcceso` (26-sep-2026): leer
+        // `sub.current_period_end` —que ya no existe— hacía reventar esta ruta
+        // con TODAS las suscripciones. El diálogo no se enteraba de que el
+        // cliente ya había cancelado, le ofrecía cancelar otra vez, y esa
+        // segunda vez también contestaba con error.
+        const cancelada = Boolean(sub.cancel_at_period_end || sub.cancel_at);
         return NextResponse.json({
             plan: planId,
             status: subscription.status,
-            currentPeriodEnd: new Date(sub.current_period_end * 1000).toISOString(),
-            cancelAtPeriodEnd: sub.cancel_at_period_end,
-            cancelAt: sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
+            currentPeriodEnd: finDelPeriodo(sub)?.toISOString() ?? null,
+            cancelAtPeriodEnd: cancelada,
+            cancelAt: cancelada ? (finDelAcceso(sub)?.toISOString() ?? null) : null,
             pausedUntil: sub.pause_collection?.resumes_at
                 ? new Date(sub.pause_collection.resumes_at * 1000).toISOString()
                 : null,

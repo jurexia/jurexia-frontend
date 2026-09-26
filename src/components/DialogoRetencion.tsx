@@ -40,6 +40,40 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { avisarCambioDeSuscripcion, consultarSuscripcion, fechaLarga } from '@/lib/suscripcion-estado';
+
+/* LO QUE TIENE QUE LEER QUIEN CANCELA (26-sep-2026). David: «es necesario
+   que vean el mensaje de que su cuenta ha sido cancelada, que conservan el
+   periodo pagado (dar fecha) y que no ocurrirá cobro subsecuente». Las tres
+   cosas, una por renglón y con la fecha escrita, igual al terminar de
+   cancelar que al volver a abrir el diálogo después. */
+function ResumenCancelacion({ titulo, fecha, nombrePlan }: {
+    titulo: string; fecha: string; nombrePlan?: string;
+}) {
+    const renglones = [
+        <>Conserva el periodo que ya pagó: acceso completo
+            {nombrePlan ? <> a <strong className="text-charcoal-900">{nombrePlan}</strong></> : null}
+            {' '}hasta el <strong className="text-charcoal-900">{fecha || 'final de su periodo pagado'}</strong>.</>,
+        <><strong className="text-charcoal-900">No habrá ningún cobro más</strong>: su suscripción no se renovará.</>,
+        <>Su cuenta, sus conversaciones y sus carpetas se conservan. Si vuelve, entra con el mismo correo.</>,
+    ];
+    return (
+        <div className="pb-2">
+            <div className="w-14 h-14 bg-cream-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="w-7 h-7 text-charcoal-700" />
+            </div>
+            <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-4 text-center">{titulo}</h3>
+            <ul className="space-y-2.5 mb-5">
+                {renglones.map((r, i) => (
+                    <li key={i} className="flex gap-2.5 text-sm text-charcoal-600 leading-relaxed">
+                        <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-accent-brown" strokeWidth={2.5} />
+                        <span>{r}</span>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
 
 type Paso = 'cargando' | 'motivo' | 'oferta' | 'pausada' | 'procesando'
     | 'cancelada' | 'ya_cancelada' | 'error';
@@ -93,23 +127,16 @@ export default function DialogoRetencion({
         let vivo = true;
         (async () => {
             setPaso('cargando');
-            try {
-                const tk = (await supabase.auth.getSession()).data.session?.access_token;
-                const r = await fetch('/api/stripe/subscription', {
-                    headers: tk ? { Authorization: `Bearer ${tk}` } : undefined,
-                });
-                if (!vivo) return;
-                const j = r.ok ? await r.json() : null;
-                const fmt = (iso: string) => new Date(iso).toLocaleDateString('es-MX',
-                    { day: 'numeric', month: 'long', year: 'numeric' });
-                if (j?.pausedUntil) { setYaPausada(true); setReanuda(fmt(j.pausedUntil)); }
-                if (j?.cancelAtPeriodEnd) {
-                    setFechaFin(fmt(j.cancelAt || j.currentPeriodEnd));
-                    setPaso('ya_cancelada');
-                    return;
-                }
-            } catch { /* sin estado se sigue igual: cancelar nunca se bloquea */ }
-            if (vivo) setPaso('motivo');
+            // Sin estado se sigue igual: cancelar nunca se bloquea.
+            const j = await consultarSuscripcion();
+            if (!vivo) return;
+            if (j?.pausedUntil) { setYaPausada(true); setReanuda(fechaLarga(j.pausedUntil) ?? ''); }
+            if (j?.cancelAtPeriodEnd) {
+                setFechaFin(fechaLarga(j.cancelAt || j.currentPeriodEnd) ?? '');
+                setPaso('ya_cancelada');
+                return;
+            }
+            setPaso('motivo');
         })();
         return () => { vivo = false; };
     }, [abierto]);
@@ -166,25 +193,37 @@ export default function DialogoRetencion({
         setPausando(false);
     };
 
+    const cancelada = (iso?: string | null) => {
+        setFechaFin(fechaLarga(iso) ?? '');
+        setPaso('cancelada');
+        avisarCambioDeSuscripcion();
+    };
+
     const cancelar = async () => {
         if (!subscriptionId) { setAviso('No se encontró una suscripción activa'); setPaso('error'); return; }
         setPaso('procesando');
+        let fallo = 'No pudimos procesar la cancelación.';
         try {
             const r = await fetch('/api/stripe/cancel', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await token()}` },
                 body: JSON.stringify({ subscriptionId }),
             });
-            const j = await r.json();
-            if (!r.ok) { setAviso(j.error || 'No pudimos procesar la cancelación.'); setPaso('error'); return; }
-            setFechaFin(j.cancelAt
-                ? new Date(j.cancelAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })
-                : 'el final de su periodo');
-            setPaso('cancelada');
+            const j = await r.json().catch(() => ({}));
+            if (r.ok) { cancelada(j.cancelAt); return; }
+            fallo = j.error || fallo;
         } catch {
-            setAviso('Problema de conexión. Su cancelación podría haberse registrado — verifíquelo en unos minutos.');
-            setPaso('error');
+            fallo = 'Problema de conexión al cancelar.';
         }
+        // ANTES DE DECIR «ERROR», SE PREGUNTA A STRIPE (26-sep-2026). Durante
+        // semanas la cancelación SÍ se registraba y la respuesta fallaba
+        // después: el abogado leía un error, lo intentaba otra vez y acababa
+        // escribiendo que no podía cancelar. Si Stripe dice que ya está
+        // cancelada, eso es lo que se le dice, con su fecha.
+        const estado = await consultarSuscripcion();
+        if (estado?.cancelAtPeriodEnd) { cancelada(estado.cancelAt || estado.currentPeriodEnd); return; }
+        setAviso(fallo);
+        setPaso('error');
     };
 
     const salidaVisible = paso === 'motivo' || paso === 'oferta';
@@ -207,24 +246,13 @@ export default function DialogoRetencion({
                         motivo ni se le ofrece nada: eso es lo que le hizo creer
                         que no había funcionado. */}
                     {paso === 'ya_cancelada' && (
-                        <div className="text-center pb-2">
-                            <div className="w-14 h-14 bg-cream-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Check className="w-7 h-7 text-charcoal-700" />
-                            </div>
-                            <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
-                                Su cancelación ya está registrada
-                            </h3>
-                            <p className="text-sm text-charcoal-600 mb-5 leading-relaxed">
-                                No habrá más cargos. Conserva su acceso completo
-                                {nombrePlan ? <> a <strong className="text-charcoal-900">{nombrePlan}</strong></> : null}
-                                {' '}hasta el <strong className="text-charcoal-900">{fechaFin}</strong>, y su cuenta,
-                                sus conversaciones y sus carpetas se mantienen después.
-                            </p>
-                            <p className="text-sm text-charcoal-600 mb-5">
+                        <>
+                            <ResumenCancelacion titulo="Su suscripción está cancelada" fecha={fechaFin} nombrePlan={nombrePlan} />
+                            <p className="text-sm text-charcoal-600 mb-5 text-center">
                                 Si quiere reactivarla o tiene dudas, escríbanos a{' '}
                                 <a href="mailto:soporte@iurexia.com" className="underline text-accent-brown">soporte@iurexia.com</a>.
                             </p>
-                        </div>
+                        </>
                     )}
 
                     {paso === 'motivo' && (
@@ -365,21 +393,10 @@ export default function DialogoRetencion({
                     )}
 
                     {paso === 'cancelada' && (
-                        <div className="text-center pb-2">
-                            <div className="w-14 h-14 bg-cream-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Check className="w-7 h-7 text-charcoal-700" />
-                            </div>
-                            <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
-                                Suscripción cancelada
-                            </h3>
-                            <p className="text-sm text-charcoal-600 mb-5 leading-relaxed">
-                                No se generarán más cargos. Conserva su acceso completo hasta el{' '}
-                                <strong className="text-charcoal-900">{fechaFin}</strong>, y su cuenta e historial
-                                se mantienen. Si más adelante quiere volver, entra con el mismo correo y nada se
-                                habrá perdido.
-                            </p>
-                            <p className="text-sm text-charcoal-600 mb-5">Gracias por el tiempo que confió en nosotros.</p>
-                        </div>
+                        <>
+                            <ResumenCancelacion titulo="Su suscripción ha sido cancelada" fecha={fechaFin} nombrePlan={nombrePlan} />
+                            <p className="text-sm text-charcoal-600 mb-5 text-center">Gracias por el tiempo que confió en nosotros.</p>
+                        </>
                     )}
 
                     {paso === 'error' && (

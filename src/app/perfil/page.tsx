@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
 import { User, CreditCard, Shield, AlertTriangle, Check, X, FileText, Building2, KeyRound, Gift, ChevronRight, MessageCircle, Mail, Copy } from 'lucide-react';
 import DialogoRetencion from '@/components/DialogoRetencion';
+import { EVENTO_SUSCRIPCION, consultarSuscripcion, fechaLarga, type EstadoSuscripcion } from '@/lib/suscripcion-estado';
 import { Insignia, nivelDePlan } from '@/components/Insignia';
 import { updatePassword } from '@/lib/supabase';
 import ConnectLawyerSection from '@/components/ConnectLawyerSection';
@@ -177,6 +178,20 @@ export default function PerfilPage() {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancellingSubscription, setCancellingSubscription] = useState(false);
     const [cancelMessage, setCancelMessage] = useState('');
+    // Lo que dice Stripe de su suscripción: si canceló, la tarjeta lo dice con
+    // su fecha en vez de seguir ofreciendo «Cancelar mi suscripción» (26-sep-2026).
+    const [estadoStripe, setEstadoStripe] = useState<EstadoSuscripcion | null>(null);
+    const subscriptionIdPerfil = profile?.stripe_subscription_id;
+    useEffect(() => {
+        if (!subscriptionIdPerfil) return;
+        let vivo = true;
+        const leer = () => { consultarSuscripcion().then((e) => { if (vivo) setEstadoStripe(e); }); };
+        leer();
+        window.addEventListener(EVENTO_SUSCRIPCION, leer);
+        return () => { vivo = false; window.removeEventListener(EVENTO_SUSCRIPCION, leer); };
+    }, [subscriptionIdPerfil]);
+    const canceloSuscripcion = Boolean(estadoStripe?.cancelAtPeriodEnd);
+    const accesoHasta = fechaLarga(estadoStripe?.cancelAt || estadoStripe?.currentPeriodEnd);
     const [referidos, setReferidos] = useState<{
         codigo: string; invitados: number; activos: number; suscritos: number;
         meta: number; consultasDeBienvenida: number; planDelPremio: string;
@@ -826,11 +841,32 @@ export default function PerfilPage() {
                             <span className={`px-4 py-2 rounded-full text-sm font-semibold ${planStyle.bg} ${planStyle.text}`}>
                                 Plan {planStyle.label}
                             </span>
-                            <span className="text-sm text-green-600 flex items-center gap-1">
-                                <Check className="w-4 h-4" />
-                                Activo
-                            </span>
+                            {canceloSuscripcion ? (
+                                <span className="text-sm text-amber-700 flex items-center gap-1">
+                                    <Check className="w-4 h-4" />
+                                    Cancelada
+                                </span>
+                            ) : (
+                                <span className="text-sm text-green-600 flex items-center gap-1">
+                                    <Check className="w-4 h-4" />
+                                    Activo
+                                </span>
+                            )}
                         </div>
+
+                        {/* LA CANCELACIÓN, A LA VISTA (26-sep-2026): quien canceló
+                            tiene que leer aquí mismo que se registró, hasta cuándo
+                            conserva lo pagado y que no habrá más cobros. */}
+                        {canceloSuscripcion && (
+                            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+                                <p className="font-semibold">Su suscripción está cancelada.</p>
+                                <p>
+                                    Conserva su acceso completo hasta el{' '}
+                                    <strong>{accesoHasta ?? 'final de su periodo pagado'}</strong>.
+                                    No habrá ningún cobro más.
+                                </p>
+                            </div>
+                        )}
 
                         {/* Uso de consultas */}
                         <div>
@@ -927,9 +963,11 @@ export default function PerfilPage() {
                             <div className="pt-3 border-t border-cream-300">
                                 <button
                                     onClick={() => setShowCancelModal(true)}
-                                    className="text-sm text-red-500 hover:text-red-700 transition-colors"
+                                    className={`text-sm transition-colors ${canceloSuscripcion
+                                        ? 'text-charcoal-600 hover:text-charcoal-900'
+                                        : 'text-red-500 hover:text-red-700'}`}
                                 >
-                                    Cancelar mi suscripción
+                                    {canceloSuscripcion ? 'Ver mi cancelación' : 'Cancelar mi suscripción'}
                                 </button>
                             </div>
                         )}

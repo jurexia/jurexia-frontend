@@ -11,16 +11,11 @@ import {
     Loader2,
     ExternalLink,
     CheckCircle,
-    AlertCircle
 } from 'lucide-react';
 import { openCustomerPortal } from '@/lib/stripe-client';
+import { consultarSuscripcion, fechaLarga, type EstadoSuscripcion } from '@/lib/suscripcion-estado';
 
-interface SubscriptionInfo {
-    plan: string;
-    status: string;
-    currentPeriodEnd: string;
-    cancelAtPeriodEnd: boolean;
-}
+type SubscriptionInfo = EstadoSuscripcion;
 
 export default function SubscriptionPage() {
     const { user, profile, loading: authLoading, isAuthenticated } = useAuth();
@@ -36,18 +31,12 @@ export default function SubscriptionPage() {
         }
     }, [authLoading, isAuthenticated]);
 
+    // Con la sesión (26-sep-2026): sin ella la ruta contestaba 401 y esta
+    // página —a la que vuelve el portal de Stripe— nunca enseñaba ni la
+    // fecha ni la cancelación.
     const fetchSubscriptionInfo = async () => {
-        try {
-            const response = await fetch('/api/stripe/subscription');
-            if (response.ok) {
-                const data = await response.json();
-                setSubscriptionInfo(data);
-            }
-        } catch (error) {
-            console.error('Error fetching subscription:', error);
-        } finally {
-            setLoading(false);
-        }
+        setSubscriptionInfo(await consultarSuscripcion());
+        setLoading(false);
     };
 
     const handleManageSubscription = async () => {
@@ -130,37 +119,44 @@ export default function SubscriptionPage() {
                                 Plan {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
                             </h2>
                         </div>
-                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${isPaidPlan
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-600'
+                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${subscriptionInfo?.cancelAtPeriodEnd
+                            ? 'bg-amber-100 text-amber-800'
+                            : isPaidPlan
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-600'
                             }`}>
-                            {isPaidPlan ? 'Activo' : 'Gratuito'}
+                            {subscriptionInfo?.cancelAtPeriodEnd ? 'Cancelada' : isPaidPlan ? 'Activo' : 'Gratuito'}
                         </div>
                     </div>
 
-                    {subscriptionInfo && (
+                    {/* Si canceló, la fecha ya no es de facturación sino de fin
+                        del acceso, y se dice que no habrá más cobros. */}
+                    {subscriptionInfo?.cancelAtPeriodEnd ? (
+                        <div className="space-y-3 pt-4 border-t border-gray-100">
+                            <div className="flex items-start gap-3 text-sm">
+                                <CheckCircle className="w-4 h-4 mt-0.5 text-amber-600" />
+                                <span className="text-charcoal-700">
+                                    Su suscripción está cancelada. Conserva su acceso completo hasta el{' '}
+                                    <span className="font-semibold text-charcoal-900">
+                                        {fechaLarga(subscriptionInfo.cancelAt || subscriptionInfo.currentPeriodEnd) ?? 'final de su periodo pagado'}
+                                    </span>
+                                    .
+                                </span>
+                            </div>
+                            <div className="flex items-start gap-3 text-sm">
+                                <CheckCircle className="w-4 h-4 mt-0.5 text-amber-600" />
+                                <span className="text-charcoal-700">No habrá ningún cobro más: la suscripción no se renovará.</span>
+                            </div>
+                        </div>
+                    ) : subscriptionInfo && fechaLarga(subscriptionInfo.currentPeriodEnd) && (
                         <div className="space-y-3 pt-4 border-t border-gray-100">
                             <div className="flex items-center gap-3 text-sm">
                                 <Calendar className="w-4 h-4 text-charcoal-400" />
                                 <span className="text-charcoal-600">
                                     Próxima facturación: {' '}
-                                    <span className="text-charcoal-900">
-                                        {new Date(subscriptionInfo.currentPeriodEnd).toLocaleDateString('es-MX', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })}
-                                    </span>
+                                    <span className="text-charcoal-900">{fechaLarga(subscriptionInfo.currentPeriodEnd)}</span>
                                 </span>
                             </div>
-                            {subscriptionInfo.cancelAtPeriodEnd && (
-                                <div className="flex items-center gap-3 text-sm">
-                                    <AlertCircle className="w-4 h-4 text-orange-500" />
-                                    <span className="text-orange-600">
-                                        Tu suscripción se cancelará al final del período actual
-                                    </span>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>

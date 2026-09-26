@@ -16,6 +16,61 @@ export function getStripe(): Stripe {
     return stripeInstance;
 }
 
+/* ═══ EL FIN DEL PERIODO PAGADO (26-sep-2026) ══════════════════════════════
+   Desde la API 2025-03-31 («basil») Stripe ya no pone `current_period_end` en
+   la suscripción: vive en cada partida (`items.data[i].current_period_end`).
+   Este proyecto fija `2026-01-28.clover` (arriba), así que
+   `sub.current_period_end` llega `undefined` y
+   `new Date(undefined * 1000).toISOString()` lanza «Invalid time value».
+
+   Así se rompía la cancelación: Stripe la registraba y, al calcular la fecha
+   para contestar, la ruta reventaba —también en su bloque de rescate, que
+   hacía la misma cuenta— y el abogado leía «No pudimos procesar la
+   cancelación». Lo intentaba de nuevo y le volvía a pasar. Medido el
+   26-sep-2026: 0 de 100 suscripciones activas traen el campo en la
+   suscripción; las 100 lo traen en su partida.
+
+   Se lee de donde esté. Con la baja programada manda `cancel_at`: es el
+   instante exacto en que termina el acceso. Nunca lanza: sin fecha, null. */
+interface ConPeriodo {
+    cancel_at?: number | null;
+    current_period_end?: number;
+    current_period_start?: number;
+    items?: { data?: Array<{ current_period_end?: number; current_period_start?: number }> };
+}
+
+function aFecha(segundos: unknown): Date | null {
+    return typeof segundos === 'number' && Number.isFinite(segundos) && segundos > 0
+        ? new Date(segundos * 1000)
+        : null;
+}
+
+function dePartidas(sub: ConPeriodo, campo: 'current_period_end' | 'current_period_start'): number | undefined {
+    const valores = (sub.items?.data ?? [])
+        .map((partida) => partida?.[campo])
+        .filter((v): v is number => typeof v === 'number' && v > 0);
+    if (!valores.length) return undefined;
+    return campo === 'current_period_end' ? Math.max(...valores) : Math.min(...valores);
+}
+
+/** Hasta cuándo está pagado el periodo en curso. null si Stripe no lo dice. */
+export function finDelPeriodo(sub: unknown): Date | null {
+    const s = (sub ?? {}) as ConPeriodo;
+    return aFecha(s.current_period_end) ?? aFecha(dePartidas(s, 'current_period_end'));
+}
+
+/** Desde cuándo corre el periodo en curso. */
+export function inicioDelPeriodo(sub: unknown): Date | null {
+    const s = (sub ?? {}) as ConPeriodo;
+    return aFecha(s.current_period_start) ?? aFecha(dePartidas(s, 'current_period_start'));
+}
+
+/** Cuándo termina el acceso de una suscripción con la baja programada. */
+export function finDelAcceso(sub: unknown): Date | null {
+    const s = (sub ?? {}) as ConPeriodo;
+    return aFecha(s.cancel_at) ?? finDelPeriodo(sub);
+}
+
 // Legacy export for backward compatibility (use getStripe() in new code)
 export const stripe = {
     get customers() { return getStripe().customers; },
