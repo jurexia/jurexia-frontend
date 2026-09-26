@@ -95,11 +95,19 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                             {g.sinFicha
                                 ? <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                                 : <IconoInstitucion inst={g.institucion} tam={22} />}
-                            <span className="truncate font-medium">{g.institucion.nombre}</span>
-                            {g.sinVigencia > 0 && (
-                                <span className="flex-shrink-0 whitespace-nowrap rounded border border-amber-300 bg-amber-50 px-1 text-[10px] font-semibold leading-4 text-amber-900">
-                                    {cuentaSinVigencia(g.sinVigencia)}
+                            {g.sinVigencia > 0 ? (
+                                /* La cuenta de las que perdieron vigencia, en teléfono,
+                                   baja a su propio renglón: al lado del nombre lo dejaba
+                                   en «Suprema Corte de J…», lo mismo que el renglón por
+                                   emblema vino a evitar. Desde sm vuelve a ir en línea. */
+                                <span className="flex min-w-0 flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                                    <span className="max-w-full truncate font-medium">{g.institucion.nombre}</span>
+                                    <span className="flex-shrink-0 whitespace-nowrap rounded border border-amber-300 bg-amber-50 px-1 text-[10px] font-semibold leading-4 text-amber-900">
+                                        {cuentaSinVigencia(g.sinVigencia)}
+                                    </span>
                                 </span>
+                            ) : (
+                                <span className="truncate font-medium">{g.institucion.nombre}</span>
                             )}
                             <span className={`ml-auto tabular-nums ${activa && !g.sinFicha ? 'text-white/70' : 'text-charcoal-400'}`}>
                                 {g.docIds.length}

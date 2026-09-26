@@ -193,11 +193,24 @@ export function registroDeFuente(f: ConRegistro | null | undefined): string | nu
 }
 
 /**
- * La que la reemplaza, si está entre las fuentes del mensaje: el backend la
- * mete en el contexto a propósito (`_sumar_sustitutas`, antes de emitir
- * `FUENTES_PREVIAS`), así que suele venir entre las fuentes aunque la
- * respuesta no la cite. Se busca por registro, que es lo único que el sello
- * comparte con ella.
+ * La que la reemplaza, si está entre las fuentes del mensaje. Se busca por
+ * registro, que es lo único que el sello comparte con ella, en TODAS las
+ * fuentes del mapa y no sólo en las citadas.
+ *
+ * CUÁNDO ESTÁ Y CUÁNDO NO (revisión del 26-sep-2026). El backend mete la
+ * sustituta en el contexto (`_sumar_sustitutas`) y por eso viaja en
+ * `FUENTES_PREVIAS`; pero ese marcador sólo vive MIENTRAS llega la respuesta:
+ * al terminar, `useChat.quitarFuentesPrevias` lo quita y no se guarda. Lo que
+ * queda es `CITATION_META.sources`, que hoy la API arma con las citas que el
+ * sello validó, más los precedentes (main.py, `_marcadores_del_sello` y el
+ * /chat): la sustituta que la respuesta no cita no entra. Así que, terminada
+ * la respuesta o al reabrir la conversación, sólo se encuentra si la
+ * respuesta TAMBIÉN la citó; si no, el visor enlaza a su ficha del Semanario.
+ *
+ * La API añadirá la sustituta a `CITATION_META.sources` aunque no se cite (en
+ * otro cambio). Cuando llegue, esta búsqueda la encuentra sin tocar nada: la
+ * lista de fuentes sigue mostrando sólo las citadas (`docIdMap`) y la hoja
+ * sólo cuenta las que su texto cita (`marcarCitas`, `metaDeDossier`).
  */
 export function buscarReemplazo<T extends ConRegistro>(
     fuentes: Record<string, T | undefined> | null | undefined,

@@ -17,6 +17,14 @@
 //       → además, una página con esos HTML (y el CSS de `next build`, si se
 //         pasa) para mirarla o capturarla en un navegador.
 //
+//   … visor_vigencia.mjs --navegador
+//       → además, en un Chromium sin cabeza (el de puppeteer, sin red: sólo
+//         file://), el panel y la lista montados con React de verdad: el foco
+//         tras «Abrir la que la reemplaza» y «Volver a …», y el emblema de la
+//         Suprema Corte a 375 px. Para lo de 375 px usa el CSS de
+//         `next build` (.next/static/css); si falta o es más viejo que los
+//         componentes, esa parte se omite y lo dice.
+//
 // API=<url> cambia el servidor (por omisión https://jurexia-api.onrender.com).
 // DATOS=<carpeta> lee cita_<registro>.json de ahí en vez de pedirlos.
 // ANTES=<commit> es la versión de los componentes SIN el sello (por omisión
@@ -30,7 +38,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { execFileSync } from 'child_process';
-import { register } from 'module';
+import { createRequire, register } from 'module';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -109,7 +117,7 @@ console.error = (...a) => {
 const React = (await import('react')).default;
 const { renderToStaticMarkup } = await import('react-dom/server');
 const vig = await import(path.join(RAIZ, 'src/lib/vigencia.ts'));
-const { fuenteDeCita } = await import(path.join(RAIZ, 'src/lib/documento/citas.ts'));
+const { fuenteDeCita, htmlDeDocumento, metaDeDossier } = await import(path.join(RAIZ, 'src/lib/documento/citas.ts'));
 const { MarcaVigencia, FranjaVigencia } = await import(path.join(RAIZ, 'src/components/VigenciaTesis.tsx'));
 const { FuentesPorInstitucion } = await import(path.join(RAIZ, 'src/components/documento/FuentesPorInstitucion.tsx'));
 const PdfViewerPanel = (await import(path.join(RAIZ, 'src/components/PdfViewerPanel.tsx'))).default;
@@ -237,6 +245,196 @@ ver(panel59 === panelAntes, `visor 2024159 (vigente): el mismo HTML que en ${ANT
 const { vigencia: _v2, reemplazo: _r2, ...abandonadaSinClave } = f17;
 ver(panel(abandonadaSinClave) === renderToStaticMarkup(React.createElement(PdfViewerPanelAntes, { isOpen: true, onClose: () => {}, source: abandonadaSinClave })),
     'visor 2009817 sin la clave «vigencia»: idéntico al de antes');
+
+// ── 5. La sustituta en CITATION_META sin que la respuesta la cite ───────────
+// Hoy `CITATION_META.sources` sólo trae lo citado y `FUENTES_PREVIAS` se quita
+// al terminar la respuesta: sin la sustituta, el botón enlaza al Semanario. La
+// API la añadirá a `sources` aunque no se cite; el frontend ya la usa, y ni la
+// lista ni la hoja la cuentan como cita.
+const cm = (regs) => ({ valid: regs.length, invalid: 0, total: regs.length, invalid_ids: [],
+    sources: Object.fromEntries(regs.map((r) => [IDS[r], cita[r]])) });
+const hoy17 = fuenteDeCita(cm([2009817]), IDS[2009817]);
+const panelHoy = panel(hoy17);
+ver(hoy17.reemplazo === undefined && panelHoy.includes('href="https://sjf2.scjn.gob.mx/detalle/tesis/2024159"')
+    && !/<button[^>]*>Abrir la que la reemplaza/.test(panelHoy),
+    'terminada la respuesta, sin la sustituta en CITATION_META: enlace al Semanario');
+const conSustituta = cm([2009817, 2024159]);
+const luego17 = fuenteDeCita(conSustituta, IDS[2009817]);
+ver(luego17.reemplazo?.registro === '2024159' && /<button[^>]*>Abrir la que la reemplaza/.test(panel(luego17)),
+    'con la sustituta en CITATION_META aunque no se cite: la abre en el mismo visor');
+const soloCitada = new Map([[IDS[2009817], 1]]);
+const listaSust = h(FuentesPorInstitucion, { meta: conSustituta, docIdMap: soloCitada });
+const cuentaLista = listaSust.match(/tabular-nums[^"]*">(\d+)</)?.[1];
+ver(cuentaLista === '1' && listaSust.includes('1 perdió vigencia'),
+    'la lista del mensaje no cuenta la sustituta no citada', `emblema: ${cuentaLista} fuente(s)`);
+const respuesta = `La P. X/2015 (10a.) [Doc ID: ${IDS[2009817]}] sostiene…\n\n<!-- CITATION_META:${JSON.stringify(conSustituta)} -->`;
+const hoja = htmlDeDocumento(respuesta);
+const metaHoja = metaDeDossier([respuesta], hoja.orden);
+ver(hoja.orden.length === 1 && metaHoja?.valid === 1 && metaHoja?.total === 1 && metaDeDossier([respuesta])?.valid === 1,
+    'la hoja: «1 cita · 1 verificada», no dos', `orden ${hoja.orden.length}, verificadas ${metaHoja?.valid}`);
+ver(fuenteDeCita(metaHoja, IDS[2009817]).reemplazo?.registro === '2024159', 'y desde la hoja también la abre en el visor');
+// Mientras llega la respuesta, FUENTES_PREVIAS trae todo el contexto: tampoco son citas.
+const enVivo = `<!-- FUENTES_PREVIAS:${JSON.stringify(Object.fromEntries(Object.entries(m6.sources)))} -->\n\nLa P. X/2015 (10a.) [Doc ID: ${IDS[2009817]}] sostiene…`;
+ver(htmlDeDocumento(enVivo).orden.length === 1, 'la hoja en vivo no numera las fuentes de FUENTES_PREVIAS', `${htmlDeDocumento(enVivo).orden.length}`);
+// El razonamiento se sigue quitando de la hoja: sus marcadores son comentarios.
+const conRazon = `<!--thinking-->Reviso ${IDS[2024159]} antes de contestar<!--/thinking-->La P. X/2015 (10a.) [Doc ID: ${IDS[2009817]}].`;
+ver(!htmlDeDocumento(conRazon).html.includes('Reviso') && htmlDeDocumento(conRazon).orden.length === 1,
+    'el razonamiento no entra a la hoja ni se numera');
+
+// El emblema en teléfono: la cuenta baja a su propio renglón (y en sm, en línea).
+ver(/<span class="flex min-w-0 flex-col[^"]*sm:flex-row[^"]*"><span class="max-w-full truncate font-medium">Suprema Corte de Justicia de la Nación<\/span><span[^>]*>2 perdieron vigencia<\/span><\/span>/.test(emblema),
+    'emblema: nombre y cuenta en columna en teléfono, en fila desde sm');
+
+// ── 6. En un navegador de verdad (--navegador) ──────────────────────────────
+if (process.argv.includes('--navegador')) await enNavegador();
+
+async function enNavegador() {
+    const requerir = createRequire(path.join(RAIZ, 'package.json'));
+    const DIR = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vigencia-navegador-')));
+    process.on('exit', () => fs.rmSync(DIR, { recursive: true, force: true }));
+
+    // El panel y la lista, empaquetados con el webpack que trae Next (sin
+    // dependencias nuevas): los .tsx con el TypeScript del repositorio, «@/»
+    // a src/, y pdfjs sustituido por nada (aquí no se abre ningún PDF).
+    const wp = requerir('next/dist/compiled/webpack/webpack.js');
+    wp.init();
+    const { webpack } = wp;
+    fs.writeFileSync(path.join(DIR, 'cargador.cjs'), `
+const ts = require(${JSON.stringify(path.join(RAIZ, 'node_modules/typescript/lib/typescript.js'))});
+module.exports = function (fuente) {
+    return ts.transpileModule(fuente, { fileName: this.resourcePath, compilerOptions: {
+        module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText;
+};`);
+    fs.writeFileSync(path.join(DIR, 'proceso.js'), 'module.exports = { env: {} };');
+    fs.writeFileSync(path.join(DIR, 'pdfjs.js'), 'export const GlobalWorkerOptions = {}; export function getDocument() { return { promise: new Promise(() => {}) }; }');
+    fs.writeFileSync(path.join(DIR, 'entrada.js'), `
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
+import PdfViewerPanel from '@/components/PdfViewerPanel';
+import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
+const raiz = createRoot(document.getElementById('raiz'));
+window.__visor = (source) => flushSync(() => raiz.render(React.createElement(PdfViewerPanel, { isOpen: true, onClose() {}, source })));
+window.__lista = (meta, pares) => flushSync(() => raiz.render(React.createElement('div', { style: { padding: 16 } },
+    React.createElement(FuentesPorInstitucion, { meta, docIdMap: new Map(pares) }))));
+`);
+    const stats = await new Promise((ok, mal) => webpack({
+        mode: 'development', devtool: false, context: DIR, entry: path.join(DIR, 'entrada.js'),
+        output: { path: DIR, filename: 'prueba.js' },
+        resolve: {
+            extensions: ['.tsx', '.ts', '.mjs', '.js', '.json'],
+            alias: { '@': path.join(RAIZ, 'src'), 'pdfjs-dist$': path.join(DIR, 'pdfjs.js') },
+            modules: [path.join(RAIZ, 'node_modules'), 'node_modules'],
+        },
+        resolveLoader: { modules: [path.join(RAIZ, 'node_modules')] },
+        module: { rules: [{ test: /\.tsx?$/, exclude: /node_modules/, use: path.join(DIR, 'cargador.cjs') }] },
+        plugins: [
+            new webpack.ProvidePlugin({ process: path.join(DIR, 'proceso.js') }),
+            new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+        ],
+        performance: { hints: false },
+    }, (e, st) => (e ? mal(e) : ok(st))));
+    if (stats.hasErrors()) {
+        ver(false, 'navegador: el paquete de prueba se arma', stats.toString({ all: false, errors: true }).slice(0, 1500));
+        return;
+    }
+
+    // El CSS de `next build`, sólo si es posterior a los componentes.
+    const dirCss = path.join(RAIZ, '.next/static/css');
+    const hojasCss = fs.existsSync(dirCss) ? fs.readdirSync(dirCss).filter((f) => f.endsWith('.css')).map((f) => path.join(dirCss, f)) : [];
+    const masNuevo = Math.max(...['src/components/documento/FuentesPorInstitucion.tsx', 'src/components/VigenciaTesis.tsx', 'tailwind.config.ts', 'tailwind.config.js']
+        .map((r) => path.join(RAIZ, r)).filter((f) => fs.existsSync(f)).map((f) => fs.statSync(f).mtimeMs));
+    const cssAlDia = hojasCss.length > 0 && Math.max(...hojasCss.map((f) => fs.statSync(f).mtimeMs)) >= masNuevo;
+    fs.writeFileSync(path.join(DIR, 'pagina.html'), `<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+${cssAlDia ? hojasCss.map((f) => `<link rel="stylesheet" href="${pathToFileURL(f).href}">`).join('\n') : ''}
+</head><body><div id="raiz"></div><script src="prueba.js"></script></body></html>`);
+
+    const puppeteer = requerir('puppeteer');
+    const nav = await puppeteer.launch({ headless: true });
+    try {
+        const pag = await nav.newPage();
+        const erroresPagina = [];
+        pag.on('pageerror', (e) => erroresPagina.push(String(e)));
+        await pag.setRequestInterception(true);
+        pag.on('request', (r) => (r.url().startsWith('file:') ? r.continue() : r.abort()));
+        await pag.setViewport({ width: 1024, height: 900 });
+        await pag.goto(pathToFileURL(path.join(DIR, 'pagina.html')).href, { waitUntil: 'load' });
+        ver(await pag.evaluate(() => typeof window.__visor === 'function'), 'navegador: la página de prueba carga', erroresPagina.join(' | '));
+        if (erroresPagina.length) return;
+
+        const foco = () => pag.evaluate(() => {
+            const a = document.activeElement;
+            return a && a !== document.body ? `${a.tagName}:${(a.getAttribute('aria-label') || a.textContent || '').replace(/\s+/g, ' ').trim()}` : 'BODY';
+        });
+        const esperar = (cond, arg) => pag.waitForFunction(cond, { timeout: 3000 }, arg).then(() => true, () => false);
+        const oprimir = async (texto) => {
+            const hay = await pag.evaluate((t) => {
+                const b = Array.from(document.querySelectorAll('button')).find((x) => x.textContent.replace(/\s+/g, ' ').trim().startsWith(t));
+                if (!b) return false;
+                b.focus();
+                return document.activeElement === b;
+            }, texto);
+            if (hay) await pag.keyboard.press('Enter');
+            return hay;
+        };
+        const cabecera = () => pag.evaluate(() => document.querySelector('a[href^="https://sjf2.scjn.gob.mx/detalle/tesis/"]')?.textContent?.trim() || '');
+
+        // 2009817 → 2024159 → vuelta, con el teclado.
+        await pag.evaluate((f) => window.__visor(f), f17);
+        const abrio = await oprimir('Abrir la que la reemplaza');
+        const enVolver = abrio && await esperar(() => /^Volver a /.test(document.activeElement?.textContent?.trim() || ''));
+        ver(enVolver && (await foco()) === 'BUTTON:Volver a la P. X/2015 (10a.)' && (await cabecera()) === '2024159',
+            'navegador: tras «Abrir la que la reemplaza», el foco va a «Volver a la P. X/2015 (10a.)»', `${await foco()} · visor en ${await cabecera()}`);
+        const volvio = await oprimir('Volver a ');
+        const enAbrir = volvio && await esperar(() => document.activeElement?.textContent?.trim().startsWith('Abrir la que la reemplaza'));
+        ver(enAbrir && (await cabecera()) === '2009817',
+            'navegador: tras «Volver a …», el foco vuelve a «Abrir la que la reemplaza»', `${await foco()} · visor en ${await cabecera()}`);
+
+        // La cadena de 164500 (→ 183349), con las dos entre las fuentes.
+        await pag.evaluate((f) => window.__visor(f), fuenteDeCita(m6, IDS[164500]));
+        await oprimir('Abrir la que la reemplaza');
+        const cadena = await esperar(() => /^Volver a /.test(document.activeElement?.textContent?.trim() || ''));
+        ver(cadena && (await cabecera()) === '183349', 'navegador: 164500 → 183349, foco en «Volver a …»', `${await foco()} · visor en ${await cabecera()}`);
+
+        // Otra cita desde fuera del panel: el foco no se toca.
+        await pag.evaluate(() => document.querySelector('button[aria-label="Cerrar panel"]')?.focus());
+        await pag.evaluate((f) => window.__visor(f), fuenteDeCita(m4, IDS[160584]));
+        await new Promise((r) => setTimeout(r, 150));
+        ver((await foco()) === 'BUTTON:Cerrar panel' && (await cabecera()) === '160584',
+            'navegador: abrir otra cita no mueve el foco', `${await foco()} · visor en ${await cabecera()}`);
+
+        // El emblema de la Suprema Corte, a 375 px y en escritorio.
+        if (!cssAlDia) {
+            console.log('omitida  navegador: el emblema a 375 px — falta el CSS de `next build` o es más viejo que los componentes');
+        } else {
+            const medir = () => pag.evaluate(() => {
+                const nombre = Array.from(document.querySelectorAll('button span')).find((x) => x.textContent === 'Suprema Corte de Justicia de la Nación');
+                const cuenta = Array.from(document.querySelectorAll('button span')).find((x) => /^\d+ perdieron vigencia$/.test(x.textContent || ''));
+                if (!nombre || !cuenta) return null;
+                const n = nombre.getBoundingClientRect(), c = cuenta.getBoundingClientRect();
+                const b = nombre.closest('button').getBoundingClientRect();
+                return { cortado: nombre.scrollWidth > nombre.clientWidth + 1, abajo: c.top >= n.bottom - 1,
+                    enLinea: Math.abs((c.top + c.bottom) / 2 - (n.top + n.bottom) / 2) < 3,
+                    dentro: c.right <= b.right && b.right <= window.innerWidth, anchoNombre: Math.round(n.width),
+                    nombre: [n.top, n.bottom].map(Math.round), cuenta: [c.top, c.bottom].map(Math.round), ancho: window.innerWidth };
+            });
+            const pares = [[IDS[2009817], 1], [IDS[2024159], 2], [IDS[164500], 3]];
+            await pag.setViewport({ width: 375, height: 812, isMobile: true, hasTouch: true });
+            await pag.evaluate((m, p) => window.__lista(m, p), m4, pares);
+            const tel = await medir();
+            ver(tel && !tel.cortado && tel.abajo && tel.dentro,
+                'navegador, 375 px: el nombre de la Suprema Corte entero y la cuenta en su renglón', JSON.stringify(tel));
+            await pag.setViewport({ width: 1024, height: 900 });
+            await pag.evaluate((m, p) => window.__lista(m, p), m4, pares);
+            const esc = await medir();
+            ver(esc && !esc.cortado && esc.enLinea, 'navegador, escritorio: la cuenta al lado del nombre', JSON.stringify(esc));
+        }
+        ver(!erroresPagina.length, 'navegador: sin errores en la página', erroresPagina.join(' | '));
+    } finally {
+        await nav.close();
+    }
+}
 
 // ── La página para mirarla ──────────────────────────────────────────────────
 const iHtml = process.argv.indexOf('--html');

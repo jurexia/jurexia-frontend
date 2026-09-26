@@ -127,7 +127,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         [bloques, vivoVisible],
     );
     const { segmentos, orden } = useMemo(() => htmlDeDossier(partes), [partes]);
-    const meta = useMemo(() => metaDeDossier(partes), [partes]);
+    const meta = useMemo(() => metaDeDossier(partes, orden), [partes, orden]);
     const palabras = useMemo(() => palabrasDe(partes.join(' ')), [partes]);
     const enVivo = vivo !== null;
     const htmlBase = useMemo(() => segmentos.slice(0, bloques.length).join('<hr>'), [segmentos, bloques.length]);

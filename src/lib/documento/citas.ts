@@ -12,7 +12,7 @@
  * el mismo `data-doc-id`. La numeración es por orden de aparición, como en
  * la burbuja, para que [3] sea la misma fuente en las dos.
  */
-import { markdownAHtml, separarTarjetas } from './marcado';
+import { markdownAHtml, separarTarjetas, sinRazonamiento } from './marcado';
 import { type CamposCoidh, camposCoidh, esCoidh, referenciaCoidh } from '@/lib/coidh';
 import { type CamposDoctrina, camposDoctrina, esDoctrina, referenciaDoctrina } from '@/lib/doctrina';
 import { type CamposVigencia, buscarReemplazo, camposVigencia, vigenciaDe } from '@/lib/vigencia';
@@ -86,7 +86,17 @@ export function marcarCitas(markdown: string): { markdown: string; orden: string
         return i + 1;
     };
     const marca = (uuid: string) => `⟦cita:${numero(uuid)}:${uuid.toLowerCase()}⟧`;
-    let t = sinTrasfondo(markdown);
+    /* LOS MARCADORES NO SON TEXTO (26-sep-2026). `CITATION_META` y
+       `FUENTES_PREVIAS` traen como claves los identificadores de fuentes que
+       el texto no cita (los precedentes que la API inyecta, los alias de
+       reparación, todo el contexto mientras llega la respuesta y, pronto, la
+       tesis que reemplaza a una citada), y la regla del «uuid suelto» los
+       contaba como citas: «5 citas» en una hoja con cuatro. La hoja ya los
+       quitaba al pintar (`limpiarMarcadores`); ahora tampoco se numeran.
+       El razonamiento se quita ANTES que los comentarios: sus marcadores
+       `<!--thinking-->` son comentarios, y sin ellos `markdownAHtml` ya no
+       sabría qué texto es razonamiento y lo metería en la hoja. */
+    let t = sinRazonamiento(sinTrasfondo(markdown)).replace(/<!--[\s\S]*?-->/g, '').replace(/<!--[\s\S]*$/, '');
     // [Doc ID: uuid] — la forma normal
     t = t.replace(new RegExp(`\\[Doc ID:\\s*(${UUID})\\]`, 'gi'), (_, u) => marca(u));
     // [, uuid] y [nombre, uuid] — formas que el modelo también produce
@@ -135,9 +145,12 @@ export function fuenteDeCita(meta: MetaCitas | null, docId: string, vistas: Set<
     };
     /* LA QUE LA REEMPLAZA, YA RESUELTA (26-sep-2026). El visor no tiene las
        fuentes del mensaje, sólo la que se pulsó: si la sustituta está entre
-       ellas —el backend la mete en el contexto—, viaja aquí para abrirla en
-       el mismo visor. Se sigue la cadena (una sustituta que a su vez perdió
-       vigencia en parte) sin volver sobre una ya vista. */
+       ellas, viaja aquí para abrirla en el mismo visor. Está mientras llega
+       la respuesta (`FUENTES_PREVIAS`) y, terminada, sólo si la respuesta
+       también la citó, hasta que la API la mande en `CITATION_META.sources`
+       (ver `buscarReemplazo`); si no está, el visor enlaza al Semanario. Se
+       sigue la cadena (una sustituta que a su vez perdió vigencia en parte)
+       sin volver sobre una ya vista. */
     const vigencia = vigenciaDe(fuente);
     const clave = docId.toLowerCase();
     const r = vigencia ? buscarReemplazo(fuentes, vigencia, docId) : null;
@@ -332,9 +345,12 @@ export function htmlDeDossier(partes: string[]): { segmentos: string[]; orden: s
     return { segmentos, orden };
 }
 
-/** Los metadatos de cita de varias respuestas, unidos. */
-export function metaDeDossier(partes: string[]): MetaCitas | null {
+/** Los metadatos de cita de varias respuestas, unidos. `citadas`: los
+ *  identificadores que el texto cita (el `orden` de `htmlDeDossier`, que ya
+ *  se tiene); sin él, se sacan de cada respuesta. */
+export function metaDeDossier(partes: string[], citadas?: Iterable<string>): MetaCitas | null {
     let salida: MetaCitas | null = null;
+    const enElTexto = new Set(Array.from(citadas ?? partes.flatMap((p) => marcarCitas(p).orden), (x) => x.toLowerCase()));
     for (const parte of partes) {
         const m = metaDeCitas(parte);
         if (!m) continue;
@@ -347,9 +363,14 @@ export function metaDeDossier(partes: string[]): MetaCitas | null {
     }
     if (salida) {
         // Las verificadas se cuentan por fuente distinta: la misma tesis citada
-        // en dos respuestas es una fuente, no dos.
+        // en dos respuestas es una fuente, no dos. Y sólo las que el texto
+        // cita: `sources` trae además fuentes que ninguna respuesta citó (los
+        // precedentes que la API inyecta, los alias de reparación y, cuando la
+        // API la mande, la tesis que reemplaza a una citada). Siguen en el mapa
+        // para que el visor las abra; no se cuentan como citas verificadas.
         const invalidas = new Set(salida.invalid_ids.map((x) => x.toLowerCase()));
-        const claves = Object.keys(salida.sources!).map((k) => k.toLowerCase());
+        const claves = Array.from(new Set(Object.keys(salida.sources!).map((k) => k.toLowerCase())))
+            .filter((k) => enElTexto.has(k));
         salida.total = claves.length;
         salida.invalid = claves.filter((k) => invalidas.has(k)).length;
         salida.valid = salida.total - salida.invalid;

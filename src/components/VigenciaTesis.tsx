@@ -1,4 +1,5 @@
 'use client';
+import type { Ref } from 'react';
 import { AlertTriangle, ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import { avisoVigencia, enlaceReemplazo, marcaVigencia, type VigenciaTesis } from '@/lib/vigencia';
 
@@ -39,10 +40,13 @@ export function MarcaVigencia({ vigencia, className = '' }: { vigencia: Vigencia
  *  - sin él: enlace a su ficha en el Semanario, en otra pestaña;
  *  - sin registro de reemplazo (la dejó sin efectos una resolución, p. ej.):
  *    sólo la franja.
+ * `refBoton` es el botón de «Abrir la que la reemplaza»: el visor le devuelve
+ * el foco al volver, para que quien usa el teclado siga donde estaba.
  */
-export function FranjaVigencia({ vigencia, onAbrirReemplazo }: {
+export function FranjaVigencia({ vigencia, onAbrirReemplazo, refBoton }: {
     vigencia: VigenciaTesis;
     onAbrirReemplazo?: () => void;
+    refBoton?: Ref<HTMLButtonElement>;
 }) {
     const aviso = avisoVigencia(vigencia);
     const enlace = onAbrirReemplazo ? null : enlaceReemplazo(vigencia);
@@ -58,7 +62,7 @@ export function FranjaVigencia({ vigencia, onAbrirReemplazo }: {
                         {aviso.detalle}
                     </p>
                     {onAbrirReemplazo ? (
-                        <button type="button" onClick={onAbrirReemplazo} className={`mt-2.5 ${boton}`}>
+                        <button type="button" ref={refBoton} onClick={onAbrirReemplazo} className={`mt-2.5 ${boton}`}>
                             {aviso.boton}
                             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
@@ -83,13 +87,15 @@ export function rotuloTesis(f: { tesis_num?: string | null; registro?: string | 
     return reg ? `la tesis ${reg}` : 'la tesis anterior';
 }
 
-/** Tras abrir la que la reemplaza: el camino de vuelta a la que se citó. */
-export function VolverATesis({ anterior, onVolver }: {
+/** Tras abrir la que la reemplaza: el camino de vuelta a la que se citó.
+ *  `refBoton`: el visor pone aquí el foco al abrir la que la reemplaza. */
+export function VolverATesis({ anterior, onVolver, refBoton }: {
     anterior: { tesis_num?: string | null; registro?: string | null; ref?: string | null };
     onVolver: () => void;
+    refBoton?: Ref<HTMLButtonElement>;
 }) {
     return (
-        <button type="button" onClick={onVolver}
+        <button type="button" ref={refBoton} onClick={onVolver}
                 className="inline-flex items-center gap-1 rounded text-[11.5px] font-medium text-charcoal-700 underline underline-offset-2 hover:text-charcoal-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-charcoal-700">
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             Volver a {rotuloTesis(anterior)}

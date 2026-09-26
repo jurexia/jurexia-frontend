@@ -1139,12 +1139,34 @@ export default function PdfViewerPanel({ isOpen, onClose, source: fuenteAbierta,
     const abiertas = pila.base === fuenteAbierta ? pila.abiertas : [];
     const source = abiertas.length ? abiertas[abiertas.length - 1] : fuenteAbierta;
     const anterior = abiertas.length > 1 ? abiertas[abiertas.length - 2] : abiertas.length ? fuenteAbierta : null;
-    const abrirReemplazo = (r: PdfSource) => setPila({ base: fuenteAbierta, abiertas: [...abiertas, r] });
-    const volver = () => setPila({ base: fuenteAbierta, abiertas: abiertas.slice(0, -1) });
+
+    /* EL FOCO NO SE PIERDE AL CAMBIAR DE TESIS. El botón que se oprimió
+       desaparece con la tesis que lo llevaba, y el foco caía al <body>: quien
+       usa teclado o lector de pantalla quedaba fuera del panel. Al abrir la
+       que la reemplaza, el foco va a «Volver a …», lo primero de la nueva; al
+       volver, a «Abrir la que la reemplaza», el botón por el que se salió.
+       Sólo tras estos dos botones: si el abogado pulsa otra cita, el foco se
+       queda donde él lo tenga. */
+    const volverRef = useRef<HTMLButtonElement>(null);
+    const reemplazoRef = useRef<HTMLButtonElement>(null);
+    const focoTras = useRef<'volver' | 'reemplazo' | null>(null);
+    const abrirReemplazo = (r: PdfSource) => {
+        focoTras.current = 'volver';
+        setPila({ base: fuenteAbierta, abiertas: [...abiertas, r] });
+    };
+    const volver = () => {
+        focoTras.current = 'reemplazo';
+        setPila({ base: fuenteAbierta, abiertas: abiertas.slice(0, -1) });
+    };
 
     // Otra tesis en el visor: se empieza a leer desde arriba, con su franja.
     useEffect(() => {
         cuerpoRef.current?.scrollTo?.({ top: 0 });
+        const destino = focoTras.current;
+        focoTras.current = null;
+        if (!destino) return;
+        const boton = (destino === 'reemplazo' ? reemplazoRef.current : null) ?? volverRef.current;
+        boton?.focus({ preventScroll: true });
     }, [source]);
 
     // Lock body scroll when panel is open on mobile
@@ -1377,11 +1399,12 @@ export default function PdfViewerPanel({ isOpen, onClose, source: fuenteAbierta,
                         vigentes no traen `vigencia` y aquí no se pinta nada. */}
                     {(vigencia || anterior) && (
                         <div className="space-y-2.5 px-5 pt-5">
-                            {anterior && <VolverATesis anterior={anterior} onVolver={volver} />}
+                            {anterior && <VolverATesis anterior={anterior} onVolver={volver} refBoton={volverRef} />}
                             {vigencia && (
                                 <FranjaVigencia
                                     vigencia={vigencia}
                                     onAbrirReemplazo={reemplazo ? () => abrirReemplazo(reemplazo) : undefined}
+                                    refBoton={reemplazoRef}
                                 />
                             )}
                         </div>
