@@ -57,8 +57,11 @@ import {
     contextoDelAsunto, asuntosEnCurso, descargarDelAlmacen,
     documentosDelAsunto, descargarDocumento, olvidarAsunto,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
-    fichaDesdeAdmision,
+    fichaDesdeAdmision, pedirPlan, leerPlan,
 } from '@/components/sentencia/api';
+import type { OpcionesResolver } from '@/components/sentencia/api';
+import type { EnlacePlan } from '@/components/sentencia/ComoSeEstudiara';
+import MapaDelEstudio from '@/components/sentencia/MapaDelEstudio';
 import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto, DecisionSuplencia } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
 
@@ -506,6 +509,56 @@ export default function TallerDeSentencias() {
     /* La suplencia decidida vale sólo para el asunto en que se decidió. */
     const suplencia = suplenciaDecidida && suplenciaDecidida.numero === encargo.numero
         ? suplenciaDecidida.d : null;
+
+    /* ═══ LA RAZÓN POR ARGUMENTO (Decisión 6 de David, opción a, 26-sep-2026) ═══
+       El plan marca los argumentos que su problema decide pero su razón no
+       contesta; el panel se la pide y aquí se guarda, por id del segmento
+       («C3.e»). Como la suplencia, con el número del asunto: los ids se
+       repiten de un expediente a otro y una razón no puede colarse en el
+       siguiente que se abra. */
+    const [razonesDecididas, setRazonesDecididas] =
+        useState<{ numero: string; r: Record<string, string> }>({ numero: '', r: {} });
+    const razonesSegmento = useMemo(
+        () => (razonesDecididas.numero === encargo.numero ? razonesDecididas.r : {}),
+        [razonesDecididas, encargo.numero]);
+    const escribirRazonSegmento = useCallback((id: string, texto: string) => {
+        setRazonesDecididas((prev) => ({
+            numero: encargo.numero,
+            r: { ...(prev.numero === encargo.numero ? prev.r : {}), [id]: texto },
+        }));
+    }, [encargo.numero]);
+
+    /* ═══ LA VARIANTE DEL PROMPT DEL ESTUDIO, SÓLO EN CASA (26-sep-2026) ═══
+       Hasta hoy sólo la pedía el banco de medición. Para probar el plan en el
+       montaje real hace falta elegirla en pantalla. Casa = lo que el servidor
+       diga (`es_casa`) o, si no lo dice, `puede_sise`, que sale de la misma
+       lista de cuentas sin tope. Al resto el servidor le ignora el campo de
+       todos modos. Se recuerda en este navegador —es una comodidad de quien
+       mide, no un estado del asunto—; si el almacenamiento falla, vuelve a
+       «por omisión». */
+    const esCasa = !!(piloto?.es_casa ?? piloto?.puede_sise);
+    const [varianteEstudio, setVarianteEstudio] = useState('');
+    useEffect(() => {
+        try {
+            const v = window.localStorage.getItem('taller.varianteEstudio') || '';
+            if (/^v[1-4]$/.test(v)) setVarianteEstudio(v);
+        } catch { /* sin almacenamiento: por omisión */ }
+    }, []);
+    const elegirVariante = useCallback((v: string) => {
+        setVarianteEstudio(v);
+        try {
+            if (v) window.localStorage.setItem('taller.varianteEstudio', v);
+            else window.localStorage.removeItem('taller.varianteEstudio');
+        } catch { /* no pasa nada: vale para esta visita */ }
+    }, []);
+    /* ¿ESTE ESTUDIO SE ESCRIBE CON PLAN? En casa, si eligió la v4; si no
+       eligió nada —o no es de casa—, lo que el servidor diga que usará para
+       este asunto (cuando se encienda por tipo). Sin plan, el panel «Cómo se
+       estudiará» no aparece y no se pide nada. */
+    const varianteEfectiva = (esCasa && varianteEstudio) || delAsunto?.varianteEstudio || '';
+    const usaPlan = varianteEfectiva === 'v4';
+    /* EL SERVIDOR ESTÁ ORDENANDO EL ESTUDIO (evento «ordenando»). */
+    const [ordenando, setOrdenando] = useState(false);
 
     const traerContexto = useCallback(async (num: string) => {
         if (!num || !correo) return;
@@ -1189,11 +1242,16 @@ export default function TallerDeSentencias() {
                         globalJson: JSON.stringify(pro.global),
                         resolvioDeclarado: pro.global.contexto?.resolvio ?? '',
                         responsable: encargo.responsable,
-                        contexto }
+                        contexto,
+                        // La variante que eligió en casa vale también para el
+                        // atajo: un mismo navegador no mide con dos prompts.
+                        varianteEstudio: esCasa ? varianteEstudio : '' }
                     : { porJurimetria: true,
-                        responsable: encargo.responsable, contexto },
-                (t) => setAvance((x) => x + t),
-                () => setAvance((x) => x + '\n\n… componiendo el documento'));
+                        responsable: encargo.responsable, contexto,
+                        varianteEstudio: esCasa ? varianteEstudio : '' },
+                (t) => { setOrdenando(false); setAvance((x) => x + t); },
+                () => setAvance((x) => x + '\n\n… componiendo el documento'),
+                () => setOrdenando(true));
             setProyecto(rg);
             descargarProyecto(rg);
             void traerGuardados(encargo.numero);
@@ -1202,8 +1260,8 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message
                    : 'No se pudo generar el proyecto completo.');
-        } finally { setCorriendo(false); }
-    }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados]);
+        } finally { setCorriendo(false); setOrdenando(false); }
+    }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados, esCasa, varianteEstudio]);
 
     const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean; contextoTexto?: string }) => {
         setError(''); setCorriendo(true); setProponiendo(true);
@@ -1305,6 +1363,8 @@ export default function TallerDeSentencias() {
         setTocados(new Set());
         setRazonando(new Set());
         setGrupos({});
+        // Las razones por argumento eran de la decisión que se descarta.
+        setRazonesDecididas({ numero: '', r: {} });
         setRazonGlobal('');
         setSentidoGlobal('');
         setGlobalDictado(false);
@@ -1378,6 +1438,7 @@ export default function TallerDeSentencias() {
         setTocados(new Set());
         setRazonando(new Set());
         setGrupos({});
+        setRazonesDecididas({ numero: '', r: {} });
         setRazonGlobal('');
         setSentidoGlobal('');
         setGlobalDictado(false);
@@ -1514,11 +1575,20 @@ export default function TallerDeSentencias() {
         } finally { setAportando(false); }
     }, [correo, encargo.numero, contexto]);
 
-    const pedirProyecto = useCallback(async (formatoPedido?: FormatoSentencia) => {
-        // LA FORMA DE LA SENTENCIA (David, 25-sep-2026): el botón de siempre
-        // es la estándar; «versión moderna» es el segundo. Se normaliza aquí
-        // porque un `onClick={pedirProyecto}` pasaría el evento del ratón.
-        const formato: FormatoSentencia = formatoPedido === 'moderna' ? 'moderna' : 'estandar';
+    /* ═══ EL FORMULARIO DEL PROYECTO, EN UN SOLO SITIO (26-sep-2026) ═══
+       Lo arma esta función y lo usan DOS llamadas: la que genera el proyecto
+       y la que pide el plan del estudio (`pedirPlan`). El servidor busca el
+       plan por una clave que sale de este formulario; si las dos llamadas lo
+       armaran cada una a su manera, al generar no encontraría el plan que el
+       secretario vio en pantalla.
+
+       Se lee por referencia, con el estado de AHORA. `pedirProyecto` es un
+       useCallback cuya lista de dependencias no traía ni `grupos`, ni
+       `conceptosViolacion`, ni `propuesta`: con «Estudiar juntos» sin puerta
+       no se notaba, pero pegar los conceptos después del último cambio de
+       sentido los mandaba vacíos. Leyendo por referencia no hay lista que
+       olvidar. Devuelve null si en «todo el asunto» falta el sentido. */
+    const opcionesDelProyecto = (formato: FormatoSentencia): OpcionesResolver | null => {
         /* LA SUPLENCIA VIAJA EN LAS DOS LLAMADAS: la que él decidió o, si no
            decidió nada, la propuesta del motor marcada sin confirmar —el
            servidor sólo aplica la confirmada—. */
@@ -1526,36 +1596,143 @@ export default function TallerDeSentencias() {
             ? { fraccion: delAsunto.suplencia.fraccion,
                 aFavorDe: delAsunto.suplencia.aFavorDe, confirmada: false }
             : null);
+        /* Lo que viaja igual por los dos caminos: la autoridad corregida, lo
+           que él resolvió sobre la oportunidad —en la petición y no en
+           memoria: con -w 2 el worker que compone no es el que leyó—, la
+           forma, la suplencia, sus razones por argumento (Decisión 6) y, sólo
+           en casa, la variante del prompt. */
+        const comunes: OpcionesResolver = {
+            contexto,
+            responsable: encargo.responsable,
+            oportunidadDecision: decision,
+            oportunidadMotivo: motivoDecision,
+            formato,
+            suplencia: supl,
+            razonesSegmento,
+            varianteEstudio: esCasa ? varianteEstudio : '',
+        };
+        // SE MANDAN TODOS LOS SENTIDOS, NO EL PRIMERO. Antes se tomaba
+        // `problemas.find(p => p.sentido)` y los demás se perdían: el
+        // secretario calificaba seis problemas y el estudio recibía uno.
+        // Con varios criterios el resolutivo sale mixto donde debe salir
+        // mixto, que es lo que hace que concuerde con el estudio.
+        if (modo === 'global') {
+            if (!sentidoGlobal) return null;
+            /* LO QUE ÉL MARCÓ VIAJA TAMBIÉN AQUÍ, y manda.
+               Este camino decía «mandar además los criterios por problema
+               sería dar dos órdenes distintas» y por eso los tiraba. El
+               razonamiento daba por hecho que el sentido global era la
+               palabra del secretario, y no lo es: lo pone la propuesta del
+               modelo en cuanto llega. Así que se tiraba lo único que él
+               había dicho de verdad.
+               Ahora el global RELLENA los problemas que no tocó, y donde
+               marcó algo gana su marca. El servidor aplica esa regla en
+               modos_decision.repartir y lo dice en un aviso. */
+            const suyos = problemas.filter((p) => tocados.has(p.id) && p.sentido);
+            /* Y EL GRUPO DE LOS QUE NO TOCÓ (26-sep-2026). «Estudiar juntos»
+               vale en los tres modos; en éste el problema agrupado que él no
+               calificó viaja SIN sentido y con `tocado: false`: no califica
+               nada —el servidor sólo toma como marca la que trae sentido—,
+               sólo dice con quién se estudia. */
+            const agrupados = problemas.filter((p) => !(tocados.has(p.id) && p.sentido) && grupos[p.id]);
+            const filas = [
+                ...suyos.map((p) => ({
+                    problema: p.pregunta,
+                    sentido: p.sentido,
+                    razonamiento: p.criterio ?? '',
+                    grupo: grupos[p.id] ?? '',
+                    jerarquia: p.jerarquia ?? 'accesorio',
+                    prediccion: p.prediccion ?? {},
+                    tocado: true,
+                })),
+                ...agrupados.map((p) => ({
+                    problema: p.pregunta,
+                    sentido: '',
+                    razonamiento: '',
+                    grupo: grupos[p.id] ?? '',
+                    jerarquia: p.jerarquia ?? 'accesorio',
+                    prediccion: p.prediccion ?? {},
+                    tocado: false,
+                })),
+            ];
+            return {
+                ...comunes,
+                sentidoGlobal, razonGlobal, globalDictado,
+                // LO QUE ÉL MARCÓ, con su razón y su grupo. Va junto al
+                // sentido global, no en lugar de él: el servidor usa el
+                // global de relleno y respeta cada marca expresa.
+                criteriosJson: filas.length ? JSON.stringify(filas) : undefined,
+                // Qué resolvió el órgano recurrido, del contexto que
+                // escribió el motor. Decide el verbo del resolutivo.
+                resolvioDeclarado: propuesta?.global?.contexto?.resolvio ?? '',
+                // Y la propuesta global entera, para el estudio.
+                globalJson: propuesta?.global ? JSON.stringify(propuesta.global) : '',
+                // Y los conceptos de violación, si el secretario los
+                // aportó: sin ellos el proyecto levanta el
+                // sobreseimiento y deja el estudio pendiente.
+                conceptosViolacion,
+            };
+        }
+        const conSentido = problemas.filter((p) => p.sentido);
+        const criteriosJson = conSentido.length
+            ? JSON.stringify(conSentido.map((p) => ({
+                  problema: p.pregunta,
+                  sentido: p.sentido,
+                  razonamiento: p.criterio ?? '',
+                  // EL GRUPO VIAJA CON EL CRITERIO. Si el secretario marcó
+                  // dos planteamientos como una sola línea argumentativa,
+                  // el estudio tiene que saberlo: es lo único que autoriza
+                  // resolverlos con una calificación conjunta.
+                  grupo: grupos[p.id] ?? '',
+                  // LO QUE SE SEMBRÓ TIENE QUE VOLVER. Este objeto se
+                  // reconstruía con tres campos y perdía la jerarquía y la
+                  // predicción, que es lo que ordena el estudio por
+                  // prelación lógica y lo que avisa de ir contra la
+                  // corriente del acervo. Es el gemelo exacto del fallo que
+                  // ya costó una ronda en el servidor: un arreglo
+                  // reconstruye una lista y descarta lo que otro sembró.
+                  jerarquia: p.jerarquia ?? 'accesorio',
+                  prediccion: p.prediccion ?? {},
+                  // QUIÉN LO PUSO. Lo que él marcó a mano el servidor no lo
+                  // toca; lo que puso la pantalla con la propuesta o con el
+                  // reparto sigue la suerte del principal.
+                  tocado: tocados.has(p.id),
+              })))
+            : undefined;
+        return {
+            ...comunes,
+            criterio: criteriosJson ? null : {
+                sentido: problemas[0]?.sentido ?? 'infundado',
+                problema: problemas[0]?.pregunta ?? '',
+                razonamiento: problemas.filter((p) => p.criterio)
+                    .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
+            },
+            criteriosJson,
+        };
+    };
+    const opcionesRef = useRef(opcionesDelProyecto);
+    opcionesRef.current = opcionesDelProyecto;
+
+    const pedirProyecto = useCallback(async (formatoPedido?: FormatoSentencia) => {
+        // LA FORMA DE LA SENTENCIA (David, 25-sep-2026): el botón de siempre
+        // es la estándar; «versión moderna» es el segundo. Se normaliza aquí
+        // porque un `onClick={pedirProyecto}` pasaría el evento del ratón.
+        const formato: FormatoSentencia = formatoPedido === 'moderna' ? 'moderna' : 'estandar';
+        const opciones = opcionesRef.current(formato);
+        if (!opciones) {
+            setError('Elige el sentido del problema principal.');
+            return;
+        }
         // EL AVANCE ARRANCA LIMPIO. Si se genera dos veces —cambiando el
         // criterio, que es lo normal—, lo que se veía escribirse era el
         // estudio nuevo pegado detrás del viejo.
-        setError(''); setAvance(''); setCorriendo(true);
+        setError(''); setAvance(''); setOrdenando(false); setCorriendo(true);
+        /* «ORDENANDO EL ESTUDIO…» (Paso 2): con el plan encendido, el servidor
+           espera o hace el plan de esta decisión antes de la primera línea.
+           Se apaga con el primer trozo de texto. */
+        const alOrdenar = () => setOrdenando(true);
         try {
-            // SE MANDAN TODOS LOS SENTIDOS, NO EL PRIMERO. Antes se tomaba
-            // `problemas.find(p => p.sentido)` y los demás se perdían: el
-            // secretario calificaba seis problemas y el estudio recibía uno.
-            // Con varios criterios el resolutivo sale mixto donde debe salir
-            // mixto, que es lo que hace que concuerde con el estudio.
-            // EL MODO GLOBAL NO PASA POR AQUÍ. El secretario dictó un sentido
-            // para el proyecto entero y el servidor lo reparte: mandar además
-            // los criterios por problema sería dar dos órdenes distintas.
             if (modo === 'global') {
-                if (!sentidoGlobal) {
-                    setError('Elige el sentido del problema principal.');
-                    setCorriendo(false);
-                    return;
-                }
-                /* LO QUE ÉL MARCÓ VIAJA TAMBIÉN AQUÍ, y manda.
-                   Este camino decía «mandar además los criterios por problema
-                   sería dar dos órdenes distintas» y por eso los tiraba. El
-                   razonamiento daba por hecho que el sentido global era la
-                   palabra del secretario, y no lo es: lo pone la propuesta del
-                   modelo en cuanto llega. Así que se tiraba lo único que él
-                   había dicho de verdad.
-                   Ahora el global RELLENA los problemas que no tocó, y donde
-                   marcó algo gana su marca. El servidor aplica esa regla en
-                   modos_decision.repartir y lo dice en un aviso. */
-                const suyos = problemas.filter((p) => tocados.has(p.id) && p.sentido);
                 // POR EL FLUJO, NO POR LA LLAMADA BLOQUEANTE. El servidor
                 // tenía este camino escrito y nadie lo llamaba: todo salía por
                 // /taller/resolver, que devuelve el .docx en una sola respuesta
@@ -1563,51 +1740,16 @@ export default function TallerDeSentencias() {
                 // revisión 410/2026: el servidor TERMINÓ el trabajo dos veces
                 // —«200 · 4,031 palabras», sin timeout ni traza— y la respuesta
                 // no llegó. El proyecto existía y era inalcanzable.
-                setAvance('');
                 // SE BAJA AL ESTUDIO AL ARRANCAR. Estaba en el primer trozo,
                 // que llega a los 61 segundos: el secretario se quedaba
                 // mirando la pantalla anterior sin saber que ya se estaba
                 // trabajando.
                 irA('estudio', 200);
                 const rg = await resolverEnVivo(
-                    encargo.numero, correo, {
-                        sentidoGlobal, contexto, razonGlobal, globalDictado,
-                        // LO QUE ÉL MARCÓ, con su razón y su grupo. Va junto al
-                        // sentido global, no en lugar de él: el servidor usa el
-                        // global de relleno y respeta cada marca expresa.
-                        criteriosJson: suyos.length
-                            ? JSON.stringify(suyos.map((p) => ({
-                                  problema: p.pregunta,
-                                  sentido: p.sentido,
-                                  razonamiento: p.criterio ?? '',
-                                  grupo: grupos[p.id] ?? '',
-                                  jerarquia: p.jerarquia ?? 'accesorio',
-                                  prediccion: p.prediccion ?? {},
-                                  tocado: true,
-                              })))
-                            : undefined,
-                        // Qué resolvió el órgano recurrido, del contexto que
-                        // escribió el motor. Decide el verbo del resolutivo.
-                        resolvioDeclarado: propuesta?.global?.contexto?.resolvio ?? '',
-                        // Y la propuesta global entera, para el estudio.
-                        globalJson: propuesta?.global
-                            ? JSON.stringify(propuesta.global) : '',
-                        // Y los conceptos de violación, si el secretario los
-                        // aportó: sin ellos el proyecto levanta el
-                        // sobreseimiento y deja el estudio pendiente.
-                        conceptosViolacion,
-                        // Y la autoridad, si la corrigió después del adelanto.
-                        responsable: encargo.responsable,
-                        // Lo que él resolvió sobre la oportunidad. Viaja en la
-                        // petición y no en memoria: con -w 2 el worker que
-                        // compone no es el que leyó el expediente.
-                        oportunidadDecision: decision,
-                        oportunidadMotivo: motivoDecision,
-                        formato,
-                        suplencia: supl,
-                    },
-                    (t) => setAvance((x) => x + t),
-                    () => setAvance((x) => x + '\n\n… componiendo el documento'));
+                    encargo.numero, correo, opciones,
+                    (t) => { setOrdenando(false); setAvance((x) => x + t); },
+                    () => setAvance((x) => x + '\n\n… componiendo el documento'),
+                    alOrdenar);
                 setProyecto(rg);
                 descargarProyecto(rg);
                 void traerGuardados(encargo.numero);
@@ -1615,70 +1757,54 @@ export default function TallerDeSentencias() {
                 // Terminó: al aviso de borrador, que es lo que hay que leer
                 // ANTES de abrir el documento.
                 irA('proyecto', 400);
-                setCorriendo(false);
                 return;
             }
-            const conSentido = problemas.filter((p) => p.sentido);
-            const criteriosJson = conSentido.length
-                ? JSON.stringify(conSentido.map((p) => ({
-                      problema: p.pregunta,
-                      sentido: p.sentido,
-                      razonamiento: p.criterio ?? '',
-                      // EL GRUPO VIAJA CON EL CRITERIO. Si el secretario marcó
-                      // dos planteamientos como una sola línea argumentativa,
-                      // el estudio tiene que saberlo: es lo único que autoriza
-                      // resolverlos con una calificación conjunta.
-                      grupo: grupos[p.id] ?? '',
-                      // LO QUE SE SEMBRÓ TIENE QUE VOLVER. Este objeto se
-                      // reconstruía con tres campos y perdía la jerarquía y la
-                      // predicción, que es lo que ordena el estudio por
-                      // prelación lógica y lo que avisa de ir contra la
-                      // corriente del acervo. Es el gemelo exacto del fallo que
-                      // ya costó una ronda en el servidor: un arreglo
-                      // reconstruye una lista y descarta lo que otro sembró.
-                      jerarquia: p.jerarquia ?? 'accesorio',
-                      prediccion: p.prediccion ?? {},
-                      // QUIÉN LO PUSO. Lo que él marcó a mano el servidor no lo
-                      // toca; lo que puso la pantalla con la propuesta o con el
-                      // reparto sigue la suerte del principal.
-                      tocado: tocados.has(p.id),
-                  })))
-                : undefined;
-            setAvance('');
             const r = await resolverEnVivo(
-                encargo.numero, correo, {
-                    criterio: criteriosJson ? null : {
-                        sentido: problemas[0]?.sentido ?? 'infundado',
-                        problema: problemas[0]?.pregunta ?? '',
-                        razonamiento: problemas.filter((p) => p.criterio)
-                            .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
-                    },
-                    criteriosJson, contexto,
-                    // También por este camino: los dos componen el documento.
-                    responsable: encargo.responsable,
-                    // Por este camino también: los dos componen el documento.
-                    oportunidadDecision: decision,
-                    oportunidadMotivo: motivoDecision,
-                    formato,
-                    suplencia: supl,
+                encargo.numero, correo, opciones,
+                (t) => {
+                    setOrdenando(false);
+                    setAvance((x) => {
+                        // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
+                        // pantalla temblaría durante los dos minutos que dura el estudio.
+                        if (!x) irA('estudio', 120);
+                        return x + t;
+                    });
                 },
-                (t) => setAvance((x) => {
-                    // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
-                    // pantalla temblaría durante los dos minutos que dura el estudio.
-                    if (!x) irA('estudio', 120);
-                    return x + t;
-                }),
-                () => setAvance((x) => x + '\n\n… componiendo el documento'));
+                () => setAvance((x) => x + '\n\n… componiendo el documento'),
+                alOrdenar);
             setProyecto(r);
             descargarProyecto(r);
             irA('proyecto', 400);
             setPaso('proyecto');
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
-        } finally { setCorriendo(false); }
-    }, [problemas, encargo.numero, encargo.responsable, correo, contexto, modo,
-        sentidoGlobal, razonGlobal, decision, motivoDecision, tocados,
-        suplencia, delAsunto]);
+        } finally { setCorriendo(false); setOrdenando(false); }
+    }, [encargo.numero, correo, modo, irA, traerGuardados]);
+
+    /* ═══ EL PLAN DEL ESTUDIO, PEDIDO DESDE LA PANTALLA DE DECISIÓN ═══
+       La firma es el formulario que se mandaría AHORA con el botón de siempre
+       (estándar): cuando cambia —un sentido, una razón, un grupo, la
+       suplencia, una razón por argumento—, el plan que hay deja de ser el de
+       esta decisión y el panel lo pide otra vez, con antirrebote. Sólo se
+       calcula si la cuenta escribe con plan: armar y serializar el
+       formulario en cada pintado no le cuesta nada a quien no lo usa. */
+    const firmaPlan = useMemo(() => {
+        if (!usaPlan) return '';
+        const o = opcionesDelProyecto('estandar');
+        return o ? JSON.stringify(o) : '';
+    }, [usaPlan, problemas, tocados, grupos, modo, sentidoGlobal, razonGlobal, globalDictado,  // eslint-disable-line react-hooks/exhaustive-deps
+        propuesta, conceptosViolacion, contexto, encargo.responsable, decision, motivoDecision,
+        suplencia, delAsunto, razonesSegmento, varianteEstudio, esCasa]);
+    const enlacePlan: EnlacePlan = {
+        activo: usaPlan && !!encargo.numero,
+        firma: firmaPlan,
+        pedir: () => {
+            const o = opcionesRef.current('estandar');
+            return o ? pedirPlan(encargo.numero, correo, o)
+                     : Promise.reject(new Error('Falta el sentido del problema principal.'));
+        },
+        leer: () => leerPlan(encargo.numero, correo),
+    };
 
     const asunto: Asunto = useMemo(() => ({
         numero: encargo.numero || '—',
@@ -3055,7 +3181,13 @@ export default function TallerDeSentencias() {
                               propuestaSuplencia={delAsunto?.suplencia ?? null}
                               suplencia={suplencia}
                               onSuplencia={(d) => setSuplenciaDecidida(
-                                  d ? { numero: encargo.numero, d } : null)} />
+                                  d ? { numero: encargo.numero, d } : null)}
+                              grupos={grupos} onGrupos={setGrupos}
+                              plan={enlacePlan}
+                              razonesSegmento={razonesSegmento}
+                              onRazonSegmento={escribirRazonSegmento}
+                              esCasa={esCasa} varianteEstudio={varianteEstudio}
+                              onVarianteEstudio={elegirVariante} />
                     )}
 
                     {/* EL ESTUDIO, VIÉNDOSE ESCRIBIR. Antes aquí no había nada
@@ -3101,11 +3233,16 @@ export default function TallerDeSentencias() {
                                             : 'leyendo el acervo'}
                                 </span>
                             }>
-                                {avance ? 'Escribiendo el estudio' : 'Preparando el estudio'}
+                                {avance ? 'Escribiendo el estudio' : ordenando ? 'Ordenando el estudio…' : 'Preparando el estudio'}
                             </Rotulo>
                             <div className="max-h-[26rem] overflow-y-auto rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
                                 <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-white/75">
-                                    {avance || 'El motor está leyendo las tesis y las normas del acervo y fijando la premisa. El texto empieza a aparecer aquí en cuanto escribe la primera línea; suele tardar alrededor de un minuto.'}
+                                    {avance || (ordenando
+                                        /* Con el plan encendido el servidor espera —o hace— el
+                                           plan de esta decisión antes de escribir: puede tardar
+                                           hasta dos minutos y sin decirlo parecería colgado. */
+                                        ? 'Ordenando el estudio con tu decisión: qué argumentos se contestan juntos, dónde se expone cada premisa y qué dato propio trae cada uno. Puede tardar hasta dos minutos; después el texto empieza a aparecer aquí.'
+                                        : 'El motor está leyendo las tesis y las normas del acervo y fijando la premisa. El texto empieza a aparecer aquí en cuanto escribe la primera línea; suele tardar alrededor de un minuto.')}
                                     <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-accent-gold align-middle" />
                                 </p>
                             </div>
@@ -3241,6 +3378,13 @@ export default function TallerDeSentencias() {
                                 textoHuecos: previo.huecos,
                             }} />
                             )}
+                            {/* EL MAPA DEL ESTUDIO, IGUAL QUE EL DÍA QUE SE GENERÓ
+                                (Paso 2): viene en la ficha. No se lee el plan de la
+                                sesión: pudo cambiar después de este proyecto. */}
+                            {!previo.parcial && previo.mapa && (
+                                <MapaDelEstudio mapa={previo.mapa}
+                                                esRecurso={encargo.tipoAsunto !== 'amparo_directo'} />
+                            )}
                         </>
                     )}
 
@@ -3307,6 +3451,17 @@ export default function TallerDeSentencias() {
                                 textoAvisos: proyecto.textoAvisos,
                                 textoHuecos: proyecto.textoHuecos,
                             }} />
+                            {/* ═══ EL MAPA DEL ESTUDIO (Paso 2, 26-sep-2026) ═══
+                                Debajo del aviso de borrador, no en su lugar: el
+                                aviso es condición de lanzamiento y va siempre a la
+                                vista. Sólo con las variantes que marcan (v3/v4).
+                                Si el «listo» no trajo el plan, se lee el de la
+                                sesión: recién generado, es el que se usó. */}
+                            {proyecto.mapa && (
+                                <MapaDelEstudio mapa={proyecto.mapa}
+                                                esRecurso={encargo.tipoAsunto !== 'amparo_directo'}
+                                                leer={() => leerPlan(encargo.numero, correo)} />
+                            )}
                             {/* EL FINAL DEL CAMINO DECÍA «DE NUEVO» SIN HABER
                                 DICHO NADA LA PRIMERA VEZ. El .docx se descarga
                                 solo al terminar —y bien, porque es lo que el
