@@ -3,6 +3,7 @@
 import { TesisVerificada } from '@/components/TesisVerificada';
 import { VisorArticulo } from '@/components/VisorArticulo';
 import { AccionesPdf } from '@/components/documento/AccionesPdf';
+import { FranjaVigencia, VolverATesis } from '@/components/VigenciaTesis';
 
 import { useEffect, useRef, useMemo, useState } from 'react';
 import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel, ChevronDown, Copy, Check } from 'lucide-react';
@@ -16,11 +17,14 @@ import {
     type CamposDoctrina, enlaceBJV, esDoctrina, fichaDoctrina, folioDoctrina, lugarDoctrina, paginaDoctrina, rotuloDoctrina,
     urlOficialDoctrina, urlPdfDoctrina,
 } from '@/lib/doctrina';
+import { type CamposVigencia, vigenciaDe } from '@/lib/vigencia';
 
 /** La fuente que abre el panel. Las de la Corte IDH (`silo: "coidh"`) traen
  *  caso, párrafo, página y ancla: ver `@/lib/coidh`. Las de doctrina
- *  (`silo: "doctrina"`), obra, autor, página y ancla: ver `@/lib/doctrina`. */
-interface PdfSource extends CamposCoidh, CamposDoctrina {
+ *  (`silo: "doctrina"`), obra, autor, página y ancla: ver `@/lib/doctrina`.
+ *  Las tesis que perdieron vigencia, `vigencia` y, si la que las reemplaza
+ *  está entre las fuentes del mensaje, `reemplazo`: ver `@/lib/vigencia`. */
+interface PdfSource extends CamposCoidh, CamposDoctrina, CamposVigencia {
     origen: string;
     ref: string;
     texto: string;
@@ -32,6 +36,7 @@ interface PdfSource extends CamposCoidh, CamposDoctrina {
     tipo_criterio?: string | null;
     instancia?: string | null;
     materia?: string | null;
+    reemplazo?: PdfSource | null;
 }
 
 interface PdfViewerPanelProps {
@@ -1121,8 +1126,26 @@ function DoctrinaView({ source, urlParaVisor }: { source: PdfSource; urlParaViso
  * abrir el PDF oficial de la ley completa en un iframe inline,
  * o ver la tesis en el Semanario Judicial de la Federación.
  */
-export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber }: PdfViewerPanelProps) {
+export default function PdfViewerPanel({ isOpen, onClose, source: fuenteAbierta, citationNumber }: PdfViewerPanelProps) {
     const panelRef = useRef<HTMLDivElement>(null);
+    const cuerpoRef = useRef<HTMLDivElement>(null);
+
+    /* «ABRIR LA QUE LA REEMPLAZA», EN EL MISMO VISOR (26-sep-2026). La tesis
+       que se pulsó es `fuenteAbierta`; las que se abren desde su franja de
+       vigencia se apilan encima y «Volver a …» las quita. La pila recuerda de
+       qué fuente salió: si el abogado pulsa otra cita, se vacía sola, sin un
+       efecto que deje ver un instante la tesis equivocada. */
+    const [pila, setPila] = useState<{ base: PdfSource | null; abiertas: PdfSource[] }>({ base: null, abiertas: [] });
+    const abiertas = pila.base === fuenteAbierta ? pila.abiertas : [];
+    const source = abiertas.length ? abiertas[abiertas.length - 1] : fuenteAbierta;
+    const anterior = abiertas.length > 1 ? abiertas[abiertas.length - 2] : abiertas.length ? fuenteAbierta : null;
+    const abrirReemplazo = (r: PdfSource) => setPila({ base: fuenteAbierta, abiertas: [...abiertas, r] });
+    const volver = () => setPila({ base: fuenteAbierta, abiertas: abiertas.slice(0, -1) });
+
+    // Otra tesis en el visor: se empieza a leer desde arriba, con su franja.
+    useEffect(() => {
+        cuerpoRef.current?.scrollTo?.({ top: 0 });
+    }, [source]);
 
     // Lock body scroll when panel is open on mobile
     useEffect(() => {
@@ -1241,6 +1264,9 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
     if (!isOpen || !source) return null;
 
     const isTesis = Boolean(tesisMeta);
+    // El sello de vigencia: sólo lo traen las tesis que la perdieron.
+    const vigencia = vigenciaDe(source);
+    const reemplazo = vigencia ? source.reemplazo : null;
     const scjnUrl = registroNumber ? `https://sjf2.scjn.gob.mx/detalle/tesis/${registroNumber}` : null;
 
     // Derive the ley name from silo for the PDF header
@@ -1297,7 +1323,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                             </div>
                         )}
                         <div className="min-w-0">
-                            {citationNumber !== undefined && (
+                            {citationNumber !== undefined && !abiertas.length && (
                                 <span className="inline-block text-[10px] font-semibold uppercase tracking-widest text-accent-gold/70 mb-0.5">
                                     Cita [{citationNumber}]
                                 </span>
@@ -1337,6 +1363,7 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
 
                 {/* Scrollable body — touch fixes for mobile */}
                 <div
+                    ref={cuerpoRef}
                     className="flex-1 overflow-y-auto"
                     style={{
                         WebkitOverflowScrolling: 'touch',
@@ -1344,6 +1371,22 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                         touchAction: 'pan-y',
                     }}
                 >
+                    {/* ═══════════ EL SELLO DE VIGENCIA (26-sep-2026) ═══════════
+                        Arriba de todo, antes que la ficha y el PDF: una tesis
+                        abandonada se veía aquí idéntica a una vigente. Las
+                        vigentes no traen `vigencia` y aquí no se pinta nada. */}
+                    {(vigencia || anterior) && (
+                        <div className="space-y-2.5 px-5 pt-5">
+                            {anterior && <VolverATesis anterior={anterior} onVolver={volver} />}
+                            {vigencia && (
+                                <FranjaVigencia
+                                    vigencia={vigencia}
+                                    onAbrirReemplazo={reemplazo ? () => abrirReemplazo(reemplazo) : undefined}
+                                />
+                            )}
+                        </div>
+                    )}
+
                     {/* ════════════════ TESIS VIEW ════════════════ */}
                     {isTesis && tesisMeta ? (
                         <div className="p-5" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>

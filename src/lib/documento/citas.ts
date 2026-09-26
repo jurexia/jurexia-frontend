@@ -15,11 +15,13 @@
 import { markdownAHtml, separarTarjetas } from './marcado';
 import { type CamposCoidh, camposCoidh, esCoidh, referenciaCoidh } from '@/lib/coidh';
 import { type CamposDoctrina, camposDoctrina, esDoctrina, referenciaDoctrina } from '@/lib/doctrina';
+import { type CamposVigencia, buscarReemplazo, camposVigencia, vigenciaDe } from '@/lib/vigencia';
 
 /** Una fuente citada. Las de la Corte IDH (`silo: "coidh"`) traen además
  *  caso, párrafo, página y ancla: ver `@/lib/coidh`. Las de doctrina
- *  (`silo: "doctrina"`), obra, autor, página y ancla: ver `@/lib/doctrina`. */
-export interface FuenteCita extends CamposCoidh, CamposDoctrina {
+ *  (`silo: "doctrina"`), obra, autor, página y ancla: ver `@/lib/doctrina`.
+ *  Las tesis que perdieron vigencia, `vigencia`: ver `@/lib/vigencia`. */
+export interface FuenteCita extends CamposCoidh, CamposDoctrina, CamposVigencia {
     docId: string;
     origen: string;
     ref: string;
@@ -32,6 +34,9 @@ export interface FuenteCita extends CamposCoidh, CamposDoctrina {
     tipo_criterio?: string;
     instancia?: string;
     materia?: string;
+    /** La que reemplaza a esta tesis, si está entre las fuentes del mensaje:
+     *  el visor la abre ahí mismo con «Abrir la que la reemplaza». */
+    reemplazo?: FuenteCita;
 }
 
 export interface MetaCitas {
@@ -105,12 +110,12 @@ export function htmlDeDocumento(markdown: string): { html: string; orden: string
 }
 
 /** La fuente de una ficha, con lo que el servidor sepa de ella. */
-export function fuenteDeCita(meta: MetaCitas | null, docId: string): FuenteCita {
+export function fuenteDeCita(meta: MetaCitas | null, docId: string, vistas: Set<string> = new Set()): FuenteCita {
     const fuentes = meta?.sources;
     const s = fuentes?.[docId]
         || fuentes?.[docId.toLowerCase()]
         || (fuentes ? Object.entries(fuentes).find(([k]) => k.toLowerCase() === docId.toLowerCase())?.[1] : undefined);
-    return {
+    const fuente: FuenteCita = {
         docId,
         origen: s?.origen || 'Fuente legal',
         ref: s?.ref || '',
@@ -125,7 +130,22 @@ export function fuenteDeCita(meta: MetaCitas | null, docId: string): FuenteCita 
         materia: s?.materia,
         ...camposCoidh(s),
         ...camposDoctrina(s),
+        // El sello de vigencia (26-sep-2026): sólo en las tesis que la perdieron.
+        ...camposVigencia(s),
     };
+    /* LA QUE LA REEMPLAZA, YA RESUELTA (26-sep-2026). El visor no tiene las
+       fuentes del mensaje, sólo la que se pulsó: si la sustituta está entre
+       ellas —el backend la mete en el contexto—, viaja aquí para abrirla en
+       el mismo visor. Se sigue la cadena (una sustituta que a su vez perdió
+       vigencia en parte) sin volver sobre una ya vista. */
+    const vigencia = vigenciaDe(fuente);
+    const clave = docId.toLowerCase();
+    const r = vigencia ? buscarReemplazo(fuentes, vigencia, docId) : null;
+    if (r && !vistas.has(r.docId.toLowerCase())) {
+        vistas.add(clave);
+        fuente.reemplazo = fuenteDeCita(meta, r.docId, vistas);
+    }
+    return fuente;
 }
 
 /** Palabras del escrito, sin marcadores ni identificadores. */

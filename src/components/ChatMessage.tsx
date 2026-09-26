@@ -7,15 +7,17 @@ import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/G
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
 import { recortarABloque, useRevelado } from '@/lib/documento/revelado';
-import { type MetaCitas, referenciaAPA } from '@/lib/documento/citas';
-import { type CamposCoidh, camposCoidh, enlaceOficialCoidh, esCoidh } from '@/lib/coidh';
-import { type CamposDoctrina, camposDoctrina, enlaceBJV, esDoctrina } from '@/lib/doctrina';
+import { type MetaCitas, fuenteDeCita, referenciaAPA } from '@/lib/documento/citas';
+import { type CamposCoidh, enlaceOficialCoidh, esCoidh } from '@/lib/coidh';
+import { type CamposDoctrina, enlaceBJV, esDoctrina } from '@/lib/doctrina';
+import type { CamposVigencia } from '@/lib/vigencia';
 import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
 
 /** Una fuente tal como llega en `FUENTES_PREVIAS` / `CITATION_META`. Las de
  *  la Corte IDH traen además caso, párrafo, página y ancla (`@/lib/coidh`);
- *  las de doctrina, obra, autor, página y ancla (`@/lib/doctrina`). */
-type FuenteMarcador = { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null } & CamposCoidh & CamposDoctrina;
+ *  las de doctrina, obra, autor, página y ancla (`@/lib/doctrina`); las
+ *  tesis que perdieron vigencia, `vigencia` (`@/lib/vigencia`). */
+type FuenteMarcador = { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null } & CamposCoidh & CamposDoctrina & CamposVigencia;
 
 interface ChatMessageProps {
     message: Message;
@@ -1335,30 +1337,13 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 if (target.classList.contains('citation-badge') && target.dataset.docId) {
                                     e.preventDefault();
                                     const docId = target.dataset.docId;
-                                    // 🔒 Case-insensitive lookup: data-doc-id is always lowercase,
-                                    // but sources_map may have mixed case from UUID repair aliases
-                                    const src = citationMeta?.sources?.[docId] 
-                                        || citationMeta?.sources?.[docId.toLowerCase()]
-                                        || (citationMeta?.sources ? Object.entries(citationMeta.sources).find(([k]) => k.toLowerCase() === docId.toLowerCase())?.[1] : undefined);
-                                    onCitationClick?.({
-                                        docId,
-                                        origen: src?.origen || 'Fuente legal',
-                                        ref: src?.ref || '',
-                                        texto: src?.texto || '',
-                                        pdf_url: src?.pdf_url,
-                                        silo: src?.silo,
-                                        entidad: src?.entidad,
-                                        registro: src?.registro,
-                                        tesis_num: src?.tesis_num,
-                                        tipo_criterio: src?.tipo_criterio,
-                                        instancia: src?.instancia,
-                                        materia: src?.materia,
-                                        // La Corte IDH: caso, párrafo, página y ancla para
-                                        // que el visor abra la sentencia en el párrafo.
-                                        ...camposCoidh(src),
-                                        // La doctrina: obra, autor, página y ancla.
-                                        ...camposDoctrina(src),
-                                    });
+                                    // La misma fuente que abre la lista por institución y la
+                                    // hoja: `fuenteDeCita` la busca sin distinguir mayúsculas
+                                    // (data-doc-id siempre va en minúsculas y sources_map puede
+                                    // traerlas de los alias de reparación de UUID) y copia de
+                                    // una vez lo de la Corte IDH, la doctrina y el sello de
+                                    // vigencia, con la que la reemplaza ya resuelta.
+                                    onCitationClick?.(fuenteDeCita(citationMeta as unknown as MetaCitas | null, docId));
                                 }
                                 // Handle precedente card clicks
                                 const precCard = target.closest('.precedente-card') as HTMLElement;

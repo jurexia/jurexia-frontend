@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react';
 import { ChevronDown, AlertTriangle } from 'lucide-react';
 import { fuenteDeCita, institucionesDe, type FuenteCita, type Institucion, type MetaCitas } from '@/lib/documento/citas';
 import { esCoidh, rotuloCoidh } from '@/lib/coidh';
+import { cuentaSinVigencia, perdioVigencia, vigenciaDe } from '@/lib/vigencia';
+import { MarcaVigencia } from '@/components/VigenciaTesis';
 import { IconoInstitucion } from './IconoInstitucion';
 
 /**
@@ -21,6 +23,11 @@ import { IconoInstitucion } from './IconoInstitucion';
  * NADA SE ESCONDE. Las citas que el motor no pudo trazar hasta una ficha
  * tienen su propio grupo, en ámbar: una cita que no se puede abrir es
  * precisamente la que hay que mirar antes de firmar.
+ *
+ * Y LA TESIS QUE PERDIÓ VIGENCIA SE VE SIN ABRIRLA (26-sep-2026): su renglón
+ * lleva la marca «Abandonada», «Interrumpida en parte», «Superada en los
+ * hechos»…, y el emblema cerrado dice cuántas hay dentro, porque la lista
+ * está plegada y ahí nadie la vería. Ver `@/lib/vigencia`.
  */
 
 const SIN_FICHA: Institucion = { clave: 'otra', nombre: 'Citas sin ficha', icono: '' };
@@ -44,6 +51,9 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
             institucion: g.institucion,
             docIds: [...g.docIds].sort((a, b) => orden(a) - orden(b)),
             sinFicha: false,
+            // Cuántas de sus tesis perdieron vigencia (las corregidas sólo se
+            // marcan en su renglón: no la perdieron).
+            sinVigencia: g.docIds.filter((id) => perdioVigencia(vigenciaDe(fuenteDeCita(meta, id)))).length,
         }));
 
         const conFicha = new Set(base.flatMap((g) => g.docIds.map((x) => x.toLowerCase())));
@@ -52,6 +62,7 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
             base.push({
                 id: 'sin-ficha', institucion: SIN_FICHA, sinFicha: true,
                 docIds: sueltas.sort((a, b) => orden(a) - orden(b)),
+                sinVigencia: 0,
             });
         }
         return { grupos: base, numeros };
@@ -71,7 +82,7 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                             type="button"
                             onClick={() => setAbierta(activa ? null : g.id)}
                             aria-expanded={activa}
-                            title={`${g.institucion.nombre} · ${g.docIds.length} ${g.docIds.length === 1 ? 'fuente' : 'fuentes'}`}
+                            title={`${g.institucion.nombre} · ${g.docIds.length} ${g.docIds.length === 1 ? 'fuente' : 'fuentes'}${g.sinVigencia ? ` · ${cuentaSinVigencia(g.sinVigencia)}` : ''}`}
                             /* En teléfono cada emblema ocupa su renglón: en fila, el nombre
                                de la institución se quedaba en «C.. 3», que no dice nada. */
                             className={`inline-flex max-w-full items-center gap-2 rounded-lg border py-1 pl-1.5 pr-2 text-[11.5px] transition-colors max-sm:w-full
@@ -85,6 +96,11 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                                 ? <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                                 : <IconoInstitucion inst={g.institucion} tam={22} />}
                             <span className="truncate font-medium">{g.institucion.nombre}</span>
+                            {g.sinVigencia > 0 && (
+                                <span className="flex-shrink-0 whitespace-nowrap rounded border border-amber-300 bg-amber-50 px-1 text-[10px] font-semibold leading-4 text-amber-900">
+                                    {cuentaSinVigencia(g.sinVigencia)}
+                                </span>
+                            )}
                             <span className={`ml-auto tabular-nums ${activa && !g.sinFicha ? 'text-white/70' : 'text-charcoal-400'}`}>
                                 {g.docIds.length}
                             </span>
@@ -99,6 +115,7 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                     {desplegada.docIds.map((id) => {
                         const f = fuenteDeCita(meta, id);
                         const n = numeros.get(id.toLowerCase());
+                        const vigencia = desplegada.sinFicha ? null : vigenciaDe(f);
                         return (
                             <li key={id}>
                                 <button
@@ -118,6 +135,7 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                                                 // no por el `origen` del marcador.
                                                 : esCoidh(f) ? rotuloCoidh(f) : f.origen}
                                         </span>
+                                        {vigencia && <MarcaVigencia vigencia={vigencia} className="ml-1.5" />}
                                         {!desplegada.sinFicha && f.ref && !esCoidh(f) ? <span className="text-charcoal-500"> — {f.ref}</span> : null}
                                     </span>
                                 </button>
