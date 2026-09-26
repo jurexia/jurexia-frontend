@@ -26,9 +26,13 @@ import type { AspectoCalificable, Correccion, OpinionProyecto as Opinion } from 
 
 // Respaldo por si la lista del servidor no llega: la pantalla no se queda sin
 // aspectos que calificar. La fuente es `opiniones_taller.ASPECTOS` del API.
+// «Contesta cada argumento» y «No repite lo ya razonado»: Decisión 5 de David
+// (26-sep-2026), para todos los usuarios. Mismo orden y claves que el API.
 const ASPECTOS_RESPALDO: AspectoCalificable[] = [
     { clave: 'sentido', etiqueta: 'El sentido de la resolución' },
     { clave: 'fundamentacion', etiqueta: 'Fundamentación y argumentación' },
+    { clave: 'exhaustividad', etiqueta: 'Contesta cada argumento' },
+    { clave: 'sin_repeticion', etiqueta: 'No repite lo ya razonado' },
     { clave: 'citas', etiqueta: 'Citas de ley y jurisprudencia' },
     { clave: 'redaccion', etiqueta: 'Redacción y estilo' },
     { clave: 'estructura', etiqueta: 'Estructura y forma del proyecto' },

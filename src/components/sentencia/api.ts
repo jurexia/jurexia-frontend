@@ -815,6 +815,10 @@ export async function resolverEnVivo(
          *  cada punto con su pregunta, la responde enseguida y condensa lo que
          *  no es materia de estudio. Vacío = estándar. */
         formato?: FormatoSentencia;
+        /** LA SUPLENCIA DE LA QUEJA (David, 26-sep-2026): la que el secretario
+         *  confirmó en la pantalla de decisión, o la propuesta del motor sin
+         *  confirmar. Sólo la confirmada cambia el estudio. */
+        suplencia?: DecisionSuplencia | null;
     },
     onTexto?: (trozo: string) => void,
     onComponiendo?: () => void,
@@ -858,6 +862,14 @@ export async function resolverEnVivo(
     if (o.oportunidadMotivo?.trim())
         fd.append('oportunidad_motivo', o.oportunidadMotivo.trim());
     fd.append('formato', o.formato === 'moderna' ? 'moderna' : 'estandar');
+    /* SIEMPRE, aunque vaya vacía: el servidor la asigna en cada petición, y una
+       suplencia confirmada en la vuelta anterior no puede sobrevivir a que el
+       secretario la quite. */
+    fd.append('suplencia', o.suplencia?.fraccion
+        ? JSON.stringify({ fraccion: o.suplencia.fraccion,
+                           a_favor_de: o.suplencia.aFavorDe,
+                           confirmada: !!o.suplencia.confirmada })
+        : '');
 
     /* ═══ LA LÍNEA PUEDE MORIRSE A MEDIAS, Y EL PROYECTO NO (17-sep-2026) ═══
        El 536/2025: el servidor escribió el estudio entero y lo archivó, y esta
@@ -1368,6 +1380,66 @@ export async function razonarSentido(
     return String(j?.razon ?? '');
 }
 
+/* ═══ LA SUPLENCIA DE LA QUEJA (David, 26-sep-2026) ═══
+   «Sí»: un paso más en la pantalla de decisión. El motor PROPONE la fracción
+   del artículo 79 y a favor de quién, con su porqué; el secretario la
+   confirma, la cambia o dice que no hay. La propuesta llega con el asunto
+   (/taller/contexto-del-asunto) y la decisión viaja en el formulario de
+   `resolverEnVivo`. Ver `suplencia.py` en el API. */
+export interface FraccionSuplencia {
+    /** «I», «II», «III-a», «III-b», «IV-a», «IV-b», «V», «VI», «VII» o «ninguna». */
+    id: string;
+    rotulo: string;
+    /** El supuesto, con el texto vigente de la ley. */
+    texto: string;
+}
+export interface PropuestaSuplencia {
+    fraccion: string;
+    rotulo: string;
+    texto: string;
+    /** A favor de quién propone el motor; vacío si propone «sin suplencia». */
+    aFavorDe: string;
+    /** La parte que promueve, aunque no se proponga nada: la pantalla la usa
+     *  si el secretario elige una fracción por su cuenta. */
+    parte: string;
+    porque: string;
+    /** Lo que conviene mirar también: la fracción que la parte pide, los
+     *  indicios de la VII, el otro inciso. */
+    alternativas: { fraccion: string; rotulo: string; porque: string }[];
+    /** La fracción que el escrito pide expresamente, si pide una. */
+    pedida: string;
+    /** El catálogo entero, para el selector: la ley vive en el API. */
+    fracciones: FraccionSuplencia[];
+}
+/** Lo que decidió el secretario. Sólo la confirmada cambia el estudio. */
+export interface DecisionSuplencia {
+    fraccion: string;
+    aFavorDe: string;
+    confirmada: boolean;
+}
+
+function _suplenciaDe(x: unknown): PropuestaSuplencia | null {
+    const j = (x && typeof x === 'object') ? x as Record<string, unknown> : null;
+    if (!j || !j.fraccion) return null;
+    const lista = (v: unknown) => (Array.isArray(v) ? v : []) as Record<string, unknown>[];
+    return {
+        fraccion: String(j.fraccion),
+        rotulo: String(j.rotulo ?? ''),
+        texto: String(j.texto ?? ''),
+        aFavorDe: String(j.a_favor_de ?? ''),
+        parte: String(j.parte ?? j.a_favor_de ?? ''),
+        porque: String(j.porque ?? ''),
+        alternativas: lista(j.alternativas).map((a) => ({
+            fraccion: String(a.fraccion ?? ''), rotulo: String(a.rotulo ?? ''),
+            porque: String(a.porque ?? ''),
+        })).filter((a) => a.fraccion),
+        pedida: String(j.pedida ?? ''),
+        fracciones: lista(j.fracciones).map((f) => ({
+            id: String(f.id ?? ''), rotulo: String(f.rotulo ?? ''), texto: String(f.texto ?? ''),
+        })).filter((f) => f.id),
+    };
+}
+
 export interface ContextoDelAsunto {
     numero: string;
     tipoAsunto: string;
@@ -1393,6 +1465,9 @@ export interface ContextoDelAsunto {
     encargo?: Record<string, string> | null;
     /** El proyecto ya generado, si lo hay. Null mientras no se haya resuelto. */
     proyecto?: FichaProyecto | null;
+    /** LA SUPLENCIA QUE PROPONE EL MOTOR para este asunto. Null si el servidor
+     *  no pudo armarla (o es anterior al 26-sep-2026). */
+    suplencia?: PropuestaSuplencia | null;
 }
 
 /* ═══ LO QUE SE QUEDÓ A MEDIAS ═══
@@ -1621,6 +1696,7 @@ export async function contextoDelAsunto(
             }
             : null,
         avisos: (j.avisos ?? []) as string[],
+        suplencia: _suplenciaDe(j.suplencia),
     };
 }
 

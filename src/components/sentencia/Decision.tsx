@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Check, Loader2, PenLine, Sparkles, ChevronRight, AlertTriangle, Zap } from 'lucide-react';
 import { cn, Pastilla } from './primitivas';
 import type { ProblemaJuridico } from './tipos';
-import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia } from './api';
+import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
+              PropuestaSuplencia, DecisionSuplencia } from './api';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LA PANTALLA DE DECISIÓN: UNA FRASE, DOS BOTONES, Y LA TARJETA FINAL
@@ -153,6 +154,135 @@ function Calificativas({ elegido, onElegir, compacto }: {
     );
 }
 
+/* ═══ LA SUPLENCIA DE LA QUEJA, UN PASO MÁS (David, 26-sep-2026) ═══
+   «Sí de acuerdo»: la suplencia es una decisión de umbral y la toma el
+   secretario, no un patrón. El motor propone la fracción del artículo 79, a
+   favor de quién y por qué, y pone a la vista lo que conviene mirar también
+   —la fracción que la parte pide, los indicios de la VII—. Él confirma,
+   cambia la fracción o dice que no hay. Sólo la CONFIRMADA llega al estudio
+   como decisión suya: con ella no cabe declarar inoperante por su
+   formulación ningún planteamiento de esa parte —se suple y se estudia—, y la
+   suplencia sólo se escribe en la sentencia si de ella deriva un beneficio.
+   Vive fuera del condicional de modo: se ve igual en los tres. */
+function PasoSuplencia({ propuesta, valor, onCambiar }: {
+    propuesta: PropuestaSuplencia;
+    valor: DecisionSuplencia | null;
+    onCambiar?: (d: DecisionSuplencia | null) => void;
+}) {
+    const [cambiando, setCambiando] = useState(false);
+    const confirmada = !!valor?.confirmada;
+    const fraccion = valor?.fraccion ?? propuesta.fraccion;
+    const sinSuplencia = fraccion === 'ninguna';
+    const cat = propuesta.fracciones ?? [];
+    const deCat = (id: string) => cat.find((f) => f.id === id);
+    const rotuloDe = (id: string) => deCat(id)?.rotulo || id;
+    const esLaPropuesta = !valor || valor.fraccion === propuesta.fraccion;
+    const aFavorDe = sinSuplencia ? '' : (valor?.aFavorDe || propuesta.aFavorDe || propuesta.parte);
+    const elegir = (id: string) => {
+        onCambiar?.({ fraccion: id, aFavorDe: id === 'ninguna' ? '' : (propuesta.aFavorDe || propuesta.parte),
+                      confirmada: true });
+        setCambiando(false);
+    };
+    const alternativas = (propuesta.alternativas ?? []).filter((a) => a.fraccion !== fraccion);
+    return (
+        <div className={cn('rounded-2xl border p-4 sm:p-5',
+            confirmada ? 'border-accent-gold/35 bg-accent-gold/[0.04]' : 'border-white/10 bg-white/[0.03]')}>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">Suplencia de la queja</p>
+                <span className={cn('rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide',
+                    confirmada ? 'border-accent-gold/45 text-accent-gold' : 'border-white/15 text-white/50')}>
+                    {confirmada ? 'decisión tuya' : 'propuesta del motor'}
+                </span>
+            </div>
+            <p className="mt-2 text-[15px] font-medium text-white">
+                {sinSuplencia ? 'Sin suplencia: se estudia en estricto derecho'
+                              : `Artículo 79 de la Ley de Amparo, ${rotuloDe(fraccion)}`}
+            </p>
+            {aFavorDe && <p className="mt-0.5 text-[13px] text-white/70">A favor de {aFavorDe}</p>}
+            {!sinSuplencia && deCat(fraccion)?.texto && (
+                <p className="mt-1 text-[12px] leading-relaxed text-white/45">{deCat(fraccion)?.texto}</p>
+            )}
+            {esLaPropuesta ? (
+                propuesta.porque && <p className="mt-2 text-[12.5px] leading-relaxed text-white/65">{propuesta.porque}</p>
+            ) : (
+                <p className="mt-2 text-[12px] text-white/50">
+                    El motor proponía: {propuesta.fraccion === 'ninguna' ? 'sin suplencia' : rotuloDe(propuesta.fraccion)}.
+                </p>
+            )}
+            {alternativas.length > 0 && (
+                <div className="mt-3 space-y-1.5">
+                    <p className="text-[10.5px] font-semibold uppercase tracking-wide text-white/40">También a revisar</p>
+                    {alternativas.map((a) => (
+                        <div key={a.fraccion} className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[12.5px]">
+                            <button type="button" onClick={() => elegir(a.fraccion)}
+                                    title="Elegir esta fracción"
+                                    className="shrink-0 rounded-full border border-white/15 px-2 py-0.5 text-[11.5px] font-medium
+                                               text-white/75 transition-colors hover:border-accent-gold/45 hover:text-white">
+                                {a.rotulo || rotuloDe(a.fraccion)}
+                            </button>
+                            <span className="min-w-0 flex-1 leading-relaxed text-white/55">{a.porque}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+                {!confirmada && (
+                    <button type="button" onClick={() => elegir(propuesta.fraccion)}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-accent-gold/45 bg-accent-gold/[0.08]
+                                       px-3.5 text-[13px] font-semibold text-accent-gold transition hover:bg-accent-gold/[0.14]">
+                        <Check className="h-3.5 w-3.5" />
+                        {propuesta.fraccion === 'ninguna' ? 'Confirmar: sin suplencia' : 'Confirmar la suplencia'}
+                    </button>
+                )}
+                <button type="button" onClick={() => setCambiando((v) => !v)} aria-expanded={cambiando}
+                        className="inline-flex h-9 items-center rounded-xl border border-white/15 bg-white/[0.04] px-3.5
+                                   text-[13px] font-medium text-white/80 transition hover:bg-white/[0.08]">
+                    {cambiando ? 'Ocultar las fracciones' : 'Cambiar la fracción'}
+                </button>
+                {/* Si lo que está en pantalla ya es «sin suplencia», el botón de
+                    confirmar lo cubre: dos botones para lo mismo confunden. */}
+                {!sinSuplencia && (
+                    <button type="button" onClick={() => elegir('ninguna')}
+                            className="inline-flex h-9 items-center rounded-xl border border-white/10 px-3.5 text-[13px]
+                                       font-medium text-white/60 transition hover:border-white/20 hover:text-white">
+                        Sin suplencia
+                    </button>
+                )}
+                {valor && (
+                    <button type="button" onClick={() => { onCambiar?.(null); setCambiando(false); }}
+                            className="inline-flex h-9 items-center rounded-xl px-2 text-[12.5px] font-medium
+                                       text-accent-gold/80 transition hover:text-accent-gold">
+                        Volver a la propuesta
+                    </button>
+                )}
+            </div>
+            {cambiando && (
+                <div className="mt-3 grid gap-1.5 sm:grid-cols-2">
+                    {cat.map((f) => (
+                        <button key={f.id} type="button" onClick={() => elegir(f.id)}
+                                aria-pressed={f.id === fraccion && confirmada}
+                                className={cn('rounded-xl border p-2.5 text-left transition-colors',
+                                    f.id === fraccion ? 'border-accent-gold/50 bg-accent-gold/[0.07]'
+                                                      : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.04]')}>
+                            <span className="block text-[12.5px] font-medium text-white/90">
+                                {f.id === 'ninguna' ? 'Sin suplencia' : f.rotulo}
+                            </span>
+                            <span className="mt-0.5 block text-[11.5px] leading-snug text-white/50">{f.texto}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
+            <p className="mt-3 text-[11.5px] leading-relaxed text-white/45">
+                {confirmada && !sinSuplencia
+                    ? 'Confirmada: el estudio no declara inoperante por su formulación ningún planteamiento de esa parte —lo suple y lo estudia— y sólo menciona la suplencia en la sentencia si de ella deriva un beneficio (art. 79).'
+                    : confirmada
+                        ? 'Decidiste que no hay suplencia: el estudio no la invoca.'
+                        : 'Mientras no la confirmes, el estudio no la trata como decisión tuya y se escribe como hasta ahora.'}
+            </p>
+        </div>
+    );
+}
+
 function Pliegue({ titulo, children, abierto }: {
     titulo: string; children: React.ReactNode; abierto?: boolean;
 }) {
@@ -182,6 +312,7 @@ export default function Decision({
     extemporanea = false, oportunidadDecidida = true,
     claseContexto = null, onCorregirProblema, corrigiendoProblema = null,
     avisosReparto = [], constanciasAportadas,
+    propuestaSuplencia = null, suplencia = null, onSuplencia,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -238,6 +369,11 @@ export default function Decision({
     /** Lo que dijo el servidor al repartir la suerte de los accesorios tras
      *  cambiar el principal. */
     avisosReparto?: string[];
+    /** LA SUPLENCIA QUE PROPONE EL MOTOR (26-sep-2026), del asunto. */
+    propuestaSuplencia?: PropuestaSuplencia | null;
+    /** Lo que decidió el secretario; null = aún no decide. */
+    suplencia?: DecisionSuplencia | null;
+    onSuplencia?: (d: DecisionSuplencia | null) => void;
 }) {
     const [corrigiendo, setCorrigiendo] = useState(false);
     const [porQue, setPorQue] = useState(false);
@@ -821,6 +957,13 @@ export default function Decision({
                 </div>
             )}
 
+            {/* ═══ 3-bis · LA SUPLENCIA DE LA QUEJA ═══
+                Fuera del condicional de modo y de «cambiar el sentido»: es un
+                paso de la decisión en los tres modos, no una corrección. */}
+            {propuestaSuplencia && (problemas.length > 0 || sentidoGlobal) && (
+                <PasoSuplencia propuesta={propuestaSuplencia} valor={suplencia} onCambiar={onSuplencia} />
+            )}
+
             {/* ═══ 4 · LA TARJETA FINAL: CON QUÉ SALE EL PROYECTO ═══ */}
             {(problemas.length > 0 || sentidoGlobal) && (
                 <div id="asi-sale" className={cn('rounded-2xl border p-4 sm:p-5',
@@ -865,6 +1008,31 @@ export default function Decision({
                             </li>
                         ))}
                     </ul>
+                    {/* LA SUPLENCIA, TAMBIÉN AQUÍ: la tarjeta dice con qué sale el
+                        proyecto, y con qué suplencia es parte de eso. */}
+                    {propuestaSuplencia && (
+                        <p className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[13px]">
+                            <span className="text-white/45">Suplencia:</span>
+                            <span className="min-w-0 flex-1 text-white/80">
+                                {(() => {
+                                    const f = suplencia?.fraccion ?? propuestaSuplencia.fraccion;
+                                    if (f === 'ninguna') return 'sin suplencia';
+                                    const r = propuestaSuplencia.fracciones.find((x) => x.id === f)?.rotulo || f;
+                                    const q = suplencia?.aFavorDe || propuestaSuplencia.aFavorDe || propuestaSuplencia.parte;
+                                    return `artículo 79, ${r}${q ? ` · a favor de ${q}` : ''}`;
+                                })()}
+                            </span>
+                            <span className={cn('shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] uppercase tracking-wide',
+                                suplencia?.confirmada ? 'border-accent-gold/45 text-accent-gold' : 'border-white/15 text-white/45')}>
+                                {suplencia?.confirmada ? 'tuya' : 'sin confirmar'}
+                            </span>
+                        </p>
+                    )}
+                    {propuestaSuplencia && !suplencia?.confirmada && propuestaSuplencia.fraccion !== 'ninguna' && (
+                        <p className="mt-1.5 text-[12px] text-amber-300/90">
+                            El motor propone suplir la queja y no lo has confirmado: el estudio no la aplicará como decisión tuya.
+                        </p>
+                    )}
                     {faltaRazon && (
                         <p className="mt-2.5 text-[12px] text-amber-300/90">
                             Te apartas de la propuesta: escribe el porqué antes de generar. El estudio se alinea a lo que escribas.

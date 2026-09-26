@@ -59,7 +59,7 @@ import {
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
     fichaDesdeAdmision,
 } from '@/components/sentencia/api';
-import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto } from '@/components/sentencia/api';
+import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto, DecisionSuplencia } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
 
 type Paso = 'ficha' | 'adelanto' | 'acervo' | 'criterio' | 'proyecto';
@@ -281,6 +281,14 @@ export default function TallerDeSentencias() {
        decide el secretario, porque es quien ve que dos planteamientos se
        resuelven con una sola línea argumentativa. */
     const [grupos, setGrupos] = useState<Record<string, string>>({});
+    /* LA SUPLENCIA DE LA QUEJA QUE DECIDIÓ EL SECRETARIO (David, 26-sep-2026).
+       Null = no ha decidido: viaja la propuesta del motor SIN confirmar y el
+       estudio se comporta como antes. Se guarda con el número del asunto al
+       que pertenece, para que la decisión de un expediente no se cuele en el
+       siguiente que se abra. No depende del sentido: cambiar de sentido y
+       regenerar la conserva. */
+    const [suplenciaDecidida, setSuplenciaDecidida] =
+        useState<{ numero: string; d: DecisionSuplencia } | null>(null);
     /* EL ESTUDIO, SEGÚN SE ESCRIBE. Cuatro minutos de pantalla quieta se
        sienten como una avería; viéndose escribir se sienten como trabajo. Y de
        paso el secretario va leyendo y puede parar si ve que va mal encaminado. */
@@ -495,6 +503,9 @@ export default function TallerDeSentencias() {
        secretario no podía leerla. Se le pedía formar criterio sobre un asunto
        que no había visto. */
     const [delAsunto, setDelAsunto] = useState<ContextoDelAsunto | null>(null);
+    /* La suplencia decidida vale sólo para el asunto en que se decidió. */
+    const suplencia = suplenciaDecidida && suplenciaDecidida.numero === encargo.numero
+        ? suplenciaDecidida.d : null;
 
     const traerContexto = useCallback(async (num: string) => {
         if (!num || !correo) return;
@@ -1363,6 +1374,7 @@ export default function TallerDeSentencias() {
         setAvance('');
         setError('');
         setPropuesta(null);
+        setSuplenciaDecidida(null);
         setTocados(new Set());
         setRazonando(new Set());
         setGrupos({});
@@ -1507,6 +1519,13 @@ export default function TallerDeSentencias() {
         // es la estándar; «versión moderna» es el segundo. Se normaliza aquí
         // porque un `onClick={pedirProyecto}` pasaría el evento del ratón.
         const formato: FormatoSentencia = formatoPedido === 'moderna' ? 'moderna' : 'estandar';
+        /* LA SUPLENCIA VIAJA EN LAS DOS LLAMADAS: la que él decidió o, si no
+           decidió nada, la propuesta del motor marcada sin confirmar —el
+           servidor sólo aplica la confirmada—. */
+        const supl = suplencia ?? (delAsunto?.suplencia
+            ? { fraccion: delAsunto.suplencia.fraccion,
+                aFavorDe: delAsunto.suplencia.aFavorDe, confirmada: false }
+            : null);
         // EL AVANCE ARRANCA LIMPIO. Si se genera dos veces —cambiando el
         // criterio, que es lo normal—, lo que se veía escribirse era el
         // estudio nuevo pegado detrás del viejo.
@@ -1585,6 +1604,7 @@ export default function TallerDeSentencias() {
                         oportunidadDecision: decision,
                         oportunidadMotivo: motivoDecision,
                         formato,
+                        suplencia: supl,
                     },
                     (t) => setAvance((x) => x + t),
                     () => setAvance((x) => x + '\n\n… componiendo el documento'));
@@ -1640,6 +1660,7 @@ export default function TallerDeSentencias() {
                     oportunidadDecision: decision,
                     oportunidadMotivo: motivoDecision,
                     formato,
+                    suplencia: supl,
                 },
                 (t) => setAvance((x) => {
                     // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
@@ -1656,7 +1677,8 @@ export default function TallerDeSentencias() {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
         } finally { setCorriendo(false); }
     }, [problemas, encargo.numero, encargo.responsable, correo, contexto, modo,
-        sentidoGlobal, razonGlobal, decision, motivoDecision, tocados]);
+        sentidoGlobal, razonGlobal, decision, motivoDecision, tocados,
+        suplencia, delAsunto]);
 
     const asunto: Asunto = useMemo(() => ({
         numero: encargo.numero || '—',
@@ -3029,7 +3051,11 @@ export default function TallerDeSentencias() {
                               corrigiendoProblema={editandoProblema}
                               avisosReparto={avisosReparto}
                               esRecurso={encargo.tipoAsunto !== 'amparo_directo'}
-                              extemporanea={extemporanea} oportunidadDecidida={decision !== ''} />
+                              extemporanea={extemporanea} oportunidadDecidida={decision !== ''}
+                              propuestaSuplencia={delAsunto?.suplencia ?? null}
+                              suplencia={suplencia}
+                              onSuplencia={(d) => setSuplenciaDecidida(
+                                  d ? { numero: encargo.numero, d } : null)} />
                     )}
 
                     {/* EL ESTUDIO, VIÉNDOSE ESCRIBIR. Antes aquí no había nada

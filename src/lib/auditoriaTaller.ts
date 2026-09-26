@@ -203,9 +203,17 @@ export function avisosPorFamilia(fichas: { email: string; expediente: string; ve
 
 // ── Lo que dicen las opiniones, sumado ─────────────────────────────────────
 
+// Las claves son las de `opiniones_taller.ASPECTOS` del API: el auditor suma
+// por clave. «exhaustividad» y «sin_repeticion» entraron el 26-sep-2026
+// (Decisión 5 de David): las dos cosas que el diagnóstico del estudio de fondo
+// midió —argumentos sin contestar y razones repetidas— y que ningún aspecto
+// preguntaba a quien firma. Etiquetas cortas, como las demás: caben en la
+// columna del panel.
 export const ASPECTOS: { clave: string; etiqueta: string }[] = [
     { clave: 'sentido', etiqueta: 'Sentido' },
     { clave: 'fundamentacion', etiqueta: 'Fundamentación' },
+    { clave: 'exhaustividad', etiqueta: 'Exhaustividad' },
+    { clave: 'sin_repeticion', etiqueta: 'Sin repetición' },
     { clave: 'citas', etiqueta: 'Citas' },
     { clave: 'redaccion', etiqueta: 'Redacción' },
     { clave: 'estructura', etiqueta: 'Estructura' },
