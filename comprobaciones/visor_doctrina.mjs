@@ -25,6 +25,13 @@
 // (tres por libro): 3,593 hallados, todos en su página y con una ventana de
 // 48 letras; lo pintado cubre ≥90 % del trozo (sin el colofón de la BJV) en
 // 3,528 y se pasa de 10 % en 34.
+//
+// Revisión del mismo día, con el ancla que YA manda el backend
+// (doctrina.ancla) sobre los 9,629 trozos y los PDF de la ingesta (mismo sha1
+// que los de la UNAM): 9,629 hallados, confirmados y en su página. Y el primer
+// trazo —adonde baja «Ir al pasaje»— es el de más arriba del pasaje en los
+// 9,629, con ancla y sin ella; antes, sin ancla, el 27 % bajaba al folio del
+// pie de página y el 15 % con ancla tenía un trazo suelto en el encabezado.
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -117,6 +124,18 @@ if (args[0] !== '--censo') {
     }
     ver(Object.keys(doctrina.camposDoctrina(nueva)).length === 7, 'doctrina: camposDoctrina copia los siete campos del contrato');
 
+    // Sin folio impreso (revisión del 25-sep-2026): el backend pone en `ref`
+    // la página del PDF («p. 18»), y la pág. 18 del cap. 8 de Carbonell lleva
+    // impreso el 773. Ni el rótulo ni la referencia pueden decir «p. 18».
+    const carbonell = 'https://archivos.juridicas.unam.mx/www/bjv/libros/3/1408/8.pdf';
+    const sinFolioNueva = { silo: 'doctrina', ref: 'p. 18', pdf_url: carbonell, url_oficial: carbonell, pagina: 18, obra: 'Los derechos fundamentales en México', autor: 'Miguel Carbonell', anio: 2004 };
+    const sinFolioVieja = { silo: 'doctrina', ref: 'p. 18', pdf_url: `${carbonell}#page=18`, origen: 'Miguel Carbonell, «Los derechos fundamentales en México», 2004' };
+    for (const [nombre, f] of [['nueva', sinFolioNueva], ['vieja', sinFolioVieja]]) {
+        ver(doctrina.folioDoctrina(f) === null, `doctrina sin folio ${nombre}: la página del PDF no es folio`);
+        ver(doctrina.lugarDoctrina(f) === 'pág. 18 del PDF', `doctrina sin folio ${nombre}: «pág. 18 del PDF»`, doctrina.lugarDoctrina(f));
+        ver(!/\(p\. 18\)/.test(doctrina.referenciaDoctrina(f)), `doctrina sin folio ${nombre}: la referencia no dice «(p. 18)»`, doctrina.referenciaDoctrina(f));
+    }
+
     // La Corte IDH: se dibuja la copia de legal-docs, se enlaza la Corte.
     const oficial = 'https://www.corteidh.or.cr/docs/casos/articulos/seriec_154_esp.pdf';
     const copia = 'https://ukcuzhwmmfwvcedvhfll.supabase.co/storage/v1/object/public/legal-docs/CorteIDH/seriec_154_esp.pdf';
@@ -153,6 +172,16 @@ if (args[0] !== '--censo') {
             ancla: 'den tro del ca pí tu lo re la ti vo a los de re',
             texto: ' den tro del ca pí tu lo re la ti vo a los de re chos de se gu ri dad jurídica).\nAho ra bien, si la li ber tad es un de re cho fun da men tal (con cre ta da en los di -\nver sos de re chos de li ber tad que es ta ble cen la Cons ti tu ción me xi ca na y los tra -\nta dos in ter na cio na les de de re chos hu ma nos), en ton ces de be ser ca paz de ha',
         },
+        {
+            // La misma voz del Diccionario en una fuente VIEJA, sin ancla (revisión
+            // del 25-sep-2026): pdf.js da primero el folio «280» —abajo a la
+            // izquierda— y el título corrido girado, y el comienzo quedaba en el
+            // folio: «Ir al pasaje» bajaba al pie de la página.
+            nombre: 'Diccionario t. I, pág. 313, fuente vieja sin ancla',
+            archivo: '8_3632_11.pdf', pagina: 313, ancla: null,
+            inicio: 'Esta última modalidad, íntimamente relacionada con el proceso de ju- dicialización de las demandas por derechos humanos, de su',
+            texto: '280\nCreación de derechos por el juez constitucional\nEsta última modalidad, íntimamente relacionada con el proceso de ju-\ndicialización de las demandas por derechos humanos, de su justiciabilidad \n(Abramovich y Pautassi, 2009; Ferrajoli, 2003) traen aparejados nuevos dile-\nmas en la relación entre justicia y política. Dilemas no sólo vinculados con ',
+        },
     ];
     for (const c of oro) {
         const archivo = path.join(carpeta, c.archivo);
@@ -163,11 +192,12 @@ if (args[0] !== '--censo') {
         const ms = Date.now() - t0;
         const pint = loc ? await pintado(loc, leer) : '';
         // La cobertura, desde el ancla: lo de antes (folio, título corrido) no se pinta a propósito.
-        const cuerpo = c.texto.slice(Math.max(0, c.texto.indexOf(c.ancla.split(' ')[0])));
+        const inicio = c.ancla || c.inicio;
+        const cuerpo = c.texto.slice(Math.max(0, c.texto.indexOf(inicio.split(' ')[0])));
         const { cobertura, exceso } = medir(cuerpo, pint);
         ver(Boolean(loc && loc.pagina === c.pagina && loc.confirmado), `${c.nombre}: hallado y confirmado en su página`, loc ? `pág. ${loc.pagina}, ${ms} ms` : '');
         // Lo que se pinta empieza en el ancla: ni el folio ni el título corrido.
-        const cabeza = palabrasCompactas(c.ancla).join('').slice(0, 30);
+        const cabeza = palabrasCompactas(inicio).join('').slice(0, 30);
         ver(pint.includes(cabeza) && pint.indexOf(cabeza) < 60 && !pint.startsWith('280'), `${c.nombre}: empieza en el ancla`, JSON.stringify(pint.slice(0, 60)));
         ver(cobertura >= 0.95, `${c.nombre}: cubre los 350 caracteres`, `cobertura ${cobertura.toFixed(3)}`);
         ver(exceso <= 0.25, `${c.nombre}: no se pasa (sólo el resto del último renglón)`, `exceso ${exceso.toFixed(3)}`);

@@ -604,6 +604,22 @@ const LETRAS_FRAGMENTO = 10;
 /** El pie que la BJV imprime en cada página: viene en el trozo, pero no es la obra. */
 const COLOFON_BJV = /juridicas\.unam\.mx|biblioteca\s+jur[ií]dica\s+virtual|^\s*DR\s*©|ir a la p[aá]gina del libro/i;
 
+/** Un renglón girado: el título corrido al margen del Diccionario (transform [0, 8, -8, 0, …]). */
+function esGirado(it: ItemPdf | undefined): boolean {
+    const t = it?.transform;
+    return Boolean(t && Math.abs(t[1] || 0) > Math.abs(t[0] || 0));
+}
+
+/**
+ * Lo que no puede abrir un pasaje: un renglón girado o un folio suelto
+ * («280», «XVI»). Los romanos, sólo de dos letras en adelante y en
+ * mayúsculas: una «C» suelta es la versalita de un epígrafe («III. C» +
+ * «ONTEXTO…» en Atienza), no un folio.
+ */
+function esMarginal(it: ItemPdf | undefined): boolean {
+    return esGirado(it) || /^\s*(?:\d{1,4}|[IVXLCDM]{2,7})\s*$/.test(it?.str || '');
+}
+
 export async function localizarPasaje(o: PeticionPasaje): Promise<LocalizacionPasaje | null> {
     const leidas: Record<number, PlanoPagina> = {};
     const leer = async (n: number) => (leidas[n] = leidas[n] || (await o.leer(n)));
@@ -656,8 +672,54 @@ export async function localizarPasaje(o: PeticionPasaje): Promise<LocalizacionPa
         if (iIni >= w.length && cIni.c.slice(iIni - w.length, iIni) === w) iIni -= w.length;
         else break;
     }
-    const desde = cIni.pos[iIni];
+    // EL COMIENZO NO ES EL FOLIO (revisión del 25-sep-2026). Sin ancla —las
+    // fuentes guardadas antes del contrato— la ventana casa desde la primera
+    // palabra del trozo, que es la cabecera que leyó PyMuPDF: en el
+    // Diccionario, pág. 313, pdf.js da primero «280» (el folio, ABAJO a la
+    // izquierda) y el título corrido girado al margen, y luego «Esta última
+    // modalidad…» arriba. El comienzo quedaba en el folio, y «Ir al pasaje»
+    // (que baja al primer trazo) llevaba al pie de la página: 374 de 1,376
+    // trozos de muestra (27 %). Se salta lo marginal que abra el hallazgo
+    // —folio suelto o renglón girado—, hasta cuatro fragmentos; si no hay
+    // nada más, se queda donde estaba. Un número en el MISMO renglón que el
+    // texto que le sigue no es folio sino el del párrafo («62. Sin embargo»
+    // en la Panorámica, que el trozo corta en «2.»), y se queda.
+    let desde = cIni.pos[iIni];
+    const k0 = pIni.trozos.findIndex((t) => t.fin > desde);
+    if (k0 >= 0) {
+        const k1 = pIni.trozos.slice(k0, k0 + 5).findIndex((t) => !esMarginal(pIni.items[t.indice]));
+        if (k1 > 0) {
+            let k = k0 + k1;
+            const ref = pIni.items[pIni.trozos[k].indice];
+            const mismoRenglon = (it: ItemPdf) =>
+                !esGirado(it) && Boolean(it.transform && ref.transform) &&
+                Math.abs(it.transform![5] - ref.transform![5]) <= Math.max(4, (ref.height || 0) * 0.6);
+            while (k > k0 && mismoRenglon(pIni.items[pIni.trozos[k - 1].indice])) k--;
+            if (k > k0) desde = pIni.trozos[k].inicio;
+        }
+    }
     const alto = altoEn(pIni, desde);
+    // Y NADA DE LO QUE QUEDE ENCIMA DEL COMIENZO, en su página: lo de antes
+    // es del trozo anterior aunque su texto venga en éste. Así no se pinta el
+    // encabezado «4 / MANUEL ATIENZA» que pdf.js da al final de la página y
+    // que el trozo arrastra (209 de 1,376 trozos de muestra tenían un trazo
+    // suelto ARRIBA del pasaje). La holgura deja entrar las llamadas voladas
+    // del mismo renglón. Los renglones girados (el título corrido al margen)
+    // tampoco se pintan: son de la maqueta, no de la obra; salvo que el
+    // pasaje mismo esté girado (una tabla apaisada). Se quitan AL FINAL, de lo
+    // que se pinta: el veredicto y los puentes entre renglones siguen viendo
+    // todos los fragmentos, como antes (quitarlos antes dejaba sin pintar la
+    // cola corta del último renglón, «tambi|é|n de», que se pintaba por estar
+    // entre dos del trozo).
+    const itemIni = pIni.items[pIni.trozos.find((t) => t.fin > desde)?.indice ?? -1];
+    const yIni = itemIni?.transform ? itemIni.transform[5] : null;
+    const holgura = Math.max(4, (itemIni?.height || 0) * 0.6);
+    const sinGirados = Boolean(itemIni) && !esGirado(itemIni);
+    const seVe = (it: ItemPdf, enLaPrimera: boolean): boolean => {
+        if (sinGirados && esGirado(it)) return false;
+        const y = it.transform?.[5];
+        return !enLaPrimera || yIni === null || y === undefined || y <= yIni + holgura;
+    };
 
     // ¿El fragmento es del trozo? Entero dentro del texto; o, en las puntas,
     // el trozo empieza a media línea (su final es el comienzo del texto) o
@@ -710,7 +772,7 @@ export async function localizarPasaje(o: PeticionPasaje): Promise<LocalizacionPa
                 pinta = previo === true && siguiente === true;
             }
             if (v !== null) previo = v;
-            if (pinta) pintar.push(k);
+            if (pinta && seVe(p.items[trozos[k].indice], n === hallado.pagina)) pintar.push(k);
         }
         if (!pintar.length) break;
         porPagina[n] = pintar.map((k) => trozos[k].indice);

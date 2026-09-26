@@ -129,15 +129,25 @@ export function fichaDoctrina(f: FuenteDoctrina): { autor: string; obra: string;
 
 /**
  * El folio impreso que se cita («280»): `pagina_impresa` o, en las fuentes
- * viejas, el de `ref` («p. 280»). Cuidado: si la obra no trae folio, el
- * backend viejo ponía en `ref` la página del PDF; se devuelve igual, porque
- * es la única que había y es la que ya se citó en la respuesta.
+ * viejas, el de `ref` («p. 280»).
+ *
+ * LA PÁGINA DEL PDF NO ES UN FOLIO (revisión del 25-sep-2026). Cuando la
+ * ingesta no halló el folio —2,566 de los 9,629 trozos: Carbonell 1,230,
+ * la Panorámica 961—, el backend pone en `ref` la página del PDF del
+ * capítulo, y el panel la rotulaba «p. 18» y la referencia decía «(p. 18)»
+ * cuando la página 18 del capítulo 8 de Carbonell lleva impreso el folio
+ * 773. Un abogado que copie esa cita cita una página que no es. Si el
+ * número de `ref` es el mismo que la página del PDF (`pagina`, o el `#page`
+ * de las fuentes viejas), no es folio: se devuelve null y se rotula
+ * «pág. 18 del PDF». Si coincidieran de verdad, el rótulo sigue siendo cierto.
  */
 export function folioDoctrina(f: FuenteDoctrina): string | null {
     const p = f.pagina_impresa;
     if (p !== undefined && p !== null && String(p).trim()) return String(p).trim();
     const m = (f.ref || '').match(/^\s*pp?\.\s*(\S+)/i);
-    return m ? m[1] : null;
+    if (!m) return null;
+    const pdf = paginaDoctrina(f);
+    return pdf !== null && m[1] === String(pdf) ? null : m[1];
 }
 
 /** «p. 280»; sin folio, «pág. 313 del PDF»; sin nada, «pasaje citado». */
