@@ -3,12 +3,88 @@
  *
  * Vivía dentro de `ChatMessage.tsx`; aquí son funciones puras —ni React ni
  * navegador— para poder medirlas en Node.
+ *
+ * TIEMPO LINEAL POR CONSTRUCCIÓN (26-sep-2026). Todo esto corre con cada
+ * trozo del stream y en cada pintado, sobre texto del modelo, así que una
+ * expresión que se vuelva cuadrática con una racha de saltos o de corchetes
+ * congela la pestaña. Había varias: `\n*<!--…-->` volvía a recorrer una racha
+ * de saltos desde cada uno de ellos (100.000 saltos, 6 s); el enlace
+ * `\[([^\]\n]+)\]\(` recorría el renglón desde cada «[» sin cierre (100.000
+ * caracteres de «[x», 2 s); `\[[^\]]*,\s*uuid` de la exportación, desde cada
+ * «[» (100.000 «[», 9 s). Se
+ * siguen las reglas de `@/lib/idsDeCita` —topes, anclas o un escáner con
+ * `indexOf`— y cada escáner dice qué expresión sustituye: devuelve lo mismo
+ * que ella. `comprobaciones/redos_pintado.mjs` lo mide y lo compara.
  */
 
-import { expandirCitasAgrupadas, numerarCitasDelChat } from '@/lib/idsDeCita';
+import { UUID_CITA, expandirCitasAgrupadas, numerarCitasDelChat, quitarBloques, sinComentarios } from '@/lib/idsDeCita';
 import type { CamposCoidh } from '@/lib/coidh';
 import type { CamposDoctrina } from '@/lib/doctrina';
 import type { CamposVigencia } from '@/lib/vigencia';
+
+const esBlanco = (c: string | undefined) => c !== undefined && /\s/.test(c);
+/** Lo que termina un renglón para `.` y `$`. */
+const esFinDeRenglon = (c: string | undefined) => c === '\n' || c === '\r' || c === '\u2028' || c === '\u2029';
+
+/** Dónde está el primer bloque `abre…cierra` (el primer `cierra` tras `abre`),
+ *  como `t.match(/abre([\s\S]*?)cierra/)`, o null. */
+function primerBloque(t: string, abre: string, cierra: string): { inicio: number; dentro: number; cierre: number } | null {
+    const a = t.indexOf(abre);
+    if (a === -1) return null;
+    const c = t.indexOf(cierra, a + abre.length);
+    return c === -1 ? null : { inicio: a, dentro: a + abre.length, cierre: c };
+}
+
+/**
+ * Quita, en una pasada, lo que casaba `\n*abre[\s\S]*?cierra\n*` con la
+ * bandera `g` —los saltos de delante o de detrás, según se pida—. Si una
+ * apertura no tiene cierre, ninguna de las de después lo tiene. Los saltos de
+ * delante sólo llegan hasta donde acabó el bloque anterior, como en la
+ * expresión.
+ */
+function quitarMarcador(t: string, abre: string, cierra: string, saltos: { delante?: boolean; detras?: boolean }): string {
+    let out = '';
+    let i = 0;
+    for (;;) {
+        const a = t.indexOf(abre, i);
+        if (a === -1) break;
+        const c = t.indexOf(cierra, a + abre.length);
+        if (c === -1) break;
+        let desde = a;
+        if (saltos.delante) while (desde > i && t[desde - 1] === '\n') desde--;
+        let hasta = c + cierra.length;
+        if (saltos.detras) while (t[hasta] === '\n') hasta++;
+        out += t.slice(i, desde);
+        i = hasta;
+    }
+    return out + t.slice(i);
+}
+
+/**
+ * `t.replace(/abre[^paradas]*cierre/g, por)`, con `cierre` entre las
+ * `paradas` y `abre` sin ninguna (bandera `g`). Lo de dentro llega hasta la
+ * primera parada; si ésa no es el cierre, tampoco casa ninguna apertura de
+ * las que hay antes de ella, que llegarían a la misma: se sigue desde ahí.
+ */
+function quitarHastaLaParada(t: string, abre: RegExp, paradas: string, cierre: string, por = ''): string {
+    let out = '';
+    let i = 0;
+    let desde = 0;
+    for (;;) {
+        abre.lastIndex = desde;
+        const m = abre.exec(t);
+        if (!m) break;
+        let k = m.index + m[0].length;
+        while (k < t.length && !paradas.includes(t[k])) k++;
+        if (k === t.length) break;
+        if (t[k] === cierre) {
+            out += t.slice(i, m.index) + por;
+            i = k + 1;
+        }
+        desde = k + 1;
+    }
+    return out + t.slice(i);
+}
 
 // Filter out document content from user messages (content between markers is hidden)
 // For AUDITAR_SENTENCIA, show a compact card with file info
@@ -40,10 +116,10 @@ export function filterDocumentContent(content: string): string {
     }
 
     // Remove content between <!-- DOCUMENTO_INICIO --> and <!-- DOCUMENTO_FIN -->
-    const filtered = content.replace(/<!-- DOCUMENTO_INICIO -->[\s\S]*?<!-- DOCUMENTO_FIN -->/g, '');
+    const filtered = quitarBloques(content, /<!-- DOCUMENTO_INICIO -->/g, '<!-- DOCUMENTO_FIN -->');
 
     // Remove content between <!-- SENTENCIA_INICIO --> and <!-- SENTENCIA_FIN -->
-    const sentenciaFiltered = filtered.replace(/<!-- SENTENCIA_INICIO -->[\s\S]*?<!-- SENTENCIA_FIN -->/g, '');
+    const sentenciaFiltered = quitarBloques(filtered, /<!-- SENTENCIA_INICIO -->/g, '<!-- SENTENCIA_FIN -->');
 
     // Also handle the legacy format
     const legacyFiltered = sentenciaFiltered.replace(/---CONTENIDO DEL DOCUMENTO---[\s\S]*/g, '');
@@ -76,10 +152,10 @@ export function procesarRespuesta(contenido: string) {
 
     // Extract thinking content (chain-of-thought from thinking mode)
     let thinking = '';
-    const thinkingMatch = content.match(/<!--THINKING_START-->([\s\S]*?)<!--THINKING_END-->/);
-    if (thinkingMatch) {
-        thinking = thinkingMatch[1];
-        content = content.replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/, '').trim();
+    const razonamiento = primerBloque(content, '<!--THINKING_START-->', '<!--THINKING_END-->');
+    if (razonamiento) {
+        thinking = content.slice(razonamiento.dentro, razonamiento.cierre);
+        content = (content.slice(0, razonamiento.inicio) + content.slice(razonamiento.cierre + '<!--THINKING_END-->'.length)).trim();
     } else if (content.includes('<!--THINKING_START-->')) {
         // El razonamiento aún está llegando y su marcador de cierre no ha
         // aparecido. Sin esto, el texto del razonamiento —y el marcador—
@@ -94,9 +170,10 @@ export function procesarRespuesta(contenido: string) {
     if (content.includes('<!--SYNTHESIS:START-->')) {
         isSynthesizing = !content.includes('<!--SYNTHESIS:END-->');
         // Clean up synthesis markers AND the "Consultando a los genios..." text that might be inside
-        content = content.replace(/<!--SYNTHESIS:START-->[\s\S]*?<!--SYNTHESIS:END-->/g, '');
+        content = quitarBloques(content, /<!--SYNTHESIS:START-->/g, '<!--SYNTHESIS:END-->');
         // Also clean up dangling start markers if it's still streaming
-        content = content.replace(/<!--SYNTHESIS:START-->[\s\S]*/, '');
+        const colgado = content.indexOf('<!--SYNTHESIS:START-->');
+        if (colgado !== -1) content = content.slice(0, colgado);
     }
 
     // LAS CITAS, NUMERADAS POR ORDEN DE PRIMERA APARICIÓN (26-sep-2026).
@@ -118,12 +195,12 @@ export function procesarRespuesta(contenido: string) {
 
     // Parse and strip <!-- CITATION_META:{...} --> from content
     let citationMeta: MetaDelServidor | null = null;
-    const metaMatch = content.match(/<!-- CITATION_META:(\{[\s\S]*?\}) -->/);
+    const metaMatch = primerBloque(content, '<!-- CITATION_META:{', '} -->');
     if (metaMatch) {
         try {
-            citationMeta = JSON.parse(metaMatch[1]);
+            citationMeta = JSON.parse(content.slice(metaMatch.dentro - 1, metaMatch.cierre + 1));
         } catch { /* ignore parse errors */ }
-        content = content.replace(/\n*<!-- CITATION_META:\{[\s\S]*?\} -->/g, '').trim();
+        content = quitarMarcador(content, '<!-- CITATION_META:{', '} -->', { delante: true }).trim();
     }
 
     // LAS FUENTES QUE LLEGAN ANTES DE ESCRIBIR (3-sep-2026).
@@ -138,29 +215,31 @@ export function procesarRespuesta(contenido: string) {
     // generar. Sirve de respaldo mientras dura el stream y el mapa final lo
     // sustituye al cerrar, porque ése trae el texto íntegro y los alias de
     // las citas reparadas.
-    const previasMatch = content.match(/<!-- FUENTES_PREVIAS:(\{[\s\S]*?\}) -->/);
+    const previasMatch = primerBloque(content, '<!-- FUENTES_PREVIAS:{', '} -->');
     if (previasMatch) {
         try {
-            const previas = JSON.parse(previasMatch[1]);
+            const previas = JSON.parse(content.slice(previasMatch.dentro - 1, previasMatch.cierre + 1));
             citationMeta = citationMeta
                 ? { ...citationMeta, sources: { ...previas, ...(citationMeta.sources || {}) } }
                 : { valid: 0, invalid: 0, total: 0, invalid_ids: [], sources: previas };
         } catch { /* si no parsea, se sigue esperando al mapa final */ }
-        content = content.replace(/\n*<!-- FUENTES_PREVIAS:\{[\s\S]*?\} -->\n*/g, '').trim();
+        content = quitarMarcador(content, '<!-- FUENTES_PREVIAS:{', '} -->', { delante: true, detras: true }).trim();
     }
 
     // La marca de cuenta en pausa se quita aquí para que nunca se vea como
     // texto; quien la pinta es el propio componente, más abajo.
-    content = content.replace(/\n*<!--\s*SUSCRIPCION_SUSPENDIDA\s*-->/g, '').trim();
+    // Los saltos de delante, desde el primero de la racha (`(?<!\n)`): sin eso
+    // la búsqueda empezaba en cada salto y recorría otra vez la racha.
+    content = content.replace(/(?<!\n)\n*<!--\s*SUSCRIPCION_SUSPENDIDA\s*-->/g, '').trim();
 
     // Parse and strip <!-- PRECEDENTES_META:[...] --> from content
     let precedentesMeta: PrecedenteMeta[] | null = null;
-    const precMatch = content.match(/<!-- PRECEDENTES_META:(\[[\s\S]*?\]) -->/);
+    const precMatch = primerBloque(content, '<!-- PRECEDENTES_META:[', '] -->');
     if (precMatch) {
         try {
-            precedentesMeta = JSON.parse(precMatch[1]);
+            precedentesMeta = JSON.parse(content.slice(precMatch.dentro - 1, precMatch.cierre + 1));
         } catch { /* ignore parse errors */ }
-        content = content.replace(/\n*<!-- PRECEDENTES_META:\[[\s\S]*?\] -->/g, '').trim();
+        content = quitarMarcador(content, '<!-- PRECEDENTES_META:[', '] -->', { delante: true }).trim();
     }
 
     // ── Inject precedentes as clickable HTML into response content (before CONCLUSIÓN) ──
@@ -213,6 +292,38 @@ export function procesarRespuesta(contenido: string) {
     return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing, precedentesMeta };
 }
 
+/**
+ * Cada «[…, uuid]» cambiado por `por(uuid)`: lo que hacía
+ * `t.replace(/\[[^\]]*,\s*(uuid)\s*\]/gi, …)`. Esa expresión volvía a recorrer
+ * hasta el siguiente «]» desde cada «[» (con «[» repetidos, cuadrático). Aquí
+ * se mira cada tramo entre «]» una vez: lo que casa acaba en el «]» del tramo,
+ * así que se lee hacia atrás —blancos, el uuid, blancos y la coma— y empieza
+ * en la primera «[» del tramo, que tiene que ir antes de la coma.
+ */
+const RX_UUID_ENTERO = new RegExp(`^${UUID_CITA}$`);
+function citaTrasComa(t: string, por: (uuid: string) => string): string {
+    let out = '';
+    let i = 0;
+    let desde = 0;
+    for (;;) {
+        const a = t.indexOf('[', desde);
+        if (a === -1) break;
+        const e = t.indexOf(']', a + 1);
+        if (e === -1) break;
+        desde = e + 1;
+        let fin = e;
+        while (fin > a + 1 && esBlanco(t[fin - 1])) fin--;
+        const u = fin - 36;
+        if (u < a + 2 || !RX_UUID_ENTERO.test(t.slice(u, fin))) continue;
+        let coma = u;
+        while (coma > a + 1 && esBlanco(t[coma - 1])) coma--;
+        if (coma - 1 <= a || t[coma - 1] !== ',') continue;
+        out += t.slice(i, a) + por(t.slice(u, fin));
+        i = e + 1;
+    }
+    return out + t.slice(i);
+}
+
 /** Sin ningún artefacto de las citas: la prosa que va al PDF y al Word. */
 export function limpiarParaExportar(raw: string, docIdMap: Map<string, number>): string {
     let clean = raw;
@@ -232,7 +343,7 @@ export function limpiarParaExportar(raw: string, docIdMap: Map<string, number>):
     // acabó impreso dentro del Word que descarga el abogado, con su JSON a
     // la vista en la primera página. Enumerar marcadores es una lista que
     // se queda corta cada vez que se añade uno; quitarlos todos no.
-    clean = clean.replace(/<!--[\s\S]*?-->/g, '');
+    clean = sinComentarios(clean);
 
     // 1b. Lo agrupado —«[Doc IDs: a; b]»— se abre en citas singulares, igual
     // que en la burbuja: si no, el paso 2b lo borraba y el Word perdía esas
@@ -246,8 +357,10 @@ export function limpiarParaExportar(raw: string, docIdMap: Map<string, number>):
         return num ? `⟦${num}⟧` : '';
     };
     clean = clean.replace(/\[Doc ID:\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\]/gi, (_, u) => replaceWithCitNum(u));
-    clean = clean.replace(/\[\s*,?\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\s*\]/gi, (_, u) => replaceWithCitNum(u));
-    clean = clean.replace(/\[[^\]]*,\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\s*\]/gi, (_, u) => replaceWithCitNum(u));
+    // `\[\s*,?\s*` repartía una racha de espacios entre los dos `\s*`: el
+    // blanco tras la coma va dentro de su opcional.
+    clean = clean.replace(/\[\s*(?:,\s*)?([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\s*\]/gi, (_, u) => replaceWithCitNum(u));
+    clean = citaTrasComa(clean, replaceWithCitNum);
     clean = clean.replace(/Doc\s+([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/gi, (_, u) => replaceWithCitNum(u));
     clean = clean.replace(/\(Doc ID:\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)/gi, (_, u) => replaceWithCitNum(u));
 
@@ -255,7 +368,7 @@ export function limpiarParaExportar(raw: string, docIdMap: Map<string, number>):
     clean = clean.replace(/\[Doc ID:\s*[a-f0-9-]+\]/gi, '');
     // Sin cruzar renglones ni números ya puestos (⟦N⟧): un corchete con
     // etiqueta sin cerrar se llevaba el renglón siguiente y sus citas.
-    clean = clean.replace(/\[Doc IDs?:[^\]\n⟦]*\]/gi, '');
+    clean = quitarHastaLaParada(clean, /\[Doc IDs?:/gi, ']\n⟦', ']');
 
     // 4. Remove standalone Doc uuid references
     clean = clean.replace(/Doc\s+[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, '');
@@ -273,7 +386,7 @@ export function limpiarParaExportar(raw: string, docIdMap: Map<string, number>):
     clean = clean.replace(/Doc ID:\s*[a-f0-9-]*/gi, '');
 
     // 9. Remove <!-- THINKING_START/END --> blocks
-    clean = clean.replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/g, '');
+    clean = quitarBloques(clean, /<!--THINKING_START-->/g, '<!--THINKING_END-->');
 
     // 10. Remove <!--PING--> and <!--CACHE:ACTIVE--> markers
     clean = clean.replace(/<!--\s*PING\s*-->/g, '');
@@ -296,7 +409,7 @@ export function limpiarParaExportar(raw: string, docIdMap: Map<string, number>):
     // abogado necesita leer.
     clean = clean.replace(/<br\s*\/?>/gi, '\n');
     clean = clean.replace(/<\/(div|p|li)>/gi, '\n');
-    clean = clean.replace(/<\/?(?:div|span|a|ul|ol|li|p|section|figure)\b[^>]*>/gi, ' ');
+    clean = quitarHastaLaParada(clean, /<\/?(?:div|span|a|ul|ol|li|p|section|figure)\b/gi, '>', '>', ' ');
     clean = clean.replace(/&#8599;|&nbsp;|&#160;/g, ' ');
     clean = clean.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 
@@ -311,14 +424,100 @@ export function limpiarParaExportar(raw: string, docIdMap: Map<string, number>):
 
 /** Lo que se lleva al portapapeles: sin marcadores ni identificadores. */
 export function textoParaCopiar(contenido: string): string {
-    return expandirCitasAgrupadas(contenido)
-        .replace(/<!--[\s\S]*?-->/g, '') // Remove ALL HTML comments (including CITATION_META)
+    // Fuera TODOS los comentarios HTML (CITATION_META incluido), con escáner.
+    const sinMarcas = sinComentarios(expandirCitasAgrupadas(contenido))
         .replace(/---CONTENIDO DEL DOCUMENTO---[\s\S]*/g, '')
         .replace(/\[AUDITAR_SENTENCIA\]/g, '')
         .replace(/\[Doc\s*ID:\s*[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\]/gi, '')
-        .replace(/(?<!")([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?!")/gi, '')
-        .replace(/\[SCJN_BUSCAR:\s*[^\]]*\]/g, '')
-        .trim();
+        .replace(/(?<!")([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?!")/gi, '');
+    // `\[SCJN_BUSCAR:\s*[^\]]*\]`: hasta el primer «]».
+    return quitarBloques(sinMarcas, /\[SCJN_BUSCAR:/g, ']').trim();
+}
+
+/**
+ * «> *Fuente: …*» → `<p class="fuente-cita">`: lo que hacía
+ * `t.replace(/^> \*?Fuente:\s*(.*?)\*?\s*$/gmi, '<p class="fuente-cita">Fuente: $1</p>')`.
+ * Con el `(.*?)` perezoso seguido de `\*?\s*$`, cada carácter de una racha de
+ * blancos a mitad del renglón volvía a recorrer la racha (cuadrático). Se
+ * conserva lo que casaba, rarezas incluidas:
+ *   · tras «Fuente:», `\s*` salta TODOS los blancos, saltos incluidos;
+ *   · el texto es el resto de ESE renglón sin los blancos del final ni el «*»
+ *     que quede delante de ellos;
+ *   · la coincidencia se come además los blancos que siguen hasta el último
+ *     fin de renglón que haya entre ellos (o hasta el final): «…*⏎⏎Sigue»
+ *     queda en «</p>⏎Sigue», con un solo salto.
+ */
+const RX_FUENTE = /^> \*?Fuente:/gmi;
+function parrafosDeFuente(t: string): string {
+    let out = '';
+    let i = 0;
+    RX_FUENTE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = RX_FUENTE.exec(t))) {
+        let a = m.index + m[0].length;
+        while (esBlanco(t[a])) a++;
+        let finRenglon = a;
+        while (finRenglon < t.length && !esFinDeRenglon(t[finRenglon])) finRenglon++;
+        let k = finRenglon;
+        while (k > a && esBlanco(t[k - 1])) k--;
+        if (k > a && t[k - 1] === '*') k--;
+        // Lo que se come después: el «*», los blancos, y se para en el último
+        // fin de renglón de esos blancos (o en el final del texto).
+        const s0 = t[k] === '*' ? k + 1 : k;
+        let j = s0;
+        while (esBlanco(t[j])) j++;
+        let fin = t.length;
+        if (j < t.length) {
+            fin = j - 1;
+            while (!esFinDeRenglon(t[fin])) fin--;
+        }
+        out += t.slice(i, m.index) + `<p class="fuente-cita">Fuente: ${t.slice(a, k)}</p>`;
+        i = fin;
+        RX_FUENTE.lastIndex = fin;
+    }
+    return out + t.slice(i);
+}
+
+/**
+ * `[texto](http…)` → enlace: lo que hacía
+ * `t.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" …>$1</a>')`.
+ * Esa expresión recorría hasta el siguiente «]» o salto desde CADA «[» (un
+ * renglón de «[x» repetido, 2 s con 100.000 caracteres). Todas las «[» de
+ * antes de ese «]» o salto llegan a él: si la primera no casa, ninguna. Y la
+ * dirección, `[^\s)]+`, acaba en el mismo blanco o «)» desde cualquier punto
+ * de una misma racha: se recuerda hasta dónde se midió.
+ */
+function enlaces(t: string): string {
+    let out = '';
+    let i = 0;
+    let desde = 0;
+    let medidaDesde = -1;
+    let medidaHasta = -1;
+    for (;;) {
+        const a = t.indexOf('[', desde);
+        if (a === -1) break;
+        let e = a + 1;
+        while (e < t.length && t[e] !== ']' && t[e] !== '\n') e++;
+        desde = e;
+        if (e === a + 1 || t[e] !== ']' || t[e + 1] !== '(') continue;
+        const url = e + 2;
+        const esquema = t.startsWith('https://', url) ? 8 : t.startsWith('http://', url) ? 7 : 0;
+        if (!esquema) continue;
+        const u = url + esquema;
+        let v: number;
+        if (u >= medidaDesde && u <= medidaHasta) v = medidaHasta;
+        else {
+            v = u;
+            while (v < t.length && t[v] !== ')' && !esBlanco(t[v])) v++;
+            medidaDesde = u;
+            medidaHasta = v;
+        }
+        if (v === u || t[v] !== ')') continue;
+        out += t.slice(i, a) + `<a href="${t.slice(url, v)}" target="_blank" rel="noopener noreferrer" class="enlace-externo">${t.slice(a + 1, e)}</a>`;
+        i = v + 1;
+        desde = v + 1;
+    }
+    return out + t.slice(i);
 }
 
 /**
@@ -339,12 +538,13 @@ export function cabeceraSeccion(titulo: string): string {
     return `<div class="iurexia-section-header"><span class="section-texto">${texto}</span></div>`;
 }
 
+const ORGANIGRAMA_NODOS = 500;
+const ORGANIGRAMA_NIVELES = 40;
+
 export function formatMarkdown(text: string): string {
     // STEP 0: Strip any [SCJN_BUSCAR: ...] markers (feature removed)
-    let processed = text.replace(
-        /\[SCJN_BUSCAR:\s*[^\]]*\]/g,
-        ''
-    );
+    // (`\[SCJN_BUSCAR:\s*[^\]]*\]`: hasta el primer «]»)
+    let processed = quitarBloques(text, /\[SCJN_BUSCAR:/g, ']');
 
     // STEP 1: Parse markdown tables BEFORE other transforms
     // Handles BOTH standard pipe tables (|) AND Unicode box-drawing tables (┌─┬─┐ │ ├ └)
@@ -492,21 +692,35 @@ export function formatMarkdown(text: string): string {
             const roots = Array.from(allNodes).filter(n => !childNodes.has(n));
             if (roots.length === 0 && allNodes.size > 0) roots.push(Array.from(allNodes)[0]);
 
-            // Recursive HTML builder
+            // Recursive HTML builder. CON TOPE (26-sep-2026): un ciclo —«a ->
+            // b», «b -> a»— recursaba hasta reventar la pila, una cadena de
+            // miles de niveles también, y los rombos —«a -> b, c», «b -> d»,
+            // «c -> d», …— doblaban el árbol en cada nivel. Un nodo que ya
+            // está en su propia rama se pinta sin hijos, y pasados
+            // ORGANIGRAMA_NODOS nodos u ORGANIGRAMA_NIVELES niveles no se baja
+            // más: un organigrama de verdad no llega a ninguno de los dos.
+            const hijosDe = new Map<string, string[]>();
+            for (const e of edges) if (!hijosDe.has(e.parent)) hijosDe.set(e.parent, e.children);   // el primero, como `edges.find`
+            const rama = new Set<string>();
+            let quedan = ORGANIGRAMA_NODOS;
             const buildNodeHtml = (nodeName: string, isRoot: boolean): string => {
-                const edge = edges.find(e => e.parent === nodeName);
+                quedan--;
+                const children = hijosDe.get(nodeName);
                 let nodeHtml = `<div class="orgchart-node-group">`;
                 nodeHtml += `<div class="orgchart-node${isRoot ? ' root-node' : ''}">${nodeName}</div>`;
-                if (edge && edge.children.length > 0) {
+                if (children && children.length > 0 && !rama.has(nodeName) && quedan > 0 && rama.size < ORGANIGRAMA_NIVELES) {
+                    rama.add(nodeName);
                     nodeHtml += `<div class="orgchart-connector"></div>`;
                     nodeHtml += `<div class="orgchart-level">`;
-                    edge.children.forEach(child => {
+                    for (const child of children) {
+                        if (quedan <= 0) break;
                         nodeHtml += `<div class="orgchart-node-group">`;
                         nodeHtml += `<div class="orgchart-vline"></div>`;
                         nodeHtml += buildNodeHtml(child, false);
                         nodeHtml += `</div>`;
-                    });
+                    }
                     nodeHtml += `</div>`;
+                    rama.delete(nodeName);
                 }
                 nodeHtml += `</div>`;
                 return nodeHtml;
@@ -631,22 +845,19 @@ export function formatMarkdown(text: string): string {
         .replace(/^## (?!.*(?:Respuesta|Análisis) Legal)(.*$)/gm, (_m, t: string) => cabeceraSeccion(t))
         .replace(/^# (.*$)/gm, '<h2>$1</h2>')
         // Negritas antes que cursivas
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        // «> *Fuente: …*» ANTES de la cursiva genérica: iba después y, como el
-        // modelo casi siempre escribe la fuente entre asteriscos, la regla no
-        // casaba nunca y la fuente caía a la cita marrón.
-        .replace(/^> \*?Fuente:\s*(.*?)\*?\s*$/gmi, '<p class="fuente-cita">Fuente: $1</p>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // «> *Fuente: …*» ANTES de la cursiva genérica: iba después y, como el
+    // modelo casi siempre escribe la fuente entre asteriscos, la regla no
+    // casaba nunca y la fuente caía a la cita marrón.
+    processed = parrafosDeFuente(processed)
         // Cursiva: un asterisco pegado al texto, sin cruzar líneas ni comerse
         // los «* » de las viñetas ni los «5*» de una nota
         .replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)\*(?!\w)/g, '$1<em>$2</em>')
         // Código en línea
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
-        // Enlaces [texto](url). Exige el paréntesis con esquema http(s), así
-        // que las referencias sueltas tipo «[1]» siguen intactas.
-        .replace(
-            /\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g,
-            '<a href="$2" target="_blank" rel="noopener noreferrer" class="enlace-externo">$1</a>'
-        )
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Enlaces [texto](url). Exige el paréntesis con esquema http(s), así
+    // que las referencias sueltas tipo «[1]» siguen intactas.
+    processed = enlaces(processed)
         // Citas: las líneas «>» consecutivas son UNA cita (un artículo de tres
         // líneas era tres blockquotes con la barra troceada)
         .replace(/^(?:> ?.*(?:\n|$))+/gm, (bloque: string) => {
@@ -669,7 +880,8 @@ export function formatMarkdown(text: string): string {
             // se envuelve. Los que empiezan por texto (o por una cita [N]) son
             // un párrafo, con el salto simple como <br/>.
             if (/^<(?:h[1-6]|div|ul|ol|blockquote|hr|table|p|details|section)\b/i.test(t) || t.startsWith('<!--')) {
-                return t.replace(/>\s*\n\s*</g, '><');
+                // `>\s*\n\s*<`, sin repartir los blancos entre dos `\s*`
+                return t.replace(/>(\s*)</g, (m: string, blancos: string) => (blancos.includes('\n') ? '><' : m));
             }
             return `<p>${t.replace(/\n/g, '<br/>')}</p>`;
         })

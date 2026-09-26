@@ -90,6 +90,16 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         [processedContent, isStreaming],
     );
     useRevelado(contentRef, htmlFormateado, isStreaming);
+    // El razonamiento y las lecturas del sello se hacían en CADA render, sin
+    // memoria: durante el stream eso es una vez por trozo. Las del sello, sólo
+    // cuando el sello se pinta (terminada la respuesta).
+    const htmlRazonamiento = useMemo(() => (thinkingContent ? formatMarkdown(thinkingContent) : ''), [thinkingContent]);
+    const conSello = !isStreaming && !basico;
+    const lecturaDelSello = useMemo(() => (conSello ? {
+        registros: registrosDeLaRespuesta(processedContent),
+        rubros: rubrosPorRegistro(processedContent),
+        sinRegistro: citasSinRegistro(processedContent),
+    } : null), [processedContent, conSello]);
 
     // ── CUENTA EN PAUSA POR UN COBRO QUE NO ENTRÓ (31-ago-2026) ───────────
     //
@@ -915,7 +925,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 </summary>
                                 <div
                                     className="px-3 py-2 text-xs text-charcoal-600 leading-relaxed border-t border-cream-200/40 max-h-64 overflow-y-auto prose-thinking bg-white"
-                                    dangerouslySetInnerHTML={{ __html: formatMarkdown(thinkingContent) }}
+                                    dangerouslySetInnerHTML={{ __html: htmlRazonamiento }}
                                 />
                             </details>
                         )}
@@ -1037,7 +1047,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             comprueba contra el Semanario cada registro de
                             tesis citado en la prosa —lo único que el
                             validador del backend NO miraba. (7-ago-2026) */}
-                        {!isStreaming && !basico && (
+                        {lecturaDelSello && (
                             <SelloCitas
                                 // Las mismas cuentas que la tarjeta y la hoja: una cita
                                 // agrupada que `/cita` resolvió también está trazada.
@@ -1048,10 +1058,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 fueraDeContexto={cuentaCitas.fueraDeContexto}
                                 sinComprobar={cuentaCitas.sinComprobar}
                                 fichasPendientes={cuentaCitas.pendientes}
-                                registros={registrosDeLaRespuesta(processedContent)}
-                                rubros={rubrosPorRegistro(processedContent)}
+                                registros={lecturaDelSello.registros}
+                                rubros={lecturaDelSello.rubros}
                                 fueraDelAcervo={message.registrosFuera}
-                                sinRegistro={citasSinRegistro(processedContent)}
+                                sinRegistro={lecturaDelSello.sinRegistro}
                             />
                         )}
 

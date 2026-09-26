@@ -29,10 +29,30 @@
  * y se da por buena la que lleve un «Registro digital» a menos de 400
  * caracteres: ésa ya la comprueba el resto del sello.
  */
+/* TIEMPO LINEAL (26-sep-2026). Dos `\s*` separados sólo por algo opcional
+   —`\s*(?:J\/)?\s*`— se reparten una racha de espacios de todas las maneras
+   posibles: «I.1o.C.» y 100.000 espacios costaban 4 s. Con el blanco de después DENTRO del opcional —`\s*(?:J\/\s*)?`—
+   casa exactamente lo mismo y cada espacio se mira una vez. La misma regla
+   para el registro, abajo: un solo `\s*` por hueco. */
 const PATRON_TESIS = new RegExp(
     '(?:(?:1a|2a|3a|4a|P|PC)\\.?\\s*\\/\\s*J\\.?\\s*\\d{1,4}\\/\\d{4})'
-    + '|(?:[IVXLC]{1,7}\\.\\d{0,3}[oa]?\\.[A-ZÁÉÍÓÚ]{1,5}\\.\\s*(?:J\\/)?\\s*\\d{1,4}(?:\\s*[A-Z]{1,3})?)',
+    + '|(?:[IVXLC]{1,7}\\.\\d{0,3}[oa]?\\.[A-ZÁÉÍÓÚ]{1,5}\\.\\s*(?:J\\/\\s*)?\\d{1,4}(?:\\s*[A-Z]{1,3})?)',
     'g');
+
+/**
+ * «Registro digital: 2021472», «registro digital 162822», «Registro: 2006227»,
+ * «Registro núm. 2006227», con el número en el grupo 1.
+ *
+ * Era `\s*(?:n[úu]m(?:ero)?\.?)?\s*[:.]?\s*`: tres `\s*` seguidos,
+ * separados sólo por opcionales, así que una racha de espacios sin número
+ * detrás se probaba repartida entre los tres —cúbico—. «Registro» y 4.000
+ * espacios tardaban 10 s, y la función corre en cada pintado del mensaje.
+ * Ahora cada blanco va detrás de lo que separa (`(?:núm…\s*)?`,
+ * `(?:[:.]\s*)?`): casa las mismas cadenas, con el mismo número, y la racha
+ * se recorre una vez.
+ */
+const REGISTRO = '[Rr]egistro(?:\\s+digital)?\\s*(?:n[úu]m(?:ero)?\\.?\\s*)?(?:[:.]\\s*)?(\\d{6,8})';
+const RX_HAY_REGISTRO = new RegExp(REGISTRO);
 
 export function citasSinRegistro(texto: string): string[] {
     const fuera = new Set<string>();
@@ -40,7 +60,7 @@ export function citasSinRegistro(texto: string): string[] {
     let m: RegExpExecArray | null;
     while ((m = patron.exec(texto)) !== null) {
         const cerca = texto.slice(Math.max(0, m.index - 400), m.index + 400);
-        if (!/[Rr]egistro(?:\s+digital)?\s*(?:n[úu]m(?:ero)?\.?)?\s*[:.]?\s*\d{6,8}/.test(cerca)) {
+        if (!RX_HAY_REGISTRO.test(cerca)) {
             fuera.add(m[0].replace(/\s+/g, ' ').trim());
         }
     }
@@ -58,7 +78,7 @@ export function citasSinRegistro(texto: string): string[] {
  */
 export function registrosDeLaRespuesta(texto: string): string[] {
     const encontrados = new Set<string>();
-    const patron = /[Rr]egistro(?:\s+digital)?\s*(?:n[úu]m(?:ero)?\.?)?\s*[:.]?\s*(\d{6,8})/g;
+    const patron = new RegExp(REGISTRO, 'g');
     let m: RegExpExecArray | null;
     while ((m = patron.exec(texto)) !== null) encontrados.add(m[1]);
     return Array.from(encontrados);
@@ -74,7 +94,7 @@ export function registrosDeLaRespuesta(texto: string): string[] {
  */
 export function rubrosPorRegistro(texto: string): Record<string, string> {
     const mapa: Record<string, string> = {};
-    const patron = /[Rr]egistro(?:\s+digital)?\s*(?:n[úu]m(?:ero)?\.?)?\s*[:.]?\s*(\d{6,8})/g;
+    const patron = new RegExp(REGISTRO, 'g');
     let m: RegExpExecArray | null;
     while ((m = patron.exec(texto)) !== null) {
         const antes = texto.slice(Math.max(0, m.index - 700), m.index);
