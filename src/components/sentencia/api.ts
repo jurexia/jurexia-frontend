@@ -2169,8 +2169,14 @@ export function mapaDe(x: unknown): MapaDelEstudio | null {
     });
     const c = j.cobertura ?? _o(j.mapa)?.cobertura;
     const co = _o(c);
+    /* «faltan» del servidor son TODOS los que no llevan marca, rescatados
+       incluidos (marcas.verificar); los que ni marca ni rastro vienen en
+       «sin_rastro». Aquí «faltan» es lo segundo (integración, 26-sep-2026). */
+    const _resc = co ? _ts(co.rescatados) : [];
     const cobertura: CoberturaDelEstudio | null = co
-        ? { faltan: _ts(co.faltan), rescatados: _ts(co.rescatados), cobertura: _n(co.cobertura) }
+        ? { faltan: Array.isArray(co.sin_rastro) ? _ts(co.sin_rastro)
+                                                 : _ts(co.faltan).filter((id) => !_resc.includes(id)),
+            rescatados: _resc, cobertura: _n(co.cobertura) }
         : (_n(c) !== null ? { faltan: [], rescatados: [], cobertura: _n(c) } : null);
     if (!Object.keys(marcas).length && !cobertura) return null;
     const plan = planDe(j.plan ?? j.plan_usado);
