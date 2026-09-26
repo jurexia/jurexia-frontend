@@ -203,7 +203,7 @@ export function markdownAHtml(md: string): string {
 export function textoDeHtml(raiz: HTMLElement): string {
     const partes: string[] = []
     let suelto = ''
-    const volcar = () => { const t = suelto.replace(/[ \t]+\n/g, '\n').trim(); if (t) partes.push(t); suelto = '' }
+    const volcar = () => { const t = sinBlancosAlFinalDelRenglon(suelto).trim(); if (t) partes.push(t); suelto = '' }
     const textoDe = (n: Node): string => {
         if (n.nodeType === 3) return n.textContent || ''
         if (!(n instanceof HTMLElement)) return ''
@@ -379,8 +379,43 @@ export function separarTarjetas(md: string): { sin: string; tarjetas: string; av
 // SÓLO CON FORMA DE RUBRO Y EN MAYÚSCULAS (segunda revisión): un párrafo del escrito
 // que empiece por «Estrategia procesal…» no puede mandar fuera todo lo que sigue.
 // Se admite «FASE 3:», numeración romana o un emoji delante.
-const RX_ESTRATEGIA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*)?[ \t]*(?:[IVX]+\.[ \t]*|FASE[ \t]+\d+[ \t]*:[ \t]*|[^\sA-Za-zÁÉÍÓÚÑáéíóúñ0-9#*]{1,3}[ \t]*)?(?:ESTRATEGIA(?:[ \t]+(?:PROCESAL|DE[ \t]+IMPUGNACI[ÓO]N|DEL[ \t]+AMPARO))|(?:EVALUACI[ÓO]N|AN[ÁA]LISIS)[ \t]+DE[ \t]+VIABILIDAD)\b.*$/gm
-const RX_CIERRE_ESCRITO = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*)?[ \t]*(?:PROTESTO|PROTESTAMOS|PUNTOS PETITORIOS|PETITORIOS)\b/gm
+// El blanco tras «**» va DENTRO de su opcional (26-sep-2026): con
+// `^[ \t]*(?:#…)?(?:\*\*)?[ \t]*` dos rachas de blancos quedaban pegadas cuando
+// no hay «#» ni «**», y un renglón de 20.000 espacios costaba 0,8 s. Casan los
+// mismos renglones; cada blanco se mira una vez.
+const RX_ESTRATEGIA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?(?:[IVX]+\.[ \t]*|FASE[ \t]+\d+[ \t]*:[ \t]*|[^\sA-Za-zÁÉÍÓÚÑáéíóúñ0-9#*]{1,3}[ \t]*)?(?:ESTRATEGIA(?:[ \t]+(?:PROCESAL|DE[ \t]+IMPUGNACI[ÓO]N|DEL[ \t]+AMPARO))|(?:EVALUACI[ÓO]N|AN[ÁA]LISIS)[ \t]+DE[ \t]+VIABILIDAD)\b.*$/gm
+const RX_CIERRE_ESCRITO = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?(?:PROTESTO|PROTESTAMOS|PUNTOS PETITORIOS|PETITORIOS)\b/gm
+
+/** ¿`t[a, b)` es un renglón separador —`[ \t]*` y tres o más de un mismo
+ *  «-», «*», «_» o «═», y `[ \t]*`—? */
+function esRenglonSeparador(t: string, a: number, b: number): boolean {
+    while (a < b && (t[a] === ' ' || t[a] === '\t')) a++
+    while (b > a && (t[b - 1] === ' ' || t[b - 1] === '\t')) b--
+    if (b - a < 3 || !'-*_═'.includes(t[a])) return false
+    for (let k = a + 1; k < b; k++) if (t[k] !== t[a]) return false
+    return true
+}
+
+/**
+ * Sin los renglones separadores del final: lo que hacía
+ * `t.replace(/(?:\n[ \t]*(?:-{3,}|\*{3,}|_{3,}|═{3,})[ \t]*)+\s*$/, '')`.
+ * Esa expresión, anclada al final pero buscada desde cada salto, recorría
+ * hasta el final desde cada «\n---» (cuadrático); aquí se lee hacia atrás:
+ * los blancos finales, y renglón a renglón mientras sean separadores
+ * seguidos —sin renglones en blanco entre ellos, como exigía la expresión—.
+ */
+function sinSeparadoresAlFinal(t: string): string {
+    let fin = t.length
+    while (fin > 0 && esBlanco(t[fin - 1])) fin--
+    let corte = -1
+    for (let b = fin; ;) {
+        const a = t.lastIndexOf('\n', b - 1)
+        if (a === -1 || !esRenglonSeparador(t, a + 1, b)) break
+        corte = a
+        b = a
+    }
+    return corte === -1 ? t : t.slice(0, corte)
+}
 
 export function separarEstrategia(md: string): { escrito: string; estrategia: string } {
     const t = md || ''
@@ -392,8 +427,51 @@ export function separarEstrategia(md: string): { escrito: string; estrategia: st
     const m = candidatos.find((c) => (c.index ?? 0) > ultimoCierre) ?? (ultimoCierre === -1 ? candidatos[0] : null)
     if (!m || m.index === undefined) return { escrito: t, estrategia: '' }
     // Los separadores «---» o «═══» que van justo antes también se quedan fuera del escrito.
-    const escrito = t.slice(0, m.index).replace(/(?:\n[ \t]*(?:-{3,}|\*{3,}|_{3,}|═{3,})[ \t]*)+\s*$/, '').trimEnd()
+    const escrito = sinSeparadoresAlFinal(t.slice(0, m.index)).trimEnd()
     return { escrito, estrategia: t.slice(m.index).trim() }
+}
+
+/* Las dos lecturas de `analizarRespuesta` eran expresiones con dos rachas de blancos
+   pegadas —`(^|\n)\s*❌`, `-{3,}\s*\n\s*⚠️`—: con saltos o espacios
+   ideográficos seguidos, cada intento volvía a recorrer la racha (100.000
+   caracteres, 3 s). Son escáneres que devuelven lo mismo. */
+
+/** El primer «❌» que empieza renglón (tras blancos): dónde empieza lo que
+ *  casaba `/(^|\n)\s*❌\s*(.*)/` —0, o el salto de delante— y su grupo 2, el
+ *  resto del renglón en que cae el texto tras los blancos que siguen al «❌». */
+function primeraFalla(t: string): { index: number; resto: string } | null {
+    for (let k = t.indexOf('❌'); k !== -1; k = t.indexOf('❌', k + 1)) {
+        let s = k
+        while (s > 0 && esBlanco(t[s - 1])) s--
+        let p = s === 0 ? 0 : -1
+        for (let j = s; p === -1 && j < k; j++) if (t[j] === '\n') p = j
+        if (p === -1) continue
+        let a = k + 1
+        while (esBlanco(t[a])) a++
+        let b = a
+        while (b < t.length && !FIN_DE_LINEA.test(t[b])) b++
+        return { index: p, resto: t.slice(a, b) }
+    }
+    return null
+}
+
+const AVISO_TRUNCADA = '**Respuesta truncada**'
+
+/** Dónde empieza el aviso de respuesta truncada, o -1: lo que casaba
+ *  `/\n-{3,}\s*\n\s*⚠️\s*\*\*Respuesta truncada\*\*[\s\S]*$/` —un salto, tres
+ *  guiones o más, blancos con algún salto, «⚠️», blancos y el aviso—. */
+function inicioDeTruncada(t: string): number {
+    for (let p = t.indexOf('\n---'); p !== -1; p = t.indexOf('\n---', p + 1)) {
+        let k = p + 1
+        while (t[k] === '-') k++
+        let salto = false
+        while (esBlanco(t[k])) { if (t[k] === '\n') salto = true; k++ }
+        if (!salto || !t.startsWith('⚠️', k)) continue
+        k += '⚠️'.length
+        while (esBlanco(t[k])) k++
+        if (t.startsWith(AVISO_TRUNCADA, k)) return p
+    }
+    return -1
 }
 
 /**
@@ -411,10 +489,10 @@ export function analizarRespuesta(bruto: string): { error: string | null; texto:
         return { error: 'Tu suscripción está suspendida por un cobro pendiente.', texto: '', truncada: false }
     }
     let limpio = limpiarMarcadores(crudo)
-    const falla = /(^|\n)\s*❌\s*(.*)/.exec(limpio)
+    const falla = primeraFalla(limpio)
     if (falla) {
         const antes = limpio.slice(0, falla.index).trim()
-        const mensaje = falla[2].replace(/\*\*/g, '').trim()
+        const mensaje = falla.resto.replace(/\*\*/g, '').trim()
         // El aviso solo (corto, sin nada antes) o el de consulta fallida detrás
         // de un texto a medias: no hay escrito. Una revisión que usa ❌ como
         // viñeta es larga y sigue siendo respuesta.
@@ -426,7 +504,7 @@ export function analizarRespuesta(bruto: string): { error: string | null; texto:
         }
     }
     let truncada = false
-    const corte = /\n-{3,}\s*\n\s*⚠️\s*\*\*Respuesta truncada\*\*[\s\S]*$/.exec(limpio)
-    if (corte) { limpio = limpio.slice(0, corte.index).trim(); truncada = true }
+    const corte = inicioDeTruncada(limpio)
+    if (corte !== -1) { limpio = limpio.slice(0, corte).trim(); truncada = true }
     return { error: null, texto: limpio, truncada }
 }
