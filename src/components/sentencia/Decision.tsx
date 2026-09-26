@@ -6,6 +6,9 @@ import { cn, Pastilla } from './primitivas';
 import type { ProblemaJuridico } from './tipos';
 import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
               PropuestaSuplencia, DecisionSuplencia } from './api';
+import EstudiarJuntos from './EstudiarJuntos';
+import ComoSeEstudiara, { usePlanDelEstudio, pendientesDeRazon } from './ComoSeEstudiara';
+import type { EnlacePlan } from './ComoSeEstudiara';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LA PANTALLA DE DECISIÓN: UNA FRASE, DOS BOTONES, Y LA TARJETA FINAL
@@ -299,6 +302,25 @@ function PasoSuplencia({ propuesta, valor, onCambiar }: {
     );
 }
 
+/* Sin enlace, el hook no pide nada: la cuenta no escribe con plan. */
+const PLAN_APAGADO: EnlacePlan = {
+    activo: false, firma: '',
+    pedir: () => Promise.reject(new Error('sin plan')),
+    leer: () => Promise.reject(new Error('sin plan')),
+};
+
+/* LAS VARIANTES DEL PROMPT DEL ESTUDIO, sólo para cuentas de casa (26-sep-2026).
+   Hasta hoy la variante sólo se podía pedir desde el banco de medición; para
+   probar el plan en el montaje real —con clic, no con un guion— hace falta
+   elegirla aquí. Al resto de cuentas el servidor les ignora el campo. */
+const VARIANTES: { id: string; rotulo: string; que: string }[] = [
+    { id: '', rotulo: 'por omisión', que: 'La que tenga el servidor (ESTUDIO_PROMPT).' },
+    { id: 'v1', rotulo: 'v1', que: 'El prompt de producción, congelado.' },
+    { id: 'v2', rotulo: 'v2', que: 'La limpieza del Paso 1.' },
+    { id: 'v3', rotulo: 'v3', que: 'v2 con el inventario de argumentos y las marcas.' },
+    { id: 'v4', rotulo: 'v4 · con plan', que: 'v3 con el plan del estudio: enciende «Cómo se estudiará».' },
+];
+
 function Pliegue({ titulo, children, abierto }: {
     titulo: string; children: React.ReactNode; abierto?: boolean;
 }) {
@@ -329,6 +351,9 @@ export default function Decision({
     claseContexto = null, onCorregirProblema, corrigiendoProblema = null,
     avisosReparto = [], constanciasAportadas,
     propuestaSuplencia = null, suplencia = null, onSuplencia,
+    grupos = {}, onGrupos,
+    plan, razonesSegmento = {}, onRazonSegmento,
+    esCasa = false, varianteEstudio = '', onVarianteEstudio,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -390,6 +415,21 @@ export default function Decision({
     /** Lo que decidió el secretario; null = aún no decide. */
     suplencia?: DecisionSuplencia | null;
     onSuplencia?: (d: DecisionSuplencia | null) => void;
+    /** «ESTUDIAR JUNTOS», en los tres modos (26-sep-2026): id del problema →
+     *  letra del grupo. Ver EstudiarJuntos.tsx. */
+    grupos?: Record<string, string>;
+    onGrupos?: (g: Record<string, string>) => void;
+    /** EL PLAN DEL ESTUDIO (Paso 2): cómo pedirlo y leerlo, y si esta cuenta
+     *  escribe con él. Sin enlace activo, el panel no aparece. */
+    plan?: EnlacePlan | null;
+    /** Decisión 6: la razón que él escribe para un argumento que su problema
+     *  decide pero su razón no contesta, por id del segmento. */
+    razonesSegmento?: Record<string, string>;
+    onRazonSegmento?: (id: string, texto: string) => void;
+    /** Cuenta de casa: puede elegir la variante del prompt del estudio. */
+    esCasa?: boolean;
+    varianteEstudio?: string;
+    onVarianteEstudio?: (v: string) => void;
 }) {
     const [corrigiendo, setCorrigiendo] = useState(false);
     const [porQue, setPorQue] = useState(false);
@@ -432,6 +472,34 @@ export default function Decision({
     const puedeGenerar = !generando && !proponiendo && listoParaGenerar && !faltaRazon && !necesitaConceptos;
     const alguienSeAparta = enGlobal ? globalSeAparta : seAparta.some(Boolean);
 
+    /* EL PLAN SE PIDE CUANDO LA DECISIÓN ESTÁ COMPLETA Y QUIETA: cada problema
+       con sentido, la razón escrita donde se aparta, los conceptos pegados si
+       hacen falta, y el motor sin redactar ninguna razón —si no, se ordenaría
+       sobre una razón que está a punto de cambiar—. El antirrebote vive en el
+       hook. */
+    const listoParaPlan = !!plan?.activo && listoParaGenerar && !faltaRazon && !necesitaConceptos
+        && !generando && !proponiendo && !(razonando && razonando.size > 0) && !razonandoGlobal;
+    const estadoPlan = usePlanDelEstudio(plan ?? PLAN_APAGADO, listoParaPlan);
+    const planHecho = estadoPlan.respuesta?.plan ?? null;
+    const sinRazon = plan?.activo ? pendientesDeRazon(planHecho, razonesSegmento) : [];
+
+    /* ACEPTAR UNA PROPUESTA DEL PLAN = PULSAR ESA CALIFICACIÓN A MANO. Mismo
+       camino que las pastillas: en «todo el asunto», si es el principal, cambia
+       la calificación global; si no, la del problema, que queda como suya y se
+       le redacta la razón del sentido nuevo. */
+    const aceptarPropuesta = (p: ProblemaJuridico, a: string) => {
+        const s = (a || '').toLowerCase();
+        if (!FINAS.some((f) => f.id === s)) return;
+        if (enGlobal && principal && p.id === principal.id) {
+            onSentidoGlobal?.(s);
+            if (grupoDe(s) !== grupoDe(global?.sentido)) onRazonGlobal?.('');
+            return;
+        }
+        onCambiar(p.id, 'sentido', s);
+        onRazonar?.(p.id, p.pregunta, s);
+    };
+    const nGrupos = new Set(Object.values(grupos)).size;
+
     const abrir = (id: string) => setAbiertos((prev) => {
         const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n;
     });
@@ -442,18 +510,18 @@ export default function Decision({
         if (enGlobal) {
             const esPrincipal = principal && p.id === principal.id;
             return {
-                id: p.id, pregunta: p.pregunta,
+                id: p.id, pregunta: p.pregunta, grupo: grupos[p.id] ?? '',
                 sentido: esPrincipal ? sentidoGlobal : (tocados?.has(p.id) && p.sentido ? p.sentido : ''),
                 de: esPrincipal ? (globalDictado ? 'tuya' : 'del motor')
                     : (tocados?.has(p.id) && p.sentido ? 'tuya' : 'sigue al principal'),
             };
         }
         return {
-            id: p.id, pregunta: p.pregunta, sentido: p.sentido || '',
+            id: p.id, pregunta: p.pregunta, sentido: p.sentido || '', grupo: grupos[p.id] ?? '',
             de: tocados?.has(p.id) && p.sentido ? 'tuya'
                 : motor?.sentido && motor.alcanza ? 'del motor' : (p.sentido ? 'de la pantalla' : 'sin decidir'),
         };
-    }), [problemas, enGlobal, sentidoGlobal, globalDictado, tocados, propuesta, principal]); // eslint-disable-line react-hooks/exhaustive-deps
+    }), [problemas, enGlobal, sentidoGlobal, globalDictado, tocados, propuesta, principal, grupos]); // eslint-disable-line react-hooks/exhaustive-deps
 
     /* ── SIN PROPUESTA TODAVÍA ── */
     if (proponiendo) {
@@ -980,6 +1048,34 @@ export default function Decision({
                 <PasoSuplencia propuesta={propuestaSuplencia} valor={suplencia} onCambiar={onSuplencia} />
             )}
 
+            {/* ═══ 3-ter · ESTUDIAR JUNTOS, EN LOS TRES MODOS ═══
+                Fuera del condicional de modo y de «cambiar el sentido», como la
+                suplencia: agrupar no es corregir la propuesta, es decir cómo se
+                estudia. En «todo el asunto» también viaja (ver page.tsx). */}
+            {onGrupos && problemas.length >= 2 && (
+                <Pliegue titulo={`Problemas que se estudian juntos${nGrupos ? ` · ${nGrupos} ${nGrupos === 1 ? 'grupo' : 'grupos'}` : ''}`}
+                         abierto={nGrupos > 0}>
+                    <p className="mb-2.5 text-[12px] leading-relaxed text-white/45">
+                        Marca dos o más si se resuelven con una sola línea argumentativa. El estudio los trata en un
+                        apartado, dice qué los une y, si atacan consideraciones distintas, contesta cada una por
+                        separado dentro de él.
+                    </p>
+                    <EstudiarJuntos problemas={problemas} grupos={grupos} onGrupos={onGrupos} />
+                </Pliegue>
+            )}
+
+            {/* ═══ 3-quater · CÓMO SE ESTUDIARÁ (Paso 2) ═══
+                Fuera del condicional de modo: el orden del estudio depende de
+                la decisión entera, se haya tomado como se haya tomado. */}
+            {plan?.activo && (problemas.length > 0 || sentidoGlobal) && (
+                <ComoSeEstudiara estado={estadoPlan} problemas={problemas}
+                                 razones={razonesSegmento}
+                                 onRazon={(id, t) => onRazonSegmento?.(id, t)}
+                                 onAceptarPropuesta={aceptarPropuesta}
+                                 puedeAceptar={(a) => FINAS.some((f) => f.id === (a || '').toLowerCase())}
+                                 esRecurso={esRecurso} />
+            )}
+
             {/* ═══ 4 · LA TARJETA FINAL: CON QUÉ SALE EL PROYECTO ═══ */}
             {(problemas.length > 0 || sentidoGlobal) && (
                 <div id="asi-sale" className={cn('rounded-2xl border p-4 sm:p-5',
@@ -1013,7 +1109,14 @@ export default function Decision({
                         {filasFinales.map((f, i) => (
                             <li key={f.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[13px]">
                                 <span className="shrink-0 text-white/45">{i + 1}.</span>
-                                <span className="min-w-0 flex-1 text-white/75">{f.pregunta}</span>
+                                <span className="min-w-0 flex-1 text-white/75">
+                                    {f.pregunta}
+                                    {f.grupo && (
+                                        <span className="ml-2 rounded-lg bg-accent-gold/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-accent-gold/90">
+                                            juntos · {f.grupo}
+                                        </span>
+                                    )}
+                                </span>
                                 <span className={cn('shrink-0 font-medium', f.sentido ? 'text-white' : 'text-white/45')}>
                                     {f.sentido ? legible(f.sentido) : (enGlobal ? '' : 'sin decidir')}
                                 </span>
@@ -1049,6 +1152,32 @@ export default function Decision({
                             El motor propone suplir la queja y no lo has confirmado: el estudio no la aplicará como decisión tuya.
                         </p>
                     )}
+                    {/* EL PLAN, TAMBIÉN AQUÍ: con qué orden sale el estudio es
+                        parte de «así va a salir». */}
+                    {plan?.activo && (
+                        <p className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[13px]">
+                            <span className="text-white/45">Cómo se estudiará:</span>
+                            <span className="min-w-0 flex-1 text-white/80">
+                                {estadoPlan.fase === 'pidiendo' || estadoPlan.fase === 'en_curso' ? 'ordenándose con tu decisión…'
+                                    : planHecho && !estadoPlan.desactualizado
+                                        ? `${planHecho.unidades.length} ${planHecho.unidades.length === 1 ? 'apartado' : 'apartados'} · ${planHecho.segmentos.length} argumentos`
+                                    : planHecho ? 'se reordenará con tu último cambio'
+                                    : estadoPlan.fase === 'fallo' || estadoPlan.fase === 'sin_plan'
+                                        ? 'sin plan por ahora: se intentará al generar'
+                                        : 'se ordena cuando la decisión esté completa'}
+                            </span>
+                            <a href="#como-se-estudiara" className="shrink-0 text-[12px] text-accent-gold/85 hover:text-accent-gold">ver ↑</a>
+                        </p>
+                    )}
+                    {/* DECISIÓN 6 (David, opción a): se pide, no se bloquea. */}
+                    {sinRazon.length > 0 && (
+                        <p className="mt-1.5 text-[12px] leading-relaxed text-amber-300/90">
+                            {sinRazon.length === 1 ? 'Un argumento' : `${sinRazon.length} argumentos`} que tu razón no
+                            contesta ({sinRazon.map((x) => x.id).join(', ')}): escríbela en «Cómo se estudiará», o el
+                            estudio {sinRazon.length === 1 ? 'lo desarrollará' : 'los desarrollará'} con el material y te lo
+                            dirá primero en las advertencias.
+                        </p>
+                    )}
                     {faltaRazon && (
                         <p className="mt-2.5 text-[12px] text-amber-300/90">
                             Te apartas de la propuesta: escribe el porqué antes de generar. El estudio se alinea a lo que escribas.
@@ -1078,6 +1207,24 @@ export default function Decision({
                                 «Estudio en reserva» si quieres otra cosa.
                             </span>
                         </p>
+                    )}
+                    {/* LA VARIANTE, SÓLO EN CASA. Discreta y encima de los
+                        botones: decide con qué prompt se escribe ESTE estudio. */}
+                    {esCasa && onVarianteEstudio && (
+                        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                            <span className="text-[12px] text-white/45">Prompt del estudio (cuenta de casa):</span>
+                            {VARIANTES.map((v) => (
+                                <button key={v.id || 'omision'} type="button" title={v.que}
+                                        onClick={() => onVarianteEstudio(v.id)}
+                                        aria-pressed={varianteEstudio === v.id}
+                                        className={cn('rounded-full border px-2.5 py-0.5 text-[12px] transition-colors',
+                                            varianteEstudio === v.id
+                                                ? 'border-accent-gold/50 bg-accent-gold/10 text-accent-gold'
+                                                : 'border-white/10 text-white/60 hover:border-white/20 hover:text-white')}>
+                                    {v.rotulo}
+                                </button>
+                            ))}
+                        </div>
                     )}
                     <div className="mt-3 flex flex-wrap items-center gap-2.5">
                         {botonGenerar(true)}
