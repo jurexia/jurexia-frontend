@@ -28,7 +28,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { metaDeCitas } from './citas';
-import { idsCitados } from '@/lib/idsDeCita';
+import { idsCitados, partirComentarios } from '@/lib/idsDeCita';
 
 /** Lo que devuelve `GET /cita/{id}`: el contrato de `CITATION_META.sources`. */
 export type FichaCita = {
@@ -93,10 +93,11 @@ export function estadoDeFicha(docId: string): EstadoFicha | null {
     return null;
 }
 
-/** ¿Ya no va a cambiar sin que nadie la toque? */
-function definitiva(id: string): boolean {
+/** ¿Ya no va a cambiar nunca? Sólo la ficha y el 404: un «fallo» vuelve a
+ *  pedirse al tocar la cita o al olvidarse (`olvidarFallos`). */
+function paraSiempre(id: string): boolean {
     const e = estadoDeFicha(id);
-    return e === 'lista' || e === 'no_existe' || e === 'fallo';
+    return e === 'lista' || e === 'no_existe';
 }
 
 /** Una entrada del mapa sin nada que enseñar: ni texto ni PDF. Es la que el
@@ -252,6 +253,10 @@ export function useFichasDeCitas(ids: string[], activo = true): {
 /** Lo mínimo que el visor recibe al tocar una cita. */
 type FuenteAbrible = { origen: string; ref: string; texto: string; pdf_url?: string | null };
 
+/** Lo que escucha cada visor (cada `fijar`): abrir otra cita en el mismo
+ *  visor suelta lo de la anterior, así que hay uno como mucho por visor. */
+const oyentesDelVisor = new WeakMap<object, (id: string) => void>();
+
 /**
  * ABRIR UNA CITA EN EL VISOR, CON SU FICHA. Lo usan las tres pantallas que
  * abren el visor (chat, agente y redactor de sentencias) con su propio
@@ -262,20 +267,36 @@ type FuenteAbrible = { origen: string; ref: string; texto: string; pdf_url?: str
  * automático: si ése llega, el visor se rellena solo. Si no existe, lo dice;
  * volver a tocar la cita lo reintenta. Si entretanto se cerró el visor o se
  * abrió otra cita, la respuesta no pisa nada.
+ *
+ * Se escucha la cita mientras el visor la enseñe y hasta que tenga ficha o
+ * `/cita` diga 404 (26-sep-2026). Antes se dejaba de escuchar también al
+ * llegar a «fallo»: si después se olvidaba el fallo (cambio de conversación)
+ * y el nuevo intento salía bien, el visor seguía diciendo «No se pudo
+ * consultar la fuente». Ahora un fallo olvidado lo vuelve a pedir el propio
+ * visor que la enseña, y lo que llegue lo rellena.
  */
 export function abrirCitaConFicha<S extends FuenteAbrible>(
     fuente: S & { docId?: string; url_oficial?: unknown },
     fijar: (valor: S | null | ((previo: S | null) => S | null)) => void,
 ): void {
+    const previo = oyentesDelVisor.get(fijar);
+    if (previo) { oyentes.delete(previo); oyentesDelVisor.delete(fijar); }
+
     const docId = fuente?.docId;
     if (!docId || !fichaVacia(fuente)) { fijar(fuente); return; }
     const id = normalizar(docId);
     const guardada = fichas.get(id);
     if (guardada) { fijar({ ...guardada, docId } as unknown as S); return; }
-    fijar({ ...fuente, origen: 'Buscando la fuente…', ref: '', texto: '' });
+    const buscando = (texto = ''): S => ({ ...fuente, origen: 'Buscando la fuente…', ref: '', texto });
+    fijar(buscando());
 
+    const soltar = () => {
+        oyentes.delete(oir);
+        if (oyentesDelVisor.get(fijar) === oir) oyentesDelVisor.delete(fijar);
+    };
     const pintar = () => fijar((actual) => {
-        if (!actual || (actual as { docId?: string }).docId !== docId) return actual;
+        // Se cerró el visor o enseña otra cita: ya no se escucha.
+        if (!actual || (actual as { docId?: string }).docId !== docId) { soltar(); return actual; }
         const ficha = fichas.get(id);
         if (ficha) return { ...ficha, docId } as unknown as S;
         const estado = estadoDeFicha(id);
@@ -285,32 +306,32 @@ export function abrirCitaConFicha<S extends FuenteAbrible>(
                 texto: 'Este identificador no corresponde a ningún documento del acervo. No des la cita por buena sin comprobarla.',
             };
         }
-        // `null`: se olvidó al cambiar de conversación; tocarla la vuelve a pedir.
-        if (estado === 'fallo' || estado === null) {
+        if (estado === 'fallo') {
             return {
                 ...fuente, origen: 'No se pudo consultar la fuente', ref: '',
                 texto: 'El servidor no respondió al pedir esta fuente. Cierra el visor y vuelve a tocar la cita para reintentarlo.',
             };
         }
-        if (reintentos.has(id)) {
-            return {
-                ...fuente, origen: 'Buscando la fuente…', ref: '',
-                texto: 'El servidor tarda en responder. Se vuelve a intentar solo en unos segundos.',
-            };
+        if (estado === null) {
+            // Se olvidó el fallo al cambiar de conversación: el visor que la
+            // enseña la vuelve a pedir. Pedirla dos veces no hace dos
+            // peticiones (`enVuelo`), así que da igual si React repite esto.
+            queueMicrotask(() => { void obtenerFicha(id); });
+            return buscando();
         }
-        return actual;
+        if (reintentos.has(id)) return buscando('El servidor tarda en responder. Se vuelve a intentar solo en unos segundos.');
+        return buscando();
     });
-    // Se escucha hasta que la cita llegue a un estado que ya no cambia solo:
-    // los reintentos son pocos, así que el oyente no se queda para siempre.
     const oir = (x: string) => {
         if (x !== id) return;
         pintar();
-        if (definitiva(id) || estadoDeFicha(id) === null) oyentes.delete(oir);
+        if (paraSiempre(id)) soltar();
     };
     oyentes.add(oir);
+    oyentesDelVisor.set(fijar, oir);
     void obtenerFicha(id);
     // Lo que se resuelve sin pedir nada (un 404 ya sabido) no avisa.
-    if (definitiva(id)) { oyentes.delete(oir); pintar(); }
+    if (paraSiempre(id)) { soltar(); pintar(); }
 }
 
 type ConFuentes = { sources?: Record<string, unknown>; invalid?: number; invalid_ids?: string[] };
@@ -422,35 +443,87 @@ export function resumenDeCitas(
 }
 
 /**
- * LO QUE LA CONVERSACIÓN YA VERIFICÓ, para `fijarFuentesVerificadas`: las
- * citas de sus respuestas terminadas con ficha —del mapa del servidor o
- * resuelta por `/cita`— que el sello no marcó como fuera del contexto (salvo
- * que otra respuesta sí la trajera en su mapa). Antes sólo contaban las
- * claves de `CITATION_META.sources`: las siete citas agrupadas del caso del
- * control de convencionalidad —Radilla, García Rodríguez, dos tesis— no
- * viajaban a la vuelta siguiente, el validador las acusaba si el modelo las
- * repetía y el sello decía 33 trazadas cuando se enviaban 26.
+ * CUÁNTO SE LEE DE CADA RESPUESTA DEL HISTORIAL (26-sep-2026). El registro
+ * se rehace con el historial entero cada vez que termina una respuesta o
+ * llega una ficha, así que su costo no puede depender de una respuesta
+ * desmesurada. De cada una se leen como mucho estos caracteres de TEXTO —lo
+ * que el modelo escribió, donde están las citas—. Los comentarios no cuentan
+ * contra el tope: el mapa del servidor (CITATION_META, que en la consulta del
+ * control de convencionalidad ocupa 124.000 de sus 157.000 caracteres) se lee
+ * aparte y entero, con un escáner, y las fuentes previas no son citas. Las
+ * respuestas más largas de Platinum rondan los 64k tokens, unos 250.000
+ * caracteres: el tope no corta ninguna real. Lo que pase de él no se registra
+ * —el registro, además, sólo envía 40 identificadores— y nada se rompe: esas
+ * citas se validan igual en el servidor la vuelta siguiente.
+ */
+export const TOPE_TEXTO_POR_MENSAJE = 300_000;
+
+/** El texto de una respuesta del historial, sin sus comentarios y hasta el
+ *  tope. Sin tocar la que no llega al tope. */
+function textoParaRegistro(md: string): string {
+    if (md.length <= TOPE_TEXTO_POR_MENSAJE) return md;
+    const trozos = partirComentarios(md);
+    let texto = '';
+    for (let i = 0; i < trozos.length && texto.length < TOPE_TEXTO_POR_MENSAJE; i += 2) texto += trozos[i];
+    texto = texto.slice(0, TOPE_TEXTO_POR_MENSAJE);
+    // Un marcador que se quedó sin cerrar no es texto del modelo.
+    const abierto = texto.indexOf('<!--');
+    return abierto === -1 ? texto : texto.slice(0, abierto);
+}
+
+/**
+ * LO QUE LA CONVERSACIÓN YA VERIFICÓ, para `fijarFuentesVerificadas`: cada
+ * cita que el sello de ALGUNA respuesta terminada contó como verificada. Es
+ * decir, citada en esa respuesta, no marcada por el servidor en ESA respuesta
+ * y con ficha —del mapa de cualquier respuesta o resuelta por `/cita`—. Lo que
+ * el sello sólo marcó como fuera del contexto no se da por hecho.
+ *
+ * Antes sólo contaban las claves de `CITATION_META.sources`: las siete citas
+ * agrupadas del caso del control de convencionalidad —Radilla, García
+ * Rodríguez, dos tesis— no viajaban a la vuelta siguiente, el validador las
+ * acusaba si el modelo las repetía y el sello decía 33 trazadas cuando se
+ * enviaban 26.
+ *
+ * Y la marca se mira respuesta por respuesta (26-sep-2026). Antes, que OTRA
+ * respuesta la marcara quitaba la cita del registro salvo que alguna la
+ * trajera en su mapa: lo que había resuelto `/cita` no la salvaba. Con el
+ * caso real y una segunda respuesta que marca Radilla ¶340, el registro
+ * bajaba de 33 a 32 aunque el sello de la primera la contó trazada —y
+ * justo entonces, sin viajar como fuente previa, es más probable que el
+ * servidor la vuelva a marcar—. Si hubiera venido singular, en el mapa, se
+ * habría quedado. Ahora da igual de dónde salió la ficha.
  *
  * `resuelta` es la caché de `/cita` (`fichaEnCache`); `faltan` son las que
- * habría que pedir para poder contarlas.
+ * habría que pedir para poder contarlas. De cada respuesta se leen como
+ * mucho `TOPE_TEXTO_POR_MENSAJE` caracteres de texto.
  */
 export function fuentesDeLaConversacion(
     markdowns: string[],
     resuelta: (id: string) => unknown = fichaEnCache,
 ): { verificadas: string[]; faltan: string[] } {
+    /** Por orden de primera cita en la conversación. */
     const citados: string[] = [];
+    const vistos = new Set<string>();
+    /** Con ficha en el mapa de alguna respuesta. */
     const delServidor = new Set<string>();
-    const marcadas = new Set<string>();
+    /** Citadas sin marca en alguna respuesta: su sello las contaría si hay ficha. */
+    const sinMarcaEnAlguna = new Set<string>();
     for (const md of markdowns) {
-        // También las agrupadas —«[Doc IDs: a; b]»—: ver `@/lib/idsDeCita`.
-        for (const id of idsCitados(md)) if (citados.indexOf(id) === -1) citados.push(id);
-        const meta = metaDeCitas(md);
+        const meta = metaDeCitas(md || '');
         for (const [k, s] of Object.entries(meta?.sources ?? {})) {
             if (!fichaVacia(s)) delServidor.add(k.toLowerCase());
         }
-        for (const x of meta?.invalid_ids ?? []) marcadas.add(String(x).toLowerCase());
+        const marcadas = new Set((meta?.invalid_ids ?? []).map((x) => String(x).toLowerCase()));
+        // También las agrupadas —«[Doc IDs: a; b]»—: ver `@/lib/idsDeCita`.
+        for (const id of idsCitados(textoParaRegistro(md || ''))) {
+            if (!vistos.has(id)) { vistos.add(id); citados.push(id); }
+            if (!marcadas.has(id)) sinMarcaEnAlguna.add(id);
+        }
     }
-    const candidatas = citados.filter((id) => delServidor.has(id) || !marcadas.has(id));
+    // Lo que el mapa de alguna respuesta trae con ficha cuenta como siempre
+    // (aunque otra la marcara); lo demás, si alguna respuesta la citó sin
+    // marca y tiene ficha de `/cita`.
+    const candidatas = citados.filter((id) => delServidor.has(id) || sinMarcaEnAlguna.has(id));
     return {
         verificadas: candidatas.filter((id) => delServidor.has(id) || !fichaVacia(resuelta(id))),
         faltan: candidatas.filter((id) => !delServidor.has(id)),

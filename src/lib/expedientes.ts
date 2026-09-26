@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { streamChat } from './api'
-import { expandirCitasAgrupadas } from './idsDeCita'
+import { expandirCitasAgrupadas, quitarBloques, sinComentarios } from './idsDeCita'
 
 /**
  * Carpetas inteligentes — la misma pieza que ya existe en la app móvil.
@@ -1037,50 +1037,81 @@ export async function generarResumenCaso(
  *  Como el análisis de carpeta usa esta misma función, se arregla en los dos.
  */
 export function limpiarMarcadores(texto: string): string {
+    // TIEMPO LINEAL (26-sep-2026). Cada `<!--X[\s\S]*?-->` recorría hasta el
+    // final desde cada apertura sin cierre, y `\s*\[` volvía a recorrer una
+    // racha de espacios desde cada uno de ellos: con 20.000 espacios, 0,6 s.
+    // Ahora los bloques se quitan con `quitarBloques` (un escáner que hace lo
+    // mismo que la expresión perezosa) y los corchetes con contenido acotado.
+    // Ver las reglas en `@/lib/idsDeCita`.
+    //
     // Lo agrupado o suelto —«[Doc IDs: a; b]», «Doc ID: a; Doc ID: b» sin
     // corchetes, «[a; b]»— se abre primero en citas singulares con la MISMA
     // función que el chat y la hoja (`@/lib/idsDeCita`). Con expresiones
     // propias, las formas sin corchetes o sin etiqueta dejaban los uuid a la
     // vista en el borrador de la carpeta (26-sep-2026).
-    return expandirCitasAgrupadas(texto || '')
+    let t = expandirCitasAgrupadas(texto || '')
         // Los identificadores internos de documento NO son para el abogado.
         // El chat los convierte en marcadores de cita [1], [2]; la carpeta no
         // tiene dónde ponerlos, así que se quitan. Se veía feo de verdad:
         // «…queda sin efecto alguno. [Doc ID: 7fc88536-c19a-25c3-ba36-…]».
         // Sin cruzar renglones: un corchete sin cerrar no se lleva el siguiente.
-        .replace(/\s*\[[ \t]*Doc[ \t]*IDs?[ \t]*:[^\]\n]*\]/gi, '')
-        .replace(/\s*\([ \t]*Doc[ \t]*IDs?[ \t]*:[^)\n]*\)/gi, '')
+        // El espacio de delante se va con la cita; la búsqueda sólo arranca al
+        // principio de la racha (`(?<!\s)`), no desde cada uno de sus espacios.
+        .replace(/(?<!\s)\s*\[[ \t]{0,8}Doc[ \t]{0,8}IDs?[ \t]{0,8}:[^[\]\n]{0,2000}\]/gi, '')
+        .replace(/(?<!\s)\s*\([ \t]{0,8}Doc[ \t]{0,8}IDs?[ \t]{0,8}:[^()\n]{0,2000}\)/gi, '')
         .replace(/<!--PING-->/g, '')
-        .replace(/<!--PASO:[^>]*-->/g, '')
-        .replace(/<!--SOURCES:[^>]*-->/g, '')
+    t = quitarMarcasCortas(t, '<!--PASO:')
+    t = quitarMarcasCortas(t, '<!--SOURCES:')
         .replace(/<!--CACHE:ACTIVE-->/g, '')
         .replace(/<!--MODE:(?:PRO|PLATINUM)-->/g, '')
-        .replace(/<!--thinking-->[\s\S]*?<!--\/thinking-->/g, '')
-        .replace(/<!-- ?CITATION_META:[\s\S]*?-->/g, '')
-        // La carga de precedentes (puntuaciones, silos y URLs internas de GCS)
-        // faltaba aquí, y el chat sí la quitaba. Resultado: el escrito que el
-        // abogado iba a presentar EMPEZABA con
-        // `… "score": 0.673, "silo": "sentencias_scjn_holdings", "pdf_url":
-        // "https://storage.googleapis.com/iurexia-leyes/…" }] -->`.
-        .replace(/<!-- ?PRECEDENTES_META:[\s\S]*?-->/g, '')
-        .replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/g, '')
-        .replace(/<think>[\s\S]*?<\/think>/g, '')
-        // Cualquier otro comentario, conocido o no. Un marcador nuevo en el
-        // servidor no debería volver a aparecer dentro de un escrito jurídico
-        // sólo porque nadie se acordó de añadirlo a esta lista.
-        .replace(/<!--[\s\S]*?-->/g, '')
-        // Y el caso que de verdad falló: el bloque que llega SIN cerrar, porque
-        // el flujo se cortó. Ninguna expresión de las de arriba lo toca —todas
-        // exigen el `-->`—, así que se recorta desde la apertura huérfana.
-        .replace(/<!--[\s\S]*$/, '')
-        // El panel de fuentes (internet y doctrina) viaja como HTML, porque el
-        // chat lo pinta con la hoja de estilos. Dentro de un escrito no hay
-        // quien lo pinte: salía la etiqueta cruda en el documento que el
-        // abogado iba a presentar —`<div class="fuentes-web"><div class=…`—.
-        // Va siempre al final, así que se corta desde su apertura.
-        .replace(/<div class="fuentes-web"[\s\S]*$/i, '')
-        // Y por si alguna vez no fuera el último bloque: ninguna etiqueta HTML
-        // tiene sentido en un escrito jurídico.
-        .replace(/<\/?(?:div|span|br|p|ul|li|ol|a|strong|em|b|i)\b[^>]*>/gi, '')
-        .trim()
+    t = quitarBloques(t, /<!--thinking-->/g, '<!--/thinking-->')
+    t = quitarBloques(t, /<!-- ?CITATION_META:/g, '-->')
+    // La carga de precedentes (puntuaciones, silos y URLs internas de GCS)
+    // faltaba aquí, y el chat sí la quitaba. Resultado: el escrito que el
+    // abogado iba a presentar EMPEZABA con
+    // `… "score": 0.673, "silo": "sentencias_scjn_holdings", "pdf_url":
+    // "https://storage.googleapis.com/iurexia-leyes/…" }] -->`.
+    t = quitarBloques(t, /<!-- ?PRECEDENTES_META:/g, '-->')
+    t = quitarBloques(t, /<!--THINKING_START-->/g, '<!--THINKING_END-->')
+    t = quitarBloques(t, /<think>/g, '</think>')
+    // Cualquier otro comentario, conocido o no. Un marcador nuevo en el
+    // servidor no debería volver a aparecer dentro de un escrito jurídico
+    // sólo porque nadie se acordó de añadirlo a esta lista.
+    t = sinComentarios(t)
+    // Y el caso que de verdad falló: el bloque que llega SIN cerrar, porque
+    // el flujo se cortó. Ninguna expresión de las de arriba lo toca —todas
+    // exigen el `-->`—, así que se recorta desde la apertura huérfana.
+    const huerfano = t.indexOf('<!--')
+    if (huerfano !== -1) t = t.slice(0, huerfano)
+    // El panel de fuentes (internet y doctrina) viaja como HTML, porque el
+    // chat lo pinta con la hoja de estilos. Dentro de un escrito no hay
+    // quien lo pinte: salía la etiqueta cruda en el documento que el
+    // abogado iba a presentar —`<div class="fuentes-web"><div class=…`—.
+    // Va siempre al final, así que se corta desde su apertura.
+    const panel = t.search(/<div class="fuentes-web"/i)
+    if (panel !== -1) t = t.slice(0, panel)
+    // Y por si alguna vez no fuera el último bloque: ninguna etiqueta HTML
+    // tiene sentido en un escrito jurídico. (`[^>]*>` es «hasta el primer
+    // `>`»: lo mismo que el escáner.)
+    return quitarBloques(t, /<\/?(?:div|span|br|p|ul|li|ol|a|strong|em|b|i)\b/gi, '>').trim()
+}
+
+/** Quita cada `prefijo[^>]*-->`: un marcador corto, sin «>» dentro. Es lo que
+ *  hacía `/<!--PASO:[^>]*-->/g`, que desde cada apertura recorría hasta el
+ *  siguiente «>»: con muchas aperturas seguidas, cuadrático. Aquí se mira el
+ *  primer «>» de cada una, y si no cierra, ninguna apertura anterior a él
+ *  puede cerrar. */
+function quitarMarcasCortas(t: string, prefijo: string): string {
+    let out = ''
+    let i = 0
+    for (;;) {
+        const p = t.indexOf(prefijo, i)
+        if (p === -1) break
+        const mayor = t.indexOf('>', p + prefijo.length)
+        if (mayor === -1) break
+        const cierra = mayor - 2 >= p + prefijo.length && t[mayor - 1] === '-' && t[mayor - 2] === '-'
+        out += cierra ? t.slice(i, p) : t.slice(i, mayor + 1)
+        i = mayor + 1
+    }
+    return out + t.slice(i)
 }

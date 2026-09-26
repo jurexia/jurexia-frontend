@@ -14,6 +14,7 @@ import { ShieldCheck, ShieldAlert, Loader2, Shield } from 'lucide-react';
  * un `catch` que devuelve el estado inocuo: el mismo patrón que ya costó dos
  * hallazgos esta semana. */
 import { rubroCorresponde } from '@/lib/citas';
+import { veredictoDelSello } from '@/lib/documento/sello';
 
 /**
  * El sello de verificación de una respuesta.
@@ -152,10 +153,18 @@ export function SelloCitas({ trazadas, noTrazadas, fueraDeContexto = 0, sinCompr
     const confirmadas = resultados.filter(r => r.estado === 'existe');
     const dudosas = resultados.filter(r => r.estado === 'sin_comprobar');
 
-    const hayProblema = noTrazadas > 0 || fueraDeContexto > 0 || inventadas.length > 0 || desviadas.length > 0 || sinReg.length > 0;
+    // La cabecera, en `@/lib/documento/sello`: una cita que nadie pudo
+    // comprobar (el servidor no respondió) no se sella en verde.
+    const { tono, titulo } = veredictoDelSello({
+        noTrazadas, fueraDeContexto, sinComprobar, fichasPendientes,
+        comprobandoRegistros: fase === 'comprobando' && registros.length > 0,
+        inventadas: inventadas.length, desviadas: desviadas.length,
+        sinRegistro: sinReg.length, registrosSinComprobar: dudosas.length,
+    });
+    const hayProblema = tono === 'problema';
     // Mientras `/cita` contesta, el sello no se pronuncia: una cita marcada
     // por el servidor todavía puede resultar existente o inexistente.
-    const comprobando = fase === 'comprobando' || fichasPendientes > 0;
+    const comprobando = tono === 'comprobando';
 
     const partes: string[] = [];
     if (trazadas) partes.push(`${trazadas} ${trazadas === 1 ? 'cita trazada' : 'citas trazadas'} al acervo`);
@@ -179,11 +188,11 @@ export function SelloCitas({ trazadas, noTrazadas, fueraDeContexto = 0, sinCompr
             : 'tesis citadas sin registro digital: NO se pudieron comprobar'}`);
     }
 
-    const color = hayProblema ? '#b45309' : '#1f7a4d';
-    const fondo = hayProblema ? 'rgba(180, 83, 9, 0.07)' : 'rgba(31, 122, 77, 0.06)';
-    const borde = hayProblema ? 'rgba(180, 83, 9, 0.25)' : 'rgba(31, 122, 77, 0.2)';
+    const color = hayProblema ? '#b45309' : tono === 'incompleto' ? '#57534e' : '#1f7a4d';
+    const fondo = hayProblema ? 'rgba(180, 83, 9, 0.07)' : tono === 'incompleto' ? 'rgba(0, 0, 0, 0.035)' : 'rgba(31, 122, 77, 0.06)';
+    const borde = hayProblema ? 'rgba(180, 83, 9, 0.25)' : tono === 'incompleto' ? 'rgba(0, 0, 0, 0.14)' : 'rgba(31, 122, 77, 0.2)';
 
-    const Icono = comprobando ? Loader2 : hayProblema ? ShieldAlert : ShieldCheck;
+    const Icono = comprobando ? Loader2 : hayProblema ? ShieldAlert : tono === 'incompleto' ? Shield : ShieldCheck;
 
     return (
         <div
@@ -197,9 +206,7 @@ export function SelloCitas({ trazadas, noTrazadas, fueraDeContexto = 0, sinCompr
                 />
                 <div className="min-w-0 flex-1">
                     <p className="text-[0.8125rem] font-medium leading-snug" style={{ color: comprobando ? 'rgba(0,0,0,0.55)' : color }}>
-                        {comprobando
-                            ? 'Comprobando las citas…'
-                            : hayProblema ? 'Revisa estas citas antes de usarlas' : 'Citas verificadas'}
+                        {titulo}
                     </p>
 
                     {partes.length > 0 && (
