@@ -266,10 +266,61 @@ export interface BolsaProyectos {
     almacenamiento_limite: number;
 }
 
+/* ═══ EL ERROR DEL SERVIDOR, LEGIBLE (26-sep-2026) ═══
+   Tras un cambio de sentido, si la recalificación no llega, el servidor ya
+   no genera con accesorios sin calificar: el flujo manda un evento «error» y
+   el camino plano contesta 409, los dos con la lista de los que faltan. Un
+   `detail` que no es texto se pintaba «[object Object]», y una lista pegada
+   en una línea no se lee. Aquí se acepta el texto tal cual o un objeto con
+   el mensaje (`mensaje`, `message`, `detail` o `error`) y la lista
+   (`sin_calificar`, `pendientes`, `problemas`, `accesorios` o `lista`: cada
+   uno texto u objeto con `problema`/`pregunta`), y sale un párrafo con un
+   renglón por planteamiento (la pantalla lo pinta con los saltos). */
+const _CAMPOS_MENSAJE = ['mensaje', 'message', 'detail', 'error'] as const;
+const _CAMPOS_LISTA = ['sin_calificar', 'pendientes', 'problemas', 'accesorios', 'lista'] as const;
+const _LARGO_RENGLON = 220;
+function _renglon(x: unknown): string {
+    const o = (x && typeof x === 'object') ? x as Record<string, unknown> : null;
+    const t = String((o ? (o.problema ?? o.pregunta ?? o.texto ?? '') : (x ?? '')) || '')
+        .replace(/\s+/g, ' ').trim();
+    const cps = Array.from(t);
+    return cps.length > _LARGO_RENGLON ? `${cps.slice(0, _LARGO_RENGLON - 1).join('').trimEnd()}…` : t;
+}
+export function textoDelError(detalle: unknown, porOmision = 'Falló la petición.'): string {
+    if (typeof detalle === 'string') return detalle.trim() || porOmision;
+    if (Array.isArray(detalle)) {
+        // La validación de FastAPI: [{loc, msg, type}, …].
+        const msgs = detalle.map((d) => (d && typeof d === 'object' && 'msg' in d
+            ? String((d as Record<string, unknown>).msg) : _renglon(d))).filter(Boolean);
+        return msgs.length ? msgs.join('\n') : porOmision;
+    }
+    if (!detalle || typeof detalle !== 'object') return porOmision;
+    const o = detalle as Record<string, unknown>;
+    let mensaje = '';
+    for (const k of _CAMPOS_MENSAJE) {
+        const v = o[k];
+        if (typeof v === 'string' && v.trim()) { mensaje = v.trim(); break; }
+        // Anidado: {detail: {mensaje, sin_calificar}}.
+        if (v && typeof v === 'object' && !Array.isArray(v)) return textoDelError(v, porOmision);
+    }
+    let lista: string[] = [];
+    for (const k of _CAMPOS_LISTA) {
+        const v = o[k];
+        if (Array.isArray(v)) { lista = v.map(_renglon).filter(Boolean); if (lista.length) break; }
+    }
+    // Si el mensaje ya trae el planteamiento, no se repite debajo.
+    const renglones = lista.filter((r) => !mensaje.includes(r)).map((r) => `· ${r}`);
+    if (!mensaje && !renglones.length) return porOmision;
+    return [mensaje || porOmision, ...renglones].join('\n');
+}
+
 async function _fallo(res: Response): Promise<never> {
-    let detalle = `Error ${res.status}`;
-    try { detalle = (await res.json())?.detail ?? detalle; } catch { /* no JSON */ }
-    throw new Error(detalle);
+    let detalle: unknown = `Error ${res.status}`;
+    try {
+        const j = await res.json();
+        if (j && typeof j === 'object' && 'detail' in j && j.detail != null) detalle = j.detail;
+    } catch { /* no JSON */ }
+    throw new Error(textoDelError(detalle, `Error ${res.status}`));
 }
 
 /** Si el piloto sigue abierto y cuántas plazas quedan. */
@@ -1009,6 +1060,10 @@ export async function resolverEnVivo(
      *  vía contraria a la que propuso el motor y los accesorios que no tocó se
      *  vuelven a calificar antes del plan y del estudio. Hasta minuto y medio. */
     onRecalificando?: () => void,
+    /** LA RECALIFICACIÓN TERMINÓ (evento «recalificado», si el servidor lo
+     *  manda): la pantalla deja de decir «Recalificando…» aunque no venga
+     *  «ordenando» —sin plan no viene— y el primer texto tarde un minuto. */
+    onRecalificado?: () => void,
 ): Promise<ResultadoProyecto> {
     const fd = formularioDelResolver(numero, userEmail, opciones);
 
@@ -1084,9 +1139,13 @@ export async function resolverEnVivo(
                     onOrdenando?.();
                 } else if (ev.tipo === 'recalificando') {
                     onRecalificando?.();
+                } else if (ev.tipo === 'recalificado') {
+                    onRecalificado?.();
                 } else if (ev.tipo === 'error') {
-                    /* El motor dice que falló: eso no se recupera, se cuenta. */
-                    throw new ErrorDelMotor(String(ev.mensaje || 'Falló la generación.'));
+                    /* El motor dice que falló: eso no se recupera, se cuenta.
+                       Con la lista, si la trae (p. ej. los accesorios que
+                       quedaron sin calificar tras el cambio de sentido). */
+                    throw new ErrorDelMotor(textoDelError(ev, 'Falló la generación.'));
                 } else if (ev.tipo === 'listo') {
                     listo = ev;
                 }

@@ -23,7 +23,14 @@
 //       reintentar;
 //   6 · pisar = tocado;
 //   7 · el plan espera a la recalificación;
-//   8 · la pantalla de decisión (Decision.tsx) pintada de verdad.
+//   8 · la pantalla de decisión (Decision.tsx) pintada de verdad;
+//   9 · el cableado de page.tsx, leído en su fuente;
+//  10 · (A) los conceptos de violación viajan en los tres modos, al
+//       resolver, al plan y a la recalificación;
+//  11 · (B) sin calificar: el mensaje, el aviso junto al botón que detiene
+//       el pedido hasta que él lo ve, y el error del servidor legible;
+//  12 · (D) el rótulo «Recalificando…» se sustituye con lo siguiente;
+//  13 · (C) lo que la pantalla promete de «estudiar juntos».
 //
 //   node comprobaciones/recalificar.mjs
 //
@@ -59,6 +66,7 @@ function transpilar(rel, destino, cambios = []) {
 const REACT = ['require("react")', 'require("./react_falso.js")'];
 transpilar('src/components/sentencia/api.ts', 'api.js');
 transpilar('src/components/sentencia/recalificacion.ts', 'recal.js', [REACT]);
+transpilar('src/components/sentencia/opcionesDelProyecto.ts', 'opciones.js');
 transpilar('src/components/sentencia/ComoSeEstudiara.tsx', 'como.js', [
     REACT,
     ['require("lucide-react")', 'require("./nada.js")'],
@@ -139,6 +147,7 @@ const recal = req('./recal.js');
 const como = req('./como.js');
 const Rf = req('./react_falso.js');
 const Decision = req('./decision.js').default;
+const opcionesMod = req('./opciones.js');
 
 const vaciar = async () => { for (let k = 0; k < 40; k++) await Promise.resolve(); };
 const entradas = (fd) => JSON.stringify([...fd.entries()].map(([k, v]) => [k, String(v)]));
@@ -301,8 +310,10 @@ const estado = (o) => ({ fase: 'listo', clave: '', respuesta: null, error: '', r
        && recal.recalificacionEnCurso({}, true) === true, 'en curso: recalificando, o el reparto en camino');
     ok(recal.porQueLegible('recalificada por el motor con tu premisa: no combate P2') === 'no combate P2'
        && recal.porQueLegible('otra cosa') === 'otra cosa', 'el porqué sin la fórmula que la marca ya dice');
-    ok(/^Sin calificar: califícalo tú; si no, el estudio lo desarrollará con el material y lo pondrá primero en ADVERTENCIAS\.$/
-       .test(recal.MENSAJE_SIN_CALIFICAR), 'el mensaje del fallo es el del contrato');
+    ok(/^Sin calificar: califícalo tú antes de generar \(un clic\), o vuelve a intentar\.$/
+       .test(recal.MENSAJE_SIN_CALIFICAR), 'el mensaje del fallo es el de la decisión del integrador');
+    ok(!/ADVERTENCIAS|desarrollará/.test(recal.MENSAJE_SIN_CALIFICAR),
+       'y ya no promete que el estudio lo desarrollará y lo pondrá en ADVERTENCIAS (el servidor no genera)');
 }
 
 /* ═══ 4-bis · LO QUE EL SERVIDOR DEVUELVE DE VERDAD (revisión adversarial) ═══
@@ -839,9 +850,10 @@ const pastillaPulsada = (t) => buscar(t, (n) => n.type === 'button' && n.props['
     const c = pintarDecision(baseDecision({ recalificadas: { p1: { estado: 'fallo', sentido: '', razon: '', porQue: '' } },
                                             avisosRecalificacion: ['El motor no pudo recalificar en dos intentos.'] }));
     const t3 = tarjetaDe(c, 'p1');
-    ok(texto(t3).includes(recal.MENSAJE_SIN_CALIFICAR), 'fallo: «sin calificar: califícalo tú; si no, …ADVERTENCIAS»');
+    ok(texto(t3).includes(recal.MENSAJE_SIN_CALIFICAR), 'fallo: «sin calificar: califícalo tú antes de generar (un clic), o vuelve a intentar»');
     ok(buscar(t3, (n) => n.type === 'textarea').length === 0 && pastillaPulsada(t3).length === 0, 'sin calificación ni razón vieja');
-    ok(/quedó sin calificar/.test(texto(c)) && /primero en ADVERTENCIAS/.test(texto(c)), 'y la tarjeta final lo dice');
+    ok(/quedó sin\s+calificar/.test(texto(c)) && /antes de generar/.test(texto(c)), 'y la tarjeta final lo dice');
+    ok(!/ADVERTENCIAS/.test(texto(c)), 'sin prometer en ningún sitio que el estudio lo pondrá en ADVERTENCIAS');
     ok(/El motor no pudo recalificar en dos intentos/.test(texto(c)), 'los avisos de la recalificación se enseñan');
     const fila3 = buscar(c, (n) => n.type === 'li' && n.props.key === 'p1')[0];
     ok(/sin calificar/.test(texto(fila3)) && !/Fundado/.test(texto(fila3)), 'tarjeta final: sin calificar');
@@ -889,6 +901,284 @@ const pastillaPulsada = (t) => buscar(t, (n) => n.type === 'button' && n.props['
     ok(pag.includes('avisosReparto={avisosRepartoVigentes}')
        && pag.includes('const avisosRepartoVigentes = avisosRecal.length ? [] : avisosReparto;'),
        'los avisos de la recalificación sustituyen a los del reparto');
+}
+
+/* ═══ 10 · (A) LOS CONCEPTOS DE VIOLACIÓN VIAJAN EN LOS TRES MODOS ═══
+   Revisión adversarial (heredado): en «problema por problema» el botón exige
+   los conceptos si el recurso levanta un sobreseimiento, él los pega, y el
+   formulario los tiraba —sólo la rama global los llevaba—. El servidor usaba
+   lo que tuviera en memoria el worker que atendiera. Se prueba con el
+   constructor REAL del formulario (opcionesDelProyecto.ts) y con las tres
+   llamadas que lo usan. */
+{
+    const CV = '  PRIMERO. La sentencia omitió valorar la pericial.  ';
+    const est = (o = {}) => ({
+        modo: 'por_problema', problemas: PROBS(), tocados: new Set(['p0']), grupos: { p1: 'A', p2: 'A' },
+        sentidoGlobal: '', razonGlobal: '', globalDictado: false, propuesta: null,
+        conceptosViolacion: CV, contexto: 'ctx', responsable: 'Sala', oportunidadDecision: '', oportunidadMotivo: '',
+        suplencia: null, suplenciaPropuesta: null, razonesSegmento: {}, varianteEstudio: '', ...o });
+    const armar = (o, f = 'estandar') => opcionesMod.opcionesDelProyecto(est(o), f);
+    const fdDe = (o) => api.formularioDelResolver('642/2024', 'x@y.mx', o);
+    for (const modo of ['por_problema', 'acervo', 'global']) {
+        const o = armar({ modo, sentidoGlobal: modo === 'global' ? 'infundado' : '' });
+        ok(o && o.conceptosViolacion === CV, `(${modo}) las opciones llevan los conceptos`);
+        ok(o && fdDe(o).get('conceptos_violacion') === CV.trim(), `(${modo}) el formulario manda conceptos_violacion`);
+    }
+    // Las tres llamadas que salen de ese formulario, en «problema por problema».
+    const o = armar({});
+    const fetchReal = globalThis.fetch;
+    const cuerpos = {};
+    globalThis.fetch = async (url, init) => {
+        const u = String(url);
+        const k = u.includes('/taller/recalificar') ? 'recalificar' : u.includes('/taller/plan/pedir') ? 'plan'
+            : u.includes('/taller/resolver/stream') ? 'resolver' : '';
+        if (k) cuerpos[k] = init.body;
+        if (k === 'recalificar') return new Response(JSON.stringify({ estado: 'listo', criterios: [], avisos: [] }), { status: 200 });
+        if (k === 'plan') return new Response(JSON.stringify({ estado: 'sin_plan', avisos: [] }), { status: 200 });
+        if (k === 'resolver') {
+            const cuerpo = `data: ${JSON.stringify({ tipo: 'listo', docx_b64: '', nombre: 'x.docx', palabras: 1, avisos: [], huecos: [] })}\n\n`;
+            return new Response(new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(cuerpo)); c.close(); } }), { status: 200 });
+        }
+        if (u.includes('/taller/proyecto?')) return new Response(JSON.stringify({ proyecto: null }), { status: 200 });
+        if (u.includes('/taller/descargar')) return new Response(new Blob(['x']), { status: 200 });
+        return new Response('{}', { status: 404 });
+    };
+    await api.recalificar('642/2024', 'x@y.mx', o);
+    await api.pedirPlan('642/2024', 'x@y.mx', o);
+    await api.resolverEnVivo('642/2024', 'x@y.mx', o);
+    globalThis.fetch = fetchReal;
+    for (const k of ['resolver', 'plan', 'recalificar'])
+        ok(cuerpos[k] && cuerpos[k].get('conceptos_violacion') === CV.trim(),
+           `(problema por problema) /taller/${k === 'plan' ? 'plan/pedir' : k === 'resolver' ? 'resolver/stream' : k} recibe los conceptos`);
+    // LA FIRMA DEL PLAN CASA CON LO QUE SE MANDA: es JSON.stringify de estas
+    // opciones; pegar los conceptos la cambia, y cambia también el formulario.
+    const sin = armar({ conceptosViolacion: '' });
+    ok(JSON.stringify(o) !== JSON.stringify(sin), 'pegar los conceptos cambia la firma del plan en «problema por problema»');
+    ok(fdDe(o).get('conceptos_violacion') === CV.trim() && fdDe(sin).get('conceptos_violacion') === null,
+       'y cambia lo que se manda (la firma no se mueve sin que se mueva el formulario)');
+    // LO DEMÁS DEL FORMULARIO NO CAMBIÓ AL SACARLO DE LA PÁGINA.
+    const filas = JSON.parse(o.criteriosJson);
+    ok(filas.length === 4 && filas[0].tocado === true && filas[1].tocado === false && filas[1].grupo === 'A'
+       && filas[1].jerarquia === 'accesorio' && o.criterio === null, 'por problema: todos los sentidos, con tocado, grupo y jerarquía');
+    ok(armar({ modo: 'global' }) === null, 'global sin sentido: null (se pide el sentido)');
+    const g = armar({ modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'r',
+                      tocados: new Set(['p3']), grupos: { p1: 'A' },
+                      propuesta: { global: { sentido: 'fundado', contexto: { resolvio: 'sobreseyó' } } } });
+    const gf = JSON.parse(g.criteriosJson);
+    ok(g.sentidoGlobal === 'infundado' && g.resolvioDeclarado === 'sobreseyó' && /sobreseyó/.test(g.globalJson)
+       && gf.length === 2 && gf[0].tocado === true && gf[1].tocado === false && gf[1].sentido === '',
+       'global: lo que él marcó y el grupo de lo que no tocó, con el global de relleno');
+    ok(JSON.stringify(armar({ suplenciaPropuesta: { fraccion: 'VI', aFavorDe: 'el quejoso' } }).suplencia)
+       === JSON.stringify({ fraccion: 'VI', aFavorDe: 'el quejoso', confirmada: false })
+       && armar({ suplencia: { fraccion: 'II', aFavorDe: 'x', confirmada: true } }).suplencia.confirmada === true,
+       'la suplencia: la decidida, o la propuesta sin confirmar');
+    const resp = armar({ problemas: PROBS().map((p) => ({ ...p, sentido: undefined })) });
+    ok(resp.criteriosJson === undefined && resp.criterio.sentido === 'infundado' && resp.conceptosViolacion === CV,
+       'sin ningún sentido: el criterio de respaldo de siempre (y los conceptos también)');
+    const pag = fs.readFileSync(path.join(RAIZ, 'src/app/taller/page.tsx'), 'utf8');
+    ok(/armarOpciones\(\{[\s\S]{0,200}conceptosViolacion, contexto,/.test(pag),
+       'la página arma el formulario con ese constructor y le pasa los conceptos');
+}
+
+/* ═══ 11 · (B) SIN CALIFICAR: JUNTO AL BOTÓN, Y EL ERROR LEGIBLE ═══
+   Decisión del integrador: tras la recalificación, el servidor no genera con
+   accesorios sin calificar (el flujo manda «error» y el plano 409, con la
+   lista). La pantalla lo dice junto al botón y el primer clic no manda el
+   pedido hasta que él lo ve; lo ya calificado no se bloquea. */
+function repintarDecision(props) {
+    let arbol, vueltas = 0;
+    do {
+        Rf.__R.sucio = false; Rf.__R.i = 0;
+        arbol = expandir(Rf.createElement(Decision, props));
+        Rf.__R.efectos.splice(0).forEach((f) => f());
+    } while (Rf.__R.sucio && ++vueltas < 10);
+    return arbol;
+}
+const botonDe = (arbol, re) => buscar(arbol, (n) => n.type === 'button' && re.test(texto(n)))[0];
+{
+    const pedidos = [];
+    const FALLO = { estado: 'fallo', sentido: '', razon: '', porQue: '' };
+    const REC = { estado: 'recalificando', sentido: '', razon: '', porQue: '' };
+    const props = baseDecision({ onGenerar: (f) => pedidos.push(f), recalificadas: { p1: FALLO },
+                                 onReintentarRecalificacion: () => pedidos.push('reintentar') });
+    let a = pintarDecision(props);
+    const tarjeta = buscar(a, (n) => n.props && n.props.id === 'asi-sale')[0];
+    const plano = (t) => (Array.isArray(t) ? t.flatMap(plano) : t && typeof t === 'object' ? [t] : []);
+    const hijos = plano(tarjeta ? tarjeta.hijos : []);
+    const iAviso = hijos.findIndex((n) => n.props.id === 'antes-de-generar');
+    ok(iAviso >= 0 && hijos[iAviso + 1] && !!botonDe(hijos[iAviso + 1], /^Generar el proyecto$/),
+       'el aviso de los sin calificar va JUNTO AL BOTÓN (inmediatamente antes de los botones)');
+    const aviso = hijos[iAviso];
+    ok(aviso && /Un accesorio quedó sin\s+calificar/.test(texto(aviso)) && /califícalo tú\s+antes de generar \(un clic/.test(texto(aviso))
+       && /o vuelve a intentar/.test(texto(aviso)) && /el proyecto no se escribe/.test(texto(aviso))
+       && texto(aviso).includes(PROBS()[1].pregunta), 'dice cuál, qué hacer (calificarlo o volver a intentar) y qué pasa si no');
+    ok(!/ADVERTENCIAS|desarrollará/.test(texto(aviso)), 'y no promete que el estudio lo desarrollará');
+    // Primer clic: el pedido NO sale; se detiene y se pregunta.
+    botonDe(a, /^Generar el proyecto$/).props.onClick();
+    a = repintarDecision(props);
+    ok(pedidos.length === 0, 'con uno sin calificar, el primer clic NO manda el pedido');
+    const asi = botonDe(a, /^Generar así$/);
+    ok(!!asi && /No se envió todavía/.test(texto(a)), 'se detiene y lo dice: «No se envió todavía… generar así»');
+    ok(!!botonDe(a, /^Volver a intentar la recalificación$/), 'y ofrece volver a intentar la recalificación');
+    asi.props.onClick();
+    a = repintarDecision(props);
+    ok(pedidos.join() === 'estandar', '«Generar así» manda el pedido, con el formato que pulsó');
+    botonDe(a, /^Generar el proyecto$/).props.onClick();
+    ok(pedidos.join() === 'estandar,estandar', 'lo que ya vio no se le vuelve a preguntar');
+
+    // El formato que pulsó viaja: la moderna detenida sale moderna.
+    pedidos.length = 0;
+    const props2 = baseDecision({ onGenerar: (f) => pedidos.push(f), recalificadas: { p1: FALLO } });
+    a = pintarDecision(props2);
+    botonDe(a, /^Generar sentencia en versión moderna$/).props.onClick();
+    a = repintarDecision(props2);
+    botonDe(a, /^Generar así$/).props.onClick();
+    ok(pedidos.join() === 'moderna', 'la versión moderna detenida sale moderna');
+
+    // Si lo pendiente cambia (el que se recalificaba quedó sin calificar), se ve otra vez.
+    pedidos.length = 0;
+    const props3 = baseDecision({ onGenerar: (f) => pedidos.push(f), recalificadas: { p1: REC } });
+    a = pintarDecision(props3);
+    ok(/se está recalificando/.test(texto(a)) && /no escribe el\s+proyecto/.test(texto(a)),
+       'recalificándose: dice que el servidor lo termina antes y que, si no sale, no escribe');
+    botonDe(a, /^Generar el proyecto$/).props.onClick();
+    a = repintarDecision(props3);
+    ok(pedidos.length === 0 && !!botonDe(a, /^Generar así$/), 'recalificándose: también se detiene el primer clic');
+    botonDe(a, /^Generar así$/).props.onClick();
+    ok(pedidos.join() === 'estandar', 'y «generar así» lo manda');
+    props3.recalificadas = { p1: FALLO };
+    a = repintarDecision(props3);
+    botonDe(a, /^Generar el proyecto$/).props.onClick();
+    a = repintarDecision(props3);
+    ok(pedidos.length === 1 && !!botonDe(a, /^Generar así$/), 'si pasa a «sin calificar», se le enseña otra vez antes de mandar');
+
+    // NO SE BLOQUEA LO QUE ÉL YA CALIFICÓ: el tumbado que pisó deja de estar en
+    // `recalificadas` (manda su marca), y lo recalificado tampoco detiene nada.
+    pedidos.length = 0;
+    a = pintarDecision(baseDecision({ onGenerar: (f) => pedidos.push(f), recalificadas: {} }));
+    botonDe(a, /^Generar el proyecto$/).props.onClick();
+    ok(pedidos.join() === 'estandar' && !buscar(a, (n) => n.props && n.props.id === 'antes-de-generar').length,
+       'ya calificado por él: sin aviso y el primer clic genera');
+    pedidos.length = 0;
+    a = pintarDecision(baseDecision({ onGenerar: (f) => pedidos.push(f),
+        recalificadas: { p1: { estado: 'recalificada', sentido: 'infundado', razon: 'r', porQue: '' } } }));
+    botonDe(a, /^Generar el proyecto$/).props.onClick();
+    ok(pedidos.join() === 'estandar', 'recalificado: el primer clic genera');
+    pedidos.length = 0;
+    a = pintarDecision(baseDecision({ onGenerar: (f) => pedidos.push(f), modo: 'global', sentidoGlobal: 'infundado',
+                                      recalificadas: { p1: FALLO } }));
+    botonDe(a, /^(Generar el proyecto|Generar con mi criterio|Aceptar y generar el proyecto)$/).props.onClick();
+    ok(pedidos.length === 1, 'en «todo el asunto» (sin recalificación de pantalla) no se detiene nada');
+
+    // El error de red en el accesorio dice lo que pasará al generar.
+    const d = pintarDecision(baseDecision({ recalificadas: { p1: { estado: 'error', sentido: '', razon: '', porQue: 'Error 502' } } }));
+    ok(/si tampoco sale, no escribirá el proyecto/.test(texto(tarjetaDe(d, 'p1'))), 'error de red: si tampoco sale al generar, no se escribe');
+
+    // EL ERROR DEL SERVIDOR, LEGIBLE: texto, objeto con lista, anidado, 422.
+    ok(api.textoDelError('Tope de 6 corridas') === 'Tope de 6 corridas', 'un texto se deja como viene');
+    const lista = { mensaje: 'Quedaron sin calificar tras tu cambio de sentido; califícalos antes de generar.',
+                    sin_calificar: ['¿La condena excedió lo reclamado?', { problema: '¿Procedían   las costas?' }, ''] };
+    ok(api.textoDelError(lista) === 'Quedaron sin calificar tras tu cambio de sentido; califícalos antes de generar.\n· ¿La condena excedió lo reclamado?\n· ¿Procedían las costas?',
+       'mensaje y lista: un renglón por planteamiento');
+    ok(api.textoDelError({ detail: lista }) === api.textoDelError(lista), 'anidado en detail: igual');
+    ok(api.textoDelError({ pendientes: ['¿A?'] }, 'Falló.') === 'Falló.\n· ¿A?', 'sin mensaje: el de siempre y la lista');
+    ok(api.textoDelError({ mensaje: 'Sin calificar: ¿A?', sin_calificar: ['¿A?'] }) === 'Sin calificar: ¿A?',
+       'si el mensaje ya trae el planteamiento, no se repite');
+    ok(api.textoDelError([{ loc: ['body'], msg: 'field required' }]) === 'field required', 'la validación de FastAPI');
+    ok(Array.from(api.textoDelError({ mensaje: 'm', sin_calificar: ['x'.repeat(500)] }).split('\n')[1]).length <= 222,
+       'un planteamiento larguísimo se recorta');
+    for (const v of [{}, null, 42]) ok(!/object Object/.test(api.textoDelError(v, 'Falló.')), `nunca «[object Object]» (${JSON.stringify(v)})`);
+    const fetchReal = globalThis.fetch;
+    // 409 del camino plano (y de cualquier puerta que use _fallo).
+    globalThis.fetch = async () => new Response(JSON.stringify({ detail: lista }), { status: 409 });
+    let msg = '';
+    try { await api.recalificar('1', 'x', { criteriosJson: '[]' }); } catch (e) { msg = e.message; }
+    ok(msg === api.textoDelError(lista), `un 409 con la lista llega legible, no «[object Object]» (${JSON.stringify(msg).slice(0, 60)})`);
+    // El evento «error» del flujo, con la lista.
+    globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes('/taller/proyecto?')) return new Response(JSON.stringify({ proyecto: null }), { status: 200 });
+        const cuerpo = [{ tipo: 'recalificando' }, { tipo: 'error', ...lista }].map((e) => `data: ${JSON.stringify(e)}\n\n`).join('');
+        return new Response(new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(cuerpo)); c.close(); } }), { status: 200 });
+    };
+    msg = '';
+    try { await api.resolverEnVivo('1', 'x', { criteriosJson: '[]' }); } catch (e) { msg = e.message; }
+    ok(msg === api.textoDelError(lista), 'el evento «error» del flujo con la lista llega legible, con sus renglones');
+    globalThis.fetch = fetchReal;
+    const pag = fs.readFileSync(path.join(RAIZ, 'src/app/taller/page.tsx'), 'utf8');
+    ok(/<p className=\{cn\('whitespace-pre-line[^']*'[\s\S]{0,160}\{error\}/.test(pag),
+       'la página pinta el error con sus renglones (whitespace-pre-line)');
+    ok(pag.includes('<span id="error-del-taller" />') && pag.includes("irA('error-del-taller', 200);"),
+       'y lo lleva a la vista cuando falla el proyecto');
+}
+
+/* ═══ 12 · (D) «RECALIFICANDO…» SE SUSTITUYE CON LO SIGUIENTE ═══
+   Una sola fase del flujo; cada evento la sustituye. Se prueba la regla y el
+   rótulo, el evento en el flujo, y que la página los usa. */
+{
+    const correr = (inicio, evs) => evs.reduce((f, ev) => recal.faseTras(f, ev), inicio);
+    const tit = (f, t = false) => recal.rotuloDelFlujo(f, t).titulo;
+    ok(tit(correr('preparando', ['recalificando'])) === 'Recalificando los accesorios con tu premisa…', 'el evento lo pone');
+    ok(tit(correr('preparando', ['recalificando', 'ordenando'])) === 'Ordenando el estudio…', '«ordenando» lo sustituye');
+    ok(tit(correr('recalificando', ['texto'])) === 'Escribiendo el estudio', 'el primer texto lo sustituye (cuentas sin plan)');
+    ok(tit(correr('recalificando', ['recalificado'])) === 'Preparando el estudio', '«recalificado» lo devuelve a «preparando»');
+    ok(tit(correr('preparando', ['ordenando', 'recalificando'])) === 'Ordenando el estudio…'
+       && tit(correr('preparando', ['texto', 'recalificando'])) === 'Escribiendo el estudio',
+       'un «recalificando» tardío no tapa lo que ya se ordena o se escribe');
+    ok(tit(correr('preparando', ['recalificado', 'ordenando', 'recalificado'])) === 'Ordenando el estudio…',
+       '«recalificado» no apaga el «ordenando»');
+    ok(tit('recalificando', true) === 'Escribiendo el estudio', 'con texto en pantalla, siempre «escribiendo»');
+    const cuerpo = recal.rotuloDelFlujo('recalificando', false).cuerpo;
+    ok(/Puede tardar hasta minuto y medio/.test(cuerpo) && /el proyecto no se escribe/.test(cuerpo) && !/ADVERTENCIAS/.test(cuerpo),
+       'el párrafo de la recalificación dice que, si no sale, no se escribe (no promete ADVERTENCIAS)');
+    // El evento «recalificado» del flujo, si el servidor lo manda.
+    const fetchReal = globalThis.fetch;
+    globalThis.fetch = async (url) => {
+        const u = String(url);
+        if (u.includes('/taller/proyecto?')) return new Response(JSON.stringify({ proyecto: null }), { status: 200 });
+        const cuerpo = [{ tipo: 'recalificando' }, { tipo: 'recalificado' }, { tipo: 'texto', dato: 'x' },
+                        { tipo: 'listo', docx_b64: '', nombre: 'x.docx', palabras: 1, avisos: [], huecos: [] }]
+            .map((e) => `data: ${JSON.stringify(e)}\n\n`).join('');
+        if (u.includes('/taller/descargar')) return new Response(new Blob(['x']), { status: 200 });
+        return new Response(new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(cuerpo)); c.close(); } }), { status: 200 });
+    };
+    let fase = 'preparando';
+    const orden = [];
+    await api.resolverEnVivo('1', 'x', { criteriosJson: '[]' },
+        () => { orden.push('texto'); fase = recal.faseTras(fase, 'texto'); }, () => {},
+        () => { orden.push('ordenando'); fase = recal.faseTras(fase, 'ordenando'); },
+        () => { orden.push('recalificando'); fase = recal.faseTras(fase, 'recalificando'); },
+        () => { orden.push('recalificado'); fase = recal.faseTras(fase, 'recalificado'); });
+    globalThis.fetch = fetchReal;
+    ok(orden.join() === 'recalificando,recalificado,texto' && fase === 'escribiendo', `el flujo entrega «recalificado» (${orden})`);
+    // La página: una sola fase, cada callback la avanza, y nada la deja puesta.
+    const pag = fs.readFileSync(path.join(RAIZ, 'src/app/taller/page.tsx'), 'utf8');
+    ok(!/recalificandoSrv|setOrdenando/.test(pag), 'la página ya no lleva dos banderas que se pisan');
+    ok((pag.match(/avanzarFase\('texto'\)/g) || []).length === 3,
+       'el primer texto avanza la fase en los tres caminos (atajo, global y por problema)');
+    ok(/const alOrdenar = \(\) => avanzarFase\('ordenando'\);/.test(pag) && /\(\) => avanzarFase\('ordenando'\),/.test(pag),
+       '«ordenando» la avanza en los tres caminos');
+    ok((pag.match(/alOrdenar, alRecalificar, alRecalificado\)/g) || []).length === 2 && /\(\) => avanzarFase\('recalificado'\)\);/.test(pag),
+       '«recalificado» llega a la fase en los tres caminos');
+    ok(/if \(corriendo && recalAntesRef\.current && !recalEnCurso\) avanzarFase\('recalificado'\);/.test(pag),
+       'y la recalificación de la pantalla que termina mientras se genera también la sustituye');
+    ok(/\{rotuloDelFlujo\(faseSrv, !!avance\)\.titulo\}/.test(pag) && /\{avance \|\| rotuloDelFlujo\(faseSrv, false\)\.cuerpo\}/.test(pag),
+       'la tarjeta pinta el rótulo y el párrafo de esa fase');
+}
+
+/* ═══ 13 · (C) LO QUE LA PANTALLA PROMETE DE «ESTUDIAR JUNTOS» ═══
+   La v1 recibe ahora el texto de grupo de la v2: un apartado que abre con qué
+   los une, calificación conjunta, la premisa común una vez y, dentro, una
+   respuesta por argumento. La pantalla prometía contestar «cada una por
+   separado» sólo «si atacan consideraciones distintas» —ninguna variante lo
+   condiciona así— y callaba la calificación conjunta. */
+{
+    const a = pintarDecision(baseDecision({ grupos: {}, onGrupos: () => {} }));
+    const pl = buscar(a, (n) => n.type === 'details' && /se estudian juntos/.test(texto(n)))[0];
+    const t = pl ? texto(pl) : '';
+    ok(!!pl && /calificación conjunta/.test(t) && /cada argumento recibe su respuesta/.test(t) && /dato propio/.test(t),
+       'promete lo que recibe el estudio: calificación conjunta y una respuesta por argumento');
+    ok(!/si atacan consideraciones distintas/.test(t), 'no promete lo que ninguna variante hace');
 }
 
 fs.rmSync(TMP, { recursive: true, force: true });

@@ -9,7 +9,7 @@ import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
 import EstudiarJuntos from './EstudiarJuntos';
 import ComoSeEstudiara, { usePlanDelEstudio, pendientesDeRazon } from './ComoSeEstudiara';
 import type { EnlacePlan } from './ComoSeEstudiara';
-import { MENSAJE_SIN_CALIFICAR, porQueLegible } from './recalificacion';
+import { MENSAJE_SIN_CALIFICAR, porQueLegible, pendientesAlGenerar, firmaPendientes } from './recalificacion';
 import type { Superpuesta } from './recalificacion';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -338,7 +338,7 @@ function MarcaRecalificacion({ sup, onReintentar }: { sup: Superpuesta; onReinte
                     ? <span className="text-white/45"> · {porQueLegible(sup.porQue)}</span> : null}
                 {sup.estado === 'error' && (
                     <span className="text-white/55"> No se pudo recalificar desde aquí{sup.porQue ? ` (${sup.porQue})` : ''}; al
-                    generar, el servidor lo intentará otra vez con tu premisa.</span>
+                    generar, el servidor lo intentará otra vez con tu premisa y, si tampoco sale, no escribirá el proyecto.</span>
                 )}
                 {/* También tras un «fallo» (revisión adversarial, 26-sep-2026):
                     el servidor no rehace uno que ya falló la validación —lo
@@ -501,6 +501,11 @@ export default function Decision({
     const [textoAporte, setTextoAporte] = useState('');
     // Cuál de los dos botones se pulsó: el giro va en ése, no en los dos.
     const [formatoPulsado, setFormatoPulsado] = useState<FormatoSentencia>('estandar');
+    /* ANTES DE GENERAR CON ACCESORIOS SIN CALIFICAR (26-sep-2026): lo que él
+       ya vio (la firma de los pendientes cuando pulsó «generar así») y el
+       pedido que se detuvo para enseñárselo. Ver `pendientesAlGenerar`. */
+    const [pendientesVistos, setPendientesVistos] = useState('');
+    const [pedidoDetenido, setPedidoDetenido] = useState<{ firma: string; formato: FormatoSentencia } | null>(null);
     const [ficheroAporte, setFicheroAporte] = useState<File | null>(null);
     /* El problema que se está corrigiendo y su texto en curso. */
     const [editando, setEditando] = useState<{ id: string; texto: string } | null>(null);
@@ -610,8 +615,32 @@ export default function Decision({
                 : motor?.sentido && motor.alcanza ? 'del motor' : (p.sentido ? 'de la pantalla' : 'sin decidir'),
         };
     }), [problemas, enGlobal, sentidoGlobal, globalDictado, tocados, propuesta, principal, grupos, recalificadas]); // eslint-disable-line react-hooks/exhaustive-deps
-    const nRecalificando = Object.values(recalificadas).filter((s) => s.estado === 'recalificando').length;
-    const nSinCalificar = Object.values(recalificadas).filter((s) => s.estado === 'fallo' || s.estado === 'error').length;
+    /* LOS TUMBADOS QUE NO TIENEN CALIFICACIÓN AL PULSAR «GENERAR». El servidor
+       ya no escribe el proyecto con un accesorio sin calificar tras el cambio
+       de sentido (decisión del integrador, 26-sep-2026): se dice junto al
+       botón y el primer clic no manda el pedido hasta que él lo ve. Lo que
+       ya calificó no está aquí —manda su marca—, así que no se le bloquea. */
+    const pendientesGen = enGlobal ? [] : pendientesAlGenerar(problemas, recalificadas);
+    const firmaGen = firmaPendientes(pendientesGen);
+    const nRecalificando = pendientesGen.filter((x) => x.estado === 'recalificando').length;
+    const nSinCalificar = pendientesGen.filter((x) => x.estado === 'sin_calificar').length;
+    const detenido = !!pedidoDetenido && !!firmaGen && pedidoDetenido.firma === firmaGen;
+    const generar = (f: FormatoSentencia) => {
+        if (firmaGen && pendientesVistos !== firmaGen) {
+            setPedidoDetenido({ firma: firmaGen, formato: f });
+            return;
+        }
+        setPedidoDetenido(null);
+        setFormatoPulsado(f);
+        onGenerar(f);
+    };
+    const generarAsi = () => {
+        const f = pedidoDetenido?.formato ?? 'estandar';
+        setPendientesVistos(firmaGen);
+        setPedidoDetenido(null);
+        setFormatoPulsado(f);
+        onGenerar(f);
+    };
 
     /* ── SIN PROPUESTA TODAVÍA ── */
     if (proponiendo) {
@@ -639,7 +668,7 @@ export default function Decision({
        estándar; el segundo, la moderna. Los dos consumen lo mismo: un proyecto.
        Se recuerda cuál se pulsó para que el giro lo lleve ése y no el otro. */
     const botonGenerar = (grande: boolean) => (
-        <button type="button" onClick={() => { setFormatoPulsado('estandar'); onGenerar('estandar'); }}
+        <button type="button" onClick={() => generar('estandar')}
                 disabled={!puedeGenerar}
                 className={cn(
                     'inline-flex items-center justify-center gap-2 rounded-xl px-5 text-[14px] font-semibold text-charcoal-900 transition',
@@ -656,7 +685,7 @@ export default function Decision({
         </button>
     );
     const botonModerna = (
-        <button type="button" onClick={() => { setFormatoPulsado('moderna'); onGenerar('moderna'); }}
+        <button type="button" onClick={() => generar('moderna')}
                 disabled={!puedeGenerar}
                 className={cn(
                     'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 py-2 text-center text-[14px] font-semibold leading-snug transition',
@@ -1167,14 +1196,27 @@ export default function Decision({
             {/* ═══ 3-ter · ESTUDIAR JUNTOS, EN LOS TRES MODOS ═══
                 Fuera del condicional de modo y de «cambiar el sentido», como la
                 suplencia: agrupar no es corregir la propuesta, es decir cómo se
-                estudia. En «todo el asunto» también viaja (ver page.tsx). */}
+                estudia. En «todo el asunto» también viaja (ver page.tsx).
+                LO QUE SE PROMETE ES LO QUE RECIBE EL ESTUDIO (revisión
+                adversarial, 26-sep-2026). Decía «si atacan consideraciones
+                distintas, contesta cada una por separado dentro de él», y la
+                v1 —la de todas las cuentas— recibía «no los contestes por
+                separado dentro de él». Ahora las cuatro variantes reciben el
+                mismo texto de grupo (fase6_estudio `_bloque_criterio`, el de la
+                v2): un apartado que abre con qué los une, una calificación
+                conjunta, la premisa común una vez y, dentro, una respuesta
+                identificable por argumento y la suya al que trae un dato
+                propio; la v4 además los separa por proposición en el plan.
+                Ninguna condiciona eso a que ataquen consideraciones
+                distintas, y la pantalla no decía lo de la calificación
+                conjunta, que es lo que más cambia. */}
             {onGrupos && problemas.length >= 2 && (
                 <Pliegue titulo={`Problemas que se estudian juntos${nGrupos ? ` · ${nGrupos} ${nGrupos === 1 ? 'grupo' : 'grupos'}` : ''}`}
                          abierto={nGrupos > 0}>
                     <p className="mb-2.5 text-[12px] leading-relaxed text-white/45">
                         Marca dos o más si se resuelven con una sola línea argumentativa. El estudio los trata en un
-                        apartado, dice qué los une y, si atacan consideraciones distintas, contesta cada una por
-                        separado dentro de él.
+                        apartado que abre diciendo qué los une, con una calificación conjunta; expone una vez la premisa
+                        común y, dentro, cada argumento recibe su respuesta, y el que trae un dato propio, la suya.
                     </p>
                     <EstudiarJuntos problemas={problemas} grupos={grupos} onGrupos={onGrupos} />
                 </Pliegue>
@@ -1302,27 +1344,6 @@ export default function Decision({
                             Te apartas de la propuesta: escribe el porqué antes de generar. El estudio se alinea a lo que escribas.
                         </p>
                     )}
-                    {/* EL PROYECTO NO SALE CON UN «RECALIFICANDO…» SIN DECIRLO
-                        (26-sep-2026). No se bloquea: el servidor termina esa
-                        recalificación antes del plan y del estudio. */}
-                    {!enGlobal && nRecalificando > 0 && (
-                        <p className="mt-2.5 flex items-start gap-1.5 text-[12px] leading-relaxed text-amber-300/90">
-                            <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin" />
-                            <span>
-                                {nRecalificando === 1 ? 'Un accesorio se está' : `${nRecalificando} accesorios se están`} recalificando
-                                con tu premisa. Si generas ahora, el servidor terminará esa recalificación antes de escribir el
-                                estudio —hasta minuto y medio más— y te lo dirá mientras tanto.
-                            </span>
-                        </p>
-                    )}
-                    {!enGlobal && nSinCalificar > 0 && (
-                        <p className="mt-2.5 text-[12px] leading-relaxed text-amber-300/90">
-                            {nSinCalificar === 1 ? 'Un accesorio quedó' : `${nSinCalificar} accesorios quedaron`} sin calificar
-                            tras el cambio de sentido: {nSinCalificar === 1 ? 'califícalo' : 'califícalos'} tú; si no, el estudio
-                            {nSinCalificar === 1 ? ' lo desarrollará' : ' los desarrollará'} con el material y
-                            {nSinCalificar === 1 ? ' lo pondrá' : ' los pondrá'} primero en ADVERTENCIAS.
-                        </p>
-                    )}
                     {necesitaConceptos && (
                         <p className="mt-2.5 text-[12px] text-amber-300/90">
                             Este recurso levanta un sobreseimiento: pega arriba los conceptos de violación antes de generar.
@@ -1364,6 +1385,71 @@ export default function Decision({
                                     {v.rotulo}
                                 </button>
                             ))}
+                        </div>
+                    )}
+                    {/* ═══ JUNTO AL BOTÓN: LOS ACCESORIOS SIN CALIFICAR ═══
+                        (26-sep-2026) Con uno sin calificar tras el cambio de
+                        sentido el servidor no escribe el proyecto; con uno
+                        recalificándose, lo termina antes —y si no sale, no
+                        escribe—. Se dice aquí, pegado al botón, con la lista;
+                        y si pulsa sin haberlo visto, el pedido se detiene y se
+                        le pregunta. No se bloquea: «generar así» lo manda. */}
+                    {pendientesGen.length > 0 && (
+                        <div id="antes-de-generar" role={detenido ? 'alert' : undefined}
+                             className={cn('mt-3 rounded-xl border px-3.5 py-2.5 text-[12px] leading-relaxed',
+                                 detenido ? 'border-amber-300/60 bg-amber-300/[0.08]' : 'border-amber-300/25 bg-amber-300/[0.04]')}>
+                            {nSinCalificar > 0 && (
+                                <p className="flex items-start gap-1.5 text-amber-300/90">
+                                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                    <span>
+                                        {nSinCalificar === 1 ? 'Un accesorio quedó' : `${nSinCalificar} accesorios quedaron`} sin
+                                        calificar tras tu cambio de sentido: {nSinCalificar === 1 ? 'califícalo' : 'califícalos'} tú
+                                        antes de generar (un clic en su calificación), o vuelve a intentar. Si generas así y el
+                                        motor tampoco {nSinCalificar === 1 ? 'lo' : 'los'} recalifica, el proyecto no se escribe: el
+                                        servidor te devuelve la lista.
+                                    </span>
+                                </p>
+                            )}
+                            {nRecalificando > 0 && (
+                                <p className={cn('flex items-start gap-1.5 text-amber-300/90', nSinCalificar > 0 && 'mt-1.5')}>
+                                    <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                                    <span>
+                                        {nRecalificando === 1 ? 'Un accesorio se está' : `${nRecalificando} accesorios se están`} recalificando
+                                        con tu premisa. Si generas ahora, el servidor terminará esa recalificación antes de escribir el
+                                        estudio —hasta minuto y medio más— y te lo dirá mientras tanto; si no sale, no escribe el
+                                        proyecto y te dice {nRecalificando === 1 ? 'que quedó' : 'cuáles quedaron'} sin calificar.
+                                    </span>
+                                </p>
+                            )}
+                            <ul className="mt-1.5 grid gap-0.5 pl-5 text-white/70">
+                                {pendientesGen.map((x) => (
+                                    <li key={x.id} className="flex flex-wrap items-baseline gap-x-1.5">
+                                        <span className="text-white/45">{x.numero}.</span>
+                                        <span className="min-w-0 flex-1 truncate">{x.pregunta}</span>
+                                        <span className="shrink-0 text-white/45">
+                                            {x.estado === 'recalificando' ? 'recalificándose…' : 'sin calificar'}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                            {detenido && (
+                                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                                    <span className="text-white/75">
+                                        No se envió todavía: {nSinCalificar === 0 ? 'espera unos segundos o'
+                                            : `${nSinCalificar === 1 ? 'califícalo' : 'califícalos'} arriba, vuelve a intentar o`} genera así.
+                                    </span>
+                                    <button type="button" onClick={generarAsi} disabled={!puedeGenerar}
+                                            className="rounded-lg border border-amber-300/50 px-2.5 py-1 font-medium text-amber-200 hover:bg-amber-300/10 disabled:opacity-40">
+                                        Generar así
+                                    </button>
+                                    {nSinCalificar > 0 && onReintentarRecalificacion && (
+                                        <button type="button" onClick={() => { setPedidoDetenido(null); onReintentarRecalificacion(); }}
+                                                className="rounded-lg border border-white/15 px-2.5 py-1 text-white/75 hover:bg-white/[0.06]">
+                                            Volver a intentar la recalificación
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
                     <div className="mt-3 flex flex-wrap items-center gap-2.5">

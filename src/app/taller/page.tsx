@@ -64,8 +64,10 @@ import type { EnlacePlan } from '@/components/sentencia/ComoSeEstudiara';
 import {
     useRecalificacion, idsPorRecalificar, aplicarReparto, pendientesVivos,
     claveRecalificacion, superposicion, recalificacionEnCurso, firmaConRecalificacion,
+    faseTras, rotuloDelFlujo,
 } from '@/components/sentencia/recalificacion';
-import type { EnlaceRecalificacion } from '@/components/sentencia/recalificacion';
+import type { EnlaceRecalificacion, FaseDelFlujo, EventoDelFlujo } from '@/components/sentencia/recalificacion';
+import { opcionesDelProyecto as armarOpciones } from '@/components/sentencia/opcionesDelProyecto';
 import MapaDelEstudio from '@/components/sentencia/MapaDelEstudio';
 import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto, DecisionSuplencia } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -562,11 +564,14 @@ export default function TallerDeSentencias() {
        estudiará» no aparece y no se pide nada. */
     const varianteEfectiva = (esCasa && varianteEstudio) || delAsunto?.varianteEstudio || '';
     const usaPlan = varianteEfectiva === 'v4';
-    /* EL SERVIDOR ESTÁ ORDENANDO EL ESTUDIO (evento «ordenando»). */
-    const [ordenando, setOrdenando] = useState(false);
-    /* EL SERVIDOR ESTÁ RECALIFICANDO LOS ACCESORIOS CON SU PREMISA (evento
-       «recalificando», 26-sep-2026): va antes del plan y del estudio. */
-    const [recalificandoSrv, setRecalificandoSrv] = useState(false);
+    /* QUÉ ESTÁ HACIENDO EL SERVIDOR MIENTRAS SE GENERA, en UNA fase y no en
+       dos banderas: «recalificando» (los accesorios con la premisa del
+       secretario, antes del plan y del estudio), «ordenando» (el plan) o
+       «escribiendo». Cada evento la sustituye (`faseTras`), así el rótulo de
+       la recalificación no se queda puesto cuando el servidor ya pasó a otra
+       cosa (revisión adversarial, 26-sep-2026). */
+    const [faseSrv, setFaseSrv] = useState<FaseDelFlujo>('preparando');
+    const avanzarFase = useCallback((ev: EventoDelFlujo) => setFaseSrv((f) => faseTras(f, ev)), []);
     /* Si al pulsar «generar» quedaba un accesorio «Recalificando…», la
        pantalla lo dice desde el primer segundo: el servidor lo terminará antes
        de escribir, aunque no llegue a mandar el evento (si la recalificación
@@ -1293,10 +1298,11 @@ export default function TallerDeSentencias() {
                     : { porJurimetria: true,
                         responsable: encargo.responsable, contexto,
                         varianteEstudio: esCasa ? varianteEstudio : '' },
-                (t) => { setOrdenando(false); setRecalificandoSrv(false); setAvance((x) => x + t); },
+                (t) => { avanzarFase('texto'); setAvance((x) => x + t); },
                 () => setAvance((x) => x + '\n\n… componiendo el documento'),
-                () => { setRecalificandoSrv(false); setOrdenando(true); },
-                () => setRecalificandoSrv(true));
+                () => avanzarFase('ordenando'),
+                () => avanzarFase('recalificando'),
+                () => avanzarFase('recalificado'));
             setProyecto(rg);
             descargarProyecto(rg);
             void traerGuardados(encargo.numero);
@@ -1305,8 +1311,8 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message
                    : 'No se pudo generar el proyecto completo.');
-        } finally { setCorriendo(false); setOrdenando(false); setRecalificandoSrv(false); }
-    }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados, esCasa, varianteEstudio]);
+        } finally { setCorriendo(false); setFaseSrv('preparando'); }
+    }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados, esCasa, varianteEstudio, avanzarFase]);
 
     const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean; contextoTexto?: string }) => {
         setError(''); setCorriendo(true); setProponiendo(true);
@@ -1630,11 +1636,13 @@ export default function TallerDeSentencias() {
     }, [correo, encargo.numero, contexto]);
 
     /* ═══ EL FORMULARIO DEL PROYECTO, EN UN SOLO SITIO (26-sep-2026) ═══
-       Lo arma esta función y lo usan DOS llamadas: la que genera el proyecto
-       y la que pide el plan del estudio (`pedirPlan`). El servidor busca el
-       plan por una clave que sale de este formulario; si las dos llamadas lo
-       armaran cada una a su manera, al generar no encontraría el plan que el
-       secretario vio en pantalla.
+       Lo arma `armarOpciones` (components/sentencia/opcionesDelProyecto.ts,
+       sin React, probado en comprobaciones/recalificar.mjs) y lo usan TRES
+       llamadas: la que genera el proyecto, la que pide el plan del estudio
+       (`pedirPlan`) y la que recalifica los tumbados (`recalificar`). El
+       servidor busca el plan y la recalificación por una clave que sale de
+       este formulario; si cada llamada lo armara a su manera, al generar no
+       encontraría lo que el secretario vio en pantalla.
 
        Se lee por referencia, con el estado de AHORA. `pedirProyecto` es un
        useCallback cuya lista de dependencias no traía ni `grupos`, ni
@@ -1642,128 +1650,17 @@ export default function TallerDeSentencias() {
        no se notaba, pero pegar los conceptos después del último cambio de
        sentido los mandaba vacíos. Leyendo por referencia no hay lista que
        olvidar. Devuelve null si en «todo el asunto» falta el sentido. */
-    const opcionesDelProyecto = (formato: FormatoSentencia): OpcionesResolver | null => {
-        /* LA SUPLENCIA VIAJA EN LAS DOS LLAMADAS: la que él decidió o, si no
-           decidió nada, la propuesta del motor marcada sin confirmar —el
-           servidor sólo aplica la confirmada—. */
-        const supl = suplencia ?? (delAsunto?.suplencia
-            ? { fraccion: delAsunto.suplencia.fraccion,
-                aFavorDe: delAsunto.suplencia.aFavorDe, confirmada: false }
-            : null);
-        /* Lo que viaja igual por los dos caminos: la autoridad corregida, lo
-           que él resolvió sobre la oportunidad —en la petición y no en
-           memoria: con -w 2 el worker que compone no es el que leyó—, la
-           forma, la suplencia, sus razones por argumento (Decisión 6) y, sólo
-           en casa, la variante del prompt. */
-        const comunes: OpcionesResolver = {
-            contexto,
-            responsable: encargo.responsable,
-            oportunidadDecision: decision,
-            oportunidadMotivo: motivoDecision,
-            formato,
-            suplencia: supl,
-            razonesSegmento,
-            varianteEstudio: esCasa ? varianteEstudio : '',
-        };
-        // SE MANDAN TODOS LOS SENTIDOS, NO EL PRIMERO. Antes se tomaba
-        // `problemas.find(p => p.sentido)` y los demás se perdían: el
-        // secretario calificaba seis problemas y el estudio recibía uno.
-        // Con varios criterios el resolutivo sale mixto donde debe salir
-        // mixto, que es lo que hace que concuerde con el estudio.
-        if (modo === 'global') {
-            if (!sentidoGlobal) return null;
-            /* LO QUE ÉL MARCÓ VIAJA TAMBIÉN AQUÍ, y manda.
-               Este camino decía «mandar además los criterios por problema
-               sería dar dos órdenes distintas» y por eso los tiraba. El
-               razonamiento daba por hecho que el sentido global era la
-               palabra del secretario, y no lo es: lo pone la propuesta del
-               modelo en cuanto llega. Así que se tiraba lo único que él
-               había dicho de verdad.
-               Ahora el global RELLENA los problemas que no tocó, y donde
-               marcó algo gana su marca. El servidor aplica esa regla en
-               modos_decision.repartir y lo dice en un aviso. */
-            const suyos = problemas.filter((p) => tocados.has(p.id) && p.sentido);
-            /* Y EL GRUPO DE LOS QUE NO TOCÓ (26-sep-2026). «Estudiar juntos»
-               vale en los tres modos; en éste el problema agrupado que él no
-               calificó viaja SIN sentido y con `tocado: false`: no califica
-               nada —el servidor sólo toma como marca la que trae sentido—,
-               sólo dice con quién se estudia. */
-            const agrupados = problemas.filter((p) => !(tocados.has(p.id) && p.sentido) && grupos[p.id]);
-            const filas = [
-                ...suyos.map((p) => ({
-                    problema: p.pregunta,
-                    sentido: p.sentido,
-                    razonamiento: p.criterio ?? '',
-                    grupo: grupos[p.id] ?? '',
-                    jerarquia: p.jerarquia ?? 'accesorio',
-                    prediccion: p.prediccion ?? {},
-                    tocado: true,
-                })),
-                ...agrupados.map((p) => ({
-                    problema: p.pregunta,
-                    sentido: '',
-                    razonamiento: '',
-                    grupo: grupos[p.id] ?? '',
-                    jerarquia: p.jerarquia ?? 'accesorio',
-                    prediccion: p.prediccion ?? {},
-                    tocado: false,
-                })),
-            ];
-            return {
-                ...comunes,
-                sentidoGlobal, razonGlobal, globalDictado,
-                // LO QUE ÉL MARCÓ, con su razón y su grupo. Va junto al
-                // sentido global, no en lugar de él: el servidor usa el
-                // global de relleno y respeta cada marca expresa.
-                criteriosJson: filas.length ? JSON.stringify(filas) : undefined,
-                // Qué resolvió el órgano recurrido, del contexto que
-                // escribió el motor. Decide el verbo del resolutivo.
-                resolvioDeclarado: propuesta?.global?.contexto?.resolvio ?? '',
-                // Y la propuesta global entera, para el estudio.
-                globalJson: propuesta?.global ? JSON.stringify(propuesta.global) : '',
-                // Y los conceptos de violación, si el secretario los
-                // aportó: sin ellos el proyecto levanta el
-                // sobreseimiento y deja el estudio pendiente.
-                conceptosViolacion,
-            };
-        }
-        const conSentido = problemas.filter((p) => p.sentido);
-        const criteriosJson = conSentido.length
-            ? JSON.stringify(conSentido.map((p) => ({
-                  problema: p.pregunta,
-                  sentido: p.sentido,
-                  razonamiento: p.criterio ?? '',
-                  // EL GRUPO VIAJA CON EL CRITERIO. Si el secretario marcó
-                  // dos planteamientos como una sola línea argumentativa,
-                  // el estudio tiene que saberlo: es lo único que autoriza
-                  // resolverlos con una calificación conjunta.
-                  grupo: grupos[p.id] ?? '',
-                  // LO QUE SE SEMBRÓ TIENE QUE VOLVER. Este objeto se
-                  // reconstruía con tres campos y perdía la jerarquía y la
-                  // predicción, que es lo que ordena el estudio por
-                  // prelación lógica y lo que avisa de ir contra la
-                  // corriente del acervo. Es el gemelo exacto del fallo que
-                  // ya costó una ronda en el servidor: un arreglo
-                  // reconstruye una lista y descarta lo que otro sembró.
-                  jerarquia: p.jerarquia ?? 'accesorio',
-                  prediccion: p.prediccion ?? {},
-                  // QUIÉN LO PUSO. Lo que él marcó a mano el servidor no lo
-                  // toca; lo que puso la pantalla con la propuesta o con el
-                  // reparto sigue la suerte del principal.
-                  tocado: tocados.has(p.id),
-              })))
-            : undefined;
-        return {
-            ...comunes,
-            criterio: criteriosJson ? null : {
-                sentido: problemas[0]?.sentido ?? 'infundado',
-                problema: problemas[0]?.pregunta ?? '',
-                razonamiento: problemas.filter((p) => p.criterio)
-                    .map((p) => `${p.pregunta}\n${p.criterio}`).join('\n\n'),
-            },
-            criteriosJson,
-        };
-    };
+    const opcionesDelProyecto = (formato: FormatoSentencia): OpcionesResolver | null => armarOpciones({
+        modo, problemas, tocados, grupos, sentidoGlobal, razonGlobal, globalDictado, propuesta,
+        conceptosViolacion, contexto,
+        responsable: encargo.responsable,
+        oportunidadDecision: decision,
+        oportunidadMotivo: motivoDecision,
+        suplencia,
+        suplenciaPropuesta: delAsunto?.suplencia ?? null,
+        razonesSegmento,
+        varianteEstudio: esCasa ? varianteEstudio : '',
+    }, formato);
     const opcionesRef = useRef(opcionesDelProyecto);
     opcionesRef.current = opcionesDelProyecto;
 
@@ -1780,18 +1677,21 @@ export default function TallerDeSentencias() {
         // EL AVANCE ARRANCA LIMPIO. Si se genera dos veces —cambiando el
         // criterio, que es lo normal—, lo que se veía escribirse era el
         // estudio nuevo pegado detrás del viejo.
-        setError(''); setAvance(''); setOrdenando(false); setCorriendo(true);
+        setError(''); setAvance(''); setCorriendo(true);
         /* «RECALIFICANDO LOS ACCESORIOS CON TU PREMISA…» (26-sep-2026): si
            quedaba alguno «Recalificando…» en pantalla, se dice desde ya —el
            servidor lo termina antes del plan y del estudio—, y también cuando
-           el servidor manda el evento. Se apaga con «ordenando» o con el
-           primer trozo de texto. */
-        setRecalificandoSrv(recalEnCursoRef.current);
-        const alRecalificar = () => setRecalificandoSrv(true);
+           el servidor manda el evento. Lo sustituye lo siguiente que pase:
+           «ordenando», el primer trozo de texto, o que la recalificación
+           termine (el evento «recalificado», o la de esta pantalla, que es la
+           que el servidor espera; ver el efecto de abajo). */
+        setFaseSrv(recalEnCursoRef.current ? 'recalificando' : 'preparando');
+        const alRecalificar = () => avanzarFase('recalificando');
+        const alRecalificado = () => avanzarFase('recalificado');
         /* «ORDENANDO EL ESTUDIO…» (Paso 2): con el plan encendido, el servidor
            espera o hace el plan de esta decisión antes de la primera línea.
            Se apaga con el primer trozo de texto. */
-        const alOrdenar = () => { setRecalificandoSrv(false); setOrdenando(true); };
+        const alOrdenar = () => avanzarFase('ordenando');
         try {
             if (modo === 'global') {
                 // POR EL FLUJO, NO POR LA LLAMADA BLOQUEANTE. El servidor
@@ -1808,9 +1708,9 @@ export default function TallerDeSentencias() {
                 irA('estudio', 200);
                 const rg = await resolverEnVivo(
                     encargo.numero, correo, opciones,
-                    (t) => { setOrdenando(false); setRecalificandoSrv(false); setAvance((x) => x + t); },
+                    (t) => { avanzarFase('texto'); setAvance((x) => x + t); },
                     () => setAvance((x) => x + '\n\n… componiendo el documento'),
-                    alOrdenar, alRecalificar);
+                    alOrdenar, alRecalificar, alRecalificado);
                 setProyecto(rg);
                 descargarProyecto(rg);
                 void traerGuardados(encargo.numero);
@@ -1823,8 +1723,7 @@ export default function TallerDeSentencias() {
             const r = await resolverEnVivo(
                 encargo.numero, correo, opciones,
                 (t) => {
-                    setOrdenando(false);
-                    setRecalificandoSrv(false);
+                    avanzarFase('texto');
                     setAvance((x) => {
                         // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
                         // pantalla temblaría durante los dos minutos que dura el estudio.
@@ -1833,15 +1732,19 @@ export default function TallerDeSentencias() {
                     });
                 },
                 () => setAvance((x) => x + '\n\n… componiendo el documento'),
-                alOrdenar, alRecalificar);
+                alOrdenar, alRecalificar, alRecalificado);
             setProyecto(r);
             descargarProyecto(r);
             irA('proyecto', 400);
             setPaso('proyecto');
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
-        } finally { setCorriendo(false); setOrdenando(false); setRecalificandoSrv(false); }
-    }, [encargo.numero, correo, modo, irA, traerGuardados]);
+            /* EL ERROR SE VE. La pantalla había bajado al estudio; el aviso
+               vive arriba. Si el servidor se negó porque quedaron accesorios
+               sin calificar tras el cambio de sentido, la lista está ahí. */
+            irA('error-del-taller', 200);
+        } finally { setCorriendo(false); setFaseSrv('preparando'); }
+    }, [encargo.numero, correo, modo, irA, traerGuardados, avanzarFase]);
 
     /* ═══ LA RECALIFICACIÓN DE LOS TUMBADOS, PEDIDA DESDE LA PANTALLA ═══
        Sólo en «problema por problema», que es donde el principal se cambia
@@ -1873,6 +1776,17 @@ export default function TallerDeSentencias() {
     const superpuestas = superposicion(vivosRecal, recal, claveRecal);
     const recalEnCurso = recalificacionEnCurso(superpuestas, repartiendo && modo === 'por_problema');
     recalEnCursoRef.current = recalEnCurso;
+    /* LA RECALIFICACIÓN DE ESTA PANTALLA TERMINÓ MIENTRAS SE GENERA. La que
+       pidió esta pantalla sigue en camino con la misma premisa que el
+       servidor espera —el hook no corta lo que ya va con ESTA clave—, así que
+       cuando llega, la del servidor también terminó. Sin plan no hay
+       «ordenando», y el rótulo se quedaba en «Recalificando…» el minuto que
+       tarda el primer texto (revisión adversarial, 26-sep-2026). */
+    const recalAntesRef = useRef(false);
+    useEffect(() => {
+        if (corriendo && recalAntesRef.current && !recalEnCurso) avanzarFase('recalificado');
+        recalAntesRef.current = recalEnCurso;
+    }, [recalEnCurso, corriendo, avanzarFase]);
     const avisosRecal = recal.clave === claveRecal && recal.respuesta ? recal.respuesta.avisos : [];
     /* Los avisos de /taller/recalificar son los del árbol de ESTE formulario
        con lo recalificado aplicado, más los de la recalificación: sustituyen a
@@ -2185,6 +2099,7 @@ export default function TallerDeSentencias() {
                         </Tarjeta>
                     )}
 
+                    <span id="error-del-taller" />
                     {error && (
                         <Tarjeta className={cn(
                             sinProyectos
@@ -2194,7 +2109,10 @@ export default function TallerDeSentencias() {
                                 <AlertCircle className={cn('mt-0.5 h-4 w-4 shrink-0',
                                     sinProyectos ? 'text-accent-gold' : 'text-red-300')} />
                                 <div className="min-w-0">
-                                    <p className={cn('text-[14px] leading-relaxed',
+                                    {/* CON SUS RENGLONES: el servidor puede mandar una
+                                        lista —los accesorios que quedaron sin calificar
+                                        tras el cambio de sentido—, uno por renglón. */}
+                                    <p className={cn('whitespace-pre-line text-[14px] leading-relaxed',
                                         sinProyectos ? 'text-white/90' : 'text-red-100')}>
                                         {error}
                                     </p>
@@ -3360,22 +3278,14 @@ export default function TallerDeSentencias() {
                                             : 'leyendo el acervo'}
                                 </span>
                             }>
-                                {avance ? 'Escribiendo el estudio' : ordenando ? 'Ordenando el estudio…'
-                                    : recalificandoSrv ? 'Recalificando los accesorios con tu premisa…' : 'Preparando el estudio'}
+                                {rotuloDelFlujo(faseSrv, !!avance).titulo}
                             </Rotulo>
                             <div className="max-h-[26rem] overflow-y-auto rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
                                 <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-white/75">
-                                    {avance || (ordenando
-                                        /* Con el plan encendido el servidor espera —o hace— el
-                                           plan de esta decisión antes de escribir: puede tardar
-                                           hasta dos minutos y sin decirlo parecería colgado. */
-                                        ? 'Ordenando el estudio con tu decisión: qué argumentos se contestan juntos, dónde se expone cada premisa y qué dato propio trae cada uno. Puede tardar hasta dos minutos; después el texto empieza a aparecer aquí.'
-                                        /* El principal va por la vía contraria a la que propuso
-                                           el motor: los accesorios que no marcaste se califican
-                                           otra vez, ANTES del plan y del estudio. */
-                                        : recalificandoSrv
-                                        ? 'Recalificando los accesorios con tu premisa…\n\nEl principal va por la vía contraria a la que propuso el motor, así que los accesorios que no marcaste se califican de nuevo con tu sentido y tu razón como hechos dados; la calificación que tenían para la otra vía no se usa. Puede tardar hasta minuto y medio. Si no sale, quedan sin calificar: el estudio los desarrollará con el material y los pondrá primero en ADVERTENCIAS.'
-                                        : 'El motor está leyendo las tesis y las normas del acervo y fijando la premisa. El texto empieza a aparecer aquí en cuanto escribe la primera línea; suele tardar alrededor de un minuto.')}
+                                    {/* Lo que dice cada fase —preparando, recalificando,
+                                        ordenando— vive en `rotuloDelFlujo`
+                                        (recalificacion.ts), probado sin servidor. */}
+                                    {avance || rotuloDelFlujo(faseSrv, false).cuerpo}
                                     <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-accent-gold align-middle" />
                                 </p>
                             </div>

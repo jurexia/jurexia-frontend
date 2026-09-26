@@ -21,9 +21,14 @@ import type { ProblemaJuridico } from './tipos';
        ni se está redactando una);
      · pinta lo que vuelve con la marca «recalificado con tu premisa» y su
        por qué; el secretario lo pisa con un clic y queda suyo (`tocado`);
-     · si el servidor dice que falló, lo dice: sin calificar, califícalo tú o
-       el estudio lo desarrolla con el material y lo pone primero en las
-       ADVERTENCIAS.
+     · si el servidor dice que falló, lo dice: sin calificar, califícalo tú
+       antes de generar (un clic) o vuelve a intentar. El servidor ya no
+       genera con un accesorio sin calificar tras el cambio de sentido
+       (decisión del integrador, 26-sep-2026): el flujo manda «error» y el
+       camino plano 409, con la lista. Por eso, si al pulsar «generar» queda
+       alguno sin calificar o recalificándose, la pantalla lo dice junto al
+       botón y el pedido no sale hasta que él lo ha visto
+       (`pendientesAlGenerar`).
 
    LA BASE NO SE TOCA. La calificación recalificada vive aquí, encima de la
    del problema, y NO se escribe en `problemas`: el formulario del proyecto
@@ -51,9 +56,13 @@ export const REINTENTOS_EN_CURSO = 2;
 /** El servidor espera como mucho 90 s; aquí se corta a los 120 s por petición. */
 export const ESPERA_CLIENTE_MS = 120_000;
 
-/** Lo que se dice cuando el motor no pudo recalificarlo (contrato: fallo). */
+/** Lo que se dice cuando el motor no pudo recalificarlo (contrato: fallo).
+ *  Ya no promete que «el estudio lo desarrollará… y lo pondrá primero en
+ *  ADVERTENCIAS»: con uno sin calificar el servidor no escribe el proyecto
+ *  (el resolutivo y la apertura se armaban sin él mientras el cuerpo del
+ *  estudio sí lo calificaba). */
 export const MENSAJE_SIN_CALIFICAR =
-    'Sin calificar: califícalo tú; si no, el estudio lo desarrollará con el material y lo pondrá primero en ADVERTENCIAS.';
+    'Sin calificar: califícalo tú antes de generar (un clic), o vuelve a intentar.';
 
 /* Las calificaciones que una pastilla puede llevar (las diez del catálogo y
    «innecesario»). Lo que venga de fuera se valida antes de pintarse. */
@@ -400,4 +409,84 @@ export function firmaConRecalificacion(
 /** El porqué del servidor sin la fórmula de arriba, que la marca ya dice. */
 export function porQueLegible(s: string): string {
     return (s || '').replace(/^\s*recalificad[ao]\s+por\s+el\s+motor\s+con\s+tu\s+premisa\s*[:·,—-]?\s*/i, '').trim();
+}
+
+/* ── ANTES DE PEDIR EL PROYECTO ──────────────────────────────────────────────
+   Decisión del integrador (26-sep-2026): tras la recalificación, el servidor
+   no genera con accesorios sin calificar —el flujo manda «error» y el camino
+   plano 409, con la lista—. La pantalla lo sabe antes: el tumbado que quedó
+   sin calificar (fallo o error de red) o que se está recalificando. Se dice
+   junto al botón, y el primer clic con algo así pendiente no manda el pedido:
+   enseña la lista y pide «generar así». Lo que él ya calificó no está aquí
+   (manda su marca y deja de ser tumbado), ni lo recalificado: no se bloquea
+   nada de lo que ya decidió. */
+export interface PendienteAlGenerar {
+    id: string;
+    /** Su número en la pantalla (1, 2, …). */
+    numero: number;
+    pregunta: string;
+    estado: 'recalificando' | 'sin_calificar';
+}
+export function pendientesAlGenerar(
+    problemas: ProblemaJuridico[], sup: Record<string, Superpuesta>,
+): PendienteAlGenerar[] {
+    const out: PendienteAlGenerar[] = [];
+    problemas.forEach((p, i) => {
+        const s = sup[p.id];
+        if (!s || s.estado === 'recalificada') return;
+        out.push({ id: p.id, numero: i + 1, pregunta: p.pregunta,
+                   estado: s.estado === 'recalificando' ? 'recalificando' : 'sin_calificar' });
+    });
+    return out;
+}
+/** Qué vio: si cambia (llega otro, uno pasa de «recalificando» a «sin
+ *  calificar»), tiene que verlo otra vez. Vacía = nada pendiente. */
+export function firmaPendientes(l: PendienteAlGenerar[]): string {
+    return l.map((x) => `${x.id}:${x.estado}`).sort().join('|');
+}
+
+/* ── LO QUE DICE LA TARJETA MIENTRAS SE GENERA ───────────────────────────────
+   «Recalificando los accesorios con tu premisa…» no puede quedarse puesto
+   cuando el servidor ya pasó a otra cosa (revisión adversarial, 26-sep-2026).
+   Una sola fase, y cada evento la sustituye: «ordenando» o el primer «texto»
+   la quitan siempre; «recalificado» (el servidor, si lo manda, o la pantalla
+   cuando su propia recalificación de ESA premisa termina mientras se genera
+   —el servidor esperaba esa misma—) la devuelve a «preparando», que es lo que
+   pasa en las cuentas sin plan: no hay «ordenando» y el primer texto tarda un
+   minuto más. Nunca se vuelve atrás: un «recalificando» tardío no tapa lo que
+   ya se está ordenando o escribiendo. */
+export type FaseDelFlujo = 'preparando' | 'recalificando' | 'ordenando' | 'escribiendo';
+export type EventoDelFlujo = 'recalificando' | 'recalificado' | 'ordenando' | 'texto';
+export function faseTras(actual: FaseDelFlujo, ev: EventoDelFlujo): FaseDelFlujo {
+    if (ev === 'texto') return 'escribiendo';
+    if (ev === 'ordenando') return actual === 'escribiendo' ? actual : 'ordenando';
+    if (ev === 'recalificando') return actual === 'preparando' ? 'recalificando' : actual;
+    return actual === 'recalificando' ? 'preparando' : actual;
+}
+/** El rótulo y el párrafo de la tarjeta, por fase. `hayTexto`: ya llegó algo
+ *  que pintar (el estudio o «componiendo»). */
+export function rotuloDelFlujo(fase: FaseDelFlujo, hayTexto: boolean): { titulo: string; cuerpo: string } {
+    if (hayTexto || fase === 'escribiendo') return { titulo: 'Escribiendo el estudio', cuerpo: '' };
+    if (fase === 'ordenando') {
+        return {
+            titulo: 'Ordenando el estudio…',
+            /* Con el plan encendido el servidor espera —o hace— el plan de
+               esta decisión antes de escribir: puede tardar hasta dos minutos
+               y sin decirlo parecería colgado. */
+            cuerpo: 'Ordenando el estudio con tu decisión: qué argumentos se contestan juntos, dónde se expone cada premisa y qué dato propio trae cada uno. Puede tardar hasta dos minutos; después el texto empieza a aparecer aquí.',
+        };
+    }
+    if (fase === 'recalificando') {
+        return {
+            titulo: 'Recalificando los accesorios con tu premisa…',
+            /* El principal va por la vía contraria a la que propuso el motor:
+               los accesorios que no marcó se califican otra vez, ANTES del
+               plan y del estudio. Si no sale, el servidor no escribe. */
+            cuerpo: 'Recalificando los accesorios con tu premisa…\n\nEl principal va por la vía contraria a la que propuso el motor, así que los accesorios que no marcaste se califican de nuevo con tu sentido y tu razón como hechos dados; la calificación que tenían para la otra vía no se usa. Puede tardar hasta minuto y medio. Si no sale, el proyecto no se escribe: te diremos cuáles quedaron sin calificar para que los califiques tú.',
+        };
+    }
+    return {
+        titulo: 'Preparando el estudio',
+        cuerpo: 'El motor está leyendo las tesis y las normas del acervo y fijando la premisa. El texto empieza a aparecer aquí en cuanto escribe la primera línea; suele tardar alrededor de un minuto.',
+    };
 }
