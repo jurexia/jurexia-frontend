@@ -305,6 +305,65 @@ const estado = (o) => ({ fase: 'listo', clave: '', respuesta: null, error: '', r
        .test(recal.MENSAJE_SIN_CALIFICAR), 'el mensaje del fallo es el del contrato');
 }
 
+/* ═══ 4-bis · LO QUE EL SERVIDOR DEVUELVE DE VERDAD (revisión adversarial) ═══
+   Con la forma exacta de main.py (`_taller_recalificar_para` y
+   `_taller_criterios_pantalla`): un «fallo» puede traer recalificados los que
+   pasaron la validación, el tumbado pendiente trae el porqué «se recalifica
+   con tu premisa», y el texto del problema llega recortado a 400. */
+{
+    const probs = PROBS();
+    const vivos = recal.pendientesVivos(probs, ['p1', 'p2'], new Set(), 'p0');
+    const k = recal.claveRecalificacion(probs[0], vivos);
+    const PENDIENTE = 'con el principal infundado —la vía contraria a la que propuso el motor— la calificación '
+        + 'que traía se escribió para la otra vía y no se usa: se recalifica con tu premisa';
+    const parcial = { estado: 'fallo', clave: 'srv', avisos: ['la recalificación no pasó la validación dos veces'], criterios: [
+        crit(vivos[0].pregunta, { sentido: 'infundado', razonamiento: 'pasó la validación', de: 'recalificada',
+                                  por_que: 'recalificada por el motor con tu premisa: pasó' }),
+        crit(vivos[1].pregunta, { de: 'por_recalificar', recalificar: true, por_que: PENDIENTE }),
+    ] };
+    let sup = recal.superposicion(vivos, estado({ fase: 'fallo', clave: k, respuesta: parcial }), k);
+    ok(sup.p1.estado === 'recalificada' && sup.p1.sentido === 'infundado' && sup.p1.razon === 'pasó la validación',
+       '«fallo» PARCIAL: el que pasó la validación se enseña recalificado (el servidor lo aplica al generar)');
+    ok(sup.p2.estado === 'fallo' && sup.p2.sentido === '', '«fallo» parcial: el que no pasó, sin calificar');
+    ok(!/se recalifica con tu premisa/.test(sup.p2.porQue),
+       'el «sin calificar» no lleva el porqué del pendiente («se recalifica…»), que lo contradice');
+
+    // EL TEXTO RECORTADO A 400 (puntos de código, como Python).
+    const largo = '¿La autoridad responsable valoró indebidamente la prueba pericial en materia de avalúo '
+        + 'y omitió pronunciarse sobre la objeción planteada en tiempo por la parte actora, '.repeat(5) + '?';
+    const corte = Array.from(largo).slice(0, 400).join('');
+    ok(Array.from(largo).length > 400 && corte !== largo, '(datos: el problema pasa de 400)');
+    const probsL = probs.map((p) => (p.id === 'p1' ? { ...p, pregunta: largo } : p));
+    const vivosL = recal.pendientesVivos(probsL, ['p1', 'p2'], new Set(), 'p0');
+    const kL = recal.claveRecalificacion(probsL[0], vivosL);
+    sup = recal.superposicion(vivosL, estado({ clave: kL, respuesta: { estado: 'listo', clave: 'srv', avisos: [], criterios: [
+        crit(corte, { sentido: 'inoperante', razonamiento: 'r', de: 'recalificada', por_que: 'p' }),
+        crit(vivosL[1].pregunta, { sentido: 'infundado', razonamiento: 'r2', de: 'recalificada', por_que: 'p' }),
+    ] } }), kL);
+    ok(sup.p1.estado === 'recalificada' && sup.p1.sentido === 'inoperante',
+       'un problema de más de 400 caracteres, recortado por el servidor, se encuentra y se pinta recalificado');
+    ok(recal.idsPorRecalificar(probsL, [crit(corte, { recalificar: true, de: 'por_recalificar' })], 'p0', new Set()).join() === 'p1',
+       'y el recortado se tumba');
+    ok(recal.aplicarReparto(probsL, [crit(corte, { sentido: 'inoperante', de: 'principal', por_que: 'x' })],
+        { excluir: 'p0', tocados: new Set(), pendientes: new Set() })[1].sentido === 'inoperante',
+       'y el «sin cambios» recortado se aplica');
+    const emoji = '😀' + 'a'.repeat(450);
+    ok(recal.mismoProblema('😀' + 'a'.repeat(399), emoji) && !recal.mismoProblema('😀' + 'a'.repeat(398), emoji),
+       'el corte se cuenta en puntos de código, como Python');
+    ok(!recal.mismoProblema(corte.slice(0, 399), largo) && !recal.mismoProblema('¿La condena excedió', '¿La condena excedió lo reclamado?')
+       && !recal.mismoProblema('', 'x'), 'un prefijo que no es el corte de 400 no es el mismo problema');
+
+    // LA FIRMA DEL PLAN: sin tumbados, la de siempre; con ellos, cambia al llegar.
+    ok(recal.firmaConRecalificacion('F', [], {}) === 'F' && recal.firmaConRecalificacion('', vivos, {}) === '',
+       'firma del plan: sin tumbados (o sin plan), la de siempre');
+    const f1 = recal.firmaConRecalificacion('F', vivos, { p1: { estado: 'recalificando', sentido: '' }, p2: { estado: 'recalificando', sentido: '' } });
+    const f2 = recal.firmaConRecalificacion('F', vivos, { p1: { estado: 'recalificada', sentido: 'infundado' }, p2: { estado: 'recalificando', sentido: '' } });
+    const f3 = recal.firmaConRecalificacion('F', vivos, { p1: { estado: 'recalificada', sentido: 'inoperante' }, p2: { estado: 'recalificando', sentido: '' } });
+    ok(f1 !== 'F' && f1 !== f2 && f2 !== f3, 'firma del plan: cambia cuando llega lo recalificado, y con otra calificación');
+    ok(f2 === recal.firmaConRecalificacion('F', [vivos[1], vivos[0]], { p2: { estado: 'recalificando', sentido: '' }, p1: { estado: 'recalificada', sentido: 'infundado' } }),
+       'firma del plan: no depende del orden');
+}
+
 /* ═══ 5 · EL HOOK: ANTIRREBOTE, CLAVES Y FALLOS ═══ */
 const reloj = { ahora: 1_000_000, timers: [], sig: 1 };
 const DateNowReal = Date.now;
@@ -499,6 +558,19 @@ function servidor() {
     ok(!h.get().enCurso, 'un fallo no deja el plan esperando');
     await h.avanzar(120_000);
     ok(s.pedidos.length === 1, 'no se reintenta solo (cada intento es una llamada al modelo)');
+    // A mano, sí: el servidor devuelve al momento el fallo de validación y
+    // rehace el que cortó el proveedor.
+    h.get().r.reintentar();
+    await h.avanzar(1);
+    ok(s.pedidos.length === 2, 'tras un fallo, «volver a intentar» pide otra vez, enseguida');
+    // 5.6-bis EL «FALLO» PARCIAL, por el hook: lo que pasó la validación se pinta.
+    s.contestar({ estado: 'fallo', clave: 'srv', avisos: ['el 2 no pasó'], criterios: [
+        crit(VIVOS()[0].pregunta, { sentido: 'inoperante', razonamiento: 'r', de: 'recalificada', por_que: 'p' }),
+        crit(VIVOS()[1].pregunta, { de: 'por_recalificar', recalificar: true, por_que: 'se recalifica con tu premisa' })] });
+    await h.avanzar(10);
+    ok(h.get().r.fase === 'fallo' && h.get().sup.p1.estado === 'recalificada' && h.get().sup.p1.sentido === 'inoperante'
+       && h.get().sup.p2.estado === 'fallo' && h.get().sup.p2.porQue === '',
+       '«fallo» parcial por el hook: el recalificado se pinta; el otro, sin calificar y sin el porqué contradictorio');
 }
 {   // 5.7 EN CURSO: se vuelve a preguntar, pocas veces, y después se dice
     reiniciar();
@@ -599,9 +671,12 @@ function servidor() {
                          pedir: async () => { planes.push(reloj.ahora); return { estado: 'listo', clave: 'KP', avisos: [], corridas: 1, tope: 4,
                              plan: api.planDe({ clave: 'KP', segmentos: [] }) }; },
                          leer: async () => { throw new Error('no debe leer'); } };
+    // Como la página: la firma del plan lleva el estado de los tumbados.
     const conPlan = (pr) => {
         const o = conRecal(pr);
-        const plan = como.usePlanDelEstudio(pr.enlacePlan, pr.listoPlan && !o.enCurso);
+        const plan = como.usePlanDelEstudio(
+            { ...pr.enlacePlan, firma: recal.firmaConRecalificacion(pr.enlacePlan.firma, pr.vivos, o.sup) },
+            pr.listoPlan && !o.enCurso);
         return { ...o, plan };
     };
     // Como la página: con el reparto en camino el enlace está apagado.
@@ -621,6 +696,42 @@ function servidor() {
     ok(planes.length === 1 && planes[0] >= llego, 'recalificado: el plan se pide una vez, DESPUÉS');
     await h.avanzar(30_000);
     ok(planes.length === 1, 'y sólo una');
+}
+{   // 7-bis (revisión adversarial) EL PLAN SE VUELVE A PEDIR CUANDO LA
+    // RECALIFICACIÓN LLEGA TARDE. Tras un error de red el plan se pide y el
+    // servidor contesta «sin plan: hay accesorios recalificándose»; «volver a
+    // intentar» trae la recalificación, pero el formulario no cambia (la base
+    // no se toca): sin el estado de los tumbados en la firma, el plan no se
+    // volvía a pedir nunca.
+    reiniciar();
+    const s = servidor();
+    const planes = [];
+    const enlacePlan = { activo: true, firma: 'F1',
+                         pedir: async () => { planes.push(reloj.ahora);
+                             return { estado: 'sin_plan', clave: '', corridas: 0, tope: 4, plan: null,
+                                      avisos: ['hay accesorios recalificándose con tu premisa; el plan se pide cuando terminen'] }; },
+                         leer: async () => { throw new Error('no debe leer'); } };
+    const conPlan = (pr) => {
+        const o = conRecal(pr);
+        const plan = como.usePlanDelEstudio(
+            { ...pr.enlacePlan, firma: recal.firmaConRecalificacion(pr.enlacePlan.firma, pr.vivos, o.sup) },
+            pr.listoPlan && !o.enCurso);
+        return { ...o, plan };
+    };
+    const h = montar(conPlan, { enlace: s.enlace = { activo: true, clave: 'R', inmediato: true, pedir: s.pedir },
+                                listo: true, vivos: VIVOS(), enlacePlan, listoPlan: true });
+    await h.avanzar(1);
+    s.pendientes.shift().rej(new Error('Error 502'));
+    await h.avanzar(20_000);
+    ok(planes.length === 1 && h.get().sup.p1.estado === 'error', 'error de red: el plan se pide y el servidor dice que espera');
+    h.get().r.reintentar();
+    await h.avanzar(1);
+    s.contestar(listoPara(VIVOS()));
+    await h.avanzar(20_000);
+    ok(h.get().sup.p1.estado === 'recalificada' && planes.length === 2,
+       'llegó la recalificación tras «volver a intentar»: el plan se pide OTRA vez, con lo recalificado');
+    await h.avanzar(60_000);
+    ok(planes.length === 2, 'y sólo una vez más');
 }
 
 Date.now = DateNowReal;
@@ -746,6 +857,13 @@ const pastillaPulsada = (t) => buscar(t, (n) => n.type === 'button' && n.props['
     ok(!!boton, 'tras un error de red se ofrece «volver a intentar»');
     if (boton) boton.props.onClick();
     ok(reintentos === 1, '«volver a intentar» llama a reintentar');
+    // 8.5-bis y tras un «fallo» del servidor también (revisión adversarial)
+    const d2 = pintarDecision(baseDecision({ recalificadas: { p1: { estado: 'fallo', sentido: '', razon: '', porQue: '' } },
+                                             onReintentarRecalificacion: () => { reintentos += 1; } }));
+    const boton2 = buscar(tarjetaDe(d2, 'p1'), (n) => n.type === 'button' && texto(n) === 'volver a intentar')[0];
+    ok(!!boton2, 'tras un «fallo» también se ofrece «volver a intentar»');
+    if (boton2) boton2.props.onClick();
+    ok(reintentos === 2, 'y llama a reintentar');
 
     // 8.6 sin tumbados, la pantalla de siempre
     const e = pintarDecision(baseDecision());
@@ -753,6 +871,24 @@ const pastillaPulsada = (t) => buscar(t, (n) => n.type === 'button' && n.props['
     ok(!/Recalific/.test(texto(e)), 'sin tumbados no hay ninguna marca de recalificación');
     ok(pastillaPulsada(t5).join() === 'Fundado' && buscar(t5, (n) => n.type === 'textarea')[0].props.value === 'razón de la otra vía',
        'y cada accesorio enseña lo suyo');
+}
+
+/* ═══ 9 · EL CABLEADO DE page.tsx, LEÍDO EN SU FUENTE (revisión adversarial) ═══
+   La página no se monta sin Next. Lo que la revisión arregló en ella se fija
+   aquí, en su fuente, para que no vuelva en silencio. */
+{
+    const pag = fs.readFileSync(path.join(RAIZ, 'src/app/taller/page.tsx'), 'utf8');
+    const i0 = pag.indexOf('const pedirPropuesta = useCallback(');
+    const i1 = pag.indexOf('pedirPropuestaRef.current = pedirPropuesta;', i0);
+    const cuerpo = i0 >= 0 && i1 > i0 ? pag.slice(i0, i1) : '';
+    ok(!!cuerpo && cuerpo.includes('tocadosRef.current.has(q.id)') && !cuerpo.includes('tocados.has('),
+       'volver a proponer lee los tocados de AHORA (tocadosRef): no vuelca el motor sobre el principal que él marcó');
+    ok(pag.includes('tocadosRef.current = tocados;'), 'y tocadosRef se refresca en cada pintado');
+    ok(pag.includes('firma: firmaConRecalificacion(firmaPlan, vivosRecal, superpuestas)'),
+       'la firma del plan lleva el estado de los tumbados');
+    ok(pag.includes('avisosReparto={avisosRepartoVigentes}')
+       && pag.includes('const avisosRepartoVigentes = avisosRecal.length ? [] : avisosReparto;'),
+       'los avisos de la recalificación sustituyen a los del reparto');
 }
 
 fs.rmSync(TMP, { recursive: true, force: true });

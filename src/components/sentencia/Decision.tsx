@@ -340,7 +340,12 @@ function MarcaRecalificacion({ sup, onReintentar }: { sup: Superpuesta; onReinte
                     <span className="text-white/55"> No se pudo recalificar desde aquí{sup.porQue ? ` (${sup.porQue})` : ''}; al
                     generar, el servidor lo intentará otra vez con tu premisa.</span>
                 )}
-                {sup.estado === 'error' && onReintentar && (
+                {/* También tras un «fallo» (revisión adversarial, 26-sep-2026):
+                    el servidor no rehace uno que ya falló la validación —lo
+                    devuelve al momento— y sí reintenta el que cortó el
+                    proveedor o el tiempo; sin el botón, eso sólo pasaba al
+                    generar, sin que él viera antes con qué salía. */}
+                {(sup.estado === 'error' || sup.estado === 'fallo') && onReintentar && (
                     <button type="button" onClick={onReintentar}
                             className="ml-1.5 font-medium text-accent-gold/90 hover:text-accent-gold">
                         volver a intentar

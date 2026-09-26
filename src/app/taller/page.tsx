@@ -63,7 +63,7 @@ import type { OpcionesResolver } from '@/components/sentencia/api';
 import type { EnlacePlan } from '@/components/sentencia/ComoSeEstudiara';
 import {
     useRecalificacion, idsPorRecalificar, aplicarReparto, pendientesVivos,
-    claveRecalificacion, superposicion, recalificacionEnCurso,
+    claveRecalificacion, superposicion, recalificacionEnCurso, firmaConRecalificacion,
 } from '@/components/sentencia/recalificacion';
 import type { EnlaceRecalificacion } from '@/components/sentencia/recalificacion';
 import MapaDelEstudio from '@/components/sentencia/MapaDelEstudio';
@@ -964,6 +964,15 @@ export default function TallerDeSentencias() {
        INFUNDADO el concepto de la pericial declarada desierta y el proyecto
        salió FUNDADO. */
     const [tocados, setTocados] = useState<Set<string>>(new Set());
+    /* LOS DE AHORA, para lo que llega tarde (revisión adversarial,
+       26-sep-2026). `pedirPropuesta` es un useCallback que no depende de
+       `tocados`: leía los del pintado en que se armó —a menudo, ninguno—, y
+       «Aporta y vuelve a proponer» volcaba el sentido del motor encima del
+       principal que él acababa de marcar. Con el cambio de sentido era peor:
+       el reparto que se rehace tras la propuesta leía el principal ya pisado,
+       en la vía del motor, y no tumbaba nada. La máquina cambiaba su sentido. */
+    const tocadosRef = useRef(tocados);
+    tocadosRef.current = tocados;
     /* Y SI EL SENTIDO GLOBAL LO ELIGIÓ ÉL. La pantalla también lo fija sola al
        llegar la propuesta —con el sentido del MODELO—, y confundir las dos
        cosas es lo que hizo que David dictara «infundado global» y recibiera un
@@ -1354,7 +1363,7 @@ export default function TallerDeSentencias() {
                 // SI ÉL YA LO DECIDIÓ, LA PROPUESTA NO LO TOCA. Antes se
                 // volcaba encima sin mirar, y «volver a proponer» borraba en
                 // silencio lo que el secretario acababa de marcar.
-                if (tocados.has(q.id)) {
+                if (tocadosRef.current.has(q.id)) {
                     return { ...base, criterio: q.criterio || s?.razon || '' };
                 }
                 if (!(s && s.alcanza && valido)) return base;
@@ -1865,6 +1874,13 @@ export default function TallerDeSentencias() {
     const recalEnCurso = recalificacionEnCurso(superpuestas, repartiendo && modo === 'por_problema');
     recalEnCursoRef.current = recalEnCurso;
     const avisosRecal = recal.clave === claveRecal && recal.respuesta ? recal.respuesta.avisos : [];
+    /* Los avisos de /taller/recalificar son los del árbol de ESTE formulario
+       con lo recalificado aplicado, más los de la recalificación: sustituyen a
+       los del reparto, que se quedaban diciendo «SE RECALIFICAN CON TU
+       PREMISA… el motor los vuelve a calificar» junto a lo ya recalificado, y
+       repetían cada aviso del árbol dos veces (revisión adversarial,
+       26-sep-2026). */
+    const avisosRepartoVigentes = avisosRecal.length ? [] : avisosReparto;
     /* «SIN CAMBIOS»: el servidor no halló nada que recalificar —la lista de
        tumbados de esta pantalla era de un reparto anterior—. Lo que devuelve
        es un reparto como cualquier otro: se aplica y los pendientes se van. */
@@ -1901,7 +1917,10 @@ export default function TallerDeSentencias() {
         suplencia, delAsunto, razonesSegmento, varianteEstudio, esCasa]);
     const enlacePlan: EnlacePlan = {
         activo: usaPlan && !!encargo.numero,
-        firma: firmaPlan,
+        /* Con tumbados, la firma lleva también cómo va cada uno: cuando llega
+           su recalificación el formulario no cambia (la base no se toca) y el
+           plan tiene que pedirse otra vez (ver recalificacion.ts). */
+        firma: firmaConRecalificacion(firmaPlan, vivosRecal, superpuestas),
         pedir: () => {
             const o = opcionesRef.current('estandar');
             return o ? pedirPlan(encargo.numero, correo, o)
@@ -3279,7 +3298,7 @@ export default function TallerDeSentencias() {
                               constanciasAportadas={constanciasAportadas}
                               onCorregirProblema={corregirYProponer}
                               corrigiendoProblema={editandoProblema}
-                              avisosReparto={avisosReparto}
+                              avisosReparto={avisosRepartoVigentes}
                               esRecurso={encargo.tipoAsunto !== 'amparo_directo'}
                               extemporanea={extemporanea} oportunidadDecidida={decision !== ''}
                               propuestaSuplencia={delAsunto?.suplencia ?? null}

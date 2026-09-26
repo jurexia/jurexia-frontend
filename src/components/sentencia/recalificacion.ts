@@ -61,6 +61,25 @@ export function sentidoValido(s: string | undefined | null): SentidoDePastilla |
     return (SENTIDOS as readonly string[]).includes(t) ? t as SentidoDePastilla : '';
 }
 
+/** ¿ES EL MISMO PROBLEMA? El servidor recorta el texto del problema a 400
+ *  caracteres al armar el criterio (`_taller_armar_criterio`:
+ *  `problema[:400]`), y /taller/recalificar devuelve los criterios desde ese
+ *  criterio armado; /taller/reparto, no. Con la igualdad exacta, un
+ *  planteamiento largo —en 16 de 157 sesiones reales hay alguno de más de 400
+ *  caracteres— no se encontraba en la respuesta y se pintaba «sin calificar»
+ *  aunque el servidor lo hubiera recalificado y fuera a usarlo al generar
+ *  (revisión adversarial, 26-sep-2026). Se cuenta por puntos de código, como
+ *  corta Python. */
+export const CORTE_PROBLEMA = 400;
+export function mismoProblema(delServidor: string | undefined | null, pregunta: string | undefined | null): boolean {
+    const a = String(delServidor ?? ''), b = String(pregunta ?? '');
+    if (a === b) return true;
+    if (!a) return false;
+    const pa = Array.from(a), pb = Array.from(b);
+    return pa.length === CORTE_PROBLEMA && pb.length > CORTE_PROBLEMA
+        && pb.slice(0, CORTE_PROBLEMA).join('') === a;
+}
+
 /** ¿Este criterio del reparto quedó tumbado para recalificarse? «recalificada»
  *  cuenta: el reparto puede traer ya aplicada una recalificación guardada con
  *  la misma premisa, y sigue siendo de la premisa, no de la base. */
@@ -74,11 +93,10 @@ export function idsPorRecalificar(
     problemas: ProblemaJuridico[], criterios: CriterioRepartido[],
     principalId: string, tocados: Set<string>,
 ): string[] {
-    const porTexto = new Map(problemas.map((p) => [p.pregunta, p.id] as const));
     const ids: string[] = [];
     criterios.forEach((c) => {
         if (!esPorRecalificar(c)) return;
-        const id = porTexto.get(c.problema);
+        const id = problemas.find((p) => mismoProblema(c.problema, p.pregunta))?.id;
         if (id && id !== principalId && !tocados.has(id) && !ids.includes(id)) ids.push(id);
     });
     return ids;
@@ -93,7 +111,7 @@ export function aplicarReparto(
     o: { excluir: string; tocados: Set<string>; pendientes: Set<string> },
 ): ProblemaJuridico[] {
     return problemas.map((p) => {
-        const c = criterios.find((x) => x.problema === p.pregunta);
+        const c = criterios.find((x) => mismoProblema(x.problema, p.pregunta));
         if (!c || p.id === o.excluir || o.tocados.has(p.id)) return p;
         if (o.pendientes.has(p.id) || esPorRecalificar(c)) return p;
         if (!c.sentido) return p;
@@ -217,7 +235,10 @@ export function useRecalificacion(enlace: EnlaceRecalificacion, listo: boolean):
                 setUltima({ clave: k, fase: 'fallo', respuesta: r,
                             error: 'el servidor sigue recalificándolo después de varios minutos' });
             } else if (r.estado === 'fallo') {
-                setUltima({ clave: k, fase: 'fallo', respuesta: r, error: r.avisos.join(' · ') });
+                /* El motivo va en los avisos de la respuesta, que la pantalla
+                   enseña en su lista; aquí no se repite pegado a cada
+                   accesorio (eran todos los avisos del árbol, uno tras otro). */
+                setUltima({ clave: k, fase: 'fallo', respuesta: r, error: '' });
             } else {
                 setUltima({ clave: k, fase: 'listo', respuesta: r, error: '' });
             }
@@ -314,7 +335,7 @@ export function superposicion(
             return;
         }
         const r = estado.respuesta;
-        const c = r?.criterios.find((x) => x.problema === p.pregunta);
+        const c = r?.criterios.find((x) => mismoProblema(x.problema, p.pregunta));
         if (estado.fase === 'error') {
             out[p.id] = { estado: 'error', sentido: '', razon: '', porQue: estado.error };
             return;
@@ -323,12 +344,22 @@ export function superposicion(
         // aplica esos criterios como un reparto y los retira de los pendientes.
         if (estado.fase === 'listo' && r?.estado === 'sin_cambios') return;
         const s = sentidoValido(c?.sentido);
-        if (estado.fase === 'listo' && c && c.de === 'recalificada' && s) {
+        /* UNO A UNO, TAMBIÉN EN UN «FALLO» (revisión adversarial, 26-sep-2026).
+           El servidor contesta «fallo» en cuanto UNO no pasó la validación,
+           pero guarda y aplica lo que sí pasó: esos vuelven con `de:
+           "recalificada"` y el árbol los usará al generar. Leer el estado de
+           la respuesta entera los enseñaba «sin calificar» —la pantalla decía
+           una cosa y el proyecto salía con otra—. */
+        if (c && c.de === 'recalificada' && s) {
             out[p.id] = { estado: 'recalificada', sentido: s, razon: c.razonamiento || '',
                           porQue: c.por_que || '' };
             return;
         }
-        out[p.id] = { estado: 'fallo', sentido: '', razon: '', porQue: c?.por_que || estado.error || '' };
+        /* Sin calificar. El porqué de un tumbado que sigue pendiente dice «se
+           recalifica con tu premisa», que junto a «sin calificar» se
+           contradice: aquí sólo va el motivo propio (p. ej. que el servidor
+           siguiera en curso); el del servidor va en los avisos. */
+        out[p.id] = { estado: 'fallo', sentido: '', razon: '', porQue: estado.error || '' };
     });
     return out;
 }
@@ -339,6 +370,26 @@ export function superposicion(
  *  en camino cuenta: todavía no se sabe qué se tumba. */
 export function recalificacionEnCurso(sup: Record<string, Superpuesta>, repartiendo: boolean): boolean {
     return repartiendo || Object.values(sup).some((s) => s.estado === 'recalificando');
+}
+
+/** LA FIRMA DEL PLAN LLEVA TAMBIÉN LO RECALIFICADO (revisión adversarial,
+ *  26-sep-2026). La firma del plan es el formulario de AHORA, y la base de los
+ *  tumbados no se toca: cuando la recalificación llega, el formulario no
+ *  cambia. Si el plan se había pedido antes —tras un error de red o un «en
+ *  curso» que se dejó de esperar, el servidor contesta «sin plan: hay
+ *  accesorios recalificándose»—, «volver a intentar» traía la recalificación
+ *  pero el plan NO se volvía a pedir: la firma era la misma y el panel se
+ *  quedaba diciendo que esperaba, y el estudio lo haría al generar. Con el
+ *  estado de cada tumbado en la firma, lo recalificado es otra decisión y el
+ *  plan se pide una vez más, después. Sin tumbados, la firma es la de
+ *  siempre. */
+export function firmaConRecalificacion(
+    firmaPlan: string, vivos: ProblemaJuridico[], sup: Record<string, Superpuesta>,
+): string {
+    if (!firmaPlan || !vivos.length) return firmaPlan;
+    return `${firmaPlan}|${JSON.stringify(vivos.map((p) => [p.pregunta, sup[p.id]?.estado ?? '',
+                                                             sup[p.id]?.sentido ?? ''])
+        .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)))}`;
 }
 
 /** El porqué del servidor sin la fórmula de arriba, que la marca ya dice. */
