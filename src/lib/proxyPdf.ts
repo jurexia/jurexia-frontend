@@ -88,6 +88,47 @@ export function consultaProxy(canonica: string, version?: string | null): string
 }
 
 /**
+ * LA DOCTRINA DE LA UNAM, POR LA MISMA PUERTA (25-sep-2026).
+ *
+ * Los 9,629 trozos de la colección `doctrina` son de cinco libros de la
+ * Biblioteca Jurídica Virtual del IIJ-UNAM, repartidos en 92 PDF de capítulo
+ * bajo `https://archivos.juridicas.unam.mx/www/bjv/libros/<n>/<id>/<cap>.pdf`
+ * (lectura de Qdrant del 25-sep-2026: las 92 casan con esa forma). Los libros
+ * NO se copian a nuestro almacenamiento —derecho de cita, doctrina.py—: el
+ * visor los lee por el proxy, como las leyes de diputados.gob.mx, y el
+ * abogado los ve en su repositorio oficial. Hasta hoy el host no estaba en la
+ * lista y el visor decía «No se pudo abrir el PDF aquí» con un 403.
+ *
+ * La puerta es estrecha a propósito:
+ *  - sólo https: el puerto 80 de la UNAM ni siquiera contesta (curl, 75 s sin
+ *    conexión, 25-sep-2026), así que `http://` no es una forma del mismo
+ *    archivo sino una dirección rota;
+ *  - sólo `/www/bjv/libros/…/*.pdf`, con segmentos de letras, números, `_` y
+ *    `-`: sin puntos fuera de la extensión y SIN ningún `%` —ni `%2F`, ni
+ *    `%5C`, ni nada—, porque ninguna de las 92 direcciones los usa;
+ *  - sin puerto y sin credenciales.
+ * La forma canónica tira la consulta y el fragmento: las fuentes viejas traen
+ * `#page=N` pegado a `pdf_url`, y codificado en `?u=` cada página sería otra
+ * llave del CDN para el mismo capítulo.
+ */
+export const HOST_UNAM = 'archivos.juridicas.unam.mx';
+export const RUTA_UNAM = /^\/www\/bjv\/libros\/(?:[A-Za-z0-9_-]+\/)+[A-Za-z0-9_-]+\.pdf$/;
+
+export function canonUNAM(cruda: string | null | undefined): string | null {
+    if (!cruda) return null;
+    let u: URL;
+    try {
+        u = new URL(cruda);
+    } catch {
+        return null;
+    }
+    if (u.hostname !== HOST_UNAM || u.protocol !== 'https:') return null;
+    if (u.port !== '' || u.username !== '' || u.password !== '') return null;
+    if (!RUTA_UNAM.test(u.pathname)) return null;
+    return `https://${HOST_UNAM}${u.pathname}`;
+}
+
+/**
  * Lo que el visor pide a nuestro dominio para un PDF.
  *
  *  - Corte IDH: la forma canónica, con `&v=` si se conoce el sha1 del PDF que
@@ -98,6 +139,8 @@ export function consultaProxy(canonica: string, version?: string | null): string
  *    null. Pedirlas al proxy era pedir un 403 seguro y esperar a que pdf.js
  *    fallara para enseñar el enlace directo; con null el visor lo enseña de
  *    entrada (revisión del 25-sep-2026).
+ *  - UNAM (doctrina): la forma canónica, sin `#page`; fuera de la puerta,
+ *    null por la misma razón que la Corte.
  *  - Lo demás: como siempre, sólo si es https; si no, la dirección tal cual.
  */
 export function urlProxyPdf(u: string | null | undefined, version?: string | null): string | null {
@@ -105,16 +148,23 @@ export function urlProxyPdf(u: string | null | undefined, version?: string | nul
     const canon = canonCorteIDH(u);
     if (canon) return `/api/ley/pdf${consultaProxy(canon, version)}`;
     if (esDeLaCorte(u)) return null;
+    const unam = canonUNAM(u);
+    if (unam) return `/api/ley/pdf${consultaProxy(unam)}`;
+    if (hostDe(u) === HOST_UNAM) return null;
     return /^https:\/\//.test(u) ? `/api/ley/pdf?u=${encodeURIComponent(u)}` : u;
+}
+
+function hostDe(u: string): string {
+    try {
+        return new URL(u).hostname;
+    } catch {
+        return '';
+    }
 }
 
 /** ¿La dirección es de corteidh.or.cr, pase o no la puerta? */
 function esDeLaCorte(u: string): boolean {
-    try {
-        return HOSTS_CORTEIDH.includes(new URL(u).hostname);
-    } catch {
-        return false;
-    }
+    return HOSTS_CORTEIDH.includes(hostDe(u));
 }
 
 /**
@@ -133,10 +183,15 @@ function esDeLaCorte(u: string): boolean {
  *
  * Devuelve la respuesta final, o `{ bloqueada }` con el estado de la
  * redirección que no pasó la puerta. `traer` se inyecta para probarlo sin red.
+ *
+ * La UNAM usa lo mismo con SU puerta (`traerUNAM`): hoy ninguno de sus 92
+ * capítulos redirige (HEAD a los 92, 25-sep-2026), pero si mañana uno lo
+ * hiciera, sólo se seguiría dentro de `/www/bjv/libros/…/*.pdf`.
  */
-export async function traerCorteIDH(
+export async function traerConPuerta(
     canonica: string,
     init: RequestInit,
+    canon: (u: string) => string | null,
     traer: typeof fetch = fetch,
 ): Promise<Response | { bloqueada: number }> {
     let destino = canonica;
@@ -146,7 +201,7 @@ export async function traerCorteIDH(
         const ubicacion = r.headers.get('location');
         let siguiente: string | null = null;
         try {
-            siguiente = ubicacion ? canonCorteIDH(new URL(ubicacion, destino).toString()) : null;
+            siguiente = ubicacion ? canon(new URL(ubicacion, destino).toString()) : null;
         } catch {
             siguiente = null;
         }
@@ -154,6 +209,14 @@ export async function traerCorteIDH(
         destino = siguiente;
     }
     return { bloqueada: 0 };
+}
+
+export function traerCorteIDH(canonica: string, init: RequestInit, traer: typeof fetch = fetch) {
+    return traerConPuerta(canonica, init, canonCorteIDH, traer);
+}
+
+export function traerUNAM(canonica: string, init: RequestInit, traer: typeof fetch = fetch) {
+    return traerConPuerta(canonica, init, canonUNAM, traer);
 }
 
 /**
@@ -173,14 +236,32 @@ export async function traerCorteIDH(
  * (`urlProxyPdf`); sólo un enlace escrito a mano cae ahí.
  */
 export function puertaCorteIDH(params: URLSearchParams): { canonica: string; ubicacion: string | null } | null {
+    return puertaCanonica(params, canonCorteIDH, true);
+}
+
+/**
+ * La puerta de la UNAM: la misma regla, sin `&v=` (no guardamos el sha1 de
+ * los capítulos: los libros no se copian). `?u=<capítulo>#page=N` codificado,
+ * o con `&v=`, se manda con 308 a la canónica; así una sola llave de CDN por
+ * capítulo aunque llegue un enlace viejo escrito con la página.
+ */
+export function puertaUNAM(params: URLSearchParams): { canonica: string; ubicacion: string | null } | null {
+    return puertaCanonica(params, canonUNAM, false);
+}
+
+function puertaCanonica(
+    params: URLSearchParams,
+    canon: (u: string | null) => string | null,
+    admiteVersion: boolean,
+): { canonica: string; ubicacion: string | null } | null {
     const cruda = params.get('u');
-    const canonica = canonCorteIDH(cruda);
+    const canonica = canon(cruda);
     if (!canonica) return null;
     const nombres = Array.from(params.keys()).join(',');
     const vCruda = params.get('v');
-    const v = versionPdf(vCruda);
+    const v = admiteVersion ? versionPdf(vCruda) : '';
     const yaCanonica =
         cruda === canonica &&
-        (nombres === 'u' || (nombres === 'u,v' && v !== '' && vCruda === v));
+        (nombres === 'u' || (admiteVersion && nombres === 'u,v' && v !== '' && vCruda === v));
     return { canonica, ubicacion: yaCanonica ? null : consultaProxy(canonica, v) };
 }

@@ -73,6 +73,7 @@ import {
 import { categoriasDe, nombreCarpeta, subirDocumento } from '@/lib/expedientes';
 import { contextoDeCarpeta, contextoDeConsulta, olvidarContextoCarpeta } from '@/lib/contexto-carpeta';
 import type { CamposCoidh } from '@/lib/coidh';
+import type { CamposDoctrina } from '@/lib/doctrina';
 
 
 /* Identifica una respuesta por su propio texto. `Message` no lleva id y el
@@ -218,8 +219,9 @@ export default function ChatPage() {
         registro?: string | null; tesis_num?: string | null;
         tipo_criterio?: string | null; instancia?: string | null;
         materia?: string | null;
-        // Corte IDH: caso, párrafo, página y ancla (`@/lib/coidh`).
-    } & CamposCoidh) | null>(null);
+        // Corte IDH: caso, párrafo, página y ancla (`@/lib/coidh`); doctrina:
+        // obra, autor, página y ancla (`@/lib/doctrina`).
+    } & CamposCoidh & CamposDoctrina) | null>(null);
 
     // Genio Multi-Domain states
     const [activeGenios, setActiveGenios] = useState<string[]>([]);

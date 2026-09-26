@@ -9,11 +9,13 @@ import type { Message } from '@/lib/api';
 import { recortarABloque, useRevelado } from '@/lib/documento/revelado';
 import { type MetaCitas, referenciaAPA } from '@/lib/documento/citas';
 import { type CamposCoidh, camposCoidh, enlaceOficialCoidh, esCoidh } from '@/lib/coidh';
+import { type CamposDoctrina, camposDoctrina, enlaceBJV, esDoctrina } from '@/lib/doctrina';
 import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
 
 /** Una fuente tal como llega en `FUENTES_PREVIAS` / `CITATION_META`. Las de
- *  la Corte IDH traen además caso, párrafo, página y ancla (`@/lib/coidh`). */
-type FuenteMarcador = { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null } & CamposCoidh;
+ *  la Corte IDH traen además caso, párrafo, página y ancla (`@/lib/coidh`);
+ *  las de doctrina, obra, autor, página y ancla (`@/lib/doctrina`). */
+type FuenteMarcador = { origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null; registro?: string | null; tesis_num?: string | null; tipo_criterio?: string | null; instancia?: string | null; materia?: string | null } & CamposCoidh & CamposDoctrina;
 
 interface ChatMessageProps {
     message: Message;
@@ -504,8 +506,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                 num,
                 reference: buildAPAReference(src),
                 // La Corte IDH, en la página del párrafo (el enlace del escrito
-                // sí lleva `#page`; el campo `pdf_url`, nunca).
-                pdfUrl: (esCoidh(src) ? enlaceOficialCoidh(src) : src.pdf_url) || null,
+                // sí lleva `#page`; el campo `pdf_url`, nunca). Y a la Corte,
+                // no a la copia de legal-docs que ahora viaja en `pdf_url`.
+                // La doctrina, a la obra en la BJV y en su página.
+                pdfUrl: (esCoidh(src) ? enlaceOficialCoidh(src) : esDoctrina(src) ? enlaceBJV(src) : src.pdf_url) || null,
             });
         }
         return list;
@@ -1352,6 +1356,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         // La Corte IDH: caso, párrafo, página y ancla para
                                         // que el visor abra la sentencia en el párrafo.
                                         ...camposCoidh(src),
+                                        // La doctrina: obra, autor, página y ancla.
+                                        ...camposDoctrina(src),
                                     });
                                 }
                                 // Handle precedente card clicks

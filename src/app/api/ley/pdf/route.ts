@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { HOSTS_CORTEIDH, puertaCorteIDH, traerCorteIDH } from '@/lib/proxyPdf';
+import { HOSTS_CORTEIDH, HOST_UNAM, puertaCorteIDH, puertaUNAM, traerCorteIDH, traerUNAM } from '@/lib/proxyPdf';
 
 /**
  * Sirve el PDF de una ley desde el propio dominio de Iurexia.
@@ -89,6 +89,24 @@ const TREINTA_DIAS = 2592000;
 const CACHE_CORTEIDH = `public, max-age=86400, s-maxage=${TREINTA_DIAS}, stale-while-revalidate=${TREINTA_DIAS}, stale-if-error=${TREINTA_DIAS}`;
 const CACHE_LEYES = 'public, max-age=3600, s-maxage=86400';
 
+/**
+ * La doctrina de la UNAM (25-sep-2026), con la misma política que la Corte,
+ * por lo que la propia UNAM declara. Un GET a sus capítulos (25-sep-2026)
+ * devuelve 200 `application/pdf` sin redirecciones, con `Cache-Control:
+ * max-age=2592000` —treinta días: es el origen quien dice cuánto se puede
+ * guardar—, `Last-Modified` de 2005 a 2014, `ETag` y `Content-Length`. Los 92
+ * capítulos pesan de 24 KB a 4.3 MB (mediana 431 KB): todos caben bajo los
+ * 10 MB que guarda el CDN, así que el segundo abogado que abre un capítulo ya
+ * no toca la UNAM. Sin `&v=`: no guardamos el sha1 de libros que no copiamos,
+ * y un libro de 2005 no se reemplaza.
+ *
+ * Y sin caché de datos de Next (`no-store`), como la Corte: esa caché es
+ * almacenamiento nuestro indexado por el destino, y los libros no se copian a
+ * nuestro almacenamiento (doctrina.py); el CDN, que respeta lo que la UNAM
+ * permite, ya hace de caché.
+ */
+const CACHE_UNAM = CACHE_CORTEIDH;
+
 export async function GET(req: NextRequest) {
     const cruda = req.nextUrl.searchParams.get('u');
     if (!cruda) return new Response('Falta el parámetro u', { status: 400 });
@@ -101,10 +119,14 @@ export async function GET(req: NextRequest) {
     }
 
     const esCorte = HOSTS_CORTEIDH.includes(destino.hostname);
-    if (esCorte) {
-        // http→https y `www.` ANTES de la puerta; sin puerto raro, sin
+    // La doctrina de la UNAM: sólo https y sólo `/www/bjv/libros/…/*.pdf`
+    // (ver `canonUNAM` en `@/lib/proxyPdf`), con la misma forma canónica y
+    // el mismo 308 que la Corte.
+    const esUNAM = destino.hostname === HOST_UNAM;
+    if (esCorte || esUNAM) {
+        // Corte: http→https y `www.` ANTES de la puerta; sin puerto raro, sin
         // credenciales y sólo el repositorio de PDF (ver `@/lib/proxyPdf`).
-        const puerta = puertaCorteIDH(req.nextUrl.searchParams);
+        const puerta = esCorte ? puertaCorteIDH(req.nextUrl.searchParams) : puertaUNAM(req.nextUrl.searchParams);
         if (!puerta) return new Response('Origen no permitido', { status: 403 });
 
         // UNA SOLA LLAVE DE CDN POR ARCHIVO. El CDN de Vercel indexa la URL
@@ -147,14 +169,17 @@ export async function GET(req: NextRequest) {
             // un PDF, `&v=` abriría una llave nueva en el CDN pero Next
             // seguiría sirviendo la copia vieja hasta 30 días. El CDN, que sí
             // indexa `&v=`, ya hace de caché.
-            ...(esCorte ? { cache: 'no-store' as const } : { next: { revalidate: 86400 } }),
+            ...(esCorte || esUNAM ? { cache: 'no-store' as const } : { next: { revalidate: 86400 } }),
         } as RequestInit;
         // La Corte, con las redirecciones seguidas a mano y por la misma puerta
         // (`traerCorteIDH`): un salto fuera de `/docs/(casos|opiniones|
-        // supervisiones)` da 502 en vez de servirse. Las leyes, como siempre.
+        // supervisiones)` da 502 en vez de servirse. La UNAM, igual con la
+        // suya. Las leyes, como siempre.
         const traida = esCorte
             ? await traerCorteIDH(destino.toString(), peticion)
-            : await fetch(destino.toString(), peticion);
+            : esUNAM
+                ? await traerUNAM(destino.toString(), peticion)
+                : await fetch(destino.toString(), peticion);
         // Sin `instanceof Response`: la respuesta del fetch parcheado de Next
         // no tiene por qué ser de la misma clase global.
         if ('bloqueada' in traida) {
@@ -188,7 +213,7 @@ export async function GET(req: NextRequest) {
             'Content-Type': 'application/pdf',
             // `inline` para que el visor lo pinte en vez de descargarlo.
             'Content-Disposition': `inline; filename="${nombre.replace(/"/g, '')}"`,
-            'Cache-Control': esCorte ? CACHE_CORTEIDH : CACHE_LEYES,
+            'Cache-Control': esCorte ? CACHE_CORTEIDH : esUNAM ? CACHE_UNAM : CACHE_LEYES,
         };
         const largo = r.headers.get('content-length');
         if (largo) cabeceras['Content-Length'] = largo;

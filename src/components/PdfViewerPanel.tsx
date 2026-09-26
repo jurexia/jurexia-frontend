@@ -9,13 +9,18 @@ import { X, ExternalLink, FileText, BookOpen, ChevronRight, Scale, Gavel, Chevro
 import { findLawPdfUrl } from '@/lib/lawPdfLookup';
 import { urlProxyPdf } from '@/lib/proxyPdf';
 import {
-    type CamposCoidh, anclaDeFicha, autorVoto, enlaceOficialCoidh, esCoidh, esFichaCoidh, extractoDeFicha, fechaLarga,
-    lugarConVoto, rotuloCoidh, serieCoidh, textoCoidh, textoEstaCompleto, urlOficialCoidh,
+    type CamposCoidh, anclaDeFicha, autorVoto, dibujaCopiaCoidh, enlaceOficialCoidh, esCoidh, esFichaCoidh, extractoDeFicha,
+    fechaLarga, lugarConVoto, rotuloCoidh, serieCoidh, textoCoidh, textoEstaCompleto, urlOficialCoidh, urlPdfCoidh,
 } from '@/lib/coidh';
+import {
+    type CamposDoctrina, enlaceBJV, esDoctrina, fichaDoctrina, folioDoctrina, lugarDoctrina, paginaDoctrina, rotuloDoctrina,
+    urlOficialDoctrina, urlPdfDoctrina,
+} from '@/lib/doctrina';
 
 /** La fuente que abre el panel. Las de la Corte IDH (`silo: "coidh"`) traen
- *  caso, párrafo, página y ancla: ver `@/lib/coidh`. */
-interface PdfSource extends CamposCoidh {
+ *  caso, párrafo, página y ancla: ver `@/lib/coidh`. Las de doctrina
+ *  (`silo: "doctrina"`), obra, autor, página y ancla: ver `@/lib/doctrina`. */
+interface PdfSource extends CamposCoidh, CamposDoctrina {
     origen: string;
     ref: string;
     texto: string;
@@ -811,13 +816,23 @@ function LeyArticuloView({ source, leyLabel, resolvedPdfUrl, urlParaVisor, hasPd
 
 interface SentenciaCoidhViewProps {
     source: PdfSource;
-    /** La dirección oficial de corteidh.or.cr, sin `#page`. */
-    urlOficial: string | null;
-    /** La misma, servida desde nuestro dominio para pdf.js. */
+    /**
+     * Lo que dibuja pdf.js, servido desde nuestro dominio: la copia verificada
+     * de legal-docs si el backend la manda en `pdf_url`, o la dirección
+     * oficial (ver `urlPdfCoidh`).
+     */
     urlParaVisor: string | null;
 }
 
-function SentenciaCoidhView({ source, urlOficial, urlParaVisor }: SentenciaCoidhViewProps) {
+function SentenciaCoidhView({ source, urlParaVisor }: SentenciaCoidhViewProps) {
+    /* LA COPIA SE DIBUJA, LA CORTE SE CITA (25-sep-2026). Cloudflare de
+       corteidh.or.cr reta con 403 al proxy, y el visor decía «No se pudo abrir
+       el PDF aquí» en cada sentencia. Se dibuja la copia de legal-docs —mismo
+       sha1 que el PDF con que se midieron las páginas—, y `url_oficial` queda
+       para el enlace a la Corte y para el respaldo si pdf.js falla: en el
+       navegador del abogado, la Corte sí abre. */
+    const urlOficial = urlOficialCoidh(source);
+    const copia = dibujaCopiaCoidh(source);
     const lugar = lugarConVoto(source);
     const autor = autorVoto(source);
     const serie = serieCoidh(source);
@@ -888,7 +903,7 @@ function SentenciaCoidhView({ source, urlOficial, urlParaVisor }: SentenciaCoidh
 
             <div className="mx-5 border-t border-cream-400" />
 
-            {urlOficial ? (
+            {urlParaVisor || urlOficial ? (
                 <div className="p-5">
                     <div className="flex items-center justify-between mb-3 gap-2">
                         <div className="flex items-center gap-2 min-w-0">
@@ -901,17 +916,20 @@ function SentenciaCoidhView({ source, urlOficial, urlParaVisor }: SentenciaCoidh
                         <div className="flex items-center gap-2 shrink-0">
                             {urlParaVisor && <AccionesPdf url={urlParaVisor} nombre={nombre} />}
                             {/* Directo a la Corte y en la página del párrafo: `#page`
-                                va en el enlace, nunca dentro de `pdf_url`. */}
-                            <a
-                                href={enlace || urlOficial}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-charcoal-900 text-white rounded-lg text-xs font-semibold hover:bg-charcoal-700 transition-colors shadow-sm"
-                            >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">Abrir en la Corte IDH</span>
-                                <span className="sm:hidden">Abrir</span>
-                            </a>
+                                va en el enlace, nunca dentro de `pdf_url`. Es
+                                `url_oficial`, nunca la copia de legal-docs. */}
+                            {enlace && (
+                                <a
+                                    href={enlace}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-charcoal-900 text-white rounded-lg text-xs font-semibold hover:bg-charcoal-700 transition-colors shadow-sm"
+                                >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Ver en el sitio de la Corte IDH</span>
+                                    <span className="sm:hidden">Corte IDH</span>
+                                </a>
+                            )}
                         </div>
                     </div>
                     <div className="bg-white border border-cream-400 rounded-2xl p-4 shadow-sm">
@@ -945,8 +963,8 @@ function SentenciaCoidhView({ source, urlOficial, urlParaVisor }: SentenciaCoidh
                         </div>
                         <p className="mt-2 text-[10px] text-charcoal-500 text-center">
                             {source.pagina
-                                ? `Abierto en el ${lugar} · pág. ${source.pagina} del PDF de corteidh.or.cr`
-                                : 'Fuente oficial · corteidh.or.cr'}
+                                ? `Abierto en el ${lugar} · pág. ${source.pagina} del PDF de corteidh.or.cr${copia ? ' (copia verificada)' : ''}`
+                                : copia ? 'Copia verificada del PDF de corteidh.or.cr' : 'Fuente oficial · corteidh.or.cr'}
                         </p>
                     </div>
                 </div>
@@ -955,6 +973,140 @@ function SentenciaCoidhView({ source, urlOficial, urlParaVisor }: SentenciaCoidh
                     <div className="bg-cream-200 rounded-2xl p-4 text-xs text-charcoal-600 text-center">
                         <Gavel className="w-5 h-5 mx-auto mb-2 text-charcoal-400" />
                         Esta cita de la Corte IDH no trae la dirección de su sentencia.
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+// ── LA DOCTRINA, ABIERTA EN SU PÁGINA (25-sep-2026) ───────────────────────────
+// David: «En todas estas nuevas el visor no está disponible, tenemos que
+// implementarlo como todas nuestras fuentes». La doctrina caía en
+// `LeyArticuloView`: «Fuente gubernamental», un «Artículo» sacado del texto y
+// el visor pidiendo el capítulo con `#page=N` a un proxy que no conocía la
+// UNAM. Aquí el rótulo es la obra, el autor y la página impresa; el visor abre
+// el capítulo en la BJV por el proxy, en su página, y pinta el pasaje; y va
+// también en el teléfono, como la Corte IDH.
+//
+// SIN EL TEXTO CORRIDO. El panel no enseña el texto del trozo: el contrato de
+// la doctrina (doctrina.py, decisión de David del 7-ago-2026) es servir la
+// CITA y la obra en su repositorio oficial, nunca nuestro texto —derecho de
+// cita, art. 148 fr. I LFDA—. Lo que se lee es el PDF de la UNAM.
+
+function DoctrinaView({ source, urlParaVisor }: { source: PdfSource; urlParaVisor: string | null }) {
+    const { autor, obra, anio } = fichaDoctrina(source);
+    const lugar = lugarDoctrina(source);
+    const folio = folioDoctrina(source);
+    const pagina = paginaDoctrina(source);
+    const urlOficial = urlOficialDoctrina(source);
+    const enlace = enlaceBJV(source);
+    const editorial = (source.editorial || '').trim();
+    const nombre = obra || source.origen || 'Obra de doctrina';
+    const lugarMayuscula = lugar.charAt(0).toUpperCase() + lugar.slice(1);
+    // Tras «Ir al…», «Buscando el…»: «pasaje de la p. 280».
+    const rotulo = /^p\. /.test(lugar) ? `pasaje de la ${lugar}` : 'pasaje citado';
+
+    return (
+        <>
+            <div className="p-5 space-y-4">
+                <div className="flex flex-wrap items-start gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-accent-gold/15 text-accent-gold border border-accent-gold/30 leading-tight">
+                        <BookOpen className="w-3 h-3 shrink-0" />
+                        Doctrina
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-charcoal-900 text-white border border-charcoal-800 leading-tight">
+                        {lugarMayuscula}
+                    </span>
+                    {(anio || editorial) && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium bg-cream-200 text-charcoal-700 border border-cream-400 leading-tight">
+                            {[editorial, anio].filter(Boolean).join(' · ')}
+                        </span>
+                    )}
+                </div>
+
+                <div>
+                    <p className="text-sm font-semibold text-charcoal-900 leading-snug" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
+                        {nombre}
+                    </p>
+                    {autor && <p className="mt-1 text-xs text-charcoal-600">{autor}</p>}
+                </div>
+
+                <p className="rounded-xl border border-cream-400 bg-cream-200 px-4 py-2.5 text-[11.5px] leading-snug text-charcoal-700">
+                    La obra se abre en la Biblioteca Jurídica Virtual del Instituto de Investigaciones
+                    Jurídicas de la UNAM, en la página citada. La doctrina ilustra el concepto; el
+                    fundamento son la ley y la jurisprudencia.
+                </p>
+            </div>
+
+            <div className="mx-5 border-t border-cream-400" />
+
+            {urlParaVisor || urlOficial ? (
+                <div className="p-5">
+                    <div className="flex items-center justify-between mb-3 gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-0.5 h-4 bg-accent-gold rounded-full shrink-0" />
+                            <span className="hidden sm:inline text-xs font-semibold text-charcoal-900 uppercase tracking-widest truncate">
+                                Coteja el pasaje en la obra
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            {urlParaVisor && <AccionesPdf url={urlParaVisor} nombre={nombre} />}
+                            {/* Directo a la UNAM y en la página: `#page` va en el
+                                enlace, nunca dentro de `pdf_url`. */}
+                            {enlace && (
+                                <a
+                                    href={enlace}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-charcoal-900 text-white rounded-lg text-xs font-semibold hover:bg-charcoal-700 transition-colors shadow-sm"
+                                >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Ver en la Biblioteca Jurídica Virtual</span>
+                                    <span className="sm:hidden">BJV</span>
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                    <div className="bg-white border border-cream-400 rounded-2xl p-4 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-xl bg-accent-gold/10 flex items-center justify-center shrink-0">
+                                <BookOpen className="w-5 h-5 text-accent-gold" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-charcoal-900 truncate">{nombre}</p>
+                                <p className="text-xs text-charcoal-600">
+                                    PDF del capítulo · Biblioteca Jurídica Virtual, IIJ-UNAM
+                                </p>
+                            </div>
+                        </div>
+                        <div className="rounded-xl overflow-hidden border border-cream-400 bg-cream-200" style={{ height: '440px' }}>
+                            <VisorArticulo
+                                url={urlParaVisor}
+                                articulo={null}
+                                // El texto del trozo sólo sirve para hallarlo y
+                                // pintarlo en el PDF; no se enseña.
+                                textoArticulo={source.texto || null}
+                                pasaje
+                                pagina={pagina}
+                                ancla={source.ancla || null}
+                                rotuloParrafo={rotulo}
+                                urlOriginal={urlOficial}
+                                alto={440}
+                            />
+                        </div>
+                        <p className="mt-2 text-[10px] text-charcoal-500 text-center">
+                            {pagina
+                                ? `Abierto en la ${folio ? `p. ${folio} · ` : ''}pág. ${pagina} del PDF del capítulo`
+                                : 'Biblioteca Jurídica Virtual · IIJ-UNAM'}
+                        </p>
+                    </div>
+                </div>
+            ) : (
+                <div className="p-5">
+                    <div className="bg-cream-200 rounded-2xl p-4 text-xs text-charcoal-600 text-center">
+                        <BookOpen className="w-5 h-5 mx-auto mb-2 text-charcoal-400" />
+                        Esta cita de doctrina no trae la dirección de su obra.
                     </div>
                 </div>
             )}
@@ -1010,8 +1162,8 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
     const tesisMeta = useMemo(() => {
         if (!source) return null;
         // Una sentencia de la Corte IDH no es una tesis, aunque su `tipo`
-        // viaje como `tipo_criterio` («sentencia_coidh»).
-        if (esCoidh(source)) return null;
+        // viaje como `tipo_criterio` («sentencia_coidh»). La doctrina tampoco.
+        if (esCoidh(source) || esDoctrina(source)) return null;
         // Match actual backend silo values + fallback text detection
         const isTesisSilo = source.silo === 'jurisprudencia_nacional'
             || source.silo === 'jurisprudencia_nacional_v2'
@@ -1050,8 +1202,13 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
     // Resolve PDF URL: direct from backend, or lookup from estadosData for state/federal laws
     const resolvedPdfUrl = useMemo(() => {
         if (!source) return null;
-        // La Corte IDH: la dirección oficial, sin `#page` (la página viaja aparte).
-        if (esCoidh(source)) return urlOficialCoidh(source);
+        // La Corte IDH: lo que se DIBUJA, sin `#page` (la página viaja aparte):
+        // la copia verificada de legal-docs si viene en `pdf_url`, o la
+        // dirección oficial (ver `urlPdfCoidh`, 25-sep-2026).
+        if (esCoidh(source)) return urlPdfCoidh(source);
+        // La doctrina: el capítulo de la UNAM sin `#page`, también en las
+        // fuentes viejas que lo traían pegado.
+        if (esDoctrina(source)) return urlPdfDoctrina(source);
         if (source.pdf_url) return source.pdf_url;
         // Try lawPdfLookup for state laws (e.g. Querétaro codes)
         if (source.entidad && source.origen) {
@@ -1093,8 +1250,11 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
             || /cpeum|constitución\s+pol[ií]tica/i.test(source.origen)
         );
     const coidh = esCoidh(source);
+    const doctrina = esDoctrina(source);
     const leyLabel = coidh
         ? rotuloCoidh(source)
+        : doctrina
+        ? rotuloDoctrina(source)
         : isCpeum
         ? 'Constitución Política de los Estados Unidos Mexicanos'
         : isTesis
@@ -1337,7 +1497,10 @@ export default function PdfViewerPanel({ isOpen, onClose, source, citationNumber
                         </div>
                     ) : coidh ? (
                         /* ════════════ CORTE IDH: LA SENTENCIA EN SU PÁRRAFO ════════════ */
-                        <SentenciaCoidhView source={source} urlOficial={resolvedPdfUrl} urlParaVisor={urlParaVisor} />
+                        <SentenciaCoidhView source={source} urlParaVisor={urlParaVisor} />
+                    ) : doctrina ? (
+                        /* ════════════ DOCTRINA: LA OBRA EN SU PÁGINA ════════════ */
+                        <DoctrinaView source={source} urlParaVisor={urlParaVisor} />
                     ) : (
                         /* ════════════════ STANDARD LEY VIEW ════════════════ */
                         <LeyArticuloView source={source} leyLabel={leyLabel} resolvedPdfUrl={resolvedPdfUrl} urlParaVisor={urlParaVisor} hasPdf={hasPdf} />

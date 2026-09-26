@@ -45,11 +45,18 @@
  * La lógica vive en `@/lib/visor/parrafoPdf`, que se prueba en Node sobre los
  * PDF oficiales (`comprobaciones/visor_coidh.mjs`): de los 16,825 puntos del
  * piloto, 16,822 se localizan, todos en su página.
+ *
+ * LA DOCTRINA (25-sep-2026)
+ * -------------------------
+ * Con `pasaje`, lo mismo sin número: abre en `pagina`, halla el comienzo con
+ * el `ancla` (o con el texto del trozo) comparando sólo letras, y pinta los
+ * renglones que son del trozo (`localizarPasaje`). Probado en Node sobre 15
+ * capítulos de la UNAM (`comprobaciones/visor_doctrina.mjs`).
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Crosshair, Loader2, AlertTriangle, SearchX, ExternalLink } from 'lucide-react';
-import { itemsDelTramo, localizarParrafo, planoDeItems, type PlanoPagina } from '@/lib/visor/parrafoPdf';
+import { itemsDelTramo, localizarParrafo, localizarPasaje, planoDeItems, type PlanoPagina } from '@/lib/visor/parrafoPdf';
 
 interface Props {
     /** El panel resuelve la URL antes de llegar aquí; si viene vacía no hay PDF que abrir. */
@@ -70,6 +77,12 @@ interface Props {
     rotuloParrafo?: string | null;
     /** false si `textoArticulo` llegó recortado (las fuentes previas del stream). */
     textoCompleto?: boolean;
+    /**
+     * Doctrina: el pasaje de una obra, sin número de párrafo. Se localiza con
+     * `ancla` y `textoArticulo` en `pagina` (±2), o en todo el PDF si no hay
+     * página, y se pintan los renglones que son del trozo.
+     */
+    pasaje?: boolean;
     /**
      * La dirección ORIGINAL del PDF, no la del proxy: es la del enlace de
      * respaldo cuando pdf.js no puede abrirlo. Mandarlo por el proxy, como
@@ -211,13 +224,15 @@ function palabrasClave(cuerpo: string): string[] {
 export function VisorArticulo({
     url, articulo, textoArticulo, alto = 440,
     parrafo = null, pagina = null, ancla = null, rotuloParrafo = null, textoCompleto = true, urlOriginal = null,
+    pasaje = false,
 }: Props) {
     /**
      * Modo párrafo (Corte IDH): se sabe la página. Con número, ancla o texto se
      * confirma el pasaje; sin nada de eso (una ficha de supervisión sin
      * extracto) se abre ahí sin pintar, que es mejor que la pág. 1.
+     * La doctrina va siempre por aquí, con o sin página.
      */
-    const modoParrafo = Boolean(pagina);
+    const modoParrafo = Boolean(pagina) || pasaje;
     const scroller = useRef<HTMLDivElement | null>(null);
     const documento = useRef<any>(null);
     const dibujadas = useRef<Set<number>>(new Set());
@@ -378,6 +393,17 @@ export function VisorArticulo({
                     const leidas: Record<number, PlanoPagina> = {};
                     const leer = async (n: number) =>
                         (leidas[n] = leidas[n] || planoDeItems((await (await doc.getPage(n)).getTextContent()).items as any[]));
+                    // Doctrina: sin número, por las letras del ancla y del trozo.
+                    if (pasaje) {
+                        const loc = await localizarPasaje({ total: doc.numPages, pagina, ancla, texto: textoArticulo, leer });
+                        if (!vivo) return;
+                        objetivo.current = loc
+                            ? { pagina: loc.pagina, desde: 0, hasta: 0, certeza: loc.confirmado ? 'texto' : 'rotulo', porPagina: loc.porPagina }
+                            : { pagina: Math.min(pagina || 1, doc.numPages), desde: 0, hasta: 0, certeza: 'rotulo', porPagina: {} };
+                        setEstadoBusqueda(loc ? 'encontrado' : 'no_encontrado');
+                        setCargando(false);
+                        return;
+                    }
                     const loc = await localizarParrafo({
                         total: doc.numPages, pagina, parrafo, ancla,
                         texto: textoArticulo, textoCompleto, leer,
@@ -510,7 +536,7 @@ export function VisorArticulo({
             }
         })();
         return () => { vivo = false; clearTimeout(reloj); };
-    }, [url, rotulo, textoArticulo, planoDe, modoParrafo, pagina, parrafo, ancla, textoCompleto]);
+    }, [url, rotulo, textoArticulo, planoDe, modoParrafo, pagina, parrafo, ancla, textoCompleto, pasaje]);
 
     /* AL PÁRRAFO, NO SÓLO A SU PÁGINA (25-sep-2026). Si la página ya está
        dibujada, se baja hasta el primer trazo amarillo: el ¶124 de Almonacid
@@ -633,9 +659,11 @@ export function VisorArticulo({
                 {estadoBusqueda === 'no_encontrado' && (
                     <span className="inline-flex items-center gap-1.5 text-[11px] text-charcoal-500">
                         <SearchX className="h-3 w-3" />
-                        {modoParrafo
+                        {modoParrafo && pagina
                             ? `No se localizó el ${rotulo || 'pasaje'}; abierto en la pág. ${pagina}`
-                            : `No se localizó ${rotulo || 'la cita'} en el PDF`}
+                            : modoParrafo
+                                ? `No se localizó el ${rotulo || 'pasaje'} en el PDF`
+                                : `No se localizó ${rotulo || 'la cita'} en el PDF`}
                     </span>
                 )}
             </div>
@@ -672,7 +700,9 @@ export function VisorArticulo({
 
             {estadoBusqueda === 'encontrado' && objetivo.current?.certeza === 'rotulo' && (
                 <p className="border-t border-cream-400 bg-cream-100 px-3 py-1 text-[10px] text-charcoal-500">
-                    Localizado por el número de {modoParrafo ? 'párrafo' : 'artículo'}; coteja el texto por tu cuenta.
+                    {pasaje
+                        ? 'Localizado por una frase corta del pasaje; cotéjalo por tu cuenta.'
+                        : `Localizado por el número de ${modoParrafo ? 'párrafo' : 'artículo'}; coteja el texto por tu cuenta.`}
                 </p>
             )}
         </div>

@@ -14,10 +14,12 @@
  */
 import { markdownAHtml, separarTarjetas } from './marcado';
 import { type CamposCoidh, camposCoidh, esCoidh, referenciaCoidh } from '@/lib/coidh';
+import { type CamposDoctrina, camposDoctrina, esDoctrina, referenciaDoctrina } from '@/lib/doctrina';
 
 /** Una fuente citada. Las de la Corte IDH (`silo: "coidh"`) traen además
- *  caso, párrafo, página y ancla: ver `@/lib/coidh`. */
-export interface FuenteCita extends CamposCoidh {
+ *  caso, párrafo, página y ancla: ver `@/lib/coidh`. Las de doctrina
+ *  (`silo: "doctrina"`), obra, autor, página y ancla: ver `@/lib/doctrina`. */
+export interface FuenteCita extends CamposCoidh, CamposDoctrina {
     docId: string;
     origen: string;
     ref: string;
@@ -122,6 +124,7 @@ export function fuenteDeCita(meta: MetaCitas | null, docId: string): FuenteCita 
         instancia: s?.instancia,
         materia: s?.materia,
         ...camposCoidh(s),
+        ...camposDoctrina(s),
     };
 }
 
@@ -147,7 +150,7 @@ export type FuenteReferencia = {
     registro?: string | null;
     tesis_num?: string | null;
     tipo_criterio?: string | null;
-} & CamposCoidh;
+} & CamposCoidh & CamposDoctrina;
 
 /** «art. 2o» de «Art. 2o CPEUM (parte 3)»; lo demás («Sección 7 Protocolo Estambul»), sin «(parte N)». */
 function lugarDeLaRef(ref: string, sigla?: RegExp): string {
@@ -170,6 +173,9 @@ export function referenciaAPA(f: FuenteReferencia): string {
     // LA CORTE IDH, ANTES QUE NADA (25-sep-2026): su cita canónica es la forma
     // en que la propia Corte se cita, con caso, Serie y párrafo.
     if (esCoidh(f)) return referenciaCoidh(f);
+    // LA DOCTRINA (25-sep-2026): caía en la regla de las leyes y salía
+    // «Miguel Carbonell, «Los derechos…», 2004, art. p. 402. (2026).».
+    if (esDoctrina(f)) return referenciaDoctrina(f);
     if (silo.includes('jurisprudencia') || tesisNum || registro) {
         const corte = instancia || 'Suprema Corte de Justicia de la Nación';
         const titulo = origen || ref || 'Tesis sin rubro';

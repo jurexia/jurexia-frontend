@@ -21,7 +21,12 @@ export type SegCoidh = 'sentencia' | 'voto' | 'resolutivos' | 'considerandos';
 
 export interface CamposCoidh {
     tipo?: TipoCoidh | string | null;
-    /** https://www.corteidh.or.cr/… sin `#page`. Igual que `pdf_url`. */
+    /**
+     * https://www.corteidh.or.cr/… sin `#page`: la dirección que se CITA y la
+     * del enlace «Ver en el sitio de la Corte IDH». Desde el 25-sep-2026 ya no
+     * es la que se dibuja: `pdf_url` trae la copia verificada de legal-docs
+     * (ver `urlPdfCoidh`).
+     */
     url_oficial?: string | null;
     /** Página del PDF, en base 1, donde EMPIEZA el párrafo (no el folio impreso). */
     pagina?: number | null;
@@ -49,12 +54,19 @@ export interface CamposCoidh {
      * llave de CDN en vez de servir la copia vieja hasta 30 días.
      */
     pdf_sha1?: string | null;
+    /**
+     * pedido | vecino | resolutivo | destacado | hito | ficha | supervision.
+     * El backend lo manda desde el 25-sep-2026 (`_CAMPOS_COIDH` de main.py);
+     * se copia para que no se pierda por el camino, aunque el visor todavía
+     * reconoce las fichas por su nota (`esFichaCoidh`).
+     */
+    rol_coidh?: string | null;
 }
 
 /** Los nombres de los campos, para copiarlos de un marcador a otro. */
 export const CLAVES_COIDH: (keyof CamposCoidh)[] = [
     'tipo', 'url_oficial', 'pagina', 'parrafo', 'seg', 'voto_autor', 'caso', 'serie',
-    'fecha', 'ancla', 'cita_canonica', 'llave', 'pdf_sha1',
+    'fecha', 'ancla', 'cita_canonica', 'llave', 'pdf_sha1', 'rol_coidh',
 ];
 
 export function esCoidh(f: { silo?: string | null } | null | undefined): boolean {
@@ -205,8 +217,56 @@ export function referenciaCoidh(f: CamposCoidh & { ref?: string | null; origen?:
  * colara en un payload sería código en la página (revisión del 25-sep-2026).
  */
 export function urlOficialCoidh(f: CamposCoidh & { pdf_url?: string | null }): string | null {
-    const u = (f.url_oficial || f.pdf_url || '').trim().split('#')[0];
-    return /^https?:\/\//i.test(u) ? u : null;
+    const oficial = httpSinFragmento(f.url_oficial);
+    if (oficial) return oficial;
+    // Sin `url_oficial`, `pdf_url` sólo hace de dirección oficial si ES de la
+    // Corte: la copia de legal-docs no se enlaza como «el sitio de la Corte».
+    const pdf = httpSinFragmento(f.pdf_url);
+    return pdf && esDeCorteidh(pdf) ? pdf : null;
+}
+
+function httpSinFragmento(u: string | null | undefined): string | null {
+    const s = (u || '').trim().split('#')[0];
+    return /^https?:\/\//i.test(s) ? s : null;
+}
+
+function esDeCorteidh(u: string): boolean {
+    try {
+        return /(^|\.)corteidh\.or\.cr$/i.test(new URL(u).hostname);
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * EL PDF QUE SE DIBUJA NO ES EL DE LA CORTE, ES SU COPIA (25-sep-2026).
+ *
+ * Cloudflare de corteidh.or.cr reta con 403 a TODO cliente automático,
+ * también al proxy de Vercel: el visor decía «No se pudo abrir el PDF aquí»
+ * en cada sentencia. Las 58 resoluciones del piloto se subieron al bucket
+ * público `legal-docs/CorteIDH/` —donde ya viven la Constitución y los
+ * tratados—, cada una con el MISMO sha1 del PDF con que se midieron las
+ * páginas (`datos/coidh_copias.json` del backend), y el backend manda esa
+ * copia en `pdf_url`. Así la página 53 de la copia es la página 53 que midió
+ * el troceador, y el resaltado del ¶124 cae donde debe.
+ *
+ *  - `pdf_url` que NO es de corteidh.or.cr (la copia): se dibuja ésa, por el
+ *    proxy de siempre (Supabase ya está en la lista).
+ *  - `pdf_url` ausente o de corteidh.or.cr (una resolución sin copia, o una
+ *    fuente vieja guardada en el historial): lo de antes, la dirección
+ *    oficial por la puerta de la Corte.
+ * `url_oficial` queda SÓLO para la cita y el enlace a la Corte.
+ */
+export function urlPdfCoidh(f: CamposCoidh & { pdf_url?: string | null }): string | null {
+    const pdf = httpSinFragmento(f.pdf_url);
+    if (pdf && !esDeCorteidh(pdf)) return pdf;
+    return urlOficialCoidh(f);
+}
+
+/** ¿Se dibuja una copia nuestra del PDF de la Corte (y no el de corteidh.or.cr)? */
+export function dibujaCopiaCoidh(f: CamposCoidh & { pdf_url?: string | null }): boolean {
+    const pdf = urlPdfCoidh(f);
+    return Boolean(pdf && !esDeCorteidh(pdf));
 }
 
 /**

@@ -505,3 +505,224 @@ export async function localizarParrafo(o: Peticion): Promise<Localizacion | null
 export function itemsDelTramo(p: PlanoPagina, tramo: Tramo): number[] {
     return p.trozos.filter((t) => t.fin > tramo.desde && t.inicio < tramo.hasta).map((t) => t.indice);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * EL PASAJE DE UNA OBRA, SIN NÚMERO DE PÁRRAFO (25-sep-2026).
+ *
+ * La doctrina (colección `doctrina`, cinco libros de la BJV-UNAM) llega con
+ * lo mismo que la Corte IDH salvo el número: la PÁGINA del PDF del capítulo
+ * (`pagina_pdf`), un ANCLA (sus ~15 primeras palabras literales) y el texto
+ * del trozo. `localizarParrafo` ya sabía empezar por el ancla cuando no hay
+ * número —las ventanas de los votos sin numerar—, pero con `indexOf` sobre
+ * el texto normalizado, y el texto de estos libros NO se parece al de pdf.js
+ * letra por letra:
+ *
+ *   · el troceador (PyMuPDF) separó sílabas en el libro de Carbonell: «la co
+ *     mu ni -\nca ción de ma sas», donde pdf.js da «la comunicación de masas»;
+ *   · los trozos empiezan y acaban a media palabra («sticia Internacional»,
+ *     «pro-dere»), y los cortes de renglón llevan guion («ju-\ndicialización»);
+ *   · el trozo arrastra lo que PyMuPDF leyó alrededor del cuerpo —el folio,
+ *     el título corrido, las notas al pie, el colofón de la BJV—, y hay trozos
+ *     que son CASI SÓLO notas (Panorámica, pág. 33: una línea de cuerpo y las
+ *     notas 121 a 126) o una portada entera.
+ *
+ * Por eso aquí se compara SIN ESPACIOS: sólo letras y números, en minúsculas y
+ * sin acentos (con NFKD, que además deshace las ligaduras «ﬁ»). Una ventana de
+ * 48 letras seguidas —nueve o diez palabras— no se repite por azar en cinco
+ * páginas, y es inmune a cómo se partieron las palabras.
+ *
+ *   1. el COMIENZO: ventanas del ancla y, si no aparece, del texto del trozo
+ *      (desde varias de sus primeras palabras, para saltar el folio y el
+ *      título corrido), en la página dicha y en ±1, ±2; luego se extiende
+ *      hacia atrás mientras el texto siga casando;
+ *   2. lo que se PINTA, desde ahí: cada fragmento de pdf.js (un renglón, casi
+ *      siempre) cuyo texto está DENTRO del texto del trozo. Así se pintan las
+ *      notas que son del trozo y no las que no, sin adivinar dónde empiezan;
+ *      los fragmentos cortos («121», una versalita suelta) se pintan si están
+ *      entre dos que sí; el colofón de la BJV, nunca;
+ *   3. el FINAL: tres renglones seguidos que no son del trozo; si la página
+ *      se acaba antes, se sigue en la siguiente, saltando su título corrido.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+/** Sólo letras y números, sin acentos ni ligaduras: la forma en que se comparan libro y trozo. */
+export function palabrasCompactas(t: string | null | undefined): string[] {
+    return normalizar((t || '').normalize('NFKD')).split(' ').filter(Boolean);
+}
+
+type Compacto = { c: string; pos: number[] };
+const compactos = new WeakMap<PlanoPagina, Compacto>();
+
+/** El texto plano de la página sin espacios, con la posición de cada letra en el plano. */
+function compactoDe(p: PlanoPagina): Compacto {
+    const previo = compactos.get(p);
+    if (previo) return previo;
+    let c = '';
+    const pos: number[] = [];
+    for (let i = 0; i < p.plano.length; i++) {
+        if (p.plano[i] !== ' ') {
+            c += p.plano[i];
+            pos.push(i);
+        }
+    }
+    const hecho = { c, pos };
+    compactos.set(p, hecho);
+    return hecho;
+}
+
+/** La ventana que empieza en la palabra k y junta al menos `letras` letras; null si no alcanzan. */
+function ventanaDesde(pal: string[], k: number, letras: number): string | null {
+    let v = '';
+    for (let j = k; j < pal.length && v.length < letras; j++) v += pal[j];
+    return v.length >= letras ? v : null;
+}
+
+export type PeticionPasaje = {
+    total: number;
+    /** Página del PDF en base 1 donde está el pasaje. Sin ella se recorre el documento (hasta 500). */
+    pagina?: number | null;
+    /** Las ~15 primeras palabras literales del cuerpo del trozo. */
+    ancla?: string | null;
+    /**
+     * El texto del trozo, tal como se guardó (con su folio, su título corrido
+     * y sus notas). Recortado (`FUENTES_PREVIAS`), se pinta lo que alcanza.
+     */
+    texto?: string | null;
+    leer: (n: number) => Promise<PlanoPagina>;
+};
+
+export type LocalizacionPasaje = Localizacion & {
+    /** Los fragmentos que se pintan, por página: no todo lo que hay entre el comienzo y el final es del trozo. */
+    porPagina: Record<number, number[]>;
+};
+
+/** Cuántas letras debe tener una ventana del comienzo para darla por buena. */
+const LETRAS_FIRMES = 48;
+/** Una ventana más corta, sólo en la página dicha y sin darla por confirmada. */
+const LETRAS_DEBILES = 30;
+/** Por debajo de esto un fragmento no dice nada por sí solo: decide su vecindario. */
+const LETRAS_FRAGMENTO = 10;
+/** El pie que la BJV imprime en cada página: viene en el trozo, pero no es la obra. */
+const COLOFON_BJV = /juridicas\.unam\.mx|biblioteca\s+jur[ií]dica\s+virtual|^\s*DR\s*©|ir a la p[aá]gina del libro/i;
+
+export async function localizarPasaje(o: PeticionPasaje): Promise<LocalizacionPasaje | null> {
+    const leidas: Record<number, PlanoPagina> = {};
+    const leer = async (n: number) => (leidas[n] = leidas[n] || (await o.leer(n)));
+
+    const palAncla = palabrasCompactas(o.ancla);
+    const palTexto = palabrasCompactas(o.texto);
+    const orden = ordenDePaginas(o.total, o.pagina);
+
+    // Las fuentes del comienzo, en orden de confianza: el ancla desde sus
+    // primeras palabras; el texto del trozo desde cualquiera de sus primeras
+    // sesenta (el folio y el título corrido ocupan unas diez, y el trozo puede
+    // empezar a media palabra).
+    const fuentes: { pal: string[]; desdes: number[] }[] = [];
+    if (palAncla.length) fuentes.push({ pal: palAncla, desdes: [0, 1, 2, 3, 4, 6] });
+    if (palTexto.length) fuentes.push({ pal: palTexto, desdes: Array.from({ length: Math.min(60, palTexto.length) }, (_, i) => i) });
+
+    type Hallazgo = { pagina: number; i: number; pal: string[]; k: number; firme: boolean };
+    const buscar = (c: string, letras: number): Omit<Hallazgo, 'pagina' | 'firme'> | null => {
+        for (const f of fuentes) {
+            for (const k of f.desdes) {
+                const v = ventanaDesde(f.pal, k, letras);
+                if (!v) break;
+                const i = c.indexOf(v);
+                if (i !== -1) return { i, pal: f.pal, k };
+            }
+        }
+        return null;
+    };
+
+    let hallado: Hallazgo | null = null;
+    for (const n of orden) {
+        const h = buscar(compactoDe(await leer(n)).c, LETRAS_FIRMES);
+        if (h) { hallado = { ...h, pagina: n, firme: true }; break; }
+    }
+    // Sin ventana larga, una corta y sólo en la página dicha: «de los derechos
+    // fundamentales» (26 letras) sale en casi cada página de Carbonell.
+    if (!hallado && o.pagina && orden.length) {
+        const h = buscar(compactoDe(await leer(orden[0])).c, LETRAS_DEBILES);
+        if (h) hallado = { ...h, pagina: orden[0], firme: false };
+    }
+    if (!hallado) return null;
+
+    // Hacia atrás, palabra por palabra, mientras el texto siga casando: si se
+    // halló desde la cuarta palabra del ancla, el pasaje empieza en la primera.
+    const pIni = await leer(hallado.pagina);
+    const cIni = compactoDe(pIni);
+    let iIni = hallado.i;
+    for (let j = hallado.k - 1; j >= 0; j--) {
+        const w = hallado.pal[j];
+        if (iIni >= w.length && cIni.c.slice(iIni - w.length, iIni) === w) iIni -= w.length;
+        else break;
+    }
+    const desde = cIni.pos[iIni];
+    const alto = altoEn(pIni, desde);
+
+    // ¿El fragmento es del trozo? Entero dentro del texto; o, en las puntas,
+    // el trozo empieza a media línea (su final es el comienzo del texto) o
+    // acaba a media línea (su comienzo es el final del texto).
+    const T = (palTexto.length ? palTexto : palAncla).join('');
+    const cabeza = T.slice(0, 12);
+    const cola = T.slice(-12);
+    // 'nunca': el colofón, que no se pinta ni aunque quede entre dos renglones del trozo.
+    const delTrozo = (str: string): boolean | null | 'nunca' => {
+        if (COLOFON_BJV.test(str)) return 'nunca';
+        const c = palabrasCompactas(str).join('');
+        if (c.length < LETRAS_FRAGMENTO) return null;
+        if (T.includes(c)) return true;
+        const a = c.indexOf(cabeza);
+        if (a !== -1 && T.startsWith(c.slice(a))) return true;
+        const z = c.lastIndexOf(cola);
+        return z !== -1 && T.endsWith(c.slice(0, z + cola.length));
+    };
+
+    const porPagina: Record<number, number[]> = {};
+    const tramos: Tramo[] = [];
+    let terminado = false;
+    for (let n = hallado.pagina; n <= Math.min(o.total, hallado.pagina + 3) && !terminado; n++) {
+        const p = await leer(n);
+        // Desde el fragmento del comienzo; en las páginas siguientes, desde el
+        // cuerpo, sin el título corrido ni el folio.
+        const base = n === hallado.pagina ? desde : inicioDeCuerpo(p, alto);
+        const trozos = p.trozos.filter((t) => t.fin > base);
+        const veredicto = trozos.map((t, k) =>
+            n === hallado!.pagina && k === 0 ? true : delTrozo(p.items[t.indice].str));
+
+        // El final: tres fragmentos largos seguidos que no son del trozo. En
+        // una página de continuación, si los primeros tres ya no lo son, el
+        // trozo acabó en la anterior.
+        let corte = trozos.length;
+        let ajenos = 0;
+        for (let k = 0; k < trozos.length; k++) {
+            if (veredicto[k] === true) ajenos = 0;
+            else if (veredicto[k] === false && ++ajenos >= 3) { corte = k - 2; terminado = true; break; }
+        }
+        // Se pinta lo que es del trozo y lo que queda entre dos que lo son.
+        const pintar: number[] = [];
+        let previo: boolean | 'nunca' | null = null;
+        for (let k = 0; k < corte; k++) {
+            const v = veredicto[k];
+            let pinta = v === true;
+            if (v === null || v === false) {
+                let siguiente: boolean | 'nunca' | null = null;
+                for (let q = k + 1; q < corte && siguiente === null; q++) siguiente = veredicto[q];
+                pinta = previo === true && siguiente === true;
+            }
+            if (v !== null) previo = v;
+            if (pinta) pintar.push(k);
+        }
+        if (!pintar.length) break;
+        porPagina[n] = pintar.map((k) => trozos[k].indice);
+        tramos.push({ pagina: n, desde: trozos[pintar[0]].inicio, hasta: trozos[pintar[pintar.length - 1]].fin });
+    }
+
+    return {
+        pagina: hallado.pagina,
+        tramos,
+        inicio: 'ancla',
+        confirmado: hallado.firme,
+        fin: terminado ? 'texto' : 'pagina',
+        porPagina,
+    };
+}
