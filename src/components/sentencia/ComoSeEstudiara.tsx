@@ -263,6 +263,21 @@ export function pendientesDeRazon(plan: PlanDelEstudio | null | undefined,
     return (plan?.segmentos ?? []).filter((s) => s.pendiente === 'razon' && !(razones[s.id] || '').trim());
 }
 
+/** LAS CAJAS DE LA DECISIÓN 6 NO DESAPARECEN CON LO QUE ÉL ESCRIBIÓ. Su razón
+ *  cambia la firma y el plan se rehace; si el nuevo ya no marca pendiente ese
+ *  argumento —porque su razón lo contesta—, la caja tiene que seguir a la
+ *  vista: lo escrito sigue viajando, y lo que viaja se tiene que poder leer y
+ *  borrar. Una razón escrita para un id que el plan nuevo ya no trae se
+ *  enseña aparte, para que no viaje a ciegas. */
+export function cajasDeRazon(plan: PlanDelEstudio | null | undefined, razones: Record<string, string>) {
+    const segs = plan?.segmentos ?? [];
+    const conRazonSuya = Object.keys(razones).filter((id) => (razones[id] || '').trim());
+    const pendRazon = segs.filter((s) => s.pendiente === 'razon' || conRazonSuya.includes(s.id));
+    const sinSegmento = plan ? conRazonSuya.filter((id) => !segs.some((s) => s.id === id)) : [];
+    const porContestar = pendRazon.filter((s) => s.pendiente === 'razon' && !(razones[s.id] || '').trim()).length;
+    return { pendRazon, sinSegmento, porContestar };
+}
+
 function Cita({ texto, pagina }: { texto: string; pagina?: string }) {
     if (!texto) return null;
     return (
@@ -358,7 +373,7 @@ export default function ComoSeEstudiara({
     const proposicion = (id: string) => plan?.proposiciones.find((p) => p.id === id);
     const quien = esRecurso ? 'agravio' : 'concepto';
 
-    const pendRazon = (plan?.segmentos ?? []).filter((s) => s.pendiente === 'razon');
+    const { pendRazon, sinSegmento, porContestar } = cajasDeRazon(plan, razones);
     const pendSentido = (plan?.segmentos ?? []).filter((s) => s.pendiente === 'sentido');
     const enUnidad = new Set<string>();
     (plan?.unidades ?? []).forEach((u) => u.segmentos.forEach((id) => enUnidad.add(id)));
@@ -424,48 +439,68 @@ export default function ComoSeEstudiara({
                 </p>
             )}
 
+            {/* ── 1 · DECISIÓN 6: LA RAZÓN QUE TU CRITERIO NO CONTESTA ──
+                David, opción a: «el panel pide la razón que falta antes de
+                generar; si no la escribe, el estudio desarrolla ese argumento
+                con el material y lo pone PRIMERO en ADVERTENCIAS». Va arriba
+                porque es lo único del panel que le pide algo, y FUERA del
+                atenuado de «desactualizado»: escribir aquí cambia la firma, y
+                la caja en la que teclea no puede apagarse bajo sus dedos. No
+                bloquea: avisa. */}
+            {plan && (pendRazon.length > 0 || sinSegmento.length > 0) && (
+                <div className="mt-3">
+                    <Seccion tono="ambar"
+                             titulo={`Razón que tu criterio no contesta${porContestar ? ` · ${porContestar} sin escribir` : ''}`}
+                             nota={`Su problema ya tiene sentido, pero tu razón no responde lo que ${pendRazon.length === 1 ? 'este argumento plantea' : 'estos argumentos plantean'} por su cuenta. Escríbela aquí y el estudio la seguirá como tuya. Si la dejas en blanco, el estudio lo desarrolla con el material y te lo dice primero en las advertencias.`}>
+                        <ul className="space-y-3">
+                            {pendRazon.map((s) => {
+                                const pr = problemaDelSegmento(s, problemas);
+                                return (
+                                    <li key={s.id}>
+                                        <p className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
+                                            <span className="font-semibold text-accent-gold/90">{s.id}</span>
+                                            {pr && <span className="text-white/50">problema {pr.n}</span>}
+                                            {s.etiqueta && <span className="text-white/75">· {etiquetaLegible(s.etiqueta)}</span>}
+                                            {s.diferencia && <span className="text-white/50">· {DIFERENCIA[s.diferencia] ?? humano(s.diferencia)}</span>}
+                                            {s.pendiente !== 'razon' && (
+                                                <span className="text-accent-gold/85">· el orden actual ya lo contesta con tu razón</span>
+                                            )}
+                                        </p>
+                                        {(s.sostiene || s.texto) && (
+                                            <p className="mt-0.5 text-[12px] leading-relaxed text-white/65">{s.sostiene || s.texto}</p>
+                                        )}
+                                        <Cita texto={s.cita} pagina={s.pagina} />
+                                        <label htmlFor={`razon-${s.id}`} className="sr-only">Tu razón para {s.id}</label>
+                                        <textarea id={`razon-${s.id}`} rows={2} value={razones[s.id] ?? ''}
+                                                  onChange={(e) => onRazon(s.id, e.target.value)}
+                                                  placeholder="Por qué se resuelve así este argumento…"
+                                                  className="mt-1.5 w-full resize-y rounded-xl border border-amber-400/30 bg-black/30 px-3 py-2 text-[13px] leading-relaxed text-white/90 outline-none placeholder:text-white/40 focus:border-accent-gold/45" />
+                                    </li>
+                                );
+                            })}
+                            {sinSegmento.map((id) => (
+                                <li key={id}>
+                                    <p className="text-[13px]">
+                                        <span className="font-semibold text-accent-gold/90">{id}</span>
+                                        <span className="text-white/50"> · ya no aparece en el orden actual: tu razón se manda igual; bórrala si ya no aplica.</span>
+                                    </p>
+                                    <label htmlFor={`razon-${id}`} className="sr-only">Tu razón para {id}</label>
+                                    <textarea id={`razon-${id}`} rows={2} value={razones[id] ?? ''}
+                                              onChange={(e) => onRazon(id, e.target.value)}
+                                              className="mt-1.5 w-full resize-y rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[13px] leading-relaxed text-white/90 outline-none focus:border-accent-gold/45" />
+                                </li>
+                            ))}
+                        </ul>
+                    </Seccion>
+                </div>
+            )}
+
             {plan && (
                 <div className={cn('mt-3 space-y-3 transition-opacity', desactualizado && 'opacity-60')}>
                     {desactualizado && (
                         <p className="text-[12px] leading-relaxed text-white/50">
                             Es el orden de tu decisión anterior. Se rehace unos segundos después de tu último cambio.
                         </p>
-                    )}
-
-                    {/* ── 1 · DECISIÓN 6: LA RAZÓN QUE TU CRITERIO NO CONTESTA ──
-                        David, opción a: «el panel pide la razón que falta antes
-                        de generar; si no la escribe, el estudio desarrolla ese
-                        argumento con el material y lo pone PRIMERO en
-                        ADVERTENCIAS». Va arriba porque es lo único del panel que
-                        le pide algo. No bloquea: avisa. */}
-                    {pendRazon.length > 0 && (
-                        <Seccion tono="ambar" titulo={`Razón que tu criterio no contesta · ${pendRazon.length}`}
-                                 nota={`Su problema ya tiene sentido, pero tu razón no responde lo que ${pendRazon.length === 1 ? 'este argumento plantea' : 'estos argumentos plantean'} por su cuenta. Escríbela aquí y el estudio la seguirá como tuya. Si la dejas en blanco, el estudio lo desarrolla con el material y te lo dice primero en las advertencias.`}>
-                            <ul className="space-y-3">
-                                {pendRazon.map((s) => {
-                                    const pr = problemaDelSegmento(s, problemas);
-                                    return (
-                                        <li key={s.id}>
-                                            <p className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
-                                                <span className="font-semibold text-accent-gold/90">{s.id}</span>
-                                                {pr && <span className="text-white/50">problema {pr.n}</span>}
-                                                {s.etiqueta && <span className="text-white/75">· {etiquetaLegible(s.etiqueta)}</span>}
-                                                {s.diferencia && <span className="text-white/50">· {DIFERENCIA[s.diferencia] ?? humano(s.diferencia)}</span>}
-                                            </p>
-                                            {(s.sostiene || s.texto) && (
-                                                <p className="mt-0.5 text-[12px] leading-relaxed text-white/65">{s.sostiene || s.texto}</p>
-                                            )}
-                                            <Cita texto={s.cita} pagina={s.pagina} />
-                                            <label htmlFor={`razon-${s.id}`} className="sr-only">Tu razón para {s.id}</label>
-                                            <textarea id={`razon-${s.id}`} rows={2} value={razones[s.id] ?? ''}
-                                                      onChange={(e) => onRazon(s.id, e.target.value)}
-                                                      placeholder="Por qué se resuelve así este argumento…"
-                                                      className="mt-1.5 w-full resize-y rounded-xl border border-amber-400/30 bg-black/30 px-3 py-2 text-[13px] leading-relaxed text-white/90 outline-none placeholder:text-white/40 focus:border-accent-gold/45" />
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </Seccion>
                     )}
 
                     {/* ── 2 · SIN SENTIDO FIJADO ── */}

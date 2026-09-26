@@ -221,6 +221,16 @@ const PLAN = {
     ok(como.pendientesDeRazon(p, {}).map((s) => s.id).join() === 'C3.e', 'pendiente de razón sin escribir');
     ok(como.pendientesDeRazon(p, { 'C3.e': '  ' }).length === 1, 'sólo espacios no cuenta como razón');
     ok(como.pendientesDeRazon(p, { 'C3.e': 'porque…' }).length === 0, 'con razón escrita deja de estar pendiente');
+    // La caja no desaparece cuando el plan nuevo ya no la marca pendiente.
+    const sinPend = api.planDe({ ...PLAN, segmentos: PLAN.segmentos.map((x) => (x.id === 'C3.e' ? { ...x, pendiente: null } : x)) });
+    const c1 = como.cajasDeRazon(p, {});
+    ok(c1.pendRazon.map((x) => x.id).join() === 'C3.e' && c1.porContestar === 1, 'caja pendiente sin escribir');
+    const c2 = como.cajasDeRazon(sinPend, { 'C3.e': 'mi razón' });
+    ok(c2.pendRazon.map((x) => x.id).join() === 'C3.e' && c2.porContestar === 0,
+       'con su razón escrita la caja sigue a la vista aunque el plan ya no la marque');
+    const c3 = como.cajasDeRazon(p, { 'C7.q': 'huérfana', 'C1.a': '  ' });
+    ok(c3.sinSegmento.join() === 'C7.q', 'la razón de un id que el plan ya no trae se enseña aparte');
+    ok(como.cajasDeRazon(null, { 'C7.q': 'x' }).sinSegmento.length === 0, 'sin plan no hay huérfanas que enseñar');
     ok(como.razonLegible('no_combate(P2)') === 'no combate la consideración (P2)', 'razón legible con argumento');
     ok(como.razonLegible('algo_nuevo') === 'algo nuevo', 'razón fuera del catálogo: se enseña, no se esconde');
 }
