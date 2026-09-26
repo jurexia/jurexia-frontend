@@ -1302,7 +1302,8 @@ export default function TallerDeSentencias() {
                 () => setAvance((x) => x + '\n\n… componiendo el documento'),
                 () => avanzarFase('ordenando'),
                 () => avanzarFase('recalificando'),
-                () => avanzarFase('recalificado'));
+                () => avanzarFase('recalificado'),
+                () => setAvance((x) => x + '\n\n… completando los argumentos que quedaron sin su respuesta (va en el documento)'));
             setProyecto(rg);
             descargarProyecto(rg);
             void traerGuardados(encargo.numero);
@@ -1710,7 +1711,8 @@ export default function TallerDeSentencias() {
                     encargo.numero, correo, opciones,
                     (t) => { avanzarFase('texto'); setAvance((x) => x + t); },
                     () => setAvance((x) => x + '\n\n… componiendo el documento'),
-                    alOrdenar, alRecalificar, alRecalificado);
+                    alOrdenar, alRecalificar, alRecalificado,
+                    () => setAvance((x) => x + '\n\n… completando los argumentos que quedaron sin su respuesta (va en el documento)'));
                 setProyecto(rg);
                 descargarProyecto(rg);
                 void traerGuardados(encargo.numero);
@@ -1732,7 +1734,8 @@ export default function TallerDeSentencias() {
                     });
                 },
                 () => setAvance((x) => x + '\n\n… componiendo el documento'),
-                alOrdenar, alRecalificar, alRecalificado);
+                alOrdenar, alRecalificar, alRecalificado,
+                    () => setAvance((x) => x + '\n\n… completando los argumentos que quedaron sin su respuesta (va en el documento)'));
             setProyecto(r);
             descargarProyecto(r);
             irA('proyecto', 400);

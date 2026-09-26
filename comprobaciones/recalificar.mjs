@@ -1178,7 +1178,8 @@ const botonDe = (arbol, re) => buscar(arbol, (n) => n.type === 'button' && re.te
        'el primer texto avanza la fase en los tres caminos (atajo, global y por problema)');
     ok(/const alOrdenar = \(\) => avanzarFase\('ordenando'\);/.test(pag) && /\(\) => avanzarFase\('ordenando'\),/.test(pag),
        '«ordenando» la avanza en los tres caminos');
-    ok((pag.match(/alOrdenar, alRecalificar, alRecalificado\)/g) || []).length === 2 && /\(\) => avanzarFase\('recalificado'\)\);/.test(pag),
+    ok((pag.match(/alOrdenar, alRecalificar, alRecalificado,/g) || []).length === 2 && /\(\) => avanzarFase\('recalificado'\),/.test(pag)
+       && (pag.match(/completando los argumentos/g) || []).length === 3,
        '«recalificado» llega a la fase en los tres caminos');
     ok(/if \(corriendo && recalAntesRef\.current && !recalEnCurso\) avanzarFase\('recalificado'\);/.test(pag),
        'y la recalificación de la pantalla que termina mientras se genera también la sustituye');

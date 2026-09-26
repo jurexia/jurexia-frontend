@@ -1083,6 +1083,11 @@ export async function resolverEnVivo(
      *  manda): la pantalla deja de decir «Recalificando…» aunque no venga
      *  «ordenando» —sin plan no viene— y el primer texto tarde un minuto. */
     onRecalificado?: () => void,
+    /** EL SERVIDOR COMPLETA EL ESTUDIO (evento «completando», sólo v3/v4): una
+     *  llamada más escribe la respuesta de los argumentos que quedaron sin su
+     *  dato propio. Lo añadido va en el .docx, no en el texto que se vio
+     *  escribirse (integración, 26-sep-2026). */
+    onCompletando?: () => void,
 ): Promise<ResultadoProyecto> {
     const fd = formularioDelResolver(numero, userEmail, opciones);
 
@@ -1160,6 +1165,8 @@ export async function resolverEnVivo(
                     onRecalificando?.();
                 } else if (ev.tipo === 'recalificado') {
                     onRecalificado?.();
+                } else if (ev.tipo === 'completando') {
+                    onCompletando?.();
                 } else if (ev.tipo === 'error') {
                     /* El motor dice que falló: eso no se recupera, se cuenta.
                        Con la lista, si la trae (p. ej. los accesorios que
