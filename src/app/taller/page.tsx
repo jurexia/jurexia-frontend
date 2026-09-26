@@ -57,10 +57,15 @@ import {
     contextoDelAsunto, asuntosEnCurso, descargarDelAlmacen,
     documentosDelAsunto, descargarDocumento, olvidarAsunto,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
-    fichaDesdeAdmision, pedirPlan, leerPlan,
+    fichaDesdeAdmision, pedirPlan, leerPlan, recalificar,
 } from '@/components/sentencia/api';
 import type { OpcionesResolver } from '@/components/sentencia/api';
 import type { EnlacePlan } from '@/components/sentencia/ComoSeEstudiara';
+import {
+    useRecalificacion, idsPorRecalificar, aplicarReparto, pendientesVivos,
+    claveRecalificacion, superposicion, recalificacionEnCurso,
+} from '@/components/sentencia/recalificacion';
+import type { EnlaceRecalificacion } from '@/components/sentencia/recalificacion';
 import MapaDelEstudio from '@/components/sentencia/MapaDelEstudio';
 import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto, DecisionSuplencia } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -559,6 +564,14 @@ export default function TallerDeSentencias() {
     const usaPlan = varianteEfectiva === 'v4';
     /* EL SERVIDOR ESTÁ ORDENANDO EL ESTUDIO (evento «ordenando»). */
     const [ordenando, setOrdenando] = useState(false);
+    /* EL SERVIDOR ESTÁ RECALIFICANDO LOS ACCESORIOS CON SU PREMISA (evento
+       «recalificando», 26-sep-2026): va antes del plan y del estudio. */
+    const [recalificandoSrv, setRecalificandoSrv] = useState(false);
+    /* Si al pulsar «generar» quedaba un accesorio «Recalificando…», la
+       pantalla lo dice desde el primer segundo: el servidor lo terminará antes
+       de escribir, aunque no llegue a mandar el evento (si la recalificación
+       que pidió esta pantalla acaba mientras tanto, la usa sin rehacerla). */
+    const recalEnCursoRef = useRef(false);
 
     const traerContexto = useCallback(async (num: string) => {
         if (!num || !correo) return;
@@ -1035,6 +1048,30 @@ export default function TallerDeSentencias() {
     const repartirRef = useRef<(id: string, valor: string) => Promise<void>>(async () => {});
     const repartirTrasCambio = useCallback((id: string, valor: string) => repartirRef.current(id, valor), []);
     const [avisosReparto, setAvisosReparto] = useState<string[]>([]);
+    /* ═══ LOS TUMBADOS: RECALIFICAR CON LA PREMISA (26-sep-2026) ═══
+       David: «si cambio sentido hay que tumbar y regenerar con la premisa del
+       cambio de sentido». Si el principal va por la vía contraria a la que
+       propuso el motor, el reparto devuelve tumbados los accesorios que él no
+       tocó y traían la calificación de la otra vía. Sus ids viven aquí; la
+       calificación nueva llega por `useRecalificacion`, más abajo, y se pinta
+       ENCIMA —la base del problema no se toca: ver recalificacion.ts—. */
+    const [pendientesRecal, setPendientesRecal] = useState<string[]>([]);
+    /* El reparto en camino: hasta que conteste no se sabe qué se tumba, y ni
+       se recalifica ni se pide el plan con lo de antes. */
+    const [repartiendo, setRepartiendo] = useState(false);
+    /* Cada reparto lleva su turno. Dos cambios seguidos del principal podían
+       contestar en desorden, y el viejo, llegando tarde, repartía la suerte
+       de un sentido que él ya había cambiado. */
+    const turnoReparto = useRef(0);
+    /* Sube tras una propuesta nueva con el principal marcado a mano: el
+       reparto se rehace con los valores nuevos del motor (efecto de abajo). */
+    const [repartoTrasPropuesta, setRepartoTrasPropuesta] = useState(0);
+    /** Lo que cuelga de la recalificación se olvida con la decisión. */
+    const olvidarRecalificacion = useCallback(() => {
+        turnoReparto.current += 1;
+        setRepartiendo(false);
+        setPendientesRecal([]);
+    }, []);
     repartirRef.current = async (id: string, valor: string) => {
         if (!encargo.numero || !valor) return;
         const esPrincipal = (problemas.find((p) => p.id === id)?.jerarquia ?? '') === 'principal'
@@ -1047,26 +1084,24 @@ export default function TallerDeSentencias() {
             jerarquia: p.jerarquia ?? 'accesorio',
             tocado: p.id === id || tocados.has(p.id),
         }));
+        const mio = ++turnoReparto.current;
+        setRepartiendo(true);
         try {
             const r = await repartirCriterios(encargo.numero, correo, criterios, propuesta?.global ?? null);
+            if (mio !== turnoReparto.current) return;    // llegó tarde: manda el último cambio
             setAvisosReparto(r.avisos);
-            setProblemas((prev) => prev.map((p) => {
-                const c = r.criterios.find((x) => x.problema === p.pregunta);
-                if (!c || p.id === id || tocados.has(p.id)) return p;
-                if (!c.sentido) return p;
-                const valido = (['fundado', 'esencialmente_fundado',
-                                 'sustancialmente_fundado', 'parcialmente_fundado',
-                                 'fundado_insuficiente', 'infundado', 'inoperante',
-                                 'inatendible', 'ineficaz', 'sin_materia', 'innecesario'] as const)
-                    .find((x) => x === c.sentido);
-                if (!valido) return p;
-                const cambia = valido !== p.sentido;
-                return { ...p, sentido: valido,
-                         criterio: cambia ? (c.razonamiento || '') : (p.criterio || c.razonamiento || ''),
-                         razonDe: cambia ? { sentido: valido, delMotor: true } : p.razonDe,
-                         de: c.de || 'motor', porQue: c.por_que || '' };
-            }));
-        } catch { /* si el reparto no sale, las pastillas se quedan como estaban */ }
+            const pend = idsPorRecalificar(problemas, r.criterios, id, tocados);
+            setPendientesRecal(pend);
+            setProblemas((prev) => aplicarReparto(prev, r.criterios,
+                { excluir: id, tocados, pendientes: new Set(pend) }));
+        } catch {
+            /* si el reparto no sale, las pastillas se quedan como estaban; lo
+               tumbado de antes ya no se sabe si sigue: al generar, el servidor
+               aplica el árbol y recalifica igual. */
+            if (mio === turnoReparto.current) setPendientesRecal([]);
+        } finally {
+            if (mio === turnoReparto.current) setRepartiendo(false);
+        }
     };
 
     const cambiarCriterio = useCallback((id: string, campo: 'criterio' | 'sentido', valor: string) => {
@@ -1249,9 +1284,10 @@ export default function TallerDeSentencias() {
                     : { porJurimetria: true,
                         responsable: encargo.responsable, contexto,
                         varianteEstudio: esCasa ? varianteEstudio : '' },
-                (t) => { setOrdenando(false); setAvance((x) => x + t); },
+                (t) => { setOrdenando(false); setRecalificandoSrv(false); setAvance((x) => x + t); },
                 () => setAvance((x) => x + '\n\n… componiendo el documento'),
-                () => setOrdenando(true));
+                () => { setRecalificandoSrv(false); setOrdenando(true); },
+                () => setRecalificandoSrv(true));
             setProyecto(rg);
             descargarProyecto(rg);
             void traerGuardados(encargo.numero);
@@ -1260,7 +1296,7 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message
                    : 'No se pudo generar el proyecto completo.');
-        } finally { setCorriendo(false); setOrdenando(false); }
+        } finally { setCorriendo(false); setOrdenando(false); setRecalificandoSrv(false); }
     }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados, esCasa, varianteEstudio]);
 
     const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean; contextoTexto?: string }) => {
@@ -1293,6 +1329,11 @@ export default function TallerDeSentencias() {
                 // existe como modo.
                 setModo('por_problema');
             }
+            /* LO TUMBADO ERA DE LA PROPUESTA ANTERIOR. Con los valores nuevos
+               del motor el reparto se rehace (si el principal lo marcó él) y
+               dice otra vez qué se recalifica: ver el efecto
+               `repartoTrasPropuesta`. */
+            olvidarRecalificacion();
             // Se vuelca sobre los problemas para que se vean y se puedan editar.
             setProblemas((prev) => prev.map((q, i) => {
                 const s = p.propuestas[i];
@@ -1329,13 +1370,14 @@ export default function TallerDeSentencias() {
                          razonDe: suya || mismaRazon ? q.razonDe : { sentido: valido, delMotor: true },
                          de: 'motor', porQue: '' };
             }));
+            setRepartoTrasPropuesta((n) => n + 1);
             if (!p.propuestas.length) {
                 setError('El motor no propuso ningún sentido. Dicta tu criterio.');
             }
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo obtener la propuesta.');
         } finally { setCorriendo(false); setProponiendo(false); }
-    }, [encargo.numero, correo, contexto]);
+    }, [encargo.numero, correo, contexto, olvidarRecalificacion]);
     pedirPropuestaRef.current = pedirPropuesta;
 
     /* ═══ QUIERO CAMBIAR DE SENTIDO ═══
@@ -1361,6 +1403,7 @@ export default function TallerDeSentencias() {
         setAvance('');
         setError('');
         setTocados(new Set());
+        olvidarRecalificacion();
         setRazonando(new Set());
         setGrupos({});
         // Las razones por argumento eran de la decisión que se descarta.
@@ -1436,6 +1479,7 @@ export default function TallerDeSentencias() {
         setPropuesta(null);
         setSuplenciaDecidida(null);
         setTocados(new Set());
+        olvidarRecalificacion();
         setRazonando(new Set());
         setGrupos({});
         setRazonesDecididas({ numero: '', r: {} });
@@ -1538,6 +1582,7 @@ export default function TallerDeSentencias() {
                          sentido: undefined, criterio: '', razonDe: undefined, de: undefined, porQue: '' };
             }));
             setTocados(new Set());
+            olvidarRecalificacion();
             setPropuesta(null);
             setSentidoGlobal(''); setGlobalDictado(false); setRazonGlobal('');
             setModo('por_problema');
@@ -1727,10 +1772,17 @@ export default function TallerDeSentencias() {
         // criterio, que es lo normal—, lo que se veía escribirse era el
         // estudio nuevo pegado detrás del viejo.
         setError(''); setAvance(''); setOrdenando(false); setCorriendo(true);
+        /* «RECALIFICANDO LOS ACCESORIOS CON TU PREMISA…» (26-sep-2026): si
+           quedaba alguno «Recalificando…» en pantalla, se dice desde ya —el
+           servidor lo termina antes del plan y del estudio—, y también cuando
+           el servidor manda el evento. Se apaga con «ordenando» o con el
+           primer trozo de texto. */
+        setRecalificandoSrv(recalEnCursoRef.current);
+        const alRecalificar = () => setRecalificandoSrv(true);
         /* «ORDENANDO EL ESTUDIO…» (Paso 2): con el plan encendido, el servidor
            espera o hace el plan de esta decisión antes de la primera línea.
            Se apaga con el primer trozo de texto. */
-        const alOrdenar = () => setOrdenando(true);
+        const alOrdenar = () => { setRecalificandoSrv(false); setOrdenando(true); };
         try {
             if (modo === 'global') {
                 // POR EL FLUJO, NO POR LA LLAMADA BLOQUEANTE. El servidor
@@ -1747,9 +1799,9 @@ export default function TallerDeSentencias() {
                 irA('estudio', 200);
                 const rg = await resolverEnVivo(
                     encargo.numero, correo, opciones,
-                    (t) => { setOrdenando(false); setAvance((x) => x + t); },
+                    (t) => { setOrdenando(false); setRecalificandoSrv(false); setAvance((x) => x + t); },
                     () => setAvance((x) => x + '\n\n… componiendo el documento'),
-                    alOrdenar);
+                    alOrdenar, alRecalificar);
                 setProyecto(rg);
                 descargarProyecto(rg);
                 void traerGuardados(encargo.numero);
@@ -1763,6 +1815,7 @@ export default function TallerDeSentencias() {
                 encargo.numero, correo, opciones,
                 (t) => {
                     setOrdenando(false);
+                    setRecalificandoSrv(false);
                     setAvance((x) => {
                         // AL PRIMER TROZO, y sólo al primero: si se moviera en cada uno la
                         // pantalla temblaría durante los dos minutos que dura el estudio.
@@ -1771,15 +1824,66 @@ export default function TallerDeSentencias() {
                     });
                 },
                 () => setAvance((x) => x + '\n\n… componiendo el documento'),
-                alOrdenar);
+                alOrdenar, alRecalificar);
             setProyecto(r);
             descargarProyecto(r);
             irA('proyecto', 400);
             setPaso('proyecto');
         } catch (e) {
             setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
-        } finally { setCorriendo(false); setOrdenando(false); }
+        } finally { setCorriendo(false); setOrdenando(false); setRecalificandoSrv(false); }
     }, [encargo.numero, correo, modo, irA, traerGuardados]);
+
+    /* ═══ LA RECALIFICACIÓN DE LOS TUMBADOS, PEDIDA DESDE LA PANTALLA ═══
+       Sólo en «problema por problema», que es donde el principal se cambia
+       con su pastilla y se pide el reparto. En «todo el asunto» la
+       calificación global es la brocha del secretario y el contrato no
+       recalifica lo que ella cubre; en el atajo del motor no hay cambio de
+       sentido. Si aun así el servidor recalifica al generar, el evento
+       «recalificando» lo dice en el flujo. */
+    const principalRecal = problemas.find((p) => (p.jerarquia ?? '') === 'principal') ?? problemas[0];
+    const vivosRecal = modo === 'por_problema' && principalRecal
+        ? pendientesVivos(problemas, pendientesRecal, tocados, principalRecal.id) : [];
+    const claveRecal = claveRecalificacion(principalRecal, vivosRecal);
+    const enlaceRecal: EnlaceRecalificacion = {
+        activo: !!claveRecal && !repartiendo && !!encargo.numero,
+        clave: claveRecal,
+        // Eligió sentido y no hay razón (ni se está redactando): enseguida.
+        inmediato: !(principalRecal?.criterio ?? '').trim(),
+        pedir: (signal) => {
+            const o = opcionesRef.current('estandar');
+            return o ? recalificar(encargo.numero, correo, o, signal)
+                     : Promise.reject(new Error('Falta el sentido del problema principal.'));
+        },
+    };
+    /* LA RAZÓN DEL PRINCIPAL ESTÁ QUIETA si el motor no la está redactando:
+       pedir antes gastaría una llamada con la razón que está por llegar. Y no
+       se pide mientras se genera o se propone. */
+    const recal = useRecalificacion(enlaceRecal,
+        !(principalRecal && razonando.has(principalRecal.id)) && !corriendo && !proponiendo);
+    const superpuestas = superposicion(vivosRecal, recal, claveRecal);
+    const recalEnCurso = recalificacionEnCurso(superpuestas, repartiendo && modo === 'por_problema');
+    recalEnCursoRef.current = recalEnCurso;
+    const avisosRecal = recal.clave === claveRecal && recal.respuesta ? recal.respuesta.avisos : [];
+    /* «SIN CAMBIOS»: el servidor no halló nada que recalificar —la lista de
+       tumbados de esta pantalla era de un reparto anterior—. Lo que devuelve
+       es un reparto como cualquier otro: se aplica y los pendientes se van. */
+    const sinCambios = recal.fase === 'listo' && recal.clave === claveRecal
+        && recal.respuesta?.estado === 'sin_cambios' ? recal.respuesta : null;
+    useEffect(() => {
+        if (!sinCambios || !principalRecal) return;
+        setProblemas((prev) => aplicarReparto(prev, sinCambios.criterios,
+            { excluir: principalRecal.id, tocados, pendientes: new Set() }));
+        setPendientesRecal([]);
+    }, [sinCambios]); // eslint-disable-line react-hooks/exhaustive-deps
+    /* TRAS UNA PROPUESTA NUEVA, si el principal lo marcó él, el reparto se
+       rehace con los valores nuevos del motor: son de la vía del motor, y si
+       él va por la contraria, hay que tumbarlos otra vez. */
+    useEffect(() => {
+        if (!repartoTrasPropuesta || !principalRecal?.sentido) return;
+        if (!tocados.has(principalRecal.id)) return;
+        void repartirRef.current(principalRecal.id, principalRecal.sentido);
+    }, [repartoTrasPropuesta]); // eslint-disable-line react-hooks/exhaustive-deps
 
     /* ═══ EL PLAN DEL ESTUDIO, PEDIDO DESDE LA PANTALLA DE DECISIÓN ═══
        La firma es el formulario que se mandaría AHORA con el botón de siempre
@@ -3184,6 +3288,10 @@ export default function TallerDeSentencias() {
                                   d ? { numero: encargo.numero, d } : null)}
                               grupos={grupos} onGrupos={setGrupos}
                               plan={enlacePlan}
+                              recalificadas={superpuestas}
+                              recalificacionEnCurso={recalEnCurso}
+                              avisosRecalificacion={avisosRecal}
+                              onReintentarRecalificacion={recal.reintentar}
                               razonesSegmento={razonesSegmento}
                               onRazonSegmento={escribirRazonSegmento}
                               esCasa={esCasa} varianteEstudio={varianteEstudio}
@@ -3233,7 +3341,8 @@ export default function TallerDeSentencias() {
                                             : 'leyendo el acervo'}
                                 </span>
                             }>
-                                {avance ? 'Escribiendo el estudio' : ordenando ? 'Ordenando el estudio…' : 'Preparando el estudio'}
+                                {avance ? 'Escribiendo el estudio' : ordenando ? 'Ordenando el estudio…'
+                                    : recalificandoSrv ? 'Recalificando los accesorios con tu premisa…' : 'Preparando el estudio'}
                             </Rotulo>
                             <div className="max-h-[26rem] overflow-y-auto rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
                                 <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-white/75">
@@ -3242,6 +3351,11 @@ export default function TallerDeSentencias() {
                                            plan de esta decisión antes de escribir: puede tardar
                                            hasta dos minutos y sin decirlo parecería colgado. */
                                         ? 'Ordenando el estudio con tu decisión: qué argumentos se contestan juntos, dónde se expone cada premisa y qué dato propio trae cada uno. Puede tardar hasta dos minutos; después el texto empieza a aparecer aquí.'
+                                        /* El principal va por la vía contraria a la que propuso
+                                           el motor: los accesorios que no marcaste se califican
+                                           otra vez, ANTES del plan y del estudio. */
+                                        : recalificandoSrv
+                                        ? 'Recalificando los accesorios con tu premisa…\n\nEl principal va por la vía contraria a la que propuso el motor, así que los accesorios que no marcaste se califican de nuevo con tu sentido y tu razón como hechos dados; la calificación que tenían para la otra vía no se usa. Puede tardar hasta minuto y medio. Si no sale, quedan sin calificar: el estudio los desarrollará con el material y los pondrá primero en ADVERTENCIAS.'
                                         : 'El motor está leyendo las tesis y las normas del acervo y fijando la premisa. El texto empieza a aparecer aquí en cuanto escribe la primera línea; suele tardar alrededor de un minuto.')}
                                     <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-accent-gold align-middle" />
                                 </p>

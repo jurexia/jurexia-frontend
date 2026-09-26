@@ -9,6 +9,8 @@ import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
 import EstudiarJuntos from './EstudiarJuntos';
 import ComoSeEstudiara, { usePlanDelEstudio, pendientesDeRazon } from './ComoSeEstudiara';
 import type { EnlacePlan } from './ComoSeEstudiara';
+import { MENSAJE_SIN_CALIFICAR, porQueLegible } from './recalificacion';
+import type { Superpuesta } from './recalificacion';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LA PANTALLA DE DECISIÓN: UNA FRASE, DOS BOTONES, Y LA TARJETA FINAL
@@ -302,6 +304,53 @@ function PasoSuplencia({ propuesta, valor, onCambiar }: {
     );
 }
 
+/* ═══ LA MARCA DE UN ACCESORIO TUMBADO (26-sep-2026) ═══
+   David: «si cambio sentido hay que tumbar y regenerar con la premisa del
+   cambio de sentido». Lo que tenía era la calificación de la otra vía y ya no
+   se enseña: o se está recalificando, o llegó recalificado con su porqué, o no
+   salió y se dice qué pasará. En los cuatro casos, una pastilla lo pisa. */
+function MarcaRecalificacion({ sup, onReintentar }: { sup: Superpuesta; onReintentar?: () => void }) {
+    if (sup.estado === 'recalificando') {
+        return (
+            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[12px] text-accent-gold/85">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Recalificando con tu premisa…</span>
+                <span className="text-white/45">· el principal va por la vía contraria a la que propuso el motor; la calificación que tenía no se usa</span>
+            </p>
+        );
+    }
+    if (sup.estado === 'recalificada') {
+        const pq = porQueLegible(sup.porQue);
+        return (
+            <p className="mt-1 text-[12px] text-accent-gold/85">
+                Recalificado con tu premisa
+                {pq ? <span className="text-white/55"> · {pq}</span> : null}
+                <span className="text-white/40"> · márcalo tú si no estás de acuerdo</span>
+            </p>
+        );
+    }
+    return (
+        <p className="mt-1 flex items-start gap-1.5 text-[12px] leading-relaxed text-amber-300/90">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+                {MENSAJE_SIN_CALIFICAR}
+                {sup.estado === 'fallo' && porQueLegible(sup.porQue)
+                    ? <span className="text-white/45"> · {porQueLegible(sup.porQue)}</span> : null}
+                {sup.estado === 'error' && (
+                    <span className="text-white/55"> No se pudo recalificar desde aquí{sup.porQue ? ` (${sup.porQue})` : ''}; al
+                    generar, el servidor lo intentará otra vez con tu premisa.</span>
+                )}
+                {sup.estado === 'error' && onReintentar && (
+                    <button type="button" onClick={onReintentar}
+                            className="ml-1.5 font-medium text-accent-gold/90 hover:text-accent-gold">
+                        volver a intentar
+                    </button>
+                )}
+            </span>
+        </p>
+    );
+}
+
 /* Sin enlace, el hook no pide nada: la cuenta no escribe con plan. */
 const PLAN_APAGADO: EnlacePlan = {
     activo: false, firma: '',
@@ -354,6 +403,8 @@ export default function Decision({
     grupos = {}, onGrupos,
     plan, razonesSegmento = {}, onRazonSegmento,
     esCasa = false, varianteEstudio = '', onVarianteEstudio,
+    recalificadas = {}, recalificacionEnCurso = false, avisosRecalificacion = [],
+    onReintentarRecalificacion,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -430,6 +481,14 @@ export default function Decision({
     esCasa?: boolean;
     varianteEstudio?: string;
     onVarianteEstudio?: (v: string) => void;
+    /** LOS ACCESORIOS TUMBADOS POR EL CAMBIO DE SENTIDO (26-sep-2026), por id:
+     *  lo que se pinta ENCIMA de su calificación —recalificando, recalificado
+     *  con su porqué, o sin calificar—. Ver recalificacion.ts. */
+    recalificadas?: Record<string, Superpuesta>;
+    /** Hay un reparto o una recalificación en camino: el plan espera. */
+    recalificacionEnCurso?: boolean;
+    avisosRecalificacion?: string[];
+    onReintentarRecalificacion?: () => void;
 }) {
     const [corrigiendo, setCorrigiendo] = useState(false);
     const [porQue, setPorQue] = useState(false);
@@ -478,7 +537,11 @@ export default function Decision({
        sobre una razón que está a punto de cambiar—. El antirrebote vive en el
        hook. */
     const listoParaPlan = !!plan?.activo && listoParaGenerar && !faltaRazon && !necesitaConceptos
-        && !generando && !proponiendo && !(razonando && razonando.size > 0) && !razonandoGlobal;
+        && !generando && !proponiendo && !(razonando && razonando.size > 0) && !razonandoGlobal
+        /* Ni mientras se recalifican los accesorios tumbados: el plan se ordena
+           sobre el criterio YA recalificado (contrato_recalificar.md), y
+           pedirlo antes gastaría una corrida en lo que está por cambiar. */
+        && !recalificacionEnCurso;
     const estadoPlan = usePlanDelEstudio(plan ?? PLAN_APAGADO, listoParaPlan);
     const planHecho = estadoPlan.respuesta?.plan ?? null;
     const sinRazon = plan?.activo ? pendientesDeRazon(planHecho, razonesSegmento) : [];
@@ -504,7 +567,9 @@ export default function Decision({
        entero, y el botón tiene que decirlo así, no «el problema 1». */
     const esPrincipalGlobal = (p: ProblemaJuridico) => enGlobal && !!principal && p.id === principal.id;
     const sentidoEnPantalla = (p: ProblemaJuridico) => (esPrincipalGlobal(p) ? (sentidoGlobal || '')
-        : enGlobal ? (tocados?.has(p.id) && p.sentido ? p.sentido : '') : (p.sentido || ''));
+        : enGlobal ? (tocados?.has(p.id) && p.sentido ? p.sentido : '')
+        // El tumbado enseña la recalificada, o nada: la de la otra vía no.
+        : recalificadas[p.id] ? recalificadas[p.id].sentido : (p.sentido || ''));
     const alcanceDe = (p: ProblemaJuridico, n: number) => (esPrincipalGlobal(p) ? 'todo el asunto' : `el problema ${n}`);
     const nGrupos = new Set(Object.values(grupos)).size;
 
@@ -524,12 +589,24 @@ export default function Decision({
                     : (tocados?.has(p.id) && p.sentido ? 'tuya' : 'sigue al principal'),
             };
         }
+        const sup = recalificadas[p.id];
+        if (sup) {
+            /* TUMBADO: con qué sale es lo recalificado, o nada todavía. */
+            return {
+                id: p.id, pregunta: p.pregunta, sentido: sup.sentido, grupo: grupos[p.id] ?? '',
+                de: sup.estado === 'recalificando' ? 'recalificando…'
+                    : sup.estado === 'recalificada' ? 'recalificado con tu premisa' : 'sin calificar',
+                vacio: sup.estado === 'recalificando' ? 'por recalificar' : 'sin calificar',
+            };
+        }
         return {
             id: p.id, pregunta: p.pregunta, sentido: p.sentido || '', grupo: grupos[p.id] ?? '',
             de: tocados?.has(p.id) && p.sentido ? 'tuya'
                 : motor?.sentido && motor.alcanza ? 'del motor' : (p.sentido ? 'de la pantalla' : 'sin decidir'),
         };
-    }), [problemas, enGlobal, sentidoGlobal, globalDictado, tocados, propuesta, principal, grupos]); // eslint-disable-line react-hooks/exhaustive-deps
+    }), [problemas, enGlobal, sentidoGlobal, globalDictado, tocados, propuesta, principal, grupos, recalificadas]); // eslint-disable-line react-hooks/exhaustive-deps
+    const nRecalificando = Object.values(recalificadas).filter((s) => s.estado === 'recalificando').length;
+    const nSinCalificar = Object.values(recalificadas).filter((s) => s.estado === 'fallo' || s.estado === 'error').length;
 
     /* ── SIN PROPUESTA TODAVÍA ── */
     if (proponiendo) {
@@ -831,6 +908,9 @@ export default function Decision({
                                 const con = contrasteDe(i);
                                 const abierto = abiertos.has(p.id);
                                 const razonEnCurso = razonando?.has(p.id);
+                                /* TUMBADO POR EL CAMBIO DE SENTIDO: lo que se pinta
+                                   es lo recalificado (o nada), no la base. */
+                                const sup = recalificadas[p.id];
                                 return (
                                     <div key={p.id}
                                          className={cn('rounded-2xl border bg-black/20 p-4 transition-colors',
@@ -882,7 +962,8 @@ export default function Decision({
                                         {/* DE QUIÉN ES LA CALIFICACIÓN. Cuando el principal cambia, los
                                             accesorios que él no marcó siguen su suerte, y aquí se dice
                                             por qué: «sigue al principal · descansa en la premisa…». */}
-                                        {p.sentido && p.de && p.de !== 'tuya' && p.de !== 'motor' && (
+                                        {sup && <MarcaRecalificacion sup={sup} onReintentar={onReintentarRecalificacion} />}
+                                        {!sup && p.sentido && p.de && p.de !== 'tuya' && p.de !== 'motor' && (
                                             <p className="mt-1 text-[12px] text-accent-gold/85">
                                                 {p.de === 'principal' ? 'Sigue al principal' : p.de === 'distinto' ? 'Tema distinto: se estudia aparte'
                                                     : p.de === 'mayor_beneficio' ? 'Pide más que el principal: se estudia' : 'Se estudia por su cuenta'}
@@ -912,16 +993,28 @@ export default function Decision({
                                             </div>
                                         )}
                                         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-                                            <Calificativas elegido={p.sentido}
+                                            {/* PISARLO = MARCARLO: la pastilla lo deja suyo
+                                                (`tocado`) y ya no se recalifica. */}
+                                            <Calificativas elegido={sup ? sup.sentido : p.sentido}
                                                            onElegir={(s) => { onCambiar(p.id, 'sentido', s); onRazonar?.(p.id, p.pregunta, s); }} />
                                             {razonEnCurso && <Pastilla tono="ambar">redactando la razón…</Pastilla>}
                                         </div>
-                                        <textarea value={p.criterio || ''} rows={3}
-                                                  onChange={(e) => onCambiar(p.id, 'criterio', e.target.value)}
+                                        {/* La razón del tumbado: mientras se recalifica o si no
+                                            salió no hay razón que enseñar —la de la otra vía no se
+                                            usa—. Recalificado, se enseña la suya; corregirla es
+                                            hacerla tuya: se fija esa calificación como tuya y se
+                                            guarda tu texto. */}
+                                        {(!sup || sup.estado === 'recalificada') && (
+                                        <textarea value={sup ? sup.razon : (p.criterio || '')} rows={3}
+                                                  onChange={(e) => {
+                                                      if (sup && sup.sentido) onCambiar(p.id, 'sentido', sup.sentido);
+                                                      onCambiar(p.id, 'criterio', e.target.value);
+                                                  }}
                                                   placeholder="Mi criterio es… porque…"
                                                   className={cn('mt-3 w-full resize-y rounded-xl border bg-black/30 px-3.5 py-2.5 text-[14px] leading-relaxed',
                                                       'text-white/90 placeholder:text-white/45 outline-none',
                                                       seAparta[i] ? 'border-accent-gold/40 focus:border-accent-gold' : 'border-white/10 focus:border-accent-gold/45')} />
+                                        )}
                                         {seAparta[i] && !(p.criterio || '').trim() && (
                                             <p className="mt-1.5 text-[12px] text-accent-gold/90">
                                                 Te apartas de la propuesta: di por qué en dos líneas. El estudio se alinea a lo que escribas.
@@ -933,6 +1026,16 @@ export default function Decision({
                             {avisosReparto.length > 0 && (
                                 <ul className="space-y-1 px-1 text-[12px] leading-relaxed text-white/55">
                                     {avisosReparto.map((a, k) => (
+                                        <li key={k} className="flex gap-2"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-gold/70" /><span>{a}</span></li>
+                                    ))}
+                                </ul>
+                            )}
+                            {/* Lo que dijo el servidor al recalificar: una caída que
+                                no se pudo verificar con su cita, un accesorio que no
+                                salió… */}
+                            {avisosRecalificacion.length > 0 && (
+                                <ul className="space-y-1 px-1 text-[12px] leading-relaxed text-white/55">
+                                    {avisosRecalificacion.map((a, k) => (
                                         <li key={k} className="flex gap-2"><AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-gold/70" /><span>{a}</span></li>
                                     ))}
                                 </ul>
@@ -1128,7 +1231,7 @@ export default function Decision({
                                     )}
                                 </span>
                                 <span className={cn('shrink-0 font-medium', f.sentido ? 'text-white' : 'text-white/45')}>
-                                    {f.sentido ? legible(f.sentido) : (enGlobal ? '' : 'sin decidir')}
+                                    {f.sentido ? legible(f.sentido) : (enGlobal ? '' : (f.vacio || 'sin decidir'))}
                                 </span>
                                 <span className={cn('shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] uppercase tracking-wide',
                                     f.de === 'tuya' ? 'border-accent-gold/45 text-accent-gold' : 'border-white/15 text-white/45')}>
@@ -1168,7 +1271,8 @@ export default function Decision({
                         <p className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[13px]">
                             <span className="text-white/45">Cómo se estudiará:</span>
                             <span className="min-w-0 flex-1 text-white/80">
-                                {estadoPlan.fase === 'pidiendo' || estadoPlan.fase === 'en_curso' ? 'ordenándose con tu decisión…'
+                                {recalificacionEnCurso ? 'se ordena en cuanto terminen de recalificarse los accesorios'
+                                    : estadoPlan.fase === 'pidiendo' || estadoPlan.fase === 'en_curso' ? 'ordenándose con tu decisión…'
                                     : planHecho && !estadoPlan.desactualizado
                                         ? `${planHecho.unidades.length} ${planHecho.unidades.length === 1 ? 'apartado' : 'apartados'} · ${planHecho.segmentos.length} argumentos`
                                     : planHecho ? 'se reordenará con tu último cambio'
@@ -1191,6 +1295,27 @@ export default function Decision({
                     {faltaRazon && (
                         <p className="mt-2.5 text-[12px] text-amber-300/90">
                             Te apartas de la propuesta: escribe el porqué antes de generar. El estudio se alinea a lo que escribas.
+                        </p>
+                    )}
+                    {/* EL PROYECTO NO SALE CON UN «RECALIFICANDO…» SIN DECIRLO
+                        (26-sep-2026). No se bloquea: el servidor termina esa
+                        recalificación antes del plan y del estudio. */}
+                    {!enGlobal && nRecalificando > 0 && (
+                        <p className="mt-2.5 flex items-start gap-1.5 text-[12px] leading-relaxed text-amber-300/90">
+                            <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin" />
+                            <span>
+                                {nRecalificando === 1 ? 'Un accesorio se está' : `${nRecalificando} accesorios se están`} recalificando
+                                con tu premisa. Si generas ahora, el servidor terminará esa recalificación antes de escribir el
+                                estudio —hasta minuto y medio más— y te lo dirá mientras tanto.
+                            </span>
+                        </p>
+                    )}
+                    {!enGlobal && nSinCalificar > 0 && (
+                        <p className="mt-2.5 text-[12px] leading-relaxed text-amber-300/90">
+                            {nSinCalificar === 1 ? 'Un accesorio quedó' : `${nSinCalificar} accesorios quedaron`} sin calificar
+                            tras el cambio de sentido: {nSinCalificar === 1 ? 'califícalo' : 'califícalos'} tú; si no, el estudio
+                            {nSinCalificar === 1 ? ' lo desarrollará' : ' los desarrollará'} con el material y
+                            {nSinCalificar === 1 ? ' lo pondrá' : ' los pondrá'} primero en ADVERTENCIAS.
                         </p>
                     )}
                     {necesitaConceptos && (
