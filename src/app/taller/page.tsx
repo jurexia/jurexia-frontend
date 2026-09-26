@@ -1756,7 +1756,8 @@ export default function TallerDeSentencias() {
     const principalRecal = problemas.find((p) => (p.jerarquia ?? '') === 'principal') ?? problemas[0];
     const vivosRecal = modo === 'por_problema' && principalRecal
         ? pendientesVivos(problemas, pendientesRecal, tocados, principalRecal.id) : [];
-    const claveRecal = claveRecalificacion(principalRecal, vivosRecal);
+    const claveRecal = claveRecalificacion(principalRecal, vivosRecal,
+        suplencia?.confirmada ? JSON.stringify([suplencia.fraccion, suplencia.aFavorDe]) : '');
     const enlaceRecal: EnlaceRecalificacion = {
         activo: !!claveRecal && !repartiendo && !!encargo.numero,
         clave: claveRecal,

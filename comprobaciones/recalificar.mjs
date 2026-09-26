@@ -1203,5 +1203,21 @@ const botonDe = (arbol, re) => buscar(arbol, (n) => n.type === 'button' && re.te
 }
 
 fs.rmSync(TMP, { recursive: true, force: true });
+{   // INTEGRACIÓN (26-sep-2026): la suplencia confirmada en la clave y «reintentable»
+    const P0 = { id: 'p0', pregunta: '¿Principal?', sentido: 'infundado', criterio: 'r' };
+    const V = [{ id: 'p1', pregunta: '¿Accesorio?' }];
+    const k0 = recal.claveRecalificacion(P0, V);
+    ok(recal.claveRecalificacion(P0, V, '') === k0, 'sin suplencia confirmada, la clave de siempre');
+    ok(recal.claveRecalificacion(P0, V, '["II","el menor"]') !== k0,
+       'confirmar la suplencia cambia la clave: se vuelve a pedir');
+    const rOk = api.respuestaRecalificarDe({ estado: 'fallo', clave: 'k', criterios: [], avisos: [] });
+    ok(rOk.reintentable === true, 'sin el campo (servidor anterior), reintentable');
+    const rNo = api.respuestaRecalificarDe({ estado: 'fallo', clave: 'k', criterios: [], avisos: [], reintentable: false });
+    ok(rNo.reintentable === false, 'reintentable:false se lee');
+    const est = { fase: 'fallo', clave: 'K', respuesta: rNo, error: '', reintentar: () => {} };
+    const sup = recal.superposicion([{ id: 'p1', pregunta: '¿Accesorio?' }], est, 'K');
+    ok(sup.p1 && sup.p1.estado === 'fallo' && sup.p1.reintentable === false,
+       'un fallo que no se reintenta no ofrece «volver a intentar»');
+}
 console.log(fallas ? `FALLAS: ${fallas} (bien: ${bien})` : `OK · ${bien} comprobaciones`);
 process.exit(fallas ? 1 : 0);

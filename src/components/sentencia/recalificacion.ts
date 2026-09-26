@@ -157,10 +157,17 @@ export function pendientesVivos(
  *  recalificado ya no es de esta premisa. Vacía = no hay nada que pedir. */
 export function claveRecalificacion(
     principal: ProblemaJuridico | undefined, vivos: ProblemaJuridico[],
+    /* LA SUPLENCIA CONFIRMADA ENTRA (integración, 26-sep-2026): el servidor
+       la lleva en su clave y en el prompt, y confirmarla es un clic; sin esto
+       la pantalla seguía enseñando lo recalificado sin ella y el proyecto se
+       recalificaba otra vez al generar. El contexto NO entra: se teclea, y
+       cada pausa gastaría una corrida del tope. Vacía = la clave de siempre. */
+    suplencia: string = '',
 ): string {
     if (!principal || !principal.sentido || !vivos.length) return '';
-    return JSON.stringify([principal.pregunta, principal.sentido, principal.criterio ?? '',
-                           vivos.map((p) => p.pregunta).sort()]);
+    const base = [principal.pregunta, principal.sentido, principal.criterio ?? '',
+                  vivos.map((p) => p.pregunta).sort()];
+    return JSON.stringify(suplencia ? [...base, suplencia] : base);
 }
 
 /* ── EL PEDIDO, CON ANTIRREBOTE Y CON CLAVE ──────────────────────────────── */
@@ -332,6 +339,9 @@ export interface Superpuesta {
     razon: string;
     /** El porqué del servidor, o el motivo del error. */
     porQue: string;
+    /** «Volver a intentar» sólo si sirve: un error de red siempre; un fallo,
+     *  si el servidor dice que la misma premisa se reintentaría. */
+    reintentable?: boolean;
 }
 
 /** Por cada accesorio tumbado, qué se enseña. Sólo vale la respuesta de la
@@ -373,7 +383,8 @@ export function superposicion(
            recalifica con tu premisa», que junto a «sin calificar» se
            contradice: aquí sólo va el motivo propio (p. ej. que el servidor
            siguiera en curso); el del servidor va en los avisos. */
-        out[p.id] = { estado: 'fallo', sentido: '', razon: '', porQue: estado.error || '' };
+        out[p.id] = { estado: 'fallo', sentido: '', razon: '', porQue: estado.error || '',
+                      reintentable: r ? r.reintentable !== false : true };
     });
     return out;
 }

@@ -345,7 +345,7 @@ function MarcaRecalificacion({ sup, onReintentar }: { sup: Superpuesta; onReinte
                     devuelve al momento— y sí reintenta el que cortó el
                     proveedor o el tiempo; sin el botón, eso sólo pasaba al
                     generar, sin que él viera antes con qué salía. */}
-                {(sup.estado === 'error' || sup.estado === 'fallo') && onReintentar && (
+                {(sup.estado === 'error' || (sup.estado === 'fallo' && sup.reintentable !== false)) && onReintentar && (
                     <button type="button" onClick={onReintentar}
                             className="ml-1.5 font-medium text-accent-gold/90 hover:text-accent-gold">
                         volver a intentar

@@ -529,6 +529,10 @@ export interface RespuestaRecalificar {
     clave: string;
     criterios: CriterioRepartido[];
     avisos: string[];
+    /** Si volver a pedir esta misma premisa serviría. Un fallo de validación
+     *  vuelve igual al instante: entonces no se ofrece «volver a intentar».
+     *  Sin el campo (servidor anterior), se da por reintentable. */
+    reintentable: boolean;
 }
 
 /** La lectura tolerante de la respuesta: un estado que no se reconoce es un
@@ -557,7 +561,8 @@ export function respuestaRecalificarDe(x: unknown): RespuestaRecalificar {
         }
         return String(a ?? '');
     }).map((a) => a.trim()).filter(Boolean);
-    return { estado, clave: String(j.clave ?? '').trim(), criterios, avisos };
+    return { estado, clave: String(j.clave ?? '').trim(), criterios, avisos,
+             reintentable: j.reintentable !== false };
 }
 
 /** PIDE LA RECALIFICACIÓN con el MISMO formulario que generará el proyecto
