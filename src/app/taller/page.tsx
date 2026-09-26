@@ -3383,7 +3383,8 @@ export default function TallerDeSentencias() {
                                 sesión: pudo cambiar después de este proyecto. */}
                             {!previo.parcial && previo.mapa && (
                                 <MapaDelEstudio mapa={previo.mapa}
-                                                esRecurso={encargo.tipoAsunto !== 'amparo_directo'} />
+                                                esRecurso={encargo.tipoAsunto !== 'amparo_directo'}
+                                                verCobertura={esCasa} />
                             )}
                         </>
                     )}
@@ -3456,11 +3457,15 @@ export default function TallerDeSentencias() {
                                 aviso es condición de lanzamiento y va siempre a la
                                 vista. Sólo con las variantes que marcan (v3/v4).
                                 Si el «listo» no trajo el plan, se lee el de la
-                                sesión: recién generado, es el que se usó. */}
+                                sesión, y sólo vale si su clave es la del plan que
+                                el «listo» dice haber usado: si el de esta decisión
+                                no salió, la fila guarda el de la anterior.
+                                La cobertura (V1), sólo a casa: sin calibrar. */}
                             {proyecto.mapa && (
                                 <MapaDelEstudio mapa={proyecto.mapa}
                                                 esRecurso={encargo.tipoAsunto !== 'amparo_directo'}
-                                                leer={() => leerPlan(encargo.numero, correo)} />
+                                                leer={() => leerPlan(encargo.numero, correo)}
+                                                verCobertura={esCasa} />
                             )}
                             {/* EL FINAL DEL CAMINO DECÍA «DE NUEVO» SIN HABER
                                 DICHO NADA LA PRIMERA VEZ. El .docx se descarga

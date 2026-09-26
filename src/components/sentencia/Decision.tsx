@@ -498,6 +498,14 @@ export default function Decision({
         onCambiar(p.id, 'sentido', s);
         onRazonar?.(p.id, p.pregunta, s);
     };
+    /* LO QUE LA TARJETA FINAL DICE DE ESE PROBLEMA, y a qué alcanza aceptar
+       (revisión, 26-sep-2026). En «todo el asunto» el principal lleva la
+       calificación GLOBAL: aceptar una propuesta suya cambia el asunto
+       entero, y el botón tiene que decirlo así, no «el problema 1». */
+    const esPrincipalGlobal = (p: ProblemaJuridico) => enGlobal && !!principal && p.id === principal.id;
+    const sentidoEnPantalla = (p: ProblemaJuridico) => (esPrincipalGlobal(p) ? (sentidoGlobal || '')
+        : enGlobal ? (tocados?.has(p.id) && p.sentido ? p.sentido : '') : (p.sentido || ''));
+    const alcanceDe = (p: ProblemaJuridico, n: number) => (esPrincipalGlobal(p) ? 'todo el asunto' : `el problema ${n}`);
     const nGrupos = new Set(Object.values(grupos)).size;
 
     const abrir = (id: string) => setAbiertos((prev) => {
@@ -1073,6 +1081,8 @@ export default function Decision({
                                  onRazon={(id, t) => onRazonSegmento?.(id, t)}
                                  onAceptarPropuesta={aceptarPropuesta}
                                  puedeAceptar={(a) => FINAS.some((f) => f.id === (a || '').toLowerCase())}
+                                 sentidoEnPantalla={sentidoEnPantalla}
+                                 alcanceDe={alcanceDe}
                                  esRecurso={esRecurso} />
             )}
 

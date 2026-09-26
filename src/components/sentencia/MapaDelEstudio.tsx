@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Tarjeta, cn } from './primitivas';
 import type { MapaDelEstudio as Mapa, PlanDelEstudio, RespuestaPlan, SegmentoDelPlan } from './api';
+import { planDeSesionParaMapa } from './api';
 import { etiquetaLegible, razonLegible } from './ComoSeEstudiara';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -52,14 +53,25 @@ const LOCALIZADO: Record<Localizado, { texto: string; clase: string }> = {
     sin_dato: { texto: 'sin dato', clase: 'border-white/10 text-white/45' },
 };
 
-export default function MapaDelEstudio({ mapa, esRecurso = false, leer }: {
+export default function MapaDelEstudio({ mapa, esRecurso = false, leer, verCobertura = false }: {
     mapa: Mapa;
     esRecurso?: boolean;
-    /** Si el resultado no trajo el plan, se lee el de la sesión: tras generar
-     *  es el que se usó —la pantalla de decisión ya no pide otro—. */
+    /** Si el resultado no trajo el plan, se lee el de la sesión, y SÓLO se usa
+     *  si su clave es la que el resultado dice haber usado (ver
+     *  `planDeSesionParaMapa`): la fila pudo quedarse con el plan de una
+     *  decisión anterior si el de ésta no salió. */
     leer?: () => Promise<RespuestaPlan>;
+    /** EL VEREDICTO DE COBERTURA (V1), SÓLO EN CASA (revisión, 26-sep-2026).
+     *  «Sin localizar», «por sus anclas» y el porcentaje leen el texto que
+     *  generó el modelo, y ese control no está calibrado contra engroses
+     *  reales: w2_final §4.4 lo deja visible sólo «cuando la marca honesta
+     *  ≥ 0.95». Hasta entonces va en sombra para el secretario —ve dónde se
+     *  contestó cada argumento, no un veredicto— y a la vista de las cuentas
+     *  de casa, que son las que lo calibran. Hoy sólo casa escribe con marcas;
+     *  esto protege el día en que se encienda la v4 para todos. */
+    verCobertura?: boolean;
 }) {
-    const cob = mapa.cobertura;
+    const cob = verCobertura ? mapa.cobertura : null;
     const faltan = new Set(cob?.faltan ?? []);
     const rescatados = new Set(cob?.rescatados ?? []);
     const [abierto, setAbierto] = useState(faltan.size > 0);
@@ -70,9 +82,10 @@ export default function MapaDelEstudio({ mapa, esRecurso = false, leer }: {
     leerRef.current = leer;
     useEffect(() => {
         const l = leerRef.current;
-        if (mapa.plan || !l) return;
+        setPlanSesion(null);
+        if (mapa.plan || !mapa.planClave || !l) return;
         let vivo = true;
-        l().then((r) => { if (vivo && r.estado === 'listo' && r.plan) setPlanSesion(r.plan); })
+        l().then((r) => { if (vivo) setPlanSesion(planDeSesionParaMapa(mapa, r)); })
            .catch(() => { /* sin detalle: el mapa se pinta con los ids */ });
         return () => { vivo = false; };
     }, [mapa]);
@@ -92,7 +105,7 @@ export default function MapaDelEstudio({ mapa, esRecurso = false, leer }: {
     const conMarca = ids.filter((id) => localizado(id) === 'marca').length;
     const porAnclas = ids.filter((id) => localizado(id) === 'anclas').length;
     const sinLocalizar = ids.filter((id) => localizado(id) === 'falta').length;
-    const cobertura = cob?.cobertura ?? (n ? conMarca / n : null);
+    const cobertura = verCobertura ? (cob?.cobertura ?? (n ? conMarca / n : null)) : null;
     const otras = Object.keys(mapa.marcas).filter((k) => !ES_SEGMENTO.test(k)).sort(comparaIds);
 
     const parrafos = (idx: number[]) => idx.map((i) => i + 1).join(', ');
@@ -106,9 +119,10 @@ export default function MapaDelEstudio({ mapa, esRecurso = false, leer }: {
                                             abierto && 'rotate-90')} />
                 <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">Mapa del estudio</span>
                 <span className="min-w-0 flex-1 text-[13px] text-white/75">
-                    {n} {n === 1 ? 'argumento' : 'argumentos'} · {conMarca} con marca
-                    {porAnclas > 0 && <> · {porAnclas} por sus anclas</>}
-                    {sinLocalizar > 0 && <span className="text-amber-300"> · {sinLocalizar} sin localizar</span>}
+                    {n} {n === 1 ? 'argumento' : 'argumentos'}
+                    {verCobertura && <> · {conMarca} con marca</>}
+                    {verCobertura && porAnclas > 0 && <> · {porAnclas} por sus anclas</>}
+                    {verCobertura && sinLocalizar > 0 && <span className="text-amber-300"> · {sinLocalizar} sin localizar</span>}
                     {cobertura !== null && <span className="text-white/45"> · cobertura {pct(cobertura)}</span>}
                 </span>
                 <span className="text-[12px] text-white/45">{abierto ? 'ocultar' : 'ver'}</span>
@@ -119,8 +133,8 @@ export default function MapaDelEstudio({ mapa, esRecurso = false, leer }: {
                     <p className="text-[12px] leading-relaxed text-white/50">
                         Dónde contestó el estudio cada {quien}, según la marca que el propio modelo deja al
                         principio del párrafo (no entra al documento). Es para revisar, no un veredicto: un argumento
-                        «sin localizar» puede estar contestado sin marca, y uno con marca, mal contestado.
-                        Compruébalo en el .docx antes de firmar.
+                        {verCobertura ? ' «sin localizar»' : ' sin párrafo'} puede estar contestado sin marca, y uno con
+                        marca, mal contestado. Compruébalo en el .docx antes de firmar.
                     </p>
 
                     <ul className="divide-y divide-white/[0.05] rounded-xl border border-white/[0.07] bg-black/20">
@@ -142,10 +156,12 @@ export default function MapaDelEstudio({ mapa, esRecurso = false, leer }: {
                                                     {idx.length === 1 ? 'párrafo' : 'párrafos'} {parrafos(idx)}
                                                 </span>
                                             )}
-                                            <span className={cn('rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide',
-                                                LOCALIZADO[loc].clase)}>
-                                                {LOCALIZADO[loc].texto}
-                                            </span>
+                                            {verCobertura && (
+                                                <span className={cn('rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide',
+                                                    LOCALIZADO[loc].clase)}>
+                                                    {LOCALIZADO[loc].texto}
+                                                </span>
+                                            )}
                                         </span>
                                     </p>
                                     {(s?.sostiene || s?.texto) && (

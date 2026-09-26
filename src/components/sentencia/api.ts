@@ -769,6 +769,9 @@ async function recuperarProyecto(
                 textoAvisos: f.avisos,
                 textoHuecos: f.huecos,
                 version: f.version ?? undefined,
+                /* El mapa del estudio también se recupera: la ficha lo guarda
+                   igual que el «listo» lo traía (Paso 2). */
+                mapa: f.mapa ?? null,
             };
         }
         if (Date.now() >= limite) {
@@ -1934,10 +1937,25 @@ export interface UnidadDelPlan {
 /** Una afinación que el plan PROPONE y no aplica: cambiar la calificación. */
 export interface PropuestaDelPlan { seg: string; de: string; a: string; porQue: string }
 
+/** LA TABLA DE PROBLEMAS DEL PLAN (revisión, 26-sep-2026). El servidor numera
+ *  los problemas desde 1 («PROBLEMA 1…n», `plan_estudio.problemas_del_criterio`)
+ *  y guarda aquí cada número con su pregunta. `problema_id` de un segmento y
+ *  `problemas` de una unidad son ESE número, no el índice de la pantalla:
+ *  leerlos como índice base 0 corría todo un problema —la propuesta del
+ *  problema 1 se aceptaba sobre el 2—. La pantalla empareja por la pregunta. */
+export interface ProblemaDelPlan {
+    id: number | string;
+    pregunta: string;
+    sentido: string;
+    jerarquia: string;
+    grupo: string;
+}
+
 export interface PlanDelEstudio {
     version: string;
     clave: string;
     tipoAsunto: string;
+    problemas: ProblemaDelPlan[];
     segmentos: SegmentoDelPlan[];
     proposiciones: ProposicionDelPlan[];
     premisas: PremisaDelPlan[];
@@ -2013,7 +2031,9 @@ export function planDe(x: unknown): PlanDelEstudio | null {
             trat: _t(s.trat),
             diferencia: _t(s.diferencia),
             pendiente: pend === 'sentido' ? 'sentido' : pend === 'razon' ? 'razon' : '',
-            texto: _t(s.texto),
+            /* El plan reparado trae el párrafo del resumen en `resumen` (el
+               piso lo llama `texto`): se leen los dos. */
+            texto: _t(s.texto ?? s.resumen),
             cita: _t(s.cita),
             pagina: _t(s.pagina),
             sostiene: _t(s.sostiene),
@@ -2024,6 +2044,14 @@ export function planDe(x: unknown): PlanDelEstudio | null {
         version: _t(j.version),
         clave: _t(j.clave),
         tipoAsunto: _t(j.tipo_asunto),
+        problemas: _l(j.problemas).map((y): ProblemaDelPlan | null => {
+            const p = _o(y);
+            const id = p ? _idProblema(p.id) : null;
+            return p && id !== null
+                ? { id, pregunta: _t(p.pregunta), sentido: _t(p.sentido),
+                    jerarquia: _t(p.jerarquia), grupo: _t(p.grupo) }
+                : null;
+        }).filter((p): p is ProblemaDelPlan => p !== null),
         segmentos,
         proposiciones: _l(j.proposiciones).map((y) => {
             const p = _o(y) ?? {};
@@ -2115,6 +2143,10 @@ export interface MapaDelEstudio {
     cobertura: CoberturaDelEstudio | null;
     /** El plan con que se escribió, si viaja con el resultado. */
     plan: PlanDelEstudio | null;
+    /** La CLAVE del plan con que se escribió, si el resultado la dice (o la
+     *  del plan que trae). Vacía si el estudio salió sin plan o el servidor no
+     *  la manda. Ver `planDeSesionParaMapa`. */
+    planClave: string;
     /** El principio de cada párrafo del estudio limpio, si el servidor lo
      *  manda: sin él la pestaña dice «párrafo 14» y no enseña su texto, porque
      *  reconstruirlo aquí desde lo que se vio escribirse podría enseñar el
@@ -2141,11 +2173,26 @@ export function mapaDe(x: unknown): MapaDelEstudio | null {
         ? { faltan: _ts(co.faltan), rescatados: _ts(co.rescatados), cobertura: _n(co.cobertura) }
         : (_n(c) !== null ? { faltan: [], rescatados: [], cobertura: _n(c) } : null);
     if (!Object.keys(marcas).length && !cobertura) return null;
+    const plan = planDe(j.plan ?? j.plan_usado);
     return {
         marcas,
         cobertura,
-        plan: planDe(j.plan ?? j.plan_usado),
+        plan,
+        planClave: _t(j.plan_clave ?? j.clave_plan) || plan?.clave || '',
         parrafos: _l(j.parrafos).map(_t),
         variante: _t(j.variante ?? j.variante_estudio),
     };
+}
+
+/** EL PLAN DE LA SESIÓN SÓLO SIRVE AL MAPA SI ES EL QUE SE USÓ (revisión,
+ *  26-sep-2026). La fila guarda UN plan, el último que se pudo escribir. Si al
+ *  generar el plan de la decisión nueva no salió —V0 falló dos veces, venció
+ *  el tope de 120 s o se agotaron las 4 corridas—, el estudio se escribe sin
+ *  plan y la fila sigue guardando el de la decisión ANTERIOR: pintarlo en el
+ *  mapa pondría junto a los párrafos del estudio nuevo las calificaciones de
+ *  otra decisión. Sólo vale si la clave coincide con la que el resultado dice
+ *  haber usado; sin esa clave, el mapa se enseña sin plan (ids y párrafos). */
+export function planDeSesionParaMapa(mapa: MapaDelEstudio, r: RespuestaPlan | null): PlanDelEstudio | null {
+    if (!r || r.estado !== 'listo' || !r.plan || !mapa.planClave) return null;
+    return r.clave === mapa.planClave ? r.plan : null;
 }

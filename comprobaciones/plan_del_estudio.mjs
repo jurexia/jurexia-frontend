@@ -125,23 +125,31 @@ const Rf = req('./react_falso.js');
     ok(!fd2.has('modo_decision'), 'por problema: sin modo_decision');
 }
 
-/* ═══ 2 · LA LECTURA TOLERANTE DEL PLAN ═══ */
+/* ═══ 2 · LA LECTURA TOLERANTE DEL PLAN ═══
+   Con la FORMA que produce la pieza PLAN (plan_estudio.reparar, 26-sep-2026):
+   problemas numerados desde 1 con su tabla `problemas` (id → pregunta), y el
+   párrafo del resumen en `resumen`. La primera versión de esta comprobación
+   usaba ids base 0 y así daba por buena la lectura equivocada. */
 const PLAN = {
     version: '1', clave: 'K1', tipo_asunto: 'amparo_directo',
+    problemas: [{ id: 1, pregunta: '¿Se acreditó la identidad?', sentido: 'infundado', jerarquia: 'principal', grupo: '' },
+                { id: 2, pregunta: '¿Hay cosa juzgada?', sentido: 'infundado', jerarquia: 'accesorio', grupo: '' },
+                { sin: 'id' }],
     segmentos: [
-        { id: 'C1.a', problema_id: 0, vicio: 'fondo', ataca: 'P2', dato: { texto: 'confesión', cita: 'dijo', fuente: 'escrito' },
-          etiqueta: 'infundado', razon: 'fondo_desestimado', trat: 'aplica', pendiente: null, cita: 'sin pericial no hay identidad' },
-        { id: 'C1.b', problema_id: '0', vicio: 'fondo', ataca: 'P2', etiqueta: 'infundado',
+        { id: 'C1.a', problema_id: 1, vicio: 'fondo', ataca: 'P2', dato: { texto: 'confesión', cita: 'dijo', fuente: 'escrito' },
+          etiqueta: 'infundado', razon: 'fondo_desestimado', trat: 'aplica', pendiente: null, cita: 'sin pericial no hay identidad',
+          resumen: 'la confesión no basta para la identidad' },
+        { id: 'C1.b', problema_id: '1', vicio: 'fondo', ataca: 'P2', etiqueta: 'infundado',
           razon: { tipo: 'no_combate', p: 'P3' }, trat: 'aplica' },
-        { id: 'C3.e', problema_id: 1, vicio: 'fondo', etiqueta: 'infundado', razon: 'fondo_desestimado',
+        { id: 'C3.e', problema_id: 2, vicio: 'fondo', etiqueta: 'infundado', razon: 'fondo_desestimado',
           trat: 'desarrolla', diferencia: 'precedente', pendiente: 'razon', sostiene: 'aplicar por analogía el 1114/2017' },
         { id: 'C9.z', problema_id: null, pendiente: 'sentido' },
         { sin_id: true },
     ],
     proposiciones: [{ id: 'P2', dice: 'identidad por confesión', caracter: 'toral' }],
     premisas: [{ id: 'M1', responde_a: ['P2'], fuentes: { tesis: ['2014643'], normas: [] }, anclas: ['confesión'] }],
-    unidades: [{ id: 'U1', problemas: [0], segmentos: ['C1.a', 'C1.b'], premisa: 'M1', objecion: { de: 'tercero', anclas: [] } },
-               { id: 'U2', problemas: [1], segmentos: ['C3.e'], premisa: 'M1' }],
+    unidades: [{ id: 'U1', problemas: [1], segmentos: ['C1.a', 'C1.b'], premisa: 'M1', objecion: { de: 'tercero', anclas: [] } },
+               { id: 'U2', problemas: [2], segmentos: ['C3.e'], premisa: 'M1' }],
     propuestas: [{ seg: 'C1.b', de: 'infundado', a: 'inoperante', por_que: 'no combate P3' }, { seg: '', a: 'x' }],
     avisos_al_secretario: ['P4 suficiente sin ataque', { texto: 'grupo con P distintas' }],
     orden: { criterio: 'promovente', por_que: 'sin prelación' },
@@ -149,7 +157,10 @@ const PLAN = {
 {
     const p = api.planDe(PLAN);
     ok(p && p.segmentos.length === 4, 'segmento sin id se descarta');
-    ok(p.segmentos[1].problemaId === 0, 'problema_id «0» (texto) → 0');
+    ok(p.segmentos[1].problemaId === 1, 'problema_id «1» (texto) → 1');
+    ok(p.problemas.length === 2 && p.problemas[1].id === 2 && p.problemas[1].pregunta === '¿Hay cosa juzgada?',
+       'la tabla de problemas del plan se lee (y la fila sin id se tira)');
+    ok(p.segmentos[0].texto === 'la confesión no basta para la identidad', 'el párrafo del resumen llega en `resumen`');
     ok(p.segmentos[1].razon === 'no_combate(P3)', 'razón partida en objeto → «no_combate(P3)»');
     ok(p.segmentos[0].pendiente === '' && p.segmentos[2].pendiente === 'razon'
        && p.segmentos[3].pendiente === 'sentido', 'pendiente normalizado');
@@ -172,6 +183,20 @@ const PLAN = {
     ok(api.mapaDe({ palabras: 10 }) === null, 'sin mapa ni cobertura → null (v1/v2)');
     const m2 = api.mapaDe({ cobertura: 0.5 });
     ok(m2 && m2.cobertura.cobertura === 0.5, 'cobertura como número');
+    ok(m.planClave === 'K1', 'la clave del plan usado sale del plan que trae');
+    ok(m2.planClave === '', 'sin plan ni clave: clave vacía');
+
+    // EL PLAN DE LA SESIÓN SÓLO SI ES EL QUE SE USÓ. La fila guarda el último
+    // plan que se pudo escribir; si el de la decisión nueva no salió, guarda
+    // el de la anterior, y pintarlo pondría otras calificaciones en el mapa.
+    const sinPlan = api.mapaDe({ mapa: { 'C1.a': [0] }, plan_clave: 'K7' });
+    ok(sinPlan.plan === null && sinPlan.planClave === 'K7', 'el «listo» puede decir la clave sin traer el plan');
+    const fila = (clave) => ({ estado: 'listo', clave, plan: api.planDe(PLAN), avisos: [], corridas: null, tope: null });
+    ok(api.planDeSesionParaMapa(sinPlan, fila('K7')) !== null, 'la fila con la MISMA clave sirve al mapa');
+    ok(api.planDeSesionParaMapa(sinPlan, fila('K6')) === null, 'la fila con OTRA clave (decisión anterior) no se pinta');
+    ok(api.planDeSesionParaMapa(api.mapaDe({ mapa: { 'C1.a': [0] } }), fila('K7')) === null,
+       'si el resultado no dice qué plan usó, la fila no se pinta');
+    ok(api.planDeSesionParaMapa(sinPlan, { ...fila('K7'), estado: 'en_curso' }) === null, 'una fila en curso no se pinta');
 }
 
 /* ═══ 4 · EL FLUJO: «ordenando», «texto» y el mapa en «listo» ═══ */
@@ -212,12 +237,31 @@ const PLAN = {
 /* ═══ 5 · SEGMENTO → PROBLEMA, Y LA DECISIÓN 6 ═══ */
 {
     const probs = [{ id: 'p1', pregunta: '¿Se acreditó la identidad?' }, { id: 'p2', pregunta: '¿Hay cosa juzgada?' }];
-    ok(como.problemaDelSegmento({ problema: '', problemaId: 1 }, probs).p.id === 'p2', 'índice base 0');
-    ok(como.problemaDelSegmento({ problema: '¿SE ACREDITÓ la identidad', problemaId: 1 }, probs).p.id === 'p1',
-       'la pregunta manda sobre el índice (normalizada)');
-    ok(como.problemaDelSegmento({ problema: '', problemaId: 'p2' }, probs).n === 2, 'id de la pantalla');
-    ok(como.problemaDelSegmento({ problema: '', problemaId: 7 }, probs) === null, 'fuera de rango → null, no adivina');
     const p = api.planDe(PLAN);
+    // SIN TABLA, EL NÚMERO DEL PLAN CUENTA DESDE 1 («PROBLEMA 1…n»).
+    ok(como.problemaDelSegmento({ problema: '', problemaId: 1 }, probs).p.id === 'p1', 'número del plan: 1 es el primero');
+    ok(como.problemaDelSegmento({ problema: '', problemaId: 2 }, probs).n === 2, 'número del plan: 2 es el segundo');
+    ok(como.problemaDelSegmento({ problema: '', problemaId: 0 }, probs) === null, 'el 0 no es un problema del plan');
+    ok(como.problemaDelSegmento({ problema: '', problemaId: 7 }, probs) === null, 'fuera de rango → null, no adivina');
+    ok(como.problemaDelSegmento({ problema: '¿SE ACREDITÓ la identidad', problemaId: 2 }, probs).p.id === 'p1',
+       'la pregunta del segmento manda sobre el número (normalizada)');
+    ok(como.problemaDelSegmento({ problema: '', problemaId: 'p2' }, probs).n === 2, 'id de la pantalla');
+    // CON LA TABLA DEL PLAN, manda la pregunta que la tabla da a ese número.
+    ok(como.problemaDelSegmento(p.segmentos[2], probs, p.problemas).p.id === 'p2', 'C3.e (problema 2) → el segundo en pantalla');
+    const alReves = [probs[1], probs[0]];
+    ok(como.problemaDelSegmento(p.segmentos[0], alReves, p.problemas).p.id === 'p1',
+       'si la pantalla los ordena distinto, la pregunta de la tabla gana a la posición');
+    const tablaAjena = [{ id: 1, pregunta: '¿Un criterio que no casó con ningún problema?' }];
+    ok(como.problemaDelSegmento({ problema: '', problemaId: 1 }, probs, tablaAjena) === null,
+       'la tabla dice una pregunta que no está en pantalla: no se adivina por posición');
+    ok(como.problemaPorNumero(2, probs, p.problemas).n === 2 && como.problemaPorNumero(9, probs, p.problemas) === null,
+       'el número de una unidad se traduce al de la pantalla');
+    // ACEPTAR UNA PROPUESTA ARRASTRA AL RESTO DEL PROBLEMA, y se dice.
+    ok(como.arrastradosPorPropuesta(p, 'C1.b', probs).join() === 'C1.a', 'la propuesta de C1.b cambia también C1.a');
+    ok(como.arrastradosPorPropuesta(p, 'C3.e', probs).length === 0, 'C3.e está solo en su problema');
+    // LEY DE AMPARO: la regla de «sólo se expresa si hay beneficio» es el
+    // PENÚLTIMO párrafo del art. 79 (verificado contra el texto vigente).
+    ok(/penúltimo/.test(como.tratLegible('no_se_expresa_art79')), 'art. 79, penúltimo párrafo');
     ok(como.pendientesDeRazon(p, {}).map((s) => s.id).join() === 'C3.e', 'pendiente de razón sin escribir');
     ok(como.pendientesDeRazon(p, { 'C3.e': '  ' }).length === 1, 'sólo espacios no cuenta como razón');
     ok(como.pendientesDeRazon(p, { 'C3.e': 'porque…' }).length === 0, 'con razón escrita deja de estar pendiente');
@@ -377,6 +421,42 @@ function reiniciar() { Rf.desmontar(); reloj.timers = []; }
     await h.cambiar({ enlace: Object.assign(enlace, { activo: true }) });
     await h.avanzar(8_100);
     ok(n === 2 && h.get().fase === 'listo', 'al encender otra vez se pide de nuevo');
+}
+const sinPlanDe = (estado, clave) => ({ estado, clave, plan: null, avisos: [], corridas: null, tope: null });
+{   // 6.7 EL CAMINO DEL CONTRATO: el POST dice «listo» con la clave y SIN el
+    // plan; se lee la fila una vez, enseguida, y se pinta.
+    reiniciar();
+    let leidas = 0;
+    const enlace = { activo: true, firma: 'A', pedir: async () => sinPlanDe('listo', 'K5'),
+                     leer: async () => { leidas++; return listo('K5'); } };
+    const h = montar({ enlace, listo: true });
+    await h.avanzar(2_100);
+    ok(h.get().fase === 'listo' && h.get().respuesta.clave === 'K5' && leidas === 1,
+       'POST «listo» sin plan: una lectura inmediata y el plan en pantalla');
+}
+{   // 6.8 «listo» SIN PLAN QUE NO SE ARREGLA: se pregunta con cadencia, no en
+    // un bucle de 0 ms. (El tope de 50 corta el bucle si vuelve el fallo.)
+    reiniciar();
+    let leidas = 0;
+    const enlace = { activo: true, firma: 'A', pedir: async () => sinPlanDe('listo', 'K6'),
+                     leer: async () => { if (++leidas > 50) throw new Error('bucle'); return sinPlanDe('listo', 'K6'); } };
+    const h = montar({ enlace, listo: true });
+    await h.avanzar(22_000);
+    ok(leidas >= 2 && leidas <= 7, `la fila se pregunta con cadencia (${leidas} lecturas en 20 s)`);
+}
+{   // 6.9 SE VENCE LA ESPERA: la rueda deja de girar y se dice qué pasará.
+    reiniciar();
+    let leidas = 0;
+    const enlace = { activo: true, firma: 'A', pedir: async () => sinPlanDe('en_curso', 'K8'),
+                     leer: async () => { leidas++; return sinPlanDe('en_curso', 'K8'); } };
+    const h = montar({ enlace, listo: true });
+    await h.avanzar(100_000);
+    ok(h.get().fase === 'en_curso', 'a los 100 s sigue en curso');
+    await h.avanzar(60_000);
+    const tras = leidas;
+    ok(h.get().fase === 'sin_plan' && /dos minutos/.test(h.get().error), 'vencida la espera: sin plan y con el motivo');
+    await h.avanzar(60_000);
+    ok(leidas === tras, 'vencida la espera ya no se pregunta a la fila');
 }
 
 Date.now = DateNowReal;

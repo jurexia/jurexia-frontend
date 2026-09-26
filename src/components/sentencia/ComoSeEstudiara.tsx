@@ -123,13 +123,20 @@ export function usePlanDelEstudio(enlace: EnlacePlan, listo: boolean): EstadoDel
                 if (mio !== turno.current) return;
                 const clave = r.clave;
                 const limite = Date.now() + ESPERA_MAXIMA_MS;
+                const sinPlanAun = (x: RespuestaPlan) => x.estado === 'en_curso' || (x.estado === 'listo' && !x.plan);
                 /* EN CURSO: se pregunta a la fila, que es la única fuente de
                    verdad con dos workers. Vale sólo el plan de NUESTRA clave:
-                   la fila puede traer uno anterior mientras corre el nuevo. */
-                while ((r.estado === 'en_curso' || (r.estado === 'listo' && !r.plan))
-                       && Date.now() < limite) {
+                   la fila puede traer uno anterior mientras corre el nuevo.
+                   El contrato dice que el POST contesta {estado, clave} SIN el
+                   plan: un «listo» se lee enseguida, UNA vez. Las lecturas
+                   siguientes van con cadencia (revisión, 26-sep-2026): si la
+                   fila contestaba «listo» sin plan, el bucle esperaba 0 ms y
+                   golpeaba el servidor sin pausa durante dos minutos y medio. */
+                let lecturas = 0;
+                while (sinPlanAun(r) && Date.now() < limite) {
                     setFase('en_curso');
-                    await esperar(r.estado === 'listo' ? 0 : CADENCIA_MS);
+                    await esperar(r.estado === 'listo' && lecturas === 0 ? 0 : CADENCIA_MS);
+                    lecturas += 1;
                     if (mio !== turno.current) return;
                     const l = await leerRef.current();
                     if (mio !== turno.current) return;
@@ -141,9 +148,13 @@ export function usePlanDelEstudio(enlace: EnlacePlan, listo: boolean): EstadoDel
                     setRespuesta(r);
                     setFirmaDeRespuesta(firma);
                     setFase('listo');
-                } else if (r.estado === 'en_curso') {
-                    // Tardó más de lo que se espera aquí: al generar se esperará allá.
-                    setFase('en_curso');
+                } else if (sinPlanAun(r)) {
+                    /* Tardó más de lo que se espera aquí. Se deja de girar la
+                       rueda —si el worker que lo hacía murió, la fila diría «en
+                       curso» para siempre— y se dice lo que pasará: al generar
+                       el servidor espera ese plan o lo hace. */
+                    setFase('sin_plan');
+                    setError('el servidor sigue ordenándolo después de dos minutos y medio');
                 } else {
                     setFase(r.estado === 'fallo' ? 'fallo' : 'sin_plan');
                     setError(r.avisos.join(' · '));
@@ -184,7 +195,13 @@ const TRAT: Record<string, string> = {
     desarrolla: 'desarrollo propio',
     residual: 'residual',
     no_se_estudia: 'no se estudia',
-    no_se_expresa_art79: 'no se expresa (art. 79, último párrafo)',
+    /* PENÚLTIMO, no último (revisión, 26-sep-2026, contra el texto vigente
+       de la Ley de Amparo): «En estos casos solo se expresará en las
+       sentencias cuando la suplencia derive de un beneficio» es el penúltimo
+       párrafo del art. 79; el último dice que la suplencia por violaciones
+       procesales o formales sólo opera si no hay vicio de fondo. Es el mismo
+       error que ya se corrigió en el prompt v2 (866afcc). */
+    no_se_expresa_art79: 'no se expresa (art. 79, penúltimo párrafo)',
 };
 const DIFERENCIA: Record<string, string> = {
     hecho: 'trae un hecho propio',
@@ -220,6 +237,7 @@ const RAZON: Record<string, string> = {
 };
 
 const humano = (s: string) => s.replace(/_/g, ' ');
+export const tratLegible = (t: string) => TRAT[t] ?? humano(t || '');
 export function razonLegible(r: string): string {
     const m = /^([a-z0-9_]+)\s*\(\s*([^)]*)\)\s*$/i.exec(r || '');
     const base = m ? m[1] : (r || '');
@@ -236,25 +254,69 @@ export function etiquetaLegible(s: string): string {
 const norm = (t: string) => (t || '').toLowerCase().normalize('NFD')
     .replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9ñ ]+/g, ' ').replace(/\s+/g, ' ').trim();
 
-/** EL PROBLEMA DE UN SEGMENTO, del lado de la pantalla. Lo fija el servidor
- *  (`problema_id`), no el modelo. Si trae la pregunta, se empareja por ella;
- *  si trae un número, es el índice de `fases.problemas`, que es el orden en
- *  que esta pantalla los recibe (base 0, como en Python). */
-export function problemaDelSegmento(
-    s: Pick<SegmentoDelPlan, 'problema' | 'problemaId'>, problemas: ProblemaJuridico[],
+/** EL PROBLEMA DE LA PANTALLA QUE CORRESPONDE A UN NÚMERO DEL PLAN.
+ *
+ *  REVISIÓN (26-sep-2026): aquí se leía `problema_id` como índice base 0 de
+ *  `fases.problemas`. El servidor los numera desde 1 («PROBLEMA 1…n») y manda
+ *  la tabla número → pregunta en `plan.problemas`; con base 0 cada segmento
+ *  caía en el problema SIGUIENTE, y el botón «Aceptar» de una propuesta
+ *  cambiaba la calificación de un problema que no era el suyo.
+ *
+ *  Orden: (1) la pregunta que traiga el propio segmento; (2) la pregunta que
+ *  la tabla del plan da para ese número; (3) sólo si no hay ninguna pregunta,
+ *  el número del plan, que cuenta desde 1. Si hay pregunta y no casa con
+ *  ninguna de la pantalla, NO se adivina por posición: un criterio que el
+ *  servidor no emparejó se añade al final de la tabla como problema propio, y
+ *  su número no es el de ningún problema en pantalla. */
+export function problemaPorNumero(
+    id: number | string | null, problemas: ProblemaJuridico[],
+    tabla: PlanDelEstudio['problemas'] = [], pregunta = '',
 ): { p: ProblemaJuridico; n: number } | null {
-    if (s.problema) {
-        const k = norm(s.problema);
-        const i = problemas.findIndex((q) => norm(q.pregunta) === k);
-        if (i >= 0) return { p: problemas[i], n: i + 1 };
+    const porPregunta = (q: string) => {
+        const k = norm(q);
+        const i = k ? problemas.findIndex((x) => norm(x.pregunta) === k) : -1;
+        return i >= 0 ? { p: problemas[i], n: i + 1 } : null;
+    };
+    const deTabla = id === null ? '' : (tabla.find((t) => String(t.id) === String(id))?.pregunta ?? '');
+    const preguntas = [pregunta, deTabla].filter(Boolean);
+    for (const q of preguntas) {
+        const r = porPregunta(q);
+        if (r) return r;
     }
-    const id = s.problemaId;
-    if (typeof id === 'number' && id >= 0 && id < problemas.length) return { p: problemas[id], n: id + 1 };
+    if (preguntas.length) return null;
+    if (typeof id === 'number' && Number.isInteger(id) && id >= 1 && id <= problemas.length) {
+        return { p: problemas[id - 1], n: id };
+    }
     if (typeof id === 'string') {
-        const i = problemas.findIndex((q) => q.id === id || norm(q.pregunta) === norm(id));
+        const i = problemas.findIndex((q) => q.id === id);
         if (i >= 0) return { p: problemas[i], n: i + 1 };
     }
     return null;
+}
+
+/** EL PROBLEMA DE UN SEGMENTO, del lado de la pantalla. Lo fija el servidor
+ *  (`problema_id`), no el modelo. Ver `problemaPorNumero`. */
+export function problemaDelSegmento(
+    s: Pick<SegmentoDelPlan, 'problema' | 'problemaId'>, problemas: ProblemaJuridico[],
+    tabla: PlanDelEstudio['problemas'] = [],
+): { p: ProblemaJuridico; n: number } | null {
+    return problemaPorNumero(s.problemaId, problemas, tabla, s.problema);
+}
+
+/** LOS OTROS ARGUMENTOS QUE CAMBIAN AL ACEPTAR UNA PROPUESTA (revisión,
+ *  26-sep-2026). La propuesta es de UN argumento, pero la calificación vive en
+ *  su problema: aceptarla califica igual a todos los argumentos de ese
+ *  problema (V0 b: la etiqueta de cada uno es la del criterio de su problema).
+ *  El botón tiene que decir a quién más alcanza antes de pulsarlo. */
+export function arrastradosPorPropuesta(
+    plan: PlanDelEstudio, seg: string, problemas: ProblemaJuridico[],
+): string[] {
+    const s = plan.segmentos.find((x) => x.id === seg);
+    const pr = s ? problemaDelSegmento(s, problemas, plan.problemas) : null;
+    if (!pr) return [];
+    return plan.segmentos
+        .filter((x) => x.id !== seg && problemaDelSegmento(x, problemas, plan.problemas)?.p.id === pr.p.id)
+        .map((x) => x.id);
 }
 
 /** Los argumentos que el plan pide razonar (Decisión 6) y que siguen sin razón. */
@@ -352,6 +414,7 @@ function RenglonSegmento({ s, esRecurso }: { s: SegmentoDelPlan; esRecurso: bool
 
 export default function ComoSeEstudiara({
     estado, problemas, razones, onRazon, onAceptarPropuesta, puedeAceptar, esRecurso = false,
+    sentidoEnPantalla = (p) => p.sentido || '', alcanceDe = (_p, n) => `el problema ${n}`,
 }: {
     estado: EstadoDelPlan;
     problemas: ProblemaJuridico[];
@@ -364,10 +427,18 @@ export default function ComoSeEstudiara({
     /** Si esa calificación existe en la pantalla (las diez de siempre). */
     puedeAceptar: (a: string) => boolean;
     esRecurso?: boolean;
+    /** La calificación que la tarjeta final le da HOY a ese problema. En «todo
+     *  el asunto» la del principal es la global, no la de su pastilla: sin
+     *  esto, una propuesta ya aceptada seguía diciendo «Aceptar». */
+    sentidoEnPantalla?: (p: ProblemaJuridico) => string;
+    /** A qué alcanza aceptarla: «el problema 2» o, si es el principal en
+     *  «todo el asunto», «todo el asunto». */
+    alcanceDe?: (p: ProblemaJuridico, n: number) => string;
 }) {
     const { fase, respuesta, desactualizado, error } = estado;
     if (fase === 'inactivo') return null;
     const plan = respuesta?.plan ?? null;
+    const tabla = plan?.problemas ?? [];
     const porId = new Map<string, SegmentoDelPlan>();
     (plan?.segmentos ?? []).forEach((s) => porId.set(s.id, s));
     const proposicion = (id: string) => plan?.proposiciones.find((p) => p.id === id);
@@ -454,7 +525,7 @@ export default function ComoSeEstudiara({
                              nota={`Su problema ya tiene sentido, pero tu razón no responde lo que ${pendRazon.length === 1 ? 'este argumento plantea' : 'estos argumentos plantean'} por su cuenta. Escríbela aquí y el estudio la seguirá como tuya. Si la dejas en blanco, el estudio lo desarrolla con el material y te lo dice primero en las advertencias.`}>
                         <ul className="space-y-3">
                             {pendRazon.map((s) => {
-                                const pr = problemaDelSegmento(s, problemas);
+                                const pr = problemaDelSegmento(s, problemas, tabla);
                                 return (
                                     <li key={s.id}>
                                         <p className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
@@ -519,13 +590,15 @@ export default function ComoSeEstudiara({
                         que pulsar esa pastilla en la pantalla. */}
                     {plan.propuestas.length > 0 && (
                         <Seccion tono="oro" titulo={`Propuestas del plan · ${plan.propuestas.length}`}
-                                 nota="No se aplican solas. Si aceptas una, cambia la calificación de todo su problema, como si la marcaras a mano.">
+                                 nota="No se aplican solas. Si aceptas una, cambia la calificación de todo su problema —y de todos sus argumentos—, como si la marcaras a mano.">
                             <ul className="space-y-2.5">
                                 {plan.propuestas.map((pp: PropuestaDelPlan, k) => {
                                     const s = porId.get(pp.seg);
-                                    const pr = s ? problemaDelSegmento(s, problemas) : null;
-                                    const hecha = !!pr && (pr.p.sentido || '').toLowerCase() === pp.a.toLowerCase();
+                                    const pr = s ? problemaDelSegmento(s, problemas, tabla) : null;
+                                    const hecha = !!pr && sentidoEnPantalla(pr.p).toLowerCase() === pp.a.toLowerCase();
                                     const cabe = !!pr && puedeAceptar(pp.a);
+                                    const alcance = pr ? alcanceDe(pr.p, pr.n) : '';
+                                    const arrastra = pr ? arrastradosPorPropuesta(plan, pp.seg, problemas) : [];
                                     return (
                                         <li key={`${pp.seg}-${k}`} className="text-[13px]">
                                             <p className="flex flex-wrap items-baseline gap-x-2">
@@ -538,14 +611,21 @@ export default function ComoSeEstudiara({
                                             <div className="mt-1.5">
                                                 {hecha ? (
                                                     <span className="inline-flex items-center gap-1 text-[12px] text-accent-gold/90">
-                                                        <Check className="h-3.5 w-3.5" /> Aceptada: el problema {pr?.n} va {etiquetaLegible(pp.a)}.
+                                                        <Check className="h-3.5 w-3.5" /> Aceptada: {alcance} va {etiquetaLegible(pp.a)}.
                                                     </span>
                                                 ) : cabe && pr ? (
-                                                    <button type="button" onClick={() => onAceptarPropuesta(pr.p, pp.a)}
-                                                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-accent-gold/40 px-3 text-[12px] font-medium text-accent-gold transition-colors hover:bg-accent-gold/10">
-                                                        <Check className="h-3.5 w-3.5" />
-                                                        Aceptar: el problema {pr.n} pasa a {etiquetaLegible(pp.a)}
-                                                    </button>
+                                                    <>
+                                                        <button type="button" onClick={() => onAceptarPropuesta(pr.p, pp.a)}
+                                                                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-accent-gold/40 px-3 text-[12px] font-medium text-accent-gold transition-colors hover:bg-accent-gold/10">
+                                                            <Check className="h-3.5 w-3.5" />
+                                                            Aceptar: {alcance} pasa a {etiquetaLegible(pp.a)}
+                                                        </button>
+                                                        {arrastra.length > 0 && (
+                                                            <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                                                                También cambia {arrastra.length === 1 ? 'el argumento' : 'los argumentos'} {arrastra.join(', ')}, del mismo problema.
+                                                            </p>
+                                                        )}
+                                                    </>
                                                 ) : (
                                                     <span className="text-[12px] text-white/45">
                                                         {pr ? 'Esa calificación no está entre las de la pantalla: si la compartes, márcala a mano.'
@@ -572,7 +652,9 @@ export default function ComoSeEstudiara({
                                 const p1 = atacan.length === 1 ? proposicion(atacan[0]) : undefined;
                                 const premisa = u.premisa ? plan.premisas.find((m) => m.id === u.premisa) : undefined;
                                 const expone = !!u.premisa && expuestaEn.get(u.premisa) === u.id;
-                                const nums = u.problemas.map((x) => (typeof x === 'number' ? String(x + 1) : x));
+                                /* El número de la PANTALLA; si no se ubica, el del
+                                   plan tal cual (cuenta desde 1), nunca +1. */
+                                const nums = u.problemas.map((x) => String(problemaPorNumero(x, problemas, tabla)?.n ?? x));
                                 return (
                                     <section key={u.id} className="rounded-xl border border-white/[0.07] bg-black/20 p-3">
                                         <p className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
