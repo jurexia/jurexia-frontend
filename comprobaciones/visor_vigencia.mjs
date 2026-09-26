@@ -1,0 +1,494 @@
+// EL SELLO DE VIGENCIA EN LA LISTA DE FUENTES Y EN EL VISOR (26-sep-2026).
+//
+// Pide a /cita/{doc_id} de producción (sólo lectura) cuatro tesis reales y
+// comprueba, con el código de la app, lo que verá el abogado:
+//   2009817  P. X/2015 (10a.)      ABANDONADA por la P./J. 2/2022 (11a.)
+//   2024159  P./J. 2/2022 (11a.)   vigente: la que la reemplaza
+//   160584   P. LXVI/2011 (9a.)    superada EN LOS HECHOS (curaduría Iurexia)
+//   164500   3a. (7a. Época)       INTERRUMPIDA EN PARTE, cadena de dos
+// y además 2006225 y 183349 (las que reemplazan a las dos últimas) para el
+// caso «la sustituta sí está entre las fuentes».
+//
+//   node --experimental-strip-types comprobaciones/visor_vigencia.mjs
+//       → la lógica (`src/lib/vigencia.ts`, `fuenteDeCita`) y el HTML que
+//         pintan la marca, el emblema, la franja y el panel entero
+//         (`renderToStaticMarkup` de los mismos componentes).
+//   … visor_vigencia.mjs --html <salida.html> [css]
+//       → además, una página con esos HTML (y el CSS de `next build`, si se
+//         pasa) para mirarla o capturarla en un navegador.
+//
+//   … visor_vigencia.mjs --navegador
+//       → además, en un Chromium sin cabeza (el de puppeteer, sin red: sólo
+//         file://), el panel y la lista montados con React de verdad: el foco
+//         tras «Abrir la que la reemplaza» y «Volver a …», el emblema de la
+//         Suprema Corte plegado a varios anchos (de 360 a 1440 px: el nombre
+//         entero, sin cuenta de vigencia) y desplegado (la marca en cada
+//         tesis). Para los anchos usa el CSS de `next build`
+//         (.next/static/css); si falta o es más viejo que los componentes,
+//         esa parte se omite y lo dice.
+//
+// API=<url> cambia el servidor (por omisión https://jurexia-api.onrender.com).
+// DATOS=<carpeta> lee cita_<registro>.json de ahí en vez de pedirlos.
+// ANTES=<commit> es la versión de los componentes SIN el sello (por omisión
+// a08cc1b): con ella se comprueba que una tesis vigente pinta exactamente el
+// mismo HTML que antes, byte por byte.
+//
+// Los .tsx se transpilan con el TypeScript del repositorio y el alias «@/»
+// se resuelve a src/, con un cargador de módulos registrado aquí mismo: los
+// componentes se prueban tal cual, sin copiarlos.
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { execFileSync } from 'child_process';
+import { createRequire, register } from 'module';
+import { fileURLToPath, pathToFileURL } from 'url';
+
+const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// Los componentes de ANTES, sacados de git a una carpeta temporal con la misma
+// forma que src/: sus «@/…» y sus «./…» se resuelven contra el src/ de hoy.
+const ANTES = process.env.ANTES || 'a08cc1b';
+const VIEJO = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vigencia-antes-')));
+process.on('exit', () => fs.rmSync(VIEJO, { recursive: true, force: true }));
+const viejos = {};
+for (const rel of ['src/components/PdfViewerPanel.tsx', 'src/components/documento/FuentesPorInstitucion.tsx']) {
+    const destino = path.join(VIEJO, rel);
+    fs.mkdirSync(path.dirname(destino), { recursive: true });
+    fs.writeFileSync(destino, execFileSync('git', ['-C', RAIZ, 'show', `${ANTES}:${rel}`]));
+    viejos[rel] = destino;
+}
+
+// ── El cargador: «@/…» → src/…, extensiones implícitas y .ts/.tsx transpilados ──
+const GANCHOS = `
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
+let ts, SRC, VIEJO;
+export async function initialize(d) { SRC = d.src; VIEJO = d.viejo; ts = (await import(d.ts)).default; }
+const nuestro = (f) => f.startsWith(SRC) || f.startsWith(VIEJO);
+const EXT = ['', '.ts', '.tsx', '/index.ts', '/index.tsx'];
+function hallar(base) {
+    for (const e of EXT) { const f = base + e; if (fs.existsSync(f) && fs.statSync(f).isFile()) return f; }
+    return null;
+}
+export async function resolve(esp, ctx, next) {
+    if (esp.startsWith('@/')) {
+        const f = hallar(path.join(SRC, esp.slice(2)));
+        if (f) return { url: pathToFileURL(f).href, shortCircuit: true };
+    }
+    if ((esp.startsWith('./') || esp.startsWith('../')) && ctx.parentURL && ctx.parentURL.startsWith('file:')
+        && nuestro(fileURLToPath(ctx.parentURL))) {
+        let dir = path.dirname(fileURLToPath(ctx.parentURL));
+        if (dir.startsWith(VIEJO)) dir = path.join(SRC, path.relative(path.join(VIEJO, 'src'), dir));
+        const f = hallar(path.resolve(dir, esp));
+        if (f) return { url: pathToFileURL(f).href, shortCircuit: true };
+    }
+    // Los paquetes (react, lucide-react…) de un componente viejo, desde su sitio en src/.
+    if (ctx.parentURL && ctx.parentURL.startsWith('file:') && fileURLToPath(ctx.parentURL).startsWith(VIEJO)) {
+        const equiv = path.join(SRC, path.relative(path.join(VIEJO, 'src'), fileURLToPath(ctx.parentURL)));
+        return next(esp, { ...ctx, parentURL: pathToFileURL(equiv).href });
+    }
+    return next(esp, ctx);
+}
+export async function load(url, ctx, next) {
+    if (url.startsWith('file:') && /\\.tsx?$/.test(url) && nuestro(fileURLToPath(url))) {
+        const fuente = fs.readFileSync(fileURLToPath(url), 'utf8');
+        const out = ts.transpileModule(fuente, { fileName: fileURLToPath(url), compilerOptions: {
+            module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX,
+            esModuleInterop: true, verbatimModuleSyntax: false,
+        } });
+        return { format: 'module', source: out.outputText, shortCircuit: true };
+    }
+    return next(url, ctx);
+}`;
+register('data:text/javascript,' + encodeURIComponent(GANCHOS), {
+    data: {
+        src: path.join(RAIZ, 'src'),
+        viejo: VIEJO,
+        ts: pathToFileURL(path.join(RAIZ, 'node_modules/typescript/lib/typescript.js')).href,
+    },
+});
+
+// `<style jsx>` del panel es de styled-jsx, que aquí no está: React avisa por
+// el atributo y el aviso no dice nada de lo que se comprueba.
+const errorOriginal = console.error;
+console.error = (...a) => {
+    const t = a.map(String).join(' ');
+    if (!(/non-boolean attribute/.test(t) && /\bjsx\b/.test(t))) errorOriginal(...a);
+};
+const React = (await import('react')).default;
+const { renderToStaticMarkup } = await import('react-dom/server');
+const vig = await import(path.join(RAIZ, 'src/lib/vigencia.ts'));
+const { fuenteDeCita, htmlDeDocumento, metaDeDossier } = await import(path.join(RAIZ, 'src/lib/documento/citas.ts'));
+const { MarcaVigencia, FranjaVigencia } = await import(path.join(RAIZ, 'src/components/VigenciaTesis.tsx'));
+const { FuentesPorInstitucion } = await import(path.join(RAIZ, 'src/components/documento/FuentesPorInstitucion.tsx'));
+const PdfViewerPanel = (await import(path.join(RAIZ, 'src/components/PdfViewerPanel.tsx'))).default;
+const PdfViewerPanelAntes = (await import(viejos['src/components/PdfViewerPanel.tsx'])).default;
+const { FuentesPorInstitucion: FuentesAntes } = await import(viejos['src/components/documento/FuentesPorInstitucion.tsx']);
+
+let fallos = 0;
+const ver = (bien, rotulo, detalle = '') => {
+    if (!bien) fallos++;
+    console.log(bien ? 'ok   ' : 'FALLA', rotulo, detalle ? `— ${detalle}` : '');
+};
+const h = (C, props) => renderToStaticMarkup(React.createElement(C, props));
+
+// ── Los datos reales ────────────────────────────────────────────────────────
+const IDS = {
+    2009817: '26719185-5b10-5321-a093-ffbf855a3ae3',
+    2024159: '73493e98-9da8-5bce-b9e2-e1bfb774c22a',
+    160584: 'd71b18a4-26c5-5e0f-8702-00ee6fff6ede',
+    164500: '5f03aea1-5097-5356-86ad-fd392c11c953',
+    2006225: '44004c61-9f0b-5001-8a0b-0256db33697d',
+    183349: 'e3b6ea29-c39f-567e-95eb-bd7da78141ba',
+};
+const API = (process.env.API || 'https://jurexia-api.onrender.com').replace(/\/$/, '');
+const cita = {};
+for (const [reg, id] of Object.entries(IDS)) {
+    if (process.env.DATOS) {
+        cita[reg] = JSON.parse(fs.readFileSync(path.join(process.env.DATOS, `cita_${reg}.json`), 'utf8'));
+        continue;
+    }
+    const r = await fetch(`${API}/cita/${id}`, { signal: AbortSignal.timeout(90_000) });
+    if (!r.ok) { console.error(`/cita/${id} (${reg}) respondió ${r.status}`); process.exit(2); }
+    cita[reg] = await r.json();
+}
+console.log(`/cita: ${Object.keys(cita).length} tesis de ${process.env.DATOS || API}\n`);
+
+// ── 1. El contrato tal como llega ───────────────────────────────────────────
+const v = (reg) => vig.vigenciaDe(cita[reg]);
+ver(v(2009817)?.estado === 'abandonada' && !v(2009817).parcial && String(v(2009817).por_registro) === '2024159',
+    '2009817 llega abandonada, por la 2024159', JSON.stringify(cita[2009817].vigencia));
+ver(!('vigencia' in cita[2024159]) && v(2024159) === null, '2024159 (vigente) no trae la clave «vigencia»');
+ver(v(160584)?.fuente === 'curaduria', '160584 llega curada', JSON.stringify(cita[160584].vigencia));
+ver(v(164500)?.parcial === true && v(164500)?.estado === 'interrumpida', '164500 llega interrumpida en parte', JSON.stringify(cita[164500].vigencia));
+ver(!('vigencia' in cita[2006225]) && !('vigencia' in cita[183349]), 'sus sustitutas (2006225, 183349) llegan vigentes');
+
+// ── 2. Lo que dicen la marca y la franja ────────────────────────────────────
+const aviso = (reg) => vig.avisoVigencia(v(reg));
+ver(vig.marcaVigencia(v(2009817)) === 'Abandonada', 'marca 2009817', vig.marcaVigencia(v(2009817)));
+ver(vig.marcaVigencia(v(160584)) === 'Superada en los hechos', 'marca 160584', vig.marcaVigencia(v(160584)));
+ver(vig.marcaVigencia(v(164500)) === 'Interrumpida en parte', 'marca 164500', vig.marcaVigencia(v(164500)));
+ver(aviso(2009817).frase === 'Esta tesis perdió vigencia: ABANDONADA por la P./J. 2/2022 (11a.), registro 2024159, desde el 11 de febrero de 2022',
+    'franja 2009817, palabra por palabra', aviso(2009817).frase);
+ver(aviso(160584).titulo === 'Superada en los hechos (curaduría Iurexia; el Semanario no lo anota)'
+    && !/no lo anota\)$/.test(aviso(160584).detalle),
+    'franja 160584: curaduría dicha una vez', aviso(160584).frase);
+ver(aviso(164500).titulo === 'Esta tesis perdió vigencia en parte' && aviso(164500).detalle.startsWith('INTERRUMPIDA EN PARTE'),
+    'franja 164500: «en parte»', aviso(164500).frase);
+ver(vig.enlaceReemplazo(v(160584)) === 'https://sjf2.scjn.gob.mx/detalle/tesis/2006225', 'enlace al Semanario de la sustituta de 160584');
+// Las correcciones no «pierden vigencia» (8 de las 558 del índice).
+const corregida = { estado: 'texto_sustituido', etiqueta: 'TEXTO SUSTITUIDO por la II.T.296 L, registro 169440', parcial: false, por_registro: '169440', por_clave: 'II.T.296 L', fuente: 'tesis_nueva' };
+ver(vig.avisoVigencia(corregida).titulo === 'Se corrigió el texto de esta tesis' && vig.avisoVigencia(corregida).boton === 'Abrir la versión corregida'
+    && !vig.perdioVigencia(corregida), 'texto sustituido: corrección, no pérdida de vigencia');
+ver(vig.vigenciaDe({ vigencia: { etiqueta: 'x' } }) === null && vig.vigenciaDe({ vigencia: null }) === null, 'un marcador sin estado no pinta nada');
+
+// ── 3. Las fuentes del mensaje: FUENTES_PREVIAS recortado a 350, como en el chat ──
+const previa = (reg) => ({ ...cita[reg], texto: Array.from(cita[reg].texto || '').slice(0, 350).join('') });
+const meta = (regs) => ({ valid: regs.length, invalid: 0, total: regs.length, invalid_ids: [],
+    sources: Object.fromEntries(regs.map((r) => [IDS[r], previa(r)])) });
+const m4 = meta([2009817, 2024159, 160584, 164500]);
+const f17 = fuenteDeCita(m4, IDS[2009817]);
+ver(f17.reemplazo?.docId === IDS[2024159] && f17.reemplazo?.registro === '2024159',
+    '2009817: la 2024159 está entre las fuentes y viaja como reemplazo');
+ver(fuenteDeCita(m4, IDS[160584]).reemplazo === undefined && fuenteDeCita(m4, IDS[164500]).reemplazo === undefined,
+    '160584 y 164500: sus sustitutas no están → sin reemplazo (enlace al Semanario)');
+const m6 = meta([2009817, 2024159, 160584, 164500, 2006225, 183349]);
+ver(fuenteDeCita(m6, IDS[160584]).reemplazo?.registro === '2006225' && fuenteDeCita(m6, IDS[164500]).reemplazo?.registro === '183349',
+    'con 2006225 y 183349 entre las fuentes, las encuentra por registro');
+const f59 = fuenteDeCita(m4, IDS[2024159]);
+ver(!('vigencia' in f59) && !('reemplazo' in f59), 'la vigente sale de fuenteDeCita sin ninguna clave nueva', Object.keys(f59).join(','));
+ver(fuenteDeCita(m4, IDS[2009817].toUpperCase()).vigencia?.estado === 'abandonada', 'la búsqueda no distingue mayúsculas');
+// Una cadena circular (A → B → A) no se recorre para siempre.
+const ciclo = { valid: 2, invalid: 0, total: 2, invalid_ids: [], sources: {
+    a: { origen: '1111111_A', registro: '1111111', vigencia: { estado: 'superada', etiqueta: 'SUPERADA', por_registro: '2222222' } },
+    b: { origen: '2222222_B', registro: '2222222', vigencia: { estado: 'superada', etiqueta: 'SUPERADA', por_registro: '1111111' } },
+} };
+const fa = fuenteDeCita(ciclo, 'a');
+ver(fa.reemplazo?.docId === 'b' && fa.reemplazo?.reemplazo === undefined, 'cadena circular: se corta sin volver a la ya vista');
+
+// ── 4. El HTML de las piezas ────────────────────────────────────────────────
+const marca17 = h(MarcaVigencia, { vigencia: v(2009817) });
+ver(marca17.includes('>Abandonada<') && marca17.includes(`title="${aviso(2009817).frase}"`) && marca17.includes('sr-only'),
+    'marca: texto corto, frase entera en title y para lector de pantalla');
+const franja17 = h(FranjaVigencia, { vigencia: v(2009817), onAbrirReemplazo: () => {} });
+ver(/<button[^>]*>Abrir la que la reemplaza/.test(franja17) && franja17.includes('role="note"') && !franja17.includes('<a '),
+    'franja 2009817 con la sustituta entre las fuentes: botón que la abre ahí mismo');
+const franja60 = h(FranjaVigencia, { vigencia: v(160584) });
+ver(franja60.includes('href="https://sjf2.scjn.gob.mx/detalle/tesis/2006225"') && franja60.includes('target="_blank"')
+    && franja60.includes('curaduría Iurexia; el Semanario no lo anota'),
+    'franja 160584 sin la sustituta: enlace al Semanario, en otra pestaña');
+const sinReemplazo = h(FranjaVigencia, { vigencia: { estado: 'sin_efectos', etiqueta: 'SIN EFECTOS al resolverse la contradicción de tesis 5/2020', fuente: 'nota_propia' } });
+ver(!sinReemplazo.includes('<button') && !sinReemplazo.includes('<a '), 'sin registro de reemplazo: sólo la franja');
+
+// El emblema plegado NO lleva la cuenta de las que perdieron vigencia: nadie
+// la pidió y a su lado el nombre de la institución se recortaba a varios
+// anchos. Plegado es el de antes, byte por byte; la marca va en cada renglón.
+const docIdMap = new Map([[IDS[2009817], 1], [IDS[2024159], 2], [IDS[164500], 3]]);
+const emblema = h(FuentesPorInstitucion, { meta: m4, docIdMap });
+ver(!/vigencia/i.test(emblema) && emblema.includes('<span class="truncate font-medium">Suprema Corte de Justicia de la Nación</span>'),
+    'emblema plegado de la Suprema Corte: sin cuenta de las que perdieron vigencia, el nombre como antes');
+ver(emblema === h(FuentesAntes, { meta: m4, docIdMap }), `emblema plegado con dos que perdieron vigencia: el mismo HTML que en ${ANTES}`);
+const soloVigente = { meta: m4, docIdMap: new Map([[IDS[2024159], 1]]) };
+const emblemaVigente = h(FuentesPorInstitucion, soloVigente);
+ver(!/vigencia/i.test(emblemaVigente) && emblemaVigente === h(FuentesAntes, soloVigente),
+    `emblema sólo con la vigente: el mismo HTML que en ${ANTES}`);
+
+// El panel entero: la abandonada lleva la franja arriba; la vigente, nada.
+const panel = (f) => h(PdfViewerPanel, { isOpen: true, onClose: () => {}, source: f });
+const panel17 = panel(f17);
+const iFranja = panel17.indexOf('role="note"');
+const iFicha = panel17.indexOf('TESIS AISLADA');
+ver(iFranja > 0 && iFicha > iFranja && /<button[^>]*>Abrir la que la reemplaza/.test(panel17),
+    'visor 2009817: franja antes de la ficha, con el botón');
+const panel59 = panel(f59);
+ver(!panel59.includes('role="note"') && !/perdió vigencia|Volver a/.test(panel59), 'visor 2024159 (vigente): sin franja ni «Volver»');
+// La vigente, como la armaba antes el clic en la cita (sin fuenteDeCita).
+const { vigencia: _v, reemplazo: _r, ...comoAntes } = f59;
+const panelAntes = renderToStaticMarkup(React.createElement(PdfViewerPanelAntes, { isOpen: true, onClose: () => {}, source: comoAntes }));
+ver(panel59 === panelAntes, `visor 2024159 (vigente): el mismo HTML que en ${ANTES}`, `${panel59.length} = ${panelAntes.length} caracteres`);
+// Y la abandonada, si el backend dejara de mandar la clave, volvería a ser la de antes.
+const { vigencia: _v2, reemplazo: _r2, ...abandonadaSinClave } = f17;
+ver(panel(abandonadaSinClave) === renderToStaticMarkup(React.createElement(PdfViewerPanelAntes, { isOpen: true, onClose: () => {}, source: abandonadaSinClave })),
+    'visor 2009817 sin la clave «vigencia»: idéntico al de antes');
+
+// ── 5. La sustituta en CITATION_META sin que la respuesta la cite ───────────
+// Hoy `CITATION_META.sources` sólo trae lo citado y `FUENTES_PREVIAS` se quita
+// al terminar la respuesta: sin la sustituta, el botón enlaza al Semanario. La
+// API la añadirá a `sources` aunque no se cite; el frontend ya la usa, y ni la
+// lista ni la hoja la cuentan como cita.
+const cm = (regs) => ({ valid: regs.length, invalid: 0, total: regs.length, invalid_ids: [],
+    sources: Object.fromEntries(regs.map((r) => [IDS[r], cita[r]])) });
+const hoy17 = fuenteDeCita(cm([2009817]), IDS[2009817]);
+const panelHoy = panel(hoy17);
+ver(hoy17.reemplazo === undefined && panelHoy.includes('href="https://sjf2.scjn.gob.mx/detalle/tesis/2024159"')
+    && !/<button[^>]*>Abrir la que la reemplaza/.test(panelHoy),
+    'terminada la respuesta, sin la sustituta en CITATION_META: enlace al Semanario');
+const conSustituta = cm([2009817, 2024159]);
+const luego17 = fuenteDeCita(conSustituta, IDS[2009817]);
+ver(luego17.reemplazo?.registro === '2024159' && /<button[^>]*>Abrir la que la reemplaza/.test(panel(luego17)),
+    'con la sustituta en CITATION_META aunque no se cite: la abre en el mismo visor');
+const soloCitada = new Map([[IDS[2009817], 1]]);
+const listaSust = h(FuentesPorInstitucion, { meta: conSustituta, docIdMap: soloCitada });
+const cuentaLista = listaSust.match(/tabular-nums[^"]*">(\d+)</)?.[1];
+ver(cuentaLista === '1' && !/perdi[óe]/.test(listaSust),
+    'la lista del mensaje no cuenta la sustituta no citada (y el emblema plegado no lleva cuenta de vigencia)', `emblema: ${cuentaLista} fuente(s)`);
+const respuesta = `La P. X/2015 (10a.) [Doc ID: ${IDS[2009817]}] sostiene…\n\n<!-- CITATION_META:${JSON.stringify(conSustituta)} -->`;
+const hoja = htmlDeDocumento(respuesta);
+const metaHoja = metaDeDossier([respuesta], hoja.orden);
+ver(hoja.orden.length === 1 && metaHoja?.valid === 1 && metaHoja?.total === 1 && metaDeDossier([respuesta])?.valid === 1,
+    'la hoja: «1 cita · 1 verificada», no dos', `orden ${hoja.orden.length}, verificadas ${metaHoja?.valid}`);
+ver(fuenteDeCita(metaHoja, IDS[2009817]).reemplazo?.registro === '2024159', 'y desde la hoja también la abre en el visor');
+// Mientras llega la respuesta, FUENTES_PREVIAS trae todo el contexto: tampoco son citas.
+const enVivo = `<!-- FUENTES_PREVIAS:${JSON.stringify(Object.fromEntries(Object.entries(m6.sources)))} -->\n\nLa P. X/2015 (10a.) [Doc ID: ${IDS[2009817]}] sostiene…`;
+ver(htmlDeDocumento(enVivo).orden.length === 1, 'la hoja en vivo no numera las fuentes de FUENTES_PREVIAS', `${htmlDeDocumento(enVivo).orden.length}`);
+// El razonamiento se sigue quitando de la hoja: sus marcadores son comentarios.
+const conRazon = `<!--thinking-->Reviso ${IDS[2024159]} antes de contestar<!--/thinking-->La P. X/2015 (10a.) [Doc ID: ${IDS[2009817]}].`;
+ver(!htmlDeDocumento(conRazon).html.includes('Reviso') && htmlDeDocumento(conRazon).orden.length === 1,
+    'el razonamiento no entra a la hoja ni se numera');
+
+// Un «<!--» que escribe el modelo NO es un marcador: la hoja no corta ahí el
+// escrito ni deja de numerar lo que sigue. Sólo se quita el marcador nuestro
+// que se quedó abierto al final (CITATION_META a medio llegar), o el principio
+// de uno que el stream partió.
+const A = IDS[2009817];
+const literal = `Un comentario HTML se abre con <!-- y se cierra después. La P. X/2015 (10a.) [Doc ID: ${A}] sostiene lo contrario.`;
+const hLiteral = htmlDeDocumento(literal);
+ver(hLiteral.orden.length === 1 && hLiteral.html.includes('sostiene lo contrario') && hLiteral.html.includes('&lt;!-- y se cierra'),
+    'un «<!--» del modelo sin cerrar: la hoja sigue y numera la cita de después', `orden ${hLiteral.orden.length}`);
+const literalConMayor = `Si a > b se escribe <!-- (y si b > c, también). La P. X/2015 (10a.) [Doc ID: ${A}] sostiene lo contrario.`;
+const hMayor = htmlDeDocumento(literalConMayor);
+ver(hMayor.orden.length === 1 && hMayor.html.includes('sostiene lo contrario'),
+    'un «<!--» del modelo con un «>» detrás: tampoco corta', `orden ${hMayor.orden.length}`);
+const metaAMedias = `La P. X/2015 (10a.) [Doc ID: ${A}] sostiene…\n\n<!-- CITATION_META:${JSON.stringify(conSustituta).slice(0, 400)}`;
+const hMedias = htmlDeDocumento(metaAMedias);
+ver(hMedias.orden.length === 1 && !hMedias.html.includes('CITATION_META') && !hMedias.html.includes(IDS[2024159]),
+    'CITATION_META a medio llegar: se quita y sus identificadores no se numeran', `orden ${hMedias.orden.length}`);
+const partido = htmlDeDocumento(`La P. X/2015 (10a.) [Doc ID: ${A}] sostiene…\n\n<!-- CITAT`);
+ver(partido.orden.length === 1 && !partido.html.includes('CITAT') && !partido.html.includes('&lt;!--'),
+    'el principio de un marcador partido por el stream no asoma en la hoja');
+const previasAMedias = `<!-- FUENTES_PREVIAS:${JSON.stringify(m6.sources).slice(0, 2000)}`;
+ver(htmlDeDocumento(previasAMedias).orden.length === 0 && !htmlDeDocumento(previasAMedias).html.includes('FUENTES_PREVIAS'),
+    'FUENTES_PREVIAS a medio llegar: ni asoma ni se numera');
+
+// ── 6. En un navegador de verdad (--navegador) ──────────────────────────────
+if (process.argv.includes('--navegador')) await enNavegador();
+
+async function enNavegador() {
+    const requerir = createRequire(path.join(RAIZ, 'package.json'));
+    const DIR = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'vigencia-navegador-')));
+    process.on('exit', () => fs.rmSync(DIR, { recursive: true, force: true }));
+
+    // El panel y la lista, empaquetados con el webpack que trae Next (sin
+    // dependencias nuevas): los .tsx con el TypeScript del repositorio, «@/»
+    // a src/, y pdfjs sustituido por nada (aquí no se abre ningún PDF).
+    const wp = requerir('next/dist/compiled/webpack/webpack.js');
+    wp.init();
+    const { webpack } = wp;
+    fs.writeFileSync(path.join(DIR, 'cargador.cjs'), `
+const ts = require(${JSON.stringify(path.join(RAIZ, 'node_modules/typescript/lib/typescript.js'))});
+module.exports = function (fuente) {
+    return ts.transpileModule(fuente, { fileName: this.resourcePath, compilerOptions: {
+        module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText;
+};`);
+    fs.writeFileSync(path.join(DIR, 'proceso.js'), 'module.exports = { env: {} };');
+    fs.writeFileSync(path.join(DIR, 'pdfjs.js'), 'export const GlobalWorkerOptions = {}; export function getDocument() { return { promise: new Promise(() => {}) }; }');
+    fs.writeFileSync(path.join(DIR, 'entrada.js'), `
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
+import PdfViewerPanel from '@/components/PdfViewerPanel';
+import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
+const raiz = createRoot(document.getElementById('raiz'));
+window.__visor = (source) => flushSync(() => raiz.render(React.createElement(PdfViewerPanel, { isOpen: true, onClose() {}, source })));
+window.__lista = (meta, pares) => flushSync(() => raiz.render(React.createElement('div', { style: { padding: 16 } },
+    React.createElement(FuentesPorInstitucion, { meta, docIdMap: new Map(pares) }))));
+`);
+    const stats = await new Promise((ok, mal) => webpack({
+        mode: 'development', devtool: false, context: DIR, entry: path.join(DIR, 'entrada.js'),
+        output: { path: DIR, filename: 'prueba.js' },
+        resolve: {
+            extensions: ['.tsx', '.ts', '.mjs', '.js', '.json'],
+            alias: { '@': path.join(RAIZ, 'src'), 'pdfjs-dist$': path.join(DIR, 'pdfjs.js') },
+            modules: [path.join(RAIZ, 'node_modules'), 'node_modules'],
+        },
+        resolveLoader: { modules: [path.join(RAIZ, 'node_modules')] },
+        module: { rules: [{ test: /\.tsx?$/, exclude: /node_modules/, use: path.join(DIR, 'cargador.cjs') }] },
+        plugins: [
+            new webpack.ProvidePlugin({ process: path.join(DIR, 'proceso.js') }),
+            new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+        ],
+        performance: { hints: false },
+    }, (e, st) => (e ? mal(e) : ok(st))));
+    if (stats.hasErrors()) {
+        ver(false, 'navegador: el paquete de prueba se arma', stats.toString({ all: false, errors: true }).slice(0, 1500));
+        return;
+    }
+
+    // El CSS de `next build`, sólo si es posterior a los componentes.
+    const dirCss = path.join(RAIZ, '.next/static/css');
+    const hojasCss = fs.existsSync(dirCss) ? fs.readdirSync(dirCss).filter((f) => f.endsWith('.css')).map((f) => path.join(dirCss, f)) : [];
+    const masNuevo = Math.max(...['src/components/documento/FuentesPorInstitucion.tsx', 'src/components/VigenciaTesis.tsx', 'tailwind.config.ts', 'tailwind.config.js']
+        .map((r) => path.join(RAIZ, r)).filter((f) => fs.existsSync(f)).map((f) => fs.statSync(f).mtimeMs));
+    const cssAlDia = hojasCss.length > 0 && Math.max(...hojasCss.map((f) => fs.statSync(f).mtimeMs)) >= masNuevo;
+    fs.writeFileSync(path.join(DIR, 'pagina.html'), `<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+${cssAlDia ? hojasCss.map((f) => `<link rel="stylesheet" href="${pathToFileURL(f).href}">`).join('\n') : ''}
+</head><body><div id="raiz"></div><script src="prueba.js"></script></body></html>`);
+
+    const puppeteer = requerir('puppeteer');
+    const nav = await puppeteer.launch({ headless: true });
+    try {
+        const pag = await nav.newPage();
+        const erroresPagina = [];
+        pag.on('pageerror', (e) => erroresPagina.push(String(e)));
+        await pag.setRequestInterception(true);
+        pag.on('request', (r) => (r.url().startsWith('file:') ? r.continue() : r.abort()));
+        await pag.setViewport({ width: 1024, height: 900 });
+        await pag.goto(pathToFileURL(path.join(DIR, 'pagina.html')).href, { waitUntil: 'load' });
+        ver(await pag.evaluate(() => typeof window.__visor === 'function'), 'navegador: la página de prueba carga', erroresPagina.join(' | '));
+        if (erroresPagina.length) return;
+
+        const foco = () => pag.evaluate(() => {
+            const a = document.activeElement;
+            return a && a !== document.body ? `${a.tagName}:${(a.getAttribute('aria-label') || a.textContent || '').replace(/\s+/g, ' ').trim()}` : 'BODY';
+        });
+        const esperar = (cond, arg) => pag.waitForFunction(cond, { timeout: 3000 }, arg).then(() => true, () => false);
+        const oprimir = async (texto) => {
+            const hay = await pag.evaluate((t) => {
+                const b = Array.from(document.querySelectorAll('button')).find((x) => x.textContent.replace(/\s+/g, ' ').trim().startsWith(t));
+                if (!b) return false;
+                b.focus();
+                return document.activeElement === b;
+            }, texto);
+            if (hay) await pag.keyboard.press('Enter');
+            return hay;
+        };
+        const cabecera = () => pag.evaluate(() => document.querySelector('a[href^="https://sjf2.scjn.gob.mx/detalle/tesis/"]')?.textContent?.trim() || '');
+
+        // 2009817 → 2024159 → vuelta, con el teclado.
+        await pag.evaluate((f) => window.__visor(f), f17);
+        const abrio = await oprimir('Abrir la que la reemplaza');
+        const enVolver = abrio && await esperar(() => /^Volver a /.test(document.activeElement?.textContent?.trim() || ''));
+        ver(enVolver && (await foco()) === 'BUTTON:Volver a la P. X/2015 (10a.)' && (await cabecera()) === '2024159',
+            'navegador: tras «Abrir la que la reemplaza», el foco va a «Volver a la P. X/2015 (10a.)»', `${await foco()} · visor en ${await cabecera()}`);
+        const volvio = await oprimir('Volver a ');
+        const enAbrir = volvio && await esperar(() => document.activeElement?.textContent?.trim().startsWith('Abrir la que la reemplaza'));
+        ver(enAbrir && (await cabecera()) === '2009817',
+            'navegador: tras «Volver a …», el foco vuelve a «Abrir la que la reemplaza»', `${await foco()} · visor en ${await cabecera()}`);
+
+        // La cadena de 164500 (→ 183349), con las dos entre las fuentes.
+        await pag.evaluate((f) => window.__visor(f), fuenteDeCita(m6, IDS[164500]));
+        await oprimir('Abrir la que la reemplaza');
+        const cadena = await esperar(() => /^Volver a /.test(document.activeElement?.textContent?.trim() || ''));
+        ver(cadena && (await cabecera()) === '183349', 'navegador: 164500 → 183349, foco en «Volver a …»', `${await foco()} · visor en ${await cabecera()}`);
+
+        // Otra cita desde fuera del panel: el foco no se toca.
+        await pag.evaluate(() => document.querySelector('button[aria-label="Cerrar panel"]')?.focus());
+        await pag.evaluate((f) => window.__visor(f), fuenteDeCita(m4, IDS[160584]));
+        await new Promise((r) => setTimeout(r, 150));
+        ver((await foco()) === 'BUTTON:Cerrar panel' && (await cabecera()) === '160584',
+            'navegador: abrir otra cita no mueve el foco', `${await foco()} · visor en ${await cabecera()}`);
+
+        // El emblema de la Suprema Corte, plegado, a varios anchos: el nombre
+        // entero y sin cuenta de vigencia. Desplegado, cada tesis con su marca.
+        if (!cssAlDia) {
+            console.log('omitida  navegador: el emblema a varios anchos — falta el CSS de `next build` o es más viejo que los componentes');
+        } else {
+            const medir = () => pag.evaluate(() => {
+                const nombre = Array.from(document.querySelectorAll('button span')).find((x) => x.textContent === 'Suprema Corte de Justicia de la Nación');
+                if (!nombre) return null;
+                const boton = nombre.closest('button');
+                const n = nombre.getBoundingClientRect(), b = boton.getBoundingClientRect();
+                return { cortado: nombre.scrollWidth > nombre.clientWidth + 1, cuenta: /vigencia/i.test(boton.textContent || ''),
+                    dentro: b.right <= window.innerWidth, anchoNombre: Math.round(n.width), ancho: window.innerWidth };
+            });
+            const pares = [[IDS[2009817], 1], [IDS[2024159], 2], [IDS[164500], 3]];
+            for (const ancho of [360, 375, 414, 640, 768, 1024, 1440]) {
+                const movil = ancho < 640;
+                await pag.setViewport({ width: ancho, height: 900, isMobile: movil, hasTouch: movil });
+                await pag.evaluate((m, p) => window.__lista(m, p), m4, pares);
+                const r = await medir();
+                ver(r && !r.cortado && !r.cuenta && r.dentro,
+                    `navegador, ${ancho} px: la Suprema Corte plegada, con el nombre entero y sin cuenta`, JSON.stringify(r));
+            }
+            await pag.evaluate(() => Array.from(document.querySelectorAll('button'))
+                .find((x) => (x.textContent || '').includes('Suprema Corte de Justicia de la Nación'))?.click());
+            const desplegada = await esperar(() => document.querySelectorAll('ul li').length === 3);
+            const renglones = await pag.evaluate(() => Array.from(document.querySelectorAll('ul li')).map((x) => x.textContent.replace(/\s+/g, ' ').trim()));
+            ver(desplegada && /Abandonada/.test(renglones[0] || '') && !/Abandonada|Interrumpida|Superada/.test(renglones[1] || '')
+                && /Interrumpida en parte/.test(renglones[2] || ''),
+                'navegador: desplegada, la 2009817 y la 164500 llevan su marca y la vigente no', JSON.stringify(renglones.map((x) => x.slice(0, 80))));
+        }
+        ver(!erroresPagina.length, 'navegador: sin errores en la página', erroresPagina.join(' | '));
+    } finally {
+        await nav.close();
+    }
+}
+
+// ── La página para mirarla ──────────────────────────────────────────────────
+const iHtml = process.argv.indexOf('--html');
+if (iHtml > 0) {
+    const salida = process.argv[iHtml + 1];
+    const css = process.argv[iHtml + 2] ? fs.readFileSync(process.argv[iHtml + 2], 'utf8') : '';
+    const lista = (regs) => regs.map((r) => {
+        const f = fuenteDeCita(m4, IDS[r]);
+        const mv = vig.vigenciaDe(f);
+        return `<li><div class="flex w-full items-start gap-2.5 px-3 py-2 text-left"><span class="mt-[1px] inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded bg-charcoal-900 text-[10px] font-bold text-white">${docIdMap.get(IDS[r]) ?? '·'}</span><span class="min-w-0 flex-1 text-[11.5px] leading-snug text-charcoal-700"><span class="font-medium text-charcoal-900">${f.origen}</span>${mv ? h(MarcaVigencia, { vigencia: mv, className: 'ml-1.5' }) : ''}<span class="text-charcoal-500"> — ${f.ref}</span></span></div></li>`;
+    }).join('');
+    const tarjeta = (titulo, cuerpo) => `<section style="margin:0 0 28px"><h2 style="font:600 12px Arial;letter-spacing:.08em;text-transform:uppercase;color:#8b7355;margin:0 0 8px">${titulo}</h2>${cuerpo}</section>`;
+    const pagina = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Sello de vigencia</title><style>${css}</style>
+<style>body{background:#f5f4f0;margin:0;padding:24px;font-family:Arial,Helvetica,sans-serif} .col{max-width:576px;margin:0 auto} .panel{background:#fdfbf7;border:1px solid #e8e6e0;border-radius:12px;overflow:hidden}</style></head>
+<body><div class="col">
+${tarjeta('Lista de fuentes · emblema plegado', emblema)}
+${tarjeta('Lista de fuentes · desplegada', `<ul class="divide-y divide-cream-200 overflow-hidden rounded-lg border border-cream-300 bg-white">${lista([2009817, 2024159, 164500, 160584])}</ul>`)}
+${tarjeta('Visor · 2009817 abandonada (la sustituta está entre las fuentes)', `<div class="panel"><div class="px-5 py-5">${franja17}</div></div>`)}
+${tarjeta('Visor · 160584 curada (sustituta fuera: enlace al Semanario)', `<div class="panel"><div class="px-5 py-5">${franja60}</div></div>`)}
+${tarjeta('Visor · 164500 interrumpida en parte', `<div class="panel"><div class="px-5 py-5">${h(FranjaVigencia, { vigencia: v(164500) })}</div></div>`)}
+</div></body></html>`;
+    fs.writeFileSync(salida, pagina);
+    console.log(`\npágina: ${salida}`);
+}
+
+console.log(fallos ? `\n${fallos} FALLAS` : '\ntodo en orden');
+process.exit(fallos ? 1 : 0);
