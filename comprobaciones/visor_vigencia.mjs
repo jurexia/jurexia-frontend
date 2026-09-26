@@ -20,10 +20,12 @@
 //   … visor_vigencia.mjs --navegador
 //       → además, en un Chromium sin cabeza (el de puppeteer, sin red: sólo
 //         file://), el panel y la lista montados con React de verdad: el foco
-//         tras «Abrir la que la reemplaza» y «Volver a …», y el emblema de la
-//         Suprema Corte a 375 px. Para lo de 375 px usa el CSS de
-//         `next build` (.next/static/css); si falta o es más viejo que los
-//         componentes, esa parte se omite y lo dice.
+//         tras «Abrir la que la reemplaza» y «Volver a …», el emblema de la
+//         Suprema Corte plegado a varios anchos (de 360 a 1440 px: el nombre
+//         entero, sin cuenta de vigencia) y desplegado (la marca en cada
+//         tesis). Para los anchos usa el CSS de `next build`
+//         (.next/static/css); si falta o es más viejo que los componentes,
+//         esa parte se omite y lo dice.
 //
 // API=<url> cambia el servidor (por omisión https://jurexia-api.onrender.com).
 // DATOS=<carpeta> lee cita_<registro>.json de ahí en vez de pedirlos.
@@ -219,10 +221,14 @@ ver(franja60.includes('href="https://sjf2.scjn.gob.mx/detalle/tesis/2006225"') &
 const sinReemplazo = h(FranjaVigencia, { vigencia: { estado: 'sin_efectos', etiqueta: 'SIN EFECTOS al resolverse la contradicción de tesis 5/2020', fuente: 'nota_propia' } });
 ver(!sinReemplazo.includes('<button') && !sinReemplazo.includes('<a '), 'sin registro de reemplazo: sólo la franja');
 
-// El emblema plegado dice cuántas perdieron vigencia; sin ellas, lo de antes.
+// El emblema plegado NO lleva la cuenta de las que perdieron vigencia: nadie
+// la pidió y a su lado el nombre de la institución se recortaba a varios
+// anchos. Plegado es el de antes, byte por byte; la marca va en cada renglón.
 const docIdMap = new Map([[IDS[2009817], 1], [IDS[2024159], 2], [IDS[164500], 3]]);
 const emblema = h(FuentesPorInstitucion, { meta: m4, docIdMap });
-ver(emblema.includes('2 perdieron vigencia'), 'emblema de la Suprema Corte: «2 perdieron vigencia»');
+ver(!/vigencia/i.test(emblema) && emblema.includes('<span class="truncate font-medium">Suprema Corte de Justicia de la Nación</span>'),
+    'emblema plegado de la Suprema Corte: sin cuenta de las que perdieron vigencia, el nombre como antes');
+ver(emblema === h(FuentesAntes, { meta: m4, docIdMap }), `emblema plegado con dos que perdieron vigencia: el mismo HTML que en ${ANTES}`);
 const soloVigente = { meta: m4, docIdMap: new Map([[IDS[2024159], 1]]) };
 const emblemaVigente = h(FuentesPorInstitucion, soloVigente);
 ver(!/vigencia/i.test(emblemaVigente) && emblemaVigente === h(FuentesAntes, soloVigente),
@@ -265,8 +271,8 @@ ver(luego17.reemplazo?.registro === '2024159' && /<button[^>]*>Abrir la que la r
 const soloCitada = new Map([[IDS[2009817], 1]]);
 const listaSust = h(FuentesPorInstitucion, { meta: conSustituta, docIdMap: soloCitada });
 const cuentaLista = listaSust.match(/tabular-nums[^"]*">(\d+)</)?.[1];
-ver(cuentaLista === '1' && listaSust.includes('1 perdió vigencia'),
-    'la lista del mensaje no cuenta la sustituta no citada', `emblema: ${cuentaLista} fuente(s)`);
+ver(cuentaLista === '1' && !/perdi[óe]/.test(listaSust),
+    'la lista del mensaje no cuenta la sustituta no citada (y el emblema plegado no lleva cuenta de vigencia)', `emblema: ${cuentaLista} fuente(s)`);
 const respuesta = `La P. X/2015 (10a.) [Doc ID: ${IDS[2009817]}] sostiene…\n\n<!-- CITATION_META:${JSON.stringify(conSustituta)} -->`;
 const hoja = htmlDeDocumento(respuesta);
 const metaHoja = metaDeDossier([respuesta], hoja.orden);
@@ -281,9 +287,29 @@ const conRazon = `<!--thinking-->Reviso ${IDS[2024159]} antes de contestar<!--/t
 ver(!htmlDeDocumento(conRazon).html.includes('Reviso') && htmlDeDocumento(conRazon).orden.length === 1,
     'el razonamiento no entra a la hoja ni se numera');
 
-// El emblema en teléfono: la cuenta baja a su propio renglón (y en sm, en línea).
-ver(/<span class="flex min-w-0 flex-col[^"]*sm:flex-row[^"]*"><span class="max-w-full truncate font-medium">Suprema Corte de Justicia de la Nación<\/span><span[^>]*>2 perdieron vigencia<\/span><\/span>/.test(emblema),
-    'emblema: nombre y cuenta en columna en teléfono, en fila desde sm');
+// Un «<!--» que escribe el modelo NO es un marcador: la hoja no corta ahí el
+// escrito ni deja de numerar lo que sigue. Sólo se quita el marcador nuestro
+// que se quedó abierto al final (CITATION_META a medio llegar), o el principio
+// de uno que el stream partió.
+const A = IDS[2009817];
+const literal = `Un comentario HTML se abre con <!-- y se cierra después. La P. X/2015 (10a.) [Doc ID: ${A}] sostiene lo contrario.`;
+const hLiteral = htmlDeDocumento(literal);
+ver(hLiteral.orden.length === 1 && hLiteral.html.includes('sostiene lo contrario') && hLiteral.html.includes('&lt;!-- y se cierra'),
+    'un «<!--» del modelo sin cerrar: la hoja sigue y numera la cita de después', `orden ${hLiteral.orden.length}`);
+const literalConMayor = `Si a > b se escribe <!-- (y si b > c, también). La P. X/2015 (10a.) [Doc ID: ${A}] sostiene lo contrario.`;
+const hMayor = htmlDeDocumento(literalConMayor);
+ver(hMayor.orden.length === 1 && hMayor.html.includes('sostiene lo contrario'),
+    'un «<!--» del modelo con un «>» detrás: tampoco corta', `orden ${hMayor.orden.length}`);
+const metaAMedias = `La P. X/2015 (10a.) [Doc ID: ${A}] sostiene…\n\n<!-- CITATION_META:${JSON.stringify(conSustituta).slice(0, 400)}`;
+const hMedias = htmlDeDocumento(metaAMedias);
+ver(hMedias.orden.length === 1 && !hMedias.html.includes('CITATION_META') && !hMedias.html.includes(IDS[2024159]),
+    'CITATION_META a medio llegar: se quita y sus identificadores no se numeran', `orden ${hMedias.orden.length}`);
+const partido = htmlDeDocumento(`La P. X/2015 (10a.) [Doc ID: ${A}] sostiene…\n\n<!-- CITAT`);
+ver(partido.orden.length === 1 && !partido.html.includes('CITAT') && !partido.html.includes('&lt;!--'),
+    'el principio de un marcador partido por el stream no asoma en la hoja');
+const previasAMedias = `<!-- FUENTES_PREVIAS:${JSON.stringify(m6.sources).slice(0, 2000)}`;
+ver(htmlDeDocumento(previasAMedias).orden.length === 0 && !htmlDeDocumento(previasAMedias).html.includes('FUENTES_PREVIAS'),
+    'FUENTES_PREVIAS a medio llegar: ni asoma ni se numera');
 
 // ── 6. En un navegador de verdad (--navegador) ──────────────────────────────
 if (process.argv.includes('--navegador')) await enNavegador();
@@ -404,31 +430,35 @@ ${cssAlDia ? hojasCss.map((f) => `<link rel="stylesheet" href="${pathToFileURL(f
         ver((await foco()) === 'BUTTON:Cerrar panel' && (await cabecera()) === '160584',
             'navegador: abrir otra cita no mueve el foco', `${await foco()} · visor en ${await cabecera()}`);
 
-        // El emblema de la Suprema Corte, a 375 px y en escritorio.
+        // El emblema de la Suprema Corte, plegado, a varios anchos: el nombre
+        // entero y sin cuenta de vigencia. Desplegado, cada tesis con su marca.
         if (!cssAlDia) {
-            console.log('omitida  navegador: el emblema a 375 px — falta el CSS de `next build` o es más viejo que los componentes');
+            console.log('omitida  navegador: el emblema a varios anchos — falta el CSS de `next build` o es más viejo que los componentes');
         } else {
             const medir = () => pag.evaluate(() => {
                 const nombre = Array.from(document.querySelectorAll('button span')).find((x) => x.textContent === 'Suprema Corte de Justicia de la Nación');
-                const cuenta = Array.from(document.querySelectorAll('button span')).find((x) => /^\d+ perdieron vigencia$/.test(x.textContent || ''));
-                if (!nombre || !cuenta) return null;
-                const n = nombre.getBoundingClientRect(), c = cuenta.getBoundingClientRect();
-                const b = nombre.closest('button').getBoundingClientRect();
-                return { cortado: nombre.scrollWidth > nombre.clientWidth + 1, abajo: c.top >= n.bottom - 1,
-                    enLinea: Math.abs((c.top + c.bottom) / 2 - (n.top + n.bottom) / 2) < 3,
-                    dentro: c.right <= b.right && b.right <= window.innerWidth, anchoNombre: Math.round(n.width),
-                    nombre: [n.top, n.bottom].map(Math.round), cuenta: [c.top, c.bottom].map(Math.round), ancho: window.innerWidth };
+                if (!nombre) return null;
+                const boton = nombre.closest('button');
+                const n = nombre.getBoundingClientRect(), b = boton.getBoundingClientRect();
+                return { cortado: nombre.scrollWidth > nombre.clientWidth + 1, cuenta: /vigencia/i.test(boton.textContent || ''),
+                    dentro: b.right <= window.innerWidth, anchoNombre: Math.round(n.width), ancho: window.innerWidth };
             });
             const pares = [[IDS[2009817], 1], [IDS[2024159], 2], [IDS[164500], 3]];
-            await pag.setViewport({ width: 375, height: 812, isMobile: true, hasTouch: true });
-            await pag.evaluate((m, p) => window.__lista(m, p), m4, pares);
-            const tel = await medir();
-            ver(tel && !tel.cortado && tel.abajo && tel.dentro,
-                'navegador, 375 px: el nombre de la Suprema Corte entero y la cuenta en su renglón', JSON.stringify(tel));
-            await pag.setViewport({ width: 1024, height: 900 });
-            await pag.evaluate((m, p) => window.__lista(m, p), m4, pares);
-            const esc = await medir();
-            ver(esc && !esc.cortado && esc.enLinea, 'navegador, escritorio: la cuenta al lado del nombre', JSON.stringify(esc));
+            for (const ancho of [360, 375, 414, 640, 768, 1024, 1440]) {
+                const movil = ancho < 640;
+                await pag.setViewport({ width: ancho, height: 900, isMobile: movil, hasTouch: movil });
+                await pag.evaluate((m, p) => window.__lista(m, p), m4, pares);
+                const r = await medir();
+                ver(r && !r.cortado && !r.cuenta && r.dentro,
+                    `navegador, ${ancho} px: la Suprema Corte plegada, con el nombre entero y sin cuenta`, JSON.stringify(r));
+            }
+            await pag.evaluate(() => Array.from(document.querySelectorAll('button'))
+                .find((x) => (x.textContent || '').includes('Suprema Corte de Justicia de la Nación'))?.click());
+            const desplegada = await esperar(() => document.querySelectorAll('ul li').length === 3);
+            const renglones = await pag.evaluate(() => Array.from(document.querySelectorAll('ul li')).map((x) => x.textContent.replace(/\s+/g, ' ').trim()));
+            ver(desplegada && /Abandonada/.test(renglones[0] || '') && !/Abandonada|Interrumpida|Superada/.test(renglones[1] || '')
+                && /Interrumpida en parte/.test(renglones[2] || ''),
+                'navegador: desplegada, la 2009817 y la 164500 llevan su marca y la vigente no', JSON.stringify(renglones.map((x) => x.slice(0, 80))));
         }
         ver(!erroresPagina.length, 'navegador: sin errores en la página', erroresPagina.join(' | '));
     } finally {

@@ -8,6 +8,7 @@ import {
     type FuenteCita,
 } from '@/lib/documento/citas';
 import { recortarABloque } from '@/lib/documento/revelado';
+import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
 
 /**
  * EL PANEL DOCUMENTO: la hoja tipo Word acoplada al chat (18-sep-2026).
@@ -127,7 +128,21 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         [bloques, vivoVisible],
     );
     const { segmentos, orden } = useMemo(() => htmlDeDossier(partes), [partes]);
-    const meta = useMemo(() => metaDeDossier(partes, orden), [partes, orden]);
+    /* EL MAPA DEL SERVIDOR CUENTA SÓLO LO CITADO (26-sep-2026): `orden` son
+       los identificadores que el texto cita, ya abiertos los grupos. Las
+       demás entradas de `sources` —precedentes inyectados, alias de
+       reparación y, cuando la API la mande, la tesis que reemplaza a una
+       citada— siguen en el mapa para que el visor las abra, pero no se
+       cuentan. Ver `metaDeDossier`. */
+    const metaDelServidor = useMemo(() => metaDeDossier(partes, orden), [partes, orden]);
+    /* LAS CITAS SIN FICHA EN EL MAPA SE PIDEN A `/cita` (26-sep-2026): así la
+       ficha [N] de la hoja abre su PDF y el Word lleva su referencia APA,
+       también en las respuestas ya guardadas. Con la respuesta aún llegando no
+       se pide: el mapa final puede traerlas. Ver `@/lib/documento/fichas`. */
+    const faltan = useMemo(() => citasSinFuente(orden, metaDelServidor), [orden, metaDelServidor]);
+    const { fichas, estado: estadoFichas } = useFichasDeCitas(faltan, vivo === null);
+    const meta = useMemo(() => conFichas(metaDelServidor, fichas), [metaDelServidor, fichas]);
+    const cuentaCitas = useMemo(() => resumenDeCitas(orden, meta, estadoFichas), [orden, meta, estadoFichas]);
     const palabras = useMemo(() => palabrasDe(partes.join(' ')), [partes]);
     const enVivo = vivo !== null;
     const htmlBase = useMemo(() => segmentos.slice(0, bloques.length).join('<hr>'), [segmentos, bloques.length]);
@@ -377,7 +392,9 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                 </span>
                 <span className="tabular-nums">
                     {orden.length} {orden.length === 1 ? 'cita' : 'citas'}
-                    {meta && meta.valid > 0 ? ` · ${meta.valid} ${meta.valid === 1 ? 'verificada' : 'verificadas'}` : ''}
+                    {/* Las citas del texto con ficha, no las entradas del mapa: con
+                        el mapa entero salía «33 citas · 60 verificadas». */}
+                    {cuentaCitas.verificadas > 0 ? ` · ${cuentaCitas.verificadas} ${cuentaCitas.verificadas === 1 ? 'verificada' : 'verificadas'}` : ''}
                 </span>
             </footer>
 

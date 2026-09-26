@@ -1,11 +1,12 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { ChevronDown, AlertTriangle } from 'lucide-react';
+import { ChevronDown, AlertTriangle, Loader2 } from 'lucide-react';
 import { fuenteDeCita, institucionesDe, type FuenteCita, type Institucion, type MetaCitas } from '@/lib/documento/citas';
 import { esCoidh, rotuloCoidh } from '@/lib/coidh';
-import { cuentaSinVigencia, perdioVigencia, vigenciaDe } from '@/lib/vigencia';
+import { vigenciaDe } from '@/lib/vigencia';
 import { MarcaVigencia } from '@/components/VigenciaTesis';
 import { IconoInstitucion } from './IconoInstitucion';
+import { citasSinFuente, conFichas, fueraDelContexto, useFichasDeCitas } from '@/lib/documento/fichas';
 
 /**
  * LAS FUENTES, BAJO EL EMBLEMA DE QUIEN LAS PUBLICA (18-sep-2026).
@@ -26,20 +27,33 @@ import { IconoInstitucion } from './IconoInstitucion';
  *
  * Y LA TESIS QUE PERDIÓ VIGENCIA SE VE SIN ABRIRLA (26-sep-2026): su renglón
  * lleva la marca «Abandonada», «Interrumpida en parte», «Superada en los
- * hechos»…, y el emblema cerrado dice cuántas hay dentro, porque la lista
- * está plegada y ahí nadie la vería. Ver `@/lib/vigencia`.
+ * hechos»…, y el visor abre con su franja. El emblema cerrado no lleva
+ * cuenta: nadie la pidió, y a su lado el nombre de la institución se
+ * recortaba a varios anchos («Suprema Corte de J…»). Ver `@/lib/vigencia`.
  */
 
 const SIN_FICHA: Institucion = { clave: 'otra', nombre: 'Citas sin ficha', icono: '' };
 
-export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }: {
+export function FuentesPorInstitucion({ meta: metaDelMensaje, docIdMap, onCita, resolver = true, className = '' }: {
     meta: MetaCitas | null;
     /** Identificador de cada cita → su número en el texto. */
     docIdMap: Map<string, number>;
     onCita?: (fuente: FuenteCita) => void;
+    /** Pedir a `/cita` las fichas que el mapa no traiga (en el hilo, al
+     *  terminar la respuesta). */
+    resolver?: boolean;
     className?: string;
 }) {
     const [abierta, setAbierta] = useState<string | null>(null);
+
+    /* NINGUNA CITA ES «SIN FICHA» ANTES DE PREGUNTAR (26-sep-2026). Lo que el
+       mapa del mensaje no trae se pide a `/cita` (`@/lib/documento/fichas`) y
+       entra en su institución con su PDF. Al grupo ámbar sólo va lo que `/cita`
+       no encontró o no pudo consultar; mientras se busca, se dice que se busca. */
+    const faltan = useMemo(() => citasSinFuente(docIdMap.keys(), metaDelMensaje), [docIdMap, metaDelMensaje]);
+    const { fichas, estado } = useFichasDeCitas(faltan, resolver);
+    const meta = useMemo(() => conFichas(metaDelMensaje, fichas), [metaDelMensaje, fichas]);
+    const buscando = faltan.filter((id) => estado[id.toLowerCase()] === 'buscando').length;
 
     const { grupos, numeros } = useMemo(() => {
         const numeros = new Map<string, number>();
@@ -51,24 +65,25 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
             institucion: g.institucion,
             docIds: [...g.docIds].sort((a, b) => orden(a) - orden(b)),
             sinFicha: false,
-            // Cuántas de sus tesis perdieron vigencia (las corregidas sólo se
-            // marcan en su renglón: no la perdieron).
-            sinVigencia: g.docIds.filter((id) => perdioVigencia(vigenciaDe(fuenteDeCita(meta, id)))).length,
+            // Las que el servidor marcó como fuera del contexto recuperado y
+            // `/cita` encontró: van con su institución y su PDF, pero marcadas.
+            fuera: g.docIds.filter((id) => fueraDelContexto(meta, id)).length,
         }));
 
         const conFicha = new Set(base.flatMap((g) => g.docIds.map((x) => x.toLowerCase())));
-        const sueltas = Array.from(docIdMap.keys()).filter((id) => !conFicha.has(id.toLowerCase()));
+        const sueltas = Array.from(docIdMap.keys())
+            .filter((id) => !conFicha.has(id.toLowerCase()) && estado[id.toLowerCase()] !== 'buscando');
         if (sueltas.length) {
             base.push({
                 id: 'sin-ficha', institucion: SIN_FICHA, sinFicha: true,
                 docIds: sueltas.sort((a, b) => orden(a) - orden(b)),
-                sinVigencia: 0,
+                fuera: 0,
             });
         }
         return { grupos: base, numeros };
-    }, [meta, docIdMap]);
+    }, [meta, docIdMap, estado]);
 
-    if (!grupos.length) return null;
+    if (!grupos.length && !buscando) return null;
     const desplegada = grupos.find((g) => g.id === abierta);
 
     return (
@@ -82,7 +97,7 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                             type="button"
                             onClick={() => setAbierta(activa ? null : g.id)}
                             aria-expanded={activa}
-                            title={`${g.institucion.nombre} · ${g.docIds.length} ${g.docIds.length === 1 ? 'fuente' : 'fuentes'}${g.sinVigencia ? ` · ${cuentaSinVigencia(g.sinVigencia)}` : ''}`}
+                            title={`${g.institucion.nombre} · ${g.docIds.length} ${g.docIds.length === 1 ? 'fuente' : 'fuentes'}${g.fuera ? ` · ${g.fuera} fuera del contexto recuperado` : ''}`}
                             /* En teléfono cada emblema ocupa su renglón: en fila, el nombre
                                de la institución se quedaba en «C.. 3», que no dice nada. */
                             className={`inline-flex max-w-full items-center gap-2 rounded-lg border py-1 pl-1.5 pr-2 text-[11.5px] transition-colors max-sm:w-full
@@ -95,27 +110,26 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                             {g.sinFicha
                                 ? <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                                 : <IconoInstitucion inst={g.institucion} tam={22} />}
-                            {g.sinVigencia > 0 ? (
-                                /* La cuenta de las que perdieron vigencia, en teléfono,
-                                   baja a su propio renglón: al lado del nombre lo dejaba
-                                   en «Suprema Corte de J…», lo mismo que el renglón por
-                                   emblema vino a evitar. Desde sm vuelve a ir en línea. */
-                                <span className="flex min-w-0 flex-col items-start gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-                                    <span className="max-w-full truncate font-medium">{g.institucion.nombre}</span>
-                                    <span className="flex-shrink-0 whitespace-nowrap rounded border border-amber-300 bg-amber-50 px-1 text-[10px] font-semibold leading-4 text-amber-900">
-                                        {cuentaSinVigencia(g.sinVigencia)}
-                                    </span>
-                                </span>
-                            ) : (
-                                <span className="truncate font-medium">{g.institucion.nombre}</span>
-                            )}
+                            <span className="truncate font-medium">{g.institucion.nombre}</span>
                             <span className={`ml-auto tabular-nums ${activa && !g.sinFicha ? 'text-white/70' : 'text-charcoal-400'}`}>
                                 {g.docIds.length}
                             </span>
+                            {g.fuera > 0 && (
+                                <AlertTriangle
+                                    className={`h-3.5 w-3.5 flex-shrink-0 ${activa ? 'text-amber-300' : 'text-amber-600'}`}
+                                    aria-label={`${g.fuera} fuera del contexto recuperado`}
+                                />
+                            )}
                             <ChevronDown className={`h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200 ${activa ? 'rotate-180' : ''}`} />
                         </button>
                     );
                 })}
+                {buscando > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-1 text-[11.5px] text-charcoal-500 max-sm:w-full">
+                        <Loader2 className="h-3.5 w-3.5 flex-shrink-0 animate-spin" />
+                        {buscando === 1 ? 'Buscando la ficha de 1 cita…' : `Buscando la ficha de ${buscando} citas…`}
+                    </span>
+                )}
             </div>
 
             {desplegada && (
@@ -138,13 +152,26 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                                     <span className="min-w-0 flex-1 text-[11.5px] leading-snug text-charcoal-700">
                                         <span className="font-medium text-charcoal-900">
                                             {desplegada.sinFicha
-                                                ? `Cita ${n ?? ''} sin ficha de origen`
+                                                // Ya se preguntó a `/cita`: se dice qué contestó.
+                                                ? (estado[id.toLowerCase()] === 'fallo'
+                                                    ? `Cita ${n ?? ''}: no se pudo consultar su ficha. Toca para reintentar`
+                                                    : `Cita ${n ?? ''} sin ficha: no está en el acervo`)
                                                 // La Corte IDH se nombra por su caso y párrafo,
                                                 // no por el `origen` del marcador.
                                                 : esCoidh(f) ? rotuloCoidh(f) : f.origen}
                                         </span>
                                         {vigencia && <MarcaVigencia vigencia={vigencia} className="ml-1.5" />}
                                         {!desplegada.sinFicha && f.ref && !esCoidh(f) ? <span className="text-charcoal-500"> — {f.ref}</span> : null}
+                                        {/* El servidor la marcó: no estaba en el contexto de esta
+                                            respuesta. Existe —`/cita` la encontró y abre su PDF—,
+                                            pero hay que comprobar que diga lo que se le atribuye.
+                                            Antes, resuelta, salía aquí como si nada (26-sep-2026). */}
+                                        {!desplegada.sinFicha && fueraDelContexto(meta, id) ? (
+                                            <span className="mt-0.5 flex items-center gap-1 text-amber-700">
+                                                <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                                                Fuera del contexto recuperado: comprueba que diga lo que se le atribuye
+                                            </span>
+                                        ) : null}
                                     </span>
                                 </button>
                             </li>

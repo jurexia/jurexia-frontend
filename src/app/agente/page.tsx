@@ -6,6 +6,7 @@ import { AlertTriangle, ArrowLeft, ArrowRight, Check, FileText, Loader2, Scale, 
 import Navbar from '@/components/Navbar';
 import ChatMessage from '@/components/ChatMessage';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
+import { abrirCitaConFicha } from '@/lib/documento/fichas';
 import { Message, streamChat } from '@/lib/api';
 import { getSession } from '@/lib/supabase';
 import { useRequireAuth } from '@/lib/useAuth';
@@ -448,7 +449,7 @@ export default function AgentePage() {
                         )}
 
                         {mensaje ? (
-                            <ChatMessage message={mensaje} isStreaming={trabajando} onCitationClick={setPdf} />
+                            <ChatMessage message={mensaje} isStreaming={trabajando} onCitationClick={(f) => abrirCitaConFicha(f, setPdf)} />
                         ) : (
                             trabajando && (
                                 <div className="flex items-center gap-2.5 rounded-xl border border-cream-400 bg-white px-5 py-6 text-sm text-charcoal-500">

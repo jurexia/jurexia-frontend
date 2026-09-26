@@ -13,6 +13,7 @@
  * la burbuja, para que [3] sea la misma fuente en las dos.
  */
 import { markdownAHtml, separarTarjetas, sinRazonamiento } from './marcado';
+import { expandirCitasAgrupadas, quitarBloques, sinComentarios, sinMarcadorAbiertoAlFinal } from '@/lib/idsDeCita';
 import { type CamposCoidh, camposCoidh, esCoidh, referenciaCoidh } from '@/lib/coidh';
 import { type CamposDoctrina, camposDoctrina, esDoctrina, referenciaDoctrina } from '@/lib/doctrina';
 import { type CamposVigencia, buscarReemplazo, camposVigencia, vigenciaDe } from '@/lib/vigencia';
@@ -49,11 +50,18 @@ export interface MetaCitas {
 
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
 
-/** Los metadatos de cita que el servidor manda al final del flujo. */
+/** Los metadatos de cita que el servidor manda al final del flujo. Es el
+ *  primer grupo de `/<!-- CITATION_META:(\{[\s\S]*?\}) -->/`, buscado con
+ *  `indexOf`: la expresión volvía a recorrer el final desde cada apertura sin
+ *  cierre, y esto corre sobre cada respuesta del historial. */
 export function metaDeCitas(markdown: string): MetaCitas | null {
-    const m = (markdown || '').match(/<!-- CITATION_META:(\{[\s\S]*?\}) -->/);
-    if (!m) return null;
-    try { return JSON.parse(m[1]) as MetaCitas; } catch { return null; }
+    const t = markdown || '';
+    const ABRE = '<!-- CITATION_META:{';
+    const a = t.indexOf(ABRE);
+    if (a === -1) return null;
+    const b = t.indexOf('} -->', a + ABRE.length);
+    if (b === -1) return null;
+    try { return JSON.parse(t.slice(a + ABRE.length - 1, b + 1)) as MetaCitas; } catch { return null; }
 }
 
 /** Lo que el chat esconde y la hoja tampoco debe enseñar: razonamiento del
@@ -68,42 +76,63 @@ function sinTrasfondo(markdown: string): string {
        vuelven a poner como lista legible de referencias. */
     const { sin, tarjetas } = separarTarjetas(t);
     t = tarjetas ? `${sin}\n\n${tarjetas}` : sin;
-    t = t.replace(/<!--THINKING_START-->[\s\S]*?<!--THINKING_END-->/g, '');
+    // Con escáneres: `[\s\S]*?` volvía a recorrer el final desde cada
+    // apertura sin cierre (ver las reglas en `@/lib/idsDeCita`).
+    t = quitarBloques(t, /<!--THINKING_START-->/g, '<!--THINKING_END-->');
     const abierto = t.indexOf('<!--THINKING_START-->');
     if (abierto !== -1) t = t.slice(0, abierto);
-    t = t.replace(/<!--SYNTHESIS:START-->[\s\S]*?<!--SYNTHESIS:END-->/g, '');
-    t = t.replace(/<!--SYNTHESIS:START-->[\s\S]*/, '');
+    t = quitarBloques(t, /<!--SYNTHESIS:START-->/g, '<!--SYNTHESIS:END-->');
+    const sintesis = t.indexOf('<!--SYNTHESIS:START-->');
+    if (sintesis !== -1) t = t.slice(0, sintesis);
     return t;
 }
 
 /** Cambia cada identificador por una marca numerada por orden de aparición. */
 export function marcarCitas(markdown: string): { markdown: string; orden: string[] } {
     const orden: string[] = [];
+    // El número de cada identificador en un mapa: `orden.indexOf` por cita
+    // era cuadrático en el número de citas distintas.
+    const numeros = new Map<string, number>();
     const numero = (uuid: string) => {
         const u = uuid.toLowerCase();
-        let i = orden.indexOf(u);
-        if (i === -1) { orden.push(u); i = orden.length - 1; }
-        return i + 1;
+        let n = numeros.get(u);
+        if (n === undefined) { orden.push(u); n = orden.length; numeros.set(u, n); }
+        return n;
     };
     const marca = (uuid: string) => `⟦cita:${numero(uuid)}:${uuid.toLowerCase()}⟧`;
-    /* LOS MARCADORES NO SON TEXTO (26-sep-2026). `CITATION_META` y
-       `FUENTES_PREVIAS` traen como claves los identificadores de fuentes que
-       el texto no cita (los precedentes que la API inyecta, los alias de
-       reparación, todo el contexto mientras llega la respuesta y, pronto, la
-       tesis que reemplaza a una citada), y la regla del «uuid suelto» los
-       contaba como citas: «5 citas» en una hoja con cuatro. La hoja ya los
-       quitaba al pintar (`limpiarMarcadores`); ahora tampoco se numeran.
-       El razonamiento se quita ANTES que los comentarios: sus marcadores
-       `<!--thinking-->` son comentarios, y sin ellos `markdownAHtml` ya no
-       sabría qué texto es razonamiento y lo metería en la hoja. */
-    let t = sinRazonamiento(sinTrasfondo(markdown)).replace(/<!--[\s\S]*?-->/g, '').replace(/<!--[\s\S]*$/, '');
+    /* LOS MARCADORES NO SON TEXTO (26-sep-2026). `CITATION_META`,
+       `PRECEDENTES_META` y `FUENTES_PREVIAS` traen como claves los
+       identificadores de fuentes que el texto no cita (los precedentes que la
+       API inyecta, los alias de reparación, todo el contexto mientras llega la
+       respuesta y, pronto, la tesis que reemplaza a una citada), y la regla
+       del «uuid suelto» los contaba como citas: el pie de la hoja decía
+       «67 citas» con 33 en el texto, y «5 citas» en una hoja con cuatro.
+       `markdownAHtml` borraba el comentario al pintar, pero `orden` ya los
+       llevaba dentro. Ahora se quitan antes de numerar.
+
+       El orden importa:
+         1. el razonamiento, con sus marcas: `<!--thinking-->` es un
+            comentario, y sin él `markdownAHtml` ya no sabría qué texto es
+            razonamiento y lo metería en la hoja;
+         2. lo agrupado —«[Doc IDs: a; b]»— se abre en citas singulares: sin
+            esto la hoja enseñaba «[Doc IDs: [25]; [26]]». No toca el JSON de
+            los comentarios;
+         3. los comentarios cerrados;
+         4. el marcador que se quedó abierto al final (el JSON de
+            CITATION_META a medio llegar), y SÓLO un marcador nuestro: un
+            «<!--» que el modelo escribió en su texto se queda, y con él lo que
+            le sigue. Con `/<!--[\s\S]*$/` la hoja perdía desde ahí el resto
+            del escrito, citas incluidas.
+       Todo en tiempo lineal: ver las reglas en `@/lib/idsDeCita`. */
+    let t = sinMarcadorAbiertoAlFinal(sinComentarios(expandirCitasAgrupadas(sinRazonamiento(sinTrasfondo(markdown)))));
     // [Doc ID: uuid] — la forma normal
-    t = t.replace(new RegExp(`\\[Doc ID:\\s*(${UUID})\\]`, 'gi'), (_, u) => marca(u));
-    // [, uuid] y [nombre, uuid] — formas que el modelo también produce
-    t = t.replace(new RegExp(`\\[\\s*,\\s*(${UUID})\\s*\\]`, 'gi'), (_, u) => marca(u));
-    t = t.replace(new RegExp(`\\[[^\\]\\n]*,\\s*(${UUID})\\s*\\]`, 'gi'), (_, u) => marca(u));
+    t = t.replace(new RegExp(`\\[Doc ID:\\s{0,8}(${UUID})\\]`, 'gi'), (_, u) => marca(u));
+    // [, uuid] y [nombre, uuid] — formas que el modelo también produce. El
+    // nombre no cruza otro «[»: una fila de «[» sin cerrar era cuadrática.
+    t = t.replace(new RegExp(`\\[\\s{0,8},\\s{0,8}(${UUID})\\s{0,8}\\]`, 'gi'), (_, u) => marca(u));
+    t = t.replace(new RegExp(`\\[[^\\[\\]\\n]{0,2000},\\s{0,8}(${UUID})\\s{0,8}\\]`, 'gi'), (_, u) => marca(u));
     // «Doc uuid» suelto
-    t = t.replace(new RegExp(`(^|[^a-f0-9-])Doc\\s+(${UUID})(?![a-f0-9-])`, 'gi'), (_, pre, u) => pre + marca(u));
+    t = t.replace(new RegExp(`(^|[^a-f0-9-])Doc\\s{1,8}(${UUID})(?![a-f0-9-])`, 'gi'), (_, pre, u) => pre + marca(u));
     // Un uuid suelto que no esté ya dentro de una marca
     t = t.replace(new RegExp(`(^|[^a-f0-9\\-⟦:])(${UUID})(?![a-f0-9\\-⟧])`, 'gi'), (_, pre, u) => pre + marca(u));
     return { markdown: t, orden };
@@ -163,9 +192,8 @@ export function fuenteDeCita(meta: MetaCitas | null, docId: string, vistas: Set<
 
 /** Palabras del escrito, sin marcadores ni identificadores. */
 export function palabrasDe(markdown: string): number {
-    const t = sinTrasfondo(markdown)
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(new RegExp(`\\[[^\\]\\n]*${UUID}\\s*\\]`, 'gi'), '')
+    const t = sinComentarios(sinTrasfondo(markdown))
+        .replace(new RegExp(`\\[[^\\[\\]\\n]{0,2000}${UUID}\\s{0,8}\\]`, 'gi'), '')
         .replace(new RegExp(UUID, 'gi'), '')
         .trim();
     return t ? t.split(/\s+/).length : 0;

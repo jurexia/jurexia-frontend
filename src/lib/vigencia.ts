@@ -93,11 +93,6 @@ export function perdioVigencia(v: VigenciaTesis | null | undefined): boolean {
     return Boolean(v && !esCorreccion(v));
 }
 
-/** «1 perdió vigencia», «2 perdieron vigencia»: la cuenta del emblema plegado. */
-export function cuentaSinVigencia(n: number): string {
-    return n === 1 ? '1 perdió vigencia' : `${n} perdieron vigencia`;
-}
-
 export function esCurada(v: VigenciaTesis | null | undefined): boolean {
     return Boolean(v && v.fuente === 'curaduria');
 }
