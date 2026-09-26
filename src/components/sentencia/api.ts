@@ -244,6 +244,11 @@ export interface EstadoPiloto {
     proyectos?: BolsaProyectos;
     /** Ocupó uno de los diez asientos del piloto y conserva el acceso. */
     del_piloto?: boolean;
+    /** CUENTA DE CASA (26-sep-2026): administración y testers, las únicas a
+     *  las que el servidor les admite elegir la variante del prompt del
+     *  estudio. Si el servidor no lo manda, la pantalla usa `puede_sise`, que
+     *  sale de la misma lista (`_taller_sin_tope`). */
+    es_casa?: boolean;
 }
 
 /** LAS TRES BOLSAS. La del mes caduca, las recargas no, y la prueba es de por
@@ -323,6 +328,9 @@ export interface ResultadoProyecto {
     /** Con qué número de versión se archivó. Es la llave de la opinión del
      *  secretario: se opina sobre ESA versión, no sobre el expediente. */
     version?: number;
+    /** DÓNDE CONTESTÓ EL ESTUDIO CADA ARGUMENTO (Paso 2, 26-sep-2026). Sólo con
+     *  las variantes que escriben marcas (v3/v4); null en las demás. */
+    mapa?: MapaDelEstudio | null;
 }
 
 /* ═══ LA OPINIÓN DEL SECRETARIO SOBRE CADA PROYECTO ═══
@@ -707,6 +715,7 @@ export async function fichaProyecto(numero: string, userEmail: string): Promise<
         sentidoGlobal: String(p.sentido_global ?? ''),
         modo: String(p.modo ?? ''),
         criterios: [],
+        mapa: mapaDe(p),
     };
 }
 
@@ -780,49 +789,70 @@ async function recuperarProyecto(
 /** Las dos formas de la sentencia. Ver `formato_sentencia.py` en el API. */
 export type FormatoSentencia = 'estandar' | 'moderna';
 
-export async function resolverEnVivo(
-    numero: string, userEmail: string,
-    opciones: {
-        criterio?: Criterio | null; criteriosJson?: string; contexto?: string;
-        sentidoGlobal?: string; razonGlobal?: string;
-        /** Si el secretario eligió ese sentido global a propósito. La pantalla
-         *  también lo fija sola al llegar la propuesta, y ése es un eco del
-         *  motor, no su palabra. */
-        globalDictado?: boolean;
-        resolvioDeclarado?: string; globalJson?: string;
-        /* Los conceptos de violación, que el secretario pega cuando el
-           recurso levanta un sobreseimiento: no constan en el expediente del
-           recurso, y sin ellos el proyecto levanta el sobreseimiento sin
-           resolver lo único que quedaba por resolver. */
-        conceptosViolacion?: string;
-        /** La autoridad corregida a mano, cuando la leída salió mal o en hueco. */
-        responsable?: string;
-        /** Lo que el secretario resolvió sobre un cómputo extemporáneo:
-         *  'oportuna' rectifica y entra al fondo; 'reserva' deja la ejecutoria
-         *  resolviendo la improcedencia y pone el estudio detrás de los
-         *  resolutivos. Vacío = no hay nada que decidir. */
-        oportunidadDecision?: string;
-        /** Su razón, que va LITERAL al considerando cuando rectifica. */
-        oportunidadMotivo?: string;
-        /** EL ATAJO DE UN SOLO CLIC: que decida el motor. El servidor reparte
-         *  con las propuestas que ya guardó al proponer —es la rama `else` de
-         *  `modos_decision.repartir`—, así que no hace falta mandarle de vuelta
-         *  lo que él mismo calculó. Nadie revisa el sentido: es el riesgo que
-         *  el botón amarillo anuncia. */
-        porJurimetria?: boolean;
-        /** LA FORMA DE LA SENTENCIA (David, 25-sep-2026). 'estandar' va
-         *  concepto por concepto con la extensión de siempre; 'moderna' abre
-         *  cada punto con su pregunta, la responde enseguida y condensa lo que
-         *  no es materia de estudio. Vacío = estándar. */
-        formato?: FormatoSentencia;
-        /** LA SUPLENCIA DE LA QUEJA (David, 26-sep-2026): la que el secretario
-         *  confirmó en la pantalla de decisión, o la propuesta del motor sin
-         *  confirmar. Sólo la confirmada cambia el estudio. */
-        suplencia?: DecisionSuplencia | null;
-    },
-    onTexto?: (trozo: string) => void,
-    onComponiendo?: () => void,
-): Promise<ResultadoProyecto> {
+/** LO QUE VIAJA AL GENERAR EL PROYECTO, en un solo tipo (26-sep-2026).
+ *  Era el parámetro en línea de `resolverEnVivo`; ahora lo comparte con
+ *  `pedirPlan`, porque el servidor busca el plan del estudio por una CLAVE que
+ *  sale de este mismo formulario (sentido, razón, grupo, suplencia, contexto…).
+ *  Si la pantalla pidiera el plan con un formulario y generara con otro, las
+ *  claves no casarían y el estudio rehará —o esperará— un plan que ya estaba
+ *  hecho, gastando una de las cuatro corridas de la sesión. Un solo
+ *  constructor, `formularioDelResolver`, para las dos puertas. */
+export interface OpcionesResolver {
+    criterio?: Criterio | null; criteriosJson?: string; contexto?: string;
+    sentidoGlobal?: string; razonGlobal?: string;
+    /** Si el secretario eligió ese sentido global a propósito. La pantalla
+     *  también lo fija sola al llegar la propuesta, y ése es un eco del
+     *  motor, no su palabra. */
+    globalDictado?: boolean;
+    resolvioDeclarado?: string; globalJson?: string;
+    /* Los conceptos de violación, que el secretario pega cuando el
+       recurso levanta un sobreseimiento: no constan en el expediente del
+       recurso, y sin ellos el proyecto levanta el sobreseimiento sin
+       resolver lo único que quedaba por resolver. */
+    conceptosViolacion?: string;
+    /** La autoridad corregida a mano, cuando la leída salió mal o en hueco. */
+    responsable?: string;
+    /** Lo que el secretario resolvió sobre un cómputo extemporáneo:
+     *  'oportuna' rectifica y entra al fondo; 'reserva' deja la ejecutoria
+     *  resolviendo la improcedencia y pone el estudio detrás de los
+     *  resolutivos. Vacío = no hay nada que decidir. */
+    oportunidadDecision?: string;
+    /** Su razón, que va LITERAL al considerando cuando rectifica. */
+    oportunidadMotivo?: string;
+    /** EL ATAJO DE UN SOLO CLIC: que decida el motor. El servidor reparte
+     *  con las propuestas que ya guardó al proponer —es la rama `else` de
+     *  `modos_decision.repartir`—, así que no hace falta mandarle de vuelta
+     *  lo que él mismo calculó. Nadie revisa el sentido: es el riesgo que
+     *  el botón amarillo anuncia. */
+    porJurimetria?: boolean;
+    /** LA FORMA DE LA SENTENCIA (David, 25-sep-2026). 'estandar' va
+     *  concepto por concepto con la extensión de siempre; 'moderna' abre
+     *  cada punto con su pregunta, la responde enseguida y condensa lo que
+     *  no es materia de estudio. Vacío = estándar. */
+    formato?: FormatoSentencia;
+    /** LA SUPLENCIA DE LA QUEJA (David, 26-sep-2026): la que el secretario
+     *  confirmó en la pantalla de decisión, o la propuesta del motor sin
+     *  confirmar. Sólo la confirmada cambia el estudio. */
+    suplencia?: DecisionSuplencia | null;
+    /** LA RAZÓN DEL SECRETARIO PARA UN ARGUMENTO CONCRETO (Decisión 6 de
+     *  David, opción a, 26-sep-2026). El plan marca `pendiente: "razon"` el
+     *  argumento que su problema decide pero su razón no contesta —el C3.e del
+     *  642, que invocaba un precedente propio—; el panel «Cómo se estudiará»
+     *  se la pide y lo que escriba viaja aquí, por id del segmento, y entra al
+     *  guion como suya. Si no escribe nada, el estudio desarrolla ese argumento
+     *  con el material y lo pone PRIMERO en las advertencias. */
+    razonesSegmento?: Record<string, string>;
+    /** LA VARIANTE DEL PROMPT DEL ESTUDIO («v1»…«v4»), sólo para cuentas de
+     *  casa; al resto el servidor se la ignora (`_taller_variante_estudio`).
+     *  Vacío = la global (ESTUDIO_PROMPT). */
+    varianteEstudio?: string;
+}
+
+/** El formulario de `/taller/resolver/stream`, el mismo que recibe
+ *  `/taller/plan/pedir`. Ver `OpcionesResolver`. */
+export function formularioDelResolver(
+    numero: string, userEmail: string, opciones: OpcionesResolver,
+): FormData {
     const fd = new FormData();
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
@@ -870,6 +900,30 @@ export async function resolverEnVivo(
                            a_favor_de: o.suplencia.aFavorDe,
                            confirmada: !!o.suplencia.confirmada })
         : '');
+    /* LAS RAZONES POR ARGUMENTO, SIEMPRE, aunque vayan vacías: igual que la
+       suplencia, el servidor las asigna en cada petición, y una razón escrita
+       para el plan anterior no puede colarse en el siguiente si el secretario
+       la borró. */
+    const razones = Object.entries(o.razonesSegmento ?? {})
+        .map(([id, t]) => [id.trim(), (t ?? '').trim()] as const)
+        .filter(([id, t]) => id && t);
+    fd.append('razones_segmento', razones.length ? JSON.stringify(Object.fromEntries(razones)) : '');
+    if (o.varianteEstudio?.trim()) fd.append('variante_estudio', o.varianteEstudio.trim());
+    return fd;
+}
+
+export async function resolverEnVivo(
+    numero: string, userEmail: string,
+    opciones: OpcionesResolver,
+    onTexto?: (trozo: string) => void,
+    onComponiendo?: () => void,
+    /** EL SERVIDOR ESTÁ ORDENANDO EL ESTUDIO (evento «ordenando», sólo con el
+     *  plan encendido): espera el plan de esta decisión, o lo hace, antes de
+     *  escribir la primera línea. Puede tardar hasta dos minutos, y sin decirlo
+     *  la pantalla parecería colgada justo antes del estudio. */
+    onOrdenando?: () => void,
+): Promise<ResultadoProyecto> {
+    const fd = formularioDelResolver(numero, userEmail, opciones);
 
     /* ═══ LA LÍNEA PUEDE MORIRSE A MEDIAS, Y EL PROYECTO NO (17-sep-2026) ═══
        El 536/2025: el servidor escribió el estudio entero y lo archivó, y esta
@@ -939,6 +993,8 @@ export async function resolverEnVivo(
                     onTexto?.(ev.dato);
                 } else if (ev.tipo === 'componiendo') {
                     onComponiendo?.();
+                } else if (ev.tipo === 'ordenando') {
+                    onOrdenando?.();
                 } else if (ev.tipo === 'error') {
                     /* El motor dice que falló: eso no se recupera, se cuenta. */
                     throw new ErrorDelMotor(String(ev.mensaje || 'Falló la generación.'));
@@ -996,6 +1052,7 @@ export async function resolverEnVivo(
         textoAvisos: avisos.map(String),
         textoHuecos: huecos.map(String),
         version: Number(listo.version || 0) || undefined,
+        mapa: mapaDe(listo),
     };
 }
 
@@ -1474,6 +1531,12 @@ export interface ContextoDelAsunto {
     /** LA SUPLENCIA QUE PROPONE EL MOTOR para este asunto. Null si el servidor
      *  no pudo armarla (o es anterior al 26-sep-2026). */
     suplencia?: PropuestaSuplencia | null;
+    /** CON QUÉ VARIANTE SE ESCRIBIRÍA EL ESTUDIO DE ESTE ASUNTO si nadie pide
+     *  otra (26-sep-2026). Hoy todos van en «v1»; cuando se encienda el plan
+     *  por tipo (`ESTUDIO_PROMPT_AD=v4`), es lo que le dice a la pantalla que
+     *  enseñe «Cómo se estudiará» también a quien no es de casa. Vacío si el
+     *  servidor no lo manda. */
+    varianteEstudio?: string;
 }
 
 /* ═══ LO QUE SE QUEDÓ A MEDIAS ═══
@@ -1509,6 +1572,9 @@ export interface FichaProyecto {
      *  registro. Se dice, no se rellena con ceros: un «0 palabras» en pantalla
      *  es peor que no enseñar nada, porque parece un dato. */
     parcial?: boolean;
+    /** El mapa del estudio con que se guardó (Paso 2): lo mismo que traía el
+     *  evento «listo», para que volver al asunto enseñe la misma pestaña. */
+    mapa?: MapaDelEstudio | null;
 }
 
 export interface AsuntoEnCurso {
@@ -1699,10 +1765,12 @@ export async function contextoDelAsunto(
                 sentidoGlobal: String(j.proyecto.sentido_global ?? ''),
                 criterios: (j.proyecto.criterios ?? []) as FichaProyecto['criterios'],
                 parcial: !!j.proyecto.parcial,
+                mapa: mapaDe(j.proyecto),
             }
             : null,
         avisos: (j.avisos ?? []) as string[],
         suplencia: _suplenciaDe(j.suplencia),
+        varianteEstudio: String(j.variante_estudio ?? ''),
     };
 }
 
@@ -1779,5 +1847,305 @@ export async function fichaDesdeAdmision(
         avisos: (j.avisos ?? []) as string[],
         // La regla de notificación que corresponde a la responsable leída.
         reglas: (j.reglas_surtimiento ?? null) as ReglasOfrecidas | null,
+    };
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EL PLAN DEL ESTUDIO: «CÓMO SE ESTUDIARÁ» Y EL MAPA (Paso 2, 26-sep-2026)
+   ═══════════════════════════════════════════════════════════════════════════
+   Medido hoy en 8 casos × 2 corridas con el localizador ciego: la v2 acorta
+   la Solución a la mitad, pero contesta con razón propia sólo el 73 % de los
+   argumentos autónomos (la v1, el 79 %) y duplica las omisiones graves (20
+   frente a 10). Al acortar sin saber qué argumentos hay, funde los que traen
+   dato propio en una respuesta global. El remedio que David aprobó es decidir
+   ANTES de redactar, sobre SU criterio, qué argumentos hay, cuáles se
+   contestan juntos y por qué, dónde se expone cada premisa una sola vez y qué
+   dato trae cada uno; y marcar en el texto dónde se contestó cada uno.
+
+   El plan NO decide el sentido: la etiqueta de cada argumento es la del
+   criterio de su problema, y toda «afinación» llega como PROPUESTA que el
+   secretario acepta con un clic o deja pasar. Tampoco redacta la regla.
+
+   Los tipos siguen `diag/contrato_paso2.md` (y el esquema de w2_final §4.1).
+   Se leen con tolerancia —campo que falta = vacío, nunca una excepción—
+   porque el servidor que los produce se escribe en paralelo a esta pantalla. */
+
+export type EstadoPlan = 'listo' | 'en_curso' | 'sin_plan' | 'fallo';
+
+/** El dato propio de un argumento, verificado palabra por palabra en su
+ *  fuente (el escrito, la reclamada, una constancia o los antecedentes). */
+export interface DatoPropio { texto: string; cita: string; fuente: string }
+
+export interface SegmentoDelPlan {
+    /** «C1.a»: C = concepto, A = agravio, AD = adhesivo, S = suplido. */
+    id: string;
+    /** El problema que decide su suerte. Lo fija el servidor, no el modelo. */
+    problemaId: number | string | null;
+    /** La pregunta de ese problema, si el servidor la manda (desempata). */
+    problema: string;
+    parte: string;
+    /** procedencia | procesal | forma | omision | fondo */
+    vicio: string;
+    /** «P2»: la consideración de la resolución que ataca; '' si ninguna. */
+    ataca: string;
+    /** El segmento que reitera, si sólo repite sin dato propio. */
+    reitera: string;
+    dato: DatoPropio | null;
+    /** = el sentido del criterio de su problema. */
+    etiqueta: string;
+    /** Del catálogo cerrado (w2_final §4.2), p. ej. «no_combate(P2)». */
+    razon: string;
+    /** aplica | remite | desarrolla | residual | no_se_estudia | no_se_expresa_art79 */
+    trat: string;
+    /** Por qué pide desarrollo propio: hecho | prueba | norma | precedente | procesal | consecuencia. */
+    diferencia: string;
+    /** '' = decidido · «sentido»: ningún problema lo decide · «razon»: su
+     *  problema lo decide pero la razón del secretario no lo contesta. */
+    pendiente: '' | 'sentido' | 'razon';
+    /** Del piso de segmentos: el párrafo del resumen y la cita LITERAL del escrito. */
+    texto: string;
+    cita: string;
+    pagina: string;
+    sostiene: string;
+}
+
+export interface ProposicionDelPlan {
+    /** «P2»: una consideración del acto, con su carácter y su relación. */
+    id: string; dice: string; caracter: string; relacion: string; fuente: string; cita: string;
+}
+
+/** Dónde se apoya la premisa de una unidad: fuentes y anclas, NUNCA el texto
+ *  de la regla —ése lo escribe el estudio desde la razón del secretario—. */
+export interface PremisaDelPlan {
+    id: string; respondeA: string[]; tesis: string[]; normas: string[]; anclas: string[];
+}
+
+/** Lo que se contesta junto: misma consideración, misma razón, mismo vicio
+ *  (o lo que el secretario juntó con «Estudiar juntos», que manda). */
+export interface UnidadDelPlan {
+    id: string;
+    problemas: (number | string)[];
+    segmentos: string[];
+    premisa: string;
+    objecion: { de: string; anclas: string[] } | null;
+}
+
+/** Una afinación que el plan PROPONE y no aplica: cambiar la calificación. */
+export interface PropuestaDelPlan { seg: string; de: string; a: string; porQue: string }
+
+export interface PlanDelEstudio {
+    version: string;
+    clave: string;
+    tipoAsunto: string;
+    segmentos: SegmentoDelPlan[];
+    proposiciones: ProposicionDelPlan[];
+    premisas: PremisaDelPlan[];
+    unidades: UnidadDelPlan[];
+    propuestas: PropuestaDelPlan[];
+    avisos: string[];
+    orden: { criterio: string; porQue: string } | null;
+}
+
+export interface RespuestaPlan {
+    estado: EstadoPlan;
+    /** La huella de la decisión con que se hizo (o se está haciendo) el plan. */
+    clave: string;
+    plan: PlanDelEstudio | null;
+    avisos: string[];
+    /** Cuántas corridas lleva la sesión y cuántas admite, si el servidor lo dice. */
+    corridas: number | null;
+    tope: number | null;
+}
+
+type _Obj = Record<string, unknown>;
+const _o = (x: unknown): _Obj | null =>
+    (x && typeof x === 'object' && !Array.isArray(x)) ? x as _Obj : null;
+const _l = (x: unknown): unknown[] => (Array.isArray(x) ? x : []);
+const _t = (x: unknown): string => (x === null || x === undefined ? '' : String(x)).trim();
+const _ts = (x: unknown): string[] => _l(x).map(_t).filter(Boolean);
+const _n = (x: unknown): number | null => {
+    const v = typeof x === 'number' ? x : (typeof x === 'string' && x.trim() ? Number(x) : NaN);
+    return Number.isFinite(v) ? v : null;
+};
+
+/** Un aviso puede venir como texto o como objeto con su texto dentro. */
+function _textoDeAviso(x: unknown): string {
+    const o = _o(x);
+    if (!o) return _t(x);
+    return _t(o.texto ?? o.mensaje ?? o.aviso ?? o.que ?? '') || JSON.stringify(o);
+}
+
+/** «no_combate(P2)» puede llegar ya escrito o partido en {tipo, p}. */
+function _razonDe(x: unknown): string {
+    const o = _o(x);
+    if (!o) return _t(x);
+    const tipo = _t(o.tipo ?? o.razon ?? o.id ?? '');
+    const arg = _t(o.p ?? o.arg ?? o.proposicion ?? '');
+    return arg ? `${tipo}(${arg})` : tipo;
+}
+
+function _idProblema(x: unknown): number | string | null {
+    if (typeof x === 'number' && Number.isFinite(x)) return x;
+    const t = _t(x);
+    if (!t) return null;
+    return /^\d+$/.test(t) ? Number(t) : t;
+}
+
+export function planDe(x: unknown): PlanDelEstudio | null {
+    const j = _o(x);
+    if (!j) return null;
+    const segmentos: SegmentoDelPlan[] = _l(j.segmentos).map((y): SegmentoDelPlan => {
+        const s = _o(y) ?? {};
+        const d = _o(s.dato);
+        const pend = _t(s.pendiente).toLowerCase();
+        return {
+            id: _t(s.id),
+            problemaId: _idProblema(s.problema_id),
+            problema: _t(s.problema ?? s.pregunta ?? ''),
+            parte: _t(s.parte),
+            vicio: _t(s.vicio),
+            ataca: _t(s.ataca),
+            reitera: _t(s.reitera),
+            dato: d && _t(d.texto) ? { texto: _t(d.texto), cita: _t(d.cita), fuente: _t(d.fuente) } : null,
+            etiqueta: _t(s.etiqueta),
+            razon: _razonDe(s.razon),
+            trat: _t(s.trat),
+            diferencia: _t(s.diferencia),
+            pendiente: pend === 'sentido' ? 'sentido' : pend === 'razon' ? 'razon' : '',
+            texto: _t(s.texto),
+            cita: _t(s.cita),
+            pagina: _t(s.pagina),
+            sostiene: _t(s.sostiene),
+        };
+    }).filter((s) => s.id);
+    const orden = _o(j.orden);
+    return {
+        version: _t(j.version),
+        clave: _t(j.clave),
+        tipoAsunto: _t(j.tipo_asunto),
+        segmentos,
+        proposiciones: _l(j.proposiciones).map((y) => {
+            const p = _o(y) ?? {};
+            return { id: _t(p.id), dice: _t(p.dice), caracter: _t(p.caracter),
+                     relacion: _t(p.relacion), fuente: _t(p.fuente), cita: _t(p.cita) };
+        }).filter((p) => p.id),
+        premisas: _l(j.premisas).map((y) => {
+            const m = _o(y) ?? {};
+            const f = _o(m.fuentes) ?? {};
+            return { id: _t(m.id), respondeA: _ts(m.responde_a), tesis: _ts(f.tesis),
+                     normas: _ts(f.normas), anclas: _ts(m.anclas) };
+        }).filter((m) => m.id),
+        unidades: _l(j.unidades).map((y) => {
+            const u = _o(y) ?? {};
+            const ob = _o(u.objecion);
+            return {
+                id: _t(u.id),
+                problemas: _l(u.problemas).map(_idProblema).filter((p): p is number | string => p !== null),
+                segmentos: _ts(u.segmentos),
+                premisa: _t(u.premisa),
+                objecion: ob ? { de: _t(ob.de), anclas: _ts(ob.anclas) } : null,
+            };
+        }).filter((u) => u.id),
+        propuestas: _l(j.propuestas).map((y) => {
+            const p = _o(y) ?? {};
+            return { seg: _t(p.seg), de: _t(p.de), a: _t(p.a), porQue: _t(p.por_que ?? p.porque) };
+        }).filter((p) => p.seg && p.a),
+        avisos: _l(j.avisos_al_secretario).map(_textoDeAviso).filter(Boolean),
+        orden: orden ? { criterio: _t(orden.criterio), porQue: _t(orden.por_que) } : null,
+    };
+}
+
+function _respuestaPlanDe(x: unknown): RespuestaPlan {
+    const j = _o(x) ?? {};
+    const e = _t(j.estado).toLowerCase();
+    const estado: EstadoPlan = e === 'listo' || e === 'en_curso' || e === 'fallo' ? e : 'sin_plan';
+    return {
+        estado,
+        clave: _t(j.clave),
+        plan: planDe(j.plan),
+        avisos: _l(j.avisos).map(_textoDeAviso).filter(Boolean),
+        corridas: _n(j.corridas),
+        tope: _n(j.tope),
+    };
+}
+
+/** El plan que hay en la sesión, sea de la decisión que sea: la respuesta
+ *  dice su `clave`, y quien pregunta compara con la que pidió. */
+export async function leerPlan(numero: string, userEmail: string): Promise<RespuestaPlan> {
+    const res = await fetch(
+        `${BASE}/taller/plan?numero=${encodeURIComponent(numero)}`
+        + `&user_email=${encodeURIComponent(userEmail)}`);
+    if (!res.ok) return _fallo(res);
+    return _respuestaPlanDe(await res.json().catch(() => null));
+}
+
+/** PIDE EL PLAN DE ESTA DECISIÓN con el MISMO formulario que generará el
+ *  proyecto (`formularioDelResolver`): así la clave que calcula el servidor
+ *  aquí es la que buscará al generar. El servidor nunca recalcula una clave ya
+ *  hecha —si lo está, contesta «listo» al momento— y corta en 4 corridas por
+ *  sesión; el antirrebote de la pantalla es lo que evita gastarlas en cada
+ *  tecla. */
+export async function pedirPlan(
+    numero: string, userEmail: string, opciones: OpcionesResolver,
+): Promise<RespuestaPlan> {
+    const fd = formularioDelResolver(numero, userEmail, opciones);
+    const res = await fetch(`${BASE}/taller/plan/pedir`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    return _respuestaPlanDe(await res.json().catch(() => null));
+}
+
+/** Cuántos argumentos quedaron localizados en el texto, según las marcas. */
+export interface CoberturaDelEstudio {
+    /** Ids sin marca y sin rastro de sus anclas en el texto. */
+    faltan: string[];
+    /** Ids sin marca cuyas anclas o cuyo texto sí aparecen: probablemente
+     *  contestados, sin la marca. */
+    rescatados: string[];
+    /** De 0 a 1; null si el servidor no la calculó. */
+    cobertura: number | null;
+}
+
+/** EL MAPA DEL ESTUDIO: dónde contestó el estudio cada argumento. Las marcas
+ *  ⟦C1.a⟧ las escribe el propio modelo al inicio del párrafo que contesta y el
+ *  servidor las retira antes de componer: nunca llegan al .docx. */
+export interface MapaDelEstudio {
+    /** «C1.a» → índices de párrafo; también «M1» (premisa) y «U1» (efectos). */
+    marcas: Record<string, number[]>;
+    cobertura: CoberturaDelEstudio | null;
+    /** El plan con que se escribió, si viaja con el resultado. */
+    plan: PlanDelEstudio | null;
+    /** El principio de cada párrafo del estudio limpio, si el servidor lo
+     *  manda: sin él la pestaña dice «párrafo 14» y no enseña su texto, porque
+     *  reconstruirlo aquí desde lo que se vio escribirse podría enseñar el
+     *  párrafo equivocado. */
+    parrafos: string[];
+    variante: string;
+}
+
+/** Lee el mapa del evento «listo» o de la ficha del proyecto. Null si no trae
+ *  marcas ni cobertura (variantes v1/v2, o proyectos anteriores). */
+export function mapaDe(x: unknown): MapaDelEstudio | null {
+    const j = _o(x);
+    if (!j) return null;
+    let crudo = _o(j.mapa);
+    if (crudo && _o(crudo.marcas)) crudo = _o(crudo.marcas);
+    const marcas: Record<string, number[]> = {};
+    Object.entries(crudo ?? {}).forEach(([id, v]) => {
+        const idx = (Array.isArray(v) ? v : [v]).map(_n).filter((n): n is number => n !== null);
+        if (id.trim()) marcas[id.trim()] = idx;
+    });
+    const c = j.cobertura ?? _o(j.mapa)?.cobertura;
+    const co = _o(c);
+    const cobertura: CoberturaDelEstudio | null = co
+        ? { faltan: _ts(co.faltan), rescatados: _ts(co.rescatados), cobertura: _n(co.cobertura) }
+        : (_n(c) !== null ? { faltan: [], rescatados: [], cobertura: _n(c) } : null);
+    if (!Object.keys(marcas).length && !cobertura) return null;
+    return {
+        marcas,
+        cobertura,
+        plan: planDe(j.plan ?? j.plan_usado),
+        parrafos: _l(j.parrafos).map(_t),
+        variante: _t(j.variante ?? j.variante_estudio),
     };
 }
