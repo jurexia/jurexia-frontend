@@ -1199,6 +1199,7 @@ const botonDe = (arbol, re) => buscar(arbol, (n) => n.type === 'button' && re.te
     ok(!!pl && /calificación conjunta/.test(t) && /cada argumento recibe su respuesta/.test(t) && /dato propio/.test(t),
        'promete lo que recibe el estudio: calificación conjunta y una respuesta por argumento');
     ok(!/si atacan consideraciones distintas/.test(t), 'no promete lo que ninguna variante hace');
+    ok(/sale del grupo y se te avisa/.test(t), 'y dice que el que queda sin estudiar sale del grupo (el servidor lo hace y avisa)');
 }
 
 fs.rmSync(TMP, { recursive: true, force: true });

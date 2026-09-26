@@ -1209,14 +1209,19 @@ export default function Decision({
                 propio; la v4 además los separa por proposición en el plan.
                 Ninguna condiciona eso a que ataquen consideraciones
                 distintas, y la pantalla no decía lo de la calificación
-                conjunta, que es lo que más cambia. */}
+                conjunta, que es lo que más cambia. Y el servidor saca del
+                grupo al que el sentido del principal deja sin estudiar
+                (innecesario, caído con él o sin calificar) y lo dice en los
+                avisos («EL GRUPO X NO SE APLICÓ…», main.py
+                `_grupos_tras_el_arbol`): también se promete. */}
             {onGrupos && problemas.length >= 2 && (
                 <Pliegue titulo={`Problemas que se estudian juntos${nGrupos ? ` · ${nGrupos} ${nGrupos === 1 ? 'grupo' : 'grupos'}` : ''}`}
                          abierto={nGrupos > 0}>
                     <p className="mb-2.5 text-[12px] leading-relaxed text-white/45">
                         Marca dos o más si se resuelven con una sola línea argumentativa. El estudio los trata en un
                         apartado que abre diciendo qué los une, con una calificación conjunta; expone una vez la premisa
-                        común y, dentro, cada argumento recibe su respuesta, y el que trae un dato propio, la suya.
+                        común y, dentro, cada argumento recibe su respuesta, y el que trae un dato propio, la suya. Si el
+                        sentido del principal deja alguno sin estudiar, sale del grupo y se te avisa.
                     </p>
                     <EstudiarJuntos problemas={problemas} grupos={grupos} onGrupos={onGrupos} />
                 </Pliegue>
