@@ -269,13 +269,16 @@ export interface BolsaProyectos {
 /* ═══ EL ERROR DEL SERVIDOR, LEGIBLE (26-sep-2026) ═══
    Tras un cambio de sentido, si la recalificación no llega, el servidor ya
    no genera con accesorios sin calificar: el flujo manda un evento «error» y
-   el camino plano contesta 409, los dos con la lista de los que faltan. Un
-   `detail` que no es texto se pintaba «[object Object]», y una lista pegada
-   en una línea no se lee. Aquí se acepta el texto tal cual o un objeto con
-   el mensaje (`mensaje`, `message`, `detail` o `error`) y la lista
-   (`sin_calificar`, `pendientes`, `problemas`, `accesorios` o `lista`: cada
-   uno texto u objeto con `problema`/`pregunta`), y sale un párrafo con un
-   renglón por planteamiento (la pantalla lo pinta con los saltos). */
+   el camino plano contesta 409, los dos con la lista de los que faltan. Hoy
+   la lista viaja DENTRO del texto (`recalificar.aviso_sin_calificar`: «…SIN
+   CALIFICAR TRAS TU CAMBIO DE SENTIDO: «P1» · «P2». Con el principal…»), en
+   un solo renglón que no se lee; aquí se parte en un renglón por
+   planteamiento (la pantalla lo pinta con los saltos). Y por si el servidor
+   la manda aparte: un `detail` que no es texto se pintaba «[object
+   Object]»; se acepta un objeto con el mensaje (`mensaje`, `message`,
+   `detail` o `error`) y la lista (`sin_calificar`, `pendientes`,
+   `problemas`, `accesorios` o `lista`: cada uno texto u objeto con
+   `problema`/`pregunta`). */
 const _CAMPOS_MENSAJE = ['mensaje', 'message', 'detail', 'error'] as const;
 const _CAMPOS_LISTA = ['sin_calificar', 'pendientes', 'problemas', 'accesorios', 'lista'] as const;
 const _LARGO_RENGLON = 220;
@@ -286,8 +289,19 @@ function _renglon(x: unknown): string {
     const cps = Array.from(t);
     return cps.length > _LARGO_RENGLON ? `${cps.slice(0, _LARGO_RENGLON - 1).join('').trimEnd()}…` : t;
 }
+/** «…: «a» · «b». Sigue…» → «…:\n· «a»\n· «b»\nSigue…». Sólo la lista de
+ *  planteamientos entre comillas latinas tras dos puntos —de dos o más, o de
+ *  uno si lo que la abre dice «sin calificar»—; lo demás, igual. */
+const _RX_LISTA_EN_TEXTO = /:\s+(«[^«»]*»(?:\s+·\s+«[^«»]*»)*)(?:\.\s+|\.?$)/;
+function _listaEnRenglones(t: string): string {
+    const m = _RX_LISTA_EN_TEXTO.exec(t);
+    if (!m) return t;
+    const items = m[1].split(/\s+·\s+(?=«)/);
+    if (items.length < 2 && !/sin calificar/i.test(t.slice(0, m.index))) return t;
+    return `${t.slice(0, m.index)}:\n${items.map((x) => `· ${x}`).join('\n')}\n${t.slice(m.index + m[0].length)}`.trim();
+}
 export function textoDelError(detalle: unknown, porOmision = 'Falló la petición.'): string {
-    if (typeof detalle === 'string') return detalle.trim() || porOmision;
+    if (typeof detalle === 'string') return _listaEnRenglones(detalle.trim()) || porOmision;
     if (Array.isArray(detalle)) {
         // La validación de FastAPI: [{loc, msg, type}, …].
         const msgs = detalle.map((d) => (d && typeof d === 'object' && 'msg' in d
@@ -299,7 +313,7 @@ export function textoDelError(detalle: unknown, porOmision = 'Falló la petició
     let mensaje = '';
     for (const k of _CAMPOS_MENSAJE) {
         const v = o[k];
-        if (typeof v === 'string' && v.trim()) { mensaje = v.trim(); break; }
+        if (typeof v === 'string' && v.trim()) { mensaje = _listaEnRenglones(v.trim()); break; }
         // Anidado: {detail: {mensaje, sin_calificar}}.
         if (v && typeof v === 'object' && !Array.isArray(v)) return textoDelError(v, porOmision);
     }

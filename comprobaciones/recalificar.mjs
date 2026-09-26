@@ -1074,8 +1074,21 @@ const botonDe = (arbol, re) => buscar(arbol, (n) => n.type === 'button' && re.te
     const d = pintarDecision(baseDecision({ recalificadas: { p1: { estado: 'error', sentido: '', razon: '', porQue: 'Error 502' } } }));
     ok(/si tampoco sale, no escribirá el proyecto/.test(texto(tarjetaDe(d, 'p1'))), 'error de red: si tampoco sale al generar, no se escribe');
 
-    // EL ERROR DEL SERVIDOR, LEGIBLE: texto, objeto con lista, anidado, 422.
-    ok(api.textoDelError('Tope de 6 corridas') === 'Tope de 6 corridas', 'un texto se deja como viene');
+    // EL ERROR DEL SERVIDOR, LEGIBLE. Primero, tal como lo manda HOY
+    // (recalificar.aviso_sin_calificar de wt-p2-integracion, 1f34fb6: el
+    // flujo como {"tipo":"error","mensaje": …} y el plano como 409 con ese
+    // texto): la lista va dentro, en un solo renglón.
+    const SRV = 'NO SE GENERÓ EL PROYECTO. SIN CALIFICAR TRAS TU CAMBIO DE SENTIDO: «¿La condena excedió lo reclamado en la demanda y en la ampliación que presentó l» · «¿Procedían las costas de segunda instancia?». Con el principal infundado —la vía contraria a la que propuso el motor— su calificación de la otra vía se retiró y la recalificación con tu premisa no llegó (el proveedor falló o no respondió a tiempo). Sin su calificación, la apertura, el cierre y los resolutivos se armarían sin ellos. Califícalos tú en la pantalla —un clic— o vuelve a generar para reintentar la recalificación.';
+    const SRV_LEGIBLE = 'NO SE GENERÓ EL PROYECTO. SIN CALIFICAR TRAS TU CAMBIO DE SENTIDO:\n'
+        + '· «¿La condena excedió lo reclamado en la demanda y en la ampliación que presentó l»\n'
+        + '· «¿Procedían las costas de segunda instancia?»\n'
+        + 'Con el principal infundado —la vía contraria a la que propuso el motor— su calificación de la otra vía se retiró y la recalificación con tu premisa no llegó (el proveedor falló o no respondió a tiempo). Sin su calificación, la apertura, el cierre y los resolutivos se armarían sin ellos. Califícalos tú en la pantalla —un clic— o vuelve a generar para reintentar la recalificación.';
+    ok(api.textoDelError(SRV) === SRV_LEGIBLE, 'el mensaje del servidor: un renglón por planteamiento sin calificar');
+    const SRV1 = 'NO SE GENERÓ EL PROYECTO. SIN CALIFICAR TRAS TU CAMBIO DE SENTIDO: «¿Procedían las costas?». Con el principal fundado —la vía contraria…';
+    ok(api.textoDelError(SRV1) === 'NO SE GENERÓ EL PROYECTO. SIN CALIFICAR TRAS TU CAMBIO DE SENTIDO:\n· «¿Procedían las costas?»\nCon el principal fundado —la vía contraria…',
+       'con uno solo, también en su renglón');
+    ok(api.textoDelError('No se pudo leer: «archivo.pdf».') === 'No se pudo leer: «archivo.pdf».'
+       && api.textoDelError('Tope de 6 corridas') === 'Tope de 6 corridas', 'lo demás se deja como viene');
     const lista = { mensaje: 'Quedaron sin calificar tras tu cambio de sentido; califícalos antes de generar.',
                     sin_calificar: ['¿La condena excedió lo reclamado?', { problema: '¿Procedían   las costas?' }, ''] };
     ok(api.textoDelError(lista) === 'Quedaron sin calificar tras tu cambio de sentido; califícalos antes de generar.\n· ¿La condena excedió lo reclamado?\n· ¿Procedían las costas?',
@@ -1089,21 +1102,28 @@ const botonDe = (arbol, re) => buscar(arbol, (n) => n.type === 'button' && re.te
        'un planteamiento larguísimo se recorta');
     for (const v of [{}, null, 42]) ok(!/object Object/.test(api.textoDelError(v, 'Falló.')), `nunca «[object Object]» (${JSON.stringify(v)})`);
     const fetchReal = globalThis.fetch;
-    // 409 del camino plano (y de cualquier puerta que use _fallo).
-    globalThis.fetch = async () => new Response(JSON.stringify({ detail: lista }), { status: 409 });
-    let msg = '';
-    try { await api.recalificar('1', 'x', { criteriosJson: '[]' }); } catch (e) { msg = e.message; }
-    ok(msg === api.textoDelError(lista), `un 409 con la lista llega legible, no «[object Object]» (${JSON.stringify(msg).slice(0, 60)})`);
-    // El evento «error» del flujo, con la lista.
-    globalThis.fetch = async (url) => {
-        const u = String(url);
-        if (u.includes('/taller/proyecto?')) return new Response(JSON.stringify({ proyecto: null }), { status: 200 });
-        const cuerpo = [{ tipo: 'recalificando' }, { tipo: 'error', ...lista }].map((e) => `data: ${JSON.stringify(e)}\n\n`).join('');
-        return new Response(new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(cuerpo)); c.close(); } }), { status: 200 });
-    };
-    msg = '';
-    try { await api.resolverEnVivo('1', 'x', { criteriosJson: '[]' }); } catch (e) { msg = e.message; }
-    ok(msg === api.textoDelError(lista), 'el evento «error» del flujo con la lista llega legible, con sus renglones');
+    // 409 del camino plano (y de cualquier puerta que use _fallo): como hoy
+    // (texto) y con la lista aparte (objeto).
+    for (const [detail, esperado, que] of [[SRV, SRV_LEGIBLE, 'el texto del servidor'],
+                                           [lista, api.textoDelError(lista), 'la lista aparte']]) {
+        globalThis.fetch = async () => new Response(JSON.stringify({ detail }), { status: 409 });
+        let msg = '';
+        try { await api.recalificar('1', 'x', { criteriosJson: '[]' }); } catch (e) { msg = e.message; }
+        ok(msg === esperado, `un 409 con ${que} llega legible (${JSON.stringify(msg).slice(0, 60)})`);
+    }
+    // El evento «error» del flujo: como hoy y con la lista aparte.
+    for (const [ev, esperado, que] of [[{ tipo: 'error', mensaje: SRV }, SRV_LEGIBLE, 'el texto del servidor'],
+                                       [{ tipo: 'error', ...lista }, api.textoDelError(lista), 'la lista aparte']]) {
+        globalThis.fetch = async (url) => {
+            const u = String(url);
+            if (u.includes('/taller/proyecto?')) return new Response(JSON.stringify({ proyecto: null }), { status: 200 });
+            const cuerpo = [{ tipo: 'recalificando' }, ev].map((e) => `data: ${JSON.stringify(e)}\n\n`).join('');
+            return new Response(new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(cuerpo)); c.close(); } }), { status: 200 });
+        };
+        let msg = '';
+        try { await api.resolverEnVivo('1', 'x', { criteriosJson: '[]' }); } catch (e) { msg = e.message; }
+        ok(msg === esperado, `el evento «error» del flujo con ${que} llega legible, con sus renglones`);
+    }
     globalThis.fetch = fetchReal;
     const pag = fs.readFileSync(path.join(RAIZ, 'src/app/taller/page.tsx'), 'utf8');
     ok(/<p className=\{cn\('whitespace-pre-line[^']*'[\s\S]{0,160}\{error\}/.test(pag),
