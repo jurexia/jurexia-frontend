@@ -44,9 +44,11 @@ export function limpiarMarcadores(texto: string): string {
         .replace(/<!--[\s\S]*?-->/g, '')
         // Lo agrupado se abre antes en singulares (`@/lib/idsDeCita`), y los
         // restos con etiqueta —singulares, plurales o entre paréntesis— se van:
-        // «[Doc IDs: …]» no casaba con `Doc ID:` y quedaba a la vista.
-        .replace(/\[\s*Doc\s*IDs?\s*:\s*[^\]]*\]/gi, '')
-        .replace(/\(\s*Doc\s*IDs?\s*:\s*[^)]*\)/gi, '')
+        // «[Doc IDs: …]» no casaba con `Doc ID:` y quedaba a la vista. Sin
+        // cruzar renglones ni marcas de cita ⟦…⟧: un corchete sin cerrar se
+        // llevaba lo que viniera en el siguiente, citas incluidas.
+        .replace(/\[[ \t]*Doc[ \t]*IDs?[ \t]*:[^\]\n⟦]*\]/gi, '')
+        .replace(/\([ \t]*Doc[ \t]*IDs?[ \t]*:[^)\n⟦]*\)/gi, '')
         .replace(/⟦\d+⟧/g, '')
         .replace(/[ \t]+\n/g, '\n')
         .replace(/\n{3,}/g, '\n\n')

@@ -21,10 +21,14 @@
  * dispare cien consultas de golpe.
  *
  * Una cita sólo se da por «sin ficha» después de haberlo intentado: si
- * `/cita` contesta 404 no está en el acervo; si falla la red, se dice así y
- * se puede reintentar tocándola.
+ * `/cita` contesta 404 no está en el acervo; si falla la red, se reintenta
+ * sola dos veces, a los 5 y a los 20 segundos —Render dormido tarda en
+ * despertar—, y sólo entonces se dice que no se pudo consultar: tocarla lo
+ * vuelve a intentar, y cambiar de conversación olvida los fallos.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { metaDeCitas } from './citas';
+import { idsCitados } from '@/lib/idsDeCita';
 
 /** Lo que devuelve `GET /cita/{id}`: el contrato de `CITATION_META.sources`. */
 export type FichaCita = {
@@ -36,19 +40,29 @@ export type FichaCita = {
     [campo: string]: unknown;
 };
 
-/** `buscando`: se está pidiendo (o se pedirá en cuanto termine la respuesta).
- *  `lista`: hay ficha. `no_existe`: `/cita` dijo 404. `fallo`: no se pudo
- *  consultar (red, servidor): tocarla lo vuelve a intentar. */
+/** `buscando`: se está pidiendo, o se volverá a pedir sola en unos segundos
+ *  (o se pedirá en cuanto termine la respuesta). `lista`: hay ficha.
+ *  `no_existe`: `/cita` dijo 404. `fallo`: no se pudo consultar (red,
+ *  servidor) ni reintentándolo: tocarla lo vuelve a intentar. */
 export type EstadoFicha = 'buscando' | 'lista' | 'no_existe' | 'fallo';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 const SIMULTANEAS = 4;
 const ESPERA_MS = 30_000;
+/** Las esperas antes de cada reintento automático de un fallo pasajero (un
+ *  503, la red, los 30 s sin respuesta de un servidor que despierta). Se
+ *  exporta para que la comprobación las acorte; la pantalla no las toca. */
+export const ESPERAS_REINTENTO_MS: number[] = [5_000, 20_000];
 
 const fichas = new Map<string, FichaCita>();
 const inexistentes = new Set<string>();
+/** Falló y ya no quedan reintentos automáticos. */
 const fallos = new Set<string>();
 const enVuelo = new Map<string, Promise<FichaCita | null>>();
+/** Falló y tiene un reintento automático en espera. */
+const reintentos = new Map<string, ReturnType<typeof setTimeout>>();
+/** Cuántos reintentos automáticos lleva cada identificador. */
+const intentos = new Map<string, number>();
 const oyentes = new Set<(id: string) => void>();
 
 const avisar = (id: string) => oyentes.forEach((f) => f(id));
@@ -74,9 +88,59 @@ export function estadoDeFicha(docId: string): EstadoFicha | null {
     const id = normalizar(docId);
     if (fichas.has(id)) return 'lista';
     if (inexistentes.has(id)) return 'no_existe';
-    if (enVuelo.has(id)) return 'buscando';
+    if (enVuelo.has(id) || reintentos.has(id)) return 'buscando';
     if (fallos.has(id)) return 'fallo';
     return null;
+}
+
+/** ¿Ya no va a cambiar sin que nadie la toque? */
+function definitiva(id: string): boolean {
+    const e = estadoDeFicha(id);
+    return e === 'lista' || e === 'no_existe' || e === 'fallo';
+}
+
+/** Una entrada del mapa sin nada que enseñar: ni texto ni PDF. Es la que el
+ *  servidor pone a una cita que no estaba en el contexto —«Fuente no
+ *  verificada», vacía— y la que llega al visor cuando el mapa no la traía. */
+export function fichaVacia(s: unknown): boolean {
+    if (!s || typeof s !== 'object') return true;
+    const f = s as { texto?: unknown; pdf_url?: unknown; url_oficial?: unknown };
+    return !f.texto && !f.pdf_url && !f.url_oficial;
+}
+
+/** Lo que `/cita` devuelve, como lo pinta la pantalla. Las tesis traen el
+ *  nombre del archivo en `origen` —«2005115_1a. CCCLIX/2013 (10a.).txt»— y el
+ *  «.txt» salía en la lista por institución y en la referencia APA del Word;
+ *  las del mapa del mensaje ya llegan sin él (`humanize_origen`). */
+function limpiarFicha(f: FichaCita): FichaCita {
+    return { ...f, origen: f.origen.replace(/\.(?:txt|json)\s*$/i, '').trim() };
+}
+
+/** Programa el siguiente reintento automático, si quedan. */
+function programarReintento(id: string, base: string): boolean {
+    const n = intentos.get(id) ?? 0;
+    if (n >= ESPERAS_REINTENTO_MS.length) return false;
+    intentos.set(id, n + 1);
+    reintentos.set(id, setTimeout(() => {
+        reintentos.delete(id);
+        void obtenerFicha(id, base);
+    }, ESPERAS_REINTENTO_MS[n]));
+    return true;
+}
+
+/**
+ * Olvida lo que falló —y los reintentos en espera—, para que se vuelva a
+ * pedir. Lo llama el chat al cambiar de conversación: un fallo pasajero no
+ * debe dejar las citas en ámbar toda la sesión. Lo que `/cita` dijo que no
+ * existe no se olvida: un 404 no es pasajero.
+ */
+export function olvidarFallos(): void {
+    const olvidados = new Set<string>(fallos);
+    reintentos.forEach((t, id) => { clearTimeout(t); olvidados.add(id); });
+    reintentos.clear();
+    fallos.clear();
+    intentos.clear();
+    olvidados.forEach(avisar);
 }
 
 export function fichaEnCache(docId: string): FichaCita | null {
@@ -85,8 +149,10 @@ export function fichaEnCache(docId: string): FichaCita | null {
 
 /**
  * La ficha de una cita según `GET /cita/{id}`. Nunca lanza: devuelve `null`
- * si no existe o no se pudo consultar, y `estadoDeFicha` dice cuál de las dos.
- * `base` sólo lo usa la comprobación, para apuntar a producción desde Node.
+ * si no existe o no se pudo consultar, y `estadoDeFicha` dice cuál de las dos
+ * (`buscando` si falló pero se reintentará sola). Llamarla mientras espera un
+ * reintento lo adelanta. `base` sólo lo usa la comprobación, para apuntar a
+ * producción desde Node.
  */
 export function obtenerFicha(docId: string, base: string = API_URL): Promise<FichaCita | null> {
     const id = normalizar(docId);
@@ -101,6 +167,8 @@ export function obtenerFicha(docId: string, base: string = API_URL): Promise<Fic
     const previa = enVuelo.get(id);
     if (previa) return previa;
 
+    const esperando = reintentos.get(id);
+    if (esperando) { clearTimeout(esperando); reintentos.delete(id); }
     fallos.delete(id);
     const pedido = conTurno(async (): Promise<FichaCita | null> => {
         const reloj = new AbortController();
@@ -114,10 +182,14 @@ export function obtenerFicha(docId: string, base: string = API_URL): Promise<Fic
             if (!r.ok) throw new Error(`/cita ${r.status}`);
             const f = (await r.json()) as FichaCita | null;
             if (!f || typeof f !== 'object' || typeof f.origen !== 'string') throw new Error('/cita sin ficha');
-            fichas.set(id, f);
-            return f;
+            const limpia = limpiarFicha(f);
+            fichas.set(id, limpia);
+            intentos.delete(id);
+            return limpia;
         } catch {
-            fallos.add(id);
+            // Pasajero hasta que se demuestre lo contrario: se reintenta sola
+            // con espera creciente, y sólo al agotar los intentos es «fallo».
+            if (!programarReintento(id, base)) fallos.add(id);
             return null;
         } finally {
             clearTimeout(alarma);
@@ -134,7 +206,8 @@ export function obtenerFicha(docId: string, base: string = API_URL): Promise<Fic
 /**
  * Las fichas de las citas que falten, pedidas a `/cita` mientras `activo`
  * (en la burbuja, al terminar la respuesta: durante el stream el mapa final
- * aún puede traerlas). Se vuelve a pintar cuando llega cualquiera de ellas.
+ * aún puede traerlas). Se vuelve a pintar cuando cambia cualquiera de ellas,
+ * y lo que se olvidó (`olvidarFallos`) se vuelve a pedir.
  */
 export function useFichasDeCitas(ids: string[], activo = true): {
     fichas: Record<string, FichaCita>;
@@ -156,21 +229,21 @@ export function useFichasDeCitas(ids: string[], activo = true): {
     useEffect(() => {
         if (!activo || !clave) return;
         for (const id of clave.split(',')) {
-            // Lo que ya falló no se repite solo (sería un bucle contra un
-            // servidor caído): se reintenta al tocar la cita.
-            if (!fichas.has(id) && !inexistentes.has(id) && !fallos.has(id)) void obtenerFicha(id);
+            // Sólo lo que no se ha pedido nunca (o se olvidó): lo que espera
+            // su reintento lo hace solo, y lo que agotó los reintentos no se
+            // repite en bucle contra un servidor caído —se reintenta al
+            // tocar la cita o al cambiar de conversación—.
+            if (estadoDeFicha(id) === null) void obtenerFicha(id);
         }
-    }, [clave, activo]);
+    }, [clave, activo, version]);
 
     return useMemo(() => {
         const salida: Record<string, FichaCita> = {};
         const estado: Record<string, EstadoFicha> = {};
         for (const id of clave ? clave.split(',') : []) {
             const f = fichas.get(id);
-            if (f) { salida[id] = f; estado[id] = 'lista'; }
-            else if (inexistentes.has(id)) estado[id] = 'no_existe';
-            else if (fallos.has(id) && !enVuelo.has(id)) estado[id] = 'fallo';
-            else estado[id] = 'buscando';
+            if (f) salida[id] = f;
+            estado[id] = estadoDeFicha(id) ?? 'buscando';
         }
         return { fichas: salida, estado };
     }, [clave, version]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -183,47 +256,81 @@ type FuenteAbrible = { origen: string; ref: string; texto: string; pdf_url?: str
  * ABRIR UNA CITA EN EL VISOR, CON SU FICHA. Lo usan las tres pantallas que
  * abren el visor (chat, agente y redactor de sentencias) con su propio
  * `setState`. Si la fuente llega vacía —sin texto ni PDF: su ficha no venía en
- * el mapa del mensaje—, el visor se abre diciendo que busca, se pide a
- * `/cita` y se rellena al llegar. Si no existe o no responde, lo dice; volver a
- * tocar la cita lo reintenta. Si entretanto se cerró el visor o se abrió otra
- * cita, la respuesta no pisa nada.
+ * el mapa del mensaje, o venía la «Fuente no verificada» del servidor—, el
+ * visor se abre diciendo que busca, se pide a `/cita` y se rellena al llegar.
+ * Si el servidor no responde, lo dice y sigue esperando el reintento
+ * automático: si ése llega, el visor se rellena solo. Si no existe, lo dice;
+ * volver a tocar la cita lo reintenta. Si entretanto se cerró el visor o se
+ * abrió otra cita, la respuesta no pisa nada.
  */
 export function abrirCitaConFicha<S extends FuenteAbrible>(
     fuente: S & { docId?: string; url_oficial?: unknown },
     fijar: (valor: S | null | ((previo: S | null) => S | null)) => void,
 ): void {
     const docId = fuente?.docId;
-    const vacia = Boolean(docId) && !fuente.texto && !fuente.pdf_url && !fuente.url_oficial;
-    if (!docId || !vacia) { fijar(fuente); return; }
-    const guardada = fichaEnCache(docId);
+    if (!docId || !fichaVacia(fuente)) { fijar(fuente); return; }
+    const id = normalizar(docId);
+    const guardada = fichas.get(id);
     if (guardada) { fijar({ ...guardada, docId } as unknown as S); return; }
     fijar({ ...fuente, origen: 'Buscando la fuente…', ref: '', texto: '' });
-    void obtenerFicha(docId).then((ficha) => {
-        fijar((actual) => {
-            if (!actual || (actual as { docId?: string }).docId !== docId) return actual;
-            if (ficha) return { ...ficha, docId } as unknown as S;
-            const fallo = estadoDeFicha(docId) === 'fallo';
+
+    const pintar = () => fijar((actual) => {
+        if (!actual || (actual as { docId?: string }).docId !== docId) return actual;
+        const ficha = fichas.get(id);
+        if (ficha) return { ...ficha, docId } as unknown as S;
+        const estado = estadoDeFicha(id);
+        if (estado === 'no_existe') {
             return {
-                ...fuente,
-                origen: fallo ? 'No se pudo consultar la fuente' : 'Cita sin ficha de origen',
-                ref: '',
-                texto: fallo
-                    ? 'El servidor no respondió al pedir esta fuente. Cierra el visor y vuelve a tocar la cita para reintentarlo.'
-                    : 'Este identificador no corresponde a ningún documento del acervo. No des la cita por buena sin comprobarla.',
+                ...fuente, origen: 'Cita sin ficha de origen', ref: '',
+                texto: 'Este identificador no corresponde a ningún documento del acervo. No des la cita por buena sin comprobarla.',
             };
-        });
+        }
+        // `null`: se olvidó al cambiar de conversación; tocarla la vuelve a pedir.
+        if (estado === 'fallo' || estado === null) {
+            return {
+                ...fuente, origen: 'No se pudo consultar la fuente', ref: '',
+                texto: 'El servidor no respondió al pedir esta fuente. Cierra el visor y vuelve a tocar la cita para reintentarlo.',
+            };
+        }
+        if (reintentos.has(id)) {
+            return {
+                ...fuente, origen: 'Buscando la fuente…', ref: '',
+                texto: 'El servidor tarda en responder. Se vuelve a intentar solo en unos segundos.',
+            };
+        }
+        return actual;
     });
+    // Se escucha hasta que la cita llegue a un estado que ya no cambia solo:
+    // los reintentos son pocos, así que el oyente no se queda para siempre.
+    const oir = (x: string) => {
+        if (x !== id) return;
+        pintar();
+        if (definitiva(id) || estadoDeFicha(id) === null) oyentes.delete(oir);
+    };
+    oyentes.add(oir);
+    void obtenerFicha(id);
+    // Lo que se resuelve sin pedir nada (un 404 ya sabido) no avisa.
+    if (definitiva(id)) { oyentes.delete(oir); pintar(); }
 }
 
 type ConFuentes = { sources?: Record<string, unknown>; invalid?: number; invalid_ids?: string[] };
 
-/** ¿Trae el mapa del mensaje la ficha de esta cita? (sin distinguir mayúsculas) */
-export function tieneFuente(meta: ConFuentes | null | undefined, docId: string): boolean {
+/** La entrada del mapa del mensaje para esta cita (sin distinguir mayúsculas). */
+function entradaDe(meta: ConFuentes | null | undefined, docId: string): unknown {
     const fuentes = meta?.sources;
-    if (!fuentes) return false;
-    if (fuentes[docId] || fuentes[docId.toLowerCase()]) return true;
+    if (!fuentes) return undefined;
+    if (fuentes[docId]) return fuentes[docId];
     const id = docId.toLowerCase();
-    return Object.keys(fuentes).some((k) => k.toLowerCase() === id);
+    if (fuentes[id]) return fuentes[id];
+    const clave = Object.keys(fuentes).find((k) => k.toLowerCase() === id);
+    return clave ? fuentes[clave] : undefined;
+}
+
+/** ¿Trae el mapa del mensaje la ficha de esta cita? Una entrada vacía —la
+ *  «Fuente no verificada» que el servidor pone a lo que no estaba en el
+ *  contexto— no cuenta: no abre ningún PDF, y hay que pedirla a `/cita`. */
+export function tieneFuente(meta: ConFuentes | null | undefined, docId: string): boolean {
+    return !fichaVacia(entradaDe(meta, docId));
 }
 
 /** Las citas del texto que el mapa del mensaje no trae. */
@@ -232,32 +339,120 @@ export function citasSinFuente(ids: Iterable<string>, meta: ConFuentes | null | 
 }
 
 /** El mapa del mensaje con las fichas de `/cita` añadidas. Lo del servidor
- *  manda: una ficha resuelta nunca pisa una del mapa. */
+ *  manda: una ficha resuelta nunca pisa una del mapa… salvo que la del mapa
+ *  esté vacía. Las vacías que `/cita` no resolvió se quitan: agrupadas,
+ *  salían como «Fuente no verificada» en «Otras fuentes» y en el Word. */
 export function conFichas<M extends ConFuentes>(meta: M | null, extra: Record<string, FichaCita>): M | null {
-    if (!Object.keys(extra).length) return meta;
+    const propias = meta?.sources || {};
+    const hayVacias = Object.values(propias).some(fichaVacia);
+    if (!Object.keys(extra).length && !hayVacias) return meta;
     const base = (meta ?? { valid: 0, invalid: 0, total: 0, invalid_ids: [] }) as M;
-    return { ...base, sources: { ...extra, ...(base.sources || {}) } };
+    const sources: Record<string, unknown> = {};
+    const vistas = new Set<string>();
+    for (const [k, s] of Object.entries(propias)) {
+        const kk = k.toLowerCase();
+        vistas.add(kk);
+        if (!fichaVacia(s)) sources[k] = s;
+        else if (extra[kk]) sources[k] = extra[kk];
+    }
+    for (const [k, f] of Object.entries(extra)) if (!vistas.has(k.toLowerCase())) sources[k] = f;
+    return { ...base, sources };
 }
+
+/** ¿El servidor la marcó como fuera del contexto recuperado? */
+export function fueraDelContexto(meta: ConFuentes | null | undefined, docId: string): boolean {
+    const id = docId.toLowerCase();
+    return (meta?.invalid_ids || []).some((x) => String(x).toLowerCase() === id);
+}
+
+/** Cómo quedan las citas de una respuesta, para la tarjeta, el sello y la hoja. */
+export type ResumenCitas = {
+    /** Del texto, con ficha, y el servidor no las marcó. */
+    verificadas: number;
+    /** El servidor dijo que no estaban en el contexto recuperado, pero existen
+     *  —`/cita` las encontró— o no se pudo comprobar si existen. No es lo mismo
+     *  que no existir: en una conversación de varias vueltas el modelo cita de
+     *  la respuesta anterior, y el validador sólo mira el contexto de ésta. */
+    fueraDeContexto: number;
+    /** No corresponden a ningún documento del acervo: `/cita` dijo 404 (o el
+     *  servidor las contó sin decir cuáles, y no hay a quién preguntar). */
+    noTrazadas: number;
+    /** No marcadas por el servidor, pero `/cita` no respondió ni reintentando. */
+    sinComprobar: number;
+    /** Todavía se están pidiendo a `/cita`. */
+    pendientes: number;
+};
 
 /**
  * Cuántas citas del texto están verificadas: las que tienen ficha —del mapa
  * o de `/cita`— y el servidor no marcó como fuera del contexto. Antes el pie
  * de la hoja contaba las entradas del mapa entero («33 citas · 60
  * verificadas») y la tarjeta del hilo sólo las singulares.
+ *
+ * Las marcadas por el servidor se separan según lo que contestó `/cita`: si
+ * el documento existe, estaba fuera del contexto; si `/cita` dijo 404, no
+ * existe en el acervo. Antes las dos cosas se decían igual —«no corresponde
+ * a ningún documento del acervo»— y la primera no es verdad.
  */
 export function resumenDeCitas(
     ids: Iterable<string>,
     meta: ConFuentes | null | undefined,
     estado: Record<string, EstadoFicha> = {},
-): { verificadas: number; noTrazadas: number } {
+): ResumenCitas {
     const invalidas = new Set((meta?.invalid_ids || []).map((x) => String(x).toLowerCase()));
-    let verificadas = 0;
-    let inexistentesEnTexto = 0;
-    for (const bruto of Array.from(ids)) {
-        const id = bruto.toLowerCase();
-        if (invalidas.has(id)) continue;
-        if (tieneFuente(meta, id)) verificadas++;
-        else if (estado[id] === 'no_existe') inexistentesEnTexto++;
+    const r: ResumenCitas = { verificadas: 0, fueraDeContexto: 0, noTrazadas: 0, sinComprobar: 0, pendientes: 0 };
+    const vistas = new Set<string>();
+    const contar = (id: string) => {
+        if (vistas.has(id)) return;
+        vistas.add(id);
+        const marcada = invalidas.has(id);
+        const e = tieneFuente(meta, id) ? 'lista' : estado[id];
+        if (e === 'buscando') r.pendientes++;
+        else if (e === 'no_existe') r.noTrazadas++;
+        else if (marcada) r.fueraDeContexto++;
+        else if (e === 'lista') r.verificadas++;
+        else if (e === 'fallo') r.sinComprobar++;
+    };
+    for (const bruto of Array.from(ids)) contar(bruto.toLowerCase());
+    // Las marcadas que el texto no deja ver cuentan igual, como antes.
+    invalidas.forEach(contar);
+    // La vía que cuenta las inválidas sin decir cuáles.
+    r.noTrazadas += Math.max(0, (meta?.invalid ?? 0) - invalidas.size);
+    return r;
+}
+
+/**
+ * LO QUE LA CONVERSACIÓN YA VERIFICÓ, para `fijarFuentesVerificadas`: las
+ * citas de sus respuestas terminadas con ficha —del mapa del servidor o
+ * resuelta por `/cita`— que el sello no marcó como fuera del contexto (salvo
+ * que otra respuesta sí la trajera en su mapa). Antes sólo contaban las
+ * claves de `CITATION_META.sources`: las siete citas agrupadas del caso del
+ * control de convencionalidad —Radilla, García Rodríguez, dos tesis— no
+ * viajaban a la vuelta siguiente, el validador las acusaba si el modelo las
+ * repetía y el sello decía 33 trazadas cuando se enviaban 26.
+ *
+ * `resuelta` es la caché de `/cita` (`fichaEnCache`); `faltan` son las que
+ * habría que pedir para poder contarlas.
+ */
+export function fuentesDeLaConversacion(
+    markdowns: string[],
+    resuelta: (id: string) => unknown = fichaEnCache,
+): { verificadas: string[]; faltan: string[] } {
+    const citados: string[] = [];
+    const delServidor = new Set<string>();
+    const marcadas = new Set<string>();
+    for (const md of markdowns) {
+        // También las agrupadas —«[Doc IDs: a; b]»—: ver `@/lib/idsDeCita`.
+        for (const id of idsCitados(md)) if (citados.indexOf(id) === -1) citados.push(id);
+        const meta = metaDeCitas(md);
+        for (const [k, s] of Object.entries(meta?.sources ?? {})) {
+            if (!fichaVacia(s)) delServidor.add(k.toLowerCase());
+        }
+        for (const x of meta?.invalid_ids ?? []) marcadas.add(String(x).toLowerCase());
     }
-    return { verificadas, noTrazadas: Math.max(meta?.invalid ?? 0, invalidas.size) + inexistentesEnTexto };
+    const candidatas = citados.filter((id) => delServidor.has(id) || !marcadas.has(id));
+    return {
+        verificadas: candidatas.filter((id) => delServidor.has(id) || !fichaVacia(resuelta(id))),
+        faltan: candidatas.filter((id) => !delServidor.has(id)),
+    };
 }

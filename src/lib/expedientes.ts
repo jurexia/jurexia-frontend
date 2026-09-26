@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { streamChat } from './api'
+import { expandirCitasAgrupadas } from './idsDeCita'
 
 /**
  * Carpetas inteligentes — la misma pieza que ya existe en la app móvil.
@@ -1036,15 +1037,19 @@ export async function generarResumenCaso(
  *  Como el análisis de carpeta usa esta misma función, se arregla en los dos.
  */
 export function limpiarMarcadores(texto: string): string {
-    return texto
+    // Lo agrupado o suelto —«[Doc IDs: a; b]», «Doc ID: a; Doc ID: b» sin
+    // corchetes, «[a; b]»— se abre primero en citas singulares con la MISMA
+    // función que el chat y la hoja (`@/lib/idsDeCita`). Con expresiones
+    // propias, las formas sin corchetes o sin etiqueta dejaban los uuid a la
+    // vista en el borrador de la carpeta (26-sep-2026).
+    return expandirCitasAgrupadas(texto || '')
         // Los identificadores internos de documento NO son para el abogado.
         // El chat los convierte en marcadores de cita [1], [2]; la carpeta no
         // tiene dónde ponerlos, así que se quitan. Se veía feo de verdad:
         // «…queda sin efecto alguno. [Doc ID: 7fc88536-c19a-25c3-ba36-…]».
-        // También las agrupadas —«[Doc IDs: a; b]»— y las de paréntesis, que
-        // con `Doc ID:` a secas se quedaban en el borrador (26-sep-2026).
-        .replace(/\s*\[\s*Doc\s*IDs?\s*:[^\]]*\]/gi, '')
-        .replace(/\s*\(\s*Doc\s*IDs?\s*:[^)]*\)/gi, '')
+        // Sin cruzar renglones: un corchete sin cerrar no se lleva el siguiente.
+        .replace(/\s*\[[ \t]*Doc[ \t]*IDs?[ \t]*:[^\]\n]*\]/gi, '')
+        .replace(/\s*\([ \t]*Doc[ \t]*IDs?[ \t]*:[^)\n]*\)/gi, '')
         .replace(/<!--PING-->/g, '')
         .replace(/<!--PASO:[^>]*-->/g, '')
         .replace(/<!--SOURCES:[^>]*-->/g, '')

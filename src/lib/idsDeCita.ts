@@ -49,22 +49,30 @@ function singulares(ids: string[]): string {
         .join('');
 }
 
+/** ¿No hay en el grupo más que identificadores, etiquetas y separadores? */
+function soloIdsYSeparadores(interior: string): boolean {
+    return !interior.replace(RX_UUID, ' ').replace(RX_ETIQUETA, ' ').replace(RX_SEPARADORES, '');
+}
+
 /**
  * Un grupo entre corchetes o paréntesis. Se abre si lleva la etiqueta
  * —«[Doc IDs: a; b]», «(Doc ID: a)»— o si no contiene más que identificadores
  * y separadores —«[a; b]»—. Si no, es prosa que menciona un identificador y
  * se deja para los pasos de siempre.
+ *
+ * `donde` dice dónde puede ir la etiqueta: en cualquier sitio (corchetes de un
+ * renglón), sólo al abrir (paréntesis de un renglón) o en ninguno que deje
+ * prosa (`puro`): un grupo partido en dos renglones sólo se abre si no trae
+ * más que identificadores, etiquetas y separadores. Abrirlo con prosa dentro
+ * se llevaría el texto de un renglón entero.
  */
-function expandirGrupo(interior: string, etiquetaEnCualquierSitio: boolean): string | null {
+function expandirGrupo(interior: string, donde: 'cualquiera' | 'inicio' | 'puro'): string | null {
     const ids = interior.match(RX_UUID);
     if (!ids) return null;
-    const etiquetado = etiquetaEnCualquierSitio
+    const etiquetado = donde === 'cualquiera'
         ? new RegExp(ETIQUETA, 'i').test(interior)
-        : RX_ETIQUETA_AL_INICIO.test(interior);
-    if (!etiquetado) {
-        const resto = interior.replace(RX_UUID, ' ').replace(RX_ETIQUETA, ' ').replace(RX_SEPARADORES, '');
-        if (resto) return null;
-    }
+        : donde === 'inicio' && RX_ETIQUETA_AL_INICIO.test(interior);
+    if (!etiquetado && !soloIdsYSeparadores(interior)) return null;
     return singulares(ids);
 }
 
@@ -74,20 +82,51 @@ const RX_SERIE_SUELTA = new RegExp(
     + `(?:(?:\\s*(?:[;,/|&+]|\\by\\b|\\band\\b)\\s*|\\s+)(?:Doc\\s*[-_]?\\s*IDs?\\s*:?\\s*)?${UUID_CITA})*`,
     'gi',
 );
-/** Un grupo con etiqueta que llega al final sin cerrarse (mientras se escribe). */
-const RX_GRUPO_ABIERTO = new RegExp(`[\\[(]\\s*(${ETIQUETA}[^\\[\\]()\\n]*)$`, 'i');
+/** Un grupo con etiqueta que llega al final sin cerrarse (mientras se escribe).
+ *  Puede venir partido en renglones: ver `expandirTramo`. */
+const RX_GRUPO_ABIERTO = new RegExp(`[\\[(]\\s*(${ETIQUETA}[^\\[\\]()]*)$`, 'i');
+/** Un grupo con etiqueta que no se cierra en su renglón y del que ya no llega
+ *  nada más que prosa: «[Doc IDs: a;⏎El párrafo siguiente…». */
+const RX_GRUPO_SIN_CERRAR = new RegExp(`[\\[(][ \\t]*(${ETIQUETA}[^\\[\\]()\\n]*)(?=\\n)`, 'gi');
+/** El identificador a medio escribir con el que termina un grupo abierto. */
+const RX_UUID_A_MEDIAS = /[0-9a-fA-F]{1,8}(?:-[0-9a-fA-F]{0,12}){0,4}\s*$/;
+
+/** Una cita singular, como la escriben `singulares` y el modelo. */
+const SINGULAR = `\\[\\s*Doc\\s*ID\\s*:\\s*${UUID_CITA}\\s*\\]`;
+/** «[Doc ID: a]; [Doc ID: b]» — el «;» o la «,» entre dos citas seguidas. */
+const RX_SEPARADOR_ENTRE_CITAS = new RegExp(`(${SINGULAR})[ \\t]*[;,][ \\t]*(?=${SINGULAR})`, 'gi');
 
 function expandirTramo(t: string): string {
     // [Doc IDs: a; b] · [Doc ID: a, b] · [Doc ID: a; Doc ID: b] · [nombre, Doc ID: a] · [a; b]
-    t = t.replace(/\[([^[\]\n]{1,2000})\]/g, (m, dentro: string) => expandirGrupo(dentro, true) ?? m);
+    t = t.replace(/\[([^[\]\n]{1,2000})\]/g, (m, dentro: string) => expandirGrupo(dentro, 'cualquiera') ?? m);
     // (Doc ID: a) · (Doc IDs: a; b) · (a, b). Aquí la etiqueta tiene que abrir el
     // paréntesis: «(como resolvió la Corte [Doc ID: a], párr. 340)» es prosa.
-    t = t.replace(/\(([^()\n]{1,2000})\)/g, (m, dentro: string) => expandirGrupo(dentro, false) ?? m);
+    t = t.replace(/\(([^()\n]{1,2000})\)/g, (m, dentro: string) => expandirGrupo(dentro, 'inicio') ?? m);
+    // El mismo grupo partido por un salto de línea —«[Doc IDs: a;⏎b]»—. Antes
+    // perdía sus citas: en la hoja desaparecían las dos y en el chat quedaba
+    // «; [2]]». Sólo si dentro no hay más que identificadores y separadores.
+    t = t.replace(/\[([^[\]]{1,2000})\]/g, (m, dentro: string) => (dentro.includes('\n') ? expandirGrupo(dentro, 'puro') ?? m : m));
+    t = t.replace(/\(([^()]{1,2000})\)/g, (m, dentro: string) => (dentro.includes('\n') ? expandirGrupo(dentro, 'puro') ?? m : m));
     // Doc ID: a; Doc ID: b — sin corchetes
     t = t.replace(RX_SERIE_SUELTA, (m) => singulares(m.match(RX_UUID) || []));
     // «[Doc IDs: a; b…» todavía sin cerrar: lo completo se cita ya y lo demás
     // espera al siguiente trozo, para que la etiqueta no asome ni un instante.
-    t = t.replace(RX_GRUPO_ABIERTO, (_, dentro: string) => singulares(dentro.match(RX_UUID) || []));
+    // Partido en renglones, sólo si lo que sigue son identificadores: si no,
+    // un corchete que nunca se cierra se llevaría los párrafos de después.
+    t = t.replace(RX_GRUPO_ABIERTO, (m, dentro: string) => {
+        if (dentro.includes('\n') && !soloIdsYSeparadores(dentro.replace(RX_UUID_A_MEDIAS, ''))) return m;
+        return singulares(dentro.match(RX_UUID) || []);
+    });
+    // El que se quedó sin cerrar en su renglón (el modelo olvidó el «]»): sus
+    // citas se abren y la prosa de después se queda donde estaba. Sin esto, la
+    // etiqueta asomaba en la hoja y la limpieza del chat se comía la cita.
+    t = t.replace(RX_GRUPO_SIN_CERRAR, (m, dentro: string) => {
+        const ids = dentro.match(RX_UUID);
+        return ids && soloIdsYSeparadores(dentro) ? singulares(ids) : m;
+    });
+    // Sólo números seguidos: «[Doc ID: a]; [Doc ID: b]» se veía «[1]; [2]».
+    // Si detrás del «;» sigue la prosa, el «;» es de la frase y se queda.
+    t = t.replace(RX_SEPARADOR_ENTRE_CITAS, '$1');
     return t;
 }
 
@@ -148,7 +187,7 @@ export function numerarCitasDelChat(texto: string): { content: string; docIdMap:
     // [, uuid] — el modelo a veces pone la coma delante
     content = content.replace(new RegExp(`\\[\\s*,\\s*(${U})\\s*\\]`, 'gi'), (_, uuid) => ficha(uuid));
     // [nombre, uuid]
-    content = content.replace(new RegExp(`\\[[^\\]]*,\\s*(${U})\\s*\\]`, 'gi'), (_, uuid) => ficha(uuid));
+    content = content.replace(new RegExp(`\\[[^\\]\\n]*,\\s*(${U})\\s*\\]`, 'gi'), (_, uuid) => ficha(uuid));
     // «Doc uuid» suelto
     content = content.replace(new RegExp(`(?<![a-f0-9-])Doc\\s+(${U})(?![a-f0-9-])`, 'gi'), (_, uuid) => ficha(uuid));
     // Un uuid suelto que no esté ya en una ficha
@@ -172,9 +211,12 @@ export function numerarCitasDelChat(texto: string): { content: string; docIdMap:
     content = content.replace(/\[-[a-f0-9-]{10,35}\]/gi, '');
     // Grupos con etiqueta que no traían ni un identificador completo —«[Doc IDs: ; ]»—.
     // Los que sí los traían ya se abrieron en el paso 0: aquí no se borra ninguna cita.
-    content = content.replace(/\[Doc IDs?:[^\]]*\]/gi, '');
+    // Sin cruzar renglones: un corchete sin cerrar se llevaba el renglón siguiente.
+    // Ni dentro de una ficha ya puesta: su «[1]» cerraba el corchete y la
+    // ficha se iba con él (quedaba «; [2]]»).
+    content = content.replace(/\[Doc IDs?:[^\]\n<]*\]/gi, '');
     // La etiqueta suelta que quede, con o sin su identificador partido.
-    content = content.replace(/\bDoc\s*IDs?\s*:\s*[a-f0-9-]*/gi, '');
+    content = content.replace(/\bDoc[ \t]*IDs?[ \t]*:[ \t]*[a-f0-9-]*/gi, '');
 
     return { content, docIdMap };
 }

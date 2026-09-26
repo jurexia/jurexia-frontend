@@ -59,8 +59,21 @@ interface Resultado {
 interface Props {
     /** Citas [Doc ID:] que el backend pudo trazar al acervo. */
     trazadas: number;
-    /** Citas que NO se pudieron trazar. */
+    /** Citas que no corresponden a ningún documento del acervo. */
     noTrazadas: number;
+    /**
+     * Citas que el backend marcó porque no estaban en el CONTEXTO de esta
+     * respuesta, pero que el documento existe (`/cita` lo encontró) o no se
+     * pudo comprobar. El validador mira el contexto, no el acervo: en una
+     * conversación de varias vueltas el modelo cita de la respuesta anterior.
+     * Decir que «no corresponde a ningún documento del acervo» sería falso
+     * (26-sep-2026). Sigue siendo algo que revisar.
+     */
+    fueraDeContexto?: number;
+    /** Citas cuya ficha no se pudo consultar (el servidor no respondió). */
+    sinComprobar?: number;
+    /** Citas cuya ficha todavía se está pidiendo a `/cita`. */
+    fichasPendientes?: number;
     /** Registros digitales mencionados en la prosa de la respuesta. */
     registros: string[];
     /** Rubro que la respuesta atribuyó a cada registro, para contrastarlo. */
@@ -82,7 +95,7 @@ interface Props {
     onVerTesis?: (registro: string) => void;
 }
 
-export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAcervo, sinRegistro, onVerTesis }: Props) {
+export function SelloCitas({ trazadas, noTrazadas, fueraDeContexto = 0, sinComprobar = 0, fichasPendientes = 0, registros, rubros, fueraDelAcervo, sinRegistro, onVerTesis }: Props) {
     const [fase, setFase] = useState<Estado>(registros.length ? 'comprobando' : 'listo');
     const [resultados, setResultados] = useState<Resultado[]>([]);
 
@@ -131,19 +144,28 @@ export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAc
 
     // Sin nada que sellar, no se pinta un adorno vacío. Pero una tesis sin
     // registro SÍ es algo que sellar: es precisamente lo que antes salía mudo.
-    if (!trazadas && !noTrazadas && !registros.length && !sinReg.length) return null;
+    if (!trazadas && !noTrazadas && !fueraDeContexto && !sinComprobar && !fichasPendientes
+        && !registros.length && !sinReg.length) return null;
 
     const inventadas = resultados.filter(r => r.estado === 'no_existe');
     const desviadas = resultados.filter(r => r.estado === 'no_corresponde');
     const confirmadas = resultados.filter(r => r.estado === 'existe');
     const dudosas = resultados.filter(r => r.estado === 'sin_comprobar');
 
-    const hayProblema = noTrazadas > 0 || inventadas.length > 0 || desviadas.length > 0 || sinReg.length > 0;
-    const comprobando = fase === 'comprobando';
+    const hayProblema = noTrazadas > 0 || fueraDeContexto > 0 || inventadas.length > 0 || desviadas.length > 0 || sinReg.length > 0;
+    // Mientras `/cita` contesta, el sello no se pronuncia: una cita marcada
+    // por el servidor todavía puede resultar existente o inexistente.
+    const comprobando = fase === 'comprobando' || fichasPendientes > 0;
 
     const partes: string[] = [];
     if (trazadas) partes.push(`${trazadas} ${trazadas === 1 ? 'cita trazada' : 'citas trazadas'} al acervo`);
-    if (comprobando && registros.length) {
+    if (fichasPendientes > 0) {
+        partes.push(`buscando la ficha de ${fichasPendientes} ${fichasPendientes === 1 ? 'cita' : 'citas'}…`);
+    }
+    if (sinComprobar > 0) {
+        partes.push(`${sinComprobar} ${sinComprobar === 1 ? 'cita' : 'citas'} sin comprobar: el servidor no respondió`);
+    }
+    if (fase === 'comprobando' && registros.length) {
         partes.push(`comprobando ${registros.length} ${registros.length === 1 ? 'tesis' : 'tesis'} en el Semanario…`);
     } else {
         if (confirmadas.length) partes.push(`${confirmadas.length} ${confirmadas.length === 1 ? 'tesis confirmada' : 'tesis confirmadas'} en el Semanario`);
@@ -190,7 +212,14 @@ export function SelloCitas({ trazadas, noTrazadas, registros, rubros, fueraDelAc
                     {!comprobando && noTrazadas > 0 && (
                         <p className="text-[0.6875rem] mt-1.5 leading-relaxed" style={{ color: '#b45309' }}>
                             {noTrazadas} {noTrazadas === 1 ? 'cita no corresponde' : 'citas no corresponden'} a ningún
-                            documento del acervo. No las des por buenas.
+                            documento del acervo. No {noTrazadas === 1 ? 'la des' : 'las des'} por {noTrazadas === 1 ? 'buena' : 'buenas'}.
+                        </p>
+                    )}
+                    {!comprobando && fueraDeContexto > 0 && (
+                        <p className="text-[0.6875rem] mt-1.5 leading-relaxed" style={{ color: '#b45309' }}>
+                            {fueraDeContexto === 1
+                                ? '1 cita no estaba entre las fuentes consultadas para esta respuesta. Ábrela y comprueba que diga lo que se le atribuye.'
+                                : `${fueraDeContexto} citas no estaban entre las fuentes consultadas para esta respuesta. Ábrelas y comprueba que digan lo que se les atribuye.`}
                         </p>
                     )}
                     {!comprobando && inventadas.length > 0 && (

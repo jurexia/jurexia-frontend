@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
 import { fuentesElegidas } from '@/lib/fuentes';
 import { esfuerzoParaEnviar, marcadorDeEsfuerzo } from '@/lib/esfuerzo';
@@ -24,10 +24,9 @@ import PanelBasico from '@/components/PanelBasico';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
 import type { VersionDocumento } from '@/components/documento/PanelDocumento';
-import { SEP_DOSSIER, metaDeCitas } from '@/lib/documento/citas';
+import { SEP_DOSSIER } from '@/lib/documento/citas';
 import { markdownAHtml, limpiarMarcadores } from '@/lib/documento/marcado';
-import { abrirCitaConFicha } from '@/lib/documento/fichas';
-import { idsCitados } from '@/lib/idsDeCita';
+import { abrirCitaConFicha, fuentesDeLaConversacion, olvidarFallos, useFichasDeCitas } from '@/lib/documento/fichas';
 import { estadoPiloto } from '@/components/sentencia/api';
 
 /* El constructor de demanda se carga sólo cuando alguien lo abre: trae el
@@ -111,6 +110,32 @@ function tituloDeRespuesta(markdown: string): string {
     const renglon = markdown.replace(/[#*_>`]/g, '').split('\n').map((l) => l.trim()).find(Boolean) ?? '';
     return renglon.split(/\s+/).slice(0, 12).join(' ').slice(0, 80) || 'Escrito de Iurexia';
 }
+
+/* LO QUE EL SELLO YA FIRMÓ SE DA POR BUENO EN LA SIGUIENTE PREGUNTA.
+   Ver `fijarFuentesVerificadas` en `@/lib/api`. Se registran las fuentes que
+   las respuestas terminadas de ESTA conversación citaron y el backend
+   resolvió: sólo esas, porque una cita que el sello no pudo trazar no es algo
+   que convenga dar por hecho en la vuelta siguiente.
+
+   «Resolvió» incluye lo que `/cita` encontró (26-sep-2026): las citas
+   agrupadas no entran en CITATION_META.sources, y el sello decía 33 trazadas
+   mientras aquí se registraban 26 —en «Desarrollar a partir de este
+   fundamento» Radilla, García Rodríguez y dos tesis no viajaban—. Por eso se
+   pide aquí lo que falte (la burbuja pide lo mismo; la caché no repite la
+   petición) y el registro se rehace cuando llegan las fichas. Vive en su
+   propio componente para que cada ficha que llega no vuelva a pintar la
+   página entera, ni se recalcula con cada trozo del stream: sólo cuando
+   cambia el texto de alguna respuesta terminada. Ver
+   `fuentesDeLaConversacion` en `@/lib/documento/fichas`. */
+const RegistroDeFuentesVerificadas = memo(function RegistroDeFuentesVerificadas({ markdowns }: { markdowns: string[] }) {
+    const faltan = useMemo(() => fuentesDeLaConversacion(markdowns, () => null).faltan, [markdowns]);
+    const { fichas } = useFichasDeCitas(faltan, true);
+    useEffect(() => {
+        fijarFuentesVerificadas(fuentesDeLaConversacion(markdowns, (id) => fichas[id] ?? null).verificadas);
+    }, [markdowns, fichas]);
+    return null;
+}, (antes, ahora) => antes.markdowns.length === ahora.markdowns.length
+    && antes.markdowns.every((m, i) => m === ahora.markdowns[i]));
 
 export default function ChatPage() {
     /* ═══ QUIÉN PUEDE ENTRAR ═══
@@ -1342,26 +1367,13 @@ export default function ChatPage() {
     }, [handleSendMessage]);
 
     /* LO QUE EL SELLO YA FIRMÓ SE DA POR BUENO EN LA SIGUIENTE PREGUNTA.
-       Ver `fijarFuentesVerificadas` en `@/lib/api`. Se registran las fuentes
-       que las respuestas terminadas de ESTA conversación citaron y el backend
-       resolvió: sólo esas, porque una cita que el sello no pudo trazar no es
-       algo que convenga dar por hecho en la vuelta siguiente. */
-    useEffect(() => {
-        const citados: string[] = [];
-        const resolubles: Record<string, true> = {};
-        for (let i = 0; i < bloquesDocumento.length; i++) {
-            const md = bloquesDocumento[i].markdown;
-            // También las que venían agrupadas —«[Doc IDs: a; b]»—: el patrón
-            // de aquí sólo veía la forma singular (`@/lib/idsDeCita`).
-            for (const id of idsCitados(md)) {
-                if (citados.indexOf(id) === -1) citados.push(id);
-            }
-            const meta = metaDeCitas(md);
-            const fuentes = meta?.sources ?? {};
-            Object.keys(fuentes).forEach((k) => { resolubles[k.toLowerCase()] = true; });
-        }
-        fijarFuentesVerificadas(citados.filter((i) => resolubles[i] === true));
-    }, [bloquesDocumento]);
+       Lo registra `RegistroDeFuentesVerificadas`, fuera de la página. */
+    const markdownsTerminados = useMemo(() => bloquesDocumento.map((b) => b.markdown), [bloquesDocumento]);
+
+    /* Un fallo pasajero de `/cita` (Render dormido, un 503) no debe dejar las
+       citas en ámbar toda la sesión: al cambiar de conversación se olvida y
+       se vuelve a pedir. */
+    useEffect(() => { olvidarFallos(); }, [activeConversationId]);
 
     // Cada respuesta terminada deja una versión del dossier (las últimas doce).
     useEffect(() => {
@@ -1433,6 +1445,7 @@ export default function ChatPage() {
 
     return (
         <div className="min-h-screen bg-cream-300">
+            <RegistroDeFuentesVerificadas markdowns={markdownsTerminados} />
             <ChatSidebar
                 conversations={conversations}
                 activeConversationId={activeConversationId}

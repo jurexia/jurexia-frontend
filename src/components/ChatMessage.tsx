@@ -333,7 +333,9 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
         // 2b. Remove any remaining Doc ID variants that didn't match a known UUID
         clean = clean.replace(/\[Doc ID:\s*[a-f0-9-]+\]/gi, '');
-        clean = clean.replace(/\[Doc IDs?:[^\]]*\]/gi, '');
+        // Sin cruzar renglones ni números ya puestos (⟦N⟧): un corchete con
+        // etiqueta sin cerrar se llevaba el renglón siguiente y sus citas.
+        clean = clean.replace(/\[Doc IDs?:[^\]\n⟦]*\]/gi, '');
 
         // 4. Remove standalone Doc uuid references
         clean = clean.replace(/Doc\s+[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi, '');
@@ -1067,8 +1069,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         if (desarrollando) cajaInstruccion.current?.focus();
     }, [desarrollando]);
     const handleCopy = useCallback(() => {
-        // Clean up internal tags, metadata, and HTML comments before copying
-        let cleanContent = message.content
+        // Clean up internal tags, metadata, and HTML comments before copying.
+        // Lo agrupado —«[Doc IDs: a; b]»— se abre antes en singulares, que se
+        // quitan abajo: si no, al portapapeles iba «[Doc IDs: ; ]».
+        let cleanContent = expandirCitasAgrupadas(message.content)
             .replace(/<!--[\s\S]*?-->/g, '') // Remove ALL HTML comments (including CITATION_META)
             .replace(/---CONTENIDO DEL DOCUMENTO---[\s\S]*/g, '')
             .replace(/\[AUDITAR_SENTENCIA\]/g, '')
@@ -1347,6 +1351,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 // agrupada que `/cita` resolvió también está trazada.
                                 trazadas={cuentaCitas.verificadas}
                                 noTrazadas={cuentaCitas.noTrazadas}
+                                // Lo que el servidor marcó pero existe: no es lo mismo
+                                // que no existir (ver `resumenDeCitas`).
+                                fueraDeContexto={cuentaCitas.fueraDeContexto}
+                                sinComprobar={cuentaCitas.sinComprobar}
+                                fichasPendientes={cuentaCitas.pendientes}
                                 registros={registrosDeLaRespuesta(processedContent)}
                                 rubros={rubrosPorRegistro(processedContent)}
                                 fueraDelAcervo={message.registrosFuera}
@@ -1483,8 +1492,15 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             <div className="border-t border-cream-200 bg-cream-50 px-5 py-4 sm:px-6">
                                 <div className="mb-2 flex items-start gap-2">
                                     <p className="flex-1 text-xs leading-relaxed text-charcoal-600">
-                                        Dile qué escrito quieres. Se redactará sobre las
-                                        {citationMeta?.valid ? ` ${citationMeta.valid} fuentes` : ' fuentes'} que
+                                        Dile qué escrito quieres. Se redactará sobre
+                                        {/* Las mismas que cuentan la tarjeta y el sello, con las
+                                            agrupadas que resolvió `/cita`: con `citationMeta.valid`
+                                            decía 24 mientras la tarjeta decía 33. */}
+                                        {cuentaCitas.verificadas === 1
+                                            ? ' la fuente'
+                                            : cuentaCitas.verificadas
+                                                ? ` las ${cuentaCitas.verificadas} fuentes`
+                                                : ' las fuentes'} que
                                         esta respuesta ya verificó, sin volver a buscarlas.
                                     </p>
                                     <button

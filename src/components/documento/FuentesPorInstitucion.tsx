@@ -4,7 +4,7 @@ import { ChevronDown, AlertTriangle, Loader2 } from 'lucide-react';
 import { fuenteDeCita, institucionesDe, type FuenteCita, type Institucion, type MetaCitas } from '@/lib/documento/citas';
 import { esCoidh, rotuloCoidh } from '@/lib/coidh';
 import { IconoInstitucion } from './IconoInstitucion';
-import { citasSinFuente, conFichas, useFichasDeCitas } from '@/lib/documento/fichas';
+import { citasSinFuente, conFichas, fueraDelContexto, useFichasDeCitas } from '@/lib/documento/fichas';
 
 /**
  * LAS FUENTES, BAJO EL EMBLEMA DE QUIEN LAS PUBLICA (18-sep-2026).
@@ -57,6 +57,9 @@ export function FuentesPorInstitucion({ meta: metaDelMensaje, docIdMap, onCita, 
             institucion: g.institucion,
             docIds: [...g.docIds].sort((a, b) => orden(a) - orden(b)),
             sinFicha: false,
+            // Las que el servidor marcó como fuera del contexto recuperado y
+            // `/cita` encontró: van con su institución y su PDF, pero marcadas.
+            fuera: g.docIds.filter((id) => fueraDelContexto(meta, id)).length,
         }));
 
         const conFicha = new Set(base.flatMap((g) => g.docIds.map((x) => x.toLowerCase())));
@@ -66,6 +69,7 @@ export function FuentesPorInstitucion({ meta: metaDelMensaje, docIdMap, onCita, 
             base.push({
                 id: 'sin-ficha', institucion: SIN_FICHA, sinFicha: true,
                 docIds: sueltas.sort((a, b) => orden(a) - orden(b)),
+                fuera: 0,
             });
         }
         return { grupos: base, numeros };
@@ -85,7 +89,7 @@ export function FuentesPorInstitucion({ meta: metaDelMensaje, docIdMap, onCita, 
                             type="button"
                             onClick={() => setAbierta(activa ? null : g.id)}
                             aria-expanded={activa}
-                            title={`${g.institucion.nombre} · ${g.docIds.length} ${g.docIds.length === 1 ? 'fuente' : 'fuentes'}`}
+                            title={`${g.institucion.nombre} · ${g.docIds.length} ${g.docIds.length === 1 ? 'fuente' : 'fuentes'}${g.fuera ? ` · ${g.fuera} fuera del contexto recuperado` : ''}`}
                             /* En teléfono cada emblema ocupa su renglón: en fila, el nombre
                                de la institución se quedaba en «C.. 3», que no dice nada. */
                             className={`inline-flex max-w-full items-center gap-2 rounded-lg border py-1 pl-1.5 pr-2 text-[11.5px] transition-colors max-sm:w-full
@@ -102,6 +106,12 @@ export function FuentesPorInstitucion({ meta: metaDelMensaje, docIdMap, onCita, 
                             <span className={`ml-auto tabular-nums ${activa && !g.sinFicha ? 'text-white/70' : 'text-charcoal-400'}`}>
                                 {g.docIds.length}
                             </span>
+                            {g.fuera > 0 && (
+                                <AlertTriangle
+                                    className={`h-3.5 w-3.5 flex-shrink-0 ${activa ? 'text-amber-300' : 'text-amber-600'}`}
+                                    aria-label={`${g.fuera} fuera del contexto recuperado`}
+                                />
+                            )}
                             <ChevronDown className={`h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200 ${activa ? 'rotate-180' : ''}`} />
                         </button>
                     );
@@ -142,6 +152,16 @@ export function FuentesPorInstitucion({ meta: metaDelMensaje, docIdMap, onCita, 
                                                 : esCoidh(f) ? rotuloCoidh(f) : f.origen}
                                         </span>
                                         {!desplegada.sinFicha && f.ref && !esCoidh(f) ? <span className="text-charcoal-500"> — {f.ref}</span> : null}
+                                        {/* El servidor la marcó: no estaba en el contexto de esta
+                                            respuesta. Existe —`/cita` la encontró y abre su PDF—,
+                                            pero hay que comprobar que diga lo que se le atribuye.
+                                            Antes, resuelta, salía aquí como si nada (26-sep-2026). */}
+                                        {!desplegada.sinFicha && fueraDelContexto(meta, id) ? (
+                                            <span className="mt-0.5 flex items-center gap-1 text-amber-700">
+                                                <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                                                Fuera del contexto recuperado: comprueba que diga lo que se le atribuye
+                                            </span>
+                                        ) : null}
                                     </span>
                                 </button>
                             </li>
