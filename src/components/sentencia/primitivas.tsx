@@ -30,8 +30,12 @@ export function Tarjeta({
     return (
         <Tag
             className={cn(
-                'relative rounded-2xl border border-white/[0.07] bg-white/[0.045]',
-                'backdrop-blur-xl transition-colors duration-300',
+                /* NEGRO TEXTURIZADO Y ESQUINA RECTA (David, 26-sep-2026: «tonos
+                   negros texturizados, sin óvalos en esquinas de tarjetas; el
+                   aspecto verdaderamente profesional»). El grano vive en
+                   `.tarjeta-negra` (globals.css); aquí sólo el plano. */
+                'tarjeta-negra relative rounded-none border border-white/[0.08] bg-[#0f0f11]',
+                'transition-colors duration-300',
                 /* LA TARJETA SE LEVANTA DEL SUELO. Con el fondo ya profundo
                    (charcoal-950), una sombra baja y ancha le da el centímetro
                    de aire que faltaba: no es un adorno, es lo que separa el
@@ -72,7 +76,7 @@ export function Pastilla({
         <Elemento
             onClick={onClick}
             className={cn(
-                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1',
+                'inline-flex items-center gap-1.5 rounded-[2px] border px-2.5 py-1',
                 'text-[12px] font-medium leading-none tracking-wide',
                 'transition-all duration-200',
                 onClick && 'hover:scale-[1.03] active:scale-[0.98] cursor-pointer',

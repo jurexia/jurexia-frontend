@@ -2128,3 +2128,33 @@ h6 {
   .fila-fuentes .palabra-esfuerzo { display: none; }
 }
 
+
+
+/* ═══ EL TALLER EN NEGRO TEXTURIZADO (26-sep-2026) ══════════════════════════
+   David: «hacerlo más elegante visualmente, con tonos negros texturizados (sin
+   óvalos en esquinas de tarjetas). El aspecto verdaderamente profesional».
+   Negro mate con un grano finísimo —papel, no pantalla—, bordes de un pelo,
+   esquinas rectas en todo el taller y la aurora dorada fuera: el oro queda
+   sólo para lo activo y lo que exige decisión. Un solo sitio: quitar la clase
+   `taller-negro` de la raíz de /taller devuelve el aspecto anterior. */
+.taller-negro {
+    background-color: #08080a;
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)' opacity='0.07'/></svg>"),
+        radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,0.035), transparent 60%),
+        linear-gradient(180deg, #0b0b0d 0%, #070708 100%);
+    background-attachment: fixed;
+}
+.taller-negro .taller-aurora { display: none; }
+/* Sin óvalos: toda esquina redondeada del taller queda recta. Los círculos de
+   verdad —puntos, anillos, indicadores— son `rounded-full` y se conservan. */
+.taller-negro [class*="rounded"]:not(.rounded-full):not(svg):not(svg *) { border-radius: 0 !important; }
+.tarjeta-negra {
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='t'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23t)' opacity='0.05'/></svg>"),
+        linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0) 38%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.045), 0 1px 2px rgba(0,0,0,0.5), 0 18px 40px -18px rgba(0,0,0,0.8);
+}
+/* Los paneles translúcidos que no son `Tarjeta` (bg-white/[0.0x]) se leen como
+   el mismo negro: sin cristal esmerilado, que en negro se ve lechoso. */
+.taller-negro [class*="backdrop-blur"] { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }

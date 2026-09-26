@@ -1927,7 +1927,7 @@ export default function TallerDeSentencias() {
     };
 
     return (
-        <div className="min-h-screen bg-charcoal-950 font-sans text-white antialiased">
+        <div className="taller-negro min-h-screen bg-charcoal-950 font-sans text-white antialiased">
             {/* ═══ LA PROFUNDIDAD DEL FONDO ═══
                 David: «colores más profundos». El suelo era #1a1a1a plano y las
                 tarjetas se pintan con bg-white/[0.035] —#232323—: trece puntos
