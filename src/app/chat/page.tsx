@@ -26,6 +26,8 @@ import type { InsercionDocumento } from '@/components/documento/ConstructorDeman
 import type { VersionDocumento } from '@/components/documento/PanelDocumento';
 import { SEP_DOSSIER, metaDeCitas } from '@/lib/documento/citas';
 import { markdownAHtml, limpiarMarcadores } from '@/lib/documento/marcado';
+import { abrirCitaConFicha } from '@/lib/documento/fichas';
+import { idsCitados } from '@/lib/idsDeCita';
 import { estadoPiloto } from '@/components/sentencia/api';
 
 /* El constructor de demanda se carga sólo cuando alguien lo abre: trae el
@@ -622,8 +624,13 @@ export default function ChatPage() {
         }
     }, [activeConversationId, clearMessages]);
 
+    /* EL PDF SIEMPRE EN EL VISOR (26-sep-2026). David: «Siempre debemos
+       asegurar el PDF en el visor». Una cita cuya ficha no venía en el mapa del
+       mensaje llegaba aquí vacía —«Fuente legal», sin texto ni PDF— y el visor
+       se abría en blanco. Ahora se pide a `/cita` con caché por identificador:
+       ver `abrirCitaConFicha` en `@/lib/documento/fichas`. */
     const handleCitationClick = useCallback((source: any) => {
-        setActivePdfSource(source);
+        abrirCitaConFicha(source, setActivePdfSource);
     }, []);
 
     /* Sin cuenta es básico siempre. Con cuenta gratuita, en cuanto se acaban
@@ -1342,13 +1349,11 @@ export default function ChatPage() {
     useEffect(() => {
         const citados: string[] = [];
         const resolubles: Record<string, true> = {};
-        const patron = /\[Doc ID:\s*([0-9a-fA-F-]{30,40})\]/g;
         for (let i = 0; i < bloquesDocumento.length; i++) {
             const md = bloquesDocumento[i].markdown;
-            patron.lastIndex = 0;
-            let m: RegExpExecArray | null;
-            while ((m = patron.exec(md)) !== null) {
-                const id = m[1].toLowerCase();
+            // También las que venían agrupadas —«[Doc IDs: a; b]»—: el patrón
+            // de aquí sólo veía la forma singular (`@/lib/idsDeCita`).
+            for (const id of idsCitados(md)) {
                 if (citados.indexOf(id) === -1) citados.push(id);
             }
             const meta = metaDeCitas(md);

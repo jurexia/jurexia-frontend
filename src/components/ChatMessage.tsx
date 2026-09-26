@@ -3,6 +3,8 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
 import { User, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X } from 'lucide-react';
 import { AvatarIurexia } from '@/components/AvatarIurexia';
+import { expandirCitasAgrupadas, numerarCitasDelChat } from '@/lib/idsDeCita';
+import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
 import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro } from '@/components/SelloCitas';
 import type { Message } from '@/lib/api';
@@ -106,7 +108,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Extract unique document IDs, thinking content, and create numbered references
-    const { processedContent, docIdMap, thinkingContent, citationMeta, isSynthesizing, precedentesMeta } = useMemo(() => {
+    const { processedContent, docIdMap, thinkingContent, citationMeta: metaDelServidor, isSynthesizing, precedentesMeta } = useMemo(() => {
         if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as { valid: number; invalid: number; total: number; invalid_ids: string[]; sources?: Record<string, FuenteMarcador> } | null, isSynthesizing: false, precedentesMeta: null as Array<{id:string; holding:string; ref:string; origen:string; score:number; silo:string; pdf_url?:string|null}> | null };
 
         let content = message.content || '';
@@ -136,97 +138,14 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
             content = content.replace(/<!--SYNTHESIS:START-->[\s\S]*/, '');
         }
 
-        // Create map to track citation numbers in order of FIRST APPEARANCE
-        const docIdMap = new Map<string, number>();
-        let citationCounter = 0;
-
-        // Helper function to get or assign citation number
-        const getCitationNumber = (uuid: string): number => {
-            const normalizedUuid = uuid.toLowerCase();
-            if (!docIdMap.has(normalizedUuid)) {
-                citationCounter++;
-                docIdMap.set(normalizedUuid, citationCounter);
-            }
-            return docIdMap.get(normalizedUuid)!;
-        };
-
-        // STEP 1: Process VALID Doc IDs first (before removing malformed ones)
-        // Pattern A: [Doc ID: uuid] - most common format (36 char UUID)
-        content = content.replace(
-            /\[Doc ID:\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\]/gi,
-            (_, uuid) => {
-                const num = getCitationNumber(uuid);
-                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
-            }
-        );
-
-        // Pattern A2: [, uuid] or [,uuid] - AI sometimes outputs this format (comma before UUID)
-        content = content.replace(
-            /\[\s*,\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\s*\]/gi,
-            (_, uuid) => {
-                const num = getCitationNumber(uuid);
-                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
-            }
-        );
-
-        // Pattern A3: [text, uuid] - AI sometimes outputs [nombre, uuid] format
-        content = content.replace(
-            /\[[^\]]*,\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\s*\]/gi,
-            (_, uuid) => {
-                const num = getCitationNumber(uuid);
-                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
-            }
-        );
-
-        // Pattern B: Doc uuid (standalone)
-        content = content.replace(
-            /(?<![a-f0-9-])Doc\s+([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(?![a-f0-9-])/gi,
-            (_, uuid) => {
-                const num = getCitationNumber(uuid);
-                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
-            }
-        );
-
-        // Pattern C: Lone UUID not already in a citation-badge
-        content = content.replace(
-            /(?<!data-doc-id=")(?!\/document\/)([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(?!")/gi,
-            (match, uuid) => {
-                // Skip if this UUID is already wrapped
-                if (content.includes(`data-doc-id="${uuid.toLowerCase()}"`)) {
-                    return match;
-                }
-                const num = getCitationNumber(uuid);
-                return `<sup class="citation-badge" data-doc-id="${uuid.toLowerCase()}">[${num}]</sup>`;
-            }
-        );
-
-        // STEP 2: Remove ALL malformed/leftover Doc IDs AFTER processing valid ones
-        // Clean up leftover bracket artifacts from citation processing: [, <sup>...</sup>] → <sup>...</sup>
-        content = content.replace(/\[\s*,?\s*(<sup class="citation-badge"[^<]*<\/sup>)\s*\]/g, '$1');
-        // Clean up double-bracketed citations: [<sup>...</sup>] → <sup>...</sup>
-        content = content.replace(/\[(<sup class="citation-badge"[^<]*<\/sup>)\]/g, '$1');
-        // Clean up [, [N]] patterns (nested brackets with numbers)
-        content = content.replace(/\[\s*,?\s*\[(\d+)\]\s*\]/g, '<sup class="citation-badge">[$1]</sup>');
-
-        // Remove UUIDs missing first segment like [-53b4-5b76-b7ea-ef9db1b4ead8]
-        content = content.replace(/\[-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\]/gi, '');
-
-        // Remove short/partial Doc IDs like [Doc ID: 9396d0c8]
-        content = content.replace(/\[Doc ID:\s*[a-f0-9]{1,35}\]/gi, '');
-
-        // Remove parenthetical partial UUIDs like (Doc ID: xxxxx)
-        content = content.replace(/\(Doc ID:\s*[a-f0-9-]+\)/gi, '');
-
-        // Remove standalone partial refs like [-985d-5043-8e4e-b43aaee99c66]
-        content = content.replace(/\[-[a-f0-9-]{10,35}\]/gi, '');
-
-        // Remove multi-Doc ID brackets like [Doc ID: uuid; Doc ID: uuid]
-        content = content.replace(/\[Doc ID:[^\]]*;[^\]]*\]/gi, '');
-        // Remove plural "Doc IDs" patterns like [Doc IDs: ; ] or [Doc IDs: xxx; yyy]
-        content = content.replace(/\[Doc IDs?:[^\]]*\]/gi, '');
-
-        // Remove any remaining raw "Doc ID:" text that wasn't properly formatted
-        content = content.replace(/Doc ID:\s*[a-f0-9-]+/gi, '');
+        // LAS CITAS, NUMERADAS POR ORDEN DE PRIMERA APARICIÓN (26-sep-2026).
+        // Antes aquí había dos pasos con sus propias expresiones y el segundo
+        // BORRABA los corchetes plurales —«[Doc IDs: a; b]»— con las citas
+        // dentro. Ahora vive en `@/lib/idsDeCita`, que primero abre lo agrupado
+        // en citas singulares y después numera: [25][26], nunca «Doc IDs».
+        const numeradas = numerarCitasDelChat(content);
+        content = numeradas.content;
+        const docIdMap = numeradas.docIdMap;
 
         // Remove any "## ⚖️ Análisis Legal" or "## ⚖️ Respuesta Legal" headers completely
         // (These are redundant - the user already knows this is a legal response from Iurexia)
@@ -333,6 +252,23 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing, precedentesMeta };
     }, [message.content, isUser]);
 
+    /* LA CITA QUE EL MAPA NO TRAE SE PIDE A `/cita` (26-sep-2026). David:
+       «Siempre debemos asegurar el PDF en el visor». Al terminar la respuesta,
+       lo que falte en `CITATION_META.sources` se resuelve por identificador y
+       entra en el mismo mapa: así abren su PDF la ficha del texto, la lista por
+       institución y las referencias del Word, también en los mensajes ya
+       guardados. Durante el stream no se pide: el mapa final aún puede traerlas. */
+    const idsSinFicha = useMemo(
+        () => citasSinFuente(docIdMap.keys(), metaDelServidor),
+        [docIdMap, metaDelServidor],
+    );
+    const { fichas: fichasResueltas, estado: estadoFichas } = useFichasDeCitas(idsSinFicha, !isStreaming && !isUser);
+    const citationMeta = useMemo(() => conFichas(metaDelServidor, fichasResueltas), [metaDelServidor, fichasResueltas]);
+    const cuentaCitas = useMemo(
+        () => resumenDeCitas(docIdMap.keys(), citationMeta, estadoFichas),
+        [docIdMap, citationMeta, estadoFichas],
+    );
+
     // El HTML se rehacía en CADA render, y durante el stream eso son cientos:
     // todo el árbol del mensaje se destruía y se volvía a crear con cada trozo,
     // así que un clic podía caer sobre un nodo que dejaba de existir a mitad de
@@ -377,6 +313,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
         // la vista en la primera página. Enumerar marcadores es una lista que
         // se queda corta cada vez que se añade uno; quitarlos todos no.
         clean = clean.replace(/<!--[\s\S]*?-->/g, '');
+
+        // 1b. Lo agrupado —«[Doc IDs: a; b]»— se abre en citas singulares, igual
+        // que en la burbuja: si no, el paso 2b lo borraba y el Word perdía esas
+        // citas y sus referencias (`@/lib/idsDeCita`).
+        clean = expandirCitasAgrupadas(clean);
 
         // 2. Replace [Doc ID: uuid] with bracketed citation number ⟦N⟧ using docIdMap.
         // Using ⟦⟧ as sentinel so downstream cleanup doesn't strip them.
@@ -713,8 +654,8 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                 continue;
             }
 
-            // Skip citation badges like [Doc ID: ...]
-            if (trimmedLine.match(/^\[Doc ID:/)) {
+            // Skip citation badges like [Doc ID: ...] / [Doc IDs: ...]
+            if (trimmedLine.match(/^\[Doc IDs?:/)) {
                 continue;
             }
 
@@ -1300,10 +1241,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         <p className="mt-0.5 text-xs text-charcoal-500">
                                             {processedContent.trim() ? processedContent.trim().split(/\s+/).length.toLocaleString('es-MX') : 0} palabras
                                             {docIdMap.size > 0 ? ` · ${docIdMap.size} ${docIdMap.size === 1 ? 'cita' : 'citas'}` : ''}
-                                            {(() => {
-                                                const v = citationMeta ? Math.min(citationMeta.valid, docIdMap.size || citationMeta.valid) : 0;
-                                                return v > 0 ? ` · ${v} ${v === 1 ? 'verificada' : 'verificadas'}` : '';
-                                            })()}
+                                            {/* Verificadas = citas del texto con ficha (del mapa o de
+                                                `/cita`) que el servidor no marcó: ver `resumenDeCitas`. */}
+                                            {cuentaCitas.verificadas > 0
+                                                ? ` · ${cuentaCitas.verificadas} ${cuentaCitas.verificadas === 1 ? 'verificada' : 'verificadas'}`
+                                                : ''}
                                         </p>
                                         {/* DE DÓNDE VINO CADA FUENTE, bajo el emblema de quien la
                                             publica (David, 18-sep y 18-sep-2026): Cámara de Diputados
@@ -1315,6 +1257,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                             meta={citationMeta as unknown as MetaCitas | null}
                                             docIdMap={docIdMap}
                                             onCita={onCitationClick}
+                                            resolver={!isStreaming}
                                             className="mt-2.5"
                                         />
                                     </div>
@@ -1400,8 +1343,10 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                             validador del backend NO miraba. (7-ago-2026) */}
                         {!isStreaming && !basico && (
                             <SelloCitas
-                                trazadas={citationMeta?.valid ?? 0}
-                                noTrazadas={citationMeta?.invalid ?? 0}
+                                // Las mismas cuentas que la tarjeta y la hoja: una cita
+                                // agrupada que `/cita` resolvió también está trazada.
+                                trazadas={cuentaCitas.verificadas}
+                                noTrazadas={cuentaCitas.noTrazadas}
                                 registros={registrosDeLaRespuesta(processedContent)}
                                 rubros={rubrosPorRegistro(processedContent)}
                                 fueraDelAcervo={message.registrosFuera}
@@ -1421,6 +1366,7 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 meta={citationMeta as unknown as MetaCitas | null}
                                 docIdMap={docIdMap}
                                 onCita={onCitationClick}
+                                resolver={!isStreaming}
                                 className="mx-5 mb-3 mt-1 sm:mx-6"
                             />
                         )}

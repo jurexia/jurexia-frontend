@@ -1,9 +1,10 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { ChevronDown, AlertTriangle } from 'lucide-react';
+import { ChevronDown, AlertTriangle, Loader2 } from 'lucide-react';
 import { fuenteDeCita, institucionesDe, type FuenteCita, type Institucion, type MetaCitas } from '@/lib/documento/citas';
 import { esCoidh, rotuloCoidh } from '@/lib/coidh';
 import { IconoInstitucion } from './IconoInstitucion';
+import { citasSinFuente, conFichas, useFichasDeCitas } from '@/lib/documento/fichas';
 
 /**
  * LAS FUENTES, BAJO EL EMBLEMA DE QUIEN LAS PUBLICA (18-sep-2026).
@@ -25,14 +26,26 @@ import { IconoInstitucion } from './IconoInstitucion';
 
 const SIN_FICHA: Institucion = { clave: 'otra', nombre: 'Citas sin ficha', icono: '' };
 
-export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }: {
+export function FuentesPorInstitucion({ meta: metaDelMensaje, docIdMap, onCita, resolver = true, className = '' }: {
     meta: MetaCitas | null;
     /** Identificador de cada cita → su número en el texto. */
     docIdMap: Map<string, number>;
     onCita?: (fuente: FuenteCita) => void;
+    /** Pedir a `/cita` las fichas que el mapa no traiga (en el hilo, al
+     *  terminar la respuesta). */
+    resolver?: boolean;
     className?: string;
 }) {
     const [abierta, setAbierta] = useState<string | null>(null);
+
+    /* NINGUNA CITA ES «SIN FICHA» ANTES DE PREGUNTAR (26-sep-2026). Lo que el
+       mapa del mensaje no trae se pide a `/cita` (`@/lib/documento/fichas`) y
+       entra en su institución con su PDF. Al grupo ámbar sólo va lo que `/cita`
+       no encontró o no pudo consultar; mientras se busca, se dice que se busca. */
+    const faltan = useMemo(() => citasSinFuente(docIdMap.keys(), metaDelMensaje), [docIdMap, metaDelMensaje]);
+    const { fichas, estado } = useFichasDeCitas(faltan, resolver);
+    const meta = useMemo(() => conFichas(metaDelMensaje, fichas), [metaDelMensaje, fichas]);
+    const buscando = faltan.filter((id) => estado[id.toLowerCase()] === 'buscando').length;
 
     const { grupos, numeros } = useMemo(() => {
         const numeros = new Map<string, number>();
@@ -47,7 +60,8 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
         }));
 
         const conFicha = new Set(base.flatMap((g) => g.docIds.map((x) => x.toLowerCase())));
-        const sueltas = Array.from(docIdMap.keys()).filter((id) => !conFicha.has(id.toLowerCase()));
+        const sueltas = Array.from(docIdMap.keys())
+            .filter((id) => !conFicha.has(id.toLowerCase()) && estado[id.toLowerCase()] !== 'buscando');
         if (sueltas.length) {
             base.push({
                 id: 'sin-ficha', institucion: SIN_FICHA, sinFicha: true,
@@ -55,9 +69,9 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
             });
         }
         return { grupos: base, numeros };
-    }, [meta, docIdMap]);
+    }, [meta, docIdMap, estado]);
 
-    if (!grupos.length) return null;
+    if (!grupos.length && !buscando) return null;
     const desplegada = grupos.find((g) => g.id === abierta);
 
     return (
@@ -92,6 +106,12 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                         </button>
                     );
                 })}
+                {buscando > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-1 text-[11.5px] text-charcoal-500 max-sm:w-full">
+                        <Loader2 className="h-3.5 w-3.5 flex-shrink-0 animate-spin" />
+                        {buscando === 1 ? 'Buscando la ficha de 1 cita…' : `Buscando la ficha de ${buscando} citas…`}
+                    </span>
+                )}
             </div>
 
             {desplegada && (
@@ -113,7 +133,10 @@ export function FuentesPorInstitucion({ meta, docIdMap, onCita, className = '' }
                                     <span className="min-w-0 flex-1 text-[11.5px] leading-snug text-charcoal-700">
                                         <span className="font-medium text-charcoal-900">
                                             {desplegada.sinFicha
-                                                ? `Cita ${n ?? ''} sin ficha de origen`
+                                                // Ya se preguntó a `/cita`: se dice qué contestó.
+                                                ? (estado[id.toLowerCase()] === 'fallo'
+                                                    ? `Cita ${n ?? ''}: no se pudo consultar su ficha. Toca para reintentar`
+                                                    : `Cita ${n ?? ''} sin ficha: no está en el acervo`)
                                                 // La Corte IDH se nombra por su caso y párrafo,
                                                 // no por el `origen` del marcador.
                                                 : esCoidh(f) ? rotuloCoidh(f) : f.origen}

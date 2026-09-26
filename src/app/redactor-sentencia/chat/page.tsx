@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import ChatMessage from '@/components/ChatMessage';
 import DocumentModal from '@/components/DocumentModal';
 import PdfViewerPanel from '@/components/PdfViewerPanel';
+import { abrirCitaConFicha } from '@/lib/documento/fichas';
 import { useRequireAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -298,7 +299,8 @@ export default function ChatSentenciaPage() {
 
     // ── Document Modal Handlers ─────────────────────────────────────────────
     const handleCitationClick = useCallback((source: { docId: string; origen: string; ref: string; texto: string; pdf_url?: string | null; silo?: string; entidad?: string | null }) => {
-        setActivePdfSource(source);
+        // Con su ficha de `/cita` si el mapa del mensaje no la traía (26-sep-2026).
+        abrirCitaConFicha(source, setActivePdfSource);
     }, []);
 
     const handleCloseModal = useCallback(() => {

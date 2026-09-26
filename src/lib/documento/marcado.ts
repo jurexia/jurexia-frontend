@@ -10,6 +10,8 @@
  * modelo nunca entra como HTML.
  */
 
+import { expandirCitasAgrupadas } from '@/lib/idsDeCita'
+
 const RUBROS_DE_ESCRITO = /^(PROEMIO|HECHOS|PRESTACIONES|PRETENSIONES|DERECHO|FUNDAMENTOS DE DERECHO|CONSIDERACIONES DE DERECHO|CONCEPTOS DE VIOLACI[ÓO]N|AGRAVIOS|PRUEBAS|OFRECIMIENTO DE PRUEBAS|PUNTOS PETITORIOS|PETITORIOS|COMPETENCIA|V[ÍI]A|PERSONALIDAD|PROTESTO LO NECESARIO|PROTESTAMOS LO NECESARIO|ACTOS RECLAMADOS|AUTORIDADES RESPONSABLES|ANTECEDENTES|CAP[ÍI]TULO DE [A-ZÁÉÍÓÚÑ ]+|[A-ZÁÉÍÓÚÑ ]{4,40})\s*[:.]?$/
 
 const ABRE_RAZON = '<!--thinking-->';
@@ -38,9 +40,13 @@ export function sinRazonamiento(texto: string): string {
 }
 
 export function limpiarMarcadores(texto: string): string {
-    return sinRazonamiento(texto || '')
+    return expandirCitasAgrupadas(sinRazonamiento(texto || ''))
         .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/\[\s*Doc\s*ID\s*:\s*[^\]]*\]/gi, '')
+        // Lo agrupado se abre antes en singulares (`@/lib/idsDeCita`), y los
+        // restos con etiqueta —singulares, plurales o entre paréntesis— se van:
+        // «[Doc IDs: …]» no casaba con `Doc ID:` y quedaba a la vista.
+        .replace(/\[\s*Doc\s*IDs?\s*:\s*[^\]]*\]/gi, '')
+        .replace(/\(\s*Doc\s*IDs?\s*:\s*[^)]*\)/gi, '')
         .replace(/⟦\d+⟧/g, '')
         .replace(/[ \t]+\n/g, '\n')
         .replace(/\n{3,}/g, '\n\n')

@@ -12,7 +12,8 @@
  * el mismo `data-doc-id`. La numeración es por orden de aparición, como en
  * la burbuja, para que [3] sea la misma fuente en las dos.
  */
-import { markdownAHtml, separarTarjetas } from './marcado';
+import { markdownAHtml, separarTarjetas, sinRazonamiento } from './marcado';
+import { expandirCitasAgrupadas } from '@/lib/idsDeCita';
 import { type CamposCoidh, camposCoidh, esCoidh, referenciaCoidh } from '@/lib/coidh';
 import { type CamposDoctrina, camposDoctrina, esDoctrina, referenciaDoctrina } from '@/lib/doctrina';
 
@@ -81,7 +82,17 @@ export function marcarCitas(markdown: string): { markdown: string; orden: string
         return i + 1;
     };
     const marca = (uuid: string) => `⟦cita:${numero(uuid)}:${uuid.toLowerCase()}⟧`;
-    let t = sinTrasfondo(markdown);
+    // Lo agrupado —«[Doc IDs: a; b]»— se abre en citas singulares ANTES de
+    // numerar. Sin esto la hoja enseñaba «[Doc IDs: [25]; [26]]» (26-sep-2026).
+    //
+    // Y los marcadores, fuera antes de numerar: el paso del uuid suelto contaba
+    // también los identificadores del JSON de CITATION_META y PRECEDENTES_META,
+    // y el pie de la hoja decía «67 citas» con 33 en el texto. `markdownAHtml`
+    // borraba el comentario después, pero `orden` ya los llevaba dentro. El
+    // razonamiento se quita primero, con sus marcas, para no dejar su texto.
+    let t = expandirCitasAgrupadas(sinRazonamiento(sinTrasfondo(markdown)))
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/<!--[^>]*$/, '');
     // [Doc ID: uuid] — la forma normal
     t = t.replace(new RegExp(`\\[Doc ID:\\s*(${UUID})\\]`, 'gi'), (_, u) => marca(u));
     // [, uuid] y [nombre, uuid] — formas que el modelo también produce

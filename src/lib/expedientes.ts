@@ -1041,7 +1041,10 @@ export function limpiarMarcadores(texto: string): string {
         // El chat los convierte en marcadores de cita [1], [2]; la carpeta no
         // tiene dónde ponerlos, así que se quitan. Se veía feo de verdad:
         // «…queda sin efecto alguno. [Doc ID: 7fc88536-c19a-25c3-ba36-…]».
-        .replace(/\s*\[Doc ID:[^\]]*\]/gi, '')
+        // También las agrupadas —«[Doc IDs: a; b]»— y las de paréntesis, que
+        // con `Doc ID:` a secas se quedaban en el borrador (26-sep-2026).
+        .replace(/\s*\[\s*Doc\s*IDs?\s*:[^\]]*\]/gi, '')
+        .replace(/\s*\(\s*Doc\s*IDs?\s*:[^)]*\)/gi, '')
         .replace(/<!--PING-->/g, '')
         .replace(/<!--PASO:[^>]*-->/g, '')
         .replace(/<!--SOURCES:[^>]*-->/g, '')
