@@ -177,10 +177,18 @@ function PasoSuplencia({ propuesta, valor, onCambiar }: {
     const deCat = (id: string) => cat.find((f) => f.id === id);
     const rotuloDe = (id: string) => deCat(id)?.rotulo || id;
     const esLaPropuesta = !valor || valor.fraccion === propuesta.fraccion;
-    const aFavorDe = sinSuplencia ? '' : (valor?.aFavorDe || propuesta.aFavorDe || propuesta.parte);
+    /* A FAVOR DE QUIÉN, SEGÚN LA FRACCIÓN (revisión, 26-sep-2026). Se heredaba
+       el de la propuesta a cualquier fracción: con la II propuesta —en favor
+       del menor— y la V elegida, la V salía «a favor del menor»; y al revés, la
+       II elegida a mano salía a favor del adulto que promovía. El beneficiario
+       que fija la ley viene en el catálogo; si no, es quien promueve. */
+    const aFavorDePara = (id: string) => id === 'ninguna' ? ''
+        : (deCat(id)?.aFavorDe
+           || (id === propuesta.fraccion ? propuesta.aFavorDe : '')
+           || propuesta.parte);
+    const aFavorDe = sinSuplencia ? '' : (valor?.aFavorDe || aFavorDePara(fraccion));
     const elegir = (id: string) => {
-        onCambiar?.({ fraccion: id, aFavorDe: id === 'ninguna' ? '' : (propuesta.aFavorDe || propuesta.parte),
-                      confirmada: true });
+        onCambiar?.({ fraccion: id, aFavorDe: aFavorDePara(id), confirmada: true });
         setCambiando(false);
     };
     const alternativas = (propuesta.alternativas ?? []).filter((a) => a.fraccion !== fraccion);
@@ -272,11 +280,19 @@ function PasoSuplencia({ propuesta, valor, onCambiar }: {
                     ))}
                 </div>
             )}
+            {/* LO QUE ESTA LÍNEA PROMETE ES LO QUE EL SERVIDOR HACE (revisión,
+                26-sep-2026). La VI no es absoluta —el bloque del estudio sólo
+                suple la violación evidente—, y «sin suplencia» no añade nada al
+                encargo: el estudio se escribe como antes, con las reglas de
+                la ley que ya traía. Decía «no la invoca», y en un asunto
+                laboral esas reglas la siguen nombrando. */}
             <p className="mt-3 text-[11.5px] leading-relaxed text-white/45">
-                {confirmada && !sinSuplencia
+                {confirmada && fraccion === 'VI'
+                    ? 'Confirmada: el estudio suple sólo la violación evidente que dejó sin defensa a esa parte —en lo demás, estricto derecho— y, si no la advierte, te lo dice en las advertencias.'
+                    : confirmada && !sinSuplencia
                     ? 'Confirmada: el estudio no declara inoperante por su formulación ningún planteamiento de esa parte —lo suple y lo estudia— y sólo menciona la suplencia en la sentencia si de ella deriva un beneficio (art. 79).'
                     : confirmada
-                        ? 'Decidiste que no hay suplencia: el estudio no la invoca.'
+                        ? 'Decidiste que no hay suplencia: el estudio no recibe ninguna orden de suplir y se escribe como hasta ahora.'
                         : 'Mientras no la confirmes, el estudio no la trata como decisión tuya y se escribe como hasta ahora.'}
             </p>
         </div>

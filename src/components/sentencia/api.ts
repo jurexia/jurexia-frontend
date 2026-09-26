@@ -1392,6 +1392,10 @@ export interface FraccionSuplencia {
     rotulo: string;
     /** El supuesto, con el texto vigente de la ley. */
     texto: string;
+    /** A favor de quién opera cuando lo fija la ley y no quien promueve: la
+     *  II es en favor del menor o de la familia, promueva quien promueva.
+     *  Vacío en las demás (revisión, 26-sep-2026). */
+    aFavorDe: string;
 }
 export interface PropuestaSuplencia {
     fraccion: string;
@@ -1400,7 +1404,8 @@ export interface PropuestaSuplencia {
     /** A favor de quién propone el motor; vacío si propone «sin suplencia». */
     aFavorDe: string;
     /** La parte que promueve, aunque no se proponga nada: la pantalla la usa
-     *  si el secretario elige una fracción por su cuenta. */
+     *  si el secretario elige una fracción por su cuenta (salvo la II, cuyo
+     *  beneficiario trae el catálogo). */
     parte: string;
     porque: string;
     /** Lo que conviene mirar también: la fracción que la parte pide, los
@@ -1436,6 +1441,7 @@ function _suplenciaDe(x: unknown): PropuestaSuplencia | null {
         pedida: String(j.pedida ?? ''),
         fracciones: lista(j.fracciones).map((f) => ({
             id: String(f.id ?? ''), rotulo: String(f.rotulo ?? ''), texto: String(f.texto ?? ''),
+            aFavorDe: String(f.a_favor_de ?? ''),
         })).filter((f) => f.id),
     };
 }
