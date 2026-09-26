@@ -114,6 +114,17 @@ export function consultaProxy(canonica: string, version?: string | null): string
 export const HOST_UNAM = 'archivos.juridicas.unam.mx';
 export const RUTA_UNAM = /^\/www\/bjv\/libros\/(?:[A-Za-z0-9_-]+\/)+[A-Za-z0-9_-]+\.pdf$/;
 
+/**
+ * Y SÓLO LOS LIBROS QUE TENEMOS (25-sep-2026, David). Sin esta lista el proxy
+ * sería un espejo de toda la Biblioteca Jurídica Virtual desde nuestro
+ * dominio, con 30 días de caché. Son las cinco obras de la colección
+ * `doctrina`: Diccionario t. I (8/3632) y t. II (8/3633), Panorámica
+ * (7/3384), Los derechos fundamentales en México (3/1408) y Las razones del
+ * derecho (2/710). Al ingerir otra obra hay que añadir su carpeta aquí.
+ */
+export const LIBROS_UNAM = ['/www/bjv/libros/8/3632/', '/www/bjv/libros/8/3633/', '/www/bjv/libros/7/3384/',
+    '/www/bjv/libros/3/1408/', '/www/bjv/libros/2/710/'];
+
 export function canonUNAM(cruda: string | null | undefined): string | null {
     if (!cruda) return null;
     let u: URL;
@@ -125,6 +136,7 @@ export function canonUNAM(cruda: string | null | undefined): string | null {
     if (u.hostname !== HOST_UNAM || u.protocol !== 'https:') return null;
     if (u.port !== '' || u.username !== '' || u.password !== '') return null;
     if (!RUTA_UNAM.test(u.pathname)) return null;
+    if (!LIBROS_UNAM.some((l) => u.pathname.startsWith(l))) return null;
     return `https://${HOST_UNAM}${u.pathname}`;
 }
 
