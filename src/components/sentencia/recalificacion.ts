@@ -37,7 +37,12 @@ import type { ProblemaJuridico } from './tipos';
    propuesta del motor que el contrato manda recuperar. */
 
 /** Quietud de la razón del principal antes de pedir. */
-export const ANTIRREBOTE_MS = 3_000;
+/* 8 s y no 3 (integración, 26-sep-2026): cada pausa al teclear la razón del
+   principal es una premisa nueva y el servidor cuenta la corrida aunque la
+   pantalla la abandone; con 3 s, corregir la razón en tres o cuatro tandas
+   agotaba el tope y el proyecto salía con los accesorios sin calificar. Es el
+   mismo ritmo que el panel del plan. */
+export const ANTIRREBOTE_MS = 8_000;
 /** Si el servidor contesta «en curso» (otra petición la está calculando y ya
  *  esperó 90 s), se le vuelve a preguntar tras esta pausa, pocas veces: la
  *  misma clave en curso se espera allá, no se duplica. */

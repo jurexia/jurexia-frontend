@@ -438,21 +438,21 @@ function servidor() {
     await h.avanzar(30_000);
     ok(s.pedidos.length === 0 && h.get().r.fase === 'inactivo', 'apagado: no se pide');
 }
-{   // 5.2 ANTIRREBOTE: 3 s tras la última tecla de la razón; una sola llamada
+{   // 5.2 ANTIRREBOTE: 8 s tras la última tecla de la razón; una sola llamada
     reiniciar();
     const s = servidor();
     const enlace = s.enlace = { activo: true, clave: 'K|a', inmediato: false, pedir: s.pedir };
     const h = montar(conRecal, { enlace, listo: true, vivos: VIVOS() });
     ok(h.get().r.fase === 'esperando' && h.get().sup.p1.estado === 'recalificando', 'recién tumbados: «recalificando», en espera');
-    await h.avanzar(2_900);
-    ok(s.pedidos.length === 0, 'antes de 3 s no se pide');
+    await h.avanzar(7_900);
+    ok(s.pedidos.length === 0, 'antes de 8 s no se pide');
     await h.cambiar({ enlace: Object.assign(enlace, { clave: 'K|ab' }) });
     await h.avanzar(2_000);
     await h.cambiar({ enlace: Object.assign(enlace, { clave: 'K|abc' }) });
-    await h.avanzar(2_900);
+    await h.avanzar(7_900);
     ok(s.pedidos.length === 0, 'cada tecla reinicia la cuenta');
     await h.avanzar(200);
-    ok(s.pedidos.length === 1 && s.pedidos[0].clave === 'K|abc', 'a los 3 s de quietud, UNA llamada con la última razón');
+    ok(s.pedidos.length === 1 && s.pedidos[0].clave === 'K|abc', 'a los 8 s de quietud, UNA llamada con la última razón');
     ok(h.get().r.fase === 'pidiendo' && h.get().enCurso, 'pidiendo: en curso');
     s.contestar(listoPara(VIVOS()));
     await h.avanzar(10);
@@ -468,9 +468,9 @@ function servidor() {
     const s = servidor();
     const h = montar(conRecal, { enlace: s.enlace = { activo: true, clave: 'K|', inmediato: true, pedir: s.pedir }, listo: true, vivos: VIVOS() });
     await h.avanzar(1);
-    ok(s.pedidos.length === 1, 'sin razón: se pide enseguida, sin los 3 s');
+    ok(s.pedidos.length === 1, 'sin razón: se pide enseguida, sin los 8 s');
 }
-{   // 5.4 MIENTRAS SE REDACTA LA RAZÓN DEL PRINCIPAL no se pide; al llegar, 3 s
+{   // 5.4 MIENTRAS SE REDACTA LA RAZÓN DEL PRINCIPAL no se pide; al llegar, 8 s
     reiniciar();
     const s = servidor();
     const enlace = s.enlace = { activo: true, clave: 'K|', inmediato: true, pedir: s.pedir };
@@ -478,7 +478,7 @@ function servidor() {
     await h.avanzar(30_000);
     ok(s.pedidos.length === 0 && h.get().sup.p1.estado === 'recalificando', 'redactando la razón: espera sin pedir (y lo dice)');
     await h.cambiar({ listo: true, enlace: Object.assign(enlace, { clave: 'K|la razón del motor', inmediato: false }) });
-    await h.avanzar(2_900);
+    await h.avanzar(7_900);
     ok(s.pedidos.length === 0, 'llegó la razón: antirrebote');
     await h.avanzar(200);
     ok(s.pedidos.length === 1 && s.pedidos[0].clave === 'K|la razón del motor', 'se pide con la razón que llegó, no con la vacía');
@@ -499,7 +499,7 @@ function servidor() {
     await h.avanzar(10);
     ok(h.get().r.fase === 'esperando' && h.get().sup.p1.estado === 'recalificando',
        'A llegó tarde y NO se pinta encima de B');
-    await h.avanzar(3_100);
+    await h.avanzar(8_100);
     ok(s.pedidos.length === 2 && s.pedidos[1].clave === 'B', 'B se pide tras su antirrebote');
     s.contestar(listoPara(VIVOS(), 'inoperante'), s.pendientes.indexOf(s.pedidos[1]));
     await h.avanzar(10);
@@ -594,7 +594,7 @@ function servidor() {
     reiniciar();
     const s = servidor();
     const h = montar(conRecal, { enlace: s.enlace = { activo: true, clave: 'E', inmediato: false, pedir: s.pedir }, listo: true, vivos: VIVOS() });
-    await h.avanzar(3_100);
+    await h.avanzar(recal.ANTIRREBOTE_MS + 100);
     s.pendientes.shift().rej(new Error('Error 502'));
     await h.avanzar(10);
     ok(h.get().r.fase === 'error' && h.get().sup.p1.estado === 'error' && h.get().sup.p1.porQue === 'Error 502', 'error con su motivo');
@@ -637,7 +637,7 @@ function servidor() {
     const vivos = () => recal.pendientesVivos(probs, ['p1', 'p2'], tocados, 'p0');
     const enlace = s.enlace = { activo: true, clave: recal.claveRecalificacion(probs[0], vivos()), inmediato: false, pedir: s.pedir };
     const h = montar(conRecal, { enlace, listo: true, vivos: vivos() });
-    await h.avanzar(3_100);
+    await h.avanzar(recal.ANTIRREBOTE_MS + 100);
     s.contestar(listoPara(vivos()));
     await h.avanzar(10);
     ok(h.get().sup.p1.estado === 'recalificada', 'p1 recalificado');
@@ -646,7 +646,7 @@ function servidor() {
     await h.cambiar({ vivos: vivos(), enlace: Object.assign(enlace, { clave: recal.claveRecalificacion(probs[0], vivos()) }) });
     ok(!('p1' in h.get().sup), 'lo que él pisó ya no lleva nada encima: manda su marca');
     ok(h.get().sup.p2.estado === 'recalificando', 'los demás, con la premisa nueva (otros pendientes), se recalifican');
-    await h.avanzar(3_100);
+    await h.avanzar(recal.ANTIRREBOTE_MS + 100);
     ok(s.pedidos.length === 2 && !JSON.parse(s.pedidos[1].clave)[3].includes(probs[1].pregunta),
        'la llamada nueva ya no lleva a p1 entre los pendientes');
     s.contestar(listoPara(PROBS().filter((p) => p.id !== 'p0'), 'fundado'));
@@ -685,7 +685,7 @@ function servidor() {
     await h.avanzar(20_000);
     ok(planes.length === 0 && s.pedidos.length === 0, 'con el reparto en camino no se pide ni plan ni recalificación');
     await h.cambiar({ repartiendo: false, enlace: Object.assign(enlace, { activo: true }) });
-    await h.avanzar(3_100);
+    await h.avanzar(recal.ANTIRREBOTE_MS + 100);
     ok(s.pedidos.length === 1, 'contestó el reparto: se recalifica');
     await h.avanzar(60_000);
     ok(planes.length === 0 && h.get().plan.fase === 'esperando', 'recalificando: el plan NO se pide (espera)');
