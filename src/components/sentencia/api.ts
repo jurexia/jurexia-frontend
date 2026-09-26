@@ -427,8 +427,87 @@ export interface CriterioEnviado {
 /** Lo que devuelve /taller/reparto por criterio: el sentido ya ajustado a la
  *  suerte del principal, de quién es y por qué. */
 export interface CriterioRepartido extends CriterioEnviado {
-    de: 'principal' | 'tuya' | 'distinto' | 'propio' | 'mayor_beneficio' | '';
+    /** «por_recalificar»: el principal va por la vía CONTRARIA a la que propuso
+     *  el motor y este accesorio, que él no tocó, traía la calificación escrita
+     *  para la otra vía (o ninguna): se TUMBA —sentido y razón vacíos— y el
+     *  motor lo vuelve a calificar con la premisa del secretario.
+     *  «recalificada»: ya se recalificó con esa misma premisa (26-sep-2026,
+     *  contrato_recalificar.md). */
+    de: 'principal' | 'tuya' | 'distinto' | 'propio' | 'mayor_beneficio'
+        | 'por_recalificar' | 'recalificada' | '';
     por_que: string;
+    /** true = tumbado, a la espera de recalificarse con la premisa. */
+    recalificar?: boolean;
+    /** «procesal» / «mayor_beneficio_189»: la guarda procesal. */
+    guarda?: string;
+    /** «presupone» / «autonoma» / «mixta»: su relación con el principal. */
+    relacion?: string;
+}
+
+/* ═══ RECALIFICAR CON LA PREMISA DEL CAMBIO DE SENTIDO (26-sep-2026) ═══
+   David: «si cambio sentido hay que tumbar y regenerar con la premisa del
+   cambio de sentido». Cuando el secretario resuelve el principal por la vía
+   contraria a la que propuso el motor, los accesorios que no tocó conservaban
+   la calificación escrita para la otra vía —en 5 de 16 casos del banco
+   Kingston era «fundado», y el engrose real los negó en los 5—. Ahora esa
+   calificación se tumba y el motor vuelve a calificar SÓLO esos accesorios con
+   el principal, su sentido y su razón como hechos dados.
+
+   El servidor espera como mucho 90 s y contesta con el estado de la
+   recalificación de ESTA premisa (su clave) y los criterios ya con las
+   recalificadas aplicadas, igual que /taller/reparto. No cobra. */
+export type EstadoRecalificar = 'listo' | 'sin_cambios' | 'en_curso' | 'fallo';
+
+export interface RespuestaRecalificar {
+    estado: EstadoRecalificar;
+    /** La huella de la premisa con que se recalificó (o se recalifica). */
+    clave: string;
+    criterios: CriterioRepartido[];
+    avisos: string[];
+}
+
+/** La lectura tolerante de la respuesta: un estado que no se reconoce es un
+ *  fallo —nunca un «listo» que pintaría calificaciones que no llegaron—. */
+export function respuestaRecalificarDe(x: unknown): RespuestaRecalificar {
+    const j = (x && typeof x === 'object' && !Array.isArray(x)) ? x as Record<string, unknown> : {};
+    const e = String(j.estado ?? '').trim().toLowerCase();
+    const estado: EstadoRecalificar = e === 'listo' || e === 'sin_cambios' || e === 'en_curso' ? e : 'fallo';
+    const criterios = (Array.isArray(j.criterios) ? j.criterios : [])
+        .filter((c): c is Record<string, unknown> => !!c && typeof c === 'object' && !Array.isArray(c))
+        .map((c) => ({
+            ...(c as object),
+            problema: String(c.problema ?? ''),
+            sentido: String(c.sentido ?? '').trim().toLowerCase(),
+            razonamiento: String(c.razonamiento ?? ''),
+            jerarquia: c.jerarquia === 'principal' ? 'principal' : 'accesorio',
+            tocado: !!c.tocado,
+            de: String(c.de ?? '') as CriterioRepartido['de'],
+            por_que: String(c.por_que ?? ''),
+            recalificar: c.recalificar === true,
+        }) as CriterioRepartido);
+    const avisos = (Array.isArray(j.avisos) ? j.avisos : []).map((a) => {
+        if (a && typeof a === 'object') {
+            const o = a as Record<string, unknown>;
+            return String(o.texto ?? o.mensaje ?? o.aviso ?? JSON.stringify(o));
+        }
+        return String(a ?? '');
+    }).map((a) => a.trim()).filter(Boolean);
+    return { estado, clave: String(j.clave ?? '').trim(), criterios, avisos };
+}
+
+/** PIDE LA RECALIFICACIÓN con el MISMO formulario que generará el proyecto
+ *  (`formularioDelResolver`): la clave que el servidor calcula aquí —el
+ *  principal, su sentido, su razón y qué accesorios quedan por recalificar—
+ *  es la que buscará al generar y al pedir el plan. Si la pantalla mandara
+ *  otra cosa, el estudio volvería a recalificar —otra llamada al modelo y
+ *  hasta minuto y medio más— sobre lo que ya estaba hecho. */
+export async function recalificar(
+    numero: string, userEmail: string, opciones: OpcionesResolver, signal?: AbortSignal,
+): Promise<RespuestaRecalificar> {
+    const fd = formularioDelResolver(numero, userEmail, opciones);
+    const res = await fetch(`${BASE}/taller/recalificar`, { method: 'POST', body: fd, signal });
+    if (!res.ok) return _fallo(res);
+    return respuestaRecalificarDe(await res.json().catch(() => null));
 }
 
 /** LA SUERTE DE LOS ACCESORIOS CUANDO CAMBIA EL PRINCIPAL. No llama a ningún
@@ -925,6 +1004,11 @@ export async function resolverEnVivo(
      *  escribir la primera línea. Puede tardar hasta dos minutos, y sin decirlo
      *  la pantalla parecería colgada justo antes del estudio. */
     onOrdenando?: () => void,
+    /** EL SERVIDOR ESTÁ RECALIFICANDO LOS ACCESORIOS CON LA PREMISA DEL
+     *  SECRETARIO (evento «recalificando», 26-sep-2026): el principal va por la
+     *  vía contraria a la que propuso el motor y los accesorios que no tocó se
+     *  vuelven a calificar antes del plan y del estudio. Hasta minuto y medio. */
+    onRecalificando?: () => void,
 ): Promise<ResultadoProyecto> {
     const fd = formularioDelResolver(numero, userEmail, opciones);
 
@@ -998,6 +1082,8 @@ export async function resolverEnVivo(
                     onComponiendo?.();
                 } else if (ev.tipo === 'ordenando') {
                     onOrdenando?.();
+                } else if (ev.tipo === 'recalificando') {
+                    onRecalificando?.();
                 } else if (ev.tipo === 'error') {
                     /* El motor dice que falló: eso no se recupera, se cuenta. */
                     throw new ErrorDelMotor(String(ev.mensaje || 'Falló la generación.'));

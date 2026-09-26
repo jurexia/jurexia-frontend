@@ -105,7 +105,12 @@ export interface ProblemaJuridico {
      *  «motor» (la propuesta), «principal» (la puso el árbol de decisión al
      *  fijar el principal), «distinto» / «propio» (se estudia por su cuenta),
      *  «mayor_beneficio». Y por qué, en una frase que la pantalla enseña. */
-    de?: 'tuya' | 'motor' | 'principal' | 'distinto' | 'propio' | 'mayor_beneficio' | '';
+    de?: 'tuya' | 'motor' | 'principal' | 'distinto' | 'propio' | 'mayor_beneficio'
+        /* Tumbado y recalificado con la premisa del cambio de sentido
+           (26-sep-2026). La pantalla no los escribe aquí —viven aparte, en
+           `recalificacion.ts`—; el tipo los admite porque /taller/reparto
+           puede devolverlos. */
+        | 'por_recalificar' | 'recalificada' | '';
     porQue?: string;
     /** El secretario corrigió la pregunta en pantalla (y en el servidor). */
     editada?: boolean;
