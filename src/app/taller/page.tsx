@@ -562,7 +562,9 @@ export default function TallerDeSentencias() {
        eligió nada —o no es de casa—, lo que el servidor diga que usará para
        este asunto (cuando se encienda por tipo). Sin plan, el panel «Cómo se
        estudiará» no aparece y no se pide nada. */
-    const varianteEfectiva = (esCasa && varianteEstudio) || delAsunto?.varianteEstudio || '';
+    /* LA VARIANTE LA DECIDE EL SERVIDOR (26-sep-2026: la v4 es la de todos y
+       David pidió quitar de la pantalla «v1, v2…»). */
+    const varianteEfectiva = delAsunto?.varianteEstudio || '';
     const usaPlan = varianteEfectiva === 'v4';
     /* QUÉ ESTÁ HACIENDO EL SERVIDOR MIENTRAS SE GENERA, en UNA fase y no en
        dos banderas: «recalificando» (los accesorios con la premisa del
@@ -1294,10 +1296,10 @@ export default function TallerDeSentencias() {
                         contexto,
                         // La variante que eligió en casa vale también para el
                         // atajo: un mismo navegador no mide con dos prompts.
-                        varianteEstudio: esCasa ? varianteEstudio : '' }
+                        varianteEstudio: '' }
                     : { porJurimetria: true,
                         responsable: encargo.responsable, contexto,
-                        varianteEstudio: esCasa ? varianteEstudio : '' },
+                        varianteEstudio: '' },
                 (t) => { avanzarFase('texto'); setAvance((x) => x + t); },
                 () => setAvance((x) => x + '\n\n… componiendo el documento'),
                 () => avanzarFase('ordenando'),
@@ -1660,7 +1662,7 @@ export default function TallerDeSentencias() {
         suplencia,
         suplenciaPropuesta: delAsunto?.suplencia ?? null,
         razonesSegmento,
-        varianteEstudio: esCasa ? varianteEstudio : '',
+        varianteEstudio: '',
     }, formato);
     const opcionesRef = useRef(opcionesDelProyecto);
     opcionesRef.current = opcionesDelProyecto;
@@ -2721,7 +2723,7 @@ export default function TallerDeSentencias() {
                                     reparto, que es exactamente lo que se va a
                                     estudiar. */}
                                 {delAsunto.relato && (
-                                    <div className="rounded-xl border border-accent-gold/25
+                                    <div className="tarjeta-clave rounded-xl border border-accent-gold/25
                                                     bg-accent-gold/[0.045] px-4 py-4 sm:px-5">
                                         <p className="text-[12px] uppercase tracking-wide text-accent-gold">
                                             De qué va el asunto

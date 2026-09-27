@@ -2130,31 +2130,131 @@ h6 {
 
 
 
-/* ═══ EL TALLER EN NEGRO TEXTURIZADO (26-sep-2026) ══════════════════════════
-   David: «hacerlo más elegante visualmente, con tonos negros texturizados (sin
-   óvalos en esquinas de tarjetas). El aspecto verdaderamente profesional».
-   Negro mate con un grano finísimo —papel, no pantalla—, bordes de un pelo,
-   esquinas rectas en todo el taller y la aurora dorada fuera: el oro queda
-   sólo para lo activo y lo que exige decisión. Un solo sitio: quitar la clase
-   `taller-negro` de la raíz de /taller devuelve el aspecto anterior. */
+/* ═══ EL TALLER EN NEGRO TEXTURIZADO (26-sep-2026, segunda vuelta) ════════
+   David: «tonos negros texturizados (sin óvalos en esquinas de tarjetas)»,
+   «cada botón como si fuera real» y «la tarjeta del asunto en corto debe ser la
+   más visible junto con la tarjeta de salida». Tras la primera vuelta: «siento
+   que no está cuidado». Tres capas, todas aquí:
+     1. el suelo: negro mate con grano de papel y una trama casi invisible;
+     2. los botones: piezas con relieve —bisel arriba, sombra abajo— que se
+        hunden al pulsarlas; los dorados, en oro cepillado;
+     3. las dos tarjetas clave: más claras que el resto, filo dorado arriba y
+        halo tenue, para que sean lo primero que se lee.
+   Quitar la clase `taller-negro` de la raíz de /taller devuelve el aspecto
+   anterior. */
 .taller-negro {
-    background-color: #08080a;
+    --negro-suelo: #070708;
+    --negro-plano: #111114;
+    --negro-plano-alto: #17171b;
+    --filo: rgba(255,255,255,0.075);
+    background-color: var(--negro-suelo);
     background-image:
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)' opacity='0.07'/></svg>"),
-        radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,0.035), transparent 60%),
-        linear-gradient(180deg, #0b0b0d 0%, #070708 100%);
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)' opacity='0.09'/></svg>"),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 7px),
+        repeating-linear-gradient(-45deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 7px),
+        radial-gradient(140% 90% at 50% -20%, rgba(255,255,255,0.045), transparent 55%),
+        radial-gradient(120% 120% at 50% 120%, rgba(0,0,0,0.85), transparent 60%);
     background-attachment: fixed;
 }
 .taller-negro .taller-aurora { display: none; }
-/* Sin óvalos: toda esquina redondeada del taller queda recta. Los círculos de
-   verdad —puntos, anillos, indicadores— son `rounded-full` y se conservan. */
-.taller-negro [class*="rounded"]:not(.rounded-full):not(svg):not(svg *) { border-radius: 0 !important; }
-.tarjeta-negra {
-    background-image:
-        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='t'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23t)' opacity='0.05'/></svg>"),
-        linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0) 38%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.045), 0 1px 2px rgba(0,0,0,0.5), 0 18px 40px -18px rgba(0,0,0,0.8);
-}
-/* Los paneles translúcidos que no son `Tarjeta` (bg-white/[0.0x]) se leen como
-   el mismo negro: sin cristal esmerilado, que en negro se ve lechoso. */
+/* Sin óvalos: esquinas rectas en todo el taller; los círculos de verdad
+   (puntos, anillos, indicadores: `rounded-full`) se conservan. */
+.taller-negro [class*="rounded"]:not(.rounded-full) { border-radius: 0 !important; }
 .taller-negro [class*="backdrop-blur"] { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+
+/* ── 1 · Las tarjetas ── */
+.tarjeta-negra {
+    background-color: var(--negro-plano, #111114) !important;
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='t'><feTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23t)' opacity='0.06'/></svg>"),
+        linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0) 32%);
+    border-color: var(--filo, rgba(255,255,255,0.075)) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        inset 0 -1px 0 rgba(0,0,0,0.6),
+        0 1px 0 rgba(0,0,0,0.9),
+        0 22px 44px -22px rgba(0,0,0,0.95);
+}
+
+/* ── 2 · Los botones: piezas reales ──
+   Sólo los que se VEN como botón —los que llevan borde—; los enlaces de texto
+   («ver», «ocultar») siguen siendo texto. */
+.taller-negro button[class*="border"]:not(:disabled),
+.taller-negro a[class*="border"][href] {
+    background-color: #17171a !important;
+    background-image: linear-gradient(180deg, #232327 0%, #151518 55%, #101012 100%) !important;
+    border-color: rgba(255,255,255,0.13) !important;
+    color: rgba(255,255,255,0.88);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.10),
+        inset 0 -1px 0 rgba(0,0,0,0.55),
+        0 1px 0 #000,
+        0 3px 7px -2px rgba(0,0,0,0.75);
+    transition: transform .08s ease, box-shadow .08s ease, background-image .15s ease, border-color .15s ease;
+}
+.taller-negro button[class*="border"]:not(:disabled):hover,
+.taller-negro a[class*="border"][href]:hover {
+    background-image: linear-gradient(180deg, #2a2a2f 0%, #19191c 55%, #121215 100%) !important;
+    border-color: rgba(255,255,255,0.22) !important;
+    color: #fff;
+}
+.taller-negro button[class*="border"]:not(:disabled):active,
+.taller-negro a[class*="border"][href]:active {
+    transform: translateY(1px);
+    background-image: linear-gradient(180deg, #0f0f11 0%, #141417 100%) !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), inset 0 -1px 0 rgba(255,255,255,0.04), 0 0 0 #000;
+}
+/* Lo dorado: la acción principal y lo que exige decisión, en oro cepillado. */
+.taller-negro button[class*="accent-gold"][class*="border"]:not(:disabled),
+.taller-negro button[class*="bg-accent-gold"]:not(:disabled) {
+    background-image:
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 3px),
+        linear-gradient(180deg, #3a3222 0%, #241f15 55%, #1a160e 100%) !important;
+    border-color: rgba(201,169,98,0.55) !important;
+    color: #e9d6a6 !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,232,178,0.20),
+        inset 0 -1px 0 rgba(0,0,0,0.6),
+        0 1px 0 #000,
+        0 4px 10px -3px rgba(0,0,0,0.8),
+        0 0 18px -8px rgba(201,169,98,0.45);
+}
+.taller-negro button[class*="accent-gold"][class*="border"]:not(:disabled):hover,
+.taller-negro button[class*="bg-accent-gold"]:not(:disabled):hover {
+    border-color: rgba(222,190,120,0.8) !important;
+    color: #f6e7bf !important;
+}
+.taller-negro button[class*="accent-gold"][class*="border"][aria-pressed="true"],
+.taller-negro button[class*="accent-gold"][class*="border"]:not(:disabled):active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.85), inset 0 -1px 0 rgba(255,232,178,0.08);
+}
+.taller-negro button:disabled { opacity: .42; box-shadow: none !important; cursor: not-allowed; }
+.taller-negro input, .taller-negro textarea, .taller-negro select {
+    background-color: #0b0b0d !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* ── 3 · Las dos tarjetas clave: el asunto en corto y cómo sale el proyecto ── */
+.taller-negro .tarjeta-clave {
+    position: relative;
+    background-color: var(--negro-plano-alto, #17171b) !important;
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='k'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23k)' opacity='0.07'/></svg>"),
+        linear-gradient(180deg, rgba(201,169,98,0.10) 0%, rgba(201,169,98,0.02) 22%, rgba(255,255,255,0) 60%) !important;
+    border: 1px solid rgba(201,169,98,0.40) !important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,232,178,0.12),
+        0 0 0 1px rgba(0,0,0,0.9),
+        0 26px 60px -24px rgba(0,0,0,1),
+        0 0 42px -14px rgba(201,169,98,0.30);
+    padding-top: 1.5rem !important;
+}
+.taller-negro .tarjeta-clave::before {
+    content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: 3px;
+    background: linear-gradient(90deg, rgba(201,169,98,0) 0%, #c9a962 18%, #e6cf98 50%, #c9a962 82%, rgba(201,169,98,0) 100%);
+}
+.taller-negro .tarjeta-clave > p:first-child,
+.taller-negro .tarjeta-clave .rotulo-clave {
+    font-size: 12.5px !important; letter-spacing: .18em !important; color: #e0c98f !important; font-weight: 600;
+}

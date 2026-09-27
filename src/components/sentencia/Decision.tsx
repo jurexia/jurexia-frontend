@@ -1243,7 +1243,7 @@ export default function Decision({
 
             {/* ═══ 4 · LA TARJETA FINAL: CON QUÉ SALE EL PROYECTO ═══ */}
             {(problemas.length > 0 || sentidoGlobal) && (
-                <div id="asi-sale" className={cn('rounded-2xl border p-4 sm:p-5',
+                <div id="asi-sale" className={cn('tarjeta-clave rounded-2xl border p-4 sm:p-5',
                     alguienSeAparta ? 'border-accent-gold/45 bg-accent-gold/[0.06]' : 'border-white/10 bg-white/[0.03]')}>
                     {faltanIndispensables.length > 0 && (
                         <p className="mb-3 rounded-xl border border-accent-gold/35 bg-accent-gold/[0.06] px-3 py-2 text-[12px] leading-relaxed text-accent-gold/90">
@@ -1254,7 +1254,7 @@ export default function Decision({
                         </p>
                     )}
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">Así va a salir el proyecto</p>
+                        <p className="rotulo-clave text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">Así va a salir el proyecto</p>
                         <p className="text-[12px] text-white/45">
                             {enGlobal ? 'todo el asunto con una calificación' : 'problema por problema'}
                         </p>
@@ -1373,24 +1373,6 @@ export default function Decision({
                                 «Estudio en reserva» si quieres otra cosa.
                             </span>
                         </p>
-                    )}
-                    {/* LA VARIANTE, SÓLO EN CASA. Discreta y encima de los
-                        botones: decide con qué prompt se escribe ESTE estudio. */}
-                    {esCasa && onVarianteEstudio && (
-                        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                            <span className="text-[12px] text-white/45">Prompt del estudio (cuenta de casa):</span>
-                            {VARIANTES.map((v) => (
-                                <button key={v.id || 'omision'} type="button" title={v.que}
-                                        onClick={() => onVarianteEstudio(v.id)}
-                                        aria-pressed={varianteEstudio === v.id}
-                                        className={cn('rounded-full border px-2.5 py-0.5 text-[12px] transition-colors',
-                                            varianteEstudio === v.id
-                                                ? 'border-accent-gold/50 bg-accent-gold/10 text-accent-gold'
-                                                : 'border-white/10 text-white/60 hover:border-white/20 hover:text-white')}>
-                                    {v.rotulo}
-                                </button>
-                            ))}
-                        </div>
                     )}
                     {/* ═══ JUNTO AL BOTÓN: LOS ACCESORIOS SIN CALIFICAR ═══
                         (26-sep-2026) Con uno sin calificar tras el cambio de
