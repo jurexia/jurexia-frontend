@@ -9,6 +9,7 @@ import {
 } from '@/lib/documento/citas';
 import { recortarABloque } from '@/lib/documento/revelado';
 import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
+import { guardarEdicion, leerEdicion, type EdicionHoja } from '@/lib/documento/edicionHoja';
 
 /**
  * EL PANEL DOCUMENTO: la hoja tipo Word acoplada al chat (18-sep-2026).
@@ -186,6 +187,48 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
        letra, la hoja deja de coincidir con lo que escribimos y no se vuelve a
        tocar nunca. Sólo se reescribe lo que es nuestro y está desactualizado. */
     const escrito = useRef<string | null>(null);   // el HTML que pusimos nosotros
+
+    /* LO QUE EDITA EL ABOGADO SE QUEDA (27-sep-2026).
+       ---------------------------------------------------------------------
+       Dos fallos, y los dos le borraban al abogado lo que había escrito.
+
+       1. No se guardaba: `onCambio` no hacía nada y la hoja se vuelve a montar
+          al cambiar de conversación o al recargar. Ahora cada edición se
+          guarda en este navegador (`@/lib/documento/edicionHoja`) y vuelve al
+          abrir la conversación; lo que respondió Iurexia después se anexa
+          detrás.
+
+       2. Se reescribía sola. Al anexar una respuesta a una hoja editada,
+          `escrito` pasaba a valer la hoja editada; en la siguiente consulta la
+          guardia de arriba la veía «intacta» y distinta del dossier, y la
+          reescribía con el texto del modelo: las correcciones del abogado se
+          iban sin que tocara nada. «Editada» es ahora un estado propio, y una
+          hoja editada no la reescribe nadie: sólo se le anexa.
+
+       Lo que escribimos nosotros (rellenar, anexar, restaurar) pasa por
+       `escribir`, para que la hoja no lo confunda con una edición. */
+    const editada = useRef(false);
+    const escribiendo = useRef(false);
+    const pendiente = useRef<EdicionHoja | null>(null);
+    const [guardadaAqui, setGuardadaAqui] = useState(false);
+    const escribir = (accion: () => void) => {
+        escribiendo.current = true;
+        try { accion(); } finally { escribiendo.current = false; }
+    };
+    const guardar = (html: string) => {
+        if (guardarEdicion(claveMontada.current, html, insertados.current)) setGuardadaAqui(true);
+    };
+    /* La hoja avisa al teclear (con espera), al perder el foco, al ocultarse
+       la pestaña y al desmontarse —también al cambiar de conversación, antes
+       de que las referencias pasen a la siguiente—. */
+    const alCambiar = (html: string) => {
+        if (escribiendo.current) return;
+        if (!editada.current && html === escrito.current) return;   // nadie tocó nada
+        editada.current = true;
+        pendiente.current = null;   // lo que teclea ahora manda sobre lo guardado
+        guardar(html);
+    };
+
     useEffect(() => {
         const raiz = hoja.current?.raiz();
         const otraConversacion = claveMontada.current !== clave;
@@ -194,29 +237,48 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
             insertados.current = bloques.length;
             // La hoja acaba de montarse con `htmlInicial`: eso es lo nuestro.
             escrito.current = raiz ? raiz.innerHTML : null;
+            editada.current = false;
+            pendiente.current = leerEdicion(clave);
+            setGuardadaAqui(false);
             setNombre('');
             setVersionElegida('');
         }
 
-        if (raiz && bloques.length) {
+        // Lo que el abogado había editado vuelve en cuanto están cargadas las
+        // respuestas que contiene.
+        const guardada = pendiente.current;
+        if (raiz && guardada && !editada.current && bloques.length >= guardada.bloques) {
+            pendiente.current = null;
+            escribir(() => hoja.current?.reemplazar(guardada.html));
+            escrito.current = hoja.current?.raiz()?.innerHTML ?? guardada.html;
+            insertados.current = guardada.bloques;
+            editada.current = true;
+            setGuardadaAqui(true);
+        }
+
+        if (raiz && bloques.length && !editada.current) {
             const deseado = segmentos.slice(0, bloques.length).join('<hr>');
             const intacta = escrito.current === null
                 ? !raiz.innerHTML.trim()          // nunca escribimos: sólo si está en blanco
                 : raiz.innerHTML === escrito.current;
             if (deseado && deseado !== escrito.current && intacta) {
-                hoja.current?.reemplazar(deseado);
+                escribir(() => hoja.current?.reemplazar(deseado));
                 escrito.current = hoja.current?.raiz()?.innerHTML ?? deseado;
                 insertados.current = bloques.length;
                 return;
             }
         }
-        if (otraConversacion) return;
+        // Recién montada con `htmlInicial` ya tiene lo suyo; restaurada, le
+        // faltan las respuestas posteriores a la edición.
+        if (otraConversacion && !editada.current) return;
 
         if (bloques.length > insertados.current) {
             const nuevos = segmentos.slice(insertados.current, bloques.length).join('<hr>');
-            hoja.current?.insertar((insertados.current > 0 ? '<hr>' : '') + nuevos, 'final');
+            escribir(() => hoja.current?.insertar((insertados.current > 0 ? '<hr>' : '') + nuevos, 'final'));
             insertados.current = bloques.length;
             escrito.current = hoja.current?.raiz()?.innerHTML ?? null;
+            // Lo nuevo se suma a la versión del abogado, y así se guarda.
+            if (editada.current && escrito.current !== null) guardar(escrito.current);
         }
     }, [clave, bloques.length, segmentos]);
 
@@ -258,12 +320,18 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         onCita(fuenteDeCita(meta, ficha.dataset.docId));
     }
 
-    /* Volver a una versión: la hoja entera se sustituye por ese dossier. */
+    /* Volver a una versión: la hoja entera se sustituye por ese dossier. Es
+       decisión del abogado, así que cuenta como su edición y se guarda. */
     function elegirVersion(id: string) {
         setVersionElegida(id);
         const v = versiones.find((x) => x.id === id);
         if (!v) return;
-        hoja.current?.reemplazar(htmlDeDocumento(v.markdown).html.replace(/<p>⟦sep⟧<\/p>/g, '<hr>'));
+        const html = htmlDeDocumento(v.markdown).html.replace(/<p>⟦sep⟧<\/p>/g, '<hr>');
+        escribir(() => hoja.current?.reemplazar(html));
+        escrito.current = hoja.current?.raiz()?.innerHTML ?? html;
+        editada.current = true;
+        pendiente.current = null;
+        guardar(escrito.current);
         mostrarAviso('Versión restaurada en la hoja.');
     }
 
@@ -367,7 +435,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     key={clave}
                     ref={hoja}
                     htmlInicial={htmlBase}
-                    onCambio={() => { /* vive en el DOM de la hoja */ }}
+                    onCambio={alCambiar}
                     vistaPrevia={htmlVivo}
                     anexando={bloques.length > 0}
                 />
@@ -383,7 +451,8 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                 ) : enVivo ? (
                     <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>Escribiendo en el documento…</span></>
                 ) : partes.length ? (
-                    <><Check className="h-3.5 w-3.5 text-accent-gold" /><span>Listo para editar</span></>
+                    /* Se dice DÓNDE se guarda: en este navegador, no en la cuenta. */
+                    <><Check className="h-3.5 w-3.5 text-accent-gold" /><span className="min-w-0 truncate">{guardadaAqui ? 'Cambios guardados en este navegador' : 'Listo para editar'}</span></>
                 ) : (
                     <span>La primera respuesta se escribirá aquí.</span>
                 )}

@@ -27,6 +27,7 @@ import type { VersionDocumento } from '@/components/documento/PanelDocumento';
 import { SEP_DOSSIER } from '@/lib/documento/citas';
 import { markdownAHtml, limpiarMarcadores } from '@/lib/documento/marcado';
 import { abrirCitaConFicha, fuentesDeLaConversacion, olvidarFallos, useFichasDeCitas } from '@/lib/documento/fichas';
+import { olvidarEdicion } from '@/lib/documento/edicionHoja';
 import { estadoPiloto } from '@/components/sentencia/api';
 
 /* El constructor de demanda se carga sólo cuando alguien lo abre: trae el
@@ -640,6 +641,8 @@ export default function ChatPage() {
 
     const handleDeleteConversation = useCallback(async (id: string) => {
         await deleteConversation(id);
+        // Lo que el abogado editó en su hoja se guarda en este navegador: se va con ella.
+        olvidarEdicion(id);
         const remaining = await getConversations();
         setConversations(remaining);
         if (id === activeConversationId) {
