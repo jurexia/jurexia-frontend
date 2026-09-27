@@ -27,7 +27,7 @@ export const metadata: Metadata = {
         locale: 'es_MX',
         type: 'video.other',
         images: [{ url: '/video/tutorial-nuevo-chat-og.jpg', width: 1200, height: 630, alt: 'El nuevo chat de Iurexia' }],
-        videos: [{ url: '/video/tutorial-nuevo-chat.mp4', type: 'video/mp4', width: 1920, height: 1080 }],
+        videos: [{ url: 'https://iurexia.com/video/tutorial-nuevo-chat.mp4', type: 'video/mp4', width: 1920, height: 1080 }],
     },
     twitter: {
         card: 'summary_large_image',
