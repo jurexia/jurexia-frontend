@@ -31,6 +31,16 @@ const nextConfig = {
         },
     },
 
+    // LA GUÍA VIEJA, AL TUTORIAL NUEVO (27-sep-2026). public/guia-pro/ era la
+    // «Guía Iurexia Pro» con capturas de marzo de 2026 (Buscar/Redactar,
+    // Genios): se borró, y quien tenga guardado su enlace llega a /tutorial.
+    async redirects() {
+        return [
+            { source: '/guia-pro', destination: '/tutorial', permanent: true },
+            { source: '/guia-pro/:ruta*', destination: '/tutorial', permanent: true },
+        ];
+    },
+
     // Environment variables accessible client-side
     env: {
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
