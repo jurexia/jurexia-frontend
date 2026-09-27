@@ -454,6 +454,13 @@ export default function TallerDeSentencias() {
     }, [correo]);
     const [corriendo, setCorriendo] = useState(false);
     const [error, setError] = useState('');
+    /* EL PROYECTO SE ESTÁ ESCRIBIENDO: sólo mientras corre pedirProyecto. La
+       tarjeta del estudio y «Escribiendo el proyecto…» se colgaban de
+       `corriendo && paso === 'acervo'`, que también es cierto mientras se
+       vuelve a traer el acervo al volver a decidir: la pantalla decía
+       «Preparando el estudio» sin que nada se estuviera escribiendo (visto en
+       producción, 26-sep-2026). */
+    const [escribiendo, setEscribiendo] = useState(false);
     /* TODO ERROR SE VE (auditoría, 26-sep-2026): seis botones de la parte baja
        fallaban con el aviso arriba, fuera de la vista. */
     useEffect(() => { if (error) irA('error-del-taller', 150); }, [error, irA]);
@@ -1288,6 +1295,7 @@ export default function TallerDeSentencias() {
                 irA('criterio', 400);
                 return;
             }
+            setEscribiendo(true);
             const rg = await resolverEnVivo(
                 encargo.numero, correo,
                 pro.global?.alcanza
@@ -1318,7 +1326,7 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(e instanceof Error ? e.message
                    : 'No se pudo generar el proyecto completo.');
-        } finally { setCorriendo(false); setFaseSrv('preparando'); }
+        } finally { setCorriendo(false); setEscribiendo(false); setFaseSrv('preparando'); }
     }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados, esCasa, varianteEstudio, avanzarFase]);
 
     const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean; contextoTexto?: string }) => {
@@ -1686,7 +1694,7 @@ export default function TallerDeSentencias() {
         // EL AVANCE ARRANCA LIMPIO. Si se genera dos veces —cambiando el
         // criterio, que es lo normal—, lo que se veía escribirse era el
         // estudio nuevo pegado detrás del viejo.
-        setError(''); setAvance(''); setCorriendo(true);
+        setError(''); setAvance(''); setCorriendo(true); setEscribiendo(true);
         /* «RECALIFICANDO LOS ACCESORIOS CON TU PREMISA…» (26-sep-2026): si
            quedaba alguno «Recalificando…» en pantalla, se dice desde ya —el
            servidor lo termina antes del plan y del estudio—, y también cuando
@@ -1754,7 +1762,7 @@ export default function TallerDeSentencias() {
                vive arriba. Si el servidor se negó porque quedaron accesorios
                sin calificar tras el cambio de sentido, la lista está ahí. */
             irA('error-del-taller', 200);
-        } finally { setCorriendo(false); setFaseSrv('preparando'); }
+        } finally { setCorriendo(false); setEscribiendo(false); setFaseSrv('preparando'); }
     }, [encargo.numero, correo, modo, irA, traerGuardados, avanzarFase]);
 
     /* ═══ LA RECALIFICACIÓN DE LOS TUMBADOS, PEDIDA DESDE LA PANTALLA ═══
@@ -2741,7 +2749,7 @@ export default function TallerDeSentencias() {
                                 {delAsunto.relato && (
                                     <div className="tarjeta-clave rounded-xl border border-accent-gold/25
                                                     bg-accent-gold/[0.045] px-4 py-4 sm:px-5">
-                                        <p className="text-[12px] uppercase tracking-wide text-accent-gold">
+                                        <p className="rotulo-clave text-[12px] uppercase tracking-wide text-accent-gold">
                                             De qué va el asunto
                                         </p>
                                         <div className="mt-2 space-y-2.5">
@@ -3216,7 +3224,7 @@ export default function TallerDeSentencias() {
                         cambiar de sentido», que además recoge la mesa. */}
                     {problemas.length > 0 && !proyecto && (
                     <Decision problemas={problemas} onCambiar={cambiarCriterio}
-                              onGenerar={pedirProyecto} generando={corriendo && paso === 'acervo' && !proponiendo}
+                              onGenerar={pedirProyecto} generando={escribiendo}
                               onProponer={() => { void pedirPropuesta(); }} propuesta={propuesta}
                               proponiendo={proponiendo}
                               onAportar={aportarYProponer} aportando={aportando}
@@ -3292,7 +3300,7 @@ export default function TallerDeSentencias() {
                         `corriendo` con el mismo paso, y entonces la tarjeta
                         diría «preparando el estudio» mientras el motor propone
                         el sentido, que es otra cosa. */}
-                    {corriendo && !proponiendo && paso === 'acervo' && (
+                    {escribiendo && (
                         <Tarjeta>
                             <Rotulo accion={
                                 <span className="text-[12px] tabular-nums text-white/45">
