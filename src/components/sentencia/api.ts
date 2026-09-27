@@ -1344,6 +1344,9 @@ export interface ExcepcionPlazo {
     clave: string;
     cuando: string;
     dias: number | null;
+    /** Plazos de AÑOS (art. 17, fr. II y III, LA): 8 o 7. Se cuentan de fecha
+     *  a fecha, no en días hábiles; 0 o ausente en los demás. */
+    anios?: number;
     fundamento: string;
     en_cualquier_tiempo: boolean;
 }

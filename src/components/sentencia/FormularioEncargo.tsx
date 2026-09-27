@@ -652,7 +652,8 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                                     const e = tipo.excepciones_de_plazo
                                         .find((x) => x.clave === valor.excepcionPlazo);
                                     return e?.en_cualquier_tiempo
-                                        ? 'En cualquier tiempo' : `${e?.dias} días`;
+                                        ? 'En cualquier tiempo'
+                                        : e?.anios ? `${e.anios} años` : `${e?.dias} días`;
                                 })()
                                 : `${tipo.plazo.dias} días`}
                         </span>
@@ -679,7 +680,8 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                                 {tipo.excepciones_de_plazo.map((e) => (
                                     <option key={e.clave} value={e.clave} className="bg-charcoal-900">
                                         {e.cuando} → {e.en_cualquier_tiempo
-                                            ? 'en cualquier tiempo' : `${e.dias} días`}
+                                            ? 'en cualquier tiempo'
+                                            : e.anios ? `${e.anios} años` : `${e.dias} días`}
                                     </option>
                                 ))}
                             </select>
