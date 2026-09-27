@@ -454,6 +454,9 @@ export default function TallerDeSentencias() {
     }, [correo]);
     const [corriendo, setCorriendo] = useState(false);
     const [error, setError] = useState('');
+    /* TODO ERROR SE VE (auditoría, 26-sep-2026): seis botones de la parte baja
+       fallaban con el aviso arriba, fuera de la vista. */
+    useEffect(() => { if (error) irA('error-del-taller', 150); }, [error, irA]);
 
     /* ─ SE RECONOCE POR EL 402 DEL SERVIDOR, no por buscar palabras en la
          prosa del mensaje: el texto se reescribe y una heurística de palabras
@@ -710,6 +713,7 @@ export default function TallerDeSentencias() {
        cuatro minutos de volver a leer el expediente. */
     const reanudar = useCallback(async (numero: string) => {
         if (!numero || !correo) return;
+        autoLanzado.current = false;
         setError(''); setCorriendo(true);
         try {
             const c = await contextoDelAsunto(numero, correo);
@@ -1517,6 +1521,7 @@ export default function TallerDeSentencias() {
     /** Volver al paso `n` de verdad. El 3 ya tenía su camino —«cambiar el
      *  sentido y regenerar»— y se reutiliza entero. */
     const volverAlPaso = useCallback((n: PasoDelEspinazo) => {
+        autoLanzado.current = false;
         if (n === 3) { volverAEstudiar(); return; }
         limpiarDecision();
         setMaterial(null);
@@ -1541,6 +1546,7 @@ export default function TallerDeSentencias() {
      *  asuntos en curso y la elección de por dónde empezar. No consume nada;
      *  el asunto vive en el servidor y se reanuda desde ahí. */
     const salirAlHistorial = useCallback(() => {
+        autoLanzado.current = false;
         limpiarDecision();
         setMaterial(null);
         setProblemas([]);
@@ -1950,7 +1956,10 @@ export default function TallerDeSentencias() {
                  style={{ background: 'radial-gradient(70% 100% at 50% 0%, rgba(201,169,98,0.13) 0%, transparent 70%)' }} />
 
             <div aria-hidden className="taller-aurora"><i /><i /><i /></div>
-            <BarraSuperior asunto={asunto} proyectos={piloto?.proyectos} />
+            {/* El selector del asunto lleva a «mis asuntos» (antes no hacía nada:
+                auditoría de botones, 26-sep-2026); sin asunto abierto no se pinta. */}
+            <BarraSuperior asunto={encargo.numero ? asunto : undefined} proyectos={piloto?.proyectos}
+                           onCambiarAsunto={() => setVuelta('historial')} />
             <AvisoDeInicio texto={profile?.aviso_inicio} />
 
             {/* LA PUERTA DE VOLVER ATRÁS. Dice qué se conserva, qué se pierde y
@@ -2529,9 +2538,10 @@ export default function TallerDeSentencias() {
                                 botones que hacen lo mismo y el secretario no
                                 sabe cuál es «el bueno». El camino de SISE no
                                 tiene pasos numerados, así que ahí se queda. */}
-                            {via !== 'archivos' && (
+                            {via !== 'archivos' && paso === 'ficha'
+                             && !(via === 'sise' && pendientes.length === 0) && (
                             <button className={cn(boton, 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90')}
-                                    disabled={corriendo || falta.length > 0 || !!sinAcceso || paso !== 'ficha'}
+                                    disabled={corriendo || falta.length > 0 || !!sinAcceso}
                                     onClick={pedirAdelanto}>
                                 {corriendo && paso === 'ficha'
                                     ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -2588,14 +2598,20 @@ export default function TallerDeSentencias() {
                                     </span>
                                 </div>
                             )}
-                            {(paso !== 'adelanto' || !delAsunto || avanceAuto.propuesta === 'fallo'
-                              || (!autoEnCurso && avanceAuto.propuesta !== 'listo')) && (
+                            {/* SIEMPRE HAY SALIDA DEL PASO 2 (auditoría, 26-sep-2026): el botón
+                                estaba escondido con la propuesta «lista» aunque el paso 3 no se
+                                abriera (volver desde el espinazo, reanudar otro asunto, consulta
+                                fallida, sesiones sin marcas). Ahora se ve en el paso 2 siempre que
+                                nada esté corriendo; en los pasos 1, 3 y 4 no se pinta (ahí borraba
+                                lo marcado o no se veía su resultado). */}
+                            {paso === 'adelanto'
+                             && !(['consulta', 'contraste', 'propuesta'] as const).some((k) => avanceAuto[k] === 'en_curso') && (
                             <button className={cn(
                                         boton,
                                         paso === 'adelanto' && !corriendo
                                             ? 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90 shadow-[0_0_0_0_rgba(201,169,98,0.7)] animate-[latido_1.6s_ease-in-out_infinite]'
                                             : 'border border-white/10 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}
-                                    disabled={corriendo || paso === 'ficha'}
+                                    disabled={corriendo}
                                     onClick={() => { void pedirAcervo(true); }}>
                                 {corriendo && paso === 'adelanto'
                                     ? <Loader2 className="h-4 w-4 animate-spin" />

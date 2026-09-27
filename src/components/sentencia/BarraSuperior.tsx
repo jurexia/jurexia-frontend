@@ -24,7 +24,7 @@ const ETIQUETA_TIPO: Record<Asunto['tipo'], string> = {
 };
 
 export default function BarraSuperior({
-    asunto, conectado = true, onCambiarAsunto, proyectos,
+    asunto, conectado, onCambiarAsunto, proyectos,
 }: {
     asunto?: Asunto; conectado?: boolean; onCambiarAsunto?: () => void;
     /** La bolsa de proyectos del usuario, tal como la devuelve /taller/estado. */
@@ -111,6 +111,9 @@ export default function BarraSuperior({
                             )}
                         </Link>
                     )}
+                    {/* Sin dato de conexión no se afirma nada (antes decía «Motor
+                        listo» siempre, en verde: un estado falso). */}
+                    {conectado !== undefined && (
                     <span className="hidden items-center gap-1.5 text-[12px] text-white/45 sm:flex">
                         <Circle className={cn(
                             'h-2 w-2 fill-current',
@@ -118,6 +121,7 @@ export default function BarraSuperior({
                         )} />
                         {conectado ? 'Motor listo' : 'Sin conexión'}
                     </span>
+                    )}
                     <Link
                         href="/perfil"
                         className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[12px] font-semibold text-white/60 transition-colors hover:border-accent-gold/35 hover:text-white/90"

@@ -247,11 +247,14 @@ function PasoSuplencia({ propuesta, valor, onCambiar }: {
                         {propuesta.fraccion === 'ninguna' ? 'Confirmar: sin suplencia' : 'Confirmar la suplencia'}
                     </button>
                 )}
+                {/* Sólo si hay otra fracción que elegir (auditoría, 26-sep-2026). */}
+                {cat.length > 1 && (
                 <button type="button" onClick={() => setCambiando((v) => !v)} aria-expanded={cambiando}
                         className="inline-flex h-9 items-center rounded-xl border border-white/15 bg-white/[0.04] px-3.5
                                    text-[13px] font-medium text-white/80 transition hover:bg-white/[0.08]">
                     {cambiando ? 'Ocultar las fracciones' : 'Cambiar la fracción'}
                 </button>
+                )}
                 {/* Si lo que está en pantalla ya es «sin suplencia», el botón de
                     confirmar lo cubre: dos botones para lo mismo confunden. */}
                 {!sinSuplencia && (
@@ -496,6 +499,11 @@ export default function Decision({
     onReintentarRecalificacion?: () => void;
 }) {
     const [corrigiendo, setCorrigiendo] = useState(false);
+    /* SIN PROPUESTA GLOBAL, LAS CALIFICACIONES A LA VISTA (auditoría,
+       26-sep-2026): el texto decía «decide tú, problema por problema» pero las
+       diez calificaciones sólo salían tras «Cambiar el sentido», y el botón de
+       generar quedaba apagado sin salida visible. */
+    useEffect(() => { if (propuesta && !propuesta.global) setCorrigiendo(true); }, [propuesta]);
     const [porQue, setPorQue] = useState(false);
     const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
     const [textoAporte, setTextoAporte] = useState('');

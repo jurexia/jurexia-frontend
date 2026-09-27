@@ -402,8 +402,9 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                             {tipo.plazo.fundamento}
                         </p>
                         <button type="button"
-                                onClick={() => onCambiar({ ...valor, tipoAsunto: '',
-                                                           excepcionPlazo: '', plazo: 0 })}
+                                onClick={() => { onDelAuto?.(false);
+                                                 onCambiar({ ...valor, tipoAsunto: '',
+                                                             excepcionPlazo: '', plazo: 0 }); }}
                                 className="mt-2 text-[12px] text-white/45 underline
                                            underline-offset-2 transition-colors
                                            hover:text-white/75">

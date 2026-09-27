@@ -203,9 +203,7 @@ export default function MapaDelEstudio({ mapa, esRecurso = false, leer, verCober
                             })}
                         </ul>
                     )}
-                    {mapa.variante && (
-                        <p className="text-[12px] text-white/40">Escrito con la variante {mapa.variante} del estudio.</p>
-                    )}
+
                 </div>
             )}
         </Tarjeta>
