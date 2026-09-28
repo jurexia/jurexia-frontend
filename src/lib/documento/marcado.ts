@@ -383,8 +383,15 @@ export function separarTarjetas(md: string): { sin: string; tarjetas: string; av
 // `^[ \t]*(?:#…)?(?:\*\*)?[ \t]*` dos rachas de blancos quedaban pegadas cuando
 // no hay «#» ni «**», y un renglón de 20.000 espacios costaba 0,8 s. Casan los
 // mismos renglones; cada blanco se mira una vez.
-const RX_ESTRATEGIA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?(?:[IVX]+\.[ \t]*|FASE[ \t]+\d+[ \t]*:[ \t]*|[^\sA-Za-zÁÉÍÓÚÑáéíóúñ0-9#*]{1,3}[ \t]*)?(?:ESTRATEGIA(?:[ \t]+(?:PROCESAL|DE[ \t]+IMPUGNACI[ÓO]N|DEL[ \t]+AMPARO))|(?:EVALUACI[ÓO]N|AN[ÁA]LISIS)[ \t]+DE[ \t]+VIABILIDAD)\b.*$/gm
+const RX_ESTRATEGIA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?(?:[IVX]+\.[ \t]*|FASE[ \t]+\d+[ \t]*:[ \t]*|[^\sA-Za-zÁÉÍÓÚÑáéíóúñ0-9#*]{1,3}[ \t]*)?(?:ESTRATEGIA(?:[ \t]+(?:PROCESAL|DE[ \t]+IMPUGNACI[ÓO]N|DEL[ \t]+AMPARO|Y[ \t]+RECOMENDACIONES|CONSTITUCIONAL))|(?:EVALUACI[ÓO]N|AN[ÁA]LISIS)[ \t]+DE[ \t]+VIABILIDAD)\b.*$/gm
 const RX_CIERRE_ESCRITO = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?(?:PROTESTO|PROTESTAMOS|PUNTOS PETITORIOS|PETITORIOS)\b/gm
+/* EL RÓTULO DE LA NOTA PARA EL ABOGADO (28-sep-2026): el que pide el prompt de
+   redacción —`ROTULO_NOTA` en esfuerzo_redaccion.py del API—, solo en su
+   renglón, con o sin «#» y «**», en singular o en plural, y con lo que el
+   modelo le cuelgue detrás («:», «(no forma parte del escrito)») mientras no
+   pase de 80 caracteres. Los blancos, como arriba, dentro de sus opcionales. */
+const RX_NOTA_ABOGADO = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?NOTAS?[ \t]+PARA[ \t]+EL[ \t]+ABOGADO\b[^\n]{0,80}$/gim
+const RX_ROTULO_NOTA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?NOTAS?[ \t]+PARA[ \t]+EL[ \t]+ABOGADO\b[^\n]{0,80}$/i
 
 /** ¿`t[a, b)` es un renglón separador —`[ \t]*` y tres o más de un mismo
  *  «-», «*», «_» o «═», y `[ \t]*`—? */
@@ -419,7 +426,9 @@ function sinSeparadoresAlFinal(t: string): string {
 
 export function separarEstrategia(md: string): { escrito: string; estrategia: string } {
     const t = md || ''
-    const candidatos = Array.from(t.matchAll(RX_ESTRATEGIA))
+    // La nota para el abogado (28-sep-2026) se enseña aparte como la estrategia.
+    const candidatos = [...Array.from(t.matchAll(RX_ESTRATEGIA)), ...Array.from(t.matchAll(RX_NOTA_ABOGADO))]
+        .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
     if (!candidatos.length) return { escrito: t, estrategia: '' }
     // Si el escrito tiene su cierre, la estrategia es la que viene DESPUÉS de él.
     const cierres = Array.from(t.matchAll(RX_CIERRE_ESCRITO))
@@ -429,6 +438,73 @@ export function separarEstrategia(md: string): { escrito: string; estrategia: st
     // Los separadores «---» o «═══» que van justo antes también se quedan fuera del escrito.
     const escrito = sinSeparadoresAlFinal(t.slice(0, m.index)).trimEnd()
     return { escrito, estrategia: t.slice(m.index).trim() }
+}
+
+/**
+ * EL ESCRITO LIMPIO Y LA NOTA PARA EL ABOGADO, SEPARADOS (28-sep-2026).
+ *
+ * El prompt de redacción cierra el escrito con «## NOTA PARA EL ABOGADO»: lo
+ * que decidió por él, qué verificar antes de presentar, el punto débil. Los
+ * prompts de la tarjeta «Escrito legal» lo cierran con su «ESTRATEGIA…». En
+ * el chat todo iba al dossier, así que acababa en la hoja y en el Word que se
+ * presenta. Aquí se aparta: `escrito` va a la hoja —con los marcadores y las
+ * tarjetas de fuentes que el servidor pega detrás, que la hoja necesita para
+ * sus citas— y `nota` a la burbuja del chat.
+ *
+ * Más prudente que `separarEstrategia`, porque aquí pasan también las
+ * consultas: la estrategia sólo se aparta DESPUÉS del cierre de un escrito
+ * (PROTESTO, PUNTOS PETITORIOS) —una consulta con un apartado «ESTRATEGIA
+ * PROCESAL» se queda entera—; nada del razonamiento cuenta; y si antes del
+ * rótulo no hay un escrito (doscientos caracteres), no se toca nada.
+ */
+export function separarNota(md: string): { escrito: string; nota: string } {
+    const t = md || ''
+    const nada = { escrito: t, nota: '' }
+    const desde = inicioDeLoVisible(t)
+    if (desde >= t.length) return nada
+    const cierres = Array.from(t.matchAll(RX_CIERRE_ESCRITO)).map((m) => m.index ?? -1).filter((i) => i >= desde)
+    const ultimoCierre = cierres.length ? cierres[cierres.length - 1] : -1
+    const candidatos = [
+        ...Array.from(t.matchAll(RX_NOTA_ABOGADO)).map((m) => m.index ?? -1),
+        ...(ultimoCierre !== -1 ? Array.from(t.matchAll(RX_ESTRATEGIA)).map((m) => m.index ?? -1) : []),
+    ].filter((i) => i >= desde && i > ultimoCierre)
+    if (!candidatos.length) return nada
+    const inicio = Math.min(...candidatos)
+    if (sinComentarios(t.slice(desde, inicio)).trim().length < 200) return nada
+    // La nota acaba donde empieza lo que el servidor pega detrás: los
+    // marcadores `<!--…-->`, las tarjetas de fuentes o el aviso de truncada.
+    let fin = t.length
+    for (const marca of ['<!--', '<div']) {
+        const k = t.indexOf(marca, inicio)
+        if (k !== -1 && k < fin) fin = k
+    }
+    const truncada = inicioDeTruncada(t)
+    if (truncada > inicio && truncada < fin) fin = truncada
+    let nota = t.slice(inicio, fin)
+    // Su rótulo no se repite: la burbuja pone el suyo. El de la estrategia sí
+    // se queda, porque dice de qué es.
+    const salto = nota.indexOf('\n')
+    if (RX_ROTULO_NOTA.test(salto === -1 ? nota : nota.slice(0, salto))) nota = salto === -1 ? '' : nota.slice(salto + 1)
+    const antes = sinSeparadoresAlFinal(t.slice(0, inicio)).trimEnd()
+    const cola = t.slice(fin).trim()
+    return {
+        escrito: cola ? `${antes}\n\n${cola}` : antes,
+        nota: sinSeparadoresAlFinal(nota).trim(),
+    }
+}
+
+/** Dónde empieza lo que el abogado lee: tras el último razonamiento cerrado,
+ *  en cualquiera de sus dos marcadores. Con uno abierto después, todo lo que
+ *  queda es razonamiento todavía. */
+function inicioDeLoVisible(t: string): number {
+    const marcas: Array<[string, string]> = [[ABRE_RAZON, CIERRA_RAZON], ['<!--THINKING_START-->', '<!--THINKING_END-->']]
+    let desde = 0
+    for (const [, cierra] of marcas) {
+        const c = t.lastIndexOf(cierra)
+        if (c !== -1) desde = Math.max(desde, c + cierra.length)
+    }
+    for (const [abre] of marcas) if (t.indexOf(abre, desde) !== -1) return t.length
+    return desde
 }
 
 /* Las dos lecturas de `analizarRespuesta` eran expresiones con dos rachas de blancos

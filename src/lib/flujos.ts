@@ -517,9 +517,11 @@ export function instruccionDeParte(
             // Medido contra /chat el 25-sep: sin esto, la parte 1 terminaba con
             // petitorio, «PROTESTO LO NECESARIO» y firma, como si fuera el
             // escrito entero.
+            // La nota para el abogado (28-sep-2026) va una vez, al final del
+            // escrito: una por parte serían seis avisos sobre medio escrito.
             (siguiente
-                ? `\n- El escrito NO termina aquí: no escribas puntos petitorios, «PROTESTO LO NECESARIO», lugar, fecha ni firma. Termina en cuanto concluya «${parte.titulo}»; lo que sigue («${flujo.partes.slice(indice + 1).map((p) => p.titulo).join('», «')}») se redactará después.`
-                : '\n- Es la última parte: cierra el escrito con los puntos petitorios, «PROTESTO LO NECESARIO», lugar, fecha y firma.'),
+                ? `\n- El escrito NO termina aquí: no escribas puntos petitorios, «PROTESTO LO NECESARIO», lugar, fecha ni firma, ni la nota para el abogado. Termina en cuanto concluya «${parte.titulo}»; lo que sigue («${flujo.partes.slice(indice + 1).map((p) => p.titulo).join('», «')}») se redactará después.`
+                : '\n- Es la última parte: cierra el escrito con los puntos petitorios, «PROTESTO LO NECESARIO», lugar, fecha y firma. La nota para el abogado, si hace falta, va después y vale para el escrito entero, no sólo para esta parte.'),
         confirmados ? `## Datos confirmados por el abogado\n${confirmados}` : null,
         documentos || null,
     ]

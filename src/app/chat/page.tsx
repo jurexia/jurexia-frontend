@@ -25,7 +25,7 @@ import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
 import type { VersionDocumento } from '@/components/documento/PanelDocumento';
 import { SEP_DOSSIER } from '@/lib/documento/citas';
-import { markdownAHtml, limpiarMarcadores } from '@/lib/documento/marcado';
+import { markdownAHtml, limpiarMarcadores, separarNota } from '@/lib/documento/marcado';
 import { abrirCitaConFicha, fuentesDeLaConversacion, olvidarFallos, useFichasDeCitas } from '@/lib/documento/fichas';
 import { olvidarEdicion } from '@/lib/documento/edicionHoja';
 import { estadoPiloto } from '@/components/sentencia/api';
@@ -1331,15 +1331,27 @@ export default function ChatPage() {
 
     /* ═══ EL DOSSIER QUE VE EL PANEL ═══
        Todas las respuestas terminadas de la conversación, en orden, y aparte
-       la que está llegando (vista previa). El panel las escribe seguidas. */
+       la que está llegando (vista previa). El panel las escribe seguidas.
+       SIN LA NOTA PARA EL ABOGADO (28-sep-2026): lo que va después del
+       escrito —qué verificar, el punto débil— se enseña en la burbuja; en la
+       hoja acababa impreso en el Word que se presenta. Ver `separarNota`.
+       Lo ya separado se recuerda: esto corre con cada trozo que llega, y
+       volver a leer todas las respuestas terminadas en cada uno no tiene
+       sentido. La memoria guarda sólo las de ahora. */
+    const escritosSinNota = useRef(new Map<string, string>());
     const bloquesDocumento = useMemo(() => {
         const trabajando = isLoading || isDocumentAnalyzing || analisisEnVuelo;
         const salida: { id: string; markdown: string }[] = [];
+        const antes = escritosSinNota.current;
+        const ahora = new Map<string, string>();
         messages.forEach((m, i) => {
             if (m.role !== 'assistant' || !m.content.trim()) return;
             if (trabajando && i === messages.length - 1) return;   // la que llega va aparte
-            salida.push({ id: `m${i}`, markdown: m.content });
+            const escrito = antes.get(m.content) ?? separarNota(m.content).escrito;
+            ahora.set(m.content, escrito);
+            salida.push({ id: `m${i}`, markdown: escrito });
         });
+        escritosSinNota.current = ahora;
         return salida;
     }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
     const vivoDocumento = useMemo(() => {
@@ -1354,7 +1366,7 @@ export default function ChatPage() {
            «Escribiendo en el documento… 0 palabras». Una hoja en blanco y sin
            una señal de vida durante todo el reconocimiento. Con null el panel
            no finge: la hoja se queda como está y el pie dice por dónde va. */
-        return ultimo?.role === 'assistant' ? ultimo.content : null;
+        return ultimo?.role === 'assistant' ? separarNota(ultimo.content).escrito : null;
     }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
     const hayDocumento = bloquesDocumento.length > 0 || vivoDocumento !== null;
     const tituloDocumento = useMemo(() => {

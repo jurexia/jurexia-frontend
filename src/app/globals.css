@@ -1728,6 +1728,10 @@ h6 {
 @media (min-width: 640px) {
   .respuesta { font-size: 16px; line-height: 1.65; }
 }
+/* LA NOTA PARA EL ABOGADO (28-sep-2026), bajo la tarjeta del documento: se
+   lee como nota, un punto por debajo del cuerpo de la respuesta. */
+.nota-abogado .respuesta { font-size: 14px; line-height: 1.55; }
+.nota-abogado .respuesta ul, .nota-abogado .respuesta ol { margin-bottom: 0; }
 .respuesta > :first-child { margin-top: 0 !important; }
 .respuesta > :last-child { margin-bottom: 0 !important; }
 

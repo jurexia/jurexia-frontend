@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X } from 'lucide-react';
+import { User, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X, StickyNote } from 'lucide-react';
 import { AvatarIurexia } from '@/components/AvatarIurexia';
 import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
@@ -9,6 +9,7 @@ import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro
 import type { Message } from '@/lib/api';
 import { recortarABloque, useRevelado } from '@/lib/documento/revelado';
 import { type MetaCitas, fuenteDeCita, referenciaAPA } from '@/lib/documento/citas';
+import { limpiarMarcadores, separarNota } from '@/lib/documento/marcado';
 import { enlaceOficialCoidh, esCoidh } from '@/lib/coidh';
 import { enlaceBJV, esDoctrina } from '@/lib/doctrina';
 import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
@@ -56,10 +57,23 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Extract unique document IDs, thinking content, and create numbered references
+    /* LA NOTA PARA EL ABOGADO (28-sep-2026). Con la respuesta en el documento,
+       lo que el modelo escribe DESPUÉS del escrito —qué decidió por él, qué
+       verificar antes de presentar, el punto débil— no va a la hoja ni al Word:
+       se enseña aquí, bajo la tarjeta. La cuenta de palabras y de citas es la
+       del escrito. Ver `separarNota`. */
+    const partes = useMemo(
+        () => (!isUser && enDocumento ? separarNota(message.content || '') : null),
+        [message.content, isUser, enDocumento],
+    );
     const { processedContent, docIdMap, thinkingContent, citationMeta: metaDelServidor, isSynthesizing, precedentesMeta } = useMemo(() => {
         if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as MetaDelServidor | null, isSynthesizing: false, precedentesMeta: null as PrecedenteMeta[] | null };
-        return procesarRespuesta(message.content || '');
-    }, [message.content, isUser]);
+        return procesarRespuesta(partes ? partes.escrito : (message.content || ''));
+    }, [message.content, isUser, partes]);
+    const htmlNota = useMemo(
+        () => (partes?.nota ? formatMarkdown(limpiarMarcadores(partes.nota)) : ''),
+        [partes],
+    );
 
     /* LA CITA QUE EL MAPA NO TRAE SE PIDE A `/cita` (26-sep-2026). David:
        «Siempre debemos asegurar el PDF en el visor». Al terminar la respuesta,
@@ -991,6 +1005,19 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         </button>
                                     )}
                                 </div>
+                                {htmlNota && (
+                                    <details open className="nota-abogado mt-3 rounded-xl border border-accent-gold/40 bg-white">
+                                        <summary className="flex cursor-pointer select-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-charcoal-900">
+                                            <StickyNote className="h-4 w-4 flex-shrink-0 text-accent-brown" />
+                                            Nota para el abogado
+                                            <span className="ml-auto text-[11px] font-normal text-charcoal-500">No va en el escrito</span>
+                                        </summary>
+                                        <div
+                                            className="prose-legal respuesta border-t border-cream-200 px-4 py-3 text-sm"
+                                            dangerouslySetInnerHTML={{ __html: htmlNota }}
+                                        />
+                                    </details>
+                                )}
                             </div>
                         )}
                         <div
