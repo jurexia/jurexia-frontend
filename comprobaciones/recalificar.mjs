@@ -137,7 +137,7 @@ module.exports = {
   default: () => null,
   usePlanDelEstudio: (enlace, listo) => { globalThis.__listoPlan.push(listo);
       return { fase: 'esperando', respuesta: null, desactualizado: false, error: '' }; },
-  pendientesDeRazon: () => [],
+  jerarquiaDelPlan: () => null,
 };
 `);
 

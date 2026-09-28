@@ -7,7 +7,7 @@ import type { ProblemaJuridico } from './tipos';
 import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
               PropuestaSuplencia, DecisionSuplencia } from './api';
 import EstudiarJuntos from './EstudiarJuntos';
-import ComoSeEstudiara, { usePlanDelEstudio, pendientesDeRazon } from './ComoSeEstudiara';
+import ComoSeEstudiara, { usePlanDelEstudio, jerarquiaDelPlan } from './ComoSeEstudiara';
 import type { EnlacePlan } from './ComoSeEstudiara';
 import { MENSAJE_SIN_CALIFICAR, porQueLegible, pendientesAlGenerar, firmaPendientes } from './recalificacion';
 import type { Superpuesta } from './recalificacion';
@@ -409,7 +409,7 @@ export default function Decision({
     avisosReparto = [], constanciasAportadas,
     propuestaSuplencia = null, suplencia = null, onSuplencia,
     grupos = {}, onGrupos,
-    plan, razonesSegmento = {}, onRazonSegmento,
+    plan,
     esCasa = false, varianteEstudio = '', onVarianteEstudio,
     recalificadas = {}, recalificacionEnCurso = false, avisosRecalificacion = [],
     onReintentarRecalificacion,
@@ -481,10 +481,6 @@ export default function Decision({
     /** EL PLAN DEL ESTUDIO (Paso 2): cómo pedirlo y leerlo, y si esta cuenta
      *  escribe con él. Sin enlace activo, el panel no aparece. */
     plan?: EnlacePlan | null;
-    /** Decisión 6: la razón que él escribe para un argumento que su problema
-     *  decide pero su razón no contesta, por id del segmento. */
-    razonesSegmento?: Record<string, string>;
-    onRazonSegmento?: (id: string, texto: string) => void;
     /** Cuenta de casa: puede elegir la variante del prompt del estudio. */
     esCasa?: boolean;
     varianteEstudio?: string;
@@ -562,7 +558,7 @@ export default function Decision({
         && !recalificacionEnCurso;
     const estadoPlan = usePlanDelEstudio(plan ?? PLAN_APAGADO, listoParaPlan);
     const planHecho = estadoPlan.respuesta?.plan ?? null;
-    const sinRazon = plan?.activo ? pendientesDeRazon(planHecho, razonesSegmento) : [];
+    const jer = jerarquiaDelPlan(planHecho, problemas);
 
     /* ACEPTAR UNA PROPUESTA DEL PLAN = PULSAR ESA CALIFICACIÓN A MANO. Mismo
        camino que las pastillas: en «todo el asunto», si es el principal, cambia
@@ -1240,8 +1236,6 @@ export default function Decision({
                 la decisión entera, se haya tomado como se haya tomado. */}
             {plan?.activo && (problemas.length > 0 || sentidoGlobal) && (
                 <ComoSeEstudiara estado={estadoPlan} problemas={problemas}
-                                 razones={razonesSegmento}
-                                 onRazon={(id, t) => onRazonSegmento?.(id, t)}
                                  onAceptarPropuesta={aceptarPropuesta}
                                  puedeAceptar={(a) => FINAS.some((f) => f.id === (a || '').toLowerCase())}
                                  sentidoEnPantalla={sentidoEnPantalla}
@@ -1334,22 +1328,14 @@ export default function Decision({
                                 {recalificacionEnCurso ? 'se ordena en cuanto terminen de recalificarse los accesorios'
                                     : estadoPlan.fase === 'pidiendo' || estadoPlan.fase === 'en_curso' ? 'ordenándose con tu decisión…'
                                     : planHecho && !estadoPlan.desactualizado
-                                        ? `${planHecho.unidades.length} ${planHecho.unidades.length === 1 ? 'apartado' : 'apartados'} · ${planHecho.segmentos.length} argumentos`
+                                        ? (jer ? `decide el problema ${jer.principal.n}; ${jer.siguen + jer.caen} de ${planHecho.segmentos.length} argumentos se resuelven por consecuencia`
+                                               : `${planHecho.unidades.length} ${planHecho.unidades.length === 1 ? 'apartado' : 'apartados'} · ${planHecho.segmentos.length} argumentos`)
                                     : planHecho ? 'se reordenará con tu último cambio'
                                     : estadoPlan.fase === 'fallo' || estadoPlan.fase === 'sin_plan'
                                         ? 'sin plan por ahora: se intentará al generar'
                                         : 'se ordena cuando la decisión esté completa'}
                             </span>
                             <a href="#como-se-estudiara" className="shrink-0 text-[12px] text-accent-gold/85 hover:text-accent-gold">ver ↑</a>
-                        </p>
-                    )}
-                    {/* DECISIÓN 6 (David, opción a): se pide, no se bloquea. */}
-                    {sinRazon.length > 0 && (
-                        <p className="mt-1.5 text-[12px] leading-relaxed text-amber-300/90">
-                            {sinRazon.length === 1 ? 'Un argumento' : `${sinRazon.length} argumentos`} que tu razón no
-                            contesta ({sinRazon.map((x) => x.id).join(', ')}): escríbela en «Cómo se estudiará», o el
-                            estudio {sinRazon.length === 1 ? 'lo desarrollará' : 'los desarrollará'} con el material y te lo
-                            dirá primero en las advertencias.
                         </p>
                     )}
                     {faltaRazon && (

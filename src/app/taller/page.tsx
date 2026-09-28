@@ -527,24 +527,6 @@ export default function TallerDeSentencias() {
     const suplencia = suplenciaDecidida && suplenciaDecidida.numero === encargo.numero
         ? suplenciaDecidida.d : null;
 
-    /* ═══ LA RAZÓN POR ARGUMENTO (Decisión 6 de David, opción a, 26-sep-2026) ═══
-       El plan marca los argumentos que su problema decide pero su razón no
-       contesta; el panel se la pide y aquí se guarda, por id del segmento
-       («C3.e»). Como la suplencia, con el número del asunto: los ids se
-       repiten de un expediente a otro y una razón no puede colarse en el
-       siguiente que se abra. */
-    const [razonesDecididas, setRazonesDecididas] =
-        useState<{ numero: string; r: Record<string, string> }>({ numero: '', r: {} });
-    const razonesSegmento = useMemo(
-        () => (razonesDecididas.numero === encargo.numero ? razonesDecididas.r : {}),
-        [razonesDecididas, encargo.numero]);
-    const escribirRazonSegmento = useCallback((id: string, texto: string) => {
-        setRazonesDecididas((prev) => ({
-            numero: encargo.numero,
-            r: { ...(prev.numero === encargo.numero ? prev.r : {}), [id]: texto },
-        }));
-    }, [encargo.numero]);
-
     /* ═══ LA VARIANTE DEL PROMPT DEL ESTUDIO, SÓLO EN CASA (26-sep-2026) ═══
        Hasta hoy sólo la pedía el banco de medición. Para probar el plan en el
        montaje real hace falta elegirla en pantalla. Casa = lo que el servidor
@@ -1436,8 +1418,6 @@ export default function TallerDeSentencias() {
         olvidarRecalificacion();
         setRazonando(new Set());
         setGrupos({});
-        // Las razones por argumento eran de la decisión que se descarta.
-        setRazonesDecididas({ numero: '', r: {} });
         setRazonGlobal('');
         setSentidoGlobal('');
         setGlobalDictado(false);
@@ -1512,7 +1492,6 @@ export default function TallerDeSentencias() {
         olvidarRecalificacion();
         setRazonando(new Set());
         setGrupos({});
-        setRazonesDecididas({ numero: '', r: {} });
         setRazonGlobal('');
         setSentidoGlobal('');
         setGlobalDictado(false);
@@ -1675,7 +1654,6 @@ export default function TallerDeSentencias() {
         oportunidadMotivo: motivoDecision,
         suplencia,
         suplenciaPropuesta: delAsunto?.suplencia ?? null,
-        razonesSegmento,
         varianteEstudio: '',
     }, formato);
     const opcionesRef = useRef(opcionesDelProyecto);
@@ -1848,7 +1826,7 @@ export default function TallerDeSentencias() {
         return o ? JSON.stringify(o) : '';
     }, [usaPlan, problemas, tocados, grupos, modo, sentidoGlobal, razonGlobal, globalDictado,  // eslint-disable-line react-hooks/exhaustive-deps
         propuesta, conceptosViolacion, contexto, encargo.responsable, decision, motivoDecision,
-        suplencia, delAsunto, razonesSegmento, varianteEstudio, esCasa]);
+        suplencia, delAsunto, varianteEstudio, esCasa]);
     const enlacePlan: EnlacePlan = {
         activo: usaPlan && !!encargo.numero,
         /* Con tumbados, la firma lleva también cómo va cada uno: cuando llega
@@ -3259,8 +3237,6 @@ export default function TallerDeSentencias() {
                               recalificacionEnCurso={recalEnCurso}
                               avisosRecalificacion={avisosRecal}
                               onReintentarRecalificacion={recal.reintentar}
-                              razonesSegmento={razonesSegmento}
-                              onRazonSegmento={escribirRazonSegmento}
                               esCasa={esCasa} varianteEstudio={varianteEstudio}
                               onVarianteEstudio={elegirVariante} />
                     )}

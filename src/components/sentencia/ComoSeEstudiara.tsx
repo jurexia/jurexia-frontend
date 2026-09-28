@@ -232,6 +232,10 @@ const RAZON: Record<string, string> = {
     adhesivo_fuera_182: 'el adhesivo no se ajusta al art. 182',
     innecesario_mayor_beneficio: 'innecesario: la concesión de fondo da mayor beneficio (art. 189)',
     cae_con_principal: 'cae con el principal',
+    /* plan-6 (28-sep-2026, AR 631/2025): los secundarios se resuelven por
+       dependencia del principal, no con una razón por argumento. */
+    innecesario_por_suficiencia: 'innecesario por suficiencia: lo resuelto en el principal ya da todo lo que podría dar',
+    deriva_de_desestimado: 'cae por derivar de una consideración ya desestimada',
     sin_materia: 'sin materia',
     adhesivo_sin_materia: 'el adhesivo queda sin materia',
 };
@@ -319,25 +323,121 @@ export function arrastradosPorPropuesta(
         .map((x) => x.id);
 }
 
-/** Los argumentos que el plan pide razonar (Decisión 6) y que siguen sin razón. */
-export function pendientesDeRazon(plan: PlanDelEstudio | null | undefined,
-                                  razones: Record<string, string>): SegmentoDelPlan[] {
-    return (plan?.segmentos ?? []).filter((s) => s.pendiente === 'razon' && !(razones[s.id] || '').trim());
+/* ═══ QUÉ DECIDE Y QUÉ SE SIGUE (28-sep-2026) ═══
+   David, sobre el AR 631/2025: la caja «Razón que tu criterio no contesta»
+   (Decisión 6, 26-sep) pedía una razón por argumento y rompía el diálogo por
+   temas. Resuelto el tema principal, los argumentos que dependen de él se
+   resuelven por consecuencia —aplican su premisa, remiten a ella, caen con
+   él o se vuelven innecesarios—. El panel ya no pide nada: lo dice en una
+   línea, con lo que el plan trae. Sólo si el plan marca un principal (o hay
+   un solo problema): con varios problemas del mismo rango no hay de quién
+   depender.
+
+   EL PLAN-6 trae los grupos hechos: el argumento que decide (el «portador»,
+   al que apunta `con`), los innecesarios por suficiencia (problema que
+   prospera: lo resuelto en el principal ya da todo lo que podrían dar) y los
+   que caen por derivar de una consideración ya desestimada (problema que no
+   prospera). Aquí sólo se leen y se cuentan; ninguno se decide en pantalla.
+   Un plan viejo (plan-4/5) con `pendiente: "razon"` se cuenta por su
+   tratamiento, como cualquier otro: ya no hay caja que enseñarle. */
+const CAEN_CON_EL = new Set(['residual', 'no_se_estudia', 'no_se_expresa_art79']);
+const razonBase = (r: string) => (/^([a-z0-9_]+)/i.exec(r || '')?.[1] ?? '').toLowerCase();
+export interface JerarquiaDelPlan {
+    principal: { n: number; pregunta: string; sentido: string };
+    /** El argumento que decide el principal (el «portador»), si el plan lo
+     *  dice con `con`; '' si no (planes anteriores al plan-6). */
+    decide: string;
+    /** La premisa del principal y el apartado donde se expone, una vez. */
+    premisa: string;
+    expuestaEn: string;
+    /** Del principal, los que aplican su premisa o remiten a ella. */
+    siguen: number;
+    /** Los que caen con él: residuales, inoperantes, innecesarios, sin materia. */
+    caen: number;
+    /** Los que se contestan con su dato propio dentro de su apartado. */
+    propios: number;
+    /** Los de otros problemas que se deciden en el suyo. */
+    otros: number;
+    /** Por id: con el principal (los que `siguen`), innecesarios por
+     *  suficiencia y caídos por derivar (los dos, dentro de `caen`), y los
+     *  autónomos (los `propios`). */
+    conElPrincipal: string[];
+    innecesarios: string[];
+    derivan: string[];
+    autonomos: string[];
+}
+export function jerarquiaDelPlan(plan: PlanDelEstudio | null | undefined,
+                                 problemas: ProblemaJuridico[]): JerarquiaDelPlan | null {
+    if (!plan || !plan.segmentos.length) return null;
+    const tabla = plan.problemas;
+    const fila = tabla.find((t) => (t.jerarquia || '').toLowerCase() === 'principal')
+        ?? (tabla.length === 1 ? tabla[0] : undefined);
+    if (!fila) return null;
+    const suyo = (s: SegmentoDelPlan) => String(s.problemaId ?? '') === String(fila.id);
+    const enPantalla = problemaPorNumero(fila.id, problemas, tabla);
+    const u = plan.unidades.find((x) => x.premisa && x.problemas.some((q) => String(q) === String(fila.id)));
+    /* EL PORTADOR: el argumento del principal al que más `con` apuntan. Sólo
+       cuenta un id que el plan trae; un `con` que no casa se ignora. */
+    const ids = new Set(plan.segmentos.map((s) => s.id));
+    const votos = new Map<string, number>();
+    plan.segmentos.forEach((s) => {
+        if (s.con && s.con !== s.id && ids.has(s.con)) votos.set(s.con, (votos.get(s.con) ?? 0) + 1);
+    });
+    let decide = '';
+    votos.forEach((v, id) => {
+        const seg = plan.segmentos.find((x) => x.id === id);
+        if (seg && suyo(seg) && (!decide || v > (votos.get(decide) ?? 0))) decide = id;
+    });
+    const conElPrincipal: string[] = [], innecesarios: string[] = [], derivan: string[] = [],
+        autonomos: string[] = [];
+    let restoCaen = 0, otros = 0;
+    plan.segmentos.forEach((s) => {
+        if (s.pendiente === 'sentido' || s.id === decide) return;
+        const base = razonBase(s.razon);
+        if (base === 'innecesario_por_suficiencia') innecesarios.push(s.id);
+        else if (base === 'deriva_de_desestimado') derivan.push(s.id);
+        else if (CAEN_CON_EL.has(s.trat)) restoCaen += 1;
+        else if (s.trat === 'desarrolla') autonomos.push(s.id);
+        else if (suyo(s) || (decide && s.con === decide)) conElPrincipal.push(s.id);
+        else otros += 1;
+    });
+    return {
+        principal: {
+            n: enPantalla?.n ?? (typeof fila.id === 'number' ? fila.id : 1),
+            pregunta: fila.pregunta || enPantalla?.p.pregunta || '',
+            sentido: (fila.sentido || enPantalla?.p.sentido || '').toLowerCase(),
+        },
+        decide,
+        premisa: u?.premisa ?? '',
+        expuestaEn: u?.id ?? '',
+        siguen: conElPrincipal.length,
+        caen: innecesarios.length + derivan.length + restoCaen,
+        propios: autonomos.length,
+        otros,
+        conElPrincipal, innecesarios, derivan, autonomos,
+    };
 }
 
-/** LAS CAJAS DE LA DECISIÓN 6 NO DESAPARECEN CON LO QUE ÉL ESCRIBIÓ. Su razón
- *  cambia la firma y el plan se rehace; si el nuevo ya no marca pendiente ese
- *  argumento —porque su razón lo contesta—, la caja tiene que seguir a la
- *  vista: lo escrito sigue viajando, y lo que viaja se tiene que poder leer y
- *  borrar. Una razón escrita para un id que el plan nuevo ya no trae se
- *  enseña aparte, para que no viaje a ciegas. */
-export function cajasDeRazon(plan: PlanDelEstudio | null | undefined, razones: Record<string, string>) {
-    const segs = plan?.segmentos ?? [];
-    const conRazonSuya = Object.keys(razones).filter((id) => (razones[id] || '').trim());
-    const pendRazon = segs.filter((s) => s.pendiente === 'razon' || conRazonSuya.includes(s.id));
-    const sinSegmento = plan ? conRazonSuya.filter((id) => !segs.some((s) => s.id === id)) : [];
-    const porContestar = pendRazon.filter((s) => s.pendiente === 'razon' && !(razones[s.id] || '').trim()).length;
-    return { pendRazon, sinSegmento, porContestar };
+/** LA LÍNEA DE LA JERARQUÍA, en tramos: se omite todo tramo en cero. Pura,
+ *  para probarla sin pintar. */
+export function tramosDeJerarquia(j: JerarquiaDelPlan): string[] {
+    const n = (k: number, uno: string, varios: string) => (k === 1 ? uno : varios.replace('#', String(k)));
+    const resto = j.caen - j.innecesarios.length - j.derivan.length;
+    const t: string[] = [];
+    /* Con portador (plan-6) los que siguen se contestan DENTRO del estudio del
+       principal; sin él (plan-4/5) aplican su premisa o remiten a ella desde
+       su propio apartado, y decir otra cosa sería prometer lo que el plan no
+       hace. */
+    const pl = j.siguen !== 1;
+    if (j.siguen) t.push(`de ahí se ${n(j.siguen, 'sigue un argumento', 'siguen # argumentos')}, que `
+        + (j.decide ? `se contesta${pl ? 'n' : ''} dentro de su estudio`
+                    : `aplica${pl ? 'n' : ''} su premisa o remite${pl ? 'n' : ''} a ella`));
+    if (j.innecesarios.length) t.push(`${n(j.innecesarios.length, 'uno es innecesario', '# son innecesarios')} por suficiencia`);
+    if (j.derivan.length) t.push(`${n(j.derivan.length, 'uno cae', '# caen')} por derivar de lo ya desestimado`);
+    if (resto > 0) t.push(`${resto} ${resto === 1 ? 'cae' : 'caen'} con él (inoperantes, residuales o sin materia)`);
+    if (j.propios) t.push(`${j.propios} se ${j.propios === 1 ? 'contesta' : 'contestan'} con su dato propio dentro de su apartado`);
+    if (j.otros) t.push(`${j.otros} se ${j.otros === 1 ? 'decide' : 'deciden'} en su propio problema`);
+    return t;
 }
 
 function Cita({ texto, pagina }: { texto: string; pagina?: string }) {
@@ -380,6 +480,7 @@ function RenglonSegmento({ s, esRecurso }: { s: SegmentoDelPlan; esRecurso: bool
                     <span className="text-white/60">: {DIFERENCIA[s.diferencia] ?? humano(s.diferencia)}</span>
                 )}
                 {s.reitera && <span className="text-white/45">· reitera {s.reitera}</span>}
+                {s.con && <span className="text-white/45">· con {s.con}</span>}
                 {s.vicio && s.vicio !== 'fondo' && <span className="text-white/45">· {VICIO[s.vicio] ?? humano(s.vicio)}</span>}
             </p>
             {(s.sostiene || s.texto) && (
@@ -413,14 +514,11 @@ function RenglonSegmento({ s, esRecurso }: { s: SegmentoDelPlan; esRecurso: bool
 }
 
 export default function ComoSeEstudiara({
-    estado, problemas, razones, onRazon, onAceptarPropuesta, puedeAceptar, esRecurso = false,
+    estado, problemas, onAceptarPropuesta, puedeAceptar, esRecurso = false,
     sentidoEnPantalla = (p) => p.sentido || '', alcanceDe = (_p, n) => `el problema ${n}`,
 }: {
     estado: EstadoDelPlan;
     problemas: ProblemaJuridico[];
-    /** Lo que escribió para cada argumento pendiente de razón, por id. */
-    razones: Record<string, string>;
-    onRazon: (id: string, texto: string) => void;
     /** Aceptar una afinación del plan cambia el sentido EN PANTALLA, igual
      *  que pulsar esa calificación a mano. */
     onAceptarPropuesta: (p: ProblemaJuridico, a: string) => void;
@@ -444,11 +542,11 @@ export default function ComoSeEstudiara({
     const proposicion = (id: string) => plan?.proposiciones.find((p) => p.id === id);
     const quien = esRecurso ? 'agravio' : 'concepto';
 
-    const { pendRazon, sinSegmento, porContestar } = cajasDeRazon(plan, razones);
+    const jer = jerarquiaDelPlan(plan, problemas);
     const pendSentido = (plan?.segmentos ?? []).filter((s) => s.pendiente === 'sentido');
     const enUnidad = new Set<string>();
     (plan?.unidades ?? []).forEach((u) => u.segmentos.forEach((id) => enUnidad.add(id)));
-    const sueltos = (plan?.segmentos ?? []).filter((s) => !enUnidad.has(s.id) && !s.pendiente);
+    const sueltos = (plan?.segmentos ?? []).filter((s) => !enUnidad.has(s.id) && s.pendiente !== 'sentido');
     /* DÓNDE SE EXPONE CADA PREMISA: en la primera unidad que la usa; en las
        demás se remite a ésa. Es lo que evita escribir dos veces la misma
        regla, que era la mitad de la repetición medida. */
@@ -510,62 +608,6 @@ export default function ComoSeEstudiara({
                 </p>
             )}
 
-            {/* ── 1 · DECISIÓN 6: LA RAZÓN QUE TU CRITERIO NO CONTESTA ──
-                David, opción a: «el panel pide la razón que falta antes de
-                generar; si no la escribe, el estudio desarrolla ese argumento
-                con el material y lo pone PRIMERO en ADVERTENCIAS». Va arriba
-                porque es lo único del panel que le pide algo, y FUERA del
-                atenuado de «desactualizado»: escribir aquí cambia la firma, y
-                la caja en la que teclea no puede apagarse bajo sus dedos. No
-                bloquea: avisa. */}
-            {plan && (pendRazon.length > 0 || sinSegmento.length > 0) && (
-                <div className="mt-3">
-                    <Seccion tono="ambar"
-                             titulo={`Razón que tu criterio no contesta${porContestar ? ` · ${porContestar} sin escribir` : ''}`}
-                             nota={`Su problema ya tiene sentido, pero tu razón no responde lo que ${pendRazon.length === 1 ? 'este argumento plantea' : 'estos argumentos plantean'} por su cuenta. Escríbela aquí y el estudio la seguirá como tuya. Si la dejas en blanco, el estudio lo desarrolla con el material y te lo dice primero en las advertencias.`}>
-                        <ul className="space-y-3">
-                            {pendRazon.map((s) => {
-                                const pr = problemaDelSegmento(s, problemas, tabla);
-                                return (
-                                    <li key={s.id}>
-                                        <p className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
-                                            <span className="font-semibold text-accent-gold/90">{s.id}</span>
-                                            {pr && <span className="text-white/50">problema {pr.n}</span>}
-                                            {s.etiqueta && <span className="text-white/75">· {etiquetaLegible(s.etiqueta)}</span>}
-                                            {s.diferencia && <span className="text-white/50">· {DIFERENCIA[s.diferencia] ?? humano(s.diferencia)}</span>}
-                                            {s.pendiente !== 'razon' && (
-                                                <span className="text-accent-gold/85">· el orden actual ya lo contesta con tu razón</span>
-                                            )}
-                                        </p>
-                                        {(s.sostiene || s.texto) && (
-                                            <p className="mt-0.5 text-[12px] leading-relaxed text-white/65">{s.sostiene || s.texto}</p>
-                                        )}
-                                        <Cita texto={s.cita} pagina={s.pagina} />
-                                        <label htmlFor={`razon-${s.id}`} className="sr-only">Tu razón para {s.id}</label>
-                                        <textarea id={`razon-${s.id}`} rows={2} value={razones[s.id] ?? ''}
-                                                  onChange={(e) => onRazon(s.id, e.target.value)}
-                                                  placeholder="Por qué se resuelve así este argumento…"
-                                                  className="mt-1.5 w-full resize-y rounded-xl border border-amber-400/30 bg-black/30 px-3 py-2 text-[13px] leading-relaxed text-white/90 outline-none placeholder:text-white/40 focus:border-accent-gold/45" />
-                                    </li>
-                                );
-                            })}
-                            {sinSegmento.map((id) => (
-                                <li key={id}>
-                                    <p className="text-[13px]">
-                                        <span className="font-semibold text-accent-gold/90">{id}</span>
-                                        <span className="text-white/50"> · ya no aparece en el orden actual: tu razón se manda igual; bórrala si ya no aplica.</span>
-                                    </p>
-                                    <label htmlFor={`razon-${id}`} className="sr-only">Tu razón para {id}</label>
-                                    <textarea id={`razon-${id}`} rows={2} value={razones[id] ?? ''}
-                                              onChange={(e) => onRazon(id, e.target.value)}
-                                              className="mt-1.5 w-full resize-y rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-[13px] leading-relaxed text-white/90 outline-none focus:border-accent-gold/45" />
-                                </li>
-                            ))}
-                        </ul>
-                    </Seccion>
-                </div>
-            )}
-
             {plan && (
                 <div className={cn('mt-3 space-y-3 transition-opacity', desactualizado && 'opacity-60')}>
                     {desactualizado && (
@@ -573,6 +615,37 @@ export default function ComoSeEstudiara({
                             Es el orden de tu decisión anterior. Se rehace unos segundos después de tu último cambio.
                         </p>
                     )}
+
+                    {/* ── 1 · QUÉ DECIDE Y QUÉ SE SIGUE: sin pedir nada ──
+                        Sólo lectura. Con el plan-6, debajo, los ids de cada
+                        grupo: es lo que el estudio contestará por consecuencia. */}
+                    {jer && (() => {
+                        const tramos = tramosDeJerarquia(jer);
+                        const grupos: [string, string[]][] = [
+                            ['con el principal', jer.decide ? jer.conElPrincipal : []],
+                            ['innecesarios por suficiencia', jer.innecesarios],
+                            ['caen por derivar', jer.derivan],
+                        ];
+                        const conIds = grupos.filter(([, xs]) => xs.length > 0);
+                        return (
+                            <div>
+                                <p className="text-[13px] leading-relaxed text-white/75">
+                                    <span className="font-medium text-accent-gold/90">Decide el problema {jer.principal.n}</span>
+                                    {jer.principal.sentido ? <>, {etiquetaLegible(jer.principal.sentido)}</> : null}
+                                    {jer.decide ? <> (lo decide {jer.decide})</> : null}
+                                    {jer.premisa ? <>: su premisa ({jer.premisa}) se expone una vez, en {jer.expuestaEn}</> : null}.
+                                    {tramos.length > 0 && <> {tramos[0].charAt(0).toUpperCase()}{tramos[0].slice(1)}{tramos.slice(1).map((t) => `; ${t}`).join('')}.</>}
+                                </p>
+                                {conIds.length > 0 && (
+                                    <p className="mt-0.5 text-[12px] leading-relaxed text-white/50">
+                                        {conIds.map(([que, xs], k) => (
+                                            <span key={que}>{k > 0 ? ' · ' : ''}{que.charAt(0).toUpperCase()}{que.slice(1)}: {xs.join(', ')}</span>
+                                        ))}
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    })()}
 
                     {/* ── 2 · SIN SENTIDO FIJADO ── */}
                     {pendSentido.length > 0 && (

@@ -37,7 +37,6 @@ export interface EstadoDelFormulario {
     suplencia: DecisionSuplencia | null;
     /** La que propone el motor para el asunto, si propone alguna. */
     suplenciaPropuesta: PropuestaSuplencia | null;
-    razonesSegmento: Record<string, string>;
     /** La variante del prompt, YA filtrada: vacía si la cuenta no es de casa. */
     varianteEstudio: string;
 }
@@ -75,7 +74,6 @@ export function opcionesDelProyecto(e: EstadoDelFormulario, formato: FormatoSent
         oportunidadMotivo: e.oportunidadMotivo,
         formato,
         suplencia: supl,
-        razonesSegmento: e.razonesSegmento,
         varianteEstudio: e.varianteEstudio,
         conceptosViolacion: e.conceptosViolacion,
     };

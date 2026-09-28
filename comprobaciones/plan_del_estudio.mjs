@@ -1,8 +1,8 @@
 // EL PLAN DEL ESTUDIO EN LA PANTALLA, PROBADO SIN SERVIDOR (26-sep-2026).
 //
 // Paso 2 del estudio de fondo (contrato: diag/contrato_paso2.md). La pantalla
-// pide el plan con antirrebote, lo lee, lo pinta, y manda las razones por
-// argumento con el proyecto. Nada de eso se ve en un typecheck: un pedido de
+// pide el plan con antirrebote, lo lee y lo pinta (desde el 28-sep-2026 ya
+// no pide razones por argumento: el plan-6 las resuelve por dependencia). Nada de eso se ve en un typecheck: un pedido de
 // más gasta una de las cuatro corridas de la sesión, y un plan viejo que
 // llega tarde pintado encima del nuevo enseña un orden que no es el de su
 // decisión. Aquí se comprueba con el código REAL (transpilado al vuelo con el
@@ -11,7 +11,8 @@
 //   · formularioDelResolver: lo que viaja en las dos puertas;
 //   · la lectura tolerante del plan y del mapa;
 //   · el evento «ordenando» y el mapa del «listo» en resolverEnVivo;
-//   · el emparejamiento segmento → problema y la Decisión 6;
+//   · el emparejamiento segmento → problema y la jerarquía del plan (qué
+//     decide y qué se sigue; la Decisión 6 se retiró el 28-sep-2026);
 //   · usePlanDelEstudio: antirrebote, un solo pedido por firma, la respuesta
 //     vieja que se tira, la espera por clave, apagar y encender.
 //
@@ -234,7 +235,7 @@ const PLAN = {
     globalThis.fetch = fetchReal;
 }
 
-/* ═══ 5 · SEGMENTO → PROBLEMA, Y LA DECISIÓN 6 ═══ */
+/* ═══ 5 · SEGMENTO → PROBLEMA, Y LA JERARQUÍA DEL PLAN ═══ */
 {
     const probs = [{ id: 'p1', pregunta: '¿Se acreditó la identidad?' }, { id: 'p2', pregunta: '¿Hay cosa juzgada?' }];
     const p = api.planDe(PLAN);
@@ -262,19 +263,68 @@ const PLAN = {
     // LEY DE AMPARO: la regla de «sólo se expresa si hay beneficio» es el
     // PENÚLTIMO párrafo del art. 79 (verificado contra el texto vigente).
     ok(/penúltimo/.test(como.tratLegible('no_se_expresa_art79')), 'art. 79, penúltimo párrafo');
-    ok(como.pendientesDeRazon(p, {}).map((s) => s.id).join() === 'C3.e', 'pendiente de razón sin escribir');
-    ok(como.pendientesDeRazon(p, { 'C3.e': '  ' }).length === 1, 'sólo espacios no cuenta como razón');
-    ok(como.pendientesDeRazon(p, { 'C3.e': 'porque…' }).length === 0, 'con razón escrita deja de estar pendiente');
-    // La caja no desaparece cuando el plan nuevo ya no la marca pendiente.
-    const sinPend = api.planDe({ ...PLAN, segmentos: PLAN.segmentos.map((x) => (x.id === 'C3.e' ? { ...x, pendiente: null } : x)) });
-    const c1 = como.cajasDeRazon(p, {});
-    ok(c1.pendRazon.map((x) => x.id).join() === 'C3.e' && c1.porContestar === 1, 'caja pendiente sin escribir');
-    const c2 = como.cajasDeRazon(sinPend, { 'C3.e': 'mi razón' });
-    ok(c2.pendRazon.map((x) => x.id).join() === 'C3.e' && c2.porContestar === 0,
-       'con su razón escrita la caja sigue a la vista aunque el plan ya no la marque');
-    const c3 = como.cajasDeRazon(p, { 'C7.q': 'huérfana', 'C1.a': '  ' });
-    ok(c3.sinSegmento.join() === 'C7.q', 'la razón de un id que el plan ya no trae se enseña aparte');
-    ok(como.cajasDeRazon(null, { 'C7.q': 'x' }).sinSegmento.length === 0, 'sin plan no hay huérfanas que enseñar');
+    // QUÉ DECIDE Y QUÉ SE SIGUE (28-sep-2026): sin caja que pida razones.
+    ok(!('pendientesDeRazon' in como) && !('cajasDeRazon' in como), 'la Decisión 6 ya no está en el panel');
+    const j = como.jerarquiaDelPlan(p, probs);
+    ok(j && j.principal.n === 1 && j.principal.sentido === 'infundado' && j.premisa === 'M1' && j.expuestaEn === 'U1',
+       'el principal, su sentido y dónde se expone su premisa');
+    ok(j.siguen === 2 && j.propios === 1 && j.caen === 0 && j.otros === 0,
+       `C1.a y C1.b lo siguen; C3.e (desarrolla) con dato propio; C9.z sin sentido no cuenta (${JSON.stringify(j)})`);
+    const sinPrincipal = api.planDe({ ...PLAN, problemas: PLAN.problemas.map((x) => ({ ...x, jerarquia: 'accesorio' })) });
+    ok(como.jerarquiaDelPlan(sinPrincipal, probs) === null, 'sin principal marcado (y con varios problemas) no se dice nada');
+    ok(como.jerarquiaDelPlan(null, probs) === null, 'sin plan, nada');
+    const caido = api.planDe({ ...PLAN, segmentos: [...PLAN.segmentos,
+        { id: 'C4.a', problema_id: 2, etiqueta: 'innecesario', razon: 'cae_con_principal', trat: 'no_se_estudia' }] });
+    ok(como.jerarquiaDelPlan(caido, probs).caen === 1, 'el que cae con el principal se cuenta aparte');
+    // Un plan viejo con pendiente «razon» (C3.e) se cuenta por su tratamiento
+    // y no deja ninguna caja: jerarquiaDelPlan es lo único que el panel lee.
+    ok(j.autonomos.join() === 'C3.e' && j.decide === '' && j.innecesarios.length === 0,
+       'plan viejo: el pendiente «razon» cuenta como autónomo, sin portador');
+    ok(como.tramosDeJerarquia(j)[0] === 'de ahí se siguen 2 argumentos, que aplican su premisa o remiten a ella',
+       `sin portador no se promete «dentro de su estudio» (${como.tramosDeJerarquia(j)[0]})`);
+
+    // PLAN-6 (28-sep-2026, AR 631/2025): los grupos por dependencia.
+    const P6 = {
+        version: 'plan-6', clave: 'K6', tipo_asunto: 'amparo_revision',
+        problemas: [{ id: 1, pregunta: '¿Se acreditó la identidad?', sentido: 'fundado', jerarquia: 'principal' },
+                    { id: 2, pregunta: '¿Hay cosa juzgada?', sentido: 'innecesario', jerarquia: 'accesorio', depende_de: 1 }],
+        segmentos: [
+            { id: 'A1.b', problema_id: 1, vicio: 'fondo', ataca: 'P1', etiqueta: 'fundado', razon: 'fundado', trat: 'aplica' },
+            { id: 'A1.a', problema_id: 1, vicio: 'fondo', ataca: 'P4', etiqueta: 'fundado', razon: 'fundado', trat: 'aplica',
+              con: 'A1.b', depende_de: 'P1' },
+            { id: 'A1.m', problema_id: 1, vicio: 'forma', etiqueta: 'innecesario', razon: 'innecesario_por_suficiencia',
+              trat: 'no_se_estudia', con: 'A1.b' },
+            { id: 'A1.p', problema_id: 1, vicio: 'forma', etiqueta: 'innecesario', razon: 'innecesario_por_suficiencia',
+              trat: 'no_se_estudia', con: 'A1.b' },
+            { id: 'A1.v', problema_id: 1, vicio: 'fondo', etiqueta: 'inoperante', razon: { tipo: 'deriva_de_desestimado', p: 'P1' },
+              trat: 'residual' },
+            { id: 'S1.a', problema_id: 1, vicio: 'omision', etiqueta: 'fundado', razon: 'fundado', trat: 'desarrolla', diferencia: 'hecho' },
+            { id: 'A1.z', problema_id: 1, vicio: 'forma', etiqueta: 'fundado', razon: 'fundado', trat: 'desarrolla', pendiente: 'razon' },
+            { id: 'A1.q', problema_id: 1, con: 'X9.x', etiqueta: 'fundado', razon: 'fundado', trat: 'aplica' },
+        ],
+        unidades: [{ id: 'U1', problemas: [1], segmentos: ['A1.b', 'A1.a'], premisa: 'M1' }],
+    };
+    const p6 = api.planDe(P6);
+    ok(p6.segmentos[1].con === 'A1.b' && p6.segmentos[1].dependeDe === 'P1' && p6.segmentos[0].con === '',
+       'con y depende_de se leen; si no llegan, vacíos');
+    ok(p6.problemas[1].dependeDe === 1 && p6.problemas[0].dependeDe === null, 'depende_de del problema');
+    ok(p6.segmentos[4].razon === 'deriva_de_desestimado(P1)', 'la razón nueva partida en objeto');
+    const j6 = como.jerarquiaDelPlan(p6, probs);
+    ok(j6.decide === 'A1.b', `el portador es al que apunta «con» (${j6.decide})`);
+    ok(j6.conElPrincipal.join() === 'A1.a,A1.q' && j6.siguen === 2,
+       `con el principal: A1.a y A1.q; el portador no se cuenta y un «con» huérfano no lo cambia (${j6.conElPrincipal})`);
+    ok(j6.innecesarios.join() === 'A1.m,A1.p' && j6.derivan.join() === 'A1.v' && j6.caen === 3,
+       'innecesarios por suficiencia y caídos por derivar, dentro de «caen»');
+    ok(j6.autonomos.join() === 'S1.a,A1.z' && j6.propios === 2 && j6.otros === 0,
+       'autónomos: el suplido y el viejo pendiente «razon», sin caja');
+    const t6 = como.tramosDeJerarquia(j6);
+    ok(t6.join(' | ') === 'de ahí se siguen 2 argumentos, que se contestan dentro de su estudio | 2 son innecesarios por suficiencia'
+       + ' | uno cae por derivar de lo ya desestimado | 2 se contestan con su dato propio dentro de su apartado',
+       `tramos del plan-6 (${t6.join(' | ')})`);
+    ok(!t6.some((t) => /razón|pendiente/i.test(t)), 'la línea no pide nada');
+    ok(/^innecesario por suficiencia/.test(como.razonLegible('innecesario_por_suficiencia'))
+       && como.razonLegible('deriva_de_desestimado(P1)') === 'cae por derivar de una consideración ya desestimada (P1)',
+       'legibles de las dos razones nuevas');
     ok(como.razonLegible('no_combate(P2)') === 'no combate la consideración (P2)', 'razón legible con argumento');
     ok(como.razonLegible('algo_nuevo') === 'algo nuevo', 'razón fuera del catálogo: se enseña, no se esconde');
 }

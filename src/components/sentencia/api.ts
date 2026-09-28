@@ -986,13 +986,13 @@ export interface OpcionesResolver {
      *  confirmó en la pantalla de decisión, o la propuesta del motor sin
      *  confirmar. Sólo la confirmada cambia el estudio. */
     suplencia?: DecisionSuplencia | null;
-    /** LA RAZÓN DEL SECRETARIO PARA UN ARGUMENTO CONCRETO (Decisión 6 de
-     *  David, opción a, 26-sep-2026). El plan marca `pendiente: "razon"` el
-     *  argumento que su problema decide pero su razón no contesta —el C3.e del
-     *  642, que invocaba un precedente propio—; el panel «Cómo se estudiará»
-     *  se la pide y lo que escriba viaja aquí, por id del segmento, y entra al
-     *  guion como suya. Si no escribe nada, el estudio desarrolla ese argumento
-     *  con el material y lo pone PRIMERO en las advertencias. */
+    /** LA RAZÓN DEL SECRETARIO PARA UN ARGUMENTO CONCRETO. Era la Decisión 6
+     *  (opción a, 26-sep-2026): el panel la pedía por argumento. SE RETIRÓ el
+     *  28-sep-2026 (David, sobre el AR 631/2025: la caja rompía el diálogo por
+     *  temas): el plan-6 resuelve los secundarios por dependencia del
+     *  principal y la pantalla ya no la pide ni la guarda. El campo queda
+     *  inerte —`razones_segmento` viaja vacío y el servidor lo recibe con
+     *  `Form("")`— hasta retirarlo de los dos lados a la vez. */
     razonesSegmento?: Record<string, string>;
     /** LA VARIANTE DEL PROMPT DEL ESTUDIO («v1»…«v4»), sólo para cuentas de
      *  casa; al resto el servidor se la ignora (`_taller_variante_estudio`).
@@ -2077,9 +2077,18 @@ export interface SegmentoDelPlan {
     trat: string;
     /** Por qué pide desarrollo propio: hecho | prueba | norma | precedente | procesal | consecuencia. */
     diferencia: string;
-    /** '' = decidido · «sentido»: ningún problema lo decide · «razon»: su
-     *  problema lo decide pero la razón del secretario no lo contesta. */
+    /** '' = decidido · «sentido»: ningún problema lo decide · «razon»: sólo
+     *  en planes viejos (plan-4 y plan-5, Decisión 6, retirada el 28-sep-2026):
+     *  se sigue leyendo porque los planes guardados y los mapas de proyectos
+     *  anteriores lo traen, pero ya no se pide nada con él. */
     pendiente: '' | 'sentido' | 'razon';
+    /** plan-6 (28-sep-2026): el argumento del que se sigue su suerte —el
+     *  «portador» que decide su problema—, si el servidor lo manda. Lo llevan
+     *  los innecesarios por suficiencia y los que se contestan con el
+     *  principal. '' si no llega. */
+    con: string;
+    /** plan-6: de qué depende (la proposición o el argumento), si llega. */
+    dependeDe: string;
     /** Del piso de segmentos: el párrafo del resumen y la cita LITERAL del escrito. */
     texto: string;
     cita: string;
@@ -2123,6 +2132,8 @@ export interface ProblemaDelPlan {
     sentido: string;
     jerarquia: string;
     grupo: string;
+    /** El problema del que depende, si el servidor lo manda (plan-6). */
+    dependeDe: number | string | null;
 }
 
 export interface PlanDelEstudio {
@@ -2205,6 +2216,8 @@ export function planDe(x: unknown): PlanDelEstudio | null {
             trat: _t(s.trat),
             diferencia: _t(s.diferencia),
             pendiente: pend === 'sentido' ? 'sentido' : pend === 'razon' ? 'razon' : '',
+            con: _t(s.con),
+            dependeDe: _t(s.depende_de),
             /* El plan reparado trae el párrafo del resumen en `resumen` (el
                piso lo llama `texto`): se leen los dos. */
             texto: _t(s.texto ?? s.resumen),
@@ -2223,7 +2236,8 @@ export function planDe(x: unknown): PlanDelEstudio | null {
             const id = p ? _idProblema(p.id) : null;
             return p && id !== null
                 ? { id, pregunta: _t(p.pregunta), sentido: _t(p.sentido),
-                    jerarquia: _t(p.jerarquia), grupo: _t(p.grupo) }
+                    jerarquia: _t(p.jerarquia), grupo: _t(p.grupo),
+                    dependeDe: _idProblema(p.depende_de) }
                 : null;
         }).filter((p): p is ProblemaDelPlan => p !== null),
         segmentos,
