@@ -20,7 +20,7 @@ import SelectorFuentes from './SelectorFuentes';
 import SelectorEsfuerzo from './SelectorEsfuerzo';
 import EtiquetaIntencion from './EtiquetaIntencion';
 import { useIntencion } from '@/hooks/useIntencion';
-import { fijarIntencionDelEnvio } from '@/lib/intencion';
+import { fijarIntencionDelEnvio, type Intencion } from '@/lib/intencion';
 import { FileText, X, Network, ChevronUp, ChevronDown, UploadCloud } from 'lucide-react';
 import { validarAdjunto, EXTENSIONES_ADJUNTO, LIMITE_ADJUNTO_MB } from '@/lib/documento/adjuntos';
 import TextEnhanceModal from './TextEnhanceModal';
@@ -33,7 +33,9 @@ import { isAdmin } from '@/app/leyesestatales/adminGuard';
 
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
-    onDocumentSubmit?: (file: File, prompt: string, displayMessage: string) => void;
+    /** `intencion`: lo que dice la etiqueta «Escrito / Consulta» para ese texto
+     *  (28-sep-2026): con «Escrito», el documento se redacta en vez de analizarse. */
+    onDocumentSubmit?: (file: File, prompt: string, displayMessage: string, intencion?: Intencion | null) => void;
     onStop?: () => void;
     isLoading?: boolean;
     placeholder?: string;
@@ -121,13 +123,14 @@ export default function ChatInput({
         activeMode === 'precedentes' ? 'Precedentes' : null,
     ].filter(Boolean).join(' · ');
 
-    /* ¿ESCRITO O CONSULTA? La etiqueta sólo va en la consulta de siempre: los
-       precedentes tienen su propia ruta, el documento adjunto va a su propio
-       análisis y el modo básico no redacta. */
+    /* ¿ESCRITO O CONSULTA? Los precedentes tienen su propia ruta y el modo
+       básico no redacta. Con documento adjunto también (28-sep-2026): «Redacta
+       el recurso contra esta sentencia» se redacta en el mismo paso, y la
+       etiqueta lo anuncia antes de enviar. */
     const intencion = useIntencion(
         message,
         respuestaAnterior,
-        !basico && !attachedDocument && activeMode !== 'precedentes',
+        !basico && activeMode !== 'precedentes',
     );
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -327,7 +330,8 @@ export default function ChatInput({
 
                 if (onDocumentSubmit) {
                     // New flow: send raw file to /analyze-document for full analysis
-                    onDocumentSubmit(attachedDocument.file, userPrompt, displayMessage);
+                    // (o para redactar sobre él, si la etiqueta dice «Escrito»).
+                    onDocumentSubmit(attachedDocument.file, userPrompt, displayMessage, finalMessage ? intencion.efectiva : null);
                 } else {
                     // Fallback: send as text message (legacy)
                     onSubmit(displayMessage, true);
@@ -629,7 +633,7 @@ ${draftRequest.descripcion}`;
                                 onKeyDown={handleKeyDown}
                                 onInput={handleInput}
                                 placeholder={attachedDocument
-                                    ? "Escribe qué quieres hacer con el documento..."
+                                    ? "Pide un análisis o un escrito sobre el documento…"
                                     : placeholder
                                 }
                                 disabled={isLoading}

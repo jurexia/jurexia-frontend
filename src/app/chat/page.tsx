@@ -4,6 +4,8 @@ import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
 import { fuentesElegidas } from '@/lib/fuentes';
 import { esfuerzoParaEnviar, marcadorDeEsfuerzo } from '@/lib/esfuerzo';
+import type { Intencion } from '@/lib/intencion';
+import { despachoParaEnviar } from '@/lib/despacho';
 import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, PlayCircle, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
@@ -864,7 +866,7 @@ export default function ChatPage() {
         modoBasico, enviarBasico, profile?.subscription_type, vincularNueva]);
 
     // Document analysis via Gemini Flash (streaming from /analyze-document)
-    const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
+    const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string, intencion?: Intencion | null) => {
         if (!user) return;
         const isAdminUser = isAdmin(user?.email);
         const remaining = queriesLimit - queriesUsed;
@@ -932,6 +934,20 @@ export default function ChatPage() {
         }
         // El selector «Fuentes» vale también con documento adjunto.
         formData.append('fuentes', fuentesElegidas().join(','));
+        /* ADJUNTAR Y REDACTAR EN UN PASO (28-sep-2026): si el mensaje encarga un
+           escrito —o la etiqueta dice «Escrito»—, el servidor redacta sobre el
+           documento con el motor del Esfuerzo y el perfil del despacho, en vez
+           de analizarlo. «Consulta» en la etiqueta lo deja en análisis. */
+        const esfuerzoDoc = esfuerzoParaEnviar();
+        if (esfuerzoDoc) formData.append('esfuerzo', esfuerzoDoc);
+        if (intencion) formData.append('intencion', intencion);
+        const despachoDoc = despachoParaEnviar();
+        if (despachoDoc) formData.append('despacho', JSON.stringify(despachoDoc));
+        // El escalón con que se redacta llega antes que el texto (evento `modo`).
+        let modoDoc: string | null = null;
+        const conModo = (m: Message): Message => (modoDoc
+            ? { ...m, isPro: modoDoc === 'PRO' || modoDoc === 'PLATINUM', isPlatinum: modoDoc === 'PLATINUM', isProfesional: modoDoc === 'PROFESIONAL' }
+            : m);
 
         // El análisis de un documento adjunto también nace en el panel.
         if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
@@ -997,10 +1013,12 @@ export default function ChatPage() {
                                         };
                                     } else {
                                         // First token — create assistant message
-                                        updated.push({ role: 'assistant' as const, content: data.token });
+                                        updated.push(conModo({ role: 'assistant' as const, content: data.token }));
                                     }
                                     return updated;
                                 });
+                            } else if (data.modo) {
+                                modoDoc = String(data.modo);
                             } else if (data.progreso) {
                                 setPasoDocumento(String(data.progreso));
                             } else if (data.documento?.texto) {
