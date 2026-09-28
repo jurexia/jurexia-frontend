@@ -7,6 +7,7 @@ import { CuentaSuspendida } from '@/components/CuentaSuspendida';
 import { AvisoImpago } from '@/components/AvisoImpago';
 import { CuentaBloqueada } from '@/components/CuentaBloqueada';
 import type { User, Session } from '@supabase/supabase-js';
+import { fijarDespacho } from '@/lib/despacho';
 
 /**
  * Las rutas que un suspendido SÍ puede ver. Son las que llevan a la caja y
@@ -60,6 +61,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: false,
         bloqueo: null,
     });
+
+    /* EL PERFIL DEL DESPACHO viaja con la sesión (`user_metadata.despacho`) y
+       el envío de cada consulta lo lee de `@/lib/despacho` (28-sep-2026). */
+    useEffect(() => {
+        fijarDespacho(authState.user?.user_metadata?.despacho ?? null);
+    }, [authState.user]);
 
     // Fetch profile without blocking — fire-and-forget update
     const loadProfile = useCallback(async (user: User) => {

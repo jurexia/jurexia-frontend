@@ -12,6 +12,7 @@ import { Insignia, nivelDePlan } from '@/components/Insignia';
 import { updatePassword } from '@/lib/supabase';
 import ConnectLawyerSection from '@/components/ConnectLawyerSection';
 import AdminLawyerPanel from '@/components/AdminLawyerPanel';
+import DespachoFormulario from '@/components/DespachoFormulario';
 
 const ADMIN_EMAIL = 'administracion@iurexia.com';
 
@@ -1392,6 +1393,17 @@ export default function PerfilPage() {
                         ))}
                     </div>
                 </Tarjeta>
+
+                {/* LOS DATOS DEL DESPACHO (28-sep-2026): lo que el abogado escribe
+                    igual en todos sus escritos, para que la redacción no lo deje
+                    como [DATO PENDIENTE] cada vez. El panel de datos pendientes
+                    de la hoja enlaza aquí (#despacho). */}
+                <div id="despacho" className="scroll-mt-24">
+                    <Tarjeta icono={Building2} titulo="Datos de su despacho" acento="carbon"
+                        descripcion="Para el proemio, las notificaciones y la firma de sus escritos">
+                        <DespachoFormulario inicial={user.user_metadata?.despacho} />
+                    </Tarjeta>
+                </div>
 
                 {/* Contraseña — cerraba el ciclo que faltaba: el helper
                     updatePassword() ya existía en lib/supabase, pero no había

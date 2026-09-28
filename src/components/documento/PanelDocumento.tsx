@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDownToLine, Check, ChevronLeft, FileText, Loader2, Printer, X } from 'lucide-react';
+import { AlertTriangle, ArrowDownToLine, Check, ChevronLeft, FileText, Loader2, Printer, X } from 'lucide-react';
 import { Hoja, type HojaAPI } from './Hoja';
 import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
 import {
@@ -10,7 +10,7 @@ import {
 import { recortarABloque } from '@/lib/documento/revelado';
 import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
 import { guardarEdicion, leerEdicion, type EdicionHoja } from '@/lib/documento/edicionHoja';
-import { markdownDeHoja } from '@/lib/documento/marcado';
+import { datosPendientes, markdownDeHoja, type DatoPendiente } from '@/lib/documento/marcado';
 
 /**
  * EL PANEL DOCUMENTO: la hoja tipo Word acoplada al chat (18-sep-2026).
@@ -121,6 +121,15 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     const [aviso, setAviso] = useState('');
     const [versionElegida, setVersionElegida] = useState('');
     const relojAviso = useRef<number | null>(null);
+    /* LOS DATOS PENDIENTES (28-sep-2026): los «[DATO PENDIENTE: …]» que
+       quedan en la hoja, para llenarlos de una vez sin buscarlos a mano. */
+    const [pendientes, setPendientes] = useState<DatoPendiente[]>([]);
+    const [verPendientes, setVerPendientes] = useState(false);
+    const [valores, setValores] = useState<Record<string, string>>({});
+    const recontar = () => {
+        const nuevos = datosPendientes(hoja.current?.raiz()?.textContent ?? '');
+        setPendientes((viejos) => (JSON.stringify(viejos) === JSON.stringify(nuevos) ? viejos : nuevos));
+    };
 
     /* ── DÓNDE SE DESPLIEGA: la misma geometría que el constructor ──────── */
     const [disp, setDisp] = useState({ lateral: false, ancho: 0 });
@@ -285,6 +294,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         editada.current = true;
         pendiente.current = null;   // lo que teclea ahora manda sobre lo guardado
         guardar(html);
+        recontar();
     };
 
     useEffect(() => {
@@ -372,6 +382,21 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         else if (sustituidos) mostrarAviso('La versión corregida sustituyó a la anterior, con tus cambios. La anterior sigue en «Versiones».');
     }, [clave, bloques, segmentos]);
 
+    // Detrás del efecto que escribe la hoja: cuenta lo que quedó en ella.
+    useEffect(() => { recontar(); }, [clave, bloques, segmentos]);
+    useEffect(() => { setVerPendientes(false); setValores({}); }, [clave]);
+
+    function ponerDato(p: DatoPendiente) {
+        const valor = (valores[p.marca] ?? '').trim();
+        if (!valor) return;
+        const veces = hoja.current?.reemplazarTexto(p.marca, valor) ?? 0;
+        setValores((v) => { const n = { ...v }; delete n[p.marca]; return n; });
+        recontar();
+        mostrarAviso(veces
+            ? `Dato puesto ${veces === 1 ? 'en su lugar' : `en ${veces} lugares`}.`
+            : 'Ese hueco ya no está en la hoja tal cual: búsquelo a mano.');
+    }
+
     const tituloEfectivo = nombre.trim() || titulo || 'Documento de Iurexia';
 
     function mostrarAviso(texto: string) {
@@ -438,6 +463,9 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         try {
             const referencias = new Map(orden.map((id) => [id, referenciaAPA(fuenteDeCita(meta, id))]));
             await aWord(raiz, tituloEfectivo, papel, referencias);
+            // Se descarga igual —es su documento—, pero se le dice.
+            const faltan = pendientes.reduce((n, p) => n + p.veces, 0);
+            if (faltan) mostrarAviso(`Ojo: el Word lleva ${faltan} ${faltan === 1 ? 'dato pendiente' : 'datos pendientes'} por llenar.`);
         } catch { mostrarAviso('No se pudo generar el Word. Vuelve a intentarlo.'); }
         finally { setExportando(false); }
     }
@@ -553,6 +581,14 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                 ) : (
                     <span>La primera respuesta se escribirá aquí.</span>
                 )}
+                {pendientes.length > 0 && (
+                    <button type="button" onClick={() => setVerPendientes((v) => !v)} aria-expanded={verPendientes}
+                        data-guide="datos-pendientes"
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-900 transition-colors hover:bg-amber-200">
+                        <AlertTriangle className="h-3 w-3" />
+                        {pendientes.length} {pendientes.length === 1 ? 'dato pendiente' : 'datos pendientes'}
+                    </button>
+                )}
                 <span className="ml-auto tabular-nums">
                     {palabras ? `${palabras.toLocaleString('es-MX')} palabras` : ''}
                 </span>
@@ -563,6 +599,53 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     {cuentaCitas.verificadas > 0 ? ` · ${cuentaCitas.verificadas} ${cuentaCitas.verificadas === 1 ? 'verificada' : 'verificadas'}` : ''}
                 </span>
             </footer>
+
+            {/* ── LOS DATOS PENDIENTES, para llenarlos de una vez ─────────── */}
+            {verPendientes && pendientes.length > 0 && (
+                <div role="dialog" aria-label="Datos pendientes"
+                    className="absolute bottom-11 right-3 z-40 flex max-h-[60vh] w-[min(24rem,calc(100%-1.5rem))] flex-col overflow-hidden rounded-xl border border-charcoal-900/10 bg-white shadow-[0_12px_40px_rgba(17,17,17,0.18)]">
+                    <div className="flex items-center gap-2 border-b border-charcoal-900/10 px-4 py-2.5">
+                        <p className="flex-1 font-serif text-[15px] text-charcoal-900">Datos pendientes</p>
+                        <button type="button" onClick={() => setVerPendientes(false)} aria-label="Cerrar"
+                            className="grid h-7 w-7 place-items-center rounded-md text-charcoal-900/60 hover:bg-charcoal-900/5 hover:text-charcoal-900">
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                    <ul className="min-h-0 flex-1 divide-y divide-charcoal-900/5 overflow-y-auto">
+                        {pendientes.map((p) => (
+                            <li key={p.marca} className="px-4 py-2.5">
+                                <div className="mb-1.5 flex items-start gap-2">
+                                    <span className="min-w-0 flex-1 text-[12.5px] font-medium leading-snug text-charcoal-900">{p.dato}</span>
+                                    {p.veces > 1 && <span className="shrink-0 rounded-full bg-cream-200 px-1.5 text-[10.5px] font-semibold text-charcoal-700">×{p.veces}</span>}
+                                    <button type="button" onClick={() => hoja.current?.senalar(p.marca)}
+                                        className="shrink-0 text-[11.5px] font-medium text-accent-brown underline-offset-2 hover:underline">
+                                        Ver
+                                    </button>
+                                </div>
+                                <form className="flex gap-1.5" onSubmit={(e) => { e.preventDefault(); ponerDato(p); }}>
+                                    <input
+                                        value={valores[p.marca] ?? ''}
+                                        onChange={(e) => setValores((v) => ({ ...v, [p.marca]: e.target.value }))}
+                                        placeholder="Escriba el dato…"
+                                        aria-label={p.dato}
+                                        className="min-w-0 flex-1 rounded-md border border-charcoal-900/15 bg-cream-50 px-2 py-1.5 text-[12.5px] text-charcoal-900 focus:border-accent-gold focus:outline-none"
+                                    />
+                                    <button type="submit" disabled={!(valores[p.marca] ?? '').trim()}
+                                        className="shrink-0 rounded-md bg-charcoal-900 px-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-charcoal-800 disabled:opacity-35">
+                                        Poner
+                                    </button>
+                                </form>
+                            </li>
+                        ))}
+                    </ul>
+                    <p className="border-t border-charcoal-900/10 bg-cream-100/60 px-4 py-2 text-[11.5px] leading-snug text-charcoal-600">
+                        ¿Le faltan siempre los mismos —domicilio, cédula, autorizados—?{' '}
+                        <a href="/perfil#despacho" target="_blank" rel="noopener" className="font-medium text-accent-brown underline-offset-2 hover:underline">
+                            Guárdelos en los datos de su despacho
+                        </a>{' '}y los próximos escritos ya los llevan.
+                    </p>
+                </div>
+            )}
 
             <div role="status" aria-live="polite" className={`pointer-events-none fixed bottom-14 z-50 flex justify-center px-4 ${disp.lateral ? 'right-0' : 'inset-x-0'}`} style={disp.lateral ? { width: disp.ancho } : undefined}>
                 {aviso && (

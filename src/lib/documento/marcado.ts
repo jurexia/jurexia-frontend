@@ -570,6 +570,34 @@ export function markdownDeHoja(raiz: HTMLElement): string {
     return partes.join('\n\n')
 }
 
+/* ═══ LOS DATOS PENDIENTES DE LA HOJA (28-sep-2026) ══════════════════════
+   Lo que el modelo no sabía queda en el escrito como «[DATO PENDIENTE: …]»
+   (la regla de los tres registros del prompt de redacción). El abogado los
+   buscaba a mano antes de firmar; el panel de la hoja los enumera y los llena
+   de una vez. Se agrupan por su texto exacto, que es lo que se sustituye. */
+export interface DatoPendiente {
+    /** El hueco tal cual está en la hoja: «[DATO PENDIENTE: fecha de …]». */
+    marca: string;
+    /** Lo que falta: «fecha de …». */
+    dato: string;
+    veces: number;
+}
+
+// Contenido acotado que no cruza otro corchete ni un renglón: lineal.
+const RX_DATO_PENDIENTE = /\[[ \t]{0,8}DATO[ \t]{1,8}PENDIENTE[ \t]{0,8}:[ \t]{0,8}([^\[\]\n]{1,200})\]/gi
+
+export function datosPendientes(texto: string): DatoPendiente[] {
+    const porMarca = new Map<string, DatoPendiente>()
+    for (const m of Array.from((texto || '').matchAll(RX_DATO_PENDIENTE))) {
+        const dato = m[1].trim()
+        if (!dato) continue
+        const hallado = porMarca.get(m[0])
+        if (hallado) hallado.veces++
+        else porMarca.set(m[0], { marca: m[0], dato, veces: 1 })
+    }
+    return Array.from(porMarca.values())
+}
+
 /** Dónde empieza lo que el abogado lee: tras el último razonamiento cerrado,
  *  en cualquiera de sus dos marcadores. Con uno abierto después, todo lo que
  *  queda es razonamiento todavía. */

@@ -5,6 +5,7 @@
 import { fuentesElegidas, FUENTES } from './fuentes';
 import { esfuerzoParaEnviar } from './esfuerzo';
 import { intencionParaEnviar, type Intencion } from './intencion';
+import { despachoParaEnviar } from './despacho';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
@@ -195,6 +196,10 @@ async function* streamChatInternal(
             // La etiqueta «Escrito / Consulta»: si viaja, manda sobre el
             // detector. Ver `./intencion`.
             ...(extra?.intencion ? { intencion: extra.intencion } : {}),
+            // El perfil del despacho: con qué nombre firma, su domicilio
+            // procesal, sus autorizados. El servidor sólo lo usa al redactar.
+            // Ver `./despacho`.
+            ...(despachoParaEnviar() ? { despacho: despachoParaEnviar() } : {}),
             ...(fuentesVerificadas().length ? { fuentes_previas: fuentesVerificadas() } : {}),
             ...(fuero ? { fuero } : {}),
         }),
