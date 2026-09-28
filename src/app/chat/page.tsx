@@ -23,9 +23,10 @@ import { hayTestigoBasico, preguntarBasico, markdownDeBasico, BLOQUEADO_POR_OMIS
 import PanelBasico from '@/components/PanelBasico';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
-import type { VersionDocumento } from '@/components/documento/PanelDocumento';
+import { escritoEnLaHoja, type BloqueDocumento, type VersionDocumento } from '@/components/documento/PanelDocumento';
 import { SEP_DOSSIER } from '@/lib/documento/citas';
-import { markdownAHtml, limpiarMarcadores, separarNota } from '@/lib/documento/marcado';
+import { markdownAHtml, limpiarMarcadores, reemplazaEscrito, separarNota } from '@/lib/documento/marcado';
+import { bloquesDelDossier, respuestasSustituidas } from '@/lib/documento/dossier';
 import { abrirCitaConFicha, fuentesDeLaConversacion, olvidarFallos, useFichasDeCitas } from '@/lib/documento/fichas';
 import { olvidarEdicion } from '@/lib/documento/edicionHoja';
 import { estadoPiloto } from '@/components/sentencia/api';
@@ -438,6 +439,25 @@ export default function ChatPage() {
     const todoElAcervo = useCallback(() => redaccionFlujoRef.current !== null, []);
     // Las partes de un flujo ya se pagaron con el flujo: no descuentan consultas.
     const sinCobro = todoElAcervo;
+    /* EL RETOQUE PARTE DE LA HOJA (28-sep-2026). Si el abogado corrigió a mano
+       la última respuesta, lo que viaja como respuesta anterior es el escrito
+       tal como está en la hoja —con sus citas— y no el que escribió el
+       modelo: «agrega un concepto» no puede devolverle el nombre mal escrito
+       que ya había corregido. Sólo cambia lo que viaja. La conversación de la
+       hoja se lee de una referencia: el estado se declara más abajo. */
+    const claveHojaRef = useRef<string | null>(null);
+    const historialParaEnviar = useCallback((mensajes: Message[]) => {
+        let k = -1;
+        for (let i = mensajes.length - 1; i >= 0; i--) {
+            if (mensajes[i].role === 'assistant') { k = i; break; }
+        }
+        if (k === -1) return mensajes;
+        const enHoja = escritoEnLaHoja(claveHojaRef.current, `m${k}`);
+        if (!enHoja) return mensajes;
+        const copia = mensajes.slice();
+        copia[k] = { ...mensajes[k], content: enHoja };
+        return copia;
+    }, []);
 
     // Chat Hook
     const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos, limpiarPasos } = useChat({
@@ -451,6 +471,7 @@ export default function ChatPage() {
         contextoSistema,
         todoElAcervo,
         sinCobro,
+        historialParaEnviar,
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -479,6 +500,7 @@ export default function ChatPage() {
     const [showLimitModal, setShowLimitModal] = useState(false);
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeConversationId, setActiveConvId] = useState<string | null>(null);
+    claveHojaRef.current = activeConversationId ?? 'nueva';
     const [conversationsLoading, setConversationsLoading] = useState(true);
 
     /* ═══ CARPETAS Y FLUJOS (25-sep-2026) ═══
@@ -1331,28 +1353,15 @@ export default function ChatPage() {
 
     /* ═══ EL DOSSIER QUE VE EL PANEL ═══
        Todas las respuestas terminadas de la conversación, en orden, y aparte
-       la que está llegando (vista previa). El panel las escribe seguidas.
-       SIN LA NOTA PARA EL ABOGADO (28-sep-2026): lo que va después del
-       escrito —qué verificar, el punto débil— se enseña en la burbuja; en la
-       hoja acababa impreso en el Word que se presenta. Ver `separarNota`.
-       Lo ya separado se recuerda: esto corre con cada trozo que llega, y
-       volver a leer todas las respuestas terminadas en cada uno no tiene
-       sentido. La memoria guarda sólo las de ahora. */
-    const escritosSinNota = useRef(new Map<string, string>());
-    const bloquesDocumento = useMemo(() => {
+       la que está llegando (vista previa). El panel las escribe seguidas,
+       sin la nota para el abogado y con cada retoque en lugar del escrito
+       que corrige. Ver `@/lib/documento/dossier`. */
+    const escritosSinNota = useRef<ReadonlyMap<string, string>>(new Map());
+    const bloquesDocumento = useMemo<BloqueDocumento[]>(() => {
         const trabajando = isLoading || isDocumentAnalyzing || analisisEnVuelo;
-        const salida: { id: string; markdown: string }[] = [];
-        const antes = escritosSinNota.current;
-        const ahora = new Map<string, string>();
-        messages.forEach((m, i) => {
-            if (m.role !== 'assistant' || !m.content.trim()) return;
-            if (trabajando && i === messages.length - 1) return;   // la que llega va aparte
-            const escrito = antes.get(m.content) ?? separarNota(m.content).escrito;
-            ahora.set(m.content, escrito);
-            salida.push({ id: `m${i}`, markdown: escrito });
-        });
-        escritosSinNota.current = ahora;
-        return salida;
+        const { bloques, memoria } = bloquesDelDossier(messages, trabajando, escritosSinNota.current);
+        escritosSinNota.current = memoria;
+        return bloques;
     }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
     const vivoDocumento = useMemo(() => {
         if (!(isLoading || isDocumentAnalyzing || analisisEnVuelo)) return null;
@@ -1368,6 +1377,10 @@ export default function ChatPage() {
            no finge: la hoja se queda como está y el pie dice por dónde va. */
         return ultimo?.role === 'assistant' ? separarNota(ultimo.content).escrito : null;
     }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
+    // La que llega es un retoque que sustituirá al escrito anterior.
+    const vivoReemplaza = vivoDocumento !== null && reemplazaEscrito(vivoDocumento);
+    // Las respuestas cuyo escrito sustituyó un retoque posterior: su burbuja lo dice.
+    const sustituidas = useMemo(() => respuestasSustituidas(messages), [messages]);
     const hayDocumento = bloquesDocumento.length > 0 || vivoDocumento !== null;
     const tituloDocumento = useMemo(() => {
         const primera = messages.find((m) => m.role === 'user');
@@ -1407,6 +1420,7 @@ export default function ChatPage() {
             : [...vs, {
                 id: ultimo.id, titulo: tituloDocumento, fecha: Date.now(),
                 markdown: bloquesDocumento.map((b) => b.markdown).join(`\n\n${SEP_DOSSIER}\n\n`),
+                ids: bloquesDocumento.map((b) => b.id),
             }].slice(-12));
     }, [bloquesDocumento, tituloDocumento]);
     const verDocumento = useCallback(() => {
@@ -1810,7 +1824,7 @@ export default function ChatPage() {
                                 const assistantCount = messages.slice(0, index + 1).filter(m => m.role === 'assistant').length;
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
-                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} basico={modoBasico} onVerDocumento={verDocumento} onDesarrollar={modoBasico ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
+                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} sustituido={sustituidas.has(index)} basico={modoBasico} onVerDocumento={verDocumento} onDesarrollar={modoBasico ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
                                     </div>
                                 );
                             })}
@@ -2207,6 +2221,7 @@ export default function ChatPage() {
                 versiones={versiones}
                 onCerrar={() => setDocumentoAbierto(false)}
                 onCita={handleCitationClick}
+                vivoReemplaza={vivoReemplaza}
             />
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 

@@ -6,6 +6,7 @@ import { unirRecorrido } from '@/lib/fuentes';
 import { getSession } from '@/lib/supabase';
 import { checkCanQuery, getSubscriptionInfo } from '@/lib/supabase';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
+import { MARCA_REEMPLAZA } from '@/lib/documento/marcado';
 
 interface UseChatOptions {
     estado?: string;
@@ -27,6 +28,12 @@ interface UseChatOptions {
      *  `user_id` (el servidor sólo cobra cuando lo recibe). Lo usan las partes
      *  de un flujo, que ya se pagó con UN flujo del mes al empezar. */
     sinCobro?: () => boolean;
+    /** El historial tal como sale al servidor (28-sep-2026): la pantalla del
+     *  chat cambia la última respuesta por el escrito como está en la hoja,
+     *  con lo que el abogado corrigió a mano, para que un retoque parta de
+     *  ahí. Como `contextoSistema`, sólo toca lo que viaja: ni el estado ni el
+     *  historial guardado. */
+    historialParaEnviar?: (mensajes: Message[]) => Message[];
 }
 
 interface UseChatReturn {
@@ -258,6 +265,13 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             let isProMode = false;
             let isPlatinumMode = false;
             let isProfesionalMode = false;
+            // «Esta respuesta sustituye al escrito anterior en la hoja»
+            // (28-sep-2026). Llega sola, antes del texto: si entrara como
+            // contenido crearía el mensaje sin nada que enseñar y apagaría la
+            // ramificación. Se aparta y se antepone al texto, que es lo que se
+            // guarda: al volver a abrir la conversación la hoja se arma igual.
+            let reemplazaEscrito = false;
+            const conMarca = (t: string) => (reemplazaEscrito && t.trim() ? MARCA_REEMPLAZA + t : t);
             // Registros citados que NO venían en el acervo. El backend los
             // detecta comparando contra el contexto recuperado; aquí se
             // recogen para que el sello los señale.
@@ -278,11 +292,20 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
             // La carpeta y el flujo viajan delante, como sistema. Si armarlos
             // falla, la consulta sale sin ellos: nunca se queda sin enviar.
+            // Lo mismo con el escrito de la hoja: si no se puede leer, viaja
+            // la respuesta tal como llegó.
             let paraEnviar: Message[] = updatedMessages;
+            if (options.historialParaEnviar) {
+                try {
+                    paraEnviar = options.historialParaEnviar(updatedMessages);
+                } catch (errHoja) {
+                    console.warn('[useChat] escrito de la hoja omitido:', errHoja);
+                }
+            }
             if (options.contextoSistema) {
                 try {
                     const contexto = await options.contextoSistema(!messages.some(m => m.role === 'assistant'));
-                    if (contexto) paraEnviar = [{ role: 'system', content: contexto }, ...updatedMessages];
+                    if (contexto) paraEnviar = [{ role: 'system', content: contexto }, ...paraEnviar];
                 } catch (errCtx) {
                     console.warn('[useChat] contexto de carpeta omitido:', errCtx);
                 }
@@ -386,6 +409,13 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     if (!remaining.trim()) continue;
                 }
 
+                if (chunk.includes(MARCA_REEMPLAZA)) {
+                    reemplazaEscrito = true;
+                    const resto = chunk.split(MARCA_REEMPLAZA).join('');
+                    if (!resto.trim()) continue;
+                    chunk = resto;
+                }
+
                 // Escalón base. Se captura para que TODA respuesta de redacción
                 // diga con qué motor se escribió, no sólo las de pago.
                 if (chunk.includes('<!--MODE:PROFESIONAL-->')) {
@@ -415,7 +445,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 // Feed chunk to the buffer-based parser (handles split markers)
                 parser.feed(chunk);
 
-                const displayContent = parser.getDisplayContent();
+                const displayContent = conMarca(parser.getDisplayContent());
 
                 // El mensaje del asistente se crea con el primer contenido REAL,
                 // no con el primer trozo.
@@ -455,7 +485,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
             // Final update — also handle edge case where thinking produced
             // reasoning but ZERO content (model exhausted max_tokens in reasoning)
-            let finalDisplay = parser.getDisplayContent();
+            let finalDisplay = conMarca(parser.getDisplayContent());
             if (parser.thinking && !parser.content.trim()) {
                 // The model used all tokens on reasoning with no answer.
                 // Surface the reasoning as actual content so user isn't left empty.
@@ -583,7 +613,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             sendingRef.current = false;
         }
         return respuestaFinal;
-    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive, options.contextoSistema, options.todoElAcervo, options.sinCobro]);
+    }, [messages, isLoading, options.estado, options.topK, options.fuero?.join(','), options.onQuotaExceeded, options.onQueryCompleted, options.genioIds, options.onCacheActive, options.contextoSistema, options.todoElAcervo, options.sinCobro, options.historialParaEnviar]);
 
     const clearMessages = useCallback(() => {
         setMessages([]);

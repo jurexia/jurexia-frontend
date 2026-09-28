@@ -39,6 +39,9 @@ export interface HojaAPI {
     insertar: (html: string, donde?: 'final' | 'cursor') => void;
     /** Sustituye el documento entero. */
     reemplazar: (html: string) => void;
+    /** Sustituye un bloque del dossier (`[data-bloque]`) por `html`, en su
+     *  sitio. Falso si ya no está: el abogado pudo borrarlo o fundirlo. */
+    sustituirBloque: (id: string, html: string) => boolean;
     vacia: () => boolean;
 }
 
@@ -111,6 +114,19 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
             hoja.current.innerHTML = html;
             cambio.current(html);
         },
+        sustituirBloque: (id: string, html: string) => {
+            const nodo = hoja.current;
+            const viejo = nodo
+                ? Array.from(nodo.querySelectorAll<HTMLElement>('[data-bloque]')).find((e) => e.dataset.bloque === id)
+                : undefined;
+            if (!nodo || !viejo) return false;
+            viejo.insertAdjacentHTML('afterend', html);
+            const nuevo = viejo.nextElementSibling as HTMLElement | null;
+            viejo.remove();
+            nuevo?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            cambio.current(nodo.innerHTML);
+            return true;
+        },
         insertar: (html: string, donde = 'final') => {
             const nodo = hoja.current;
             if (!nodo) return;
@@ -164,7 +180,7 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
         if (!nodo || !sel || sel.rangeCount === 0) return [];
         const rango = sel.getRangeAt(0);
         if (!nodo.contains(rango.commonAncestorContainer)) return [];
-        const esBloque = (el: Element) => /^(P|H1|H2|H3|BLOCKQUOTE|LI|DIV)$/.test(el.tagName) && el !== nodo;
+        const esBloque = (el: Element) => /^(P|H1|H2|H3|BLOCKQUOTE|LI|DIV)$/.test(el.tagName) && el !== nodo && !el.hasAttribute('data-bloque');
         const subir = (n: Node | null): HTMLElement | null => {
             let x: Node | null = n;
             while (x && x !== nodo) {

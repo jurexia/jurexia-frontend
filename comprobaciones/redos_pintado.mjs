@@ -128,6 +128,7 @@ function funciones(x) {
         'respuestaDelChat.limpiarParaExportar': (t) => x.R.limpiarParaExportar(t, rec._docIdMap),
         'citas.rubroCorresponde': (t) => x.C.rubroCorresponde(t, t.slice(0, 400)),
         'marcado.textoDeHtml': (t) => x.M.textoDeHtml(arbolDeTexto(t)),
+        'marcado.markdownDeHoja': (t) => x.M.markdownDeHoja(arbolDeTexto(t)),
     };
     const lista = [];
     const sinAdaptador = [];

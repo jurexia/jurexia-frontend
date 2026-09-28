@@ -9,7 +9,7 @@ import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro
 import type { Message } from '@/lib/api';
 import { recortarABloque, useRevelado } from '@/lib/documento/revelado';
 import { type MetaCitas, fuenteDeCita, referenciaAPA } from '@/lib/documento/citas';
-import { limpiarMarcadores, separarNota } from '@/lib/documento/marcado';
+import { limpiarMarcadores, reemplazaEscrito, separarNota } from '@/lib/documento/marcado';
 import { enlaceOficialCoidh, esCoidh } from '@/lib/coidh';
 import { enlaceBJV, esDoctrina } from '@/lib/doctrina';
 import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
@@ -32,6 +32,9 @@ interface ChatMessageProps {
     /** La respuesta vive en el panel Documento: aquí sólo se resume y se enlaza. */
     enDocumento?: boolean;
     onVerDocumento?: () => void;
+    /** Un retoque posterior entregó este escrito corregido y ocupó su lugar
+     *  en la hoja (28-sep-2026). */
+    sustituido?: boolean;
     /** MODO BÁSICO (18-sep-2026): la respuesta se lee EN EL HILO y nada más.
      *  Sin hoja de Word, sin exportar, sin carpeta y sin sello de citas: aquí
      *  no hay verificación contra el acervo que sellar, y las fuentes ya van
@@ -52,7 +55,7 @@ const TRATAMIENTOS_CHAT: Record<string, string> = {
 
 
 
-export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, onDesarrollar, enDocumento = false, onVerDocumento , basico = false }: ChatMessageProps) {
+export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, onDesarrollar, enDocumento = false, onVerDocumento , basico = false, sustituido = false }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
@@ -973,8 +976,19 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         : <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent-brown" />}
                                     <div className="min-w-0 flex-1">
                                         <p className="text-sm font-semibold text-charcoal-900">
-                                            {isStreaming ? 'Escribiendo en el documento…' : 'Escrito en el documento'}
+                                            {/* El retoque que corrige el escrito va EN LUGAR del
+                                                anterior (28-sep-2026): se dice, en los dos. */}
+                                            {sustituido
+                                                ? 'Versión anterior del escrito'
+                                                : reemplazaEscrito(message.content)
+                                                    ? (isStreaming ? 'Corrigiendo el escrito en el documento…' : 'Escrito corregido en el documento')
+                                                    : (isStreaming ? 'Escribiendo en el documento…' : 'Escrito en el documento')}
                                         </p>
+                                        {sustituido && (
+                                            <p className="mt-0.5 text-xs text-charcoal-500">
+                                                La sustituyó la versión corregida; sigue en «Versiones» del documento.
+                                            </p>
+                                        )}
                                         <p className="mt-0.5 text-xs text-charcoal-500">
                                             {processedContent.trim() ? processedContent.trim().split(/\s+/).length.toLocaleString('es-MX') : 0} palabras
                                             {docIdMap.size > 0 ? ` · ${docIdMap.size} ${docIdMap.size === 1 ? 'cita' : 'citas'}` : ''}

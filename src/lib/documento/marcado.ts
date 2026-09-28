@@ -493,6 +493,83 @@ export function separarNota(md: string): { escrito: string; nota: string } {
     }
 }
 
+/* ═══ EL RETOQUE, EN SU LUGAR (28-sep-2026) ═══════════════════════════════
+   Un retoque que modifica el escrito —«agrega un concepto…»— llega marcado
+   (`MARCA_REEMPLAZA` en esfuerzo_redaccion.py del API): es el escrito entero
+   con el cambio, y la hoja lo pone EN LUGAR del anterior en vez de anexarlo
+   debajo. La marca va al principio y se guarda con el mensaje. */
+export const MARCA_REEMPLAZA = '<!--REEMPLAZA_ESCRITO-->'
+
+/** ¿Esta respuesta sustituye al escrito anterior? */
+export function reemplazaEscrito(md: string | null | undefined): boolean {
+    return (md || '').trimStart().startsWith(MARCA_REEMPLAZA)
+}
+
+/**
+ * EL ESCRITO DE LA HOJA, DE VUELTA A MARKDOWN (28-sep-2026).
+ *
+ * Para que el retoque parta de lo que el abogado corrigió a mano, la pantalla
+ * manda como respuesta anterior el escrito tal como está en la hoja. Lo que
+ * importa conservar: los rubros y la negrita (el formato del escrito), las
+ * listas con su número, y sobre todo las citas: cada ficha [N] vuelve a ser
+ * «[Doc ID: uuid]», o el escrito corregido saldría sin fuentes.
+ */
+export function markdownDeHoja(raiz: HTMLElement): string {
+    const enLinea = (n: Node): string => {
+        if (n.nodeType === 3) return (n.textContent || '').replace(/\s+/g, ' ')
+        if (!(n instanceof HTMLElement)) return ''
+        const etiqueta = n.tagName
+        if (etiqueta === 'BR') return '\n'
+        const id = n.getAttribute('data-doc-id')
+        if (id && n.classList.contains('citation-badge')) return ` [Doc ID: ${id}]`
+        const dentro = Array.from(n.childNodes).map(enLinea).join('')
+        if ((etiqueta === 'B' || etiqueta === 'STRONG') && dentro.trim()) return `**${dentro.trim()}**`
+        if ((etiqueta === 'I' || etiqueta === 'EM') && dentro.trim()) return `*${dentro.trim()}*`
+        return dentro
+    }
+    const limpio = (t: string) => t.split('\n').map((l) => l.replace(/[ \t]+/g, ' ').trim()).join('\n').trim()
+    const partes: string[] = []
+    let suelto = ''
+    const volcar = () => { const t = limpio(suelto); if (t) partes.push(t); suelto = '' }
+    const recorrer = (padre: HTMLElement) => {
+        for (const n of Array.from(padre.childNodes)) {
+            if (!(n instanceof HTMLElement)) { suelto += enLinea(n); continue }
+            const etiqueta = n.tagName
+            if (etiqueta === 'UL' || etiqueta === 'OL') {
+                volcar()
+                const base = parseInt(n.getAttribute('start') || '1', 10) || 1
+                const items = Array.from(n.children)
+                    .map((li, i) => ({ t: limpio(enLinea(li)), i }))
+                    .filter((x) => x.t)
+                    .map((x) => (etiqueta === 'OL' ? `${base + x.i}. ${x.t}` : `- ${x.t}`))
+                if (items.length) partes.push(items.join('\n'))
+            } else if (/^H[1-6]$/.test(etiqueta)) {
+                volcar()
+                const t = limpio(enLinea(n)).replace(/\*\*/g, '')
+                if (t) partes.push(`**${t}**`)
+            } else if (etiqueta === 'BLOCKQUOTE') {
+                volcar()
+                const t = limpio(enLinea(n))
+                if (t) partes.push(t.split('\n').map((l) => `> ${l}`).join('\n'))
+            } else if (etiqueta === 'HR') {
+                volcar()
+            } else if (etiqueta === 'DIV' || etiqueta === 'SECTION' || etiqueta === 'ARTICLE') {
+                volcar()
+                recorrer(n)
+            } else if (etiqueta === 'P' || etiqueta === 'PRE' || etiqueta === 'TABLE') {
+                volcar()
+                const t = limpio(enLinea(n))
+                if (t) partes.push(t)
+            } else {
+                suelto += enLinea(n)
+            }
+        }
+        volcar()
+    }
+    recorrer(raiz)
+    return partes.join('\n\n')
+}
+
 /** Dónde empieza lo que el abogado lee: tras el último razonamiento cerrado,
  *  en cualquiera de sus dos marcadores. Con uno abierto después, todo lo que
  *  queda es razonamiento todavía. */

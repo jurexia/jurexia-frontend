@@ -10,6 +10,7 @@ import {
 import { recortarABloque } from '@/lib/documento/revelado';
 import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
 import { guardarEdicion, leerEdicion, type EdicionHoja } from '@/lib/documento/edicionHoja';
+import { markdownDeHoja } from '@/lib/documento/marcado';
 
 /**
  * EL PANEL DOCUMENTO: la hoja tipo Word acoplada al chat (18-sep-2026).
@@ -43,6 +44,9 @@ export interface BloqueDocumento {
     /** Identifica la respuesta dentro de la conversación (m<índice>). */
     id: string;
     markdown: string;
+    /** El bloque al que sustituye: un retoque que entrega el escrito entero
+     *  ya corregido va EN LUGAR del anterior (28-sep-2026). */
+    reemplaza?: string;
 }
 
 export interface VersionDocumento {
@@ -51,6 +55,41 @@ export interface VersionDocumento {
     /** El dossier entero en ese momento, con SEP_DOSSIER entre respuestas. */
     markdown: string;
     fecha: number;
+    /** Los bloques de ese dossier, en orden: al volver a una versión, la hoja
+     *  los envuelve como los demás y un retoque posterior los encuentra. */
+    ids?: string[];
+}
+
+/* ═══ CADA RESPUESTA, EN SU ENVOLTORIO (28-sep-2026) ══════════════════════
+   Cada bloque del dossier va en `<div data-bloque="m<índice>">`: así un
+   retoque puede ponerse EN LUGAR del escrito que corrige, también en una hoja
+   editada, y la pantalla puede leer ese escrito tal como lo dejó el abogado.
+   El exportador de Word y la revisión ya recorren los `div` con párrafos
+   dentro como si sus hijos estuvieran sueltos. */
+export function envolverBloque(id: string, html: string): string {
+    return `<div data-bloque="${id.replace(/[^\w-]/g, '')}">${html}</div>`;
+}
+
+function bloquesEnLaHoja(raiz: HTMLElement | null | undefined): string[] {
+    if (!raiz) return [];
+    return Array.from(raiz.querySelectorAll<HTMLElement>('[data-bloque]')).map((e) => e.dataset.bloque || '');
+}
+
+/* ═══ EL ESCRITO COMO ESTÁ EN LA HOJA (28-sep-2026) ═══════════════════════
+   El chat lo pide al enviar: si el abogado corrigió a mano la última
+   respuesta, ésa es la que el modelo debe retocar, no la que escribió. Sólo
+   hay una hoja montada en el chat; se registra aquí mientras vive. */
+let hojaViva: { clave: () => string | null; raiz: () => HTMLElement | null; editada: () => boolean } | null = null;
+
+/** El markdown del bloque `id` tal como está en la hoja de la conversación
+ *  `clave`, o null si la hoja no está editada o el bloque ya no está. */
+export function escritoEnLaHoja(clave: string | null | undefined, id: string): string | null {
+    const h = hojaViva;
+    if (!h || !clave || h.clave() !== clave || !h.editada()) return null;
+    const bloque = Array.from(h.raiz()?.querySelectorAll<HTMLElement>('[data-bloque]') ?? []).find((e) => e.dataset.bloque === id);
+    if (!bloque) return null;
+    const md = markdownDeHoja(bloque).trim();
+    return md || null;
 }
 
 interface Props {
@@ -69,9 +108,11 @@ interface Props {
     versiones: VersionDocumento[];
     onCerrar: () => void;
     onCita?: (fuente: FuenteCita) => void;
+    /** La respuesta que llega es un retoque que sustituirá al escrito anterior. */
+    vivoReemplaza?: boolean;
 }
 
-export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, paso, versiones, onCerrar, onCita }: Props) {
+export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, paso, versiones, onCerrar, onCita, vivoReemplaza = false }: Props) {
     const hoja = useRef<HojaAPI | null>(null);
     const raizRef = useRef<HTMLDivElement | null>(null);
     const [nombre, setNombre] = useState('');
@@ -146,13 +187,21 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     const cuentaCitas = useMemo(() => resumenDeCitas(orden, meta, estadoFichas), [orden, meta, estadoFichas]);
     const palabras = useMemo(() => palabrasDe(partes.join(' ')), [partes]);
     const enVivo = vivo !== null;
-    const htmlBase = useMemo(() => segmentos.slice(0, bloques.length).join('<hr>'), [segmentos, bloques.length]);
+    /* Los bloques terminados, cada uno en su envoltorio. */
+    const htmlDeBloques = (desde: number, hasta: number) => segmentos
+        .slice(desde, hasta)
+        .map((h, i) => envolverBloque(bloques[desde + i]?.id ?? `b${desde + i}`, h))
+        .join('<hr>');
+    const htmlBase = useMemo(() => htmlDeBloques(0, bloques.length), [segmentos, bloques]);
     const htmlVivo = enVivo ? (segmentos[bloques.length] ?? '') : null;
 
     /* LO QUE YA ESTÁ EN LA HOJA. Al montar (o al cambiar de conversación) la
        hoja arranca con todas las respuestas terminadas; cada vez que termina
        una nueva se INSERTA al final, sin tocar lo que el abogado editó. */
     const insertados = useRef(0);
+    /* Qué bloques del dossier tiene la hoja, en orden. Lo nuevo es lo que no
+       está aquí; un retoque se pone en lugar del bloque que sustituye. */
+    const enHoja = useRef<string[]>([]);
     const claveMontada = useRef<string | null>(null);
     /* LA HOJA VACÍA SE RELLENA SOLA (20-sep-2026).
        ---------------------------------------------------------------------
@@ -208,6 +257,15 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
        Lo que escribimos nosotros (rellenar, anexar, restaurar) pasa por
        `escribir`, para que la hoja no lo confunda con una edición. */
     const editada = useRef(false);
+    useEffect(() => {
+        const registro = {
+            clave: () => claveMontada.current,
+            raiz: () => hoja.current?.raiz() ?? null,
+            editada: () => editada.current,
+        };
+        hojaViva = registro;
+        return () => { if (hojaViva === registro) hojaViva = null; };
+    }, []);
     const escribiendo = useRef(false);
     const pendiente = useRef<EdicionHoja | null>(null);
     const [guardadaAqui, setGuardadaAqui] = useState(false);
@@ -232,9 +290,11 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     useEffect(() => {
         const raiz = hoja.current?.raiz();
         const otraConversacion = claveMontada.current !== clave;
+        const ids = (n: number) => bloques.slice(0, n).map((b) => b.id);
         if (otraConversacion) {
             claveMontada.current = clave;
             insertados.current = bloques.length;
+            enHoja.current = ids(bloques.length);
             // La hoja acaba de montarse con `htmlInicial`: eso es lo nuestro.
             escrito.current = raiz ? raiz.innerHTML : null;
             editada.current = false;
@@ -252,19 +312,29 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
             escribir(() => hoja.current?.reemplazar(guardada.html));
             escrito.current = hoja.current?.raiz()?.innerHTML ?? guardada.html;
             insertados.current = guardada.bloques;
+            // Los envoltorios dicen qué bloques trae; una hoja guardada antes
+            // de que existieran trae los primeros que contaba.
+            const envueltos = bloquesEnLaHoja(hoja.current?.raiz());
+            enHoja.current = envueltos.length ? envueltos : ids(guardada.bloques);
             editada.current = true;
             setGuardadaAqui(true);
         }
 
+        // Un retoque que sustituye a un bloque que la hoja tiene.
+        const sustituye = (b: BloqueDocumento) => !!b.reemplaza && enHoja.current.includes(b.reemplaza);
+
         if (raiz && bloques.length && !editada.current) {
-            const deseado = segmentos.slice(0, bloques.length).join('<hr>');
+            const deseado = htmlDeBloques(0, bloques.length);
             const intacta = escrito.current === null
                 ? !raiz.innerHTML.trim()          // nunca escribimos: sólo si está en blanco
                 : raiz.innerHTML === escrito.current;
             if (deseado && deseado !== escrito.current && intacta) {
+                const retoque = bloques.some((b) => !enHoja.current.includes(b.id) && sustituye(b));
                 escribir(() => hoja.current?.reemplazar(deseado));
                 escrito.current = hoja.current?.raiz()?.innerHTML ?? deseado;
                 insertados.current = bloques.length;
+                enHoja.current = ids(bloques.length);
+                if (retoque && !otraConversacion) mostrarAviso('La versión corregida sustituyó a la anterior, que sigue en «Versiones».');
                 return;
             }
         }
@@ -272,15 +342,35 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         // faltan las respuestas posteriores a la edición.
         if (otraConversacion && !editada.current) return;
 
-        if (bloques.length > insertados.current) {
-            const nuevos = segmentos.slice(insertados.current, bloques.length).join('<hr>');
-            escribir(() => hoja.current?.insertar((insertados.current > 0 ? '<hr>' : '') + nuevos, 'final'));
-            insertados.current = bloques.length;
-            escrito.current = hoja.current?.raiz()?.innerHTML ?? null;
-            // Lo nuevo se suma a la versión del abogado, y así se guarda.
-            if (editada.current && escrito.current !== null) guardar(escrito.current);
-        }
-    }, [clave, bloques.length, segmentos]);
+        /* EN UNA HOJA EDITADA SÓLO SE TOCA LO QUE FALTA. Lo nuevo se anexa
+           al final; el retoque va en lugar del bloque que sustituye, y si el
+           abogado lo borró o lo fundió con otro, se anexa y se dice. */
+        const faltan = bloques.filter((b) => !enHoja.current.includes(b.id));
+        if (!faltan.length) return;
+        let sustituidos = 0;
+        let sinSitio = 0;
+        escribir(() => {
+            for (const b of faltan) {
+                const i = bloques.indexOf(b);
+                const html = envolverBloque(b.id, segmentos[i] ?? '');
+                if (b.reemplaza && sustituye(b) && hoja.current?.sustituirBloque(b.reemplaza, html)) {
+                    enHoja.current = enHoja.current.map((x) => (x === b.reemplaza ? b.id : x));
+                    sustituidos++;
+                    continue;
+                }
+                if (b.reemplaza) sinSitio++;
+                const conAlgo = !!hoja.current?.raiz()?.textContent?.trim();
+                hoja.current?.insertar((conAlgo ? '<hr>' : '') + html, 'final');
+                enHoja.current = [...enHoja.current, b.id];
+            }
+        });
+        insertados.current = bloques.length;
+        escrito.current = hoja.current?.raiz()?.innerHTML ?? null;
+        // Lo nuevo se suma a la versión del abogado, y así se guarda.
+        if (editada.current && escrito.current !== null) guardar(escrito.current);
+        if (sinSitio) mostrarAviso('No encontré el escrito anterior en la hoja: la versión corregida va al final.');
+        else if (sustituidos) mostrarAviso('La versión corregida sustituyó a la anterior, con tus cambios. La anterior sigue en «Versiones».');
+    }, [clave, bloques, segmentos]);
 
     const tituloEfectivo = nombre.trim() || titulo || 'Documento de Iurexia';
 
@@ -326,11 +416,16 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         setVersionElegida(id);
         const v = versiones.find((x) => x.id === id);
         if (!v) return;
-        const html = htmlDeDocumento(v.markdown).html.replace(/<p>⟦sep⟧<\/p>/g, '<hr>');
+        const trozos = htmlDeDocumento(v.markdown).html.split(/<p>⟦sep⟧<\/p>/);
+        // Con sus bloques envueltos, un retoque posterior encuentra el suyo.
+        const html = v.ids && v.ids.length === trozos.length
+            ? trozos.map((t, i) => envolverBloque(v.ids![i], t)).join('<hr>')
+            : trozos.join('<hr>');
         escribir(() => hoja.current?.reemplazar(html));
         escrito.current = hoja.current?.raiz()?.innerHTML ?? html;
         editada.current = true;
         pendiente.current = null;
+        enHoja.current = bloquesEnLaHoja(hoja.current?.raiz());
         guardar(escrito.current);
         mostrarAviso('Versión restaurada en la hoja.');
     }
@@ -449,7 +544,9 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                        abogado mirando una hoja en blanco sin señal de vida. */
                     <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>{paso}</span></>
                 ) : enVivo ? (
-                    <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>Escribiendo en el documento…</span></>
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span className="min-w-0 truncate">{vivoReemplaza
+                        ? 'Escribiendo la versión corregida: sustituirá a la anterior al terminar…'
+                        : 'Escribiendo en el documento…'}</span></>
                 ) : partes.length ? (
                     /* Se dice DÓNDE se guarda: en este navegador, no en la cuenta. */
                     <><Check className="h-3.5 w-3.5 text-accent-gold" /><span className="min-w-0 truncate">{guardadaAqui ? 'Cambios guardados en este navegador' : 'Listo para editar'}</span></>
