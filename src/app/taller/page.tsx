@@ -267,6 +267,41 @@ function Pliegue({ titulo, nota, abierto, children }: {
     );
 }
 
+/* EL NEUN, PARA LLEVARLO A LA OAJ. El Buscador de la OAJ no tiene enlace
+   profundo por expediente: se abre el buscador y se pega ahí el NEUN. Copiarlo
+   con un clic ahorra teclear el número a mano, que es donde uno se equivoca de
+   sentencia sin darse cuenta.
+
+   Si el navegador no deja escribir en el portapapeles —página sin HTTPS,
+   permiso denegado—, se dice en el propio botón; el número lleva `select-all`
+   para que un clic lo seleccione entero. */
+function CopiarNeun({ neun }: { neun: number }) {
+    const [estado, setEstado] = useState<'' | 'copiado' | 'fallo'>('');
+    useEffect(() => {
+        if (!estado) return;
+        const t = setTimeout(() => setEstado(''), 1800);
+        return () => clearTimeout(t);
+    }, [estado]);
+    return (
+        <button type="button"
+                onClick={async () => {
+                    try {
+                        await navigator.clipboard.writeText(String(neun));
+                        setEstado('copiado');
+                    } catch {
+                        setEstado('fallo');
+                    }
+                }}
+                className="inline-flex items-center gap-1 rounded-lg border border-white/10
+                           bg-white/[0.05] px-1.5 py-0.5 text-[11px] text-white/60
+                           transition-colors hover:text-white/75">
+            {estado === 'copiado' ? (
+                <><Check className="h-3 w-3 text-accent-gold/80" aria-hidden="true" />copiado</>
+            ) : estado === 'fallo' ? 'selecciónelo a mano' : 'copiar'}
+        </button>
+    );
+}
+
 
 export default function TallerDeSentencias() {
     const { user, profile, loading: authLoading } = useRequireAuth();
@@ -3110,6 +3145,18 @@ export default function TallerDeSentencias() {
                                 : las sentencias suyas más cercanas a cada planteamiento.
                                 No dicen cómo debe resolver — dicen qué ha resuelto antes
                                 el tribunal que firma.
+                                {/* EL PORCENTAJE SE EXPLICA UNA VEZ, arriba, y sólo
+                                    cuando lo hay. Sale de una tabla calibrada, no del
+                                    coseno: sin decirlo, «87%» se leería como «el
+                                    texto se parece en un 87%», que no es lo que mide. */}
+                                {material!.espejo!.some(e => e.filas.some(
+                                    f => typeof f.similitud === 'number')) && (
+                                    <>
+                                        {' '}El porcentaje sale de una tabla calibrada, no del
+                                        parecido crudo del texto, y sólo se enseñan las
+                                        coincidencias de 85% o más.
+                                    </>
+                                )}
                             </p>
                             <div className="grid gap-2">
                                 {material!.espejo!.map((e, i) => (
@@ -3117,9 +3164,19 @@ export default function TallerDeSentencias() {
                                              titulo={e.problema.length > 92
                                                  ? e.problema.slice(0, 92) + '…'
                                                  : e.problema}
-                                             nota={`${e.filas.length} sentencias propias`}>
+                                             // La fuente de la OAJ no tiene piso de
+                                             // tres filas: una coincidencia al 85% se
+                                             // enseña sola, y «1 sentencias» se lee mal.
+                                             nota={e.filas.length === 1
+                                                 ? '1 sentencia propia'
+                                                 : `${e.filas.length} sentencias propias`}>
                                         <ul className="grid gap-1.5">
-                                            {e.filas.map((f, j) => (
+                                            {e.filas.map((f, j) => {
+                                                // LA FILA DE LA OAJ SE RECONOCE POR SU
+                                                // PORCENTAJE. Las del acervo viejo no lo
+                                                // traen y se pintan exactamente como antes.
+                                                const oaj = typeof f.similitud === 'number';
+                                                return (
                                                 <li key={j}
                                                     className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5
                                                                rounded-lg border border-white/[0.07]
@@ -3132,12 +3189,25 @@ export default function TallerDeSentencias() {
                                                             {f.fecha.slice(0, 10)}
                                                         </span>
                                                     )}
-                                                    <span className="rounded-lg border border-white/10
-                                                                     bg-white/[0.05] px-1.5 py-0.5
-                                                                     text-[10px] uppercase tracking-wide
-                                                                     text-white/60">
-                                                        {f.sentido || 'sin sentido'}
-                                                    </span>
+                                                    {/* En la OAJ el sentido puede venir
+                                                        vacío, y ahí «sin sentido» no es un
+                                                        dato: es que el índice no lo trae. */}
+                                                    {(f.sentido || !oaj) && (
+                                                        <span className="rounded-lg border border-white/10
+                                                                         bg-white/[0.05] px-1.5 py-0.5
+                                                                         text-[10px] uppercase tracking-wide
+                                                                         text-white/60">
+                                                            {f.sentido || 'sin sentido'}
+                                                        </span>
+                                                    )}
+                                                    {oaj && (
+                                                        <span className="rounded-lg border border-accent-gold/30
+                                                                         bg-accent-gold/[0.07] px-1.5 py-0.5
+                                                                         text-[10px] font-medium tabular-nums
+                                                                         text-accent-gold/90">
+                                                            {f.similitud}% de similitud
+                                                        </span>
+                                                    )}
                                                     {f.pdf_url && (
                                                         <a href={f.pdf_url} target="_blank"
                                                            rel="noopener noreferrer"
@@ -3148,8 +3218,67 @@ export default function TallerDeSentencias() {
                                                             abrir
                                                         </a>
                                                     )}
+                                                    {/* POR TEMA NO ES POR PUNTO. Si ningún
+                                                        planteamiento del precedente pasó y
+                                                        coincidió el tema del asunto, se dice:
+                                                        no hay pregunta ni calificación que
+                                                        enseñar, y no se finge. */}
+                                                    {oaj && f.fuente === 'tema' && (
+                                                        <span className="w-full text-[11px] text-white/45">
+                                                            coincide por el tema del asunto, no por un
+                                                            planteamiento
+                                                        </span>
+                                                    )}
+                                                    {oaj && f.pregunta && (
+                                                        <p className="w-full pt-0.5 text-[12px] leading-relaxed
+                                                                      text-white/60">
+                                                            {f.pregunta}
+                                                        </p>
+                                                    )}
+                                                    {/* La calificación, LITERAL. Es la del
+                                                        planteamiento del precedente, no un
+                                                        juicio sobre el proyecto: compara el
+                                                        secretario. */}
+                                                    {oaj && (f.calificacion || f.razon) && (
+                                                        <p className="w-full text-[12px] leading-relaxed
+                                                                      text-white/45">
+                                                            {f.calificacion && (
+                                                                <span className="text-white/75">
+                                                                    {f.calificacion}
+                                                                </span>
+                                                            )}
+                                                            {f.calificacion && f.razon && ' · '}
+                                                            {f.razon}
+                                                        </p>
+                                                    )}
+                                                    {oaj && f.neun != null && (
+                                                        <span className="flex w-full flex-wrap items-center
+                                                                         gap-x-2 gap-y-1 pt-1 text-[11px]
+                                                                         text-white/45">
+                                                            <span>
+                                                                NEUN{' '}
+                                                                <span className="select-all tabular-nums
+                                                                                 text-white/75">
+                                                                    {f.neun}
+                                                                </span>
+                                                            </span>
+                                                            <CopiarNeun neun={f.neun} />
+                                                            {f.enlace_oaj && (
+                                                                <a href={f.enlace_oaj} target="_blank"
+                                                                   rel="noopener noreferrer"
+                                                                   className="text-accent-gold/80 underline
+                                                                              decoration-accent-gold/30
+                                                                              underline-offset-2
+                                                                              transition-colors
+                                                                              hover:text-accent-gold">
+                                                                    Buscador de la OAJ
+                                                                </a>
+                                                            )}
+                                                        </span>
+                                                    )}
                                                 </li>
-                                            ))}
+                                                );
+                                            })}
                                         </ul>
                                         {/* El resumen viene vacío cuando no se puede
                                             resumir sin mentir: tipos de asunto

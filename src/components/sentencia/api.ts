@@ -211,22 +211,53 @@ export interface MaterialDelCaso {
     avisos: string[];
 }
 
+/** Una sentencia del propio tribunal en la tarjeta del espejo.
+ *
+ *  DOS FUENTES, UNA FORMA. Las filas del acervo viejo traen sólo los siete
+ *  primeros campos; las del índice de la OAJ traen además `similitud` y lo que
+ *  cuelga de ella. La pantalla distingue por `similitud`: si no viene, la fila
+ *  se pinta como siempre. */
+export interface FilaEspejo {
+    tipo_asunto: string;
+    expediente: string;
+    /** ISO en el acervo viejo, dd-mm-aaaa en el de la OAJ. Puede venir vacía:
+     *  hay sentencias sin fecha en el acervo. */
+    fecha: string;
+    /** La palabra que el acervo guardó, sin traducir. En la OAJ puede venir
+     *  vacía. */
+    sentido: string;
+    tema: string;
+    score: number;
+    /** Vacío en las filas de la OAJ: no hay PDF por enlace directo. */
+    pdf_url: string;
+    /** ═══ SÓLO EN LAS FILAS DE LA OAJ ═══
+     *  Porcentaje ENTERO, ya calibrado: no es el coseno. Sólo llegan las de 85
+     *  o más. */
+    similitud?: number;
+    /** «planteamiento» si coincidió un planteamiento del precedente; «tema» si
+     *  fue el respaldo por el tema del asunto (entonces no hay pregunta, razón
+     *  ni calificación). */
+    fuente?: 'planteamiento' | 'tema';
+    /** La pregunta del planteamiento del precedente. */
+    pregunta?: string;
+    /** Por qué se calificó así, en palabras del índice. */
+    razon?: string;
+    /** Fundado, infundado, inoperante… literal: no se traduce. */
+    calificacion?: string;
+    autoridad?: string;
+    /** El número de expediente único de la OAJ, para pegarlo en su buscador:
+     *  no hay enlace profundo por NEUN. */
+    neun?: number;
+    /** El Buscador de la OAJ. */
+    enlace_oaj?: string;
+}
+
 export interface EspejoDelTribunal {
     /** El planteamiento al que corresponden estas sentencias. */
     problema: string;
     /** El nombre largo del tribunal, para leerlo. */
     tribunal: string;
-    filas: {
-        tipo_asunto: string;
-        expediente: string;
-        /** ISO. Puede venir vacía: hay sentencias sin fecha en el acervo. */
-        fecha: string;
-        /** La palabra que el acervo guardó, sin traducir. */
-        sentido: string;
-        tema: string;
-        score: number;
-        pdf_url: string;
-    }[];
+    filas: FilaEspejo[];
     /** El renglón que describe las filas. Vacío cuando no se puede resumir sin
      *  mentir: tipos de asunto mezclados, o etiqueta que ya trae el resultado. */
     resumen: string;
