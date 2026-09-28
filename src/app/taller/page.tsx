@@ -68,6 +68,7 @@ import {
 } from '@/components/sentencia/recalificacion';
 import type { EnlaceRecalificacion, FaseDelFlujo, EventoDelFlujo } from '@/components/sentencia/recalificacion';
 import { opcionesDelProyecto as armarOpciones } from '@/components/sentencia/opcionesDelProyecto';
+import { useTarjetaDelPrincipal, soltarLoTocado } from '@/components/sentencia/tarjetaDelPrincipal';
 import MapaDelEstudio from '@/components/sentencia/MapaDelEstudio';
 import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto, DecisionSuplencia } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
@@ -1081,6 +1082,52 @@ export default function TallerDeSentencias() {
         setRepartiendo(false);
         setPendientesRecal([]);
     }, []);
+
+    /* ═══ LA TARJETA DEL PROBLEMA PRINCIPAL (28-sep-2026, AR 631/2025) ═══
+       Se pide al servidor al llegar cada propuesta (GET /taller/tarjeta, sin
+       modelo); mientras no llega, Decision pinta la que arma con la propuesta.
+       Sus dos vías se eligen enteras con estos dos callbacks —el tercero,
+       «resolver con mi criterio», sólo abre la ventana de siempre—. */
+    const tarjeta = useTarjetaDelPrincipal(propuesta, encargo.numero, correo);
+    /** Lo marcado a mano en la ventana —y lo que el reparto movió por esas
+     *  marcas— se suelta: cada problema vuelve a lo que propuso el motor, sin
+     *  destruir el texto que él escribió. Una vía es un paquete: el principal
+     *  y la suerte que el árbol da a los secundarios; una marca vieja de la
+     *  ventana haría que el proyecto dijera otra cosa que la tarjeta. */
+    const soltarLoMarcado = useCallback(() => {
+        const motor = propuesta?.propuestas ?? [];
+        setProblemas((prev) => soltarLoTocado(prev, motor));
+        setTocados(new Set());
+        olvidarRecalificacion();
+        setAvisosReparto([]);
+    }, [propuesta]);   // eslint-disable-line react-hooks/exhaustive-deps
+    /** «RESOLVER ASÍ»: la propuesta del motor como llegó. NO dictada —es su eco,
+     *  como la pone `pedirPropuesta`—: con el global dictado el sentido sería
+     *  la brocha de todos los no tocados y el árbol dejaría de recalificar
+     *  (arbol_decision.py:611). `elegirGlobal` dicta siempre; por eso esto. */
+    const volverALaPropuesta = useCallback(() => {
+        const g = propuesta?.global;
+        if (!g) return;
+        soltarLoMarcado();
+        setModo('global');
+        setSentidoGlobal(g.sentido || '');
+        setRazonGlobal(g.razon || '');
+        setGlobalDictado(false);
+    }, [propuesta, soltarLoMarcado]);
+    /** «RESOLVER EN SENTIDO OPUESTO» (u otra vía entera): ESE sentido, dictado,
+     *  y SU razón. La razón SIEMPRE se sustituye, también por una vacía: en el
+     *  AR 631/2025 la del motor viajó con la vía contraria y el proyecto
+     *  revocó y volvió a conceder (lección 1). Vacía, la pantalla ofrece
+     *  redactarla con un clic y no deja generar sin ella (`faltaRazon`). */
+    const resolverPorLaVia = useCallback((sentido: string, razon: string) => {
+        if (!sentido) return;
+        soltarLoMarcado();
+        setModo('global');
+        setSentidoGlobal(sentido);
+        setGlobalDictado(true);
+        setRazonGlobal(razon);
+    }, [soltarLoMarcado]);
+
     repartirRef.current = async (id: string, valor: string) => {
         if (!encargo.numero || !valor) return;
         const esPrincipal = (problemas.find((p) => p.id === id)?.jerarquia ?? '') === 'principal'
@@ -3238,7 +3285,12 @@ export default function TallerDeSentencias() {
                               avisosRecalificacion={avisosRecal}
                               onReintentarRecalificacion={recal.reintentar}
                               esCasa={esCasa} varianteEstudio={varianteEstudio}
-                              onVarianteEstudio={elegirVariante} />
+                              onVarianteEstudio={elegirVariante}
+                              tarjeta={tarjeta}
+                              tesisDelMaterial={material?.tesis}
+                              onAbrirTesis={setTesisAbierta}
+                              onVolverALaPropuesta={volverALaPropuesta}
+                              onResolverPorLaVia={resolverPorLaVia} />
                     )}
 
                     {/* EL ESTUDIO, VIÉNDOSE ESCRIBIR. Antes aquí no había nada

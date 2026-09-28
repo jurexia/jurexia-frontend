@@ -1,0 +1,646 @@
+// LA TARJETA «EL PROBLEMA PRINCIPAL Y SU SOLUCIÓN», PROBADA SIN SERVIDOR
+// (28-sep-2026, tras el AR 631/2025).
+//
+// David: «saltar una tarjeta con el problema jurídico y la posible solución.
+// Preguntando, ¿o quieres resolver en sentido opuesto? (…) y nada más un botón
+// que me permita ir a resolver con mi criterio». La tarjeta decide qué vía se
+// enseña como propuesta, con qué peso, qué suerte lleva cada secundario y qué
+// viaja al pulsar cada botón. Nada de eso se ve en un typecheck: aquí se
+// comprueba con el código REAL (transpilado al vuelo con el TypeScript del
+// proyecto) y el HTML que pinta React de verdad (react-dom/server):
+//
+//   1 · la lectura tolerante del contrato (`tarjetaDe`) y `leerTarjeta` con un
+//       fetch falso (un servidor sin la tarjeta NO es un error);
+//   2 · la lógica pura: qué vía está en pantalla, si la contraria es de verdad
+//       contraria, la suerte y su rótulo, la vía que revoca, el contraste por
+//       vía, el propio tribunal por vía, la tarjeta local y «soltar lo tocado»;
+//   3 · el HTML de ProblemaPrincipal con datos del contrato: vía propuesta y
+//       opuesta, sin opuesta, reñido, no alcanza, secundarios en las dos vías,
+//       conceptos omitidos, la contraria sin razón y sin propuesta global;
+//   4 · Decision montada entera: la tarjeta en lugar de «la frase», la tarjeta
+//       final con la suerte de cada accesorio y el plan esperando a la vía;
+//   5 · el hook que pide la tarjeta: una vez por propuesta, «calculando» con
+//       reintentos y lo de una propuesta vieja que no se pinta.
+//
+//   TMPDIR=<scratchpad> node comprobaciones/problema_principal.mjs
+//   … problema_principal.mjs --html <salida.html> [css]
+//       → además, una página con la tarjeta en sus estados y Decision entera
+//         (con el CSS que se le pase: el de `next build`, o el que saca
+//         `tailwindcss -i src/app/globals.css --content <salida.html>`) para
+//         mirarla en un navegador.
+//
+// No arranca Next ni llama a ningún servidor. Los datos son de prueba: textos
+// esquemáticos, no frases para copiar.
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+
+const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const requerir = createRequire(path.join(RAIZ, 'package.json'));
+const ts = requerir('typescript');
+const REACT = requerir.resolve('react');
+const LUCIDE = requerir.resolve('lucide-react');
+
+let fallas = 0, bien = 0;
+function ok(cond, que) {
+    if (cond) { bien += 1; return; }
+    fallas += 1;
+    console.log(`  FALLA · ${que}`);
+}
+
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'problema-principal-'));
+process.on('exit', () => fs.rmSync(TMP, { recursive: true, force: true }));
+const SENT = 'src/components/sentencia';
+function transpilar(dir, rel, cambios = []) {
+    const src = fs.readFileSync(path.join(RAIZ, SENT, rel), 'utf8');
+    let js = ts.transpileModule(src, {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020,
+                           jsx: ts.JsxEmit.React, esModuleInterop: true },
+        fileName: rel,
+    }).outputText;
+    for (const [de, a] of cambios) js = js.split(de).join(a);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, rel.replace(/\.tsx?$/, '.js')), js);
+}
+
+/* ── Con React de verdad: para pintar ── */
+const REAL = path.join(TMP, 'real');
+const conReact = [['require("react")', `require(${JSON.stringify(REACT)})`],
+                  ['require("lucide-react")', `require(${JSON.stringify(LUCIDE)})`]];
+for (const f of ['api.ts', 'tipos.ts', 'calificaciones.ts', 'recalificacion.ts', 'tarjetaDelPrincipal.ts',
+                 'primitivas.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
+                 'EstudiarJuntos.tsx']) {
+    transpilar(REAL, f, conReact);
+}
+const req = createRequire(path.join(REAL, 'x.js'));
+const React = requerir('react');
+const { renderToStaticMarkup } = requerir('react-dom/server');
+const api = req('./api.js');
+const td = req('./tarjetaDelPrincipal.js');
+const PP = req('./ProblemaPrincipal.js').default;
+const Decision = req('./Decision.js').default;
+
+const pintar = (el) => renderToStaticMarkup(el);
+/* Lo pintado, por si se pide la página (--html). */
+const MUESTRAS = [];
+const muestra = (titulo, html) => { MUESTRAS.push([titulo, html]); return html; };
+/** El HTML de la columna de una vía (`data-via`), hasta la siguiente. */
+function columna(html, lado) {
+    const i = html.indexOf(`data-via="${lado}"`);
+    if (i < 0) return '';
+    const j = html.indexOf('data-via="', i + 10);
+    return html.slice(i, j < 0 ? html.length : j);
+}
+/** El texto del chip «vía: …». */
+function chip(html) {
+    const m = /data-chip-via="[a-z]+"[^>]*>([^<]*)</.exec(html);
+    return m ? m[1] : '';
+}
+/** La fila de los tres botones (`data-botones`), hasta el final de la tarjeta. */
+function fila3(html) {
+    const i = html.indexOf('data-botones=');
+    return i < 0 ? '' : html.slice(i);
+}
+/** La etiqueta <button …>texto</button> que contiene `texto`, en la fila de
+ *  los botones (el pie de los secundarios también nombra «Resolver con mi
+ *  criterio», como texto). */
+function boton(html, texto) {
+    html = fila3(html) || html;
+    const k = html.indexOf(texto);
+    if (k < 0) return '';
+    const a = html.lastIndexOf('<button', k);
+    const b = html.indexOf('</button>', k);
+    return a < 0 || b < 0 ? '' : html.slice(a, b);
+}
+
+/* ═══ LOS DATOS DE PRUEBA, EN LA FORMA DEL CONTRATO (contrato_tarjeta.md) ═══
+   Un recurso de revisión como el AR 631/2025: el principal es de fondo y un
+   secundario procesal cuelga de él. Textos esquemáticos a propósito. */
+const APOYO_SCJN = { registro: '2015688', rubro: 'Rubro de prueba A.', instancia: 'Primera Sala',
+                     tipo: 'jurisprudencia', fuerza: 'obliga', fuerza_texto: '', vigencia: 'vigente',
+                     de_internet: false, en_acervo: true, norma: null };
+const APOYO_TCC = { registro: '2020001', rubro: 'Rubro de prueba B.', instancia: 'Tribunales Colegiados',
+                    tipo: 'jurisprudencia', fuerza: 'orienta', fuerza_texto: 'orienta (art. 217, párr. tercero)',
+                    vigencia: null, de_internet: true, en_acervo: true, norma: null };
+const APOYO_ABANDONADO = { registro: '2009817', rubro: 'Rubro de prueba C.', instancia: 'Pleno', tipo: 'aislada',
+                           fuerza: 'orienta', vigencia: 'abandonada', en_acervo: true };
+const APOYO_SIN_ACERVO = { registro: '1999999', rubro: '', en_acervo: false };
+const NORMA = { norma: 'art. 93, fr. VI, LA (prueba)' };
+
+function base(extra = {}) {
+    return {
+        formato: 1, estado_calculo: 'listo', huella: 'h1',
+        principal: {
+            numero: 1, pregunta: '¿Pregunta principal de prueba?', clase: 'fondo', jerarquia_de: 'fase3',
+            por_que_principal: 'Por qué es el principal (prueba).',
+            discrepa_motor: null,
+            contraste: { razon_toral: 'Razón toral de prueba.', la_combate: true, sobrevive: false, veredicto_previo: 'a_examinar' },
+            prediccion: { frase: 'frase de jurimetría de prueba', n: 12 },
+        },
+        vias: {
+            propuesta: { sentido: 'infundado', prospera: false, razon: 'Razón de la vía A (prueba).', efecto: 'Efecto A.',
+                         desenlace: ['PRIMERO. Se confirma (prueba).', 'SEGUNDO. Se concede (prueba).'],
+                         desenlace_nota: null, interpretacion: null, cadena: null, objecion: null,
+                         apoyos: [APOYO_SCJN, APOYO_ABANDONADO, APOYO_SIN_ACERVO, NORMA], via_protectora: null },
+            opuesta: { sentido: 'fundado', prospera: true, razon: 'Razón de la vía B (prueba).', efecto: 'Efecto B.',
+                       desenlace: ['PRIMERO. Se revoca (prueba).', 'SEGUNDO. Se niega (prueba).'],
+                       desenlace_nota: 'Nota del desenlace (prueba).', interpretacion: 'Interpretación B (prueba).',
+                       cadena: null, objecion: { de_la_otra_via: 'Objeción de la vía A (prueba).', respuesta: 'Respuesta B.' },
+                       apoyos: [APOYO_TCC], via_protectora: null },
+        },
+        recomendada: 'propuesta', estado: 'claro', estado_por_que: ['Razón del estado 1 (prueba).'],
+        secundarios: [{
+            numero: 2, pregunta: '¿Pregunta secundaria procesal de prueba?', clase: 'procesal', relacion: 'depende',
+            en_propuesta: { sentido: 'infundado', de: 'arbol', por_que: 'Por qué en A (prueba).', relacion: 'depende',
+                            guarda: null, recalificar: false, previsto: false },
+            en_opuesta: { sentido: 'innecesario', de: 'motor', por_que: 'Por qué en B (prueba).', relacion: 'depende',
+                          guarda: null, recalificar: true, previsto: true },
+        }],
+        independientes: [{ numero: 3, pregunta: '¿Pregunta independiente de prueba?',
+                           propuesta: { sentido: 'inoperante', razon: 'Razón propia (prueba).', apoyos: [] } }],
+        que_la_cambiaria: { en_contra: 'Lo que se diría en contra de A (prueba).', crux: null,
+                            constancias_indispensables: ['Constancia de prueba'], limite_protector: null },
+        tu_tribunal: [
+            { expediente: 'AR 10/2025', fecha: '2025-03-01', sentido: 'confirma', calificacion: 'infundado',
+              razon: 'Razón de la fila 1.', similitud: 0.8, nivel: 'mismo_problema', neun: 'n1' },
+            { expediente: 'AR 11/2025', fecha: '2025-04-01', sentido: 'CONCEDE', calificacion: '',
+              razon: '', similitud: null, nivel: null, neun: '' },
+        ],
+        linea_corte: { confirmadas: [APOYO_TCC], pistas: ['Pista de prueba sin confirmar'] },
+        deliberacion: null,
+        conceptos_omitidos: { hacen_falta: true, por_que: 'art. 93, fr. VI (prueba)', tenemos: false },
+        avisos: ['Aviso de prueba'],
+        ...extra,
+    };
+}
+
+/* ═══ 1 · LA LECTURA TOLERANTE ═══ */
+{
+    ok(api.tarjetaDe(null) === null && api.tarjetaDe('x') === null && api.tarjetaDe([]) === null,
+       'lo que no es objeto → null');
+    const v = api.tarjetaDe({});
+    ok(v && v.estado === '' && v.recomendada === null && v.principal === null
+       && v.vias.propuesta === null && v.vias.opuesta === null && v.secundarios.length === 0
+       && v.estado_calculo === 'listo' && v.origen === 'servidor',
+       'objeto vacío → tarjeta vacía, sin estado ni vías');
+    ok(api.tarjetaDe({ estado: 'renido' }).estado === 'reñido', '«renido» sin eñe se lee «reñido»');
+    ok(api.tarjetaDe({ estado: 'seguro' }).estado === '', 'un estado desconocido no se inventa');
+    ok(api.tarjetaDe({ estado_calculo: 'calculando' }).estado_calculo === 'calculando', 'calculando');
+    const t = api.tarjetaDe(base());
+    ok(t.principal.numero === 1 && t.principal.contraste.la_combate === true, 'principal y su contraste');
+    ok(t.vias.propuesta.apoyos.length === 4 && t.vias.propuesta.apoyos[3].norma, 'apoyos: tesis y norma');
+    ok(t.vias.propuesta.apoyos[2].en_acervo === false, 'en_acervo:false se conserva');
+    ok(t.vias.opuesta.apoyos[0].fuerza === 'orienta' && t.vias.opuesta.apoyos[0].de_internet,
+       'fuerza y de_internet');
+    ok(t.secundarios[0].en_opuesta.previsto === true && t.secundarios[0].en_opuesta.recalificar === true,
+       'la suerte prevista de la opuesta');
+    ok(t.conceptos_omitidos.hacen_falta === true && t.conceptos_omitidos.tenemos === false, 'conceptos omitidos');
+    ok(t.linea_corte.pistas.length === 1 && t.linea_corte.confirmadas.length === 1, 'línea de la Corte');
+    const raro = api.tarjetaDe({ vias: { propuesta: { sentido: 'FUNDADO', apoyos: ['2015688', 'art. 1 CPF', '', null, { fuerza: 'x' }] },
+                                          opuesta: { sentido: '', razon: '' } },
+                                 secundarios: [{}, { numero: '2', en_propuesta: 'x' }],
+                                 tu_tribunal: [{ expediente: '' }, { expediente: 'X 1', similitud: 'no' }] });
+    ok(raro.vias.propuesta.sentido === 'fundado', 'el sentido se normaliza a minúsculas');
+    ok(raro.vias.propuesta.apoyos.length === 2 && raro.vias.propuesta.apoyos[0].registro === '2015688'
+       && raro.vias.propuesta.apoyos[1].norma === 'art. 1 CPF', 'apoyos en texto: registro o norma; los vacíos fuera');
+    ok(raro.vias.opuesta === null, 'una vía sin sentido ni razón es null');
+    ok(raro.secundarios.length === 1 && raro.secundarios[0].numero === 2 && raro.secundarios[0].en_propuesta === null,
+       'secundarios: sin número ni pregunta fuera; suerte ilegible → null');
+    ok(raro.tu_tribunal.length === 1 && raro.tu_tribunal[0].similitud === null, 'tu tribunal: sin expediente fuera');
+}
+/* leerTarjeta con un fetch falso */
+{
+    const fetchReal = globalThis.fetch;
+    const pedidos = [];
+    const responder = (status, cuerpo) => { globalThis.fetch = async (url) => {
+        pedidos.push(String(url));
+        return { ok: status >= 200 && status < 300, status, json: async () => cuerpo };
+    }; };
+    responder(200, base());
+    const t = await api.leerTarjeta('631/2025', 'casa@iurexia.com');
+    ok(t && t.estado === 'claro', '200 → tarjeta leída');
+    ok(/\/taller\/tarjeta\?numero=631%2F2025&user_email=casa%40iurexia\.com$/.test(pedidos[0]),
+       'GET /taller/tarjeta con numero y user_email codificados');
+    responder(404, { detail: 'Not Found' });
+    ok(await api.leerTarjeta('1', 'a@b') === null, '404 (servidor sin la tarjeta) → null, no error');
+    responder(405, {});
+    ok(await api.leerTarjeta('1', 'a@b') === null, '405 → null');
+    responder(500, { detail: 'se cayó' });
+    let lanzo = false;
+    try { await api.leerTarjeta('1', 'a@b'); } catch (e) { lanzo = /se cayó/.test(e.message); }
+    ok(lanzo, '500 → error con el detalle');
+    globalThis.fetch = fetchReal;
+}
+
+/* ═══ 2 · LA LÓGICA PURA ═══ */
+{
+    const t = api.tarjetaDe(base());
+    ok(td.hayAlternativaReal(t), 'infundado frente a fundado: alternativa real');
+    ok(!td.hayAlternativaReal(api.tarjetaDe(base({ vias: { propuesta: base().vias.propuesta,
+        opuesta: { ...base().vias.opuesta, sentido: 'inoperante', prospera: false } } }))),
+       'inoperante frente a infundado: NO es contraria');
+    ok(!td.hayAlternativaReal(api.tarjetaDe(base({ vias: { propuesta: base().vias.propuesta, opuesta: null } }))),
+       'sin opuesta: no hay alternativa');
+    ok(td.sinRecomendar(api.tarjetaDe(base({ estado: 'reñido' }))) && td.sinRecomendar(api.tarjetaDe(base({ estado: 'no_alcanza' })))
+       && !td.sinRecomendar(t), 'reñido y no alcanza no recomiendan; claro sí');
+    ok(td.ladoDelSentido(t, 'inoperante') === 'propuesta' && td.ladoDelSentido(t, 'esencialmente_fundado') === 'opuesta'
+       && td.ladoDelSentido(t, '') === null, 'la vía de una calificación, por grupo');
+
+    // QUÉ VÍA ESTÁ EN PANTALLA
+    const e = { enGlobal: true, globalDictado: false, sentidoGlobal: 'infundado', razonGlobal: 'Razón de la vía A (prueba).',
+                sentidoMotor: 'infundado', nTocados: 0, tarjeta: t, elegida: null };
+    ok(td.viaActivaDe(e) === 'propuesta', 'eco del motor → la propuesta');
+    ok(td.viaActivaDe({ ...e, globalDictado: true, sentidoGlobal: 'fundado', razonGlobal: 'Razón de la vía B (prueba).' }) === 'contraria',
+       'dictado, sentido y razón de la opuesta → la contraria');
+    ok(td.viaActivaDe({ ...e, globalDictado: true, sentidoGlobal: 'fundado', razonGlobal: 'Razón de la vía A (prueba).' }) === 'criterio',
+       'LECCIÓN 1 DEL 631: el sentido contrario con la razón de la propuesta es SU criterio, no la contraria');
+    ok(td.viaActivaDe({ ...e, globalDictado: true, sentidoGlobal: 'esencialmente_fundado', razonGlobal: 'Razón de la vía B (prueba).' }) === 'criterio',
+       'otra calificación del mismo grupo: su criterio');
+    ok(td.viaActivaDe({ ...e, nTocados: 1 }) === 'criterio', 'con algo marcado a mano: su criterio');
+    ok(td.viaActivaDe({ ...e, enGlobal: false }) === 'criterio', 'problema por problema: su criterio');
+    const sinRazon = api.tarjetaDe(base({ vias: { propuesta: base().vias.propuesta,
+        opuesta: { ...base().vias.opuesta, razon: '' } } }));
+    ok(td.viaActivaDe({ ...e, tarjeta: sinRazon, globalDictado: true, sentidoGlobal: 'fundado', razonGlobal: '',
+                        elegida: 'contraria' }) === 'contraria', 'opuesta sin razón, recién elegida: la contraria');
+    ok(td.viaActivaDe({ ...e, tarjeta: sinRazon, globalDictado: true, sentidoGlobal: 'fundado', razonGlobal: 'redactada',
+                        elegida: 'contraria' }) === 'contraria', '… y sigue siéndolo tras redactar su criterio');
+    ok(td.viaActivaDe({ ...e, tarjeta: sinRazon, globalDictado: true, sentidoGlobal: 'fundado', razonGlobal: 'mía',
+                        elegida: 'criterio' }) === 'criterio', 'sin haberla elegido, una razón suya es su criterio');
+    const delib = api.tarjetaDe(base({ vias: { propuesta: { ...base().vias.opuesta }, opuesta: { ...base().vias.propuesta } } }));
+    ok(td.viaActivaDe({ ...e, tarjeta: delib, globalDictado: true, sentidoGlobal: 'fundado',
+                        razonGlobal: 'Razón de la vía B (prueba).' }) === 'propuesta',
+       'con deliberación, la propuesta que no es la del motor: dictada con SU razón');
+
+    // LA SUERTE Y SU RÓTULO
+    ok(td.suerteDe(t, 2, '', 'propuesta').sentido === 'infundado' && td.suerteDe(t, 2, '', 'opuesta').sentido === 'innecesario',
+       'la suerte de un secundario en cada vía');
+    ok(td.suerteDe(t, 3, '', null).relacion === 'distinto', 'un independiente lleva la suya en cualquier vía');
+    ok(td.suerteDe(t, 9, '', 'propuesta') === null, 'número sin secundario → null');
+    const R = (s, pr) => td.rotuloDeSuerte({ sentido: '', de: 'arbol', por_que: '', relacion: '', guarda: null,
+                                             recalificar: false, previsto: false, ...s }, pr);
+    ok(R({ sentido: 'innecesario', relacion: 'depende' }, true).texto === 'Queda sin materia: lo absorbe el principal',
+       'innecesario con el principal que prospera');
+    ok(R({ sentido: 'innecesario', relacion: 'autonoma' }, true).texto.startsWith('Se estudia aparte'),
+       'autónomo: se estudia aparte');
+    ok(R({ sentido: 'innecesario' }, false).texto === 'Innecesario por suficiencia', 'innecesario sin prosperar');
+    ok(R({ sentido: 'infundado', relacion: 'presupone' }, false).texto === 'Cae con lo desestimado · infundado',
+       'presupone y el principal cae');
+    ok(R({ sentido: 'fundado', guarda: 'procesal' }, false).texto === 'Violación procesal: se decide · fundado', 'guarda procesal');
+    ok(R({ guarda: 'mayor_beneficio_189' }, true).texto.includes('art. 189'), 'mayor beneficio, art. 189');
+    ok(R({ relacion: 'distinto', sentido: 'inoperante' }, true).texto === 'Se estudia aparte: tema distinto · inoperante', 'tema distinto');
+    ok(R({ recalificar: true }, true).tono === 'ambar', 'por recalificar sin previsión: ámbar');
+    ok(td.rotuloDeSuerte(null, true).texto === 'Sin suerte prevista', 'sin suerte');
+    ok(R({ sentido: 'infundado', de: 'motor' }, false).corto === 'del motor', 'corto: del motor');
+
+    ok(td.textoDeFuerza(t.vias.opuesta.apoyos[0]) === 'orienta (art. 217, párr. tercero)', 'fuerza: el texto del servidor manda');
+    ok(td.textoDeFuerza({ ...t.vias.opuesta.apoyos[0], fuerza_texto: '', fuerza: 'pleno_circuito' }) === 'Pleno de Circuito',
+       'fuerza: Pleno de Circuito, sin afirmar si obliga');
+    const citar = td.apoyosParaCitar(t.vias.propuesta);
+    ok(citar.citables.length === 2 && citar.fuera === 2, 'fuera lo abandonado y lo que no está en el acervo; la norma se queda');
+
+    ok(td.ladoQueRevoca(t, true) === 'opuesta', 'la que revoca, por su desenlace');
+    const sinDes = api.tarjetaDe(base({ vias: { propuesta: { ...base().vias.propuesta, desenlace: [] },
+                                                opuesta: { ...base().vias.opuesta, desenlace: [] } } }));
+    ok(td.ladoQueRevoca(sinDes, true) === 'opuesta' && td.ladoQueRevoca(sinDes, false) === null,
+       'sin desenlace: en un recurso, la que prospera; en amparo directo, ninguna');
+
+    const trib = td.tribunalPorLado(t);
+    ok(trib.propuesta.length === 1 && trib.opuesta.length === 0 && trib.sin_lado.length === 1,
+       'tu tribunal: la fila calificada «infundado» va con la vía A; la que no trae calificación, aparte');
+
+    const cA = td.contrasteParaVia({ la_combate: false, sobrevive: false }, false, true);
+    const cB = td.contrasteParaVia({ la_combate: false, sobrevive: false }, true, true);
+    const cN = td.contrasteParaVia({ la_combate: true, sobrevive: false }, true, true);
+    ok(cA.tono === 'a_favor' && cB.tono === 'en_contra' && cN.tono === 'neutro',
+       'contraste: no combate → sostiene la que no prospera; combate y no sobrevive → neutro');
+    ok(td.contrasteParaVia(null, true, true) === null && td.contrasteParaVia({ la_combate: true, sobrevive: true }, null, true) === null,
+       'sin contraste o sin saber si prospera: nada');
+
+    ok(td.elegirTarjeta(t, null) === t, 'la del servidor manda');
+    const local = { ...t, origen: 'local' };
+    ok(td.elegirTarjeta({ ...t, estado_calculo: 'calculando' }, local) === local, 'calculando → la local');
+    ok(td.elegirTarjeta({ ...t, vias: { propuesta: null, opuesta: null } }, local) === local,
+       'la del servidor sin vía propuesta, con la local que sí la tiene → la local');
+}
+/* LA TARJETA LOCAL Y «SOLTAR LO TOCADO» */
+const PROPUESTA = {
+    propuestas: [
+        { problema: '¿P1?', sentido: 'infundado', razon: 'razón motor 1', apoyos: ['2015688'], confianza: 'alta', alcanza: true, jerarquia: 'principal' },
+        { problema: '¿P2?', sentido: 'infundado', razon: 'razón motor 2', apoyos: [], confianza: 'media', alcanza: true },
+        { problema: '¿P3?', sentido: '', razon: '', apoyos: [], confianza: '', alcanza: false },
+    ],
+    global: {
+        sentido: 'infundado', razon: 'razón global', problema_que_decide: '¿P1?', efecto: 'efecto global',
+        apoyos: ['Registro 2015688', '9999999', 'art. 14 CPEUM'], confianza: 'alta', en_contra: 'en contra global', alcanza: true,
+        contexto: { hechos: '', resolvio: '', combate: '', tema_principal: 'tema principal de prueba' },
+        alternativa: { sentido: 'fundado', razon: '', efecto: 'efecto alt', apoyos: ['2020001'] },
+        via_protectora: { sentido: 'fundado', posible: true, norma: 'norma prueba', lectura: 'lectura', limite: 'límite', apoyos: [] },
+        constancias: [{ que: 'constancia X', para_que: '', indispensable: true, problema: 1 },
+                      { que: 'constancia Y', para_que: '', indispensable: false, problema: 1 }],
+        checklist: [
+            { numero: 2, tema: 'P2', papel: 'accesorio', con_propuesta: 'texto A', con_alternativa: 'texto B', relacion: 'depende',
+              si_prospera: { sentido: 'innecesario', razon: 'lo absorbe' }, si_no_prospera: { sentido: 'infundado', razon: 'cae' } },
+            { numero: 3, tema: 'P3', papel: 'accesorio', con_propuesta: 'solo texto', con_alternativa: '', tema_distinto: true },
+        ],
+    },
+    contraste: [{ numero: 1, razon_toral: 'toral', la_combate: false, sobrevive: false, veredicto_previo: 'inoperante', por_que: '' }],
+    resumen: '', avisos: [], criteriosJson: '', modelo: '', necesitaConceptos: false,
+};
+const PROBLEMAS = [
+    { id: 'a', pregunta: '¿P1?', resolvio: '', combate: '', candidatos: [], criterio: '', jerarquia: 'principal',
+      prediccion: { sentido: 'infundado', porcentaje: 70, n: 10, confianza: 'media', frase: 'frase P1' } },
+    { id: 'b', pregunta: '¿P2?', resolvio: '', combate: '', candidatos: [], criterio: '', jerarquia: 'accesorio' },
+    { id: 'c', pregunta: '¿P3?', resolvio: '', combate: '', candidatos: [], criterio: '', jerarquia: 'accesorio' },
+];
+const TESIS = [{ registro: '2015688', rubro: 'Rubro A', instancia: 'Primera Sala', obligatoria: true, localizacion: '', texto: 'texto A' },
+               { registro: '2020001', rubro: 'Rubro B', instancia: 'TCC', obligatoria: true, localizacion: '', texto: '' }];
+{
+    const l = td.tarjetaDeLaPropuesta(PROPUESTA, PROBLEMAS, TESIS);
+    ok(l.origen === 'local' && l.estado === '' && l.recomendada === null, 'local: sin estado ni recomendación');
+    ok(l.principal.numero === 1 && l.principal.por_que_principal === 'tema principal de prueba'
+       && l.principal.contraste.la_combate === false && l.principal.prediccion.frase === 'frase P1',
+       'local: el principal, su porqué, su contraste y su jurimetría');
+    ok(l.vias.propuesta.apoyos.length === 2 && l.vias.propuesta.apoyos[0].rubro === 'Rubro A'
+       && l.vias.propuesta.apoyos[0].fuerza === '' && l.vias.propuesta.apoyos[1].norma === 'art. 14 CPEUM',
+       'local: registro hidratado con el material SIN fuerza; el que no está, fuera; la norma se queda');
+    ok(l.vias.opuesta.sentido === 'fundado' && l.vias.opuesta.razon === '' && l.vias.opuesta.via_protectora?.posible
+       && l.vias.propuesta.via_protectora === null, 'local: la vía protectora cae del lado de su grupo');
+    const s2 = l.secundarios.find((s) => s.numero === 2);
+    ok(s2.en_propuesta.sentido === 'infundado' && s2.en_opuesta.sentido === 'innecesario'
+       && s2.en_propuesta.previsto && s2.en_opuesta.previsto, 'local: si_no_prospera / si_prospera por vía, «previsto»');
+    const s3 = l.secundarios.find((s) => s.numero === 3);
+    ok(s3.relacion === 'distinto' && s3.en_propuesta.por_que === 'solo texto' && s3.en_propuesta.sentido === '',
+       'local: tema distinto y el texto libre cuando no hay suerte estructurada');
+    ok(l.que_la_cambiaria.constancias_indispensables.join() === 'constancia X', 'local: sólo las indispensables');
+    const sinG = td.tarjetaDeLaPropuesta({ ...PROPUESTA, global: null }, PROBLEMAS, TESIS);
+    ok(sinG.vias.propuesta.sentido === 'infundado' && sinG.vias.opuesta === null
+       && sinG.secundarios[0].en_propuesta.previsto === false, 'local sin global: la propuesta por problema, sin contraria');
+    const nada = td.tarjetaDeLaPropuesta({ ...PROPUESTA, global: null, propuestas: [] }, PROBLEMAS, TESIS);
+    ok(nada.vias.propuesta === null && nada.estado_calculo === 'sin_propuesta', 'sin nada: sin propuesta');
+
+    const tocados = [
+        { ...PROBLEMAS[0], sentido: 'fundado', criterio: 'mi razón', razonDe: { sentido: 'fundado', delMotor: false }, de: 'tuya' },
+        { ...PROBLEMAS[1], sentido: 'innecesario', criterio: 'razón que puso el reparto', razonDe: { sentido: 'innecesario', delMotor: true }, de: 'principal', porQue: 'x' },
+        { ...PROBLEMAS[2], sentido: 'fundado', criterio: '', de: 'tuya' },
+    ];
+    const s = td.soltarLoTocado(tocados, PROPUESTA.propuestas);
+    ok(s[0].sentido === 'infundado' && s[0].criterio === 'mi razón' && s[0].de === 'motor',
+       'soltar: vuelve la calificación del motor y SU texto se queda');
+    ok(s[1].sentido === 'infundado' && s[1].criterio === 'razón motor 2' && s[1].razonDe.delMotor && s[1].porQue === '',
+       'soltar: lo que movió el reparto vuelve a la propuesta, con la razón del motor');
+    ok(s[2].sentido === undefined && s[2].de === undefined, 'soltar: sin propuesta del motor, sin calificación');
+}
+
+/* ═══ 3 · EL HTML DE LA TARJETA ═══ */
+const props = (t, extra = {}) => ({
+    tarjeta: api.tarjetaDe(t), esRecurso: true, hayGlobal: true, hayPropuestas: true,
+    viaActiva: 'propuesta', viaElegida: false, ladoSecundarios: 'propuesta',
+    tesis: TESIS, onAbrirTesis: () => {}, onResolverAsi: () => {}, onResolverOpuesta: () => {},
+    onMiCriterio: () => {}, onRedactarOpuesta: () => {}, ...extra,
+});
+{   /* A · propuesta y opuesta, estado claro */
+    const h = muestra('A · claro, sin elegir', pintar(React.createElement(PP, props(base()))));
+    ok(h.includes('id="problema-principal"') && h.includes('tarjeta-clave'), 'A: la tarjeta clave con su id');
+    ok(h.includes('El problema principal · decide el asunto') && h.includes('¿Pregunta principal de prueba?'),
+       'A: el rótulo y la pregunta del principal');
+    ok(h.includes('Te propongo') && h.includes('¿O resolverías en sentido opuesto?') && !h.includes('Vía A'),
+       'A: claro → «Te propongo» y «¿O resolverías…?»');
+    ok(/border-accent-gold/.test(boton(h, 'Resolver así')), 'A: «Resolver así» en oro');
+    ok(!/border-accent-gold/.test(boton(h, 'Resolver en sentido opuesto')), 'A: la opuesta en negro');
+    ok(h.includes('Resolver con mi criterio'), 'A: el tercer botón');
+    const b = fila3(h);
+    ok(b.indexOf('Resolver así') < b.indexOf('Resolver en sentido opuesto')
+       && b.indexOf('Resolver en sentido opuesto') < b.indexOf('Resolver con mi criterio'), 'A: el orden de los botones');
+    ok(chip(h) === 'vía: la propuesta · sin confirmar', 'A: el chip de la vía, sin confirmar');
+    const A = columna(h, 'propuesta'), B = columna(h, 'opuesta');
+    ok(A.includes('PRIMERO. Se confirma (prueba).') && B.includes('PRIMERO. Se revoca (prueba).'), 'A: el desenlace de cada vía');
+    ok(A.includes('Rubro de prueba A.') && A.includes('>obliga<') && A.includes('art. 93, fr. VI, LA (prueba)'),
+       'A: «Lo aplicaría con» con su fuerza y la norma');
+    ok(!A.includes('Rubro de prueba C.') && !A.includes('1999999') && A.includes('2 criterios más se quedaron fuera'),
+       'A: lo abandonado y lo que no está en el acervo NO se pinta como cita, y se dice');
+    ok(B.includes('orienta (art. 217, párr. tercero)') && B.includes('línea de la Corte · internet'),
+       'A: la jurisprudencia de colegiado orienta, y la de internet se marca');
+    ok(A.includes('AR 10/2025') && !B.includes('AR 10/2025'), 'A: tu tribunal, en la columna de su calificación');
+    ok(h.includes('Tu tribunal en este punto') && h.includes('AR 11/2025'), 'A: la fila sin calificación, aparte');
+    ok(A.includes('Lo que se diría en contra de A (prueba).') && B.includes('Objeción de la vía A (prueba).'),
+       'A: por dónde se cae cada una');
+    ok(A.includes('El contraste no la descarta') && B.includes('El contraste no la descarta'),
+       'A: combate y no sobrevive → el contraste no descarta ninguna');
+    ok(!A.includes('conceptos de violación que el juez no estudió') && B.includes('conceptos de violación que el juez no estudió')
+       && B.includes('No constan en lo que se subió'), 'A: los conceptos omitidos, sólo en la vía que revoca');
+    ok(h.includes('Claro: el material sostiene la propuesta') && h.includes('Razón del estado 1 (prueba).'), 'A: el estado y su porqué');
+    ok(!/\d+\s?%/.test(h), 'A: ningún porcentaje en la tarjeta');
+    ok(h.includes('Pista de prueba sin confirmar') && h.includes('no se citan'), 'A: las pistas, dichas como no citables');
+    ok(h.includes('Se estudian aparte') && h.includes('propuesta propia · inoperante'), 'A: el independiente con su propuesta');
+    ok(h.includes('Constancia de prueba'), 'A: qué cambiaría la decisión');
+    // secundarios en la vía propuesta
+    const fila = (x) => { const i = x.indexOf('data-secundario="2"'); return x.slice(i, x.indexOf('</li>', i)); };
+    ok(fila(h).includes('Infundado') && fila(h).includes('Por qué en A (prueba).') && !fila(h).includes('previsto'),
+       'A: el secundario con su suerte en la vía propuesta');
+    ok(h.includes('Se resuelven solos con el principal'), 'A: el pie de los secundarios');
+}
+{   /* A2 · la contraria elegida: la suerte cambia de vía */
+    const h = muestra('A2 · la contraria elegida', pintar(React.createElement(PP, props(base(), { viaActiva: 'contraria', viaElegida: true, ladoSecundarios: 'opuesta' }))));
+    const i = h.indexOf('data-secundario="2"'); const f = h.slice(i, h.indexOf('</li>', i));
+    ok(f.includes('Queda sin materia: lo absorbe el principal') && f.includes('previsto'),
+       'A2: en la contraria, la suerte de esa vía, rotulada «previsto»');
+    ok(chip(h) === 'vía: la contraria', 'A2: el chip dice la contraria, ya confirmada');
+    ok(/border-accent-gold/.test(columna(h, 'opuesta').slice(0, 300)) && !/border-accent-gold/.test(columna(h, 'propuesta').slice(0, 300)),
+       'A2: sólo la columna elegida se enmarca en oro');
+    ok(/aria-pressed="true"/.test(boton(h, 'Resolver en sentido opuesto')), 'A2: el botón de la contraria, pulsado');
+}
+{   /* A3 · un secundario marcado a mano */
+    const h = pintar(React.createElement(PP, props(base(), { viaActiva: 'criterio', marcados: { 2: { sentido: 'fundado', quien: 'marcado por ti' } } })));
+    ok(h.includes('marcado por ti · fundado'), 'A3: lo marcado a mano manda y se dice');
+}
+{   /* B · sin opuesta */
+    const h = muestra('B · sin opuesta', pintar(React.createElement(PP, props(base({ vias: { propuesta: base().vias.propuesta, opuesta: null } })))));
+    ok(columna(h, 'opuesta').includes('El motor no encontró cómo sostener la vía contraria'), 'B: la columna apagada con su leyenda');
+    ok(/disabled/.test(boton(h, 'Resolver en sentido opuesto')), 'B: el botón contrario, apagado');
+    const h2 = pintar(React.createElement(PP, props(base({ vias: { propuesta: base().vias.propuesta,
+        opuesta: { ...base().vias.opuesta, sentido: 'inoperante', prospera: false } } }))));
+    ok(columna(h2, 'opuesta').includes('El motor no encontró') && /disabled/.test(boton(h2, 'Resolver en sentido opuesto')),
+       'B: una «opuesta» del mismo grupo tampoco es alternativa');
+}
+{   /* C · reñido */
+    const h = muestra('C · reñido', pintar(React.createElement(PP, props(base({ estado: 'reñido', recomendada: null, estado_por_que: ['Motivo reñido (prueba).'] })))));
+    ok(h.includes('Vía A') && h.includes('Vía B') && !h.includes('Te propongo') && !h.includes('¿O resolverías'),
+       'C: reñido → «Vía A» y «Vía B», nada de «te propongo»');
+    ok(h.includes('Resolver por la vía A') && !/border-accent-gold/.test(boton(h, 'Resolver por la vía A')),
+       'C: ningún botón dorado para aceptar');
+    ok(!/border-accent-gold/.test(boton(h, 'Resolver con mi criterio')), 'C: ni el de su criterio');
+    ok(h.includes('Reñido: las dos vías se sostienen') && h.includes('Motivo reñido (prueba).'), 'C: el estado y su porqué');
+    ok(h.split('recomendada').length === 2 && h.includes('Ninguna se rotula como recomendada'),
+       'C: la palabra «recomendada» sólo aparece para negarla');
+}
+{   /* D · no alcanza */
+    const h = muestra('D · no alcanza', pintar(React.createElement(PP, props(base({ estado: 'no_alcanza', recomendada: null })))));
+    ok(fila3(h).indexOf('Resolver con mi criterio') < fila3(h).indexOf('Resolver por la vía A'), 'D: «Resolver con mi criterio» va primero');
+    ok(/border-accent-gold/.test(boton(h, 'Resolver con mi criterio')) && !/border-accent-gold/.test(boton(h, 'Resolver por la vía A')),
+       'D: y es el dorado');
+    ok(h.includes('data-botones="criterio-primero"') && h.includes('No alcanza para recomendar'), 'D: el estado');
+}
+{   /* E · conceptos omitidos, cuando ya constan */
+    const h = pintar(React.createElement(PP, props(base({ conceptos_omitidos: { hacen_falta: true, por_que: '', tenemos: true } }))));
+    ok(columna(h, 'opuesta').includes('Constan en el expediente'), 'E: si constan, se dice que el estudio los contesta');
+    const h2 = pintar(React.createElement(PP, props(base({ conceptos_omitidos: { hacen_falta: false, por_que: '', tenemos: false } }))));
+    ok(!h2.includes('que el juez no estudió'), 'E: si no hacen falta, no hay aviso');
+}
+{   /* F · la contraria sin razón */
+    const sin = base({ vias: { propuesta: base().vias.propuesta, opuesta: { ...base().vias.opuesta, razon: '' } } });
+    const h = pintar(React.createElement(PP, props(sin)));
+    ok(columna(h, 'opuesta').includes('El motor no escribió la razón de esta vía')
+       && columna(h, 'opuesta').includes('Si eliges esta vía podrás pedir que se redacte')
+       && !h.includes('Redactar el criterio de esta vía'), 'F: sin elegirla, sólo se anuncia');
+    const h2 = pintar(React.createElement(PP, props(sin, { viaActiva: 'contraria', viaElegida: true, ladoSecundarios: 'opuesta' })));
+    ok(h2.includes('Redactar el criterio de esta vía'), 'F: elegida, el botón de redactar (llamada al motor sólo con clic)');
+    const h3 = pintar(React.createElement(PP, props(sin, { viaActiva: 'contraria', viaElegida: true, razonActiva: 'Razón redactada (prueba).' })));
+    ok(h3.includes('redactada a tu pedido') && h3.includes('Razón redactada (prueba).'), 'F: redactada, se enseña como tal');
+}
+{   /* G · sin propuesta global */
+    const h = muestra('G · sin propuesta global', pintar(React.createElement(PP, props(base({ vias: { propuesta: base().vias.propuesta, opuesta: null } }),
+                                                   { hayGlobal: false }))));
+    ok(h.includes('El motor propone para este problema') && !h.includes('¿O resolverías') && !h.includes('Resolver así'),
+       'G: el principal con su propuesta por problema, sin contraria ni «resolver así»');
+    ok(h.includes('Resolver con mi criterio') && h.includes('propuso problema por problema'), 'G: su criterio y el porqué');
+    ok(!chip(h), 'G: sin vías no hay chip de vía');
+    const h2 = pintar(React.createElement(PP, props(base({ vias: { propuesta: null, opuesta: null } }),
+                                                    { hayGlobal: false, hayPropuestas: false, onProponer: () => {} })));
+    ok(h2.includes('no propuso ningún sentido') && h2.includes('Volver a pedir la propuesta'), 'G: sin nada, volver a pedirla');
+}
+{   /* H · la tarjeta local, pintada */
+    const l = td.tarjetaDeLaPropuesta(PROPUESTA, PROBLEMAS, TESIS);
+    const h = pintar(React.createElement(PP, { ...props(base()), tarjeta: l }));
+    ok(h.includes('data-origen="local"') && !h.includes('data-estado-banda'), 'H: la local no dice ningún estado');
+    ok(h.includes('Te propongo') && h.includes('Rubro A') && !h.includes('>obliga<'),
+       'H: la local no rotula «obliga» (el «obligatoria» del acervo no vale para un colegiado)');
+    ok(h.includes('el árbol de decisión lo confirma al generar'), 'H: dice que lo «previsto» lo confirma el árbol');
+}
+
+/* ═══ 4 · DECISION MONTADA ENTERA ═══ */
+{
+    const plan = { activo: true, firma: 'f', pedir: () => Promise.reject(new Error('x')), leer: () => Promise.reject(new Error('x')) };
+    const comunes = {
+        problemas: PROBLEMAS.map((p, i) => ({ ...p, sentido: PROPUESTA.propuestas[i].sentido || undefined })),
+        onCambiar: () => {}, onGenerar: () => {}, propuesta: PROPUESTA, modo: 'global',
+        sentidoGlobal: 'infundado', razonGlobal: 'razón global', globalDictado: false,
+        tocados: new Set(), esRecurso: true, plan, tesisDelMaterial: TESIS,
+    };
+    const tServ = api.tarjetaDe(base({ secundarios: [{ ...base().secundarios[0] },
+        { numero: 3, pregunta: '¿P3?', relacion: 'distinto',
+          en_propuesta: { sentido: 'inoperante', de: 'arbol', relacion: 'distinto' },
+          en_opuesta: { sentido: 'inoperante', de: 'arbol', relacion: 'distinto' } }], independientes: [] }));
+    const h = muestra('Decision entera · la del servidor', pintar(React.createElement(Decision, { ...comunes, tarjeta: tServ })));
+    ok(h.includes('id="problema-principal"') && h.includes('data-origen="servidor"'), 'D: la tarjeta del servidor, montada');
+    ok(!h.includes('Ver por qué') && !h.includes('Cambiar el sentido') && !h.includes('El motor propone</p>'),
+       'D: fuera «la frase» y «el porqué»');
+    const fin = h.slice(h.indexOf('id="asi-sale"'));
+    ok(/Infundado<\/span><span[^>]*>del motor/.test(fin) || fin.includes('del motor'), 'D: el principal en la tarjeta final');
+    ok(fin.includes('¿P2?') && /sigue al principal|del motor|cae con el principal/.test(fin.slice(fin.indexOf('¿P2?'), fin.indexOf('¿P3?')))
+       && fin.slice(fin.indexOf('¿P2?'), fin.indexOf('¿P3?')).includes('Infundado'),
+       'D: en «todo el asunto», el accesorio con la suerte del reparto, no en blanco');
+    ok(fin.slice(fin.indexOf('¿P3?')).includes('se estudia aparte'), 'D: el de tema distinto dice que se estudia aparte');
+    ok(fin.includes('se ordena cuando elijas la vía'), 'D: el plan espera a que se elija la vía');
+    // sin la del servidor: la local
+    const h2 = pintar(React.createElement(Decision, { ...comunes, tarjeta: null }));
+    ok(h2.includes('data-origen="local"') && h2.includes('Te propongo'), 'D: sin la del servidor, la local');
+    const fin2 = h2.slice(h2.indexOf('id="asi-sale"'));
+    ok(fin2.slice(fin2.indexOf('¿P2?'), fin2.indexOf('¿P3?')).includes('previsto'),
+       'D: con la local, la suerte del accesorio se rotula «previsto»');
+    // la contraria en pantalla, dictada con su razón
+    const h3 = pintar(React.createElement(Decision, { ...comunes, tarjeta: tServ, sentidoGlobal: 'fundado',
+                                                      globalDictado: true, razonGlobal: 'Razón de la vía B (prueba).' }));
+    ok(h3.includes('vía: la contraria'), 'D: dictado con la razón de la opuesta → «la contraria»');
+    const fin3 = h3.slice(h3.indexOf('id="asi-sale"'));
+    ok(fin3.slice(fin3.indexOf('¿P2?'), fin3.indexOf('¿P3?')).includes('previsto'),
+       'D: la tarjeta final sigue a la vía en pantalla');
+    // problema por problema: la ventana manual de siempre, con su ancla
+    const h4 = pintar(React.createElement(Decision, { ...comunes, tarjeta: tServ, propuesta: { ...PROPUESTA, global: null }, modo: 'por_problema' }));
+    ok(!h4.includes('Te propongo') && h4.includes('El motor propone para este problema'), 'D: sin global, sin columnas');
+    // sin propuesta: la tarjeta lo dice y deja volver a pedirla
+    const h5 = pintar(React.createElement(Decision, { ...comunes, propuesta: null, tarjeta: null, onProponer: () => {} }));
+    ok(h5.includes('no propuso ningún sentido') && h5.includes('Volver a pedir la propuesta') && h5.includes('Resolver con mi criterio'),
+       'D: sin propuesta, la tarjeta lo dice y ofrece su criterio');
+}
+
+/* ═══ 5 · EL HOOK QUE PIDE LA TARJETA ═══
+   Con un React mínimo (useState/useEffect con dependencias) y un reloj falso. */
+{
+    const FALSO = path.join(TMP, 'falso');
+    const aFalso = [['require("react")', 'require("./react_falso.js")']];
+    for (const f of ['api.ts', 'tipos.ts', 'calificaciones.ts', 'recalificacion.ts', 'tarjetaDelPrincipal.ts']) transpilar(FALSO, f, aFalso);
+    fs.writeFileSync(path.join(FALSO, 'react_falso.js'), `
+const R = { hooks: [], i: 0, efectos: [] };
+function useState(ini) { const i = R.i++; if (!(i in R.hooks)) R.hooks[i] = { v: typeof ini === 'function' ? ini() : ini };
+  const h = R.hooks[i]; return [h.v, (nv) => { h.v = typeof nv === 'function' ? nv(h.v) : nv; }]; }
+function useRef(ini) { const i = R.i++; if (!(i in R.hooks)) R.hooks[i] = { current: ini }; return R.hooks[i]; }
+function useEffect(fn, deps) { const i = R.i++; const prev = R.hooks[i];
+  const cambia = !prev || !deps || deps.length !== prev.deps.length || deps.some((d, k) => !Object.is(d, prev.deps[k]));
+  if (!cambia) return; const reg = { deps, limpiar: null }; R.hooks[i] = reg;
+  R.efectos.push(() => { if (prev && prev.limpiar) prev.limpiar(); const c = fn(); reg.limpiar = typeof c === 'function' ? c : null; }); }
+function useMemo(fn) { return fn(); }
+function useCallback(fn) { return fn; }
+module.exports = { __R: R, useState, useRef, useEffect, useMemo, useCallback, createElement: () => null, default: null };
+`);
+    const rq = createRequire(path.join(FALSO, 'x.js'));
+    const Rf = rq('./react_falso.js');
+    const tdf = rq('./tarjetaDelPrincipal.js');
+    const vaciar = async () => { for (let k = 0; k < 20; k++) await Promise.resolve(); };
+    const relojes = [];
+    const stReal = globalThis.setTimeout, ctReal = globalThis.clearTimeout;
+    globalThis.setTimeout = (fn, ms) => { const id = relojes.length + 1; relojes.push({ id, fn, ms, vivo: true }); return id; };
+    globalThis.clearTimeout = (id) => { const r = relojes.find((x) => x.id === id); if (r) r.vivo = false; };
+    const correr = async () => { for (const r of relojes.filter((x) => x.vivo)) { r.vivo = false; r.fn(); } await vaciar(); };
+    let res = null;
+    const pintarHook = async (prop, leer) => {
+        Rf.__R.i = 0;
+        res = tdf.useTarjetaDelPrincipal(prop, '631/2025', 'casa@iurexia.com', leer);
+        const ef = Rf.__R.efectos.splice(0); ef.forEach((f) => f());
+        await vaciar();
+        Rf.__R.i = 0;
+        res = tdf.useTarjetaDelPrincipal(prop, '631/2025', 'casa@iurexia.com', leer);
+    };
+    let n = 0;
+    const cola = [];
+    const leer = async () => { n += 1; return cola.length ? cola.shift() : api.tarjetaDe(base()); };
+    const p1 = { ...PROPUESTA };
+    await pintarHook(p1, leer);
+    ok(n === 1 && res && res.estado === 'claro', 'hook: una petición por propuesta y la tarjeta llega');
+    await pintarHook(p1, leer);
+    ok(n === 1, 'hook: el mismo objeto de propuesta no vuelve a pedir');
+    // «calculando» → reintenta con pausa, hasta el tope
+    const p2 = { ...PROPUESTA };
+    cola.push(api.tarjetaDe({ estado_calculo: 'calculando' }), api.tarjetaDe({ estado_calculo: 'calculando' }));
+    await pintarHook(p2, leer);
+    ok(res === null, 'hook: lo de la propuesta anterior no se pinta mientras llega la nueva');
+    ok(relojes.some((r) => r.vivo && r.ms === tdf.PAUSA_TARJETA_MS), 'hook: «calculando» → otra pregunta tras la pausa');
+    await correr(); await correr();
+    Rf.__R.i = 0; res = tdf.useTarjetaDelPrincipal(p2, '631/2025', 'casa@iurexia.com', leer);
+    ok(n === 4 && res && res.estado === 'claro', 'hook: tras dos «calculando», la tercera respuesta se pinta');
+    // un fallo no rompe: la pantalla sigue con la local
+    const p3 = { ...PROPUESTA };
+    await pintarHook(p3, async () => { throw new Error('caído'); });
+    ok(res === null, 'hook: si falla, null (la pantalla pinta la local)');
+    // sin propuesta no se pide nada
+    let pedidas = 0;
+    await pintarHook(null, async () => { pedidas += 1; return null; });
+    ok(pedidas === 0 && res === null, 'hook: sin propuesta no pide');
+    globalThis.setTimeout = stReal; globalThis.clearTimeout = ctReal;
+}
+
+const iHtml = process.argv.indexOf('--html');
+if (iHtml > 0 && process.argv[iHtml + 1]) {
+    const salida = path.resolve(process.argv[iHtml + 1]);
+    const css = process.argv[iHtml + 2] ? fs.readFileSync(process.argv[iHtml + 2], 'utf8') : '';
+    const cuerpo = MUESTRAS.map(([t, h]) => `<h1 style="font:600 12px system-ui;color:#c9a962;margin:32px 0 8px">${t}</h1>${h}`).join('\n');
+    fs.writeFileSync(salida, `<!doctype html><html lang="es"><head><meta charset="utf-8">`
+        + `<meta name="viewport" content="width=device-width, initial-scale=1"><title>Problema principal</title>`
+        + `<style>${css}</style></head><body class="taller-negro" style="margin:0;padding:24px;color:#fff">`
+        + `<main style="max-width:880px;margin:0 auto">${cuerpo}</main></body></html>`);
+    console.log(`página: ${salida}`);
+}
+
+console.log(`\n${fallas ? 'FALLA' : 'OK'} · ${bien} comprobaciones bien, ${fallas} mal`);
+process.exit(fallas ? 1 : 0);

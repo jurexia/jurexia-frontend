@@ -81,6 +81,18 @@ transpilar('src/components/sentencia/Decision.tsx', 'decision.js', [
     ['require("./ComoSeEstudiara")', 'require("./como_espia.js")'],
     ['require("./recalificacion")', 'require("./recal.js")'],
 ]);
+/* LA TARJETA DEL PROBLEMA PRINCIPAL (28-sep-2026), que Decision monta en
+   lugar de «la frase»: con el mismo React falso, se pinta entera en el árbol
+   (comprobaciones/problema_principal.mjs la prueba aparte con React de verdad). */
+transpilar('src/components/sentencia/calificaciones.ts', 'calificaciones.js');
+transpilar('src/components/sentencia/tarjetaDelPrincipal.ts', 'tarjetaDelPrincipal.js', [
+    REACT, ['require("./recalificacion")', 'require("./recal.js")'],
+]);
+transpilar('src/components/sentencia/ProblemaPrincipal.tsx', 'ProblemaPrincipal.js', [
+    REACT,
+    ['require("lucide-react")', 'require("./nada.js")'],
+    ['require("./primitivas")', 'require("./primitivas_falsas.js")'],
+]);
 fs.writeFileSync(path.join(TMP, 'nada.js'),
     'module.exports = new Proxy({}, { get: () => () => null });');
 

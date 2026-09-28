@@ -10,6 +10,8 @@
  * confirma quien los tiene delante.
  */
 
+import type { ApoyoDeLaVia, FuerzaDelApoyo, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
+
 export interface EncargoAdelanto {
     numero: string;                 // «512/2026»
     encabezado: string;             // «AMPARO DIRECTO ADMINISTRATIVO: 512/2026»
@@ -2431,4 +2433,197 @@ export function mapaDe(x: unknown): MapaDelEstudio | null {
 export function planDeSesionParaMapa(mapa: MapaDelEstudio, r: RespuestaPlan | null): PlanDelEstudio | null {
     if (!r || r.estado !== 'listo' || !r.plan || !mapa.planClave) return null;
     return r.clave === mapa.planClave ? r.plan : null;
+}
+
+/* ═══ LA TARJETA DEL PROBLEMA PRINCIPAL (28-sep-2026, AR 631/2025) ═══
+   `GET /taller/tarjeta` la arma el servidor sin llamar a ningún modelo (0 USD)
+   con lo que ya calculó: la propuesta y su vía contraria, el contraste, el
+   árbol de decisión corrido por las DOS vías, el espejo y la línea de
+   internet. La pantalla la pide al llegar la propuesta y la pinta en
+   ProblemaPrincipal.tsx (contrato_tarjeta.md, formato 1).
+
+   Lectura tolerante, como la del plan: todo puede faltar o venir nulo. Un
+   servidor anterior a la tarjeta contesta 404 —o 405—: eso NO es un error del
+   asunto, es que aún no la sirve, y la pantalla sigue con la tarjeta que arma
+   ella misma con la propuesta (`tarjetaDeLaPropuesta`). Por eso esos dos
+   códigos devuelven null en vez de lanzar. */
+const _FUERZAS = ['obliga', 'orienta', 'pleno_circuito', 'precedente_propio'] as const;
+function _apoyoDe(x: unknown): ApoyoDeLaVia | null {
+    const o = _o(x);
+    // Un apoyo que llega como texto suelto es un registro o una norma: el
+    // servidor ya no los manda así, pero una tarjeta vieja podría.
+    if (!o) {
+        const t = _t(x);
+        if (!t) return null;
+        const reg = /^\d{6,8}$/.test(t) ? t : '';
+        return { registro: reg, rubro: '', instancia: '', tipo: '', fuerza: '', fuerza_texto: '',
+                 vigencia: null, de_internet: false, en_acervo: !!reg, norma: reg ? null : t };
+    }
+    const f = _t(o.fuerza).toLowerCase();
+    const norma = _t(o.norma);
+    const registro = _t(o.registro);
+    if (!registro && !norma) return null;
+    return {
+        registro,
+        rubro: _t(o.rubro),
+        instancia: _t(o.instancia),
+        tipo: _t(o.tipo).toLowerCase(),
+        fuerza: (_FUERZAS as readonly string[]).includes(f) ? f as FuerzaDelApoyo : '',
+        fuerza_texto: _t(o.fuerza_texto),
+        vigencia: _t(o.vigencia) || null,
+        de_internet: o.de_internet === true,
+        // Sin el campo se da por verificado sólo si trae registro: el servidor
+        // no manda como cita lo que no está en el material.
+        en_acervo: o.en_acervo === undefined ? !!registro : o.en_acervo === true,
+        norma: norma || null,
+    };
+}
+const _apoyosDe = (x: unknown): ApoyoDeLaVia[] =>
+    _l(x).map(_apoyoDe).filter((a): a is ApoyoDeLaVia => !!a);
+
+function _suerteDe(x: unknown): SuerteDelSecundario | null {
+    const o = _o(x);
+    if (!o) return null;
+    return {
+        sentido: _t(o.sentido).toLowerCase(),
+        de: _t(o.de).toLowerCase(),
+        por_que: _t(o.por_que ?? o.porQue),
+        relacion: _t(o.relacion).toLowerCase(),
+        guarda: _t(o.guarda).toLowerCase() || null,
+        recalificar: o.recalificar === true,
+        previsto: o.previsto === true,
+    };
+}
+
+function _viaDe(x: unknown): ViaDeLaTarjeta | null {
+    const o = _o(x);
+    if (!o) return null;
+    const sentido = _t(o.sentido).toLowerCase();
+    const razon = _t(o.razon);
+    if (!sentido && !razon) return null;
+    const cad = _o(o.cadena);
+    const obj = _o(o.objecion);
+    const vp = _o(o.via_protectora);
+    return {
+        sentido,
+        prospera: o.prospera === true ? true : o.prospera === false ? false : null,
+        razon,
+        efecto: _t(o.efecto),
+        desenlace: _ts(o.desenlace),
+        desenlace_nota: _t(o.desenlace_nota) || null,
+        interpretacion: _t(o.interpretacion) || null,
+        cadena: cad ? {
+            regla: _t(cad.regla),
+            hechos: _l(cad.hechos).map((h) => {
+                const q = _o(h) ?? {};
+                return { afirma: _t(q.afirma), cita: _t(q.cita), fuente: _t(q.fuente) };
+            }).filter((h) => h.afirma || h.cita),
+            subsuncion: _t(cad.subsuncion),
+            conclusion: _t(cad.conclusion),
+        } : null,
+        objecion: obj && (_t(obj.de_la_otra_via) || _t(obj.respuesta))
+            ? { de_la_otra_via: _t(obj.de_la_otra_via), respuesta: _t(obj.respuesta) } : null,
+        apoyos: _apoyosDe(o.apoyos),
+        via_protectora: vp ? {
+            sentido: _t(vp.sentido).toLowerCase(), posible: vp.posible === true,
+            norma: _t(vp.norma), lectura: _t(vp.lectura), limite: _t(vp.limite),
+        } : null,
+    };
+}
+
+export function tarjetaDe(x: unknown): TarjetaDecision | null {
+    const j = _o(x);
+    if (!j) return null;
+    const ec = _t(j.estado_calculo).toLowerCase();
+    const est = _t(j.estado).toLowerCase().replace('renido', 'reñido');
+    const rec = _t(j.recomendada).toLowerCase();
+    const p = _o(j.principal);
+    const dm = p ? _o(p.discrepa_motor) : null;
+    const con = p ? _o(p.contraste) : null;
+    const pred = p ? _o(p.prediccion) : null;
+    const vias = _o(j.vias) ?? {};
+    const qc = _o(j.que_la_cambiaria);
+    const crux = qc ? _o(qc.crux) : null;
+    const lc = _o(j.linea_corte) ?? {};
+    const del = _o(j.deliberacion);
+    const pt = del ? _o(del.proposicion_toral) : null;
+    const co = _o(j.conceptos_omitidos);
+    return {
+        formato: _n(j.formato) ?? 1,
+        estado_calculo: ec === 'sin_propuesta' || ec === 'calculando' ? ec : 'listo',
+        huella: _t(j.huella),
+        principal: p ? {
+            numero: _n(p.numero) ?? 0,
+            pregunta: _t(p.pregunta),
+            clase: _t(p.clase),
+            jerarquia_de: _t(p.jerarquia_de),
+            por_que_principal: _t(p.por_que_principal),
+            discrepa_motor: dm && (_t(dm.nota) || _n(dm.numero_motor) !== null)
+                ? { numero_motor: _n(dm.numero_motor), nota: _t(dm.nota) } : null,
+            contraste: con && (_t(con.razon_toral) || con.la_combate !== undefined) ? {
+                razon_toral: _t(con.razon_toral), la_combate: con.la_combate === true,
+                sobrevive: con.sobrevive === true, veredicto_previo: _t(con.veredicto_previo),
+            } : null,
+            prediccion: pred && _t(pred.frase) ? { frase: _t(pred.frase), n: _n(pred.n) ?? 0 } : null,
+        } : null,
+        vias: { propuesta: _viaDe(vias.propuesta), opuesta: _viaDe(vias.opuesta) },
+        recomendada: rec === 'propuesta' || rec === 'opuesta' ? rec : null,
+        // Un estado que no se reconoce no se inventa: sin estado, la pantalla
+        // no rotula ninguna vía como recomendada ni dice «claro».
+        estado: est === 'claro' || est === 'reñido' || est === 'no_alcanza' ? est : '',
+        estado_por_que: _ts(j.estado_por_que),
+        secundarios: _l(j.secundarios).map((y) => {
+            const s = _o(y) ?? {};
+            return {
+                numero: _n(s.numero) ?? 0, pregunta: _t(s.pregunta), clase: _t(s.clase),
+                relacion: _t(s.relacion).toLowerCase(),
+                en_propuesta: _suerteDe(s.en_propuesta), en_opuesta: _suerteDe(s.en_opuesta),
+            };
+        }).filter((s) => s.numero > 0 || s.pregunta),
+        independientes: _l(j.independientes).map((y) => {
+            const s = _o(y) ?? {};
+            const pr = _o(s.propuesta);
+            return {
+                numero: _n(s.numero) ?? 0, pregunta: _t(s.pregunta),
+                propuesta: pr ? { sentido: _t(pr.sentido).toLowerCase(), razon: _t(pr.razon),
+                                  apoyos: _apoyosDe(pr.apoyos) } : null,
+            };
+        }).filter((s) => s.numero > 0 || s.pregunta),
+        que_la_cambiaria: qc ? {
+            en_contra: _t(qc.en_contra),
+            crux: crux && _t(crux.que) ? { que: _t(crux.que), si_cambia: _t(crux.si_cambia),
+                                            constancia: _t(crux.constancia) } : null,
+            constancias_indispensables: _ts(qc.constancias_indispensables),
+            limite_protector: _t(qc.limite_protector) || null,
+        } : null,
+        tu_tribunal: _l(j.tu_tribunal).map((y) => {
+            const f = _o(y) ?? {};
+            return {
+                expediente: _t(f.expediente), fecha: _t(f.fecha), sentido: _t(f.sentido),
+                calificacion: _t(f.calificacion).toLowerCase(), razon: _t(f.razon),
+                similitud: _n(f.similitud), nivel: _t(f.nivel) || null, neun: _t(f.neun),
+            };
+        }).filter((f) => f.expediente),
+        linea_corte: { confirmadas: _apoyosDe(lc.confirmadas), pistas: _ts(lc.pistas) },
+        deliberacion: del ? {
+            origen: _t(del.origen), pregunta_decisiva: _t(del.pregunta_decisiva), figura: _t(del.figura),
+            proposicion_toral: pt && _t(pt.dice) ? { dice: _t(pt.dice), cita: _t(pt.cita) } : null,
+        } : null,
+        conceptos_omitidos: co ? {
+            hacen_falta: co.hacen_falta === true, por_que: _t(co.por_que), tenemos: co.tenemos === true,
+        } : null,
+        avisos: _l(j.avisos).map(_textoDeAviso).filter(Boolean),
+        origen: 'servidor',
+    };
+}
+
+/** Pide la tarjeta del asunto. null = el servidor aún no la sirve (404/405) o
+ *  no trae nada legible: la pantalla sigue con la suya. */
+export async function leerTarjeta(numero: string, userEmail: string): Promise<TarjetaDecision | null> {
+    const res = await fetch(
+        `${BASE}/taller/tarjeta?numero=${encodeURIComponent(numero)}`
+        + `&user_email=${encodeURIComponent(userEmail)}`);
+    if (res.status === 404 || res.status === 405) return null;
+    if (!res.ok) return _fallo(res);
+    return tarjetaDe(await res.json().catch(() => null));
 }

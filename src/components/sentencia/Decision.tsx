@@ -3,9 +3,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, Loader2, PenLine, Sparkles, ChevronRight, AlertTriangle, Zap } from 'lucide-react';
 import { cn, Pastilla } from './primitivas';
-import type { ProblemaJuridico } from './tipos';
+import type { ProblemaJuridico, TarjetaDecision } from './tipos';
 import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
-              PropuestaSuplencia, DecisionSuplencia } from './api';
+              PropuestaSuplencia, DecisionSuplencia, TesisDelAcervo } from './api';
+import { FINAS, grupoDe, legible } from './calificaciones';
+import ProblemaPrincipal from './ProblemaPrincipal';
+import type { MarcaDeSecundario } from './ProblemaPrincipal';
+import { elegirTarjeta, ladoDelSentido, prosperaDeLaVia, rotuloDeSuerte, suerteDe,
+         tarjetaDeLaPropuesta, viaActivaDe } from './tarjetaDelPrincipal';
+import type { LadoDeLaTarjeta, ViaActiva } from './tarjetaDelPrincipal';
 import EstudiarJuntos from './EstudiarJuntos';
 import ComoSeEstudiara, { usePlanDelEstudio, jerarquiaDelPlan } from './ComoSeEstudiara';
 import type { EnlacePlan, JerarquiaDelPlan } from './ComoSeEstudiara';
@@ -24,9 +30,12 @@ import type { Superpuesta } from './recalificacion';
    jurídico. Esto ya funcionaba: sólo ajústalo al nuevo pipeline».
 
    Así que el orden es:
-     1. LA FRASE del motor, con su razón y su confianza.
-     2. DOS BOTONES: aceptar y generar, o cambiar el sentido.
-     3. Al cambiar, LAS DOS VÍAS DE SIEMPRE, explícitas: todo el asunto —una
+     1. EL PROBLEMA PRINCIPAL Y SU SOLUCIÓN (28-sep-2026, tras el AR
+        631/2025; antes, «la frase» del motor y un «ver por qué» que escondía
+        la vía contraria): el principal, los secundarios con su suerte, las
+        dos vías del mismo peso y tres botones. Ver ProblemaPrincipal.tsx.
+     2. «RESOLVER CON MI CRITERIO» abre la ventana de siempre, sin cambiarla.
+     3. En esa ventana, LAS DOS VÍAS DE SIEMPRE, explícitas: todo el asunto —una
         calificación gobierna el proyecto— o problema por problema, cada uno
         con SUS calificaciones a la vista (las diez, no tres genéricas), su
         razón y la jurimetría del acervo al lado.
@@ -40,32 +49,9 @@ import type { Superpuesta } from './recalificacion';
    `modos_decision.repartir`. */
 
 type Modo = 'acervo' | 'global' | 'por_problema';
-type Grupo = 'si' | 'no' | 'sm';
 
-/* Las calificaciones que puede escribir un proyecto, en el orden en que un
-   secretario las piensa. Las cuatro de arriba prosperan; las demás no. */
-const FINAS: { id: string; etiqueta: string; grupo: Grupo }[] = [
-    { id: 'fundado', etiqueta: 'Fundado', grupo: 'si' },
-    { id: 'esencialmente_fundado', etiqueta: 'Esencialmente fundado', grupo: 'si' },
-    { id: 'sustancialmente_fundado', etiqueta: 'Sustancialmente fundado', grupo: 'si' },
-    { id: 'parcialmente_fundado', etiqueta: 'Parcialmente fundado', grupo: 'si' },
-    { id: 'fundado_insuficiente', etiqueta: 'Fundado pero insuficiente', grupo: 'no' },
-    { id: 'infundado', etiqueta: 'Infundado', grupo: 'no' },
-    { id: 'inoperante', etiqueta: 'Inoperante', grupo: 'no' },
-    { id: 'inatendible', etiqueta: 'Inatendible', grupo: 'no' },
-    { id: 'ineficaz', etiqueta: 'Ineficaz', grupo: 'no' },
-    { id: 'sin_materia', etiqueta: 'Sin materia', grupo: 'sm' },
-];
-
-function grupoDe(sentido: string | undefined): Grupo | '' {
-    const f = FINAS.find((x) => x.id === (sentido || '').toLowerCase());
-    return f ? f.grupo : (sentido || '').toLowerCase() === 'innecesario' ? 'sm' : '';
-}
-
-function legible(sentido: string | undefined): string {
-    const f = FINAS.find((x) => x.id === (sentido || '').toLowerCase());
-    return f ? f.etiqueta : (sentido || '').replace(/_/g, ' ');
-}
+/* FINAS, grupoDe, legible y fraseDe viven desde el 28-sep-2026 en
+   calificaciones.ts: la tarjeta del problema principal las lee igual. */
 
 /* ═══ LA VÍA PROTECTORA (24-sep-2026) ═══
    David, sobre el 711/2025: «sólo operan ese tipo de interpretaciones en
@@ -104,31 +90,6 @@ function AvisoViaProtectora({ via, sentido }: { via?: ViaProtectora | null; sent
                     {via.lectura ? ` — ${via.lectura}` : ''}</>
             )}
         </p>
-    );
-}
-
-/* La frase grande: lo que el resolutivo va a hacer, no la etiqueta. */
-function fraseDe(sentido: string, esRecurso: boolean): string {
-    const g = grupoDe(sentido);
-    const que = legible(sentido).toLowerCase();
-    if (g === 'si') return esRecurso ? `Prospera el recurso: ${que}` : `Se concede: ${que}`;
-    if (g === 'no') return esRecurso ? `No prospera: agravios ${que}s` : `Se niega: conceptos ${que}s`;
-    if (g === 'sm') return 'Queda sin materia';
-    return legible(sentido) || 'Sin sentido propuesto';
-}
-
-function Confianza({ nivel }: { nivel: string }) {
-    const n = (nivel || '').toLowerCase();
-    const on = n === 'alta' ? 3 : n === 'media' ? 2 : n ? 1 : 0;
-    return (
-        <span className="inline-flex items-center gap-1 align-middle" title={`Confianza ${n || 'sin dato'}`}>
-            {[0, 1, 2].map((i) => (
-                <i key={i} className={cn('h-[5px] w-3.5 rounded-full', i < on ? 'bg-accent-gold' : 'bg-white/10')} />
-            ))}
-            <span className="ml-1 text-[10px] uppercase tracking-wide text-white/45">
-                {n ? `confianza ${n}` : ''}
-            </span>
-        </span>
     );
 }
 
@@ -359,6 +320,14 @@ function MarcaRecalificacion({ sup, onReintentar }: { sup: Superpuesta; onReinte
     );
 }
 
+/* Sin propuesta (la pidió y falló, o se está volviendo a pedir): la tarjeta
+   dice que no hay y deja a mano «Resolver con mi criterio» y «Volver a pedir
+   la propuesta», como hacía «la frase». */
+const SIN_PROPUESTA: RespuestaPropuesta = {
+    propuestas: [], global: null, contraste: [], resumen: '', avisos: [],
+    criteriosJson: '', modelo: '', necesitaConceptos: false,
+};
+
 /* Sin enlace, el hook no pide nada: la cuenta no escribe con plan. */
 const PLAN_APAGADO: EnlacePlan = {
     activo: false, firma: '',
@@ -426,6 +395,8 @@ export default function Decision({
     esCasa = false, varianteEstudio = '', onVarianteEstudio,
     recalificadas = {}, recalificacionEnCurso = false, avisosRecalificacion = [],
     onReintentarRecalificacion,
+    tarjeta = null, tesisDelMaterial, onAbrirTesis,
+    onVolverALaPropuesta, onResolverPorLaVia,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -506,6 +477,24 @@ export default function Decision({
     recalificacionEnCurso?: boolean;
     avisosRecalificacion?: string[];
     onReintentarRecalificacion?: () => void;
+    /** LA TARJETA DEL PROBLEMA PRINCIPAL que armó el servidor (GET
+     *  /taller/tarjeta, 28-sep-2026). null mientras no llega o si el servidor
+     *  aún no la sirve: entonces se pinta la que arma la pantalla con la
+     *  propuesta (`tarjetaDeLaPropuesta`). */
+    tarjeta?: TarjetaDecision | null;
+    /** Las tesis del material: el clic en un criterio de la tarjeta abre la
+     *  suya en VentanaTesis, con su texto. */
+    tesisDelMaterial?: TesisDelAcervo[];
+    onAbrirTesis?: (t: TesisDelAcervo) => void;
+    /** «RESOLVER ASÍ»: vuelve a la propuesta del motor —todo el asunto, su
+     *  sentido y su razón, NO dictado— y suelta lo tocado a mano. No es
+     *  `onSentidoGlobal`, que dicta siempre (page.tsx `elegirGlobal`): con el
+     *  global dictado el sentido se vuelve la brocha de todos los no tocados y
+     *  el árbol deja de recalificar (lector2_visor.md, riesgo 2). */
+    onVolverALaPropuesta?: () => void;
+    /** Resolver por otra vía entera: todo el asunto, ESE sentido dictado y SU
+     *  razón —siempre la sustituye: lección 1 del 631—, y lo tocado suelto. */
+    onResolverPorLaVia?: (sentido: string, razon: string) => void;
 }) {
     const [corrigiendo, setCorrigiendo] = useState(false);
     /* SIN PROPUESTA GLOBAL, LAS CALIFICACIONES A LA VISTA (auditoría,
@@ -513,7 +502,15 @@ export default function Decision({
        diez calificaciones sólo salían tras «Cambiar el sentido», y el botón de
        generar quedaba apagado sin salida visible. */
     useEffect(() => { if (propuesta && !propuesta.global) setCorrigiendo(true); }, [propuesta]);
-    const [porQue, setPorQue] = useState(false);
+    /* ═══ LA VÍA QUE ÉL ELIGIÓ (28-sep-2026) ═══
+       null hasta que pulsa uno de los tres botones de la tarjeta. Cada
+       propuesta nueva la olvida: la elección era sobre otra. Sin propuesta
+       global no hay vías que elegir: decide en su ventana, que ya está
+       abierta. El plan del estudio espera a que haya vía (ver
+       `listoParaPlan`): alternar entre las dos vías antes de decidir gastaba
+       las cuatro corridas de la sesión en firmas que nadie iba a usar. */
+    const [viaElegida, setViaElegida] = useState<ViaActiva | null>(null);
+    useEffect(() => { setViaElegida(propuesta && !propuesta.global ? 'criterio' : null); }, [propuesta]);
     const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
     const [textoAporte, setTextoAporte] = useState('');
     // Cuál de los dos botones se pulsó: el giro va en ése, no en los dos.
@@ -540,6 +537,87 @@ export default function Decision({
     const contrasteDe = (i: number) => (propuesta?.contraste ?? []).find((c) => c.numero === i + 1);
     const enGlobal = modo === 'global';
 
+    /* ═══ LA TARJETA DEL PROBLEMA PRINCIPAL ═══
+       La del servidor si llegó; si no, la que se arma aquí con la propuesta
+       (sin estado y con la suerte de los secundarios «prevista»). */
+    const tarjetaLocal = useMemo(
+        () => tarjetaDeLaPropuesta(propuesta ?? SIN_PROPUESTA, problemas, tesisDelMaterial ?? []),
+        [propuesta, problemas, tesisDelMaterial]);
+    const tarjetaVista = elegirTarjeta(tarjeta, tarjetaLocal);
+    /* Cualquier marca a mano cuenta, también la del principal: en «todo el
+       asunto» viaja y gana a la calificación global (opcionesDelProyecto). */
+    const nTocados = problemas.filter((p) => tocados?.has(p.id) && !!p.sentido).length;
+    const viaActiva: ViaActiva = viaActivaDe({
+        enGlobal, globalDictado, sentidoGlobal, razonGlobal,
+        sentidoMotor: global?.sentido ?? '', nTocados, tarjeta: tarjetaVista, elegida: viaElegida,
+    });
+    /* Él eligió con un botón, o está decidiendo en su ventana. */
+    const viaConfirmada = !!viaElegida || corrigiendo;
+    /* De qué vía es la suerte que se pinta en los secundarios: la de la vía
+       en pantalla; con su criterio, la de la vía cuyo grupo casa con cómo
+       calificó el principal (en su ventana, lo que él marcó manda y se dice
+       aparte, en `marcados`). */
+    const sentidoDelPrincipal = enGlobal ? sentidoGlobal
+        : principal ? (recalificadas[principal.id]?.sentido || principal.sentido || '') : '';
+    const ladoSecundarios: LadoDeLaTarjeta | null = viaActiva === 'propuesta' ? 'propuesta'
+        : viaActiva === 'contraria' ? 'opuesta'
+        : ladoDelSentido(tarjetaVista, sentidoDelPrincipal);
+    const prosperaDelLado = ladoSecundarios === 'opuesta' ? prosperaDeLaVia(tarjetaVista?.vias.opuesta)
+        : ladoSecundarios === 'propuesta' ? prosperaDeLaVia(tarjetaVista?.vias.propuesta) : null;
+    /* Los secundarios cuya calificación en pantalla NO es la de la vía: en
+       «todo el asunto», los que él marcó a mano; problema por problema, lo que
+       hay en la pantalla (su marca, el reparto o lo recalificado), que es lo
+       que viaja. */
+    const marcados = useMemo(() => {
+        const m: Record<number, MarcaDeSecundario> = {};
+        problemas.forEach((p, i) => {
+            if (principal && p.id === principal.id) return;
+            const suyo = !!tocados?.has(p.id) && !!p.sentido;
+            if (enGlobal) {
+                if (suyo) m[i + 1] = { sentido: p.sentido || '', quien: 'marcado por ti' };
+                return;
+            }
+            const sup = recalificadas[p.id];
+            if (suyo) m[i + 1] = { sentido: p.sentido || '', quien: 'marcado por ti' };
+            else if (sup) m[i + 1] = { sentido: sup.sentido, quien: sup.estado === 'recalificada' ? 'recalificado' : 'por recalificar' };
+            else if (p.sentido) {
+                m[i + 1] = { sentido: p.sentido, quien: p.de === 'principal' ? 'sigue al principal'
+                    : p.de === 'distinto' ? 'se estudia aparte' : p.de === 'mayor_beneficio' ? 'se estudia' : 'en pantalla' };
+            }
+        });
+        return m;
+    }, [problemas, principal, tocados, enGlobal, recalificadas]);
+
+    /* LOS TRES BOTONES. Cada vía se elige entera; su criterio abre la ventana
+       de siempre —global o problema por problema, las diez calificaciones, la
+       razón y «Redactar un criterio»— SIN tocar nada de lo que hay en ella. */
+    const bajarA = (id: string) => {
+        if (typeof window === 'undefined') return;
+        window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    };
+    const resolverAsi = () => {
+        const vp = tarjetaVista?.vias.propuesta;
+        if (!global || !vp) return;
+        setViaElegida('propuesta');
+        /* Con la deliberación, la vía propuesta puede no ser la del motor: se
+           dicta con SU razón. Sin ella (hoy, siempre) es volver a la propuesta. */
+        if (vp.sentido && vp.sentido !== global.sentido) onResolverPorLaVia?.(vp.sentido, vp.razon);
+        else onVolverALaPropuesta?.();
+        bajarA('asi-sale');
+    };
+    const resolverOpuesta = () => {
+        const vo = tarjetaVista?.vias.opuesta;
+        if (!vo?.sentido) return;
+        setViaElegida('contraria');
+        onResolverPorLaVia?.(vo.sentido, vo.razon || '');
+        bajarA('asi-sale');
+    };
+    const miCriterio = () => {
+        setViaElegida('criterio');
+        setCorrigiendo(true);
+        bajarA('mi-criterio');
+    };
+
     /* ¿Se aparta el secretario de la propuesta? Sólo ahí se le pide el porqué. */
     const seAparta = useMemo(() => problemas.map((p, i) => {
         const suya = tocados?.has(p.id) && !!p.sentido;
@@ -562,8 +640,11 @@ export default function Decision({
        con sentido, la razón escrita donde se aparta, los conceptos pegados si
        hacen falta, y el motor sin redactar ninguna razón —si no, se ordenaría
        sobre una razón que está a punto de cambiar—. El antirrebote vive en el
-       hook. */
-    const listoParaPlan = !!plan?.activo && listoParaGenerar && !faltaRazon && !necesitaConceptos
+       hook. Y CON LA VÍA ELEGIDA (28-sep-2026): con la tarjeta del principal
+       el secretario alterna entre la propuesta y la contraria antes de
+       decidir, y cada alternancia es otra firma: pedir el plan de la que está
+       en pantalla antes de que la elija gastaba corridas del tope de cuatro. */
+    const listoParaPlan = !!plan?.activo && viaConfirmada && listoParaGenerar && !faltaRazon && !necesitaConceptos
         && !generando && !proponiendo && !(razonando && razonando.size > 0) && !razonandoGlobal
         /* Ni mientras se recalifican los accesorios tumbados: el plan se ordena
            sobre el criterio YA recalificado (contrato_recalificar.md), y
@@ -609,11 +690,22 @@ export default function Decision({
         const motor = propuestaDe(i);
         if (enGlobal) {
             const esPrincipal = principal && p.id === principal.id;
+            const suyo = !!tocados?.has(p.id) && !!p.sentido;
+            /* LA SUERTE DE CADA ACCESORIO, LA MISMA DE LA TARJETA DE ARRIBA
+               (28-sep-2026). Decía «sigue al principal» en blanco: el
+               secretario generaba sin ver qué le pasaba a cada uno. Ahora es
+               la del reparto de la vía en pantalla —el árbol, o lo que el motor
+               previó si el árbol lo dejaba por recalificar— y se dice cuál. */
+            const suerte = !esPrincipal && !suyo
+                ? suerteDe(tarjetaVista, i + 1, p.pregunta, ladoSecundarios) : null;
+            const rs = suerte ? rotuloDeSuerte(suerte, prosperaDelLado) : null;
             return {
                 id: p.id, pregunta: p.pregunta, grupo: grupos[p.id] ?? '',
-                sentido: esPrincipal ? sentidoGlobal : (tocados?.has(p.id) && p.sentido ? p.sentido : ''),
+                sentido: esPrincipal ? sentidoGlobal : suyo ? (p.sentido || '') : (suerte?.sentido || ''),
                 de: esPrincipal ? (globalDictado ? 'tuya' : 'del motor')
-                    : (tocados?.has(p.id) && p.sentido ? 'tuya' : 'sigue al principal'),
+                    : suyo ? 'tuya'
+                    : rs ? `${rs.corto || 'sigue al principal'}${suerte?.previsto ? ' · previsto' : ''}`
+                    : 'sigue al principal',
             };
         }
         const sup = recalificadas[p.id];
@@ -631,7 +723,8 @@ export default function Decision({
             de: tocados?.has(p.id) && p.sentido ? 'tuya'
                 : motor?.sentido && motor.alcanza ? 'del motor' : (p.sentido ? 'de la pantalla' : 'sin decidir'),
         };
-    }), [problemas, enGlobal, sentidoGlobal, globalDictado, tocados, propuesta, principal, grupos, recalificadas]); // eslint-disable-line react-hooks/exhaustive-deps
+    }), [problemas, enGlobal, sentidoGlobal, globalDictado, tocados, propuesta, principal, grupos, recalificadas,  // eslint-disable-line react-hooks/exhaustive-deps
+        tarjetaVista, ladoSecundarios, prosperaDelLado]);
     /* LOS TUMBADOS QUE NO TIENEN CALIFICACIÓN AL PULSAR «GENERAR». El servidor
        ya no escribe el proyecto con un accesorio sin calificar tras el cambio
        de sentido (decisión del integrador, 26-sep-2026): se dice junto al
@@ -718,160 +811,38 @@ export default function Decision({
 
     return (
         <div className="space-y-4">
-            {/* ═══ 1 · LA FRASE ═══ */}
-            <div className={cn(
-                'relative overflow-hidden rounded-2xl border p-5 sm:p-6',
-                global ? 'border-accent-gold/35 bg-gradient-to-br from-accent-gold/[0.12] to-accent-gold/[0.03]'
-                       : 'border-white/10 bg-white/[0.03]')}>
-                <p className="text-[12px] uppercase tracking-[0.14em] text-accent-gold/80">
-                    Paso 3 · el único que no se automatiza
-                </p>
-                {global ? (
-                    <div className="mt-3 grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center">
-                        <div aria-hidden className="flex h-16 w-16 items-center justify-center rounded-full
-                                                    bg-gradient-to-br from-[#e3c98a] to-[#8e7436]
-                                                    font-serif text-2xl font-semibold text-charcoal-900
-                                                    shadow-[0_12px_30px_-12px_rgba(201,169,98,0.9)]">
-                            {grupoDe(global.sentido) === 'si' ? 'P' : grupoDe(global.sentido) === 'no' ? 'N' : '—'}
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-[12px] text-white/45">El motor propone</p>
-                            <h2 className="font-serif text-xl font-medium leading-tight text-white sm:text-2xl">
-                                {fraseDe(global.sentido, esRecurso)}
-                            </h2>
-                            <div className="mt-1.5"><Confianza nivel={global.confianza} /></div>
-                            <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-white/75">{global.razon}</p>
-                            {global.apoyos?.length > 0 && (
-                                <p className="mt-1.5 text-[12px] text-white/45">
-                                    {global.apoyos.length} {global.apoyos.length === 1 ? 'criterio' : 'criterios'} de apoyo con registro verificado
-                                    {problemas.length > 1 && ` · ${problemas.length} problemas jurídicos`}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="mt-3">
-                        <h2 className="font-serif text-xl font-medium leading-tight text-white">
-                            El motor no se atrevió con un sentido para todo el asunto
-                        </h2>
-                        <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-white/60">
-                            {propuesta?.propuestas?.length
-                                ? 'Propuso problema por problema. Abajo están, con su calificación; corrige lo que no compartas y genera.'
-                                : 'Con el material de este asunto no propuso ningún sentido. Decide tú, problema por problema.'}
-                        </p>
-                    </div>
-                )}
-
-                {/* ═══ 2 · LOS DOS BOTONES ═══ */}
-                {/* ═══ AQUÍ ARRIBA YA NO SE GENERA ═══
-                    Recorrido del 16-sep-2026, con el proyecto ya hecho en
-                    pantalla: el secretario veía TRES botones que generan
-                    —éste, el de la tarjeta final y «cambiar el sentido y
-                    regenerar»— y TRES que cambian el sentido. David: «no
-                    múltiples botones que confundan, creo que quizá alguno
-                    está de sobra».
-                    Se genera en UN solo sitio: la tarjeta final, que es la
-                    que enseña con qué va a salir el proyecto. Aquí arriba se
-                    cuestiona la propuesta —«cambiar el sentido», «ver por
-                    qué»— y se baja a ver el resultado. */}
-                <div className="mt-5 flex flex-wrap items-center gap-2.5">
-                    {problemas.length > 0 && (
-                        <button type="button" onClick={() => setCorrigiendo((v) => !v)}
-                                className={cn(
-                                    'inline-flex h-11 items-center gap-2 rounded-xl border px-4 text-[14px] font-medium transition',
-                                    corrigiendo ? 'border-accent-gold/45 bg-accent-gold/10 text-white'
-                                                : 'border-white/15 bg-white/[0.05] text-white/90 hover:bg-white/[0.08]')}>
-                            <PenLine className="h-4 w-4" />
-                            {corrigiendo ? 'Ocultar la corrección' : 'Cambiar el sentido'}
-                        </button>
-                    )}
-                    {global && (
-                        <button type="button" onClick={() => setPorQue((v) => !v)}
-                                className="inline-flex h-10 items-center rounded-xl border border-white/10 px-3.5
-                                           text-[13px] font-medium text-white/60 transition hover:border-white/20 hover:text-white">
-                            {porQue ? 'Ocultar el porqué' : 'Ver por qué'}
-                        </button>
-                    )}
-                    {listoParaGenerar && (
-                        <a href="#asi-sale"
-                           className="inline-flex h-10 items-center rounded-xl px-1 text-[13px]
-                                      font-medium text-accent-gold/85 transition hover:text-accent-gold">
-                            Ver cómo va a salir ↓
-                        </a>
-                    )}
-                    {onProponer && !global && !propuesta?.propuestas?.length && (
-                        <button type="button" onClick={onProponer}
-                                className="inline-flex h-10 items-center rounded-xl border border-white/10 px-3.5
-                                           text-[13px] font-medium text-white/60 transition hover:text-white">
-                            Volver a pedir la propuesta
-                        </button>
-                    )}
-                </div>
-                <div className="mt-3 flex gap-2 rounded-lg border-l-2 border-amber-400/40 bg-amber-400/[0.04] py-2 pl-2.5 pr-3">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300/70" />
-                    <p className="text-[12px] leading-relaxed text-white/60">
-                        El motor propone; <span className="text-white/90">el criterio es tuyo</span>. El proyecto
-                        sale con tu nombre: lee la razón antes de generar y corrígela si no es la que sostendrías.
-                    </p>
-                </div>
-                {/* EL AVISO DE EXTEMPORANEIDAD VIVE DONDE SE GENERA, y sólo
-                    ahí: al quitar el botón dorado de aquí arriba, repetirlo
-                    en los dos sitios era ruido. Está en la tarjeta final,
-                    junto al único botón que escribe el proyecto. */}
-            </div>
-
-            {/* ═══ EL PORQUÉ, SÓLO SI SE PIDE ═══ */}
-            {porQue && global && (
-                <div className="grid gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 sm:grid-cols-2">
-                    {global.problema_que_decide && (
-                        <div>
-                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">De qué cuelga el resultado</p>
-                            <p className="text-[13px] leading-relaxed text-white/75">{global.problema_que_decide}</p>
-                        </div>
-                    )}
-                    {global.efecto && (
-                        <div>
-                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">Qué pasa con los demás temas</p>
-                            <p className="text-[13px] leading-relaxed text-white/75">{global.efecto}</p>
-                        </div>
-                    )}
-                    {global.en_contra && (
-                        <div className="sm:col-span-2">
-                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">Lo que se diría en contra</p>
-                            <p className="text-[13px] leading-relaxed text-white/75">{global.en_contra}</p>
-                        </div>
-                    )}
-                    {global.alternativa?.sentido && (
-                        <div className="rounded-xl border border-white/[0.07] bg-black/20 p-3 sm:col-span-2">
-                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-white/45">
-                                La otra salida · {legible(global.alternativa.sentido)}
-                            </p>
-                            <p className="text-[13px] leading-relaxed text-white/60">{global.alternativa.razon}</p>
-                            {global.via_protectora?.posible
-                                && grupoDe(global.via_protectora.sentido) === grupoDe(global.alternativa.sentido) && (
-                                <p className="mt-1.5 text-[12px] leading-relaxed text-accent-gold/85">
-                                    En esta salida cabe interpretación conforme o pro persona: {global.via_protectora.norma}
-                                    {global.via_protectora.lectura ? ` — ${global.via_protectora.lectura}` : ''}
-                                </p>
-                            )}
-                            <button type="button"
-                                    onClick={() => {
-                                        onModo?.('global');
-                                        onSentidoGlobal?.(global.alternativa.sentido);
-                                        onRazonGlobal?.(global.alternativa.razon || '');
-                                        setCorrigiendo(true);
-                                    }}
-                                    className="mt-2 text-[12px] font-medium text-accent-gold/90 hover:text-accent-gold">
-                                Resolver así, en vez de como propone el motor
-                            </button>
-                        </div>
-                    )}
-                </div>
+            {/* ═══ 1 · EL PROBLEMA PRINCIPAL Y SU SOLUCIÓN (28-sep-2026) ═══
+                Sustituye a «la frase» del motor y a «el porqué», que escondía
+                la vía contraria detrás de un clic. AQUÍ ARRIBA SIGUE SIN
+                GENERARSE: se genera en un solo sitio, la tarjeta final (David,
+                16-sep-2026: «no múltiples botones que confundan»). Aquí se
+                elige la vía y se baja a ver con qué sale. El aviso de
+                extemporaneidad vive junto al botón que genera. */}
+            {tarjetaVista && problemas.length > 0 && (
+                <ProblemaPrincipal
+                    tarjeta={tarjetaVista}
+                    esRecurso={esRecurso}
+                    hayGlobal={!!global}
+                    hayPropuestas={!!propuesta?.propuestas?.length}
+                    viaActiva={viaActiva}
+                    viaElegida={!!viaElegida}
+                    ladoSecundarios={ladoSecundarios}
+                    marcados={marcados}
+                    razonActiva={enGlobal ? razonGlobal : ''}
+                    tesis={tesisDelMaterial}
+                    onAbrirTesis={onAbrirTesis}
+                    onResolverAsi={resolverAsi}
+                    onResolverOpuesta={resolverOpuesta}
+                    onMiCriterio={miCriterio}
+                    onRedactarOpuesta={onRazonarGlobal}
+                    redactando={razonandoGlobal}
+                    onProponer={onProponer}
+                    puedeVerComoSale={listoParaGenerar} />
             )}
 
             {/* ═══ 3 · CAMBIAR EL SENTIDO: LAS DOS VÍAS DE SIEMPRE ═══ */}
             {corrigiendo && problemas.length > 0 && (
-                <div className="space-y-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
+                <div id="mi-criterio" className="space-y-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
                     <p className="text-[12px] font-medium uppercase tracking-wide text-white/45">Cómo vas a resolver</p>
                     <div className="grid gap-2 sm:grid-cols-2">
                         {([
@@ -1338,7 +1309,8 @@ export default function Decision({
                         <p className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[13px]">
                             <span className="text-white/45">Cómo se estudiará:</span>
                             <span className="min-w-0 flex-1 text-white/80">
-                                {recalificacionEnCurso ? 'se ordena en cuanto terminen de recalificarse los accesorios'
+                                {!viaConfirmada ? 'se ordena cuando elijas la vía, arriba'
+                                    : recalificacionEnCurso ? 'se ordena en cuanto terminen de recalificarse los accesorios'
                                     : estadoPlan.fase === 'pidiendo' || estadoPlan.fase === 'en_curso' ? 'ordenándose con tu decisión…'
                                     : planHecho && !estadoPlan.desactualizado
                                         ? (jer ? decideYSigue(jer)
@@ -1453,8 +1425,8 @@ export default function Decision({
                     {/* QUÉ ENTREGA CADA UNO, dicho antes de pulsar. */}
                     <dl className="mt-3 grid gap-2 sm:grid-cols-2">
                         <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5">
-                            <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/55">Formato estándar</dt>
-                            <dd className="mt-1 text-[12.5px] leading-relaxed text-white/60">
+                            <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/55">Formato estándar</dt>
+                            <dd className="mt-1 text-[12px] leading-relaxed text-white/60">
                                 Concepto por concepto, con la fórmula del oficio: «Sobre el primer
                                 {esRecurso ? ' agravio' : ' concepto de violación'}, en el que
                                 {esRecurso ? ' la parte recurrente' : ' la quejosa'} sostiene… Se considera
@@ -1462,8 +1434,8 @@ export default function Decision({
                             </dd>
                         </div>
                         <div className="rounded-xl border border-accent-gold/25 bg-accent-gold/[0.04] px-3.5 py-2.5">
-                            <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent-gold/85">Versión moderna</dt>
-                            <dd className="mt-1 text-[12.5px] leading-relaxed text-white/65">
+                            <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-accent-gold/85">Versión moderna</dt>
+                            <dd className="mt-1 text-[12px] leading-relaxed text-white/65">
                                 Atiende el problema jurídico central de forma exhaustiva y con
                                 argumentación de alto nivel, pero prescinde de lo irrelevante: cada
                                 punto abre con su pregunta y enseguida se responde. Hechos, sentencia y
@@ -1472,7 +1444,7 @@ export default function Decision({
                             </dd>
                         </div>
                     </dl>
-                    <p className="mt-2 text-[11.5px] text-white/40">
+                    <p className="mt-2 text-[12px] text-white/40">
                         Cualquiera de las dos consume un proyecto de tu contador.
                     </p>
                 </div>
