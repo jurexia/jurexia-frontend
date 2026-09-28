@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, ArrowDownToLine, Check, ChevronLeft, FileText, Loader2, Printer, X } from 'lucide-react';
+import { AlertTriangle, ArrowDownToLine, Check, ChevronLeft, ClipboardCheck, FileText, Loader2, Printer, X, XCircle } from 'lucide-react';
 import { Hoja, type HojaAPI } from './Hoja';
 import { aWord, imprimir, pareceEscritoDeJuzgado, type FormatoWord, type Papel } from '@/lib/documento/exportarDocx';
 import {
@@ -10,7 +10,8 @@ import {
 import { recortarABloque } from '@/lib/documento/revelado';
 import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
 import { guardarEdicion, leerEdicion, type EdicionHoja } from '@/lib/documento/edicionHoja';
-import { datosPendientes, markdownDeHoja, type DatoPendiente } from '@/lib/documento/marcado';
+import { datosPendientes, markdownDeHoja, textoDeHtml, type DatoPendiente } from '@/lib/documento/marcado';
+import { TOPE_REVISION, revisarEscrito, trozosParaSenalar, type Revision } from '@/lib/revision';
 
 /**
  * EL PANEL DOCUMENTO: la hoja tipo Word acoplada al chat (18-sep-2026).
@@ -140,6 +141,13 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
        quedan en la hoja, para llenarlos de una vez sin buscarlos a mano. */
     const [pendientes, setPendientes] = useState<DatoPendiente[]>([]);
     const [verPendientes, setVerPendientes] = useState(false);
+    /* LA REVISIÓN ANTES DE PRESENTAR (28-sep-2026): lo que falta, lo que
+       conviene mirar y lo que ya está, sobre lo que hay en la hoja ahora. */
+    const [revision, setRevision] = useState<Revision | null>(null);
+    const [revisando, setRevisando] = useState(false);
+    const [verRevision, setVerRevision] = useState(false);
+    const [revisionCortada, setRevisionCortada] = useState(false);
+    const revisionEnCurso = useRef<AbortController | null>(null);
     const [valores, setValores] = useState<Record<string, string>>({});
     const recontar = () => {
         const nuevos = datosPendientes(hoja.current?.raiz()?.textContent ?? '');
@@ -399,7 +407,38 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
 
     // Detrás del efecto que escribe la hoja: cuenta lo que quedó en ella.
     useEffect(() => { recontar(); }, [clave, bloques, segmentos]);
-    useEffect(() => { setVerPendientes(false); setValores({}); }, [clave]);
+    // Otra conversación: la revisión de la anterior, en curso o hecha, no es de ésta.
+    useEffect(() => {
+        setVerPendientes(false); setValores({}); setVerRevision(false); setRevision(null);
+        revisionEnCurso.current?.abort(); revisionEnCurso.current = null; setRevisando(false);
+    }, [clave]);
+    useEffect(() => () => revisionEnCurso.current?.abort(), []);
+
+    async function revisar() {
+        const raiz = hoja.current?.raiz();
+        const texto = raiz ? textoDeHtml(raiz) : '';
+        if (!texto.trim()) { mostrarAviso('La hoja está vacía: no hay nada que revisar.'); return; }
+        setVerPendientes(false);
+        setRevisando(true);
+        const control = new AbortController();
+        revisionEnCurso.current = control;
+        const r = await revisarEscrito(texto, control.signal);
+        if (control.signal.aborted) return;
+        revisionEnCurso.current = null;
+        setRevisando(false);
+        if (!r) { mostrarAviso('No se pudo revisar ahora. Vuelve a intentarlo.'); return; }
+        setRevisionCortada(texto.length > TOPE_REVISION);
+        setRevision(r);
+        setVerPendientes(false);
+        setVerRevision(true);
+    }
+
+    function senalarHallazgo(donde: string) {
+        for (const trozo of trozosParaSenalar(donde)) {
+            if (hoja.current?.senalar(trozo)) return;
+        }
+        mostrarAviso('No lo encontré tal cual en la hoja: búscalo a mano.');
+    }
 
     function ponerDato(p: DatoPendiente) {
         const valor = (valores[p.marca] ?? '').trim();
@@ -566,6 +605,12 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                         <option value="juzgado">Formato de juzgado</option>
                         <option value="apa">Con notas APA</option>
                     </select>
+                    <button type="button" onClick={revisar} disabled={enVivo || revisando} data-guide="revisar-escrito"
+                        title="Revisar antes de presentar: requisitos, datos pendientes, cierre y frases rotas"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-charcoal-900/15 bg-white px-2 text-[12.5px] font-medium text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:opacity-40 sm:px-2.5">
+                        {revisando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
+                        <span className="hidden lg:inline">Revisar</span>
+                    </button>
                     <button type="button" onClick={mandarAImprimir} title="Imprimir o guardar como PDF" disabled={enVivo}
                         className="grid h-9 w-9 place-items-center rounded-lg border border-charcoal-900/15 bg-white text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:opacity-40">
                         <Printer className="h-4 w-4" />
@@ -609,7 +654,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     <span>La primera respuesta se escribirá aquí.</span>
                 )}
                 {pendientes.length > 0 && (
-                    <button type="button" onClick={() => setVerPendientes((v) => !v)} aria-expanded={verPendientes}
+                    <button type="button" onClick={() => { setVerRevision(false); setVerPendientes((v) => !v); }} aria-expanded={verPendientes}
                         data-guide="datos-pendientes"
                         className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-900 transition-colors hover:bg-amber-200">
                         <AlertTriangle className="h-3 w-3" />
@@ -626,6 +671,59 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     {cuentaCitas.verificadas > 0 ? ` · ${cuentaCitas.verificadas} ${cuentaCitas.verificadas === 1 ? 'verificada' : 'verificadas'}` : ''}
                 </span>
             </footer>
+
+            {/* ── LA REVISIÓN ANTES DE PRESENTAR ───────────────────────────── */}
+            {verRevision && revision && (
+                <div role="dialog" aria-label="Revisión antes de presentar"
+                    className="absolute right-3 top-16 z-40 flex max-h-[calc(100%-6rem)] w-[min(27rem,calc(100%-1.5rem))] flex-col overflow-hidden rounded-xl border border-charcoal-900/10 bg-white shadow-[0_12px_40px_rgba(17,17,17,0.18)]">
+                    <div className="flex items-start gap-2 border-b border-charcoal-900/10 px-4 py-3">
+                        <div className="min-w-0 flex-1">
+                            <p className="font-serif text-[15px] text-charcoal-900">Revisión antes de presentar</p>
+                            <p className="mt-0.5 text-[11.5px] text-charcoal-600">
+                                {revision.tipo_nombre.charAt(0).toUpperCase() + revision.tipo_nombre.slice(1)}
+                                {' · '}
+                                {revision.faltan
+                                    ? `${revision.faltan} ${revision.faltan === 1 ? 'cosa falta' : 'cosas faltan'}`
+                                    : 'no falta nada de lo que se comprueba'}
+                                {revision.revisar ? ` · ${revision.revisar} por mirar` : ''}
+                            </p>
+                        </div>
+                        <button type="button" onClick={() => setVerRevision(false)} aria-label="Cerrar"
+                            className="grid h-7 w-7 place-items-center rounded-md text-charcoal-900/60 hover:bg-charcoal-900/5 hover:text-charcoal-900">
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                    <ul className="min-h-0 flex-1 divide-y divide-charcoal-900/5 overflow-y-auto">
+                        {revision.hallazgos.map((h, i) => (
+                            <li key={i} data-nivel={h.nivel} className="flex items-start gap-2.5 px-4 py-2.5">
+                                {h.nivel === 'falta'
+                                    ? <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600" aria-label="Falta" />
+                                    : h.nivel === 'revise'
+                                        ? <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" aria-label="Por mirar" />
+                                        : <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-600" aria-label="Está" />}
+                                <div className="min-w-0 flex-1">
+                                    <p className={`text-[12.5px] leading-snug ${h.nivel === 'bien' ? 'text-charcoal-600' : 'font-medium text-charcoal-900'}`}>{h.que}</p>
+                                    {h.fundamento && <p className="mt-0.5 text-[11px] text-charcoal-500">{h.fundamento.charAt(0).toUpperCase() + h.fundamento.slice(1)}</p>}
+                                    {h.donde && (
+                                        <p className="mt-1 flex items-start gap-2 text-[11px] text-charcoal-500">
+                                            <span className="min-w-0 flex-1 italic">«{h.donde.length > 110 ? h.donde.slice(0, 110) + '…' : h.donde}»</span>
+                                            <button type="button" onClick={() => senalarHallazgo(h.donde)}
+                                                className="shrink-0 font-medium not-italic text-accent-brown underline-offset-2 hover:underline">
+                                                Ver
+                                            </button>
+                                        </p>
+                                    )}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                    <p className="border-t border-charcoal-900/10 bg-cream-100/60 px-4 py-2 text-[11px] leading-snug text-charcoal-600">
+                        Comprueba requisitos, huecos, el cierre y la redacción; no el fondo ni el plazo, que
+                        dependen de la fecha de notificación y del calendario del órgano.
+                        {revisionCortada ? ' El escrito es más largo que lo que se revisa de una vez: se revisó el principio.' : ''}
+                    </p>
+                </div>
+            )}
 
             {/* ── LOS DATOS PENDIENTES, para llenarlos de una vez ─────────── */}
             {verPendientes && pendientes.length > 0 && (
