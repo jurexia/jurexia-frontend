@@ -2,27 +2,30 @@
 
 import { useEffect, useState } from 'react';
 import { AlertTriangle, Check, Download, ExternalLink, Loader2, Scale } from 'lucide-react';
+import { urlProxyPdf } from '@/lib/proxyPdf';
 
 /**
- * Comprueba una tesis contra el Semanario Judicial de la Federación y muestra
- * su ficha oficial dentro del panel.
- *
- * El panel ya mostraba el texto de la tesis, pero venía de nuestra propia base
- * (Qdrant) y el abogado sólo tenía un enlace para ir a comprobarlo fuera. Aquí
- * el texto se trae del Semanario en el momento, así que lo que se lee ES lo
- * que publica la Corte, no nuestra copia.
+ * Comprueba una tesis por su registro y muestra su ficha dentro del panel.
  *
  * De paso resuelve lo que ninguna instrucción al modelo puede garantizar: si
- * el registro no existe, el Semanario no lo encuentra y se dice claramente.
- * Una tesis inventada deja de parecer verificada.
+ * el registro no existe, se dice claramente. Una tesis inventada deja de
+ * parecer verificada.
  *
- * (El Semanario no sirve un PDF descargable desde su servidor: lo arma en el
- * navegador con JavaScript. Por eso se reconstruye aquí la ficha en lugar de
- * incrustar un archivo que no existe.)
+ * DE DÓNDE SALE LA FICHA (28-sep-2026). Se escribió para traerla del
+ * Semanario en el momento. Desde el 2-sep el Semanario reta a las IP de
+ * servidor, así que ahora sale del acervo —la copia del Semanario descargada
+ * en agosto de 2026, con el PDF oficial en nuestro bucket— y sólo lo que el
+ * acervo no tiene se pregunta en vivo (ver `@/lib/tesisDelAcervo`). Del
+ * acervo llegan rubro, texto, clave, tipo, instancia, materias y el PDF; no
+ * época, fuente ni precedentes, que sí vienen dentro del PDF.
  */
 
 interface Ficha {
     verificada: true;
+    /** `acervo`: la copia del Semanario que guarda Iurexia. `semanario`: en vivo. */
+    origen?: 'acervo' | 'semanario';
+    /** El PDF oficial en nuestro bucket, si lo tenemos. */
+    pdf?: string | null;
     registro: string;
     rubro: string;
     texto: string;
@@ -56,7 +59,9 @@ export function TesisVerificada({ registro, urlSemanario }: { registro: string; 
         let vivo = true;
         setEstado({ fase: 'cargando' });
 
-        fetch(`/api/tesis/${registro}`)
+        // `?ficha=1`: texto, clave y PDF. El sello, que sólo mira existencia
+        // y rubro, llama sin él y no paga la consulta extra.
+        fetch(`/api/tesis/${registro}?ficha=1`)
             .then((r) => r.json())
             .then((d) => {
                 if (!vivo) return;
@@ -123,6 +128,12 @@ export function TesisVerificada({ registro, urlSemanario }: { registro: string; 
         ['Publicación', [t.volumen, t.subVolumen, t.pagina ? `Pág. ${t.pagina}` : null].filter(Boolean).join(', ') || null],
     ];
 
+    // El PDF: el de nuestro bucket, servido por el mismo proxy que el visor de
+    // leyes (mismo origen, así «Descargar» descarga). El del Semanario sólo si
+    // la ficha vino del Semanario: pedírselo desde aquí daría un visor roto,
+    // porque también reta a nuestro servidor. Sin PDF, no se pinta el hueco.
+    const pdf = t.pdf ? urlProxyPdf(t.pdf) : t.origen === 'acervo' ? null : `/api/tesis/${t.registro}/pdf`;
+
     return (
         <div className="overflow-hidden rounded-2xl border border-cream-400 bg-white">
             {/* Sello: lo que sigue viene del Semanario, no de nuestra base */}
@@ -133,6 +144,11 @@ export function TesisVerificada({ registro, urlSemanario }: { registro: string; 
                 <p className="text-xs font-semibold text-charcoal-900">
                     Verificada en el Semanario Judicial de la Federación
                 </p>
+                {/* Se dice contra qué se comprobó: la copia descargada del
+                    Semanario, no una consulta en vivo. */}
+                {t.origen === 'acervo' && (
+                    <span className="ml-auto flex-shrink-0 text-[10px] text-charcoal-500">copia en el acervo Iurexia</span>
+                )}
             </div>
 
             {/* Carátula, con el aire de la ficha oficial */}
@@ -157,32 +173,37 @@ export function TesisVerificada({ registro, urlSemanario }: { registro: string; 
                 Sólo en pantalla grande: iOS no pinta PDF dentro de un iframe,
                 así que en teléfono se lee la ficha de abajo, que además es más
                 cómoda a ese tamaño. */}
-            <div className="hidden border-b border-cream-400 bg-cream-200 md:block" style={{ height: '460px' }}>
-                <iframe
-                    src={`/api/tesis/${t.registro}/pdf#toolbar=1&navpanes=0&scrollbar=1`}
-                    className="h-full w-full"
-                    title={`Tesis ${t.registro} en PDF`}
-                    loading="lazy"
-                />
-            </div>
+            {pdf && (
+                <div className="hidden border-b border-cream-400 bg-cream-200 md:block" style={{ height: '460px' }}>
+                    <iframe
+                        src={`${pdf}#toolbar=1&navpanes=0&scrollbar=1`}
+                        className="h-full w-full"
+                        title={`Tesis ${t.registro} en PDF`}
+                        loading="lazy"
+                    />
+                </div>
+            )}
 
-            <div className="hidden items-center justify-between gap-2 border-b border-cream-400 px-5 py-2 md:flex">
-                <p className="text-[10.5px] text-charcoal-500">
-                    Documento oficial del Semanario Judicial de la Federación
-                </p>
-                <a
-                    href={`/api/tesis/${t.registro}/pdf`}
-                    download={`Tesis${t.registro}.pdf`}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-charcoal-900/10 px-2 py-1 text-[10.5px] font-medium text-charcoal-700 transition-colors hover:bg-charcoal-900/[0.04]"
-                >
-                    <Download className="h-3 w-3" /> Descargar
-                </a>
-            </div>
+            {pdf && (
+                <div className="hidden items-center justify-between gap-2 border-b border-cream-400 px-5 py-2 md:flex">
+                    <p className="text-[10.5px] text-charcoal-500">
+                        Documento oficial del Semanario Judicial de la Federación
+                    </p>
+                    <a
+                        href={pdf}
+                        download={`Tesis${t.registro}.pdf`}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-charcoal-900/10 px-2 py-1 text-[10.5px] font-medium text-charcoal-700 transition-colors hover:bg-charcoal-900/[0.04]"
+                    >
+                        <Download className="h-3 w-3" /> Descargar
+                    </a>
+                </div>
+            )}
 
             {/* Rubro y texto — sólo en teléfono, donde el iframe con PDF no
                 funciona. En escritorio esto lo cubre el documento oficial de
-                arriba y repetirlo era una tercera copia de lo mismo. */}
-            <div className="px-5 py-4 md:hidden">
+                arriba y repetirlo era una tercera copia de lo mismo. Sin PDF,
+                en todas las pantallas: es lo único que hay que leer. */}
+            <div className={`px-5 py-4 ${pdf ? 'md:hidden' : ''}`}>
                 <h4 className="mb-3 text-[13px] font-bold leading-snug text-charcoal-900">{t.rubro}</h4>
                 {t.texto.split('\n\n').filter(Boolean).map((p, i) => (
                     <p key={i} className="mb-2.5 text-[12.5px] leading-relaxed text-charcoal-700 last:mb-0" style={{ textAlign: 'justify' }}>

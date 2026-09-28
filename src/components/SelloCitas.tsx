@@ -14,7 +14,7 @@ import { ShieldCheck, ShieldAlert, Loader2, Shield } from 'lucide-react';
  * un `catch` que devuelve el estado inocuo: el mismo patrón que ya costó dos
  * hallazgos esta semana. */
 import { rubroCorresponde } from '@/lib/citas';
-import { veredictoDelSello } from '@/lib/documento/sello';
+import { estadosDeLosRegistros, veredictoDelSello, type RespuestaTesis, type ResultadoRegistro } from '@/lib/documento/sello';
 
 /**
  * El sello de verificación de una respuesta.
@@ -30,32 +30,19 @@ import { veredictoDelSello } from '@/lib/documento/sello';
  *    en la prosa exista de verdad en el Semanario Judicial de la Federación.
  *    Esto NO lo cubría nada: el validador del backend sólo mira los UUID del
  *    acervo, y un registro inventado en el texto pasaba entero. Se comprueba
- *    contra la API oficial (proxy `/api/tesis/[registro]`, caché de una hora).
+ *    con el proxy `/api/tesis/[registro]`: desde el 28-sep-2026, contra la
+ *    copia del Semanario que guarda el acervo, porque el Semanario reta a
+ *    nuestros servidores (ver `@/lib/tesisDelAcervo`).
  *
  * Regla de oro: sólo un 404 del Semanario prueba que la tesis no existe.
- * Cualquier otro fallo se reporta como «no se pudo comprobar», nunca como
- * invento. Acusar en falso destruye justo la confianza que esto vende.
+ * Cualquier otro fallo —y no estar en el acervo— se reporta como «no se pudo
+ * comprobar», nunca como invento. Acusar en falso destruye justo la confianza
+ * que esto vende. Cómo queda cada registro: `estadosDeLosRegistros`.
  */
 
 type Estado = 'comprobando' | 'listo';
 
-interface Resultado {
-    registro: string;
-    /**
-     * `no_corresponde` es el hallazgo del 8-ago-2026 y el motivo de este
-     * cambio: el registro EXISTE pero la respuesta le atribuyó el rubro de
-     * otra tesis. Comprobado con un abogado que reportó «al solicitarle
-     * tesis, siempre se equivoca»: de 12 pares revisados, 12 mal
-     * emparejados —«TUTELA JUDICIAL EFECTIVA» resultó ser «CHEQUES. SON
-     * TÍTULOS PAGADEROS A LA VISTA»—.
-     *
-     * Es MÁS grave que un número inventado: la cita parece verificable, y
-     * el sello anterior la sellaba en verde por existir. Un abogado que la
-     * copia a un escrito queda expuesto.
-     */
-    estado: 'existe' | 'no_existe' | 'no_corresponde' | 'sin_comprobar';
-    rubroReal?: string;
-}
+type Resultado = ResultadoRegistro;
 
 interface Props {
     /** Citas [Doc ID:] que el backend pudo trazar al acervo. */
@@ -106,35 +93,22 @@ export function SelloCitas({ trazadas, noTrazadas, fueraDeContexto = 0, sinCompr
         setFase('comprobando');
 
         Promise.all(
-            registros.map(async (registro): Promise<Resultado> => {
+            registros.map(async (registro): Promise<[string, RespuestaTesis | null]> => {
                 try {
                     const r = await fetch(`/api/tesis/${registro}`);
-                    const d = await r.json();
-                    // El acervo manda: si no venía en el contexto, no es
-                    // trazable aunque el Semanario lo encuentre.
-                    if (fueraDelAcervo?.includes(registro)) {
-                        return { registro, estado: 'no_corresponde' };
-                    }
-                    if (d?.verificada) {
-                        // Existir no basta. Se contrasta el rubro: es donde
-                        // fallaba de verdad.
-                        const citado = rubros?.[registro];
-                        if (citado && !rubroCorresponde(citado, d.rubro || '')) {
-                            return { registro, estado: 'no_corresponde', rubroReal: d.rubro };
-                        }
-                        return { registro, estado: 'existe' };
-                    }
-                    // El proxy distingue el 404 (no existe) de un fallo del
-                    // servidor de la Corte (no se pudo comprobar).
-                    if (d?.motivo === 'no_encontrada') return { registro, estado: 'no_existe' };
-                    return { registro, estado: 'sin_comprobar' };
+                    return [registro, await r.json()];
                 } catch {
-                    return { registro, estado: 'sin_comprobar' };
+                    // `null` = no se pudo preguntar: «sin comprobar», nunca invento.
+                    return [registro, null];
                 }
             })
-        ).then(res => {
+        ).then(pares => {
             if (!vigente) return;
-            setResultados(res);
+            // Todos a la vez, no uno por uno: para reconocer un rubro prestado
+            // de la cita de al lado hacen falta los rubros reales de las demás.
+            setResultados(estadosDeLosRegistros(registros, Object.fromEntries(pares), {
+                rubros, fueraDelAcervo, corresponde: rubroCorresponde,
+            }));
             setFase('listo');
         });
 

@@ -629,6 +629,22 @@ console.log('\nLA MISMA SALIDA QUE ANTES');
         const fv = new Map(funciones(viejo).lista);
         const fn = new Map(funciones(nuevo).lista);
         const salida = (f, t) => { try { return JSON.stringify(f(t), (_, v) => (v instanceof Map ? [...v] : v)); } catch (e) { return `LANZÓ ${e?.message}`; } };
+        // CAMBIADA A PROPÓSITO (28-sep-2026): `rubrosPorRegistro` ya no le
+        // presta a un registro el rubro de la cita de al lado ni toma un título
+        // por rubro. Sólo QUITA atribuciones, y eso es lo que se exige aquí: lo
+        // de ahora, contenido en lo de antes, registro por registro. El resto
+        // de lo que devuelve el sello sigue siendo idéntico.
+        const contenido = (antes, ahora) => Object.entries(ahora).every(([k, v]) => antes[k] === v);
+        const SOLO_QUITA = {
+            'citas.rubrosPorRegistro': (va, vb) => contenido(va, vb),
+            'sello (registros, rubros, sin registro)': (va, vb) => JSON.stringify(va[0]) === JSON.stringify(vb[0])
+                && contenido(va[1], vb[1]) && JSON.stringify(va[2]) === JSON.stringify(vb[2]),
+        };
+        const equivalentes = (nombre, a, b) => {
+            if (a === b) return true;
+            if (!SOLO_QUITA[nombre]) return false;
+            try { return SOLO_QUITA[nombre](JSON.parse(a), JSON.parse(b)); } catch { return false; }
+        };
         const comparar = (titulo, textos) => {
             let malas = 0;
             let primera = '';
@@ -638,7 +654,7 @@ console.log('\nLA MISMA SALIDA QUE ANTES');
                 for (const t of textos) {
                     const a = salida(g, t);
                     const b = salida(f, t);
-                    if (a !== b) {
+                    if (!equivalentes(nombre, a, b)) {
                         malas++;
                         if (!primera) {
                             let k = 0;

@@ -91,16 +91,55 @@ export function registrosDeLaRespuesta(texto: string): string[] {
  * mayúsculas que aparece antes de «Registro digital: N», que es como se
  * escriben las citas de tesis. Si no se encuentra ninguno, se devuelve
  * cadena vacía y ese registro sólo se comprueba por existencia.
+ *
+ * NO SE PRESTA EL RUBRO DE LA CITA DE AL LADO (28-sep-2026). Mirar hacia
+ * atrás sirve cuando el rubro va delante del número, como pide el formato del
+ * chat. Pero el prompt de redacción pide el orden contrario —«registro digital
+ * 2011282, Décima Época, Primera Sala, de rubro: «…»»—, y entonces lo que hay
+ * detrás del SEGUNDO registro es el rubro del PRIMERO. Medido con tres tesis
+ * reales en ese formato: dos «no corresponde» en falso, y el sello decía
+ * «Revisa estas citas» de una respuesta correcta. Desde el 2-sep no se veía
+ * porque el Semanario no dejaba comprobar nada; con el acervo, sí se vería.
+ * Por eso un rubro sólo se atribuye si no queda del lado de otro registro:
+ *   · la búsqueda no cruza la cita de registro anterior;
+ *   · un rubro que sigue de cerca a otro registro EN EL MISMO RENGLÓN es de
+ *     ese registro, y no se le atribuye al siguiente (una lista del chat, una
+ *     cita por renglón, conserva su lectura);
+ *   · un título de Markdown («### JURISPRUDENCIA Y TESIS APLICABLES», que el
+ *     propio prompt manda escribir) no es un rubro.
+ * Las tres sólo QUITAN atribuciones: en la duda, el registro se comprueba
+ * por existencia y no se acusa a nadie. El préstamo que cruza renglones —el
+ * rubro en su propio párrafo, debajo del registro— lo reconoce el sello, que
+ * sí conoce los rubros reales (`estadosDeLosRegistros`).
  */
+const RX_MAYUSCULAS = /[A-ZÁÉÍÓÚÑÜ][A-ZÁÉÍÓÚÑÜ0-9 ,.;:()«»"'\-\/]{24,}/g;
+
 export function rubrosPorRegistro(texto: string): Record<string, string> {
     const mapa: Record<string, string> = {};
     const patron = new RegExp(REGISTRO, 'g');
     let m: RegExpExecArray | null;
+    let finAnterior = -1;
     while ((m = patron.exec(texto)) !== null) {
-        const antes = texto.slice(Math.max(0, m.index - 700), m.index);
+        const desde = Math.max(0, m.index - 700, finAnterior);
+        const antes = texto.slice(desde, m.index);
         // Tramos largos en mayúsculas: así se escriben los rubros del Semanario.
-        const mays = antes.match(/[A-ZÁÉÍÓÚÑÜ][A-ZÁÉÍÓÚÑÜ0-9 ,.;:()«»"'\-\/]{24,}/g);
-        if (mays?.length) mapa[m[1]] = mays[mays.length - 1].trim();
+        let ultimo: RegExpExecArray | null = null;
+        const rx = new RegExp(RX_MAYUSCULAS.source, 'g');
+        for (let t = rx.exec(antes); t !== null; t = rx.exec(antes)) ultimo = t;
+        if (ultimo) {
+            // ¿Título de Markdown? Se mira el renglón hasta 200 caracteres
+            // atrás, no entero, para que siga siendo lineal: un título es un
+            // renglón corto. Si el último tramo es un título NO se busca otro
+            // más atrás: así la lectura nueva sólo quita, nunca cambia.
+            const pos = desde + ultimo.index;
+            const previo = texto.slice(Math.max(0, pos - 200), pos);
+            const salto = previo.lastIndexOf('\n');
+            const esTitulo = (salto >= 0 || pos <= 200) && /^[ \t>]*#/.test(previo.slice(salto + 1));
+            const deOtroRegistro = desde === finAnterior
+                && ultimo.index <= 150 && !antes.slice(0, ultimo.index).includes('\n');
+            if (!esTitulo && !deOtroRegistro) mapa[m[1]] = ultimo[0].trim();
+        }
+        finAnterior = m.index + m[0].length;
     }
     return mapa;
 }
