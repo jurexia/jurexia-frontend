@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { PREFIJO_CIERRE_SOLICITADO } from '@/lib/cierre-cuenta'
 
 // Server-side Supabase client with service_role key
 // This client bypasses Row Level Security (RLS) - use ONLY in server-side code (API routes, webhooks)
@@ -396,6 +397,44 @@ export async function bloquearPorDisputa(
     console.log(`🔒 CUENTA BLOQUEADA ${normalizedEmail} — ${motivo}`
         + (r.ya_estaba ? ' (ya lo estaba)' : ''));
     return { ok: !!r.ok, yaEstaba: !!r.ya_estaba };
+}
+
+/**
+ * Reabrir la cuenta que se cerró a petición de su titular (28-sep-2026).
+ *
+ * El cierre con reembolso vive en `blocked_users`, como la disputa, porque el
+ * barrido de morosos levantaría una suspensión al día siguiente (ver
+ * lib/cierre-cuenta.ts). Pero éste SÍ se abre pagando: en cuanto entra el
+ * pago de una suscripción se borra la fila. Sólo la de ese motivo: un bloqueo
+ * por disputa no se abre con dinero.
+ */
+export async function levantarCierreSolicitado(email: string): Promise<boolean> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const { data: perfil, error: errPerfil } = await getSupabaseAdmin()
+        .from('user_profiles')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+    if (errPerfil) throw errPerfil;
+    if (!perfil?.id) return false;
+
+    const { data, error } = await getSupabaseAdmin()
+        .from('blocked_users')
+        .delete()
+        .eq('user_id', perfil.id)
+        .like('reason', `${PREFIJO_CIERRE_SOLICITADO}%`)
+        .select('user_id');
+
+    if (error) {
+        console.error(`❌ No pude reabrir la cuenta de ${normalizedEmail}:`, error);
+        throw error;
+    }
+    if (data && data.length > 0) {
+        console.log(`🔓 CUENTA REABIERTA ${normalizedEmail}: pagó tras un cierre a petición propia`);
+        return true;
+    }
+    return false;
 }
 
 export const DIAS_HASTA_SUSPENDER = Number(process.env.DIAS_HASTA_SUSPENDER || 14);

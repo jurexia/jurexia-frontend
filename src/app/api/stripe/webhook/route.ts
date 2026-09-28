@@ -8,6 +8,7 @@ import {
     resetUserQueries,
     suspenderPorImpago,
     levantarSuspension,
+    levantarCierreSolicitado,
     marcarImpago,
     bloquearPorDisputa,
     DIAS_HASTA_SUSPENDER,
@@ -709,6 +710,17 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
             await marcarImpago(email, null);
         } catch (e) {
             console.error(`⚠️ Entró el pago de ${email} pero no pude levantar su suspensión:`, e);
+        }
+
+        // Y quien cerró su cuenta a petición propia vuelve pagando (28-sep-2026).
+        // Sólo con el pago de una suscripción: es lo que se le ofrece en el muro,
+        // y una recarga suelta no es volver a contratar.
+        if ((invoice.billing_reason || '').startsWith('subscription')) {
+            try {
+                await levantarCierreSolicitado(email);
+            } catch (e) {
+                console.error(`⚠️ Entró el pago de ${email} pero no pude reabrir su cuenta cerrada:`, e);
+            }
         }
 
         /* EL RECIBO, CON EL NOMBRE QUE VERÁ EN SU BANCO (23-sep-2026).

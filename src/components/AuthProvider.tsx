@@ -6,6 +6,7 @@ import { supabase, getUserProfile, getBloqueo, UserProfile, BloqueoCuenta } from
 import { CuentaSuspendida } from '@/components/CuentaSuspendida';
 import { AvisoImpago } from '@/components/AvisoImpago';
 import { CuentaBloqueada } from '@/components/CuentaBloqueada';
+import { esCierreSolicitado } from '@/lib/cierre-cuenta';
 import type { User, Session } from '@supabase/supabase-js';
 
 /**
@@ -198,7 +199,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // El bloqueo gana al muro de suspensión cuando coinciden: decirle «no
     // pudimos cobrarte» a quien desconoció el cargo sería contarle una
     // historia distinta de la que su propio banco ya le contó.
-    const bloqueado = !!authState.bloqueo;
+    //
+    // SALVO EL CIERRE QUE PIDIÓ EL PROPIO TITULAR (28-sep-2026). Ése sí se
+    // reabre pagando, así que a él se le dejan las mismas rutas de la caja que
+    // al suspendido: encerrarlo sin dejarle pagar sería prometerle en el muro
+    // una reactivación a la que no puede llegar.
+    const cierrePropio = esCierreSolicitado(authState.bloqueo?.reason);
+    const bloqueado = !!authState.bloqueo && !(cierrePropio && enRutaDePago);
 
     return (
         <AuthContext.Provider value={authState}>
@@ -207,6 +214,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 <CuentaBloqueada
                     email={authState.profile?.email}
                     desde={authState.bloqueo?.blocked_at}
+                    motivo={authState.bloqueo?.reason}
+                    userId={authState.user?.id}
                 />
             )}
             {!bloqueado && suspendido && <CuentaSuspendida email={authState.profile?.email} />}

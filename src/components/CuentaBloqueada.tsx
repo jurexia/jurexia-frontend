@@ -10,6 +10,8 @@
  *     suscripción ya se canceló— y ofrecer un botón de pago sería mandar al
  *     usuario a una puerta que no abre. La única salida es escribir a
  *     soporte para que una persona revise el caso.
+ *     (La excepción es el cierre que pidió el propio titular: ése sí se
+ *     reabre pagando. Ver `CierreSolicitado`, más abajo.)
  *
  * SE LE DICE EL MOTIVO CON TODAS SUS LETRAS. Un bloqueo mudo es lo que
  * convierte a un cliente molesto en una queja ante el banco o ante Profeco.
@@ -20,9 +22,20 @@
  * cuenta es lo correcto, y en los dos casos el usuario merece saberlo sin que
  * se le trate de tramposo.
  */
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { esCierreSolicitado, planDelCierre } from '@/lib/cierre-cuenta';
 
-export function CuentaBloqueada({ email, desde }: { email?: string | null; desde?: string | null }) {
+/* EL CIERRE QUE PIDIÓ EL TITULAR (28-sep-2026). El muro nació para las
+   disputas, y su texto lo dice —«Su institución bancaria nos informó que se
+   desconoció uno de los cargos»—. A quien pidió cancelar y recibió su
+   reembolso, cerrarle el acceso con ESE texto sería contarle algo que no
+   pasó. El motivo en `blocked_users.reason` decide la variante (ver
+   lib/cierre-cuenta.ts), y ésta sí lleva a la caja: la cuenta se reabre
+   pagando. */
+export function CuentaBloqueada({ email, desde, motivo, userId }: {
+    email?: string | null; desde?: string | null; motivo?: string | null; userId?: string | null;
+}) {
     const salir = async () => {
         await supabase.auth.signOut();
         window.location.href = '/entrar';
@@ -31,6 +44,10 @@ export function CuentaBloqueada({ email, desde }: { email?: string | null; desde
     const fecha = desde
         ? new Date(desde).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })
         : null;
+
+    if (esCierreSolicitado(motivo)) {
+        return <CierreSolicitado email={email} fecha={fecha} motivo={motivo} userId={userId} salir={salir} />;
+    }
 
     return (
         <div
@@ -85,6 +102,116 @@ export function CuentaBloqueada({ email, desde }: { email?: string | null; desde
 
                 <div className="mt-5 flex items-center justify-between border-t border-charcoal-100 pt-4 text-xs text-charcoal-500">
                     <span>Sus datos y documentos se conservan íntegros.</span>
+                    <button onClick={salir} className="ml-3 flex-shrink-0 underline hover:text-charcoal-700">
+                        Cerrar sesión
+                    </button>
+                </div>
+                {email && <p className="mt-3 text-[11px] text-charcoal-400">Sesión de {email}</p>}
+            </div>
+        </div>
+    );
+}
+
+function CierreSolicitado({ email, fecha, motivo, userId, salir }: {
+    email?: string | null; fecha: string | null; motivo?: string | null; userId?: string | null;
+    salir: () => void;
+}) {
+    const [abriendo, setAbriendo] = useState(false);
+    const [fallo, setFallo] = useState(false);
+
+    // QUIEN YA PAGÓ NO PUEDE SEGUIR VIENDO ESTE MURO. Vuelve de Stripe a
+    // /checkout/success con el bloqueo leído ANTES de que el webhook lo
+    // borrara, y al pasar al chat sin recargar la página lo encontraría otra
+    // vez: «inhabilitada» a quien acaba de pagar. Mientras el muro esté
+    // abierto se pregunta por la fila; si ya no existe, se recarga. Un error
+    // de lectura NO cuenta como «ya no existe»: recargaría en bucle.
+    useEffect(() => {
+        if (!userId) return;
+        let vivo = true;
+        const mirar = async () => {
+            const { data, error } = await supabase
+                .from('blocked_users')
+                .select('reason')
+                .eq('user_id', userId)
+                .maybeSingle();
+            if (vivo && !error && !data) window.location.reload();
+        };
+        mirar();
+        const reloj = setInterval(mirar, 10000);
+        return () => { vivo = false; clearInterval(reloj); };
+    }, [userId]);
+
+    // Un clic y a la caja de Stripe, con el plan que tenía. Stripe enseña el
+    // plan y el precio antes de cobrar nada. Se importa al pulsar, no antes:
+    // este muro vive en el proveedor de sesión de TODAS las páginas y no debe
+    // cargarle a nadie el código de cobro.
+    const reactivar = async () => {
+        setAbriendo(true);
+        setFallo(false);
+        try {
+            const [{ PLANS }, { redirectToCheckout }] = await Promise.all([
+                import('@/lib/stripe'),
+                import('@/lib/stripe-client'),
+            ]);
+            const planes = PLANS as unknown as Record<string, { priceId?: string | null }>;
+            const plan = planDelCierre(motivo);
+            const precio = plan ? planes[plan]?.priceId : null;
+            if (!precio || !email) {
+                window.location.href = '/precios';
+                return;
+            }
+            await redirectToCheckout(precio, email);
+        } catch {
+            setAbriendo(false);
+            setFallo(true);
+        }
+    };
+
+    return (
+        <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="titulo-cierre"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-charcoal-900/95 p-4 backdrop-blur-sm"
+        >
+            <div className="w-full max-w-lg rounded-2xl border border-charcoal-300 bg-white p-8 shadow-2xl">
+                <h2 id="titulo-cierre" className="mb-4 font-serif text-2xl font-medium text-charcoal-900">
+                    Cuenta inhabilitada
+                </h2>
+                <p className="mb-4 text-base leading-relaxed text-charcoal-700">
+                    A solicitud suya{fecha ? `, el ${fecha},` : ''} cancelamos su suscripción y la cuenta quedó
+                    inhabilitada. <strong className="text-charcoal-900">No se realizará ningún cargo más.</strong>
+                </p>
+                <div className="mb-5 rounded-lg border border-charcoal-200 bg-charcoal-50 p-4 text-sm leading-relaxed text-charcoal-700">
+                    Puede reactivarla cuando lo desee con un solo pago. El acceso se restablece en cuanto el pago
+                    se confirma, con sus conversaciones, carpetas y documentos tal como quedaron.
+                </div>
+                <button
+                    type="button"
+                    onClick={reactivar}
+                    disabled={abriendo}
+                    className="block w-full rounded-lg bg-charcoal-900 px-4 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-charcoal-800 disabled:opacity-60"
+                >
+                    {abriendo ? 'Abriendo la caja segura…' : 'Reactivar mi cuenta'}
+                </button>
+                {fallo && (
+                    <p className="mt-3 text-sm text-red-700" role="alert">
+                        No pudimos abrir la caja. Inténtelo de nuevo o elija su plan en la página de precios.
+                    </p>
+                )}
+                <p className="mt-3 text-center text-xs leading-relaxed text-charcoal-500">
+                    Le llevamos a la caja segura de Stripe con el plan que tenía.{' '}
+                    <a href="/precios" className="underline hover:text-charcoal-700">
+                        Ver todos los planes
+                    </a>
+                </p>
+                <div className="mt-5 flex items-center justify-between border-t border-charcoal-100 pt-4 text-xs text-charcoal-500">
+                    <span>
+                        Dudas:{' '}
+                        <a href="mailto:soporte@iurexia.com" className="underline hover:text-charcoal-700">
+                            soporte@iurexia.com
+                        </a>
+                    </span>
                     <button onClick={salir} className="ml-3 flex-shrink-0 underline hover:text-charcoal-700">
                         Cerrar sesión
                     </button>
