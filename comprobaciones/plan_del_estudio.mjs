@@ -25,6 +25,7 @@ import os from 'os';
 import path from 'path';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
+import { P462_INFUNDADO, P462_FUNDADO } from './planes_462_plan6.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const requerir = createRequire(path.join(RAIZ, 'package.json'));
@@ -268,18 +269,27 @@ const PLAN = {
     const j = como.jerarquiaDelPlan(p, probs);
     ok(j && j.principal.n === 1 && j.principal.sentido === 'infundado' && j.premisa === 'M1' && j.expuestaEn === 'U1',
        'el principal, su sentido y dónde se expone su premisa');
-    ok(j.siguen === 2 && j.propios === 1 && j.caen === 0 && j.otros === 0,
-       `C1.a y C1.b lo siguen; C3.e (desarrolla) con dato propio; C9.z sin sentido no cuenta (${JSON.stringify(j)})`);
+    ok(j.siguen === 2 && j.propios === 0 && j.caen === 0 && j.otros === 1 && j.argumentos === 2,
+       `C1.a y C1.b lo siguen; C3.e es del problema 2 y se decide en el suyo; C9.z sin sentido no cuenta (${JSON.stringify(j)})`);
     const sinPrincipal = api.planDe({ ...PLAN, problemas: PLAN.problemas.map((x) => ({ ...x, jerarquia: 'accesorio' })) });
     ok(como.jerarquiaDelPlan(sinPrincipal, probs) === null, 'sin principal marcado (y con varios problemas) no se dice nada');
     ok(como.jerarquiaDelPlan(null, probs) === null, 'sin plan, nada');
+    // LO QUE CAE CON ÉL ES SÓLO DEL PRINCIPAL (revisión, 28-sep-2026): un
+    // «cae con el principal» o un innecesario por mayor beneficio de OTRO
+    // problema se decide en el suyo; antes se contaba en «caen con él».
     const caido = api.planDe({ ...PLAN, segmentos: [...PLAN.segmentos,
-        { id: 'C4.a', problema_id: 2, etiqueta: 'innecesario', razon: 'cae_con_principal', trat: 'no_se_estudia' }] });
-    ok(como.jerarquiaDelPlan(caido, probs).caen === 1, 'el que cae con el principal se cuenta aparte');
-    // Un plan viejo con pendiente «razon» (C3.e) se cuenta por su tratamiento
-    // y no deja ninguna caja: jerarquiaDelPlan es lo único que el panel lee.
-    ok(j.autonomos.join() === 'C3.e' && j.decide === '' && j.innecesarios.length === 0,
-       'plan viejo: el pendiente «razon» cuenta como autónomo, sin portador');
+        { id: 'C4.a', problema_id: 2, etiqueta: 'innecesario', razon: 'cae_con_principal', trat: 'no_se_estudia' },
+        { id: 'C4.b', problema_id: 2, etiqueta: 'innecesario', razon: 'innecesario_mayor_beneficio', trat: 'no_se_estudia' },
+        { id: 'C1.c', problema_id: 1, etiqueta: 'inoperante', razon: 'generico', trat: 'residual' }] });
+    const jc = como.jerarquiaDelPlan(caido, probs);
+    ok(jc.caen === 1 && jc.otros === 3 && jc.argumentos === 3,
+       `sólo C1.c cae con el principal; C4.a y C4.b se deciden en el problema 2 (${JSON.stringify(jc)})`);
+    ok(como.tramosDeJerarquia(jc).includes('1 cae con él (inoperantes, innecesarios, residuales o sin materia)'),
+       `el rótulo de los que caen nombra a los innecesarios (${como.tramosDeJerarquia(jc).join(' | ')})`);
+    // Un plan viejo con pendiente «razon» se cuenta por su tratamiento y no
+    // deja ninguna caja: jerarquiaDelPlan es lo único que el panel lee.
+    ok(j.autonomos.length === 0 && j.decide === '' && j.innecesarios.length === 0,
+       'plan viejo: sin portador ni grupos');
     ok(como.tramosDeJerarquia(j)[0] === 'de ahí se siguen 2 argumentos, que aplican su premisa o remiten a ella',
        `sin portador no se promete «dentro de su estudio» (${como.tramosDeJerarquia(j)[0]})`);
 
@@ -319,7 +329,7 @@ const PLAN = {
        'autónomos: el suplido y el viejo pendiente «razon», sin caja');
     const t6 = como.tramosDeJerarquia(j6);
     ok(t6.join(' | ') === 'de ahí se siguen 2 argumentos, que se contestan dentro de su estudio | 2 son innecesarios por suficiencia'
-       + ' | uno cae por derivar de lo ya desestimado | 2 se contestan con su dato propio dentro de su apartado',
+       + ' | uno cae por derivar de lo ya desestimado | 2 se contestan por su cuenta',
        `tramos del plan-6 (${t6.join(' | ')})`);
     ok(!t6.some((t) => /razón|pendiente/i.test(t)), 'la línea no pide nada');
     ok(/^innecesario por suficiencia/.test(como.razonLegible('innecesario_por_suficiencia'))
@@ -327,6 +337,89 @@ const PLAN = {
        'legibles de las dos razones nuevas');
     ok(como.razonLegible('no_combate(P2)') === 'no combate la consideración (P2)', 'razón legible con argumento');
     ok(como.razonLegible('algo_nuevo') === 'algo nuevo', 'razón fuera del catálogo: se enseña, no se esconde');
+
+    // EL GRUPO DEL SERVIDOR MANDA SOBRE EL TRATAMIENTO (revisión, 28-sep-2026).
+    // Como lo emite `resolver_por_dependencia`: el portador marcado «decide»
+    // y SIN `con` (el servidor se lo quita), un absorbido que conserva trat
+    // «desarrolla», la razón con su proposición APARTE en `razon_p`, y un
+    // innecesario por mayor beneficio de otro problema.
+    const P6R = {
+        version: 'plan-6',
+        problemas: [{ id: 1, pregunta: '¿Se acreditó la identidad?', sentido: 'infundado', jerarquia: 'principal' },
+                    { id: 2, pregunta: '¿Hay cosa juzgada?', sentido: 'innecesario', jerarquia: 'accesorio' }],
+        segmentos: [
+            { id: 'A1.a', problema_id: 1, etiqueta: 'infundado', razon: 'fondo_desestimado', trat: 'desarrolla',
+              dependencia: 'decide' },
+            { id: 'A1.b', problema_id: 1, etiqueta: 'infundado', razon: 'fondo_desestimado', trat: 'desarrolla',
+              dependencia: 'con_el_principal', con: 'A1.a', depende_de: 'P1' },
+            { id: 'A1.c', problema_id: 1, etiqueta: 'infundado', razon: 'fondo_desestimado', trat: 'residual',
+              dependencia: 'con_el_principal', con: 'A1.a', depende_de: 'P1' },
+            { id: 'A1.d', problema_id: 1, etiqueta: 'inoperante', razon: 'deriva_de_desestimado', razon_p: 'P1',
+              trat: 'residual', dependencia: 'deriva', con: 'A1.a', depende_de: 'P1' },
+            { id: 'A1.e', problema_id: 1, etiqueta: 'inoperante', razon: 'deriva_de_desestimado', trat: 'residual',
+              dependencia: 'deriva', con: 'A1.a', depende_de: 'P1' },
+            { id: 'A1.f', problema_id: 1, etiqueta: 'inoperante', razon: 'no_combate', razon_p: 'P7', trat: 'residual',
+              dependencia: 'autonomo' },
+            { id: 'A2.a', problema_id: 2, etiqueta: 'innecesario', razon: 'innecesario_mayor_beneficio',
+              trat: 'no_se_estudia' },
+        ],
+        unidades: [{ id: 'U1', problemas: [1], segmentos: ['A1.a', 'A1.b'], premisa: 'M1' }],
+    };
+    const p6r = api.planDe(P6R);
+    ok(p6r.segmentos[3].razon === 'deriva_de_desestimado(P1)' && p6r.segmentos[5].razon === 'no_combate(P7)',
+       `razon + razon_p apartes se componen (${p6r.segmentos[3].razon}, ${p6r.segmentos[5].razon})`);
+    ok(p6r.segmentos[4].razon === 'deriva_de_desestimado(P1)',
+       'la ficha no trae razon_p: al que cae por derivar le da su proposición el depende_de');
+    ok(p6r.segmentos[0].dependencia === 'decide' && p6r.segmentos[1].dependencia === 'con_el_principal'
+       && p6r.segmentos[6].dependencia === '' && p6r.jerarquia.length === 0, 'dependencia se lee; sin ella, vacía');
+    const j6r = como.jerarquiaDelPlan(p6r, probs);
+    ok(j6r.decide === 'A1.a', `el portador es el que el servidor marca «decide» (${j6r.decide})`);
+    // Un problema que prospera cuyo único otro argumento es autónomo: ningún
+    // `con` en todo el plan, y aun así hay portador (antes: decide = '').
+    const solo = api.planDe({ ...P6R, segmentos: [
+        { id: 'A1.a', problema_id: 1, etiqueta: 'fundado', razon: 'fundado', trat: 'aplica', dependencia: 'decide' },
+        { id: 'A1.b', problema_id: 1, etiqueta: 'fundado_insuficiente', razon: 'fundado_insuficiente', trat: 'remite',
+          diferencia: 'consecuencia', dependencia: 'autonomo' }] });
+    const js = como.jerarquiaDelPlan(solo, probs);
+    ok(js.decide === 'A1.a' && js.autonomos.join() === 'A1.b' && js.siguen === 0
+       && como.tramosDeJerarquia(js).join() === '1 se contesta por su cuenta',
+       `sin ningún «con», el portador sale de «decide» y el autónomo no «aplica su premisa» (${JSON.stringify(js)})`);
+    ok(j6r.conElPrincipal.join() === 'A1.b,A1.c' && j6r.derivan.join() === 'A1.d,A1.e'
+       && j6r.autonomos.join() === 'A1.f' && j6r.caen === 2 && j6r.otros === 1 && j6r.argumentos === 5,
+       `el grupo manda sobre el tratamiento: A1.b (desarrolla) y A1.c (residual) van con el principal (${JSON.stringify(j6r)})`);
+    ok(!como.tramosDeJerarquia(j6r).some((t) => /cae con él|caen con él/.test(t)),
+       'el innecesario por mayor beneficio del problema 2 no «cae con él»');
+    // Sin `dependencia` en los argumentos, la jerarquía del plan basta.
+    const conJer = api.planDe({ ...P6R,
+        segmentos: P6R.segmentos.map(({ dependencia, ...x }) => x),
+        jerarquia: [{ problema: 1, decide: 'A1.a', raiz: 'P1', con_el_principal: ['A1.b', 'A1.c'],
+                      innecesario: [], deriva: ['A1.d', 'A1.e'] }] });
+    const jj = como.jerarquiaDelPlan(conJer, probs);
+    ok(conJer.jerarquia[0].conElPrincipal.join() === 'A1.b,A1.c' && jj.decide === 'A1.a'
+       && jj.conElPrincipal.join() === 'A1.b,A1.c' && jj.derivan.join() === 'A1.d,A1.e',
+       `la jerarquía del plan (la de la ficha, sin autónomos) da los mismos grupos (${JSON.stringify(jj)})`);
+
+    // LOS DOS PLANES REALES DEL 462, TAL COMO LOS DEJA EL SERVIDOR PLAN-6.
+    const pi = api.planDe(P462_INFUNDADO);
+    const ji = como.jerarquiaDelPlan(pi, probs);
+    ok(ji.decide === 'A1.a' && ji.siguen === 23 && ji.caen === 0 && ji.propios === 0 && ji.otros === 1
+       && ji.argumentos === 23,
+       `462 infundado (la captura): 23 con el principal, ninguno «con su dato propio» (${JSON.stringify(ji)})`);
+    ok(como.tramosDeJerarquia(ji).join(' | ')
+       === 'de ahí se siguen 23 argumentos, que se contestan dentro de su estudio | 1 se decide en su propio problema',
+       `462 infundado: la línea (${como.tramosDeJerarquia(ji).join(' | ')})`);
+    const pf = api.planDe(P462_FUNDADO);
+    const jf = como.jerarquiaDelPlan(pf, probs);
+    ok(jf.decide === 'A1.a' && jf.siguen === 11 && jf.innecesarios.length === 9 && jf.caen === 9
+       && jf.autonomos.join() === 'A1.b,A1.i,A1.u' && jf.otros === 1 && jf.argumentos === 23,
+       `462 fundado: 11 con el principal, 9 innecesarios, 3 autónomos; A2.a (art. 189) del problema 2 aparte (${JSON.stringify(jf)})`);
+    for (const [nom, plan] of [['infundado', P462_INFUNDADO], ['fundado', P462_FUNDADO]]) {
+        const srv = plan.jerarquia[0];
+        const jx = como.jerarquiaDelPlan(api.planDe(plan), probs);
+        ok(jx.decide === srv.decide && jx.conElPrincipal.join() === srv.con_el_principal.join()
+           && jx.innecesarios.join() === srv.innecesario.join() && jx.derivan.join() === srv.deriva.join(),
+           `462 ${nom}: la pantalla dice lo mismo que la jerarquía del servidor`);
+    }
 }
 
 /* ═══ 6 · EL HOOK: ANTIRREBOTE, TURNOS Y CLAVES ═══ */

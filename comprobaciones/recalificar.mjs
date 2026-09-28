@@ -40,6 +40,7 @@ import os from 'os';
 import path from 'path';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
+import { P462_INFUNDADO, P462_FUNDADO } from './planes_462_plan6.mjs';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const requerir = createRequire(path.join(RAIZ, 'package.json'));
@@ -129,15 +130,20 @@ module.exports = {
 };
 `);
 /* El panel del plan no se pinta aquí: se espía con qué `listo` lo llama
-   Decision, que es lo que decide si el plan se pide. */
+   Decision, que es lo que decide si el plan se pide. El estado del plan es
+   el de `globalThis.__estadoPlan` si una prueba lo pone (8.1 bis: la tarjeta
+   con un plan hecho), y la jerarquía es la REAL: antes el espía devolvía
+   siempre null y la rama «decide el problema N…» no la probaba nada. */
 fs.writeFileSync(path.join(TMP, 'como_espia.js'), `
 globalThis.__listoPlan = [];
+globalThis.__estadoPlan = null;
 module.exports = {
   __esModule: true,
   default: () => null,
   usePlanDelEstudio: (enlace, listo) => { globalThis.__listoPlan.push(listo);
-      return { fase: 'esperando', respuesta: null, desactualizado: false, error: '' }; },
-  jerarquiaDelPlan: () => null,
+      return globalThis.__estadoPlan
+          ?? { fase: 'esperando', respuesta: null, desactualizado: false, error: '' }; },
+  jerarquiaDelPlan: (...a) => require('./como.js').jerarquiaDelPlan(...a),
 };
 `);
 
@@ -810,6 +816,27 @@ const pastillaPulsada = (t) => buscar(t, (n) => n.type === 'button' && n.props['
     ok(globalThis.__listoPlan.length > 0 && globalThis.__listoPlan.every((x) => x === false),
        'con recalificación en curso Decision NO deja pedir el plan');
     ok(/se ordena en cuanto terminen de recalificarse/.test(texto(a)), 'y la tarjeta final dice por qué espera');
+
+    // 8.1 bis «Cómo se estudiará» con un plan hecho (revisión, 28-sep-2026):
+    // los dos planes reales del 462 tal como los deja el servidor plan-6. El
+    // denominador son los argumentos del principal sin el que decide; antes
+    // eran todos los segmentos del plan y la captura decía «1 de 25».
+    const conPlan = (plan) => {
+        globalThis.__estadoPlan = { fase: 'listo', desactualizado: false, error: '',
+            respuesta: { estado: 'listo', clave: 'K', plan: api.planDe(plan), avisos: [], corridas: null, tope: null } };
+        try { return texto(pintarDecision(baseDecision())); } finally { globalThis.__estadoPlan = null; }
+    };
+    const ti = conPlan(P462_INFUNDADO);
+    ok(ti.includes('Cómo se estudiará:decide el problema 1 (A1.a); de sus otros 23 argumentos, todos se resuelven por consecuencia'),
+       `tarjeta, 462 infundado (${(/Cómo se estudiará:[^↑]*/.exec(ti) || [''])[0]})`);
+    const tf = conPlan(P462_FUNDADO);
+    ok(tf.includes('decide el problema 1 (A1.a); de sus otros 23 argumentos, 20 se resuelven por consecuencia'),
+       `tarjeta, 462 fundado: 11 con él y 9 innecesarios; los 3 autónomos no (${(/Cómo se estudiará:[^↑]*/.exec(tf) || [''])[0]})`);
+    const dys = req('./decision.js').decideYSigue;
+    ok(dys({ principal: { n: 2 }, decide: '', argumentos: 0, siguen: 0, caen: 0 }) === 'decide el problema 2'
+       && dys({ principal: { n: 1 }, decide: 'A1.a', argumentos: 1, siguen: 1, caen: 0 })
+          === 'decide el problema 1 (A1.a); de su otro argumento, 1 se resuelve por consecuencia',
+       'la frase de la tarjeta sin argumentos que seguir y con uno solo');
 
     // 8.2 recalificando
     const t1 = tarjetaDe(a, 'p1');

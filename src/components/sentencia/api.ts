@@ -2084,16 +2084,40 @@ export interface SegmentoDelPlan {
     pendiente: '' | 'sentido' | 'razon';
     /** plan-6 (28-sep-2026): el argumento del que se sigue su suerte —el
      *  «portador» que decide su problema—, si el servidor lo manda. Lo llevan
-     *  los innecesarios por suficiencia y los que se contestan con el
-     *  principal. '' si no llega. */
+     *  los que se contestan con el principal, los innecesarios por suficiencia
+     *  y los que caen por derivar; el portador NO lo lleva (el servidor se lo
+     *  quita). '' si no llega. */
     con: string;
-    /** plan-6: de qué depende (la proposición o el argumento), si llega. */
+    /** plan-6: la raíz toral de la que depende («P1»), si llega. */
     dependeDe: string;
+    /** plan-6: el grupo en que el servidor lo resolvió
+     *  (`plan_estudio.resolver_por_dependencia`). Manda sobre cualquier
+     *  deducción de la pantalla: revisión del 28-sep-2026, la captura del
+     *  462 —23 argumentos «con el principal» que conservaban trat
+     *  «desarrolla» salían contados como autónomos—. '' en planes viejos. */
+    dependencia: DependenciaDelSegmento;
     /** Del piso de segmentos: el párrafo del resumen y la cita LITERAL del escrito. */
     texto: string;
     cita: string;
     pagina: string;
     sostiene: string;
+}
+
+export type DependenciaDelSegmento =
+    '' | 'decide' | 'con_el_principal' | 'innecesario' | 'deriva' | 'autonomo';
+const _DEPENDENCIAS = new Set(['decide', 'con_el_principal', 'innecesario', 'deriva', 'autonomo']);
+
+/** LA JERARQUÍA DE UN PROBLEMA, como la resuelve el servidor (plan-6): quién
+ *  decide y qué se resolvió por consecuencia de él. La ficha del proyecto la
+ *  manda sin `autonomo`; el plan entero (GET /taller/plan), con él. */
+export interface JerarquiaDeProblema {
+    problema: number | string;
+    decide: string;
+    raiz: string;
+    conElPrincipal: string[];
+    innecesario: string[];
+    deriva: string[];
+    autonomo: string[];
 }
 
 export interface ProposicionDelPlan {
@@ -2148,6 +2172,8 @@ export interface PlanDelEstudio {
     propuestas: PropuestaDelPlan[];
     avisos: string[];
     orden: { criterio: string; porQue: string } | null;
+    /** plan-6: vacía en planes viejos. */
+    jerarquia: JerarquiaDeProblema[];
 }
 
 export interface RespuestaPlan {
@@ -2179,13 +2205,16 @@ function _textoDeAviso(x: unknown): string {
     return _t(o.texto ?? o.mensaje ?? o.aviso ?? o.que ?? '') || JSON.stringify(o);
 }
 
-/** «no_combate(P2)» puede llegar ya escrito o partido en {tipo, p}. */
-function _razonDe(x: unknown): string {
+/** «no_combate(P2)» puede llegar ya escrito, partido en {tipo, p} o —como lo
+ *  guarda el servidor— con la proposición APARTE, en `razon_p` (revisión del
+ *  28-sep-2026: sin leerla, «deriva_de_desestimado» salía sin decir de qué
+ *  Pk derivaba). La ficha del proyecto no trae `razon_p`: al que cae por
+ *  derivar le basta su `depende_de`, que es la misma raíz. */
+function _razonDe(x: unknown, aparte: unknown = ''): string {
     const o = _o(x);
-    if (!o) return _t(x);
-    const tipo = _t(o.tipo ?? o.razon ?? o.id ?? '');
-    const arg = _t(o.p ?? o.arg ?? o.proposicion ?? '');
-    return arg ? `${tipo}(${arg})` : tipo;
+    const tipo = o ? _t(o.tipo ?? o.razon ?? o.id ?? '') : _t(x);
+    const arg = (o ? _t(o.p ?? o.arg ?? o.proposicion ?? '') : '') || _t(aparte);
+    return arg && tipo && !tipo.includes('(') ? `${tipo}(${arg})` : tipo;
 }
 
 function _idProblema(x: unknown): number | string | null {
@@ -2202,6 +2231,8 @@ export function planDe(x: unknown): PlanDelEstudio | null {
         const s = _o(y) ?? {};
         const d = _o(s.dato);
         const pend = _t(s.pendiente).toLowerCase();
+        const dep = _t(s.dependencia).toLowerCase();
+        const dependencia = (_DEPENDENCIAS.has(dep) ? dep : '') as DependenciaDelSegmento;
         return {
             id: _t(s.id),
             problemaId: _idProblema(s.problema_id),
@@ -2212,12 +2243,14 @@ export function planDe(x: unknown): PlanDelEstudio | null {
             reitera: _t(s.reitera),
             dato: d && _t(d.texto) ? { texto: _t(d.texto), cita: _t(d.cita), fuente: _t(d.fuente) } : null,
             etiqueta: _t(s.etiqueta),
-            razon: _razonDe(s.razon),
+            razon: _razonDe(s.razon, s.razon_p
+                ?? (dependencia === 'deriva' || /^deriva_de_desestimado$/i.test(_t(s.razon)) ? s.depende_de : '')),
             trat: _t(s.trat),
             diferencia: _t(s.diferencia),
             pendiente: pend === 'sentido' ? 'sentido' : pend === 'razon' ? 'razon' : '',
             con: _t(s.con),
             dependeDe: _t(s.depende_de),
+            dependencia,
             /* El plan reparado trae el párrafo del resumen en `resumen` (el
                piso lo llama `texto`): se leen los dos. */
             texto: _t(s.texto ?? s.resumen),
@@ -2269,6 +2302,15 @@ export function planDe(x: unknown): PlanDelEstudio | null {
         }).filter((p) => p.seg && p.a),
         avisos: _l(j.avisos_al_secretario).map(_textoDeAviso).filter(Boolean),
         orden: orden ? { criterio: _t(orden.criterio), porQue: _t(orden.por_que) } : null,
+        jerarquia: _l(j.jerarquia).map((y): JerarquiaDeProblema | null => {
+            const g = _o(y);
+            const problema = g ? _idProblema(g.problema) : null;
+            return g && problema !== null
+                ? { problema, decide: _t(g.decide), raiz: _t(g.raiz),
+                    conElPrincipal: _ts(g.con_el_principal), innecesario: _ts(g.innecesario),
+                    deriva: _ts(g.deriva), autonomo: _ts(g.autonomo) }
+                : null;
+        }).filter((g): g is JerarquiaDeProblema => g !== null),
     };
 }
 

@@ -53,8 +53,10 @@ export function opcionesDelProyecto(e: EstadoDelFormulario, formato: FormatoSent
     /* Lo que viaja igual por los tres modos: la autoridad corregida, lo
        que él resolvió sobre la oportunidad —en la petición y no en
        memoria: con -w 2 el worker que compone no es el que leyó—, la
-       forma, la suplencia, sus razones por argumento (Decisión 6), sólo
-       en casa la variante del prompt, y LOS CONCEPTOS DE VIOLACIÓN.
+       forma, la suplencia, sólo en casa la variante del prompt, y LOS
+       CONCEPTOS DE VIOLACIÓN. (Las razones por argumento de la Decisión 6
+       dejaron de viajar desde aquí el 28-sep-2026: `razones_segmento` va
+       siempre vacío.)
 
        Los conceptos iban sólo en la rama de «todo el asunto» (revisión
        adversarial, 26-sep-2026; heredado). En «problema por problema» —que es

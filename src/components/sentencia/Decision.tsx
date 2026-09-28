@@ -8,7 +8,7 @@ import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
               PropuestaSuplencia, DecisionSuplencia } from './api';
 import EstudiarJuntos from './EstudiarJuntos';
 import ComoSeEstudiara, { usePlanDelEstudio, jerarquiaDelPlan } from './ComoSeEstudiara';
-import type { EnlacePlan } from './ComoSeEstudiara';
+import type { EnlacePlan, JerarquiaDelPlan } from './ComoSeEstudiara';
 import { MENSAJE_SIN_CALIFICAR, porQueLegible, pendientesAlGenerar, firmaPendientes } from './recalificacion';
 import type { Superpuesta } from './recalificacion';
 
@@ -365,6 +365,19 @@ const PLAN_APAGADO: EnlacePlan = {
     pedir: () => Promise.reject(new Error('sin plan')),
     leer: () => Promise.reject(new Error('sin plan')),
 };
+
+/** «CÓMO SE ESTUDIARÁ» EN LA TARJETA FINAL, con la jerarquía del plan. El
+ *  denominador son los argumentos del PRINCIPAL sin el que decide ni los
+ *  pendientes de sentido (revisión, 28-sep-2026): con todos los segmentos del
+ *  plan, la captura del 462 decía «1 de 25 se resuelven por consecuencia»
+ *  cuando el servidor había resuelto 23 de los 23 restantes. */
+export function decideYSigue(j: JerarquiaDelPlan): string {
+    const quien = `decide el problema ${j.principal.n}${j.decide ? ` (${j.decide})` : ''}`;
+    if (!j.argumentos) return quien;
+    const k = j.siguen + j.caen;
+    return `${quien}; de ${j.argumentos === 1 ? 'su otro argumento' : `sus otros ${j.argumentos} argumentos`}, `
+        + `${k === j.argumentos && k > 1 ? 'todos' : k} se ${k === 1 ? 'resuelve' : 'resuelven'} por consecuencia`;
+}
 
 /* LAS VARIANTES DEL PROMPT DEL ESTUDIO, sólo para cuentas de casa (26-sep-2026).
    Hasta hoy la variante sólo se podía pedir desde el banco de medición; para
@@ -1328,7 +1341,7 @@ export default function Decision({
                                 {recalificacionEnCurso ? 'se ordena en cuanto terminen de recalificarse los accesorios'
                                     : estadoPlan.fase === 'pidiendo' || estadoPlan.fase === 'en_curso' ? 'ordenándose con tu decisión…'
                                     : planHecho && !estadoPlan.desactualizado
-                                        ? (jer ? `decide el problema ${jer.principal.n}; ${jer.siguen + jer.caen} de ${planHecho.segmentos.length} argumentos se resuelven por consecuencia`
+                                        ? (jer ? decideYSigue(jer)
                                                : `${planHecho.unidades.length} ${planHecho.unidades.length === 1 ? 'apartado' : 'apartados'} · ${planHecho.segmentos.length} argumentos`)
                                     : planHecho ? 'se reordenará con tu último cambio'
                                     : estadoPlan.fase === 'fallo' || estadoPlan.fase === 'sin_plan'

@@ -333,29 +333,48 @@ export function arrastradosPorPropuesta(
    un solo problema): con varios problemas del mismo rango no hay de quién
    depender.
 
-   EL PLAN-6 trae los grupos hechos: el argumento que decide (el «portador»,
-   al que apunta `con`), los innecesarios por suficiencia (problema que
-   prospera: lo resuelto en el principal ya da todo lo que podrían dar) y los
-   que caen por derivar de una consideración ya desestimada (problema que no
-   prospera). Aquí sólo se leen y se cuentan; ninguno se decide en pantalla.
-   Un plan viejo (plan-4/5) con `pendiente: "razon"` se cuenta por su
-   tratamiento, como cualquier otro: ya no hay caja que enseñarle. */
+   EL PLAN-6 trae los grupos hechos, y aquí sólo se leen y se cuentan;
+   ninguno se decide en pantalla. En este orden (revisión, 28-sep-2026):
+     1. `dependencia` de cada argumento, o la `jerarquia` del plan: es lo que
+        el servidor resolvió (`plan_estudio.resolver_por_dependencia`), y
+        manda. La primera versión clasificaba por el tratamiento ANTES que por
+        el grupo, y en la captura del 462 —plan-4 «infundado» pasado por el
+        resolver— los 23 argumentos «con el principal» que conservaban trat
+        «desarrolla» salían como 22 autónomos: la línea decía lo contrario de
+        lo que el estudio iba a hacer.
+     2. `con` apuntando al que decide (planes sin `dependencia`).
+     3. Sólo al final, el tratamiento (plan-4/5 que no pasaron por el
+        resolver): un pendiente «razon» viejo se cuenta como cualquier otro.
+   El portador es el que el servidor marca `decide` (o nombra en su
+   jerarquía): el servidor le QUITA `con`, así que contar votos de `con` sólo
+   sirve de respaldo.
+
+   La línea describe al PRINCIPAL: los argumentos de otros problemas se
+   cuentan aparte («se deciden en su propio problema»), salvo que el servidor
+   los cuelgue del que decide. Antes caían en «caen con él» un innecesario
+   por mayor beneficio (art. 189) o un «cae con el principal» del problema 2,
+   que no caen con éste. */
 const CAEN_CON_EL = new Set(['residual', 'no_se_estudia', 'no_se_expresa_art79']);
 const razonBase = (r: string) => (/^([a-z0-9_]+)/i.exec(r || '')?.[1] ?? '').toLowerCase();
 export interface JerarquiaDelPlan {
     principal: { n: number; pregunta: string; sentido: string };
-    /** El argumento que decide el principal (el «portador»), si el plan lo
-     *  dice con `con`; '' si no (planes anteriores al plan-6). */
+    /** El argumento que decide el principal (el «portador»); '' si el plan no
+     *  lo dice (planes anteriores al plan-6). */
     decide: string;
     /** La premisa del principal y el apartado donde se expone, una vez. */
     premisa: string;
     expuestaEn: string;
-    /** Del principal, los que aplican su premisa o remiten a ella. */
+    /** Del principal, los que se contestan con él (aplican su premisa o
+     *  remiten a ella, o —plan-6— dentro de su estudio). */
     siguen: number;
-    /** Los que caen con él: residuales, inoperantes, innecesarios, sin materia. */
+    /** Los que caen con él: innecesarios por suficiencia, caídos por derivar
+     *  y, en planes viejos, los residuales o sin estudio del principal. */
     caen: number;
-    /** Los que se contestan con su dato propio dentro de su apartado. */
+    /** Los que se contestan por su cuenta (autónomos). */
     propios: number;
+    /** Del principal, sin el que decide ni los pendientes de sentido:
+     *  siguen + caen + propios. Es el denominador de la tarjeta. */
+    argumentos: number;
     /** Los de otros problemas que se deciden en el suyo. */
     otros: number;
     /** Por id: con el principal (los que `siguen`), innecesarios por
@@ -375,32 +394,61 @@ export function jerarquiaDelPlan(plan: PlanDelEstudio | null | undefined,
     if (!fila) return null;
     const suyo = (s: SegmentoDelPlan) => String(s.problemaId ?? '') === String(fila.id);
     const enPantalla = problemaPorNumero(fila.id, problemas, tabla);
-    const u = plan.unidades.find((x) => x.premisa && x.problemas.some((q) => String(q) === String(fila.id)));
-    /* EL PORTADOR: el argumento del principal al que más `con` apuntan. Sólo
-       cuenta un id que el plan trae; un `con` que no casa se ignora. */
     const ids = new Set(plan.segmentos.map((s) => s.id));
-    const votos = new Map<string, number>();
-    plan.segmentos.forEach((s) => {
-        if (s.con && s.con !== s.id && ids.has(s.con)) votos.set(s.con, (votos.get(s.con) ?? 0) + 1);
+    /* EL GRUPO QUE DIO EL SERVIDOR: el del argumento y, si no lo trae, el de
+       la jerarquía del plan (de cualquier problema). */
+    const jerarquias = plan.jerarquia ?? [];
+    const suJer = jerarquias.find((g) => String(g.problema) === String(fila.id));
+    const grupoDe = new Map<string, string>();
+    jerarquias.forEach((g) => {
+        if (g.decide) grupoDe.set(g.decide, 'decide');
+        g.conElPrincipal.forEach((id) => grupoDe.set(id, 'con_el_principal'));
+        g.innecesario.forEach((id) => grupoDe.set(id, 'innecesario'));
+        g.deriva.forEach((id) => grupoDe.set(id, 'deriva'));
+        g.autonomo.forEach((id) => grupoDe.set(id, 'autonomo'));
     });
-    let decide = '';
-    votos.forEach((v, id) => {
-        const seg = plan.segmentos.find((x) => x.id === id);
-        if (seg && suyo(seg) && (!decide || v > (votos.get(decide) ?? 0))) decide = id;
-    });
+    const grupo = (s: SegmentoDelPlan) => s.dependencia || grupoDe.get(s.id) || '';
+    /* EL PORTADOR: el que la jerarquía nombra; si no, el argumento del
+       principal marcado «decide»; si no, al que más `con` apuntan. Sólo cuenta
+       un id que el plan trae. */
+    let decide = suJer && ids.has(suJer.decide) ? suJer.decide : '';
+    if (!decide) decide = plan.segmentos.find((s) => suyo(s) && grupo(s) === 'decide')?.id ?? '';
+    if (!decide) {
+        const votos = new Map<string, number>();
+        plan.segmentos.forEach((s) => {
+            if (s.con && s.con !== s.id && ids.has(s.con)) votos.set(s.con, (votos.get(s.con) ?? 0) + 1);
+        });
+        votos.forEach((v, id) => {
+            const seg = plan.segmentos.find((x) => x.id === id);
+            if (seg && suyo(seg) && (!decide || v > (votos.get(decide) ?? 0))) decide = id;
+        });
+    }
+    /* La premisa del principal es la del apartado del que decide (o, sin él,
+       la del primero del problema), y se expone en el PRIMER apartado que la
+       usa: lo mismo que dice la lista de apartados más abajo. */
+    const premisa = (plan.unidades.find((x) => x.premisa && decide && x.segmentos.includes(decide))
+        ?? plan.unidades.find((x) => x.premisa && x.problemas.some((q) => String(q) === String(fila.id))))?.premisa ?? '';
+    const expuestaEn = premisa ? plan.unidades.find((x) => x.premisa === premisa)?.id ?? '' : '';
     const conElPrincipal: string[] = [], innecesarios: string[] = [], derivan: string[] = [],
         autonomos: string[] = [];
     let restoCaen = 0, otros = 0;
     plan.segmentos.forEach((s) => {
         if (s.pendiente === 'sentido' || s.id === decide) return;
+        if (!suyo(s) && !(decide && s.con === decide)) { otros += 1; return; }
+        const g = grupo(s);
         const base = razonBase(s.razon);
-        if (base === 'innecesario_por_suficiencia') innecesarios.push(s.id);
+        if (g === 'con_el_principal') conElPrincipal.push(s.id);
+        else if (g === 'innecesario') innecesarios.push(s.id);
+        else if (g === 'deriva') derivan.push(s.id);
+        else if (g === 'autonomo' || g === 'decide') autonomos.push(s.id);
+        else if (base === 'innecesario_por_suficiencia') innecesarios.push(s.id);
         else if (base === 'deriva_de_desestimado') derivan.push(s.id);
+        else if (decide && s.con === decide) conElPrincipal.push(s.id);
         else if (CAEN_CON_EL.has(s.trat)) restoCaen += 1;
         else if (s.trat === 'desarrolla') autonomos.push(s.id);
-        else if (suyo(s) || (decide && s.con === decide)) conElPrincipal.push(s.id);
-        else otros += 1;
+        else conElPrincipal.push(s.id);
     });
+    const caen = innecesarios.length + derivan.length + restoCaen;
     return {
         principal: {
             n: enPantalla?.n ?? (typeof fila.id === 'number' ? fila.id : 1),
@@ -408,11 +456,12 @@ export function jerarquiaDelPlan(plan: PlanDelEstudio | null | undefined,
             sentido: (fila.sentido || enPantalla?.p.sentido || '').toLowerCase(),
         },
         decide,
-        premisa: u?.premisa ?? '',
-        expuestaEn: u?.id ?? '',
+        premisa,
+        expuestaEn,
         siguen: conElPrincipal.length,
-        caen: innecesarios.length + derivan.length + restoCaen,
+        caen,
         propios: autonomos.length,
+        argumentos: conElPrincipal.length + caen + autonomos.length,
         otros,
         conElPrincipal, innecesarios, derivan, autonomos,
     };
@@ -434,8 +483,14 @@ export function tramosDeJerarquia(j: JerarquiaDelPlan): string[] {
                     : `aplica${pl ? 'n' : ''} su premisa o remite${pl ? 'n' : ''} a ella`));
     if (j.innecesarios.length) t.push(`${n(j.innecesarios.length, 'uno es innecesario', '# son innecesarios')} por suficiencia`);
     if (j.derivan.length) t.push(`${n(j.derivan.length, 'uno cae', '# caen')} por derivar de lo ya desestimado`);
-    if (resto > 0) t.push(`${resto} ${resto === 1 ? 'cae' : 'caen'} con él (inoperantes, residuales o sin materia)`);
-    if (j.propios) t.push(`${j.propios} se ${j.propios === 1 ? 'contesta' : 'contestan'} con su dato propio dentro de su apartado`);
+    /* Sólo del principal (planes sin grupos del servidor): los de otro
+       problema ya no entran aquí. El rótulo nombra también a los
+       innecesarios, que el prototipo contaba y la primera versión omitía. */
+    if (resto > 0) t.push(`${resto} ${resto === 1 ? 'cae' : 'caen'} con él (inoperantes, innecesarios, residuales o sin materia)`);
+    /* «Por su cuenta», no «con su dato propio»: en el plan-6 un autónomo
+       puede remitir (el fundado pero insuficiente que pide otra consecuencia)
+       o ser inoperante con razón suya. */
+    if (j.propios) t.push(`${j.propios} se ${j.propios === 1 ? 'contesta' : 'contestan'} por su cuenta`);
     if (j.otros) t.push(`${j.otros} se ${j.otros === 1 ? 'decide' : 'deciden'} en su propio problema`);
     return t;
 }
@@ -625,6 +680,7 @@ export default function ComoSeEstudiara({
                             ['con el principal', jer.decide ? jer.conElPrincipal : []],
                             ['innecesarios por suficiencia', jer.innecesarios],
                             ['caen por derivar', jer.derivan],
+                            ['por su cuenta', jer.decide ? jer.autonomos : []],
                         ];
                         const conIds = grupos.filter(([, xs]) => xs.length > 0);
                         return (
