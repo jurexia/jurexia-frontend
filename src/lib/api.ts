@@ -4,6 +4,7 @@
 
 import { fuentesElegidas, FUENTES } from './fuentes';
 import { esfuerzoParaEnviar } from './esfuerzo';
+import { intencionParaEnviar, type Intencion } from './intencion';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
@@ -136,6 +137,10 @@ export interface OpcionesEnvio {
      *  selector «Fuentes» (25-sep-2026): con la legislación federal apagada,
      *  el primer flujo de amparo no pudo citar la Ley de Amparo. */
     todoElAcervo?: boolean;
+    /** «Escrito» o «Consulta», como lo anunció la etiqueta del compositor.
+     *  `streamChat` la toma de `@/lib/intencion` cuando el último mensaje es
+     *  el que el compositor mandó; nadie más la pasa. */
+    intencion?: Intencion;
 }
 
 async function* streamChatInternal(
@@ -187,6 +192,9 @@ async function* streamChatInternal(
             // El desplegable «Esfuerzo»: sólo cuenta si el mensaje pide un
             // escrito, y el servidor lo acota al plan. Ver `./esfuerzo`.
             ...(esfuerzoParaEnviar() ? { esfuerzo: esfuerzoParaEnviar() } : {}),
+            // La etiqueta «Escrito / Consulta»: si viaja, manda sobre el
+            // detector. Ver `./intencion`.
+            ...(extra?.intencion ? { intencion: extra.intencion } : {}),
             ...(fuentesVerificadas().length ? { fuentes_previas: fuentesVerificadas() } : {}),
             ...(fuero ? { fuero } : {}),
         }),
@@ -232,11 +240,14 @@ export async function* streamChat(
 ): AsyncGenerator<string, void, unknown> {
     const maxRetries = 3;
     let attempt = 0;
+    // Se consume una vez, antes de los reintentos: los tres llevan la misma.
+    const intencion = extra?.intencion ?? intencionParaEnviar(messages);
+    const opciones: OpcionesEnvio | undefined = intencion ? { ...extra, intencion } : extra;
 
     while (attempt < maxRetries) {
         try {
             // Attempt to stream chat
-            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, signal, extra);
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, signal, opciones);
             return; // Success - exit
         } catch (err) {
             // User-initiated stop — exit silently without retry

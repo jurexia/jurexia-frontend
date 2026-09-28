@@ -2124,8 +2124,33 @@ h6 {
 @container (max-width: 480px) {
   .fila-fuentes .prefijo-plegar { display: none; }
 }
-@container (max-width: 400px) {
+/* 420 y no 400 (28-sep-2026): entre 401 y 417 px la fila no cabía y
+   «Herramientas» asomaba por la derecha del cuadro. */
+@container (max-width: 420px) {
   .fila-fuentes .palabra-esfuerzo { display: none; }
+}
+/* En el teléfono ni «Herramientas» sola cabía: se salía por la derecha del
+   cuadro. Se queda la flecha, que con su título dice lo mismo. */
+@container (max-width: 365px) {
+  .fila-fuentes .palabra-herramientas { display: none; }
+}
+/* LA ETIQUETA «ESCRITO / CONSULTA» (28-sep-2026) entra al final de la fila
+   mientras hay texto. Para que quepa sin empujar nada fuera del cuadro, lo
+   que ya se entiende sin palabras cede la suya, de lo menos necesario a lo
+   más: «Herramientas» se queda en su flecha, «Esfuerzo» en su nombre, la
+   etiqueta pierde las flechas y, en el teléfono, se queda en su icono (su
+   título y su nombre accesible siguen diciéndolo todo). */
+@container (max-width: 600px) {
+  .fila-fuentes:has(.etiqueta-intencion) .palabra-herramientas { display: none; }
+}
+@container (max-width: 440px) {
+  .fila-fuentes:has(.etiqueta-intencion) .palabra-esfuerzo { display: none; }
+}
+@container (max-width: 380px) {
+  .fila-fuentes .flechas-intencion { display: none; }
+}
+@container (max-width: 360px) {
+  .fila-fuentes .palabra-intencion { display: none; }
 }
 
 

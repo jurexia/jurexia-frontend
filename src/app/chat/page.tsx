@@ -459,6 +459,15 @@ export default function ChatPage() {
     const mainRef = useRef<HTMLElement>(null);
     const messagesRef = useRef(messages);
     messagesRef.current = messages;
+    /* La última respuesta, para la etiqueta «Escrito / Consulta» del
+       compositor: con ella reconoce el retoque del escrito recién entregado y
+       el «sí» a la oferta de redactar. Ver `@/lib/intencion`. */
+    const respuestaAnterior = useMemo(() => {
+        for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'assistant') return messages[i].content;
+        }
+        return undefined;
+    }, [messages]);
     const constructorAbiertoRef = useRef(constructorAbierto);
     constructorAbiertoRef.current = constructorAbierto;
     const pieRef = useRef<HTMLDivElement>(null);
@@ -1713,6 +1722,7 @@ export default function ChatPage() {
 
                                     onAbrirConstructor={abrirConstructor}
                                     constructorAbierto={constructorAbierto}
+                                    respuestaAnterior={respuestaAnterior}
                                 />
 
                                 {/* EL TUTORIAL DEL NUEVO CHAT (27-sep-2026). David: «una liga
@@ -1890,6 +1900,7 @@ export default function ChatPage() {
                                 ? 'Pregunta y te doy los criterios aplicables…'
                                 : documentoAbierto ? 'Pide un cambio al documento o haz otra consulta…' : undefined}
                                     constructorAbierto={constructorAbierto}
+                            respuestaAnterior={respuestaAnterior}
                         />
                     </div>
                 )}
