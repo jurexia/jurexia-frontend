@@ -232,7 +232,8 @@ export interface FilaEspejo {
     pdf_url: string;
     /** ═══ SÓLO EN LAS FILAS DE LA OAJ ═══
      *  Porcentaje ENTERO, ya calibrado: no es el coseno. Sólo llegan las de 85
-     *  o más. */
+     *  o más, y nunca pasa de 99: con un centenar de pares medidos no se
+     *  afirma certeza. */
     similitud?: number;
     /** «planteamiento» si coincidió un planteamiento del precedente; «tema» si
      *  fue el respaldo por el tema del asunto (entonces no hay pregunta, razón
@@ -259,7 +260,10 @@ export interface EspejoDelTribunal {
     tribunal: string;
     filas: FilaEspejo[];
     /** El renglón que describe las filas. Vacío cuando no se puede resumir sin
-     *  mentir: tipos de asunto mezclados, o etiqueta que ya trae el resultado. */
+     *  mentir: tipos de asunto mezclados, o etiqueta que ya trae el resultado.
+     *  Y SIEMPRE vacío en la fuente de la OAJ: el sentido de la fila es el de
+     *  la sentencia y la coincidencia es con uno de sus planteamientos, así que
+     *  contarlos cruza dos escalas; cada fila trae ya su calificación. */
     resumen: string;
     cobertura: string;
 }

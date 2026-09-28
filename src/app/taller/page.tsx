@@ -72,6 +72,7 @@ import { useTarjetaDelPrincipal, soltarLoTocado } from '@/components/sentencia/t
 import MapaDelEstudio from '@/components/sentencia/MapaDelEstudio';
 import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto, DecisionSuplencia } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
+import type { EspejoDelTribunal } from '@/components/sentencia/api';
 
 type Paso = 'ficha' | 'adelanto' | 'acervo' | 'criterio' | 'proyecto';
 
@@ -265,6 +266,14 @@ function Pliegue({ titulo, nota, abierto, children }: {
             <div className="px-3 pb-3 pt-0.5">{children}</div>
         </details>
     );
+}
+
+/* ¿LA TARJETA VIENE DEL ÍNDICE DE LA OAJ? Se reconoce por el porcentaje de sus
+   filas: las del acervo viejo no lo traen. Se pregunta en dos sitios —el rótulo
+   y la explicación del porcentaje— y con la MISMA prueba, para que las dos
+   frases no se contradigan. El back nunca mezcla fuentes en una tarjeta. */
+function espejoConPorcentaje(espejo?: EspejoDelTribunal[] | null): boolean {
+    return (espejo ?? []).some(e => e.filas.some(f => typeof f.similitud === 'number'));
 }
 
 /* EL NEUN, PARA LLEVARLO A LA OAJ. El Buscador de la OAJ no tiene enlace
@@ -3130,9 +3139,16 @@ export default function TallerDeSentencias() {
                         enseñan las sentencias y compara el secretario. */}
                     {(material?.espejo?.length ?? 0) > 0 && (
                         <Tarjeta>
+                            {/* LO QUE SE PUEDE HACER CON LAS FILAS, DICHO SEGÚN LA
+                                FUENTE. Las de la OAJ no traen PDF —su buscador no
+                                tiene enlace por expediente—: prometer «sentencias
+                                que puede abrir» y no enseñar ningún «abrir» manda
+                                al secretario a buscar un enlace que no existe. */}
                             <Rotulo accion={
                                 <span className="text-[12px] text-white/45">
-                                    no es un recuento: son sentencias que puede abrir
+                                    {espejoConPorcentaje(material!.espejo)
+                                        ? 'no es un recuento: búsquelas por su NEUN en la OAJ'
+                                        : 'no es un recuento: son sentencias que puede abrir'}
                                 </span>
                             }>
                                 Su propio tribunal
@@ -3149,8 +3165,7 @@ export default function TallerDeSentencias() {
                                     cuando lo hay. Sale de una tabla calibrada, no del
                                     coseno: sin decirlo, «87%» se leería como «el
                                     texto se parece en un 87%», que no es lo que mide. */}
-                                {material!.espejo!.some(e => e.filas.some(
-                                    f => typeof f.similitud === 'number')) && (
+                                {espejoConPorcentaje(material!.espejo) && (
                                     <>
                                         {' '}El porcentaje sale de una tabla calibrada, no del
                                         parecido crudo del texto, y sólo se enseñan las
@@ -3205,7 +3220,12 @@ export default function TallerDeSentencias() {
                                                                          bg-accent-gold/[0.07] px-1.5 py-0.5
                                                                          text-[10px] font-medium tabular-nums
                                                                          text-accent-gold/90">
-                                                            {f.similitud}% de similitud
+                                                            {/* Tope en 99: el back ya lo
+                                                                pone, y aquí se repite
+                                                                porque «100%» sería afirmar
+                                                                certeza con un centenar de
+                                                                pares medidos. */}
+                                                            {Math.min(f.similitud ?? 0, 99)}% de similitud
                                                         </span>
                                                     )}
                                                     {f.pdf_url && (
