@@ -430,8 +430,10 @@ function descargar(blob: Blob, nombre: string): void {
     window.setTimeout(() => URL.revokeObjectURL(url), 30_000)
 }
 
-export async function aWord(raiz: HTMLElement, titulo: string, papel: Papel, referencias?: Referencias): Promise<void> {
-    const blob = await construirDocx(bloquesDe(raiz), papel, referencias)
+export async function aWord(raiz: HTMLElement, titulo: string, papel: Papel, referencias?: Referencias, formato: FormatoWord = 'apa'): Promise<void> {
+    // En formato de juzgado, sin notas al pie: la copia ya no trae las fichas.
+    const hoja = formato === 'juzgado' ? prepararParaJuzgado(raiz) : raiz
+    const blob = await construirDocx(bloquesDe(hoja), papel, formato === 'juzgado' ? undefined : referencias)
     descargar(blob, nombreDeArchivo(titulo, 'docx'))
 }
 
@@ -441,11 +443,11 @@ export async function aWord(raiz: HTMLElement, titulo: string, papel: Papel, ref
  * del Word. Imprimir la página del chat obligaría a esconder media aplicación
  * con reglas de impresión que se rompen en cuanto alguien toca la maqueta.
  */
-export function imprimir(raiz: HTMLElement, titulo: string, papel: Papel): boolean {
+export function imprimir(raiz: HTMLElement, titulo: string, papel: Papel, formato: FormatoWord = 'apa'): boolean {
     const v = window.open('', '_blank', 'noopener=no,width=900,height=1100')
     if (!v) return false
     const tam = papel === 'oficio' ? '21.59cm 35.56cm' : 'letter'
-    const html = raiz.innerHTML
+    const html = (formato === 'juzgado' ? prepararParaJuzgado(raiz) : raiz).innerHTML
     v.document.open()
     v.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${escaparHtml(titulo || 'Demanda')}</title>
 <style>
@@ -469,4 +471,96 @@ h1,h2,h3{page-break-after:avoid}
 
 function escaparHtml(s: string): string {
     return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+}
+
+/* ═══ EL FORMATO DE JUZGADO (28-sep-2026) ═════════════════════════════════
+   Lo básico del foro ya estaba —Arial 12, interlineado 1.5, justificado,
+   márgenes de 3 y 2 cm—, pero un escrito salía con el rubro justificado a
+   todo lo ancho, el destinatario como un párrafo más, la firma pegada al
+   margen y cada cita convertida en nota al pie APA: un formato de trabajo
+   académico, no de promoción. En formato de juzgado:
+     · el RUBRO —«QUEJOSO: …», «EXPEDIENTE: …», «ASUNTO: …», arriba— va a la
+       derecha;
+     · el DESTINATARIO —«C. JUEZ…», «P R E S E N T E»— a la izquierda y en
+       negritas;
+     · el CIERRE —«PROTESTO LO NECESARIO», lugar y fecha, la raya y el
+       nombre— centrado;
+     · las citas SIN notas al pie: el escrito ya transcribe rubro y registro
+       en el texto, que es como se cita ante un tribunal.
+   Se trabaja sobre una COPIA de la hoja: el Word y la impresión salen de
+   ella, y la hoja del abogado no cambia. Lo que él alineó a mano se respeta. */
+
+export type FormatoWord = 'juzgado' | 'apa'
+
+const RX_ETIQUETA_RUBRO = /^\s*(?:QUEJOS[OA]S?|ACTOR(?:ES|AS?)?|DEMANDAD[OA]S?|TERCER[OA]S? INTERESAD[OA]S?|AUTORIDAD(?:ES)? RESPONSABLES?|RECURRENTES?|PROMOVENTES?|JUICIO|EXPEDIENTE|EXP\.|TOCA|AMPARO(?: DIRECTO| INDIRECTO| EN REVISI[ÓO]N)?|ASUNTO|SECRETAR[ÍI]A|MESA|JUZGADO|V[ÍI]A|INCIDENTE|CUADERNO|CAUSA PENAL|CARPETA DE INVESTIGACI[ÓO]N|OFENDID[OA]|IMPUTAD[OA]|DENUNCIANTE)\s*:/i
+// Cada palabra intermedia, acotada: con `[…]+` dentro de `{0,3}`, un renglón
+// largo sin espacios hacía la búsqueda cúbica. Y sólo se mira el principio.
+const RX_DESTINATARIO = /^\s{0,8}(?:C\.|CC\.|H\.|HH\.|CIUDADAN[OA]S?|HONORABLES?|SE[ÑN]OR(?:A|ES)?|AL? C\.|A LA|AL)\s{0,3}(?:[A-ZÁÉÍÓÚÑ.]{1,20}\s{1,3}){0,3}(?:JUE[ZC]|JUEZA|MAGISTRAD|TRIBUNAL|SALA|PLENO|MINISTR|PRESIDENT|FISCAL|AGENTE DEL MINISTERIO|JUNTA|CENTRO FEDERAL)/i
+const RX_PRESENTE = /^\s*(?:P\s?R\s?E\s?S\s?E\s?N\s?T\s?E)\s*[.:]?\s*$/i
+const RX_CIERRE = /^\s*(?:PROTESTO|PROTESTAMOS|ATENTAMENTE|RESPETUOSAMENTE)\b/i
+
+/** Los renglones de un bloque, partidos donde hay un `<br>`. */
+/** El principio de un renglón, que es lo único que miran las expresiones. */
+const inicio = (r: string | undefined) => (r ?? '').slice(0, 200)
+
+function renglonesDe(nodo: HTMLElement): string[] {
+    const renglones: string[] = ['']
+    const recorrer = (n: Node) => {
+        if (n.nodeType === Node.TEXT_NODE) { renglones[renglones.length - 1] += n.textContent ?? ''; return }
+        if (!(n instanceof HTMLElement)) return
+        if (n.tagName === 'BR') { renglones.push(''); return }
+        n.childNodes.forEach(recorrer)
+    }
+    nodo.childNodes.forEach(recorrer)
+    return renglones.map((r) => r.replace(/\s+/g, ' ').trim()).filter(Boolean)
+}
+
+/** ¿El escrito de esta hoja es un escrito de juzgado? Para elegir el formato
+ *  cuando el abogado no lo eligió. */
+export function pareceEscritoDeJuzgado(raiz: HTMLElement | null | undefined): boolean {
+    if (!raiz) return false
+    return Array.from(raiz.querySelectorAll<HTMLElement>('p, h1, h2, h3')).some((b) => {
+        const primero = inicio(renglonesDe(b)[0])
+        return RX_CIERRE.test(primero) || RX_DESTINATARIO.test(primero)
+    })
+}
+
+/** Una copia de la hoja con el formato de juzgado aplicado. */
+export function prepararParaJuzgado(raiz: HTMLElement): HTMLElement {
+    const copia = raiz.cloneNode(true) as HTMLElement
+    copia.querySelectorAll('.citation-badge').forEach((c) => c.remove())
+    const bloques = Array.from(copia.querySelectorAll<HTMLElement>('p, h1, h2, h3, blockquote, ul, ol'))
+        .filter((b) => !b.parentElement?.closest('p, h1, h2, h3, blockquote, ul, ol'))
+    const libre = (b: HTMLElement) => !b.style.textAlign
+    const esParrafo = (b: HTMLElement) => b.tagName === 'P'
+    const renglones = bloques.map(renglonesDe)
+    const cortos = (i: number, tope: number) => renglones[i].length > 0 && renglones[i].every((r) => r.length <= tope)
+    const esRubro = (i: number) => esParrafo(bloques[i]) && cortos(i, 140) && RX_ETIQUETA_RUBRO.test(inicio(renglones[i][0]))
+    const esDestinatario = (i: number) => esParrafo(bloques[i]) && cortos(i, 160)
+        && (RX_DESTINATARIO.test(inicio(renglones[i][0])) || RX_PRESENTE.test(inicio(renglones[i][0])))
+
+    bloques.forEach((b, i) => {
+        if (esRubro(i) && libre(b)) b.style.textAlign = 'right'
+        if (esDestinatario(i)) {
+            if (libre(b)) b.style.textAlign = 'left'
+            b.style.fontWeight = 'bold'
+        }
+    })
+
+    // El cierre: desde «PROTESTO…», los renglones cortos que le siguen —lugar
+    // y fecha, la raya, el nombre, la cédula— hasta el primer párrafo largo,
+    // rubro, lista o cita, que ya son otra cosa (los anexos, por ejemplo).
+    // «PROTESTO LO NECESARIO» solo en su renglón es rubro de escrito: la hoja
+    // lo pinta como encabezado, así que el cierre puede empezar en uno.
+    const esTitulo = (b: HTMLElement) => /^H[1-3]$/.test(b.tagName)
+    for (let i = 0; i < bloques.length; i++) {
+        if (!(esParrafo(bloques[i]) || esTitulo(bloques[i])) || !RX_CIERRE.test(inicio(renglones[i][0]))) continue
+        if (libre(bloques[i])) bloques[i].style.textAlign = 'center'
+        let j = i + 1
+        for (; j < bloques.length && (esParrafo(bloques[j]) || esTitulo(bloques[j])) && cortos(j, 160) && !RX_ETIQUETA_RUBRO.test(inicio(renglones[j][0])); j++) {
+            if (libre(bloques[j])) bloques[j].style.textAlign = 'center'
+        }
+        i = j - 1   // lo ya centrado no se vuelve a recorrer
+    }
+    return copia
 }

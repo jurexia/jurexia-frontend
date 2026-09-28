@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ArrowDownToLine, Check, ChevronLeft, FileText, Loader2, Printer, X } from 'lucide-react';
 import { Hoja, type HojaAPI } from './Hoja';
-import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
+import { aWord, imprimir, pareceEscritoDeJuzgado, type FormatoWord, type Papel } from '@/lib/documento/exportarDocx';
 import {
     fuenteDeCita, htmlDeDocumento, htmlDeDossier, metaDeDossier, palabrasDe, referenciaAPA,
     type FuenteCita,
@@ -117,6 +117,21 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     const raizRef = useRef<HTMLDivElement | null>(null);
     const [nombre, setNombre] = useState('');
     const [papel, setPapel] = useState<Papel>('carta');
+    /* EL FORMATO DEL WORD (28-sep-2026): «Juzgado» —rubro a la derecha, firma
+       centrada, citas en el texto— o «Notas APA» —cada cita como nota al pie—.
+       Sin elección del abogado, se decide por la hoja: si trae el cierre o el
+       destinatario de un escrito, juzgado. La elección se recuerda. */
+    const [formatoElegido, setFormatoElegido] = useState<FormatoWord | null>(null);
+    useEffect(() => {
+        try {
+            const g = localStorage.getItem('iurexia-formato-word');
+            if (g === 'juzgado' || g === 'apa') setFormatoElegido(g);
+        } catch { /* sin almacenamiento */ }
+    }, []);
+    const elegirFormato = (f: FormatoWord) => {
+        setFormatoElegido(f);
+        try { localStorage.setItem('iurexia-formato-word', f); } catch { /* sin almacenamiento */ }
+    };
     const [exportando, setExportando] = useState(false);
     const [aviso, setAviso] = useState('');
     const [versionElegida, setVersionElegida] = useState('');
@@ -462,7 +477,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         setExportando(true);
         try {
             const referencias = new Map(orden.map((id) => [id, referenciaAPA(fuenteDeCita(meta, id))]));
-            await aWord(raiz, tituloEfectivo, papel, referencias);
+            await aWord(raiz, tituloEfectivo, papel, referencias, formatoVigente());
             // Se descarga igual —es su documento—, pero se le dice.
             const faltan = pendientes.reduce((n, p) => n + p.veces, 0);
             if (faltan) mostrarAviso(`Ojo: el Word lleva ${faltan} ${faltan === 1 ? 'dato pendiente' : 'datos pendientes'} por llenar.`);
@@ -472,10 +487,14 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     function mandarAImprimir() {
         const raiz = hoja.current?.raiz();
         if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return; }
-        if (!imprimir(raiz, tituloEfectivo, papel)) mostrarAviso('El navegador bloqueó la ventana de impresión.');
+        if (!imprimir(raiz, tituloEfectivo, papel, formatoVigente())) mostrarAviso('El navegador bloqueó la ventana de impresión.');
     }
 
     const fecha = (t: number) => new Date(t).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    // El formato del momento: el elegido, o el que dice la hoja.
+    function formatoVigente(): FormatoWord {
+        return formatoElegido ?? (pareceEscritoDeJuzgado(hoja.current?.raiz()) ? 'juzgado' : 'apa');
+    }
 
     return (
         <div
@@ -538,6 +557,14 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                         className="hidden h-9 rounded-lg border border-charcoal-900/15 bg-white px-2 text-[12px] text-charcoal-900 md:block">
                         <option value="carta">Carta</option>
                         <option value="oficio">Oficio</option>
+                    </select>
+                    <select value={formatoElegido ?? ''} onChange={(e) => e.target.value && elegirFormato(e.target.value as FormatoWord)}
+                        aria-label="Formato del Word" data-guide="formato-word"
+                        title="Juzgado: rubro a la derecha, firma centrada y las citas en el texto. Notas APA: cada cita como nota al pie."
+                        className="hidden h-9 rounded-lg border border-charcoal-900/15 bg-white px-2 text-[12px] text-charcoal-900 md:block">
+                        {!formatoElegido && <option value="">Formato automático</option>}
+                        <option value="juzgado">Formato de juzgado</option>
+                        <option value="apa">Con notas APA</option>
                     </select>
                     <button type="button" onClick={mandarAImprimir} title="Imprimir o guardar como PDF" disabled={enVivo}
                         className="grid h-9 w-9 place-items-center rounded-lg border border-charcoal-900/15 bg-white text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:opacity-40">

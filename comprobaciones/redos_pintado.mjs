@@ -596,6 +596,22 @@ ___`,
     'Registro digital: 2021472 y registro 162822 y Registro núm. 2006227 y Registro número: 1234567 y registro digital. 7654321 y Registro:123456789 y Registro núm 2006228 y Registro número 1234568',
 ];
 
+/* LOS CAMBIOS HECHOS A PROPÓSITO después de la referencia. La equivalencia
+   vigila que la reescritura a tiempo lineal no cambie lo que se pinta; un
+   cambio de comportamiento buscado se declara aquí, con su fecha y su porqué,
+   y los textos que lo tocan no se comparan en esas funciones (ni en los
+   recorridos que las usan). Todo lo demás se sigue comparando. */
+const CAMBIOS_A_PROPOSITO = [
+    // 28-sep-2026: la raya de la firma (ocho o más guiones bajos solos en su
+    // renglón) ya no es una raya de markdown: la hoja la borraba, y con ella
+    // el renglón del nombre se volvía rubro. Ver formato_juzgado.mjs.
+    {
+        funciones: ['marcado.markdownAHtml', 'vista previa del constructor'],
+        afecta: (t) => /(^|\n)[^\S\n]*_{8,}[^\S\n]*(\n|$)/.test(t),
+    },
+];
+const aProposito = (nombre, t) => CAMBIOS_A_PROPOSITO.some((c) => c.funciones.includes(nombre) && c.afecta(t));
+
 console.log('\nLA MISMA SALIDA QUE ANTES');
 {
     if (viejo && !soloUna) {
@@ -610,6 +626,7 @@ console.log('\nLA MISMA SALIDA QUE ANTES');
                 const g = fv.get(nombre);
                 if (!g) continue;                          // función nueva: no hay con qué comparar
                 for (const t of textos) {
+                    if (aProposito(nombre, t)) continue;
                     const a = salida(g, t);
                     const b = salida(f, t);
                     if (a !== b) {

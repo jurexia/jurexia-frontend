@@ -152,7 +152,17 @@ export function markdownAHtml(md: string): string {
             }
             cerrarTodo(); continue
         }
+        /* LA RAYA DE LA FIRMA NO ES UN SEPARADOR (28-sep-2026): «___» es una
+           raya horizontal de markdown, pero la de ocho o más guiones bajos
+           es donde firma el abogado, y la hoja la borraba. Se queda, en su
+           párrafo, y el nombre que va debajo se queda con ella. */
+        if (/^_{8,}$/.test(t)) {
+            cerrarLista(); cerrarCita()
+            parrafo.push(t)
+            continue
+        }
         if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) { cerrarTodo(); continue }
+        const bajoLaFirma = parrafo.length > 0 && /^_{8,}$/.test(parrafo[parrafo.length - 1])
 
         const h = conPrefijo(t, TITULO)
         if (h) {
@@ -164,7 +174,7 @@ export function markdownAHtml(md: string): string {
         // «**HECHOS**» o «HECHOS:» solo en su renglón: es un rubro del escrito.
         const soloNegrita = /^\*\*([^*]+)\*\*:?$/.exec(t)
         const rubro = (soloNegrita ? soloNegrita[1] : t).trim()
-        if ((soloNegrita || rubro === rubro.toUpperCase()) && rubro.length <= 60 && RUBROS_DE_ESCRITO.test(rubro) && /[A-ZÁÉÍÓÚÑ]{3}/.test(rubro)) {
+        if (!bajoLaFirma && (soloNegrita || rubro === rubro.toUpperCase()) && rubro.length <= 60 && RUBROS_DE_ESCRITO.test(rubro) && /[A-ZÁÉÍÓÚÑ]{3}/.test(rubro)) {
             cerrarTodo()
             out.push(`<h2>${escapar(rubro.replace(/[:.]$/, ''))}</h2>`)
             continue
