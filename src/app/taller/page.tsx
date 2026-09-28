@@ -341,7 +341,13 @@ function notaDelGrupo(filas: FilaEspejo[]): string {
 /* UNA SENTENCIA DEL ESPEJO. La misma fila para los dos niveles y para las dos
    fuentes: lo que cambia es la insignia. La del nivel de arriba es la dorada de
    siempre; la del posible, sólo contorno y en gris, porque dice menos y no debe
-   competir con ella. Las dos llevan el número REAL de la tabla. */
+   competir con ella. Las dos llevan el número REAL de la tabla.
+
+   LAS DOS INSIGNIAS NOMBRAN IGUAL EL MISMO NÚMERO: «90% · mismo problema» y
+   «57% · posible». Antes la de arriba decía «90% de similitud», que es justo
+   la lectura —parecido del texto— que el encabezado descarta, y ponía debajo de
+   ella un «57% · posible» como si fueran magnitudes distintas. Las dos son la
+   probabilidad calibrada de que sea el mismo problema. */
 function FilaDelEspejo({ f }: { f: FilaEspejo }) {
     // LA FILA DE LA OAJ SE RECONOCE POR SU PORCENTAJE. Las del acervo viejo no
     // lo traen y se pintan exactamente como antes.
@@ -350,6 +356,11 @@ function FilaDelEspejo({ f }: { f: FilaEspejo }) {
     // Tope en 99: el back ya lo pone, y aquí se repite porque «100%» sería
     // afirmar certeza con un centenar de pares medidos.
     const porcentaje = Math.min(f.similitud ?? 0, 99);
+    // «57% O MÁS» cuando la tabla no midió ese coseno y el número es el del
+    // tramo de abajo (api.ts, `cota_inferior`): enseñarlo pelado haría pasar
+    // una cota por una medida. En el tope no se añade: «99% o más» dejaría
+    // abierto el 100% que el tope existe para no afirmar.
+    const cifra = `${porcentaje}%${f.cota_inferior && porcentaje < 99 ? ' o más' : ''}`;
     return (
         <li className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5
                        rounded-lg border border-white/[0.07]
@@ -377,13 +388,13 @@ function FilaDelEspejo({ f }: { f: FilaEspejo }) {
                                  bg-accent-gold/[0.07] px-1.5 py-0.5
                                  text-[10px] font-medium tabular-nums
                                  text-accent-gold/90">
-                    {porcentaje}% de similitud
+                    {cifra} · mismo problema
                 </span>
             )}
             {posible && (
                 <span className="rounded-lg border border-white/10 px-1.5 py-0.5
                                  text-[10px] tabular-nums text-white/60">
-                    {porcentaje}% · posible
+                    {cifra} · posible
                 </span>
             )}
             {f.pdf_url && (
@@ -3310,12 +3321,19 @@ export default function TallerDeSentencias() {
                                     texto se parece en un 87%», que no es lo que mide.
                                     Y SE DICEN LOS DOS NIVELES aunque este asunto no
                                     traiga posibles: así su ausencia también se lee
-                                    («nada llegó al 50%»), no se adivina. */}
+                                    («nada llegó al 50%»), no se adivina.
+
+                                    COMO PROBABILIDAD, NO COMO IDENTIDAD. Decía «de 85%
+                                    en adelante es el mismo problema», y lo medido es
+                                    otra cosa: con el 90% de la revisión fiscal, 1 de
+                                    cada 10 pares NO lo era. Los dos niveles se dicen
+                                    en la misma escala que el bloque de posibles. */}
                                 {espejoConPorcentaje(material!.espejo) && (
                                     <>
-                                        {' '}El porcentaje sale de una tabla calibrada, no del
-                                        parecido crudo del texto. De 85% en adelante es el
-                                        mismo problema; de 50% a 84% va aparte, como posible
+                                        {' '}El porcentaje es la probabilidad de que el
+                                        precedente trate el mismo problema, según una tabla
+                                        calibrada, no el parecido crudo del texto. Con 85% o
+                                        más va arriba; de 50% a 84%, aparte, como posible
                                         precedente.
                                     </>
                                 )}

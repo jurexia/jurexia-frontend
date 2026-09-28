@@ -234,8 +234,14 @@ export interface FilaEspejo {
      *  Porcentaje ENTERO, ya calibrado: no es el coseno. Es la probabilidad
      *  REAL de la tabla, redondeada hacia abajo: 85 o más en el nivel «mismo
      *  problema», de 50 a 84 en el «posible». Nunca pasa de 99: con un centenar
-     *  de pares medidos no se afirma certeza. */
+     *  de pares medidos no se afirma certeza. El nombre del campo es histórico:
+     *  NO es un parecido de texto, y la pantalla no lo llama «similitud». */
     similitud?: number;
+    /** True cuando la tabla no midió ESE coseno —cae en un hueco entre tramos,
+     *  o por encima del último sostenido por tres pares— y `similitud` es el
+     *  número del tramo de abajo: la probabilidad es ésa O MÁS. La pantalla
+     *  escribe «57% o más». Sin el campo (un API anterior), exacta. */
+    cota_inferior?: boolean;
     /** «planteamiento» si coincidió un planteamiento del precedente; «tema» si
      *  fue el respaldo por el tema del asunto (entonces no hay pregunta, razón
      *  ni calificación). */
