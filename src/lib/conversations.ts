@@ -145,7 +145,17 @@ function removePendingMessage(conversationId: string, role: string): void {
 // Generate title from first message
 export function generateTitle(firstMessage: string): string {
     const maxLength = 40;
-    const cleaned = firstMessage.replace(/\s+/g, ' ').trim();
+    /* CON DOCUMENTO ADJUNTO, EL TÍTULO ES LA PREGUNTA (28-sep-2026). El mensaje empieza
+       por «📄 **Documento adjunto:** nombre» —la API lo reconoce así, no se cambia— y el
+       título eran sus primeros cuarenta caracteres, asteriscos incluidos: el historial
+       enseñaba «📄 **Documento adjunto:** Demanda-mutuo-…». Fuera también los marcadores
+       internos y el texto del documento, que viaja oculto en el mismo mensaje. */
+    const adjunto = /^\s*📄\s*\*\*Documento adjunto:\*\*\s*([^\n]*)\n*/.exec(firstMessage || '');
+    const sinAdjunto = (adjunto ? firstMessage.slice(adjunto[0].length) : firstMessage || '')
+        .replace(/<!-- DOCUMENTO_INICIO -->[\s\S]*?(<!-- DOCUMENTO_FIN -->|$)/g, '')
+        .replace(/^(?:\s*\[[A-Z_]+(?::[^\]]*)?\])+\s*/, '');
+    const pregunta = sinAdjunto.replace(/\s+/g, ' ').trim();
+    const cleaned = adjunto ? `📄 ${pregunta || adjunto[1].trim()}` : pregunta;
     if (cleaned.length <= maxLength) return cleaned;
     return cleaned.substring(0, maxLength) + '...';
 }

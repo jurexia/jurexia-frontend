@@ -82,7 +82,13 @@ export function escapar(s: string): string {
 
 function enLinea(s: string): string {
     return escapar(s)
-        .replace(/\*\*([^*]+?)\*\*/g, '<b>$1</b>')
+        /* Una negrita puede llevar una cursiva dentro (28-sep-2026): «**Formulación por la
+           Corte en pleno: *Almonacid Arellano*, 2006.**» no casaba con `[^*]+` y la hoja
+           enseñaba los dos pares de asteriscos. Dentro vale cualquier cosa menos «**», y
+           empieza por algo que no sea asterisco: así «***X**» sigue dando «*<b>X</b>» (lo de
+           antes y lo de CommonMark). La cursiva de dentro la pinta la regla de abajo. Lineal:
+           cada vuelta del grupo consume un carácter y no hay dos maneras de repartirlo. */
+        .replace(/\*\*([^*](?:[^*]|\*(?!\*))*?)\*\*/g, '<b>$1</b>')
         .replace(/__([^_]+?)__/g, '<b>$1</b>')
         .replace(/(^|[^*\w])\*([^*\n]+?)\*(?!\*)/g, '$1<i>$2</i>')
         .replace(/`([^`]+)`/g, '$1')
@@ -162,7 +168,7 @@ export function markdownAHtml(md: string): string {
             continue
         }
         // «**HECHOS**» o «HECHOS:» solo en su renglón: es un rubro del escrito.
-        const soloNegrita = /^\*\*([^*]+)\*\*:?$/.exec(t)
+        const soloNegrita = /^\*\*([^*](?:[^*]|\*(?!\*))*)\*\*:?$/.exec(t)
         const rubro = (soloNegrita ? soloNegrita[1] : t).trim()
         if ((soloNegrita || rubro === rubro.toUpperCase()) && rubro.length <= 60 && RUBROS_DE_ESCRITO.test(rubro) && /[A-ZÁÉÍÓÚÑ]{3}/.test(rubro)) {
             cerrarTodo()

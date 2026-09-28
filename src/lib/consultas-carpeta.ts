@@ -129,6 +129,8 @@ export function tituloLimpio(titulo: string | null | undefined): string {
         // El título se corta a unos cincuenta caracteres, así que el rótulo
         // del flujo puede llegar sin sus asteriscos de cierre.
         .replace(/^\*\*Flujo · [^*]*(\*\*)?\s*/, '')
+        // Los guardados antes del 28-sep-2026: «📄 **Documento adjunto:** nombre…»
+        .replace(/^📄\s*\*\*Documento adjunto:\*\*\s*/, '📄 ')
         .replace(/\s+/g, ' ')
         .trim()
     return t || 'Consulta'

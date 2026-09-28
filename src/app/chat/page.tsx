@@ -1780,12 +1780,20 @@ export default function ChatPage() {
                             </div>
                         )}
                         <div className="mx-auto w-full max-w-[var(--chat-max)] px-4 py-6 space-y-5" style={{ paddingBottom: pieAltura + 24 }}>
+                            {/* EL ANÁLISIS DE UN DOCUMENTO SIGUE ESCRIBIENDO AUNQUE YA HAYA TEXTO
+                                (28-sep-2026). `isDocumentAnalyzing` se apaga con el PRIMER token —sólo
+                                gobierna el indicador de «pensando»—, e `isLoading` no se enciende en este
+                                camino. Con esas dos, la tarjeta de la columna pasaba a «Escrito en el
+                                documento · 178 palabras», sin citas, mientras el análisis seguía llegando:
+                                en el teléfono, quien miraba «Consulta» lo daba por terminado y salía, la
+                                conexión se cortaba y la conversación no llegaba a guardarse (se guarda al
+                                acabar). `analisisEnVuelo` es la que dura hasta el último token. */}
                             {messages.map((message, index) => {
                                 // Count assistant messages up to this point
                                 const assistantCount = messages.slice(0, index + 1).filter(m => m.role === 'assistant').length;
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
-                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} basico={modoBasico} onVerDocumento={verDocumento} onDesarrollar={modoBasico ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
+                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} basico={modoBasico} onVerDocumento={verDocumento} onDesarrollar={modoBasico ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing || analisisEnVuelo) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
                                     </div>
                                 );
                             })}

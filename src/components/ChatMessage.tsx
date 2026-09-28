@@ -888,9 +888,28 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                 <p className="text-[12.5px] font-medium text-cream-100/80">Consulta:</p>
                             )}
                         </div>
-                        <p className="text-sm sm:text-base whitespace-pre-wrap">
-                            {limpiarMarcadoresInternos(filterDocumentContent(message.content))}
-                        </p>
+                        {(() => {
+                            /* EL ADJUNTO, COMO FICHA (28-sep-2026). El mensaje empieza por
+                               «📄 **Documento adjunto:** nombre» —así lo guarda ChatInput y así lo
+                               reconoce la API— y la burbuja, que es texto plano, enseñaba los
+                               asteriscos. Se pinta el nombre del archivo aparte y la pregunta debajo. */
+                            const limpio = limpiarMarcadoresInternos(filterDocumentContent(message.content));
+                            const adjunto = /^📄\s*\*\*Documento adjunto:\*\*\s*([^\n]*)\n*/.exec(limpio);
+                            const pregunta = adjunto ? limpio.slice(adjunto[0].length) : limpio;
+                            return (
+                                <>
+                                    {adjunto && (
+                                        <p className="mb-2 inline-flex max-w-full items-center gap-1.5 rounded-md bg-white/10 px-2 py-1 text-[12.5px] text-cream-100">
+                                            <span aria-hidden="true">📄</span>
+                                            <span className="truncate">{adjunto[1].trim() || 'Documento adjunto'}</span>
+                                        </p>
+                                    )}
+                                    {pregunta.trim() && (
+                                        <p className="text-sm sm:text-base whitespace-pre-wrap">{pregunta}</p>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
                 ) : (
                     <>

@@ -281,6 +281,33 @@ try {
     ok(false, `no se pudo sacar ${ref} con git`, String(e?.message || e).slice(0, 160));
     dir = null;
 }
+// CAMBIOS DE COMPORTAMIENTO QUERIDOS, posteriores a la referencia. Se aplican también a una
+// COPIA del código de antes (la del caché no se toca: la comparten otras ramas), para que esta
+// prueba siga vigilando lo suyo —que la versión lineal no cambió NADA MÁS— sin tomar por
+// avería un arreglo pedido.
+//  · 28-sep-2026: la negrita de la hoja admite una cursiva dentro. «**Formulación por la
+//    Corte en pleno: *Almonacid Arellano*, 2006.**» salía con los dos pares de asteriscos a la
+//    vista; ahora dentro vale todo menos «**», y empieza por algo que no sea asterisco.
+const QUERIDOS = [
+    ['src/lib/documento/marcado.ts', ".replace(/\\*\\*([^*]+?)\\*\\*/g, '<b>$1</b>')",
+        ".replace(/\\*\\*([^*](?:[^*]|\\*(?!\\*))*?)\\*\\*/g, '<b>$1</b>')"],
+    ['src/lib/documento/marcado.ts', 'const soloNegrita = /^\\*\\*([^*]+)\\*\\*:?$/.exec(t)',
+        'const soloNegrita = /^\\*\\*([^*](?:[^*]|\\*(?!\\*))*)\\*\\*:?$/.exec(t)'],
+];
+if (dir && QUERIDOS.length) {
+    const copia = `${dir}-queridos-${QUERIDOS.length}`;
+    if (!fs.existsSync(path.join(copia, 'src/lib/respuestaDelChat.ts'))) {
+        fs.mkdirSync(copia, { recursive: true });
+        execSync(`cp -R ${JSON.stringify(path.join(dir, 'src'))} ${JSON.stringify(copia)}/`);
+    }
+    for (const [rel, antes, ahora] of QUERIDOS) {
+        const f = path.join(copia, rel);
+        const t = fs.readFileSync(f, 'utf8');
+        if (t.includes(antes)) fs.writeFileSync(f, t.replace(antes, ahora));
+        else if (!t.includes(ahora)) ok(false, `el cambio querido no casa en la referencia: ${rel}`, antes.slice(0, 80));
+    }
+    dir = copia;
+}
 const viejo = dir ? await cargar(dir) : null;
 // `--medir-referencia` mide el código de antes en vez del de ahora: así se ve
 // que esta prueba lo habría parado. Lo de antes puede tardar horas en una
