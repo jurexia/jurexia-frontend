@@ -72,7 +72,7 @@ import { useTarjetaDelPrincipal, soltarLoTocado } from '@/components/sentencia/t
 import MapaDelEstudio from '@/components/sentencia/MapaDelEstudio';
 import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto, DecisionSuplencia } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
-import type { EspejoDelTribunal } from '@/components/sentencia/api';
+import type { EspejoDelTribunal, FilaEspejo } from '@/components/sentencia/api';
 
 type Paso = 'ficha' | 'adelanto' | 'acervo' | 'criterio' | 'proyecto';
 
@@ -308,6 +308,149 @@ function CopiarNeun({ neun }: { neun: number }) {
                 <><Check className="h-3 w-3 text-accent-gold/80" aria-hidden="true" />copiado</>
             ) : estado === 'fallo' ? 'selecciónelo a mano' : 'copiar'}
         </button>
+    );
+}
+
+/* LOS DOS NIVELES DE LA FUENTE OAJ (David, 28-sep-2026, «opción 1 + 2»). Del
+   85% arriba, «mismo problema»; de 50% a 84%, «posible», que va aparte y se
+   revisa a mano. Una fila sin `nivel` —del acervo viejo, o de un API anterior,
+   que sólo mandaba las de 85% o más— es del nivel de arriba y se pinta como
+   siempre. */
+function esPosible(f: FilaEspejo): boolean {
+    return typeof f.similitud === 'number' && f.nivel === 'posible';
+}
+
+/* LO QUE HAY DENTRO DEL PLIEGUE, contado por nivel. Sin piso de filas en la
+   OAJ, «1 sentencias» se leería mal; y un planteamiento con sólo posibles no
+   dice «0 sentencias propias».
+
+   CON LOS DOS NIVELES, «2 propias · 1 posible», sin «sentencias»: la nota no
+   se encoge (shrink-0 en el Pliegue) y «2 sentencias propias · 2 posibles»
+   empujaba el «ocultar» fuera de la pantalla en un teléfono de 375 px —medido
+   en el navegador: 19 px de desborde—. Con el nivel de arriba solo, el texto
+   de siempre. */
+function notaDelGrupo(filas: FilaEspejo[]): string {
+    const posibles = filas.filter(esPosible).length;
+    const mismas = filas.length - posibles;
+    const txtPosibles = posibles === 1 ? '1 posible' : `${posibles} posibles`;
+    if (posibles === 0) return mismas === 1 ? '1 sentencia propia' : `${mismas} sentencias propias`;
+    if (mismas === 0) return txtPosibles;
+    return `${mismas} ${mismas === 1 ? 'propia' : 'propias'} · ${txtPosibles}`;
+}
+
+/* UNA SENTENCIA DEL ESPEJO. La misma fila para los dos niveles y para las dos
+   fuentes: lo que cambia es la insignia. La del nivel de arriba es la dorada de
+   siempre; la del posible, sólo contorno y en gris, porque dice menos y no debe
+   competir con ella. Las dos llevan el número REAL de la tabla. */
+function FilaDelEspejo({ f }: { f: FilaEspejo }) {
+    // LA FILA DE LA OAJ SE RECONOCE POR SU PORCENTAJE. Las del acervo viejo no
+    // lo traen y se pintan exactamente como antes.
+    const oaj = typeof f.similitud === 'number';
+    const posible = esPosible(f);
+    // Tope en 99: el back ya lo pone, y aquí se repite porque «100%» sería
+    // afirmar certeza con un centenar de pares medidos.
+    const porcentaje = Math.min(f.similitud ?? 0, 99);
+    return (
+        <li className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5
+                       rounded-lg border border-white/[0.07]
+                       bg-white/[0.02] px-3 py-2 text-[12px]">
+            <span className="font-medium text-white/75">
+                {f.tipo_asunto} {f.expediente}
+            </span>
+            {f.fecha && (
+                <span className="tabular-nums text-white/45">
+                    {f.fecha.slice(0, 10)}
+                </span>
+            )}
+            {/* En la OAJ el sentido puede venir vacío, y ahí «sin sentido» no
+                es un dato: es que el índice no lo trae. */}
+            {(f.sentido || !oaj) && (
+                <span className="rounded-lg border border-white/10
+                                 bg-white/[0.05] px-1.5 py-0.5
+                                 text-[10px] uppercase tracking-wide
+                                 text-white/60">
+                    {f.sentido || 'sin sentido'}
+                </span>
+            )}
+            {oaj && !posible && (
+                <span className="rounded-lg border border-accent-gold/30
+                                 bg-accent-gold/[0.07] px-1.5 py-0.5
+                                 text-[10px] font-medium tabular-nums
+                                 text-accent-gold/90">
+                    {porcentaje}% de similitud
+                </span>
+            )}
+            {posible && (
+                <span className="rounded-lg border border-white/10 px-1.5 py-0.5
+                                 text-[10px] tabular-nums text-white/60">
+                    {porcentaje}% · posible
+                </span>
+            )}
+            {f.pdf_url && (
+                <a href={f.pdf_url} target="_blank"
+                   rel="noopener noreferrer"
+                   className="ml-auto text-[12px] text-accent-gold/80
+                              underline decoration-accent-gold/30
+                              underline-offset-2 transition-colors
+                              hover:text-accent-gold">
+                    abrir
+                </a>
+            )}
+            {/* POR TEMA NO ES POR PUNTO. Si ningún planteamiento del
+                precedente pasó y coincidió el tema del asunto, se dice: no hay
+                pregunta ni calificación que enseñar, y no se finge. */}
+            {oaj && f.fuente === 'tema' && (
+                <span className="w-full text-[11px] text-white/45">
+                    coincide por el tema del asunto, no por un planteamiento
+                </span>
+            )}
+            {oaj && f.pregunta && (
+                <p className="w-full pt-0.5 text-[12px] leading-relaxed
+                              text-white/60">
+                    {f.pregunta}
+                </p>
+            )}
+            {/* La calificación, LITERAL. Es la del planteamiento del
+                precedente, no un juicio sobre el proyecto: compara el
+                secretario. */}
+            {oaj && (f.calificacion || f.razon) && (
+                <p className="w-full text-[12px] leading-relaxed
+                              text-white/45">
+                    {f.calificacion && (
+                        <span className="text-white/75">
+                            {f.calificacion}
+                        </span>
+                    )}
+                    {f.calificacion && f.razon && ' · '}
+                    {f.razon}
+                </p>
+            )}
+            {oaj && f.neun != null && (
+                <span className="flex w-full flex-wrap items-center
+                                 gap-x-2 gap-y-1 pt-1 text-[11px]
+                                 text-white/45">
+                    <span>
+                        NEUN{' '}
+                        <span className="select-all tabular-nums
+                                         text-white/75">
+                            {f.neun}
+                        </span>
+                    </span>
+                    <CopiarNeun neun={f.neun} />
+                    {f.enlace_oaj && (
+                        <a href={f.enlace_oaj} target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-accent-gold/80 underline
+                                      decoration-accent-gold/30
+                                      underline-offset-2
+                                      transition-colors
+                                      hover:text-accent-gold">
+                            Buscador de la OAJ
+                        </a>
+                    )}
+                </span>
+            )}
+        </li>
     );
 }
 
@@ -3164,12 +3307,16 @@ export default function TallerDeSentencias() {
                                 {/* EL PORCENTAJE SE EXPLICA UNA VEZ, arriba, y sólo
                                     cuando lo hay. Sale de una tabla calibrada, no del
                                     coseno: sin decirlo, «87%» se leería como «el
-                                    texto se parece en un 87%», que no es lo que mide. */}
+                                    texto se parece en un 87%», que no es lo que mide.
+                                    Y SE DICEN LOS DOS NIVELES aunque este asunto no
+                                    traiga posibles: así su ausencia también se lee
+                                    («nada llegó al 50%»), no se adivina. */}
                                 {espejoConPorcentaje(material!.espejo) && (
                                     <>
                                         {' '}El porcentaje sale de una tabla calibrada, no del
-                                        parecido crudo del texto, y sólo se enseñan las
-                                        coincidencias de 85% o más.
+                                        parecido crudo del texto. De 85% en adelante es el
+                                        mismo problema; de 50% a 84% va aparte, como posible
+                                        precedente.
                                     </>
                                 )}
                             </p>
@@ -3179,127 +3326,40 @@ export default function TallerDeSentencias() {
                                              titulo={e.problema.length > 92
                                                  ? e.problema.slice(0, 92) + '…'
                                                  : e.problema}
-                                             // La fuente de la OAJ no tiene piso de
-                                             // tres filas: una coincidencia al 85% se
-                                             // enseña sola, y «1 sentencias» se lee mal.
-                                             nota={e.filas.length === 1
-                                                 ? '1 sentencia propia'
-                                                 : `${e.filas.length} sentencias propias`}>
-                                        <ul className="grid gap-1.5">
-                                            {e.filas.map((f, j) => {
-                                                // LA FILA DE LA OAJ SE RECONOCE POR SU
-                                                // PORCENTAJE. Las del acervo viejo no lo
-                                                // traen y se pintan exactamente como antes.
-                                                const oaj = typeof f.similitud === 'number';
-                                                return (
-                                                <li key={j}
-                                                    className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5
-                                                               rounded-lg border border-white/[0.07]
-                                                               bg-white/[0.02] px-3 py-2 text-[12px]">
-                                                    <span className="font-medium text-white/75">
-                                                        {f.tipo_asunto} {f.expediente}
-                                                    </span>
-                                                    {f.fecha && (
-                                                        <span className="tabular-nums text-white/45">
-                                                            {f.fecha.slice(0, 10)}
-                                                        </span>
-                                                    )}
-                                                    {/* En la OAJ el sentido puede venir
-                                                        vacío, y ahí «sin sentido» no es un
-                                                        dato: es que el índice no lo trae. */}
-                                                    {(f.sentido || !oaj) && (
-                                                        <span className="rounded-lg border border-white/10
-                                                                         bg-white/[0.05] px-1.5 py-0.5
-                                                                         text-[10px] uppercase tracking-wide
-                                                                         text-white/60">
-                                                            {f.sentido || 'sin sentido'}
-                                                        </span>
-                                                    )}
-                                                    {oaj && (
-                                                        <span className="rounded-lg border border-accent-gold/30
-                                                                         bg-accent-gold/[0.07] px-1.5 py-0.5
-                                                                         text-[10px] font-medium tabular-nums
-                                                                         text-accent-gold/90">
-                                                            {/* Tope en 99: el back ya lo
-                                                                pone, y aquí se repite
-                                                                porque «100%» sería afirmar
-                                                                certeza con un centenar de
-                                                                pares medidos. */}
-                                                            {Math.min(f.similitud ?? 0, 99)}% de similitud
-                                                        </span>
-                                                    )}
-                                                    {f.pdf_url && (
-                                                        <a href={f.pdf_url} target="_blank"
-                                                           rel="noopener noreferrer"
-                                                           className="ml-auto text-[12px] text-accent-gold/80
-                                                                      underline decoration-accent-gold/30
-                                                                      underline-offset-2 transition-colors
-                                                                      hover:text-accent-gold">
-                                                            abrir
-                                                        </a>
-                                                    )}
-                                                    {/* POR TEMA NO ES POR PUNTO. Si ningún
-                                                        planteamiento del precedente pasó y
-                                                        coincidió el tema del asunto, se dice:
-                                                        no hay pregunta ni calificación que
-                                                        enseñar, y no se finge. */}
-                                                    {oaj && f.fuente === 'tema' && (
-                                                        <span className="w-full text-[11px] text-white/45">
-                                                            coincide por el tema del asunto, no por un
-                                                            planteamiento
-                                                        </span>
-                                                    )}
-                                                    {oaj && f.pregunta && (
-                                                        <p className="w-full pt-0.5 text-[12px] leading-relaxed
-                                                                      text-white/60">
-                                                            {f.pregunta}
-                                                        </p>
-                                                    )}
-                                                    {/* La calificación, LITERAL. Es la del
-                                                        planteamiento del precedente, no un
-                                                        juicio sobre el proyecto: compara el
-                                                        secretario. */}
-                                                    {oaj && (f.calificacion || f.razon) && (
-                                                        <p className="w-full text-[12px] leading-relaxed
-                                                                      text-white/45">
-                                                            {f.calificacion && (
-                                                                <span className="text-white/75">
-                                                                    {f.calificacion}
-                                                                </span>
-                                                            )}
-                                                            {f.calificacion && f.razon && ' · '}
-                                                            {f.razon}
-                                                        </p>
-                                                    )}
-                                                    {oaj && f.neun != null && (
-                                                        <span className="flex w-full flex-wrap items-center
-                                                                         gap-x-2 gap-y-1 pt-1 text-[11px]
-                                                                         text-white/45">
-                                                            <span>
-                                                                NEUN{' '}
-                                                                <span className="select-all tabular-nums
-                                                                                 text-white/75">
-                                                                    {f.neun}
-                                                                </span>
-                                                            </span>
-                                                            <CopiarNeun neun={f.neun} />
-                                                            {f.enlace_oaj && (
-                                                                <a href={f.enlace_oaj} target="_blank"
-                                                                   rel="noopener noreferrer"
-                                                                   className="text-accent-gold/80 underline
-                                                                              decoration-accent-gold/30
-                                                                              underline-offset-2
-                                                                              transition-colors
-                                                                              hover:text-accent-gold">
-                                                                    Buscador de la OAJ
-                                                                </a>
-                                                            )}
-                                                        </span>
-                                                    )}
-                                                </li>
-                                                );
-                                            })}
-                                        </ul>
+                                             // Contada por nivel («2 sentencias propias · 1
+                                             // posible»): ver notaDelGrupo.
+                                             nota={notaDelGrupo(e.filas)}>
+                                        {/* PRIMERO EL MISMO PROBLEMA, como siempre, y los
+                                            posibles DEBAJO y aparte, con su rótulo: un 57%
+                                            entre dos del 90% se leería como uno más de la
+                                            misma lista. Si sólo hay posibles, el bloque va
+                                            solo: la tarjeta no calla por falta del nivel de
+                                            arriba. */}
+                                        {e.filas.some(f => !esPosible(f)) && (
+                                            <ul className="grid gap-1.5">
+                                                {e.filas.filter(f => !esPosible(f)).map((f, j) => (
+                                                    <FilaDelEspejo key={j} f={f} />
+                                                ))}
+                                            </ul>
+                                        )}
+                                        {e.filas.some(esPosible) && (
+                                            <div className={e.filas.some(f => !esPosible(f))
+                                                ? 'mt-3 border-t border-white/[0.07] pt-2.5'
+                                                : ''}>
+                                                <p className="text-[12px] font-medium text-white/60">
+                                                    Posibles precedentes
+                                                </p>
+                                                <p className="text-[12px] leading-relaxed text-white/45">
+                                                    Probabilidad calibrada de que sea el mismo
+                                                    problema; revíselo usted.
+                                                </p>
+                                                <ul className="mt-2 grid gap-1.5">
+                                                    {e.filas.filter(esPosible).map((f, j) => (
+                                                        <FilaDelEspejo key={j} f={f} />
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                         {/* El resumen viene vacío cuando no se puede
                                             resumir sin mentir: tipos de asunto
                                             mezclados, o etiqueta que ya contiene el

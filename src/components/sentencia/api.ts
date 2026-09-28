@@ -231,14 +231,22 @@ export interface FilaEspejo {
     /** Vacío en las filas de la OAJ: no hay PDF por enlace directo. */
     pdf_url: string;
     /** ═══ SÓLO EN LAS FILAS DE LA OAJ ═══
-     *  Porcentaje ENTERO, ya calibrado: no es el coseno. Sólo llegan las de 85
-     *  o más, y nunca pasa de 99: con un centenar de pares medidos no se
-     *  afirma certeza. */
+     *  Porcentaje ENTERO, ya calibrado: no es el coseno. Es la probabilidad
+     *  REAL de la tabla, redondeada hacia abajo: 85 o más en el nivel «mismo
+     *  problema», de 50 a 84 en el «posible». Nunca pasa de 99: con un centenar
+     *  de pares medidos no se afirma certeza. */
     similitud?: number;
     /** «planteamiento» si coincidió un planteamiento del precedente; «tema» si
      *  fue el respaldo por el tema del asunto (entonces no hay pregunta, razón
      *  ni calificación). */
     fuente?: 'planteamiento' | 'tema';
+    /** El nivel de la fila (David, 28-sep-2026, «opción 1 + 2»):
+     *  «mismo_problema», probabilidad calibrada de 85% o más, hasta seis por
+     *  planteamiento; «posible», de 50% a 84%, hasta tres y sólo por
+     *  planteamiento, para revisarlo a mano. Una sentencia sale en un solo
+     *  nivel. Sin el campo —un API anterior— la fila es del nivel de arriba:
+     *  entonces sólo llegaban las de 85% o más. */
+    nivel?: 'mismo_problema' | 'posible';
     /** La pregunta del planteamiento del precedente. */
     pregunta?: string;
     /** Por qué se calificó así, en palabras del índice. */
@@ -258,6 +266,8 @@ export interface EspejoDelTribunal {
     problema: string;
     /** El nombre largo del tribunal, para leerlo. */
     tribunal: string;
+    /** En la fuente de la OAJ, primero las «mismo_problema» y detrás las
+     *  «posible». Un grupo puede traer sólo posibles. */
     filas: FilaEspejo[];
     /** El renglón que describe las filas. Vacío cuando no se puede resumir sin
      *  mentir: tipos de asunto mezclados, o etiqueta que ya trae el resultado.
