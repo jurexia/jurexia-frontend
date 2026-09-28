@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X } from 'lucide-react';
+import { User, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X, Workflow } from 'lucide-react';
 import { AvatarIurexia } from '@/components/AvatarIurexia';
 import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
@@ -895,13 +895,23 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                asteriscos. Se pinta el nombre del archivo aparte y la pregunta debajo. */
                             const limpio = limpiarMarcadoresInternos(filterDocumentContent(message.content));
                             const adjunto = /^📄\s*\*\*Documento adjunto:\*\*\s*([^\n]*)\n*/.exec(limpio);
-                            const pregunta = adjunto ? limpio.slice(adjunto[0].length) : limpio;
+                            /* Y EL FLUJO, IGUAL: `mensajeDeFlujo` lo abre con «**Flujo · nombre**» y
+                               el encargo debajo; la burbuja enseñaba los asteriscos. */
+                            const flujo = adjunto ? null : /^\*\*Flujo · ([^*\n]+)\*\*\s*/.exec(limpio);
+                            const cabecera = adjunto ?? flujo;
+                            const pregunta = cabecera ? limpio.slice(cabecera[0].length) : limpio;
                             return (
                                 <>
                                     {adjunto && (
                                         <p className="mb-2 inline-flex max-w-full items-center gap-1.5 rounded-md bg-white/10 px-2 py-1 text-[12.5px] text-cream-100">
                                             <span aria-hidden="true">📄</span>
                                             <span className="truncate">{adjunto[1].trim() || 'Documento adjunto'}</span>
+                                        </p>
+                                    )}
+                                    {flujo && (
+                                        <p className="mb-2 inline-flex max-w-full items-center gap-1.5 rounded-md bg-white/10 px-2 py-1 text-[12.5px] text-cream-100">
+                                            <Workflow className="h-3.5 w-3.5 shrink-0 text-[#c9a962]" aria-hidden="true" />
+                                            <span className="truncate">Flujo · {flujo[1].trim()}</span>
                                         </p>
                                     )}
                                     {pregunta.trim() && (
