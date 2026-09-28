@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
 import { fuentesElegidas } from '@/lib/fuentes';
 import { esfuerzoParaEnviar, marcadorDeEsfuerzo } from '@/lib/esfuerzo';
-import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, Loader2 as Loader2Icon } from 'lucide-react';
+import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, PlayCircle, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
 import ChatMessage from '@/components/ChatMessage';
@@ -1714,6 +1714,23 @@ export default function ChatPage() {
                                     onAbrirConstructor={abrirConstructor}
                                     constructorAbierto={constructorAbierto}
                                 />
+
+                                {/* EL TUTORIAL DEL NUEVO CHAT (27-sep-2026). David: «una liga
+                                    azul debajo del chat». Abre /tutorial en otra pestaña para
+                                    no perder lo que ya se escribió en la caja. Es la única
+                                    guía que vuelve tras el «fuera avisos y tutoriales» del
+                                    25-sep: un vínculo discreto, no un aviso que se impone. */}
+                                <div className="mt-3.5">
+                                    <Link
+                                        href="/tutorial"
+                                        target="_blank"
+                                        rel="noopener"
+                                        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-blue-700 underline-offset-4 transition-colors hover:text-blue-800 hover:underline"
+                                    >
+                                        <PlayCircle className="h-4 w-4" aria-hidden />
+                                        Ver tutorial de uso del nuevo chat
+                                    </Link>
+                                </div>
 
                                 {modoBasico && (
                                     <div className="mt-5 text-left">
