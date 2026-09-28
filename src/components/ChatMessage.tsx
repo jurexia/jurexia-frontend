@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useCallback, useState, useEffect } from 'react';
-import { User, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X } from 'lucide-react';
+import { User, FileText, FileDown, Printer, Loader2, Copy, Check, Sparkles, Gem, FolderPlus, PenTool, FileSignature, Wand2, CornerDownLeft, X, StickyNote } from 'lucide-react';
 import { AvatarIurexia } from '@/components/AvatarIurexia';
 import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
 import { GuardarEnCarpetaModal, type ContenidoParaCarpeta } from '@/components/GuardarEnCarpeta';
@@ -9,6 +9,7 @@ import { SelloCitas, registrosDeLaRespuesta, rubrosPorRegistro, citasSinRegistro
 import type { Message } from '@/lib/api';
 import { recortarABloque, useRevelado } from '@/lib/documento/revelado';
 import { type MetaCitas, fuenteDeCita, referenciaAPA } from '@/lib/documento/citas';
+import { limpiarMarcadores, reemplazaEscrito, separarNota } from '@/lib/documento/marcado';
 import { enlaceOficialCoidh, esCoidh } from '@/lib/coidh';
 import { enlaceBJV, esDoctrina } from '@/lib/doctrina';
 import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
@@ -31,6 +32,9 @@ interface ChatMessageProps {
     /** La respuesta vive en el panel Documento: aquí sólo se resume y se enlaza. */
     enDocumento?: boolean;
     onVerDocumento?: () => void;
+    /** Un retoque posterior entregó este escrito corregido y ocupó su lugar
+     *  en la hoja (28-sep-2026). */
+    sustituido?: boolean;
     /** MODO BÁSICO (18-sep-2026): la respuesta se lee EN EL HILO y nada más.
      *  Sin hoja de Word, sin exportar, sin carpeta y sin sello de citas: aquí
      *  no hay verificación contra el acervo que sellar, y las fuentes ya van
@@ -51,15 +55,28 @@ const TRATAMIENTOS_CHAT: Record<string, string> = {
 
 
 
-export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, onDesarrollar, enDocumento = false, onVerDocumento , basico = false }: ChatMessageProps) {
+export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, onDesarrollar, enDocumento = false, onVerDocumento , basico = false, sustituido = false }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Extract unique document IDs, thinking content, and create numbered references
+    /* LA NOTA PARA EL ABOGADO (28-sep-2026). Con la respuesta en el documento,
+       lo que el modelo escribe DESPUÉS del escrito —qué decidió por él, qué
+       verificar antes de presentar, el punto débil— no va a la hoja ni al Word:
+       se enseña aquí, bajo la tarjeta. La cuenta de palabras y de citas es la
+       del escrito. Ver `separarNota`. */
+    const partes = useMemo(
+        () => (!isUser && enDocumento ? separarNota(message.content || '') : null),
+        [message.content, isUser, enDocumento],
+    );
     const { processedContent, docIdMap, thinkingContent, citationMeta: metaDelServidor, isSynthesizing, precedentesMeta } = useMemo(() => {
         if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as MetaDelServidor | null, isSynthesizing: false, precedentesMeta: null as PrecedenteMeta[] | null };
-        return procesarRespuesta(message.content || '');
-    }, [message.content, isUser]);
+        return procesarRespuesta(partes ? partes.escrito : (message.content || ''));
+    }, [message.content, isUser, partes]);
+    const htmlNota = useMemo(
+        () => (partes?.nota ? formatMarkdown(limpiarMarcadores(partes.nota)) : ''),
+        [partes],
+    );
 
     /* LA CITA QUE EL MAPA NO TRAE SE PIDE A `/cita` (26-sep-2026). David:
        «Siempre debemos asegurar el PDF en el visor». Al terminar la respuesta,
@@ -959,8 +976,19 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         : <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent-brown" />}
                                     <div className="min-w-0 flex-1">
                                         <p className="text-sm font-semibold text-charcoal-900">
-                                            {isStreaming ? 'Escribiendo en el documento…' : 'Escrito en el documento'}
+                                            {/* El retoque que corrige el escrito va EN LUGAR del
+                                                anterior (28-sep-2026): se dice, en los dos. */}
+                                            {sustituido
+                                                ? 'Versión anterior del escrito'
+                                                : reemplazaEscrito(message.content)
+                                                    ? (isStreaming ? 'Corrigiendo el escrito en el documento…' : 'Escrito corregido en el documento')
+                                                    : (isStreaming ? 'Escribiendo en el documento…' : 'Escrito en el documento')}
                                         </p>
+                                        {sustituido && (
+                                            <p className="mt-0.5 text-xs text-charcoal-500">
+                                                La sustituyó la versión corregida; sigue en «Versiones» del documento.
+                                            </p>
+                                        )}
                                         <p className="mt-0.5 text-xs text-charcoal-500">
                                             {processedContent.trim() ? processedContent.trim().split(/\s+/).length.toLocaleString('es-MX') : 0} palabras
                                             {docIdMap.size > 0 ? ` · ${docIdMap.size} ${docIdMap.size === 1 ? 'cita' : 'citas'}` : ''}
@@ -991,6 +1019,19 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                                         </button>
                                     )}
                                 </div>
+                                {htmlNota && (
+                                    <details open className="nota-abogado mt-3 rounded-xl border border-accent-gold/40 bg-white">
+                                        <summary className="flex cursor-pointer select-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-charcoal-900">
+                                            <StickyNote className="h-4 w-4 flex-shrink-0 text-accent-brown" />
+                                            Nota para el abogado
+                                            <span className="ml-auto text-[11px] font-normal text-charcoal-500">No va en el escrito</span>
+                                        </summary>
+                                        <div
+                                            className="prose-legal respuesta border-t border-cream-200 px-4 py-3 text-sm"
+                                            dangerouslySetInnerHTML={{ __html: htmlNota }}
+                                        />
+                                    </details>
+                                )}
                             </div>
                         )}
                         <div

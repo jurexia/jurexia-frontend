@@ -152,7 +152,17 @@ export function markdownAHtml(md: string): string {
             }
             cerrarTodo(); continue
         }
+        /* LA RAYA DE LA FIRMA NO ES UN SEPARADOR (28-sep-2026): «___» es una
+           raya horizontal de markdown, pero la de ocho o más guiones bajos
+           es donde firma el abogado, y la hoja la borraba. Se queda, en su
+           párrafo, y el nombre que va debajo se queda con ella. */
+        if (/^_{8,}$/.test(t)) {
+            cerrarLista(); cerrarCita()
+            parrafo.push(t)
+            continue
+        }
         if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) { cerrarTodo(); continue }
+        const bajoLaFirma = parrafo.length > 0 && /^_{8,}$/.test(parrafo[parrafo.length - 1])
 
         const h = conPrefijo(t, TITULO)
         if (h) {
@@ -164,7 +174,7 @@ export function markdownAHtml(md: string): string {
         // «**HECHOS**» o «HECHOS:» solo en su renglón: es un rubro del escrito.
         const soloNegrita = /^\*\*([^*]+)\*\*:?$/.exec(t)
         const rubro = (soloNegrita ? soloNegrita[1] : t).trim()
-        if ((soloNegrita || rubro === rubro.toUpperCase()) && rubro.length <= 60 && RUBROS_DE_ESCRITO.test(rubro) && /[A-ZÁÉÍÓÚÑ]{3}/.test(rubro)) {
+        if (!bajoLaFirma && (soloNegrita || rubro === rubro.toUpperCase()) && rubro.length <= 60 && RUBROS_DE_ESCRITO.test(rubro) && /[A-ZÁÉÍÓÚÑ]{3}/.test(rubro)) {
             cerrarTodo()
             out.push(`<h2>${escapar(rubro.replace(/[:.]$/, ''))}</h2>`)
             continue
@@ -383,8 +393,15 @@ export function separarTarjetas(md: string): { sin: string; tarjetas: string; av
 // `^[ \t]*(?:#…)?(?:\*\*)?[ \t]*` dos rachas de blancos quedaban pegadas cuando
 // no hay «#» ni «**», y un renglón de 20.000 espacios costaba 0,8 s. Casan los
 // mismos renglones; cada blanco se mira una vez.
-const RX_ESTRATEGIA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?(?:[IVX]+\.[ \t]*|FASE[ \t]+\d+[ \t]*:[ \t]*|[^\sA-Za-zÁÉÍÓÚÑáéíóúñ0-9#*]{1,3}[ \t]*)?(?:ESTRATEGIA(?:[ \t]+(?:PROCESAL|DE[ \t]+IMPUGNACI[ÓO]N|DEL[ \t]+AMPARO))|(?:EVALUACI[ÓO]N|AN[ÁA]LISIS)[ \t]+DE[ \t]+VIABILIDAD)\b.*$/gm
+const RX_ESTRATEGIA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?(?:[IVX]+\.[ \t]*|FASE[ \t]+\d+[ \t]*:[ \t]*|[^\sA-Za-zÁÉÍÓÚÑáéíóúñ0-9#*]{1,3}[ \t]*)?(?:ESTRATEGIA(?:[ \t]+(?:PROCESAL|DE[ \t]+IMPUGNACI[ÓO]N|DEL[ \t]+AMPARO|Y[ \t]+RECOMENDACIONES|CONSTITUCIONAL))|(?:EVALUACI[ÓO]N|AN[ÁA]LISIS)[ \t]+DE[ \t]+VIABILIDAD)\b.*$/gm
 const RX_CIERRE_ESCRITO = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?(?:PROTESTO|PROTESTAMOS|PUNTOS PETITORIOS|PETITORIOS)\b/gm
+/* EL RÓTULO DE LA NOTA PARA EL ABOGADO (28-sep-2026): el que pide el prompt de
+   redacción —`ROTULO_NOTA` en esfuerzo_redaccion.py del API—, solo en su
+   renglón, con o sin «#» y «**», en singular o en plural, y con lo que el
+   modelo le cuelgue detrás («:», «(no forma parte del escrito)») mientras no
+   pase de 80 caracteres. Los blancos, como arriba, dentro de sus opcionales. */
+const RX_NOTA_ABOGADO = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?NOTAS?[ \t]+PARA[ \t]+EL[ \t]+ABOGADO\b[^\n]{0,80}$/gim
+const RX_ROTULO_NOTA = /^[ \t]*(?:#{1,3}[ \t]*)?(?:\*\*[ \t]*)?NOTAS?[ \t]+PARA[ \t]+EL[ \t]+ABOGADO\b[^\n]{0,80}$/i
 
 /** ¿`t[a, b)` es un renglón separador —`[ \t]*` y tres o más de un mismo
  *  «-», «*», «_» o «═», y `[ \t]*`—? */
@@ -419,7 +436,9 @@ function sinSeparadoresAlFinal(t: string): string {
 
 export function separarEstrategia(md: string): { escrito: string; estrategia: string } {
     const t = md || ''
-    const candidatos = Array.from(t.matchAll(RX_ESTRATEGIA))
+    // La nota para el abogado (28-sep-2026) se enseña aparte como la estrategia.
+    const candidatos = [...Array.from(t.matchAll(RX_ESTRATEGIA)), ...Array.from(t.matchAll(RX_NOTA_ABOGADO))]
+        .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
     if (!candidatos.length) return { escrito: t, estrategia: '' }
     // Si el escrito tiene su cierre, la estrategia es la que viene DESPUÉS de él.
     const cierres = Array.from(t.matchAll(RX_CIERRE_ESCRITO))
@@ -429,6 +448,178 @@ export function separarEstrategia(md: string): { escrito: string; estrategia: st
     // Los separadores «---» o «═══» que van justo antes también se quedan fuera del escrito.
     const escrito = sinSeparadoresAlFinal(t.slice(0, m.index)).trimEnd()
     return { escrito, estrategia: t.slice(m.index).trim() }
+}
+
+/**
+ * EL ESCRITO LIMPIO Y LA NOTA PARA EL ABOGADO, SEPARADOS (28-sep-2026).
+ *
+ * El prompt de redacción cierra el escrito con «## NOTA PARA EL ABOGADO»: lo
+ * que decidió por él, qué verificar antes de presentar, el punto débil. Los
+ * prompts de la tarjeta «Escrito legal» lo cierran con su «ESTRATEGIA…». En
+ * el chat todo iba al dossier, así que acababa en la hoja y en el Word que se
+ * presenta. Aquí se aparta: `escrito` va a la hoja —con los marcadores y las
+ * tarjetas de fuentes que el servidor pega detrás, que la hoja necesita para
+ * sus citas— y `nota` a la burbuja del chat.
+ *
+ * Más prudente que `separarEstrategia`, porque aquí pasan también las
+ * consultas: la estrategia sólo se aparta DESPUÉS del cierre de un escrito
+ * (PROTESTO, PUNTOS PETITORIOS) —una consulta con un apartado «ESTRATEGIA
+ * PROCESAL» se queda entera—; nada del razonamiento cuenta; y si antes del
+ * rótulo no hay un escrito (doscientos caracteres), no se toca nada.
+ */
+export function separarNota(md: string): { escrito: string; nota: string } {
+    const t = md || ''
+    const nada = { escrito: t, nota: '' }
+    const desde = inicioDeLoVisible(t)
+    if (desde >= t.length) return nada
+    const cierres = Array.from(t.matchAll(RX_CIERRE_ESCRITO)).map((m) => m.index ?? -1).filter((i) => i >= desde)
+    const ultimoCierre = cierres.length ? cierres[cierres.length - 1] : -1
+    const candidatos = [
+        ...Array.from(t.matchAll(RX_NOTA_ABOGADO)).map((m) => m.index ?? -1),
+        ...(ultimoCierre !== -1 ? Array.from(t.matchAll(RX_ESTRATEGIA)).map((m) => m.index ?? -1) : []),
+    ].filter((i) => i >= desde && i > ultimoCierre)
+    if (!candidatos.length) return nada
+    const inicio = Math.min(...candidatos)
+    if (sinComentarios(t.slice(desde, inicio)).trim().length < 200) return nada
+    // La nota acaba donde empieza lo que el servidor pega detrás: los
+    // marcadores `<!--…-->`, las tarjetas de fuentes o el aviso de truncada.
+    let fin = t.length
+    for (const marca of ['<!--', '<div']) {
+        const k = t.indexOf(marca, inicio)
+        if (k !== -1 && k < fin) fin = k
+    }
+    const truncada = inicioDeTruncada(t)
+    if (truncada > inicio && truncada < fin) fin = truncada
+    let nota = t.slice(inicio, fin)
+    // Su rótulo no se repite: la burbuja pone el suyo. El de la estrategia sí
+    // se queda, porque dice de qué es.
+    const salto = nota.indexOf('\n')
+    if (RX_ROTULO_NOTA.test(salto === -1 ? nota : nota.slice(0, salto))) nota = salto === -1 ? '' : nota.slice(salto + 1)
+    const antes = sinSeparadoresAlFinal(t.slice(0, inicio)).trimEnd()
+    const cola = t.slice(fin).trim()
+    return {
+        escrito: cola ? `${antes}\n\n${cola}` : antes,
+        nota: sinSeparadoresAlFinal(nota).trim(),
+    }
+}
+
+/* ═══ EL RETOQUE, EN SU LUGAR (28-sep-2026) ═══════════════════════════════
+   Un retoque que modifica el escrito —«agrega un concepto…»— llega marcado
+   (`MARCA_REEMPLAZA` en esfuerzo_redaccion.py del API): es el escrito entero
+   con el cambio, y la hoja lo pone EN LUGAR del anterior en vez de anexarlo
+   debajo. La marca va al principio y se guarda con el mensaje. */
+export const MARCA_REEMPLAZA = '<!--REEMPLAZA_ESCRITO-->'
+
+/** ¿Esta respuesta sustituye al escrito anterior? */
+export function reemplazaEscrito(md: string | null | undefined): boolean {
+    return (md || '').trimStart().startsWith(MARCA_REEMPLAZA)
+}
+
+/**
+ * EL ESCRITO DE LA HOJA, DE VUELTA A MARKDOWN (28-sep-2026).
+ *
+ * Para que el retoque parta de lo que el abogado corrigió a mano, la pantalla
+ * manda como respuesta anterior el escrito tal como está en la hoja. Lo que
+ * importa conservar: los rubros y la negrita (el formato del escrito), las
+ * listas con su número, y sobre todo las citas: cada ficha [N] vuelve a ser
+ * «[Doc ID: uuid]», o el escrito corregido saldría sin fuentes.
+ */
+export function markdownDeHoja(raiz: HTMLElement): string {
+    const enLinea = (n: Node): string => {
+        if (n.nodeType === 3) return (n.textContent || '').replace(/\s+/g, ' ')
+        if (!(n instanceof HTMLElement)) return ''
+        const etiqueta = n.tagName
+        if (etiqueta === 'BR') return '\n'
+        const id = n.getAttribute('data-doc-id')
+        if (id && n.classList.contains('citation-badge')) return ` [Doc ID: ${id}]`
+        const dentro = Array.from(n.childNodes).map(enLinea).join('')
+        if ((etiqueta === 'B' || etiqueta === 'STRONG') && dentro.trim()) return `**${dentro.trim()}**`
+        if ((etiqueta === 'I' || etiqueta === 'EM') && dentro.trim()) return `*${dentro.trim()}*`
+        return dentro
+    }
+    const limpio = (t: string) => t.split('\n').map((l) => l.replace(/[ \t]+/g, ' ').trim()).join('\n').trim()
+    const partes: string[] = []
+    let suelto = ''
+    const volcar = () => { const t = limpio(suelto); if (t) partes.push(t); suelto = '' }
+    const recorrer = (padre: HTMLElement) => {
+        for (const n of Array.from(padre.childNodes)) {
+            if (!(n instanceof HTMLElement)) { suelto += enLinea(n); continue }
+            const etiqueta = n.tagName
+            if (etiqueta === 'UL' || etiqueta === 'OL') {
+                volcar()
+                const base = parseInt(n.getAttribute('start') || '1', 10) || 1
+                const items = Array.from(n.children)
+                    .map((li, i) => ({ t: limpio(enLinea(li)), i }))
+                    .filter((x) => x.t)
+                    .map((x) => (etiqueta === 'OL' ? `${base + x.i}. ${x.t}` : `- ${x.t}`))
+                if (items.length) partes.push(items.join('\n'))
+            } else if (/^H[1-6]$/.test(etiqueta)) {
+                volcar()
+                const t = limpio(enLinea(n)).replace(/\*\*/g, '')
+                if (t) partes.push(`**${t}**`)
+            } else if (etiqueta === 'BLOCKQUOTE') {
+                volcar()
+                const t = limpio(enLinea(n))
+                if (t) partes.push(t.split('\n').map((l) => `> ${l}`).join('\n'))
+            } else if (etiqueta === 'HR') {
+                volcar()
+            } else if (etiqueta === 'DIV' || etiqueta === 'SECTION' || etiqueta === 'ARTICLE') {
+                volcar()
+                recorrer(n)
+            } else if (etiqueta === 'P' || etiqueta === 'PRE' || etiqueta === 'TABLE') {
+                volcar()
+                const t = limpio(enLinea(n))
+                if (t) partes.push(t)
+            } else {
+                suelto += enLinea(n)
+            }
+        }
+        volcar()
+    }
+    recorrer(raiz)
+    return partes.join('\n\n')
+}
+
+/* ═══ LOS DATOS PENDIENTES DE LA HOJA (28-sep-2026) ══════════════════════
+   Lo que el modelo no sabía queda en el escrito como «[DATO PENDIENTE: …]»
+   (la regla de los tres registros del prompt de redacción). El abogado los
+   buscaba a mano antes de firmar; el panel de la hoja los enumera y los llena
+   de una vez. Se agrupan por su texto exacto, que es lo que se sustituye. */
+export interface DatoPendiente {
+    /** El hueco tal cual está en la hoja: «[DATO PENDIENTE: fecha de …]». */
+    marca: string;
+    /** Lo que falta: «fecha de …». */
+    dato: string;
+    veces: number;
+}
+
+// Contenido acotado que no cruza otro corchete ni un renglón: lineal.
+const RX_DATO_PENDIENTE = /\[[ \t]{0,8}DATO[ \t]{1,8}PENDIENTE[ \t]{0,8}:[ \t]{0,8}([^\[\]\n]{1,200})\]/gi
+
+export function datosPendientes(texto: string): DatoPendiente[] {
+    const porMarca = new Map<string, DatoPendiente>()
+    for (const m of Array.from((texto || '').matchAll(RX_DATO_PENDIENTE))) {
+        const dato = m[1].trim()
+        if (!dato) continue
+        const hallado = porMarca.get(m[0])
+        if (hallado) hallado.veces++
+        else porMarca.set(m[0], { marca: m[0], dato, veces: 1 })
+    }
+    return Array.from(porMarca.values())
+}
+
+/** Dónde empieza lo que el abogado lee: tras el último razonamiento cerrado,
+ *  en cualquiera de sus dos marcadores. Con uno abierto después, todo lo que
+ *  queda es razonamiento todavía. */
+function inicioDeLoVisible(t: string): number {
+    const marcas: Array<[string, string]> = [[ABRE_RAZON, CIERRA_RAZON], ['<!--THINKING_START-->', '<!--THINKING_END-->']]
+    let desde = 0
+    for (const [, cierra] of marcas) {
+        const c = t.lastIndexOf(cierra)
+        if (c !== -1) desde = Math.max(desde, c + cierra.length)
+    }
+    for (const [abre] of marcas) if (t.indexOf(abre, desde) !== -1) return t.length
+    return desde
 }
 
 /* Las dos lecturas de `analizarRespuesta` eran expresiones con dos rachas de blancos

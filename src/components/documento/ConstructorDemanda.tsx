@@ -15,6 +15,7 @@ import {
     type ClaseEscrito, type ResultadoToulmin,
 } from '@/lib/toulmin';
 import { streamChat } from '@/lib/api';
+import { esfuerzoParaEnviar, marcadorDeEsfuerzo } from '@/lib/esfuerzo';
 import { getSession } from '@/lib/supabase';
 import { ESTADOS_SOLO, getEstadoLabel } from '@/lib/estados';
 
@@ -493,7 +494,13 @@ ${caso.hechos.trim()}
 
 LO QUE SE PIDE:
 ${caso.pretension.trim()}`;
-        const mensaje = `[REDACTAR_DOCUMENTO]
+        /* CON EL MOTOR DEL ESFUERZO ELEGIDO (27-sep-2026). Sólo con
+           `[REDACTAR_DOCUMENTO]` el servidor redacta con el motor de siempre,
+           sea cual sea el plan: es lo que se corrigió el 19-sep en la tarjeta
+           «Escrito legal», y aquí seguía igual. El marcador va delante, como
+           allí: sale del desplegable, ya acotado al plan, y el servidor vuelve
+           a comprobar el de Platinum. */
+        const mensaje = `${marcadorDeEsfuerzo(esfuerzoParaEnviar())} [REDACTAR_DOCUMENTO]
 Tipo: ${tipoSel.tipo}
 Subtipo: ${subtipo}
 ${esRecurso ? `Materia: ${materiaEscrito}\n` : ''}${esRecurso && usar?.recurrente === 'autoridad' ? 'Recurrente: autoridad (voz institucional, sin alegar derechos humanos propios)\n' : ''}Jurisdicción: ${caso.estado ? getEstadoLabel(caso.estado) : 'No indicada'}

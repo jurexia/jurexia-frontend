@@ -39,6 +39,14 @@ export interface HojaAPI {
     insertar: (html: string, donde?: 'final' | 'cursor') => void;
     /** Sustituye el documento entero. */
     reemplazar: (html: string) => void;
+    /** Sustituye un bloque del dossier (`[data-bloque]`) por `html`, en su
+     *  sitio. Falso si ya no está: el abogado pudo borrarlo o fundirlo. */
+    sustituirBloque: (id: string, html: string) => boolean;
+    /** Cambia cada aparición de `buscado` por `nuevo` (texto, no HTML) y dice
+     *  cuántas. Cuenta como edición del abogado: pasa por `onCambio`. */
+    reemplazarTexto: (buscado: string, nuevo: string) => number;
+    /** Selecciona la primera aparición de `buscado` y la trae a la vista. */
+    senalar: (buscado: string) => boolean;
     vacia: () => boolean;
 }
 
@@ -111,6 +119,55 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
             hoja.current.innerHTML = html;
             cambio.current(html);
         },
+        reemplazarTexto: (buscado: string, nuevo: string) => {
+            const nodo = hoja.current;
+            if (!nodo || !buscado) return 0;
+            let veces = 0;
+            const caminante = document.createTreeWalker(nodo, NodeFilter.SHOW_TEXT);
+            const textos: Text[] = [];
+            for (let n = caminante.nextNode(); n; n = caminante.nextNode()) textos.push(n as Text);
+            for (const t of textos) {
+                if (!t.data.includes(buscado)) continue;
+                const trozos = t.data.split(buscado);
+                veces += trozos.length - 1;
+                t.data = trozos.join(nuevo);
+            }
+            if (veces) cambio.current(nodo.innerHTML);
+            return veces;
+        },
+        senalar: (buscado: string) => {
+            const nodo = hoja.current;
+            if (!nodo || !buscado) return false;
+            const caminante = document.createTreeWalker(nodo, NodeFilter.SHOW_TEXT);
+            for (let n = caminante.nextNode(); n; n = caminante.nextNode()) {
+                const t = n as Text;
+                const i = t.data.indexOf(buscado);
+                if (i === -1) continue;
+                const rango = document.createRange();
+                rango.setStart(t, i);
+                rango.setEnd(t, i + buscado.length);
+                const sel = window.getSelection();
+                nodo.focus();
+                sel?.removeAllRanges();
+                sel?.addRange(rango);
+                t.parentElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return true;
+            }
+            return false;
+        },
+        sustituirBloque: (id: string, html: string) => {
+            const nodo = hoja.current;
+            const viejo = nodo
+                ? Array.from(nodo.querySelectorAll<HTMLElement>('[data-bloque]')).find((e) => e.dataset.bloque === id)
+                : undefined;
+            if (!nodo || !viejo) return false;
+            viejo.insertAdjacentHTML('afterend', html);
+            const nuevo = viejo.nextElementSibling as HTMLElement | null;
+            viejo.remove();
+            nuevo?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            cambio.current(nodo.innerHTML);
+            return true;
+        },
         insertar: (html: string, donde = 'final') => {
             const nodo = hoja.current;
             if (!nodo) return;
@@ -164,7 +221,7 @@ export const Hoja = forwardRef<HojaAPI, HojaProps>(function Hoja({ htmlInicial, 
         if (!nodo || !sel || sel.rangeCount === 0) return [];
         const rango = sel.getRangeAt(0);
         if (!nodo.contains(rango.commonAncestorContainer)) return [];
-        const esBloque = (el: Element) => /^(P|H1|H2|H3|BLOCKQUOTE|LI|DIV)$/.test(el.tagName) && el !== nodo;
+        const esBloque = (el: Element) => /^(P|H1|H2|H3|BLOCKQUOTE|LI|DIV)$/.test(el.tagName) && el !== nodo && !el.hasAttribute('data-bloque');
         const subir = (n: Node | null): HTMLElement | null => {
             let x: Node | null = n;
             while (x && x !== nodo) {

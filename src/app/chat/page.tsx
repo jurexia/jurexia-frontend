@@ -4,6 +4,8 @@ import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { Message, fuentesWebActivas, fijarFuentesVerificadas } from '@/lib/api';
 import { fuentesElegidas } from '@/lib/fuentes';
 import { esfuerzoParaEnviar, marcadorDeEsfuerzo } from '@/lib/esfuerzo';
+import type { Intencion } from '@/lib/intencion';
+import { despachoParaEnviar } from '@/lib/despacho';
 import { Trash2, MapPin, Scale, Building2, Settings, ChevronDown, BookOpen, FileText, Plus, Crown, ShieldCheck, ArrowRight, Lock, Zap, Shield, Gavel, Newspaper, MoreHorizontal, PlayCircle, Loader2 as Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import ChatInput from '@/components/ChatInput';
@@ -23,10 +25,12 @@ import { hayTestigoBasico, preguntarBasico, markdownDeBasico, BLOQUEADO_POR_OMIS
 import PanelBasico from '@/components/PanelBasico';
 import dynamic from 'next/dynamic';
 import type { InsercionDocumento } from '@/components/documento/ConstructorDemanda';
-import type { VersionDocumento } from '@/components/documento/PanelDocumento';
+import { escritoEnLaHoja, type BloqueDocumento, type VersionDocumento } from '@/components/documento/PanelDocumento';
 import { SEP_DOSSIER } from '@/lib/documento/citas';
-import { markdownAHtml, limpiarMarcadores } from '@/lib/documento/marcado';
+import { markdownAHtml, limpiarMarcadores, reemplazaEscrito, separarNota } from '@/lib/documento/marcado';
+import { bloquesDelDossier, respuestasSustituidas } from '@/lib/documento/dossier';
 import { abrirCitaConFicha, fuentesDeLaConversacion, olvidarFallos, useFichasDeCitas } from '@/lib/documento/fichas';
+import { olvidarEdicion } from '@/lib/documento/edicionHoja';
 import { estadoPiloto } from '@/components/sentencia/api';
 
 /* El constructor de demanda se carga sólo cuando alguien lo abre: trae el
@@ -437,6 +441,25 @@ export default function ChatPage() {
     const todoElAcervo = useCallback(() => redaccionFlujoRef.current !== null, []);
     // Las partes de un flujo ya se pagaron con el flujo: no descuentan consultas.
     const sinCobro = todoElAcervo;
+    /* EL RETOQUE PARTE DE LA HOJA (28-sep-2026). Si el abogado corrigió a mano
+       la última respuesta, lo que viaja como respuesta anterior es el escrito
+       tal como está en la hoja —con sus citas— y no el que escribió el
+       modelo: «agrega un concepto» no puede devolverle el nombre mal escrito
+       que ya había corregido. Sólo cambia lo que viaja. La conversación de la
+       hoja se lee de una referencia: el estado se declara más abajo. */
+    const claveHojaRef = useRef<string | null>(null);
+    const historialParaEnviar = useCallback((mensajes: Message[]) => {
+        let k = -1;
+        for (let i = mensajes.length - 1; i >= 0; i--) {
+            if (mensajes[i].role === 'assistant') { k = i; break; }
+        }
+        if (k === -1) return mensajes;
+        const enHoja = escritoEnLaHoja(claveHojaRef.current, `m${k}`);
+        if (!enHoja) return mensajes;
+        const copia = mensajes.slice();
+        copia[k] = { ...mensajes[k], content: enHoja };
+        return copia;
+    }, []);
 
     // Chat Hook
     const { messages, isLoading, error, sendMessage, stopGeneration, clearMessages, setMessages, retryMessage, retryType, sourcesCount, pasos, limpiarPasos } = useChat({
@@ -450,6 +473,7 @@ export default function ChatPage() {
         contextoSistema,
         todoElAcervo,
         sinCobro,
+        historialParaEnviar,
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -458,6 +482,15 @@ export default function ChatPage() {
     const mainRef = useRef<HTMLElement>(null);
     const messagesRef = useRef(messages);
     messagesRef.current = messages;
+    /* La última respuesta, para la etiqueta «Escrito / Consulta» del
+       compositor: con ella reconoce el retoque del escrito recién entregado y
+       el «sí» a la oferta de redactar. Ver `@/lib/intencion`. */
+    const respuestaAnterior = useMemo(() => {
+        for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'assistant') return messages[i].content;
+        }
+        return undefined;
+    }, [messages]);
     const constructorAbiertoRef = useRef(constructorAbierto);
     constructorAbiertoRef.current = constructorAbierto;
     const pieRef = useRef<HTMLDivElement>(null);
@@ -469,6 +502,7 @@ export default function ChatPage() {
     const [showLimitModal, setShowLimitModal] = useState(false);
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeConversationId, setActiveConvId] = useState<string | null>(null);
+    claveHojaRef.current = activeConversationId ?? 'nueva';
     const [conversationsLoading, setConversationsLoading] = useState(true);
 
     /* ═══ CARPETAS Y FLUJOS (25-sep-2026) ═══
@@ -640,6 +674,8 @@ export default function ChatPage() {
 
     const handleDeleteConversation = useCallback(async (id: string) => {
         await deleteConversation(id);
+        // Lo que el abogado editó en su hoja se guarda en este navegador: se va con ella.
+        olvidarEdicion(id);
         const remaining = await getConversations();
         setConversations(remaining);
         if (id === activeConversationId) {
@@ -830,7 +866,7 @@ export default function ChatPage() {
         modoBasico, enviarBasico, profile?.subscription_type, vincularNueva]);
 
     // Document analysis via Gemini Flash (streaming from /analyze-document)
-    const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string) => {
+    const handleDocumentSubmit = useCallback(async (file: File, prompt: string, displayMessage: string, intencion?: Intencion | null) => {
         if (!user) return;
         const isAdminUser = isAdmin(user?.email);
         const remaining = queriesLimit - queriesUsed;
@@ -898,6 +934,20 @@ export default function ChatPage() {
         }
         // El selector «Fuentes» vale también con documento adjunto.
         formData.append('fuentes', fuentesElegidas().join(','));
+        /* ADJUNTAR Y REDACTAR EN UN PASO (28-sep-2026): si el mensaje encarga un
+           escrito —o la etiqueta dice «Escrito»—, el servidor redacta sobre el
+           documento con el motor del Esfuerzo y el perfil del despacho, en vez
+           de analizarlo. «Consulta» en la etiqueta lo deja en análisis. */
+        const esfuerzoDoc = esfuerzoParaEnviar();
+        if (esfuerzoDoc) formData.append('esfuerzo', esfuerzoDoc);
+        if (intencion) formData.append('intencion', intencion);
+        const despachoDoc = despachoParaEnviar();
+        if (despachoDoc) formData.append('despacho', JSON.stringify(despachoDoc));
+        // El escalón con que se redacta llega antes que el texto (evento `modo`).
+        let modoDoc: string | null = null;
+        const conModo = (m: Message): Message => (modoDoc
+            ? { ...m, isPro: modoDoc === 'PRO' || modoDoc === 'PLATINUM', isPlatinum: modoDoc === 'PLATINUM', isProfesional: modoDoc === 'PROFESIONAL' }
+            : m);
 
         // El análisis de un documento adjunto también nace en el panel.
         if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
@@ -963,10 +1013,12 @@ export default function ChatPage() {
                                         };
                                     } else {
                                         // First token — create assistant message
-                                        updated.push({ role: 'assistant' as const, content: data.token });
+                                        updated.push(conModo({ role: 'assistant' as const, content: data.token }));
                                     }
                                     return updated;
                                 });
+                            } else if (data.modo) {
+                                modoDoc = String(data.modo);
                             } else if (data.progreso) {
                                 setPasoDocumento(String(data.progreso));
                             } else if (data.documento?.texto) {
@@ -1319,16 +1371,15 @@ export default function ChatPage() {
 
     /* ═══ EL DOSSIER QUE VE EL PANEL ═══
        Todas las respuestas terminadas de la conversación, en orden, y aparte
-       la que está llegando (vista previa). El panel las escribe seguidas. */
-    const bloquesDocumento = useMemo(() => {
+       la que está llegando (vista previa). El panel las escribe seguidas,
+       sin la nota para el abogado y con cada retoque en lugar del escrito
+       que corrige. Ver `@/lib/documento/dossier`. */
+    const escritosSinNota = useRef<ReadonlyMap<string, string>>(new Map());
+    const bloquesDocumento = useMemo<BloqueDocumento[]>(() => {
         const trabajando = isLoading || isDocumentAnalyzing || analisisEnVuelo;
-        const salida: { id: string; markdown: string }[] = [];
-        messages.forEach((m, i) => {
-            if (m.role !== 'assistant' || !m.content.trim()) return;
-            if (trabajando && i === messages.length - 1) return;   // la que llega va aparte
-            salida.push({ id: `m${i}`, markdown: m.content });
-        });
-        return salida;
+        const { bloques, memoria } = bloquesDelDossier(messages, trabajando, escritosSinNota.current);
+        escritosSinNota.current = memoria;
+        return bloques;
     }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
     const vivoDocumento = useMemo(() => {
         if (!(isLoading || isDocumentAnalyzing || analisisEnVuelo)) return null;
@@ -1342,8 +1393,12 @@ export default function ChatPage() {
            «Escribiendo en el documento… 0 palabras». Una hoja en blanco y sin
            una señal de vida durante todo el reconocimiento. Con null el panel
            no finge: la hoja se queda como está y el pie dice por dónde va. */
-        return ultimo?.role === 'assistant' ? ultimo.content : null;
+        return ultimo?.role === 'assistant' ? separarNota(ultimo.content).escrito : null;
     }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
+    // La que llega es un retoque que sustituirá al escrito anterior.
+    const vivoReemplaza = vivoDocumento !== null && reemplazaEscrito(vivoDocumento);
+    // Las respuestas cuyo escrito sustituyó un retoque posterior: su burbuja lo dice.
+    const sustituidas = useMemo(() => respuestasSustituidas(messages), [messages]);
     const hayDocumento = bloquesDocumento.length > 0 || vivoDocumento !== null;
     const tituloDocumento = useMemo(() => {
         const primera = messages.find((m) => m.role === 'user');
@@ -1383,6 +1438,7 @@ export default function ChatPage() {
             : [...vs, {
                 id: ultimo.id, titulo: tituloDocumento, fecha: Date.now(),
                 markdown: bloquesDocumento.map((b) => b.markdown).join(`\n\n${SEP_DOSSIER}\n\n`),
+                ids: bloquesDocumento.map((b) => b.id),
             }].slice(-12));
     }, [bloquesDocumento, tituloDocumento]);
     const verDocumento = useCallback(() => {
@@ -1710,6 +1766,7 @@ export default function ChatPage() {
 
                                     onAbrirConstructor={abrirConstructor}
                                     constructorAbierto={constructorAbierto}
+                                    respuestaAnterior={respuestaAnterior}
                                 />
 
                                 {/* EL TUTORIAL DEL NUEVO CHAT (27-sep-2026). David: «una liga
@@ -1785,7 +1842,7 @@ export default function ChatPage() {
                                 const assistantCount = messages.slice(0, index + 1).filter(m => m.role === 'assistant').length;
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
-                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} basico={modoBasico} onVerDocumento={verDocumento} onDesarrollar={modoBasico ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
+                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} sustituido={sustituidas.has(index)} basico={modoBasico} onVerDocumento={verDocumento} onDesarrollar={modoBasico ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
                                     </div>
                                 );
                             })}
@@ -1887,6 +1944,7 @@ export default function ChatPage() {
                                 ? 'Pregunta y te doy los criterios aplicables…'
                                 : documentoAbierto ? 'Pide un cambio al documento o haz otra consulta…' : undefined}
                                     constructorAbierto={constructorAbierto}
+                            respuestaAnterior={respuestaAnterior}
                         />
                     </div>
                 )}
@@ -2181,6 +2239,7 @@ export default function ChatPage() {
                 versiones={versiones}
                 onCerrar={() => setDocumentoAbierto(false)}
                 onCita={handleCitationClick}
+                vivoReemplaza={vivoReemplaza}
             />
             <PdfViewerPanel isOpen={activePdfSource !== null} onClose={() => setActivePdfSource(null)} source={activePdfSource} />
 

@@ -1,14 +1,17 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDownToLine, Check, ChevronLeft, FileText, Loader2, Printer, X } from 'lucide-react';
+import { AlertTriangle, ArrowDownToLine, Check, ChevronLeft, ClipboardCheck, FileText, Loader2, Printer, X, XCircle } from 'lucide-react';
 import { Hoja, type HojaAPI } from './Hoja';
-import { aWord, imprimir, type Papel } from '@/lib/documento/exportarDocx';
+import { aWord, imprimir, pareceEscritoDeJuzgado, type FormatoWord, type Papel } from '@/lib/documento/exportarDocx';
 import {
     fuenteDeCita, htmlDeDocumento, htmlDeDossier, metaDeDossier, palabrasDe, referenciaAPA,
     type FuenteCita,
 } from '@/lib/documento/citas';
 import { recortarABloque } from '@/lib/documento/revelado';
 import { citasSinFuente, conFichas, resumenDeCitas, useFichasDeCitas } from '@/lib/documento/fichas';
+import { guardarEdicion, leerEdicion, type EdicionHoja } from '@/lib/documento/edicionHoja';
+import { datosPendientes, markdownDeHoja, textoDeHtml, type DatoPendiente } from '@/lib/documento/marcado';
+import { TOPE_REVISION, revisarEscrito, trozosParaSenalar, type Revision } from '@/lib/revision';
 
 /**
  * EL PANEL DOCUMENTO: la hoja tipo Word acoplada al chat (18-sep-2026).
@@ -42,6 +45,9 @@ export interface BloqueDocumento {
     /** Identifica la respuesta dentro de la conversación (m<índice>). */
     id: string;
     markdown: string;
+    /** El bloque al que sustituye: un retoque que entrega el escrito entero
+     *  ya corregido va EN LUGAR del anterior (28-sep-2026). */
+    reemplaza?: string;
 }
 
 export interface VersionDocumento {
@@ -50,6 +56,41 @@ export interface VersionDocumento {
     /** El dossier entero en ese momento, con SEP_DOSSIER entre respuestas. */
     markdown: string;
     fecha: number;
+    /** Los bloques de ese dossier, en orden: al volver a una versión, la hoja
+     *  los envuelve como los demás y un retoque posterior los encuentra. */
+    ids?: string[];
+}
+
+/* ═══ CADA RESPUESTA, EN SU ENVOLTORIO (28-sep-2026) ══════════════════════
+   Cada bloque del dossier va en `<div data-bloque="m<índice>">`: así un
+   retoque puede ponerse EN LUGAR del escrito que corrige, también en una hoja
+   editada, y la pantalla puede leer ese escrito tal como lo dejó el abogado.
+   El exportador de Word y la revisión ya recorren los `div` con párrafos
+   dentro como si sus hijos estuvieran sueltos. */
+export function envolverBloque(id: string, html: string): string {
+    return `<div data-bloque="${id.replace(/[^\w-]/g, '')}">${html}</div>`;
+}
+
+function bloquesEnLaHoja(raiz: HTMLElement | null | undefined): string[] {
+    if (!raiz) return [];
+    return Array.from(raiz.querySelectorAll<HTMLElement>('[data-bloque]')).map((e) => e.dataset.bloque || '');
+}
+
+/* ═══ EL ESCRITO COMO ESTÁ EN LA HOJA (28-sep-2026) ═══════════════════════
+   El chat lo pide al enviar: si el abogado corrigió a mano la última
+   respuesta, ésa es la que el modelo debe retocar, no la que escribió. Sólo
+   hay una hoja montada en el chat; se registra aquí mientras vive. */
+let hojaViva: { clave: () => string | null; raiz: () => HTMLElement | null; editada: () => boolean } | null = null;
+
+/** El markdown del bloque `id` tal como está en la hoja de la conversación
+ *  `clave`, o null si la hoja no está editada o el bloque ya no está. */
+export function escritoEnLaHoja(clave: string | null | undefined, id: string): string | null {
+    const h = hojaViva;
+    if (!h || !clave || h.clave() !== clave || !h.editada()) return null;
+    const bloque = Array.from(h.raiz()?.querySelectorAll<HTMLElement>('[data-bloque]') ?? []).find((e) => e.dataset.bloque === id);
+    if (!bloque) return null;
+    const md = markdownDeHoja(bloque).trim();
+    return md || null;
 }
 
 interface Props {
@@ -68,17 +109,50 @@ interface Props {
     versiones: VersionDocumento[];
     onCerrar: () => void;
     onCita?: (fuente: FuenteCita) => void;
+    /** La respuesta que llega es un retoque que sustituirá al escrito anterior. */
+    vivoReemplaza?: boolean;
 }
 
-export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, paso, versiones, onCerrar, onCita }: Props) {
+export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, paso, versiones, onCerrar, onCita, vivoReemplaza = false }: Props) {
     const hoja = useRef<HojaAPI | null>(null);
     const raizRef = useRef<HTMLDivElement | null>(null);
     const [nombre, setNombre] = useState('');
     const [papel, setPapel] = useState<Papel>('carta');
+    /* EL FORMATO DEL WORD (28-sep-2026): «Juzgado» —rubro a la derecha, firma
+       centrada, citas en el texto— o «Notas APA» —cada cita como nota al pie—.
+       Sin elección del abogado, se decide por la hoja: si trae el cierre o el
+       destinatario de un escrito, juzgado. La elección se recuerda. */
+    const [formatoElegido, setFormatoElegido] = useState<FormatoWord | null>(null);
+    useEffect(() => {
+        try {
+            const g = localStorage.getItem('iurexia-formato-word');
+            if (g === 'juzgado' || g === 'apa') setFormatoElegido(g);
+        } catch { /* sin almacenamiento */ }
+    }, []);
+    const elegirFormato = (f: FormatoWord) => {
+        setFormatoElegido(f);
+        try { localStorage.setItem('iurexia-formato-word', f); } catch { /* sin almacenamiento */ }
+    };
     const [exportando, setExportando] = useState(false);
     const [aviso, setAviso] = useState('');
     const [versionElegida, setVersionElegida] = useState('');
     const relojAviso = useRef<number | null>(null);
+    /* LOS DATOS PENDIENTES (28-sep-2026): los «[DATO PENDIENTE: …]» que
+       quedan en la hoja, para llenarlos de una vez sin buscarlos a mano. */
+    const [pendientes, setPendientes] = useState<DatoPendiente[]>([]);
+    const [verPendientes, setVerPendientes] = useState(false);
+    /* LA REVISIÓN ANTES DE PRESENTAR (28-sep-2026): lo que falta, lo que
+       conviene mirar y lo que ya está, sobre lo que hay en la hoja ahora. */
+    const [revision, setRevision] = useState<Revision | null>(null);
+    const [revisando, setRevisando] = useState(false);
+    const [verRevision, setVerRevision] = useState(false);
+    const [revisionCortada, setRevisionCortada] = useState(false);
+    const revisionEnCurso = useRef<AbortController | null>(null);
+    const [valores, setValores] = useState<Record<string, string>>({});
+    const recontar = () => {
+        const nuevos = datosPendientes(hoja.current?.raiz()?.textContent ?? '');
+        setPendientes((viejos) => (JSON.stringify(viejos) === JSON.stringify(nuevos) ? viejos : nuevos));
+    };
 
     /* ── DÓNDE SE DESPLIEGA: la misma geometría que el constructor ──────── */
     const [disp, setDisp] = useState({ lateral: false, ancho: 0 });
@@ -145,13 +219,21 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
     const cuentaCitas = useMemo(() => resumenDeCitas(orden, meta, estadoFichas), [orden, meta, estadoFichas]);
     const palabras = useMemo(() => palabrasDe(partes.join(' ')), [partes]);
     const enVivo = vivo !== null;
-    const htmlBase = useMemo(() => segmentos.slice(0, bloques.length).join('<hr>'), [segmentos, bloques.length]);
+    /* Los bloques terminados, cada uno en su envoltorio. */
+    const htmlDeBloques = (desde: number, hasta: number) => segmentos
+        .slice(desde, hasta)
+        .map((h, i) => envolverBloque(bloques[desde + i]?.id ?? `b${desde + i}`, h))
+        .join('<hr>');
+    const htmlBase = useMemo(() => htmlDeBloques(0, bloques.length), [segmentos, bloques]);
     const htmlVivo = enVivo ? (segmentos[bloques.length] ?? '') : null;
 
     /* LO QUE YA ESTÁ EN LA HOJA. Al montar (o al cambiar de conversación) la
        hoja arranca con todas las respuestas terminadas; cada vez que termina
        una nueva se INSERTA al final, sin tocar lo que el abogado editó. */
     const insertados = useRef(0);
+    /* Qué bloques del dossier tiene la hoja, en orden. Lo nuevo es lo que no
+       está aquí; un retoque se pone en lugar del bloque que sustituye. */
+    const enHoja = useRef<string[]>([]);
     const claveMontada = useRef<string | null>(null);
     /* LA HOJA VACÍA SE RELLENA SOLA (20-sep-2026).
        ---------------------------------------------------------------------
@@ -186,39 +268,188 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
        letra, la hoja deja de coincidir con lo que escribimos y no se vuelve a
        tocar nunca. Sólo se reescribe lo que es nuestro y está desactualizado. */
     const escrito = useRef<string | null>(null);   // el HTML que pusimos nosotros
+
+    /* LO QUE EDITA EL ABOGADO SE QUEDA (27-sep-2026).
+       ---------------------------------------------------------------------
+       Dos fallos, y los dos le borraban al abogado lo que había escrito.
+
+       1. No se guardaba: `onCambio` no hacía nada y la hoja se vuelve a montar
+          al cambiar de conversación o al recargar. Ahora cada edición se
+          guarda en este navegador (`@/lib/documento/edicionHoja`) y vuelve al
+          abrir la conversación; lo que respondió Iurexia después se anexa
+          detrás.
+
+       2. Se reescribía sola. Al anexar una respuesta a una hoja editada,
+          `escrito` pasaba a valer la hoja editada; en la siguiente consulta la
+          guardia de arriba la veía «intacta» y distinta del dossier, y la
+          reescribía con el texto del modelo: las correcciones del abogado se
+          iban sin que tocara nada. «Editada» es ahora un estado propio, y una
+          hoja editada no la reescribe nadie: sólo se le anexa.
+
+       Lo que escribimos nosotros (rellenar, anexar, restaurar) pasa por
+       `escribir`, para que la hoja no lo confunda con una edición. */
+    const editada = useRef(false);
+    useEffect(() => {
+        const registro = {
+            clave: () => claveMontada.current,
+            raiz: () => hoja.current?.raiz() ?? null,
+            editada: () => editada.current,
+        };
+        hojaViva = registro;
+        return () => { if (hojaViva === registro) hojaViva = null; };
+    }, []);
+    const escribiendo = useRef(false);
+    const pendiente = useRef<EdicionHoja | null>(null);
+    const [guardadaAqui, setGuardadaAqui] = useState(false);
+    const escribir = (accion: () => void) => {
+        escribiendo.current = true;
+        try { accion(); } finally { escribiendo.current = false; }
+    };
+    const guardar = (html: string) => {
+        if (guardarEdicion(claveMontada.current, html, insertados.current)) setGuardadaAqui(true);
+    };
+    /* La hoja avisa al teclear (con espera), al perder el foco, al ocultarse
+       la pestaña y al desmontarse —también al cambiar de conversación, antes
+       de que las referencias pasen a la siguiente—. */
+    const alCambiar = (html: string) => {
+        if (escribiendo.current) return;
+        if (!editada.current && html === escrito.current) return;   // nadie tocó nada
+        editada.current = true;
+        pendiente.current = null;   // lo que teclea ahora manda sobre lo guardado
+        guardar(html);
+        recontar();
+    };
+
     useEffect(() => {
         const raiz = hoja.current?.raiz();
         const otraConversacion = claveMontada.current !== clave;
+        const ids = (n: number) => bloques.slice(0, n).map((b) => b.id);
         if (otraConversacion) {
             claveMontada.current = clave;
             insertados.current = bloques.length;
+            enHoja.current = ids(bloques.length);
             // La hoja acaba de montarse con `htmlInicial`: eso es lo nuestro.
             escrito.current = raiz ? raiz.innerHTML : null;
+            editada.current = false;
+            pendiente.current = leerEdicion(clave);
+            setGuardadaAqui(false);
             setNombre('');
             setVersionElegida('');
         }
 
-        if (raiz && bloques.length) {
-            const deseado = segmentos.slice(0, bloques.length).join('<hr>');
+        // Lo que el abogado había editado vuelve en cuanto están cargadas las
+        // respuestas que contiene.
+        const guardada = pendiente.current;
+        if (raiz && guardada && !editada.current && bloques.length >= guardada.bloques) {
+            pendiente.current = null;
+            escribir(() => hoja.current?.reemplazar(guardada.html));
+            escrito.current = hoja.current?.raiz()?.innerHTML ?? guardada.html;
+            insertados.current = guardada.bloques;
+            // Los envoltorios dicen qué bloques trae; una hoja guardada antes
+            // de que existieran trae los primeros que contaba.
+            const envueltos = bloquesEnLaHoja(hoja.current?.raiz());
+            enHoja.current = envueltos.length ? envueltos : ids(guardada.bloques);
+            editada.current = true;
+            setGuardadaAqui(true);
+        }
+
+        // Un retoque que sustituye a un bloque que la hoja tiene.
+        const sustituye = (b: BloqueDocumento) => !!b.reemplaza && enHoja.current.includes(b.reemplaza);
+
+        if (raiz && bloques.length && !editada.current) {
+            const deseado = htmlDeBloques(0, bloques.length);
             const intacta = escrito.current === null
                 ? !raiz.innerHTML.trim()          // nunca escribimos: sólo si está en blanco
                 : raiz.innerHTML === escrito.current;
             if (deseado && deseado !== escrito.current && intacta) {
-                hoja.current?.reemplazar(deseado);
+                const retoque = bloques.some((b) => !enHoja.current.includes(b.id) && sustituye(b));
+                escribir(() => hoja.current?.reemplazar(deseado));
                 escrito.current = hoja.current?.raiz()?.innerHTML ?? deseado;
                 insertados.current = bloques.length;
+                enHoja.current = ids(bloques.length);
+                if (retoque && !otraConversacion) mostrarAviso('La versión corregida sustituyó a la anterior, que sigue en «Versiones».');
                 return;
             }
         }
-        if (otraConversacion) return;
+        // Recién montada con `htmlInicial` ya tiene lo suyo; restaurada, le
+        // faltan las respuestas posteriores a la edición.
+        if (otraConversacion && !editada.current) return;
 
-        if (bloques.length > insertados.current) {
-            const nuevos = segmentos.slice(insertados.current, bloques.length).join('<hr>');
-            hoja.current?.insertar((insertados.current > 0 ? '<hr>' : '') + nuevos, 'final');
-            insertados.current = bloques.length;
-            escrito.current = hoja.current?.raiz()?.innerHTML ?? null;
+        /* EN UNA HOJA EDITADA SÓLO SE TOCA LO QUE FALTA. Lo nuevo se anexa
+           al final; el retoque va en lugar del bloque que sustituye, y si el
+           abogado lo borró o lo fundió con otro, se anexa y se dice. */
+        const faltan = bloques.filter((b) => !enHoja.current.includes(b.id));
+        if (!faltan.length) return;
+        let sustituidos = 0;
+        let sinSitio = 0;
+        escribir(() => {
+            for (const b of faltan) {
+                const i = bloques.indexOf(b);
+                const html = envolverBloque(b.id, segmentos[i] ?? '');
+                if (b.reemplaza && sustituye(b) && hoja.current?.sustituirBloque(b.reemplaza, html)) {
+                    enHoja.current = enHoja.current.map((x) => (x === b.reemplaza ? b.id : x));
+                    sustituidos++;
+                    continue;
+                }
+                if (b.reemplaza) sinSitio++;
+                const conAlgo = !!hoja.current?.raiz()?.textContent?.trim();
+                hoja.current?.insertar((conAlgo ? '<hr>' : '') + html, 'final');
+                enHoja.current = [...enHoja.current, b.id];
+            }
+        });
+        insertados.current = bloques.length;
+        escrito.current = hoja.current?.raiz()?.innerHTML ?? null;
+        // Lo nuevo se suma a la versión del abogado, y así se guarda.
+        if (editada.current && escrito.current !== null) guardar(escrito.current);
+        if (sinSitio) mostrarAviso('No encontré el escrito anterior en la hoja: la versión corregida va al final.');
+        else if (sustituidos) mostrarAviso('La versión corregida sustituyó a la anterior, con tus cambios. La anterior sigue en «Versiones».');
+    }, [clave, bloques, segmentos]);
+
+    // Detrás del efecto que escribe la hoja: cuenta lo que quedó en ella.
+    useEffect(() => { recontar(); }, [clave, bloques, segmentos]);
+    // Otra conversación: la revisión de la anterior, en curso o hecha, no es de ésta.
+    useEffect(() => {
+        setVerPendientes(false); setValores({}); setVerRevision(false); setRevision(null);
+        revisionEnCurso.current?.abort(); revisionEnCurso.current = null; setRevisando(false);
+    }, [clave]);
+    useEffect(() => () => revisionEnCurso.current?.abort(), []);
+
+    async function revisar() {
+        const raiz = hoja.current?.raiz();
+        const texto = raiz ? textoDeHtml(raiz) : '';
+        if (!texto.trim()) { mostrarAviso('La hoja está vacía: no hay nada que revisar.'); return; }
+        setVerPendientes(false);
+        setRevisando(true);
+        const control = new AbortController();
+        revisionEnCurso.current = control;
+        const r = await revisarEscrito(texto, control.signal);
+        if (control.signal.aborted) return;
+        revisionEnCurso.current = null;
+        setRevisando(false);
+        if (!r) { mostrarAviso('No se pudo revisar ahora. Vuelve a intentarlo.'); return; }
+        setRevisionCortada(texto.length > TOPE_REVISION);
+        setRevision(r);
+        setVerPendientes(false);
+        setVerRevision(true);
+    }
+
+    function senalarHallazgo(donde: string) {
+        for (const trozo of trozosParaSenalar(donde)) {
+            if (hoja.current?.senalar(trozo)) return;
         }
-    }, [clave, bloques.length, segmentos]);
+        mostrarAviso('No lo encontré tal cual en la hoja: búscalo a mano.');
+    }
+
+    function ponerDato(p: DatoPendiente) {
+        const valor = (valores[p.marca] ?? '').trim();
+        if (!valor) return;
+        const veces = hoja.current?.reemplazarTexto(p.marca, valor) ?? 0;
+        setValores((v) => { const n = { ...v }; delete n[p.marca]; return n; });
+        recontar();
+        mostrarAviso(veces
+            ? `Dato puesto ${veces === 1 ? 'en su lugar' : `en ${veces} lugares`}.`
+            : 'Ese hueco ya no está en la hoja tal cual: búsquelo a mano.');
+    }
 
     const tituloEfectivo = nombre.trim() || titulo || 'Documento de Iurexia';
 
@@ -258,12 +489,23 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         onCita(fuenteDeCita(meta, ficha.dataset.docId));
     }
 
-    /* Volver a una versión: la hoja entera se sustituye por ese dossier. */
+    /* Volver a una versión: la hoja entera se sustituye por ese dossier. Es
+       decisión del abogado, así que cuenta como su edición y se guarda. */
     function elegirVersion(id: string) {
         setVersionElegida(id);
         const v = versiones.find((x) => x.id === id);
         if (!v) return;
-        hoja.current?.reemplazar(htmlDeDocumento(v.markdown).html.replace(/<p>⟦sep⟧<\/p>/g, '<hr>'));
+        const trozos = htmlDeDocumento(v.markdown).html.split(/<p>⟦sep⟧<\/p>/);
+        // Con sus bloques envueltos, un retoque posterior encuentra el suyo.
+        const html = v.ids && v.ids.length === trozos.length
+            ? trozos.map((t, i) => envolverBloque(v.ids![i], t)).join('<hr>')
+            : trozos.join('<hr>');
+        escribir(() => hoja.current?.reemplazar(html));
+        escrito.current = hoja.current?.raiz()?.innerHTML ?? html;
+        editada.current = true;
+        pendiente.current = null;
+        enHoja.current = bloquesEnLaHoja(hoja.current?.raiz());
+        guardar(escrito.current);
         mostrarAviso('Versión restaurada en la hoja.');
     }
 
@@ -274,17 +516,24 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
         setExportando(true);
         try {
             const referencias = new Map(orden.map((id) => [id, referenciaAPA(fuenteDeCita(meta, id))]));
-            await aWord(raiz, tituloEfectivo, papel, referencias);
+            await aWord(raiz, tituloEfectivo, papel, referencias, formatoVigente());
+            // Se descarga igual —es su documento—, pero se le dice.
+            const faltan = pendientes.reduce((n, p) => n + p.veces, 0);
+            if (faltan) mostrarAviso(`Ojo: el Word lleva ${faltan} ${faltan === 1 ? 'dato pendiente' : 'datos pendientes'} por llenar.`);
         } catch { mostrarAviso('No se pudo generar el Word. Vuelve a intentarlo.'); }
         finally { setExportando(false); }
     }
     function mandarAImprimir() {
         const raiz = hoja.current?.raiz();
         if (!raiz || hoja.current?.vacia()) { mostrarAviso('El documento está vacío.'); return; }
-        if (!imprimir(raiz, tituloEfectivo, papel)) mostrarAviso('El navegador bloqueó la ventana de impresión.');
+        if (!imprimir(raiz, tituloEfectivo, papel, formatoVigente())) mostrarAviso('El navegador bloqueó la ventana de impresión.');
     }
 
     const fecha = (t: number) => new Date(t).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    // El formato del momento: el elegido, o el que dice la hoja.
+    function formatoVigente(): FormatoWord {
+        return formatoElegido ?? (pareceEscritoDeJuzgado(hoja.current?.raiz()) ? 'juzgado' : 'apa');
+    }
 
     return (
         <div
@@ -348,6 +597,20 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                         <option value="carta">Carta</option>
                         <option value="oficio">Oficio</option>
                     </select>
+                    <select value={formatoElegido ?? ''} onChange={(e) => e.target.value && elegirFormato(e.target.value as FormatoWord)}
+                        aria-label="Formato del Word" data-guide="formato-word"
+                        title="Juzgado: rubro a la derecha, firma centrada y las citas en el texto. Notas APA: cada cita como nota al pie."
+                        className="hidden h-9 rounded-lg border border-charcoal-900/15 bg-white px-2 text-[12px] text-charcoal-900 md:block">
+                        {!formatoElegido && <option value="">Formato automático</option>}
+                        <option value="juzgado">Formato de juzgado</option>
+                        <option value="apa">Con notas APA</option>
+                    </select>
+                    <button type="button" onClick={revisar} disabled={enVivo || revisando} data-guide="revisar-escrito"
+                        title="Revisar antes de presentar: requisitos, datos pendientes, cierre y frases rotas"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-charcoal-900/15 bg-white px-2 text-[12.5px] font-medium text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:opacity-40 sm:px-2.5">
+                        {revisando ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
+                        <span className="hidden lg:inline">Revisar</span>
+                    </button>
                     <button type="button" onClick={mandarAImprimir} title="Imprimir o guardar como PDF" disabled={enVivo}
                         className="grid h-9 w-9 place-items-center rounded-lg border border-charcoal-900/15 bg-white text-charcoal-900 transition-colors hover:border-charcoal-900/35 disabled:opacity-40">
                         <Printer className="h-4 w-4" />
@@ -367,7 +630,7 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     key={clave}
                     ref={hoja}
                     htmlInicial={htmlBase}
-                    onCambio={() => { /* vive en el DOM de la hoja */ }}
+                    onCambio={alCambiar}
                     vistaPrevia={htmlVivo}
                     anexando={bloques.length > 0}
                 />
@@ -381,11 +644,22 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                        abogado mirando una hoja en blanco sin señal de vida. */
                     <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>{paso}</span></>
                 ) : enVivo ? (
-                    <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span>Escribiendo en el documento…</span></>
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin text-accent-brown" /><span className="min-w-0 truncate">{vivoReemplaza
+                        ? 'Escribiendo la versión corregida: sustituirá a la anterior al terminar…'
+                        : 'Escribiendo en el documento…'}</span></>
                 ) : partes.length ? (
-                    <><Check className="h-3.5 w-3.5 text-accent-gold" /><span>Listo para editar</span></>
+                    /* Se dice DÓNDE se guarda: en este navegador, no en la cuenta. */
+                    <><Check className="h-3.5 w-3.5 text-accent-gold" /><span className="min-w-0 truncate">{guardadaAqui ? 'Cambios guardados en este navegador' : 'Listo para editar'}</span></>
                 ) : (
                     <span>La primera respuesta se escribirá aquí.</span>
+                )}
+                {pendientes.length > 0 && (
+                    <button type="button" onClick={() => { setVerRevision(false); setVerPendientes((v) => !v); }} aria-expanded={verPendientes}
+                        data-guide="datos-pendientes"
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-900 transition-colors hover:bg-amber-200">
+                        <AlertTriangle className="h-3 w-3" />
+                        {pendientes.length} {pendientes.length === 1 ? 'dato pendiente' : 'datos pendientes'}
+                    </button>
                 )}
                 <span className="ml-auto tabular-nums">
                     {palabras ? `${palabras.toLocaleString('es-MX')} palabras` : ''}
@@ -397,6 +671,106 @@ export default function PanelDocumento({ abierto, clave, titulo, bloques, vivo, 
                     {cuentaCitas.verificadas > 0 ? ` · ${cuentaCitas.verificadas} ${cuentaCitas.verificadas === 1 ? 'verificada' : 'verificadas'}` : ''}
                 </span>
             </footer>
+
+            {/* ── LA REVISIÓN ANTES DE PRESENTAR ───────────────────────────── */}
+            {verRevision && revision && (
+                <div role="dialog" aria-label="Revisión antes de presentar"
+                    className="absolute right-3 top-16 z-40 flex max-h-[calc(100%-6rem)] w-[min(27rem,calc(100%-1.5rem))] flex-col overflow-hidden rounded-xl border border-charcoal-900/10 bg-white shadow-[0_12px_40px_rgba(17,17,17,0.18)]">
+                    <div className="flex items-start gap-2 border-b border-charcoal-900/10 px-4 py-3">
+                        <div className="min-w-0 flex-1">
+                            <p className="font-serif text-[15px] text-charcoal-900">Revisión antes de presentar</p>
+                            <p className="mt-0.5 text-[11.5px] text-charcoal-600">
+                                {revision.tipo_nombre.charAt(0).toUpperCase() + revision.tipo_nombre.slice(1)}
+                                {' · '}
+                                {revision.faltan
+                                    ? `${revision.faltan} ${revision.faltan === 1 ? 'cosa falta' : 'cosas faltan'}`
+                                    : 'no falta nada de lo que se comprueba'}
+                                {revision.revisar ? ` · ${revision.revisar} por mirar` : ''}
+                            </p>
+                        </div>
+                        <button type="button" onClick={() => setVerRevision(false)} aria-label="Cerrar"
+                            className="grid h-7 w-7 place-items-center rounded-md text-charcoal-900/60 hover:bg-charcoal-900/5 hover:text-charcoal-900">
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                    <ul className="min-h-0 flex-1 divide-y divide-charcoal-900/5 overflow-y-auto">
+                        {revision.hallazgos.map((h, i) => (
+                            <li key={i} data-nivel={h.nivel} className="flex items-start gap-2.5 px-4 py-2.5">
+                                {h.nivel === 'falta'
+                                    ? <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600" aria-label="Falta" />
+                                    : h.nivel === 'revise'
+                                        ? <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" aria-label="Por mirar" />
+                                        : <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-600" aria-label="Está" />}
+                                <div className="min-w-0 flex-1">
+                                    <p className={`text-[12.5px] leading-snug ${h.nivel === 'bien' ? 'text-charcoal-600' : 'font-medium text-charcoal-900'}`}>{h.que}</p>
+                                    {h.fundamento && <p className="mt-0.5 text-[11px] text-charcoal-500">{h.fundamento.charAt(0).toUpperCase() + h.fundamento.slice(1)}</p>}
+                                    {h.donde && (
+                                        <p className="mt-1 flex items-start gap-2 text-[11px] text-charcoal-500">
+                                            <span className="min-w-0 flex-1 italic">«{h.donde.length > 110 ? h.donde.slice(0, 110) + '…' : h.donde}»</span>
+                                            <button type="button" onClick={() => senalarHallazgo(h.donde)}
+                                                className="shrink-0 font-medium not-italic text-accent-brown underline-offset-2 hover:underline">
+                                                Ver
+                                            </button>
+                                        </p>
+                                    )}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                    <p className="border-t border-charcoal-900/10 bg-cream-100/60 px-4 py-2 text-[11px] leading-snug text-charcoal-600">
+                        Comprueba requisitos, huecos, el cierre y la redacción; no el fondo ni el plazo, que
+                        dependen de la fecha de notificación y del calendario del órgano.
+                        {revisionCortada ? ' El escrito es más largo que lo que se revisa de una vez: se revisó el principio.' : ''}
+                    </p>
+                </div>
+            )}
+
+            {/* ── LOS DATOS PENDIENTES, para llenarlos de una vez ─────────── */}
+            {verPendientes && pendientes.length > 0 && (
+                <div role="dialog" aria-label="Datos pendientes"
+                    className="absolute bottom-11 right-3 z-40 flex max-h-[60vh] w-[min(24rem,calc(100%-1.5rem))] flex-col overflow-hidden rounded-xl border border-charcoal-900/10 bg-white shadow-[0_12px_40px_rgba(17,17,17,0.18)]">
+                    <div className="flex items-center gap-2 border-b border-charcoal-900/10 px-4 py-2.5">
+                        <p className="flex-1 font-serif text-[15px] text-charcoal-900">Datos pendientes</p>
+                        <button type="button" onClick={() => setVerPendientes(false)} aria-label="Cerrar"
+                            className="grid h-7 w-7 place-items-center rounded-md text-charcoal-900/60 hover:bg-charcoal-900/5 hover:text-charcoal-900">
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                    <ul className="min-h-0 flex-1 divide-y divide-charcoal-900/5 overflow-y-auto">
+                        {pendientes.map((p) => (
+                            <li key={p.marca} className="px-4 py-2.5">
+                                <div className="mb-1.5 flex items-start gap-2">
+                                    <span className="min-w-0 flex-1 text-[12.5px] font-medium leading-snug text-charcoal-900">{p.dato}</span>
+                                    {p.veces > 1 && <span className="shrink-0 rounded-full bg-cream-200 px-1.5 text-[10.5px] font-semibold text-charcoal-700">×{p.veces}</span>}
+                                    <button type="button" onClick={() => hoja.current?.senalar(p.marca)}
+                                        className="shrink-0 text-[11.5px] font-medium text-accent-brown underline-offset-2 hover:underline">
+                                        Ver
+                                    </button>
+                                </div>
+                                <form className="flex gap-1.5" onSubmit={(e) => { e.preventDefault(); ponerDato(p); }}>
+                                    <input
+                                        value={valores[p.marca] ?? ''}
+                                        onChange={(e) => setValores((v) => ({ ...v, [p.marca]: e.target.value }))}
+                                        placeholder="Escriba el dato…"
+                                        aria-label={p.dato}
+                                        className="min-w-0 flex-1 rounded-md border border-charcoal-900/15 bg-cream-50 px-2 py-1.5 text-[12.5px] text-charcoal-900 focus:border-accent-gold focus:outline-none"
+                                    />
+                                    <button type="submit" disabled={!(valores[p.marca] ?? '').trim()}
+                                        className="shrink-0 rounded-md bg-charcoal-900 px-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-charcoal-800 disabled:opacity-35">
+                                        Poner
+                                    </button>
+                                </form>
+                            </li>
+                        ))}
+                    </ul>
+                    <p className="border-t border-charcoal-900/10 bg-cream-100/60 px-4 py-2 text-[11.5px] leading-snug text-charcoal-600">
+                        ¿Le faltan siempre los mismos —domicilio, cédula, autorizados—?{' '}
+                        <a href="/perfil#despacho" target="_blank" rel="noopener" className="font-medium text-accent-brown underline-offset-2 hover:underline">
+                            Guárdelos en los datos de su despacho
+                        </a>{' '}y los próximos escritos ya los llevan.
+                    </p>
+                </div>
+            )}
 
             <div role="status" aria-live="polite" className={`pointer-events-none fixed bottom-14 z-50 flex justify-center px-4 ${disp.lateral ? 'right-0' : 'inset-x-0'}`} style={disp.lateral ? { width: disp.ancho } : undefined}>
                 {aviso && (

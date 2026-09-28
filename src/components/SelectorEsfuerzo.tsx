@@ -56,9 +56,13 @@ const FICHAS: Record<Esfuerzo, Ficha> = {
 
 interface Props {
     disabled?: boolean;
+    /** Falso cuando la etiqueta del compositor dice «Consulta»: el esfuerzo
+     *  sólo cuenta para los escritos, y se atenúa para que se vea. Sigue
+     *  pudiéndose elegir. */
+    aplica?: boolean;
 }
 
-export default function SelectorEsfuerzo({ disabled = false }: Props) {
+export default function SelectorEsfuerzo({ disabled = false, aplica = true }: Props) {
     const { user, profile } = useAuth();
     const techo = techoDelPlan(profile?.subscription_type, user?.email);
     // Básico hasta leer el navegador y el perfil: servidor y cliente pintan lo
@@ -121,8 +125,11 @@ export default function SelectorEsfuerzo({ disabled = false }: Props) {
                 aria-haspopup="menu"
                 aria-expanded={abierto}
                 aria-label={`Esfuerzo de redacción: ${actual.nombre}`}
-                title={`Esfuerzo de redacción: ${actual.nombre}. Se aplica cuando pide un escrito.`}
-                className={`flex h-7 items-center gap-1.5 rounded-full border px-2 transition-colors disabled:opacity-50
+                title={aplica
+                    ? `Esfuerzo de redacción: ${actual.nombre}. Se aplica cuando pide un escrito.`
+                    : `Esfuerzo de redacción: ${actual.nombre}. No se aplica a este mensaje: se contestará como consulta.`}
+                className={`flex h-7 items-center gap-1.5 rounded-full border px-2 transition disabled:opacity-50
+                    ${!aplica && !abierto ? 'opacity-50 hover:opacity-100' : ''}
                     ${abierto
                         ? 'border-accent-gold/70 bg-accent-gold/10 text-charcoal-900'
                         : 'border-charcoal-900/15 bg-white text-charcoal-700 hover:border-charcoal-900/30 hover:text-charcoal-900'}`}

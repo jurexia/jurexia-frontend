@@ -18,6 +18,9 @@ import {
 import FileUploadModal from './FileUploadModal';
 import SelectorFuentes from './SelectorFuentes';
 import SelectorEsfuerzo from './SelectorEsfuerzo';
+import EtiquetaIntencion from './EtiquetaIntencion';
+import { useIntencion } from '@/hooks/useIntencion';
+import { fijarIntencionDelEnvio, type Intencion } from '@/lib/intencion';
 import { FileText, X, Network, ChevronUp, ChevronDown, UploadCloud } from 'lucide-react';
 import { validarAdjunto, EXTENSIONES_ADJUNTO, LIMITE_ADJUNTO_MB } from '@/lib/documento/adjuntos';
 import TextEnhanceModal from './TextEnhanceModal';
@@ -30,7 +33,9 @@ import { isAdmin } from '@/app/leyesestatales/adminGuard';
 
 interface ChatInputProps {
     onSubmit: (message: string, enableReasoning?: boolean) => void;
-    onDocumentSubmit?: (file: File, prompt: string, displayMessage: string) => void;
+    /** `intencion`: lo que dice la etiqueta «Escrito / Consulta» para ese texto
+     *  (28-sep-2026): con «Escrito», el documento se redacta en vez de analizarse. */
+    onDocumentSubmit?: (file: File, prompt: string, displayMessage: string, intencion?: Intencion | null) => void;
     onStop?: () => void;
     isLoading?: boolean;
     placeholder?: string;
@@ -52,6 +57,10 @@ interface ChatInputProps {
      *  está perdiendo, que es lo único que convierte una prueba en una
      *  suscripción. Ver `@/lib/gratis`. */
     basico?: boolean;
+    /** La última respuesta de la conversación: con ella se reconoce el
+     *  retoque del escrito recién entregado y el «sí» a la oferta de
+     *  redactar. Ver la etiqueta «Escrito / Consulta» en `@/lib/intencion`. */
+    respuestaAnterior?: string;
 }
 
 export default function ChatInput({
@@ -72,6 +81,7 @@ export default function ChatInput({
     onAbrirConstructor,
     constructorAbierto = false,
     basico = false,
+    respuestaAnterior,
 }: ChatInputProps) {
     const [message, setMessage] = useState('');
     const [isListening, setIsListening] = useState(false);
@@ -112,6 +122,16 @@ export default function ChatInput({
     const resumenPlegado = [
         activeMode === 'precedentes' ? 'Precedentes' : null,
     ].filter(Boolean).join(' · ');
+
+    /* ¿ESCRITO O CONSULTA? Los precedentes tienen su propia ruta y el modo
+       básico no redacta. Con documento adjunto también (28-sep-2026): «Redacta
+       el recurso contra esta sentencia» se redacta en el mismo paso, y la
+       etiqueta lo anuncia antes de enviar. */
+    const intencion = useIntencion(
+        message,
+        respuestaAnterior,
+        !basico && activeMode !== 'precedentes',
+    );
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const recognitionRef = useRef<any>(null);
@@ -310,7 +330,8 @@ export default function ChatInput({
 
                 if (onDocumentSubmit) {
                     // New flow: send raw file to /analyze-document for full analysis
-                    onDocumentSubmit(attachedDocument.file, userPrompt, displayMessage);
+                    // (o para redactar sobre él, si la etiqueta dice «Escrito»).
+                    onDocumentSubmit(attachedDocument.file, userPrompt, displayMessage, finalMessage ? intencion.efectiva : null);
                 } else {
                     // Fallback: send as text message (legacy)
                     onSubmit(displayMessage, true);
@@ -350,6 +371,10 @@ export default function ChatInput({
                 }
                 finalMessage = `[MODO_PRECEDENTES]${corteTag}${extraTags} ${finalMessage}`;
             }
+
+            // Lo que la etiqueta anunció es lo que ocurre: viaja con ESTE texto
+            // y `streamChat` lo recoge. Ver `@/lib/intencion`.
+            fijarIntencionDelEnvio(finalMessage, activeMode === 'precedentes' ? null : intencion.efectiva);
 
             // Always use reasoning for maximum quality
             onSubmit(finalMessage, true);
@@ -608,7 +633,7 @@ ${draftRequest.descripcion}`;
                                 onKeyDown={handleKeyDown}
                                 onInput={handleInput}
                                 placeholder={attachedDocument
-                                    ? "Escribe qué quieres hacer con el documento..."
+                                    ? "Pide un análisis o un escrito sobre el documento…"
                                     : placeholder
                                 }
                                 disabled={isLoading}
@@ -736,7 +761,7 @@ ${draftRequest.descripcion}`;
                     {!basico && (
                     <div className="fila-fuentes mt-2 flex items-center gap-2 border-t border-gray-100 pt-2">
                         <SelectorFuentes estado={estado} disabled={isLoading} />
-                        <SelectorEsfuerzo disabled={isLoading} />
+                        <SelectorEsfuerzo disabled={isLoading} aplica={intencion.mostrada !== 'consultar'} />
                         <button
                             type="button"
                             data-guide="herramientas"
@@ -755,11 +780,20 @@ ${draftRequest.descripcion}`;
                                 esfuerzo al lado la frase entera se salía del cuadro
                                 —en el teléfono y en el chat de 420 px junto al
                                 documento—. Ver `.fila-fuentes` en globals.css. */}
-                            <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
+                            <span className="palabra-herramientas flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider">
                                 <span className="prefijo-plegar">{plegado ? 'Desplegar ' : 'Plegar '}</span>herramientas
                             </span>
                             {plegado && <span className="hidden min-w-0 truncate sm:inline">{resumenPlegado}</span>}
                         </button>
+                        {intencion.mostrada && (
+                            <EtiquetaIntencion
+                                intencion={intencion.mostrada}
+                                elegida={intencion.elegida}
+                                pendiente={intencion.pendiente}
+                                onAlternar={intencion.alternar}
+                                disabled={isLoading}
+                            />
+                        )}
                     </div>
                     )}
 
