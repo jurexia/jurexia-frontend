@@ -2,8 +2,9 @@
  * El barrido diario de impagos. Lo dispara el cron de Vercel cada día a las
  * 08:00 de Ciudad de México (14:00 UTC).
  *
- * Suspende a quien lleva 14 días sin pagar y reactiva a quien ya pagó. La
- * lógica vive en `@/lib/suscripciones-morosas`; aquí sólo está la puerta.
+ * Suspende a quien tiene un cobro rechazado sin cubrir —sin plazo de gracia
+ * desde el 28-sep-2026— y reactiva a quien ya pagó. La lógica vive en
+ * `@/lib/suscripciones-morosas`; aquí sólo está la puerta.
  *
  * ENSAYO, sin tocar a nadie:
  *   GET /api/suscripciones/revisar?dry=1   con la cabecera `x-admin-key`
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
         const r = await revisarMorosos({ ensayo });
         console.log(`🧹 Barrido de impagos${ensayo ? ' (ENSAYO)' : ''}: `
             + `${r.revisadas} revisadas · ${r.suspendidos.length} suspendidos · `
-            + `${r.reactivados.length} reactivados · ${r.en_gracia.length} en gracia`);
+            + `${r.reactivados.length} reactivados · ${r.errores.length} errores`);
         return NextResponse.json({ ensayo, ...r }, { status: r.ok ? 200 : 500 });
     } catch (e) {
         console.error('barrido de impagos: falló', e);

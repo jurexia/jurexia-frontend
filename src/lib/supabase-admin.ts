@@ -345,7 +345,6 @@ export async function downgradeToFree(email: string, canceledSubscriptionId?: st
     }
 }
 
-/** Cuántos días de impago se aguantan antes de cortar el servicio. */
 /**
  * Bloquear una cuenta por disputa de cargo (15-sep-2026).
  *
@@ -437,8 +436,6 @@ export async function levantarCierreSolicitado(email: string): Promise<boolean> 
     return false;
 }
 
-export const DIAS_HASTA_SUSPENDER = Number(process.env.DIAS_HASTA_SUSPENDER || 14);
-
 /**
  * Cortar el servicio por impago SIN romper nada (31-ago-2026).
  *
@@ -455,18 +452,22 @@ export const DIAS_HASTA_SUSPENDER = Number(process.env.DIAS_HASTA_SUSPENDER || 1
  * Suspender es una fecha. El plan, el cupo y el vínculo con Stripe siguen
  * exactamente donde estaban, así que reactivar es poner esa fecha en NULL.
  *
- * EL UMBRAL SON 14 DÍAS desde la factura impagada, no un número de intentos.
- * Medido el 31-ago-2026: los diez morosos de ese día llevaban de 1 a 7 días,
- * Stripe seguía reintentando en los diez, y una factura que se revisó acabó
- * pagándose al octavo intento. Cortar antes es cortarle a quien iba a pagar.
+ * AL PRIMER RECHAZO, SIN PLAZO DE GRACIA (28-sep-2026). Del 31-ago al 28-sep
+ * se esperaban 14 días desde la factura impagada, pensando en quien iba a
+ * pagar tarde. El 28-sep había 21 suscripciones en mora y 7 de esos abogados
+ * habían hecho 58 preguntas después del rechazo —uno, 39 en doce días—.
+ * David: «suspensión inmediata
+ * ante el primer rechazo para que se vean obligados a actualizar su pago».
+ * Quien iba a pagar no pierde nada: actualiza su tarjeta en el muro y la
+ * cuenta se abre en el acto (`@/lib/cobro-pendiente`).
  */
 /**
  * Deja escrito desde cuándo hay una factura sin pagar —o lo borra al entrar el
- * pago—. Es lo único que el frontend necesita para avisar en pantalla: la
- * cuenta de días se hace contra `DIAS_HASTA_SUSPENDER`.
+ * pago—. Sirve de registro: desde el 28-sep la suspensión es inmediata y ya no
+ * hay cuenta atrás que enseñar.
  *
  * No toca `suspendido_at`: marcar el adeudo y cortar el acceso son dos cosas
- * distintas, separadas por catorce días.
+ * distintas, aunque hoy ocurran en el mismo instante.
  */
 export async function marcarImpago(email: string, desde: Date | null) {
     const normalizedEmail = email.toLowerCase().trim();

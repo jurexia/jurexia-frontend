@@ -4,26 +4,34 @@ import { createContext, useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { supabase, getUserProfile, getBloqueo, UserProfile, BloqueoCuenta } from '@/lib/supabase';
 import { CuentaSuspendida } from '@/components/CuentaSuspendida';
-import { AvisoImpago } from '@/components/AvisoImpago';
 import { CuentaBloqueada } from '@/components/CuentaBloqueada';
 import { esCierreSolicitado } from '@/lib/cierre-cuenta';
 import type { User, Session } from '@supabase/supabase-js';
 
 /**
- * Las rutas que un suspendido SÍ puede ver. Son las que llevan a la caja y
- * las que le permiten salir: encerrarlo sin dejarle pagar sería cobrarle a
- * puerta cerrada. Todo lo demás queda detrás del muro.
+ * Las rutas que ningún muro tapa: entrar y salir de la sesión, y leer los
+ * términos que explican por qué se está del otro lado. No dan acceso a nada.
+ *
+ * AL SUSPENDIDO POR IMPAGO, SÓLO ÉSTAS (28-sep-2026). Hasta ese día también
+ * tenía abiertas las páginas de la caja, y desde /precios podía contratar otro
+ * plan y dejar atrás la factura rechazada. Ahora su única salida es la del
+ * muro: actualizar su método de pago.
  */
-const RUTAS_ABIERTAS_EN_SUSPENSION = [
-    '/cuenta/suscripcion',
-    '/checkout',
-    '/precios',
+const RUTAS_DE_SESION = [
     '/entrar',
     '/login',
     '/registro',
     '/auth',
     '/terminos',
     '/privacidad',
+];
+
+/** Las páginas de la caja. Sólo para quien cerró su cuenta a petición propia:
+ *  ése se reabre contratando de nuevo, no pagando una factura. */
+const RUTAS_DE_LA_CAJA = [
+    '/cuenta/suscripcion',
+    '/checkout',
+    '/precios',
 ];
 
 export interface AuthContextType {
@@ -184,28 +192,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // El muro se pinta ENCIMA de `children`, no en su lugar: la aplicación
     // sigue montada detrás, así que al levantar la suspensión el usuario
     // vuelve a lo que estaba haciendo sin recargar ni perder el hilo.
+    //
+    // Desde el 28-sep-2026 cae al PRIMER cobro rechazado y sólo deja actualizar
+    // el método de pago: fuera del muro quedan nada más las rutas de sesión.
     const rutaActual = usePathname() || '';
-    const enRutaDePago = RUTAS_ABIERTAS_EN_SUSPENSION.some((r) => rutaActual.startsWith(r));
-    const suspendido = !!authState.profile?.suspendido_at && !enRutaDePago;
+    const enRutaDeSesion = RUTAS_DE_SESION.some((r) => rutaActual.startsWith(r));
+    const enRutaDeLaCaja = enRutaDeSesion || RUTAS_DE_LA_CAJA.some((r) => rutaActual.startsWith(r));
+    const suspendido = !!authState.profile?.suspendido_at && !enRutaDeSesion;
 
     // ── EL MURO DEL BLOQUEO POR DISPUTA (15-sep-2026) ─────────────────────
     //
-    // NO tiene rutas exentas, y es la diferencia con el muro de suspensión.
-    // Al suspendido se le deja llegar a la caja porque pagando recupera su
-    // cuenta; al bloqueado no hay caja que ofrecerle —su suscripción ya se
-    // canceló— y dejarle entrar a /checkout sería invitarle a contratar otra
-    // vez con la misma tarjeta que su banco puso en duda.
+    // NO tiene rutas exentas: al bloqueado no hay caja que ofrecerle —su
+    // suscripción ya se canceló— y dejarle entrar a /checkout sería invitarle
+    // a contratar otra vez con la misma tarjeta que su banco puso en duda.
     //
     // El bloqueo gana al muro de suspensión cuando coinciden: decirle «no
     // pudimos cobrarte» a quien desconoció el cargo sería contarle una
     // historia distinta de la que su propio banco ya le contó.
     //
-    // SALVO EL CIERRE QUE PIDIÓ EL PROPIO TITULAR (28-sep-2026). Ése sí se
-    // reabre pagando, así que a él se le dejan las mismas rutas de la caja que
-    // al suspendido: encerrarlo sin dejarle pagar sería prometerle en el muro
-    // una reactivación a la que no puede llegar.
+    // SALVO EL CIERRE QUE PIDIÓ EL PROPIO TITULAR (28-sep-2026). Ése se reabre
+    // contratando de nuevo, así que a él sí se le dejan las páginas de la
+    // caja: encerrarlo sin dejarle pagar sería prometerle en el muro una
+    // reactivación a la que no puede llegar.
     const cierrePropio = esCierreSolicitado(authState.bloqueo?.reason);
-    const bloqueado = !!authState.bloqueo && !(cierrePropio && enRutaDePago);
+    const bloqueado = !!authState.bloqueo && !(cierrePropio && enRutaDeLaCaja);
 
     return (
         <AuthContext.Provider value={authState}>
@@ -218,13 +228,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     userId={authState.user?.id}
                 />
             )}
-            {!bloqueado && suspendido && <CuentaSuspendida email={authState.profile?.email} />}
-            {/* El que todavía NO cae: se le dicen los días que le quedan y se le
-                abre su facturación. Va aquí, junto al muro, porque es el mismo
-                asunto en dos momentos y porque así aparece en toda la
-                aplicación, no sólo en la pantalla donde alguien se acordó. */}
-            {!bloqueado && !suspendido && (
-                <AvisoImpago impagoDesde={authState.profile?.impago_desde} />
+            {!bloqueado && suspendido && (
+                <CuentaSuspendida email={authState.profile?.email} userId={authState.user?.id} />
             )}
         </AuthContext.Provider>
     );

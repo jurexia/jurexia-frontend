@@ -1,5 +1,11 @@
 /**
- * El barrido diario de impagos: suspende a los 14 días y reactiva al pagar.
+ * El barrido diario de impagos: suspende al que debe y reactiva al que pagó.
+ *
+ * SIN PLAZO DE GRACIA DESDE EL 28-SEP-2026. Hasta ese día aquí se esperaban
+ * 14 días desde la factura impagada; ahora basta con que la suscripción esté
+ * en mora con una factura abierta. El webhook suspende al primer rechazo, y
+ * esto recoge a quien se le haya escapado —y, el día del cambio, a los 21 que
+ * ya estaban en mora dentro de la gracia vieja—.
  *
  * POR QUÉ NO BASTA EL WEBHOOK (31-ago-2026)
  * -----------------------------------------
@@ -14,7 +20,7 @@
  * puede correr todos los días sin miedo.
  *
  * LAS DOS DIRECCIONES, y las dos importan:
- *   · suspender al que lleva 14 días sin pagar, y
+ *   · suspender al que tiene un cobro rechazado sin cubrir, y
  *   · REACTIVAR al que ya pagó. Esto último es lo que evita el caso
  *     imperdonable: un cliente que pagó y sigue sin poder entrar porque un
  *     webhook se perdió.
@@ -23,7 +29,9 @@
 import { createClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 import { getStripe } from '@/lib/stripe';
-import { suspenderPorImpago, levantarSuspension, marcarImpago, DIAS_HASTA_SUSPENDER } from '@/lib/supabase-admin';
+import { suspenderPorImpago, levantarSuspension, marcarImpago } from '@/lib/supabase-admin';
+import { guardarTarjetaQuePague } from '@/lib/cobro-pendiente';
+import { avisarSuspension } from '@/lib/correo/suspension';
 
 function admin() {
     return createClient(
@@ -38,8 +46,6 @@ export interface ResultadoBarrido {
     revisadas: number;
     suspendidos: string[];
     reactivados: string[];
-    /** Morosos que aún no llegan al umbral: se miran, no se tocan. */
-    en_gracia: { email: string; dias: number }[];
     errores: string[];
 }
 
@@ -48,13 +54,12 @@ function correoDe(sub: Stripe.Subscription): string {
 }
 
 /** La factura abierta más antigua de esa suscripción, o null si no debe nada.
- *  Se devuelve la FECHA y no sólo los días porque de ella sale el aviso que ve
- *  el usuario: «se suspende en N días» se cuenta desde aquí. */
-async function adeudoMasViejo(stripe: Stripe, subId: string): Promise<Date | null> {
+ *  Se devuelve la factura entera porque el aviso de suspensión lleva su enlace
+ *  de pago y su importe. */
+async function facturaAbiertaMasVieja(stripe: Stripe, subId: string): Promise<Stripe.Invoice | null> {
     const facturas = await stripe.invoices.list({ subscription: subId, status: 'open', limit: 20 });
     if (!facturas.data.length) return null;
-    const masVieja = Math.min(...facturas.data.map(i => i.created ?? Math.floor(Date.now() / 1000)));
-    return new Date(masVieja * 1000);
+    return facturas.data.reduce((a, b) => ((a.created ?? 0) <= (b.created ?? 0) ? a : b));
 }
 
 const diasDesde = (d: Date) => Math.floor((Date.now() - d.getTime()) / 86400000);
@@ -62,10 +67,10 @@ const diasDesde = (d: Date) => Math.floor((Date.now() - d.getTime()) / 86400000)
 export async function revisarMorosos({ ensayo = false } = {}): Promise<ResultadoBarrido> {
     const stripe = getStripe();
     const r: ResultadoBarrido = {
-        ok: true, revisadas: 0, suspendidos: [], reactivados: [], en_gracia: [], errores: [],
+        ok: true, revisadas: 0, suspendidos: [], reactivados: [], errores: [],
     };
 
-    // ── 1. Los que deben: ¿ya pasaron los 14 días? ───────────────────────
+    // ── 1. Los que deben: suspensión inmediata ───────────────────────────
     for (const estado of ['past_due', 'unpaid'] as const) {
         for await (const sub of stripe.subscriptions.list({ status: estado, limit: 100 })) {
             r.revisadas++;
@@ -75,20 +80,29 @@ export async function revisarMorosos({ ensayo = false } = {}): Promise<Resultado
                 continue;
             }
             try {
-                const desde = await adeudoMasViejo(stripe, sub.id);
-                if (!desde) { if (!ensayo) await marcarImpago(email, null); continue; }   // sin factura abierta: nada que cobrar
+                const factura = await facturaAbiertaMasVieja(stripe, sub.id);
+                if (!factura) { if (!ensayo) await marcarImpago(email, null); continue; }   // sin factura abierta: nada que cobrar
+                const desde = new Date((factura.created ?? Math.floor(Date.now() / 1000)) * 1000);
                 const dias = diasDesde(desde);
-                if (dias < DIAS_HASTA_SUSPENDER) {
-                    r.en_gracia.push({ email, dias });
-                    // QUE SE ENTERE ANTES DE QUEDARSE FUERA. Hasta hoy esta
-                    // lista sólo se escribía en el reporte del barrido: el
-                    // usuario no sabía que debía hasta que dejaba de entrar.
-                    if (!ensayo) await marcarImpago(email, desde);
-                    continue;
-                }
                 if (ensayo) { r.suspendidos.push(`${email} (ensayo, ${dias} d)`); continue; }
-                if (await suspenderPorImpago(email, `${dias} días de impago`)) {
+
+                await marcarImpago(email, desde);
+                // Que la tarjeta con la que pague desde el correo se quede.
+                if (sub.payment_settings?.save_default_payment_method !== 'on_subscription') {
+                    try {
+                        await guardarTarjetaQuePague(stripe, sub.id);
+                    } catch (e) {
+                        r.errores.push(`${email}: no pude ajustar la tarjeta de ${sub.id}: ${e instanceof Error ? e.message : String(e)}`);
+                    }
+                }
+                if (await suspenderPorImpago(email, `cobro rechazado hace ${dias} d`)) {
                     r.suspendidos.push(`${email} (${dias} d)`);
+                    // Una sola vez: sólo a quien acaba de pasar a suspendido.
+                    try {
+                        await avisarSuspension(email, factura);
+                    } catch (e) {
+                        r.errores.push(`${email}: suspendido, pero no salió el aviso: ${e instanceof Error ? e.message : String(e)}`);
+                    }
                 }
             } catch (e) {
                 r.errores.push(`${email}: ${e instanceof Error ? e.message : String(e)}`);

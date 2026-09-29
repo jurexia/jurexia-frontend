@@ -11,11 +11,11 @@ import {
     levantarCierreSolicitado,
     marcarImpago,
     bloquearPorDisputa,
-    DIAS_HASTA_SUSPENDER,
     PlanType,
     PLAN_CONFIG,
 } from '@/lib/supabase-admin';
-import { PALETA, envolver, rotulo, esc, boton } from '@/lib/correo/plantilla';
+import { guardarTarjetaQuePague, suscripcionDeLaFactura } from '@/lib/cobro-pendiente';
+import { avisarSuspension } from '@/lib/correo/suspension';
 import { Resend } from 'resend';
 
 // Disable body parsing, we need the raw body for webhook verification
@@ -205,84 +205,6 @@ export async function POST(request: NextRequest) {
 }
 
 // ─── Handler Functions ──────────────────────────────────────────────
-
-function buildPaymentFailedEmail(name: string, attemptCount: number) {
-    const firstName = name.split(' ')[0] || 'Estimado/a';
-
-    return `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a;padding:40px 20px;">
-        <tr>
-            <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#111111;border-radius:16px;overflow:hidden;border:1px solid #222;">
-                    <!-- Header con gradiente -->
-                    <tr>
-                        <td style="background:linear-gradient(135deg,#1a1a1a 0%,#1f1f1f 100%);padding:32px 40px;border-bottom:1px solid #333;">
-                            <span style="font-size:26px;font-weight:800;color:#ffffff;letter-spacing:1px;">
-                                IUREX<span style="color:#c9a84c;">IA</span>
-                            </span>
-                        </td>
-                    </tr>
-                    <!-- Cuerpo principal -->
-                    <tr>
-                        <td style="padding:40px;">
-                            <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#ffffff;">
-                                Acción Requerida en tu Suscripción ⚠️
-                            </h1>
-                            <p style="margin:0 0 28px;font-size:15px;color:#999;line-height:1.6;">
-                                Hola ${firstName},
-                            </p>
-                            
-                            <div style="background-color:#1a1a1a;border:1px solid #dc262640;border-left:4px solid #dc2626;border-radius:12px;padding:24px;margin-bottom:24px;">
-                                <p style="margin:0;font-size:15px;color:#fca5a5;line-height:1.7;">
-                                    <strong>No hemos podido procesar el cargo de tu mensualidad.</strong><br/>
-                                    Esto suele ocurrir porque los fondos son insuficientes o la tarjeta ha caducado.
-                                </p>
-                            </div>
-
-                            <p style="margin:0 0 24px;font-size:15px;color:#ccc;line-height:1.6;">
-                                Para seguir disfrutando del Genio Jurídico y acceso ilimitado a nuestros modelos de IA, por favor <strong>actualiza tu método de pago</strong> en la plataforma.
-                            </p>
-                            
-                            <div style="background-color:#0d1b0d;border:1px solid #1a3a1a;border-radius:12px;padding:24px;margin-bottom:28px;">
-                                <p style="margin:0;font-size:14px;color:#86efac;line-height:1.6;">
-                                    🔄 Realizaremos intentos de cobro automáticos (intento ${attemptCount} de 3) en los próximos días. <strong>Si el último intento falla, tu suscripción pasará de forma automática al plan Gratuito.</strong>
-                                </p>
-                            </div>
-
-                            <table cellpadding="0" cellspacing="0" width="100%">
-                                <tr>
-                                    <td align="center" style="padding:8px 0 0;">
-                                        <a href="https://www.iurexia.com/plataforma"
-                                           style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8c56d);color:#1a1a1a;font-size:15px;font-weight:700;padding:14px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.3px;">
-                                            Actualizar Método de Pago →
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color:#0a0a0a;padding:24px 40px;border-top:1px solid #222;">
-                            <p style="margin:0 0 4px;font-size:12px;color:#666;text-align:center;">
-                                Si tienes dudas sobre tu facturación contáctanos a <a href="mailto:soporte@iurexia.com" style="color:#c9a84c;text-decoration:none;">soporte@iurexia.com</a>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>`;
-}
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     /* `customer_details.email` ES EL TERCERO Y HACE FALTA (14-sep-2026).
@@ -657,9 +579,11 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
         await downgradeToFree(email, subscription.id);
     } else if (subscription.status === 'past_due') {
-        // Payment is past due but subscription hasn't been canceled yet
-        // Keep current plan but log the warning
-        console.warn(`⚠️ Subscription past_due for ${email} — user retains access for now`);
+        // El plan se conserva; el acceso lo corta `invoice.payment_failed`,
+        // que suspende al primer rechazo y manda el aviso con la factura. No
+        // se suspende aquí: si este evento llegara primero, el de la factura
+        // encontraría la cuenta ya suspendida y el aviso no saldría nunca.
+        console.warn(`⚠️ Subscription past_due for ${email} — la suspensión la hace invoice.payment_failed`);
     } else {
         console.log(`ℹ️ Subscription status is "${subscription.status}" — no action taken`);
     }
@@ -705,8 +629,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         try {
             await levantarSuspension(email);
             // Y se borra la marca del adeudo aunque NO estuviera suspendido:
-            // quien pagó dentro del periodo de gracia no puede seguir viendo
-            // en pantalla que su cuenta se suspende en N días.
+            // pagó, así que ya no debe nada.
             await marcarImpago(email, null);
         } catch (e) {
             console.error(`⚠️ Entró el pago de ${email} pero no pude levantar su suspensión:`, e);
@@ -740,154 +663,69 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     }
 }
 
-/**
- * El aviso de suspensión. Lo que NO puede pasar es que el cliente descubra por
- * su cuenta que no puede consultar: eso es como se pierde a alguien que sólo
- * tenía la tarjeta vencida.
- *
- * El botón lleva a la factura alojada de Stripe, que se paga sin iniciar
- * sesión y sin que nosotros toquemos una tarjeta. Pagar ahí dispara
- * `invoice.payment_succeeded`, y ese webhook levanta la suspensión solo.
- */
-async function avisarSuspension(email: string, invoice: Stripe.Invoice) {
-    const clave = process.env.RESEND_API_KEY;
-    if (!clave) {
-        console.warn('⚠️ RESEND_API_KEY sin configurar — no sale el aviso de suspensión');
-        return;
-    }
-
-    const url = invoice.hosted_invoice_url || `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.iurexia.com'}/cuenta/suscripcion`;
-    const monto = `$${((invoice.amount_due ?? 0) / 100).toLocaleString('es-MX')} MXN`;
-
-    const cuerpo = `
-${rotulo('Su cuenta está en pausa')}
-<p style="margin:0 0 20px 0;">Le escribimos porque <strong style="color:${PALETA.tinta};">no hemos podido cobrar su mensualidad</strong> de ${esc(monto)}. Lo intentamos varias veces durante ${DIAS_HASTA_SUSPENDER} días, casi siempre por una tarjeta vencida o sin fondos en ese momento.</p>
-<p style="margin:0 0 20px 0;">Mientras tanto su acceso queda en pausa. <strong style="color:${PALETA.tinta};">No ha perdido nada</strong>: su plan, sus conversaciones, sus carpetas y sus documentos siguen intactos y le esperan.</p>
-${boton('Pagar y reactivar ahora', url)}
-<p style="margin:16px 0 20px 0;">El pago reactiva su cuenta <strong style="color:${PALETA.tinta};">de inmediato</strong>, sin que tenga que avisarnos ni esperar a nadie.</p>
-<p style="margin:0 0 20px 0;">Si prefiere no continuar, puede cancelar cuando quiera desde su perfil y no se le cobrará nada más. Y si esto es un error o algo no cuadra, respóndanos a este correo: lo revisa una persona.</p>
-<p style="margin:0;color:${PALETA.tinta};"><strong style="color:${PALETA.tinta};">Equipo de Iurexia</strong></p>
-`;
-
-    await new Resend(clave).emails.send({
-        from: process.env.FROM_EMAIL_REPORTES || 'Iurexia <soporte@iurexia.com>',
-        to: email,
-        subject: 'Su cuenta de Iurexia está en pausa — no pudimos cobrar su mensualidad',
-        html: envolver({ cuerpo, pie: 'Este aviso se envía una sola vez, cuando la cuenta entra en pausa por un cobro que no pudo completarse.' }),
-    });
-    console.log(`📧 Aviso de suspensión enviado a ${email}`);
-}
-
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
     const email = (invoice.customer_email || '').toLowerCase().trim();
     const attemptCount = invoice.attempt_count ?? 1;
+    const motivo = invoice.billing_reason || '';
 
     console.log('⚠️ Payment failed:', {
         invoiceId: invoice.id,
         customerEmail: email,
         attemptCount,
+        billingReason: motivo,
     });
 
     if (!email) {
-        console.warn('⚠️ No email to send payment failed notification to');
+        console.warn('⚠️ Cobro rechazado sin correo en la factura — no se puede suspender a nadie');
         return;
     }
 
-    // ¿CUÁNTOS DÍAS LLEVA SIN PAGAR? (31-ago-2026)
-    //
-    // Antes se cortaba con `attemptCount >= 4`, y ese número engaña: el
-    // contador es POR FACTURA y se reinicia cada ciclo, así que una factura
-    // vieja puede llevar nueve intentos y la del mes en curso ir por el
-    // primero. Medido ese día: los diez morosos llevaban de 1 a 7 días de
-    // retraso, Stripe seguía reintentando en los diez, y una de las facturas
-    // que se revisó acabó pagándose al octavo intento. Cortar por intentos
-    // corta a quien iba a pagar.
-    //
-    // Ahora manda el calendario: catorce días desde que se emitió la factura
-    // que no entró. Es la misma vara que usa el barrido diario.
-    const diasDeImpago = Math.floor((Date.now() / 1000 - (invoice.created ?? 0)) / 86400);
+    // SÓLO LAS RENOVACIONES DE UNA SUSCRIPCIÓN. El primer cobro de un alta
+    // (`subscription_create`) que falla deja la suscripción `incomplete`: esa
+    // persona nunca tuvo el plan, así que no hay acceso de pago que cortar, y
+    // suspenderla le cerraría hasta el nivel gratuito. Las facturas sueltas
+    // tampoco son una mensualidad.
+    if (motivo === 'subscription_create' || !motivo.startsWith('subscription')) {
+        console.log(`ℹ️ Cobro rechazado de ${email} (${motivo || 'sin motivo'}): no es una renovación — no se suspende`);
+        return;
+    }
 
-    // EL AVISO EMPIEZA HOY, no mañana. El barrido diario también escribe esta
-    // marca, pero corre a las 08:00: sin esto, quien falla el cobro por la
-    // tarde no vería el aviso hasta el día siguiente. De aquí sale la banda
-    // «su cuenta se suspende en N días» con el botón para cambiar la tarjeta.
     try {
         await marcarImpago(email, new Date((invoice.created ?? Math.floor(Date.now() / 1000)) * 1000));
     } catch (e) {
         console.error(`⚠️ No pude marcar el impago de ${email}:`, e);
     }
 
-    if (diasDeImpago >= DIAS_HASTA_SUSPENDER) {
-        console.warn(`🚨 ${email} lleva ${diasDeImpago} días sin pagar (${attemptCount} intentos) — se suspende`);
-        // `invoice.subscription` DESAPARECIÓ de la API en la versión que usamos
-        // (2026-01-28.clover): Stripe lo movió a `parent.subscription_details`.
-        // Leerlo del sitio viejo devolvía siempre undefined, y eso no fallaba
-        // ruidosamente: apagaba el candado de `downgradeToFree`.
-        //
-        // Ese candado existe para no degradar a quien YA se cambió a otro plan.
-        // Sin id, el candado se salta, y la secuencia real es ésta: un cliente
-        // moroso mejora su plan (el propio checkout lo permite: «past_due +
-        // plan distinto → cancelar el viejo y seguir»), Stripe sigue
-        // reintentando la factura vieja, al cuarto intento entra aquí y se
-        // degrada a gratuito a alguien que acaba de pagar más.
-        //
-        // Comprobado el 22-ago-2026: ningún suscriptor activo está hoy en
-        // gratuito, así que tampoco había daño consumado. Se lee del sitio
-        // nuevo y se deja el viejo como respaldo por si cambia la versión.
-        const facturaConPadre = invoice as unknown as {
-            parent?: { subscription_details?: { subscription?: string | { id: string } } };
-            subscription?: string | { id: string };
-        };
-        const refSub = facturaConPadre.parent?.subscription_details?.subscription
-            ?? facturaConPadre.subscription;
-        const failedSubId = typeof refSub === 'string' ? refSub : refSub?.id;
-        if (!failedSubId) {
-            console.warn(`⚠️ Sin id de suscripción en la factura de ${email}`);
+    // Que la tarjeta con la que pague desde el enlace del correo se quede para
+    // los cobros siguientes; si no, el mes que viene volvería a caer.
+    const subId = suscripcionDeLaFactura(invoice);
+    if (subId) {
+        try {
+            await guardarTarjetaQuePague(getStripe(), subId);
+        } catch (e) {
+            console.error(`⚠️ No pude ajustar la tarjeta de ${subId} (${email}):`, e);
         }
+    } else {
+        console.warn(`⚠️ Sin id de suscripción en la factura de ${email}`);
+    }
 
-        // SUSPENDER, NO DEGRADAR. La suscripción de Stripe se queda como está
-        // —viva y cobrable— y el plan del cliente también: lo único que cambia
-        // es que no puede consultar hasta que el pago entre. Ver
-        // `suspenderPorImpago`, que explica por qué degradar era peor.
-        await suspenderPorImpago(email, `${diasDeImpago} días de impago`);
+    // SUSPENSIÓN AL PRIMER RECHAZO (28-sep-2026). Del 31-ago al 28-sep aquí se
+    // esperaban 14 días desde la factura impagada; mientras tanto se seguía
+    // consultando sin pagar —el 28-sep, 7 de los 21 en mora, con 58 preguntas
+    // hechas después del rechazo—. Ahora
+    // el primer rechazo suspende, y el muro sólo deja actualizar la tarjeta.
+    //
+    // SUSPENDER, NO DEGRADAR: la suscripción de Stripe sigue viva y cobrable y
+    // el plan del cliente también. Ver `suspenderPorImpago`.
+    const recienSuspendido = await suspenderPorImpago(email, `cobro rechazado (intento ${attemptCount})`);
 
+    // El aviso sale UNA vez: cuando la cuenta acaba de pasar a suspendida. Los
+    // reintentos de Stripe que vuelvan a fallar no mandan otro correo.
+    if (recienSuspendido) {
         try {
             await avisarSuspension(email, invoice);
         } catch (e) {
             console.error(`⚠️ Suspendido ${email} pero no salió el aviso:`, e);
-        }
-    } else {
-        console.log(`⚠️ Payment failed for ${email} (attempt ${attemptCount}, ${diasDeImpago} días) — awaiting retry and sending email`);
-
-        try {
-            // Get user's name for personalization
-            const supabase = getSupabaseAdmin();
-            const { data: user } = await supabase
-                .from('users')
-                .select('full_name')
-                .eq('email', email)
-                .single();
-
-            const fullName = user?.full_name || 'Usuario';
-
-            // Send warning email
-            const apiKey = process.env.RESEND_API_KEY;
-            if (apiKey) {
-                const resend = new Resend(apiKey);
-                const fromEmail = process.env.FROM_EMAIL || 'Iurexia Facturación <noreply@iurexia.com>';
-
-                await resend.emails.send({
-                    from: fromEmail,
-                    to: email,
-                    subject: '⚠️ Error al procesar tu pago de Iurexia',
-                    html: buildPaymentFailedEmail(fullName, attemptCount),
-                });
-                console.log(`📧 Failed payment notification sent to ${email}`);
-            } else {
-                console.warn('⚠️ RESEND_API_KEY not set - skipping failed payment email');
-            }
-        } catch (err) {
-            console.error(`❌ Failed to send payment failed email to ${email}:`, err);
         }
     }
 }
