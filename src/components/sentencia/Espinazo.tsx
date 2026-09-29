@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Check, Lock, LogOut, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Check, Lock, LogOut, RotateCcw } from 'lucide-react';
 import { cn } from './primitivas';
+import type { EstadoDeLaSesion } from './api';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    EL ESPINAZO: CUATRO BOTONES
@@ -31,8 +32,34 @@ const PASOS: { n: PasoDelEspinazo; titulo: string; sub: string }[] = [
 
 type Estado = 'activo' | 'hecho' | 'listo' | 'cerrado';
 
+/* LA INSIGNIA ÚNICA (rediseño, etapa 4): en qué punto está el asunto, y si
+   lo hecho quedó desactualizado. Sólo informa; los motivos, al pasar encima. */
+const ROTULO_ESTADO: Record<string, { texto: string; clase: string }> = {
+    en_analisis: { texto: 'en análisis', clase: 'border-white/15 text-white/65' },
+    faltan_insumos: { texto: 'faltan insumos', clase: 'border-amber-400/40 text-amber-200/90' },
+    justificacion_pendiente: { texto: 'justificación pendiente', clase: 'border-amber-400/40 text-amber-200/90' },
+    borrador_sin_plan: { texto: 'borrador sin plan', clase: 'border-red-400/40 text-red-200/85' },
+    proyecto_verificado: { texto: 'proyecto verificado', clase: 'border-emerald-400/40 text-emerald-200/90' },
+};
+
+export function InsigniaDeEstado({ e }: { e?: EstadoDeLaSesion | null }) {
+    if (!e || (!e.estado && !e.desactualizado)) return null;
+    const r = e.estado ? ROTULO_ESTADO[e.estado] : null;
+    return (
+        <div data-estado-sesion={e.estado || 'desactualizado'} title={e.motivos.join(' · ') || undefined}
+             className="flex flex-wrap items-center gap-1.5 text-[11px]">
+            {r && <span className={cn('rounded-full border px-2 py-0.5', r.clase)}>{r.texto}</span>}
+            {e.desactualizado && (
+                <span className="flex items-center gap-1 rounded-full border border-amber-400/40 px-2 py-0.5 text-amber-200/90">
+                    <AlertTriangle className="h-3 w-3" />desactualizado
+                </span>
+            )}
+        </div>
+    );
+}
+
 export default function Espinazo({
-    activo, hechos, abiertos, corriendo, onIr, nota, onSalir,
+    activo, hechos, abiertos, corriendo, onIr, nota, onSalir, insignia,
 }: {
     /** El paso en el que está el secretario. */
     activo: PasoDelEspinazo;
@@ -47,6 +74,8 @@ export default function Espinazo({
      *  los asuntos en curso y la elección de por dónde empezar—. Sin esto no
      *  había forma de salir de un proyecto sin recargar la página. */
     onSalir?: () => void;
+    /** Rediseño, etapa 4: el estado de la sesión (null = no se pinta). */
+    insignia?: EstadoDeLaSesion | null;
 }) {
     const estadoDe = (n: PasoDelEspinazo): Estado =>
         n === activo ? 'activo'
@@ -54,6 +83,7 @@ export default function Espinazo({
                 : abiertos?.includes(n) ? 'listo' : 'cerrado';
     return (
         <nav aria-label="Pasos del taller" className="flex flex-col gap-2">
+            <InsigniaDeEstado e={insignia} />
             {PASOS.map((p) => {
                 const e = estadoDe(p.n);
                 const cerrado = e === 'cerrado';

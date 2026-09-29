@@ -2040,6 +2040,7 @@ export default function TallerDeSentencias() {
                     {(paso !== 'ficha' || via || pendientes.length > 0) && (
                         <Espinazo activo={pasoEspinazo} hechos={hechosEspinazo}
                                   abiertos={abiertosEspinazo}
+                                  insignia={delAsunto?.estadoSesion ?? null}
                                   corriendo={corriendo} onIr={irAlPaso}
                                   onSalir={() => setVuelta('historial')}
                                   nota={<><span className="text-white/60">Un paso a la vez.</span> Puedes volver

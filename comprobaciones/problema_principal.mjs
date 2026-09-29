@@ -72,7 +72,7 @@ const REAL = path.join(TMP, 'real');
 const conReact = [['require("react")', `require(${JSON.stringify(REACT)})`],
                   ['require("lucide-react")', `require(${JSON.stringify(LUCIDE)})`]];
 for (const f of ['api.ts', 'tipos.ts', 'calificaciones.ts', 'recalificacion.ts', 'tarjetaDelPrincipal.ts',
-                 'primitivas.tsx', 'FilaDelEspejo.tsx', 'SolucionesPosibles.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
+                 'primitivas.tsx', 'FilaDelEspejo.tsx', 'SolucionesPosibles.tsx', 'Espinazo.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
                  'EstudiarJuntos.tsx']) {
     transpilar(REAL, f, conReact);
 }
@@ -965,6 +965,28 @@ const FICHA_631 = {
         pregunta_decisiva: '¿X (prueba)?', figura: '', proposicion_toral: null } })))));
     ok(!h0.includes('Las soluciones que caben') && api.tarjetaDe(base()).deliberacion === null,
        'E3: sin la lista (servidor sin la bandera), la tarjeta de siempre');
+}
+
+/* ═══ 9 · LA INSIGNIA DEL ESTADO DE LA SESIÓN (rediseño, etapa 4) ═══ */
+{
+    const esp = req('./Espinazo.js');
+    ok(api.estadoSesionDe(null) === null && api.estadoSesionDe({ estado: '', desactualizado: false }) === null
+       && api.estadoSesionDe({ estado: 'inventado' }) === null, 'E4: sin estado que decir, null (no se inventa insignia)');
+    const e = api.estadoSesionDe({ estado: 'justificacion_pendiente', desactualizado: true, motivos: [
+        { marca: 'propuesta', insumo: 'ficha', tipo: 'cambio', antes: 'a', ahora: 'b', invalida: true },
+        { marca: 'plan', tipo: 'arrastre', de: 'propuesta', invalida: true },
+        { texto: 'Motivo dicho por el servidor.' }, 7] });
+    ok(e.estado === 'justificacion_pendiente' && e.desactualizado
+       && e.motivos[0] === 'la propuesta: cambió ficha desde que se hizo'
+       && e.motivos[1] === 'el plan del estudio: depende de la propuesta, que cambió'
+       && e.motivos[2] === 'Motivo dicho por el servidor.', 'E4: el estado, desactualizado y los motivos en frases');
+    const h = muestra('E4 · la insignia', pintar(React.createElement(esp.InsigniaDeEstado, { e })));
+    ok(h.includes('justificación pendiente') && h.includes('desactualizado') && h.includes('data-estado-sesion="justificacion_pendiente"')
+       && h.includes('la propuesta: cambió ficha'), 'E4: la insignia con su rótulo, «desactualizado» y los motivos al pasar encima');
+    ok(pintar(React.createElement(esp.InsigniaDeEstado, { e: null })) === '', 'E4: sin estado, nada');
+    const soloViejo = api.estadoSesionDe({ estado: '', desactualizado: true, motivos: [] });
+    ok(soloViejo && soloViejo.estado === '' && pintar(React.createElement(esp.InsigniaDeEstado, { e: soloViejo })).includes('desactualizado'),
+       'E4: desactualizado sin estado también se enseña');
 }
 
 const iHtml = process.argv.indexOf('--html');

@@ -1761,6 +1761,9 @@ export interface ContextoDelAsunto {
      *  'listo' · 'fallo'. La pantalla lo pregunta cada pocos segundos y, con
      *  la propuesta lista, la pide y pasa a decidir. */
     avance: { consulta: string; contraste: string; propuesta: string };
+    /** Rediseño, etapa 4: UNA insignia con el punto en que está el asunto y si
+     *  lo hecho quedó desactualizado. null si el servidor no la manda. */
+    estadoSesion: EstadoDeLaSesion | null;
     problemas: { pregunta: string; resolvio: string; combate: string; jerarquia: string }[];
     avisos: string[];
     /** LA FICHA, PARA QUE LA PANTALLA NO VUELVA EN BLANCO. Al retomar un asunto
@@ -1992,6 +1995,7 @@ export async function contextoDelAsunto(
             contraste: String(j.avance?.contraste?.estado ?? ''),
             propuesta: String(j.avance?.propuesta?.estado ?? ''),
         },
+        estadoSesion: estadoSesionDe(j.estado_sesion),
         problemas: (j.problemas ?? []) as ContextoDelAsunto['problemas'],
         encargo: (j.encargo ?? null) as Record<string, string> | null,
         proyecto: j.proyecto
@@ -2345,6 +2349,50 @@ export function cambiosDelPlan(x: unknown): CambioDelPlan[] {
             cuenta: c.cuenta === true,
         } as CambioDelPlan;
     }).filter((c): c is CambioDelPlan => c !== null);
+}
+
+/** ═══ EL ESTADO DE LA SESIÓN (rediseño, etapa 4) ═══
+ *  `taller_estado.estado_sesion` en el servidor: en qué punto está el asunto
+ *  y si lo hecho quedó desactualizado porque cambió algo que consumió. Sólo
+ *  informa: no bloquea nada. «» = nada que decir (no se pinta insignia). */
+export type EstadoSesion = '' | 'en_analisis' | 'faltan_insumos' | 'justificacion_pendiente'
+    | 'borrador_sin_plan' | 'proyecto_verificado';
+
+export interface EstadoDeLaSesion {
+    estado: EstadoSesion;
+    desactualizado: boolean;
+    /** Por qué, en frases, de la causa al arrastre. */
+    motivos: string[];
+}
+
+const _ESTADOS_SESION = new Set(['en_analisis', 'faltan_insumos', 'justificacion_pendiente',
+                                 'borrador_sin_plan', 'proyecto_verificado']);
+const _MARCA_LEGIBLE: Record<string, string> = {
+    consulta: 'la consulta del acervo', contraste: 'el contraste', analisis: 'el análisis de la litis',
+    propuesta: 'la propuesta', deliberacion: 'la deliberación', plan: 'el plan del estudio',
+    proyecto: 'el proyecto', decisiva: 'la pregunta decisiva', requisitos: 'los requisitos',
+};
+
+function _motivoLegible(m: unknown): string {
+    const o = _o(m);
+    if (!o) return _t(m);
+    if (_t(o.texto)) return _t(o.texto);
+    const marca = _MARCA_LEGIBLE[_t(o.marca)] ?? _t(o.marca).replace(/_/g, ' ');
+    const tipo = _t(o.tipo);
+    if (tipo === 'arrastre') return `${marca}: depende de ${_MARCA_LEGIBLE[_t(o.de)] ?? _t(o.de)}, que cambió`;
+    if (tipo === 'anterior_a_estados') return 'el proyecto es anterior a esta revisión: no se puede decir';
+    const insumo = _t(o.insumo).replace(/_/g, ' ');
+    return insumo ? `${marca}: cambió ${insumo} desde que se hizo` : `${marca}: ${tipo.replace(/_/g, ' ')}`;
+}
+
+export function estadoSesionDe(x: unknown): EstadoDeLaSesion | null {
+    const o = _o(x);
+    if (!o) return null;
+    const e = _t(o.estado);
+    const estado = (_ESTADOS_SESION.has(e) ? e : '') as EstadoSesion;
+    const desactualizado = o.desactualizado === true;
+    if (!estado && !desactualizado) return null;
+    return { estado, desactualizado, motivos: _l(o.motivos).map(_motivoLegible).filter(Boolean).slice(0, 6) };
 }
 
 export function planDe(x: unknown): PlanDelEstudio | null {
