@@ -7,8 +7,8 @@ import type { TesisDelAcervo } from './api';
 import type { ApoyoDeLaVia, FilaDeTuTribunal, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 import { fraseDe, legible } from './calificaciones';
 import {
-    apoyosParaCitar, contrasteParaVia, hayAlternativaReal, propuestaDelJuez, ladoQueRevoca, prosperaDeLaVia,
-    rotuloDeSuerte, sinRecomendar, textoDeFuerza, tribunalPorLado, vigenciaDudosa,
+    apoyosParaCitar, contrasteParaVia, decisivaYaEsElPrincipal, hayAlternativaReal, lineaDeLaFicha,
+    preguntaRecurridaAparte, propuestaDelJuez, ladoQueRevoca, prosperaDeLaVia, rotuloDeSuerte, sinRecomendar, textoDeFuerza, tribunalPorLado, vigenciaDudosa,
 } from './tarjetaDelPrincipal';
 import type { LadoDeLaTarjeta, ViaActiva } from './tarjetaDelPrincipal';
 
@@ -354,6 +354,10 @@ export default function ProblemaPrincipal({
         : ladoSecundarios === 'propuesta' ? prosperaDeLaVia(vp) : null;
     const opuestaSinRazon = alt && !!vo && !vo.razon.trim();
     const qc = t.que_la_cambiaria;
+    // SPEC E2/E3 (AR 631/2025): quién es quién, y la pregunta del a quo aparte.
+    const ficha = lineaDeLaFicha(t.ficha);
+    const recurrida = preguntaRecurridaAparte(p);
+    const decisivaRepetida = decisivaYaEsElPrincipal(p, t.deliberacion?.pregunta_decisiva);
     const hayQueCambia = !!qc && (!!qc.crux || qc.constancias_indispensables.length > 0 || !!qc.limite_protector);
 
     /* LOS TRES BOTONES. Con «no alcanza», el de su criterio va primero y es el
@@ -410,6 +414,25 @@ export default function ProblemaPrincipal({
                 )}
             </div>
 
+            {/* LA FICHA PROCESAL, en una línea (SPEC E2). En el 631 nadie decía
+                en pantalla que recurría la tercera interesada contra una
+                concesión y que el sobreseimiento del otro acto estaba firme. */}
+            {ficha.length > 0 && (
+                <p data-ficha className="mt-2 text-[12px] leading-relaxed text-white/60"
+                   title={t.ficha?.avisos.length ? t.ficha.avisos.join(' · ') : undefined}>
+                    {ficha.map((s, i) => (
+                        <React.Fragment key={s.rotulo}>
+                            {i > 0 && <span className="text-white/25"> · </span>}
+                            <span className="text-white/40">{s.rotulo}: </span>{s.texto}
+                        </React.Fragment>
+                    ))}
+                    {!!t.ficha?.avisos.length && (
+                        <span className="text-amber-200/80"> · {t.ficha.avisos.length === 1 ? '1 aviso'
+                            : `${t.ficha.avisos.length} avisos`}</span>
+                    )}
+                </p>
+            )}
+
             {/* ── 1 · EL PRINCIPAL ── */}
             {p ? (
                 <>
@@ -419,6 +442,15 @@ export default function ProblemaPrincipal({
                         </span>
                         {p.pregunta}
                     </h2>
+                    {/* La pregunta que decide va arriba; la del a quo, debajo y
+                        como dato (SPEC E3): en el 631 el motor razonó con la de
+                        la recurrida («¿alteró la cosa juzgada?») en lugar de la
+                        figura que decide. */}
+                    {recurrida && (
+                        <p data-pregunta-recurrida className="mt-1 text-[13px] leading-relaxed text-white/60">
+                            <span className="text-white/40">Así lo planteó la recurrida: </span>{recurrida}
+                        </p>
+                    )}
                     <p className="mt-1 text-[12px] text-white/45">
                         {p.jerarquia_de === 'secretario' ? 'Lo marcaste tú como principal'
                             : p.jerarquia_de === 'por_omision' ? 'Principal por ser el primero: ningún paso lo marcó'
@@ -437,7 +469,7 @@ export default function ProblemaPrincipal({
                     )}
                     {t.deliberacion && (t.deliberacion.pregunta_decisiva || t.deliberacion.figura) && (
                         <div className="mt-2 space-y-1 text-[13px] leading-relaxed text-white/75">
-                            {t.deliberacion.pregunta_decisiva && (
+                            {t.deliberacion.pregunta_decisiva && !decisivaRepetida && (
                                 <p><span className="text-white/45">Lo que decide: </span>{t.deliberacion.pregunta_decisiva}</p>
                             )}
                             {t.deliberacion.figura && <p><span className="text-white/45">La figura: </span>{t.deliberacion.figura}</p>}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { PropuestaDeSolucion, RespuestaPropuesta, TesisDelAcervo } from './api';
 import { leerTarjeta } from './api';
 import type {
-    ApoyoDeLaVia, ConceptosOmitidos, FilaDeTuTribunal, ProblemaJuridico, SuerteDelSecundario, TarjetaDecision,
+    ApoyoDeLaVia, ConceptosOmitidos, FichaProcesal, FilaDeTuTribunal, PrincipalDeLaTarjeta, ProblemaJuridico, SuerteDelSecundario, TarjetaDecision,
     ViaDeLaTarjeta,
 } from './tipos';
 import { grupoDe, legible } from './calificaciones';
@@ -436,7 +436,7 @@ export function tarjetaDeLaPropuesta(
         estado_calculo: vp ? 'listo' : 'sin_propuesta',
         huella: '',
         principal: pral ? {
-            numero: iP + 1, pregunta: pral.pregunta, clase: '',
+            numero: iP + 1, pregunta: pral.pregunta, pregunta_recurrida: '', clase: '',
             jerarquia_de: (pral.jerarquia ?? '') === 'principal' ? 'fase3' : 'por_omision',
             por_que_principal: g?.contexto?.tema_principal ?? '',
             discrepa_motor: null,
@@ -461,10 +461,75 @@ export function tarjetaDeLaPropuesta(
         deliberacion: null,
         // El de /taller/proponer ya viene calculado para la vía que prospera.
         conceptos_omitidos: propuesta.conceptosOmitidos ?? null,
+        // La ficha la arma el servidor por código; la pantalla no la adivina.
+        ficha: null,
         deliberacion_estado: '',
         avisos: [],
         origen: 'local',
     };
+}
+
+/* ── LA PREGUNTA DECISIVA Y LA FICHA (SPEC E3 y E2, AR 631/2025) ─────────── */
+
+const _comparable = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[¿?¡!.,;:«»"'()]/g, ' ').replace(/\s+/g, ' ').trim();
+
+/** «Así lo planteó la recurrida», sólo si dice OTRA cosa que la pregunta que
+ *  decide: en el 631 la recurrida preguntó por la cosa juzgada y lo que decide
+ *  es si el adquirente puede sustituirse a la actora en la ejecución; si el
+ *  servidor manda las dos iguales, repetirla sería ruido. */
+export function preguntaRecurridaAparte(p: PrincipalDeLaTarjeta | null | undefined): string {
+    const r = (p?.pregunta_recurrida ?? '').trim();
+    if (!r) return '';
+    return _comparable(r) === _comparable(p?.pregunta ?? '') ? '' : r;
+}
+
+/** La línea «Lo que decide» de la deliberación sobra cuando ya es el
+ *  encabezado de la tarjeta (la E3 pone la decisiva en `principal.pregunta`). */
+export function decisivaYaEsElPrincipal(p: PrincipalDeLaTarjeta | null | undefined, decisiva: string | null | undefined): boolean {
+    return !!p && !!(decisiva ?? '').trim() && _comparable(decisiva ?? '') === _comparable(p.pregunta);
+}
+
+const _SENTIDO_DE_LA_RECURRIDA: Record<string, string> = {
+    sobresee: 'sobresee', sobreseimiento: 'sobresee', sobreseyo: 'sobresee', 'sobreseyó': 'sobresee',
+    concede: 'concede', concedio: 'concede', 'concedió': 'concede', concesion: 'concede', 'concesión': 'concede',
+    niega: 'niega', nego: 'niega', 'negó': 'niega', negativa: 'niega',
+};
+
+/** LA FICHA PROCESAL EN UNA LÍNEA: rótulo y texto por segmento, en el orden en
+ *  que se lee un asunto (quién pide amparo, contra quién y qué, quién más es
+ *  parte, qué resolvió el a quo, quién recurre y qué se revisa). Sólo lo que
+ *  consta: un segmento vacío no se pinta. En el 631 la línea dice de un vistazo
+ *  que recurre la tercera interesada contra la concesión, y que el
+ *  sobreseimiento del otro acto no es materia de la revisión. */
+export function lineaDeLaFicha(f: FichaProcesal | null | undefined): { rotulo: string; texto: string }[] {
+    if (!f) return [];
+    const out: { rotulo: string; texto: string }[] = [];
+    const pl = (n: number, uno: string, varios: string) => (n === 1 ? uno : varios);
+    if (f.quejosa) out.push({ rotulo: 'Quejosa', texto: f.quejosa });
+    if (f.responsables.length) {
+        out.push({
+            rotulo: pl(f.responsables.length, 'Responsable', 'Responsables'),
+            texto: f.responsables.map((r) => (r.autoridad && r.acto ? `${r.autoridad} (${r.acto})`
+                : r.autoridad || r.acto)).join('; '),
+        });
+    }
+    if (f.terceros.length) out.push({ rotulo: pl(f.terceros.length, 'Tercero', 'Terceros'), texto: f.terceros.join(', ') });
+    if (f.recurrida) {
+        const res = f.recurrida.resolvio.map((r) => {
+            const s = _SENTIDO_DE_LA_RECURRIDA[r.sentido.toLowerCase()] ?? r.sentido;
+            return s && r.acto ? `${s} (${r.acto})` : s || r.acto;
+        }).filter(Boolean).join('; ');
+        const texto = [f.recurrida.organo, res].filter(Boolean).join(': ');
+        if (texto) out.push({ rotulo: 'Recurrida', texto });
+    }
+    if (f.recurrente) {
+        const texto = [f.recurrente.quien, f.recurrente.caracter].filter(Boolean).join(', ');
+        if (texto) out.push({ rotulo: 'Recurre', texto });
+    }
+    // En el amparo directo no hay revisión: la materia es la del juicio.
+    if (f.materia) out.push({ rotulo: f.tipo.includes('directo') ? 'Materia' : 'Materia de la revisión', texto: f.materia });
+    return out;
 }
 
 /** La del servidor manda si está lista y trae la vía propuesta (o si la local

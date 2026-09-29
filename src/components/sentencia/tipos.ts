@@ -223,7 +223,14 @@ export interface ViaDeLaTarjeta {
 export interface PrincipalDeLaTarjeta {
     /** 1-based, el de la lista de la fase 3. */
     numero: number;
+    /** La pregunta que DECIDE (SPEC E3): la de la figura, no la del a quo. */
     pregunta: string;
+    /** El problema tal como lo planteó la recurrida, aparte y como dato. En el
+     *  AR 631/2025 el motor buscó y razonó con «¿la sustitución alteró la cosa
+     *  juzgada?» (el marco del a quo) y no con la figura que decide (si el
+     *  adquirente del inmueble puede sustituirse a la actora en la ejecución).
+     *  Vacío = el servidor no lo manda o coincide con la decisiva. */
+    pregunta_recurrida: string;
     clase: string;
     /** Quién lo hizo principal: «fase3» | «secretario» | «por_omision». */
     jerarquia_de: string;
@@ -290,6 +297,28 @@ export interface ConceptosOmitidos {
     reasuncion: string;
 }
 
+/** LA FICHA PROCESAL DEL ASUNTO (SPEC E2), la que arma el servidor UNA vez y
+ *  por código: quién es quién y qué se revisa. En el AR 631/2025 cada pieza
+ *  adivinaba los papeles y la recurrente —la tercera interesada, contra una
+ *  concesión, con un sobreseimiento firme de otro acto— se confundía con la
+ *  quejosa. La tarjeta la enseña en una línea (`lineaDeLaFicha`). Todo puede
+ *  faltar. */
+export interface FichaProcesal {
+    /** «amparo_revision» | «amparo_directo» | … */
+    tipo: string;
+    quejosa: string;
+    /** Cada autoridad responsable con su acto reclamado (en el AD, la Sala). */
+    responsables: { autoridad: string; acto: string }[];
+    terceros: string[];
+    /** Quién dictó la resolución recurrida (en la revisión, el Juzgado de
+     *  Distrito) y qué resolvió por acto: «sobresee» | «concede» | «niega». */
+    recurrida: { organo: string; resolvio: { acto: string; sentido: string }[] } | null;
+    recurrente: { quien: string; caracter: string } | null;
+    /** Qué es materia de la revisión (lo impugnado; lo demás quedó firme). */
+    materia: string;
+    avisos: string[];
+}
+
 export interface TarjetaDecision {
     formato: number;
     estado_calculo: 'listo' | 'sin_propuesta' | 'calculando';
@@ -319,6 +348,8 @@ export interface TarjetaDecision {
     /** En la vía que revoca: los conceptos que el juez no estudió y que hay que
      *  estudiar al reasumir jurisdicción (art. 93, fr. VI, LA). */
     conceptos_omitidos: ConceptosOmitidos | null;
+    /** null = el servidor aún no la manda (o la tarjeta es la local). */
+    ficha: FichaProcesal | null;
     /** En qué va la deliberación del juez sobre el principal: «en_curso» = la
      *  pantalla vuelve a preguntar (se lanza en segundo plano DESPUÉS de la
      *  propuesta y tarda minutos); «listo», «fallo», «apagada» o vacío (un

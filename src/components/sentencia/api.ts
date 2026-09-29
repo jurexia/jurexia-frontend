@@ -10,7 +10,7 @@
  * confirma quien los tiene delante.
  */
 
-import type { ApoyoDeLaVia, ConceptosOmitidos, FuerzaDelApoyo, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
+import type { ApoyoDeLaVia, ConceptosOmitidos, FichaProcesal, FuerzaDelApoyo, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 
 export interface EncargoAdelanto {
     numero: string;                 // «512/2026»
@@ -2556,6 +2556,51 @@ export function conceptosOmitidosDe(x: unknown): ConceptosOmitidos | null {
     };
 }
 
+/** Una lista que puede venir como lista o como un solo elemento suelto. */
+const _uno = (x: unknown): unknown[] => (Array.isArray(x) ? x : x === null || x === undefined || x === '' ? [] : [x]);
+/** El nombre de una parte: texto, o un objeto con su nombre dentro. */
+function _parte(x: unknown): string {
+    const o = _o(x);
+    return o ? _t(o.nombre ?? o.quien ?? o.autoridad) : _t(x);
+}
+
+/** LA FICHA PROCESAL (SPEC E2), leída con tolerancia: la arma la API en otra
+ *  rama y aquí se acepta la forma del contrato y sus variantes razonables
+ *  (lista o elemento suelto, texto u objeto, `materia_revision` u
+ *  `organo_recurrida`). null = no trae nada que enseñar. AR 631/2025: sin ella,
+ *  la pantalla no decía que recurre la TERCERA contra una concesión. */
+export function fichaDe(x: unknown): FichaProcesal | null {
+    const f = _o(x);
+    if (!f) return null;
+    const responsables = _uno(f.responsables ?? f.responsable).map((y) => {
+        const o = _o(y);
+        return o ? { autoridad: _t(o.autoridad ?? o.nombre), acto: _t(o.acto ?? o.acto_reclamado) }
+                 : { autoridad: _t(y), acto: '' };
+    }).filter((r) => r.autoridad || r.acto);
+    const rec = _o(f.recurrida);
+    const organo = _t(rec ? (rec.organo ?? rec.quien) : (f.organo_recurrida ?? f.recurrida));
+    const resolvio = _uno(rec ? rec.resolvio : f.resolvio).map((y) => {
+        const o = _o(y);
+        return o ? { acto: _t(o.acto), sentido: _t(o.sentido).toLowerCase() } : { acto: '', sentido: _t(y) };
+    }).filter((r) => r.acto || r.sentido);
+    const rte = _o(f.recurrente);
+    const quien = rte ? _t(rte.quien ?? rte.nombre) : _t(f.recurrente);
+    const caracter = _t(rte ? rte.caracter : f.caracter_recurrente);
+    const ficha: FichaProcesal = {
+        tipo: _t(f.tipo ?? f.tipo_asunto).toLowerCase(),
+        quejosa: _parte(f.quejosa ?? f.quejoso),
+        responsables,
+        terceros: _uno(f.terceros ?? f.tercero).map(_parte).filter(Boolean),
+        recurrida: organo || resolvio.length ? { organo, resolvio } : null,
+        recurrente: quien || caracter ? { quien, caracter } : null,
+        materia: _t(f.materia ?? f.materia_revision),
+        avisos: _l(f.avisos).map(_textoDeAviso).filter(Boolean),
+    };
+    const vacia = !ficha.quejosa && !responsables.length && !ficha.terceros.length && !ficha.recurrida
+        && !ficha.recurrente && !ficha.materia;
+    return vacia ? null : ficha;
+}
+
 export function tarjetaDe(x: unknown): TarjetaDecision | null {
     const j = _o(x);
     if (!j) return null;
@@ -2580,6 +2625,7 @@ export function tarjetaDe(x: unknown): TarjetaDecision | null {
         principal: p ? {
             numero: _n(p.numero) ?? 0,
             pregunta: _t(p.pregunta),
+            pregunta_recurrida: _t(p.pregunta_recurrida),
             clase: _t(p.clase),
             jerarquia_de: _t(p.jerarquia_de),
             por_que_principal: _t(p.por_que_principal),
@@ -2635,6 +2681,7 @@ export function tarjetaDe(x: unknown): TarjetaDecision | null {
             proposicion_toral: pt && _t(pt.dice) ? { dice: _t(pt.dice), cita: _t(pt.cita) } : null,
         } : null,
         conceptos_omitidos: co ? conceptosOmitidosDe(co) : null,
+        ficha: fichaDe(j.ficha),
         deliberacion_estado: (['en_curso', 'listo', 'fallo', 'apagada'] as const)
             .find((x) => x === _t(j.deliberacion_estado).toLowerCase()) ?? '',
         avisos: _l(j.avisos).map(_textoDeAviso).filter(Boolean),

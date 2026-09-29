@@ -21,6 +21,8 @@
 //       final con la suerte de cada accesorio y el plan esperando a la vía;
 //   5 · el hook que pide la tarjeta: una vez por propuesta, «calculando» con
 //       reintentos y lo de una propuesta vieja que no se pinta.
+//   6 · la pregunta decisiva con «así lo planteó la recurrida» y la ficha
+//       procesal en una línea (SPEC E4), tolerando que falten.
 //
 //   TMPDIR=<scratchpad> node comprobaciones/problema_principal.mjs
 //   … problema_principal.mjs --html <salida.html> [css]
@@ -794,6 +796,76 @@ module.exports = { __R: R, useState, useRef, useEffect, useMemo, useCallback, cr
     for (let k = 0; k < tdf.REINTENTOS_DELIBERACION + 5; k++) await correr();
     ok(m === tdf.REINTENTOS_DELIBERACION + 1 && !relojes.some((r) => r.vivo), 'hook: con tope, no pregunta para siempre');
     globalThis.setTimeout = stReal; globalThis.clearTimeout = ctReal;
+}
+
+/* ═══ 6 · LA PREGUNTA DECISIVA Y LA FICHA PROCESAL (SPEC E4, AR 631/2025) ═══
+   El 631 sintético: recurre la tercera interesada contra una concesión; el
+   sobreseimiento de otro acto quedó firme. Datos esquemáticos de prueba. */
+const FICHA_631 = {
+    tipo: 'amparo_revision', quejosa: 'Quejosa de prueba',
+    responsables: [{ autoridad: 'Juez responsable de prueba', acto: 'acto 1 de prueba' },
+                   { autoridad: 'Actuario de prueba', acto: 'acto 2 de prueba' }],
+    terceros: ['Tercera interesada de prueba'],
+    recurrida: { organo: 'Juzgado de Distrito de prueba',
+                 resolvio: [{ acto: 'acto 2 de prueba', sentido: 'sobresee' }, { acto: 'acto 1 de prueba', sentido: 'concede' }] },
+    recurrente: { quien: 'Tercera interesada de prueba', caracter: 'tercera interesada' },
+    materia: 'la concesión respecto del acto 1 (prueba)', avisos: ['aviso de ficha de prueba'],
+};
+{
+    // lectura tolerante
+    const sin = api.tarjetaDe(base());
+    ok(sin.ficha === null && sin.principal.pregunta_recurrida === '', 'E4: sin ficha ni pregunta_recurrida → null y vacío');
+    ok(api.tarjetaDe(base({ ficha: {} })).ficha === null && api.tarjetaDe(base({ ficha: 'x' })).ficha === null
+       && api.tarjetaDe(base({ ficha: [] })).ficha === null, 'E4: una ficha vacía o rara no se inventa');
+    const f = api.tarjetaDe(base({ ficha: FICHA_631 })).ficha;
+    ok(f && f.responsables.length === 2 && f.recurrida.resolvio.length === 2 && f.recurrente.caracter === 'tercera interesada'
+       && f.avisos.length === 1, 'E4: la ficha del contrato se lee entera');
+    const v = api.fichaDe({ quejoso: { nombre: 'Q' }, responsable: 'Sala de prueba', tercero: 'T',
+                            organo_recurrida: 'Juzgado X', resolvio: 'concede', recurrente: 'Autoridad Y',
+                            caracter_recurrente: 'autoridad responsable', materia_revision: 'M', tipo_asunto: 'Amparo_Revision' });
+    ok(v && v.quejosa === 'Q' && v.responsables[0].autoridad === 'Sala de prueba' && v.terceros[0] === 'T'
+       && v.recurrida.organo === 'Juzgado X' && v.recurrida.resolvio[0].sentido === 'concede'
+       && v.recurrente.quien === 'Autoridad Y' && v.recurrente.caracter === 'autoridad responsable'
+       && v.materia === 'M' && v.tipo === 'amparo_revision', 'E4: variantes (suelto, texto, alias) se leen');
+    // la línea
+    const l = td.lineaDeLaFicha(f);
+    ok(l.map((x) => x.rotulo).join('|') === 'Quejosa|Responsables|Tercero|Recurrida|Recurre|Materia de la revisión',
+       'E4: la línea en el orden de lectura del asunto');
+    ok(l[3].texto === 'Juzgado de Distrito de prueba: sobresee (acto 2 de prueba); concede (acto 1 de prueba)',
+       'E4: la recurrida con lo que resolvió por acto');
+    ok(l[4].texto === 'Tercera interesada de prueba, tercera interesada', 'E4: quién recurre y su carácter');
+    ok(td.lineaDeLaFicha(null).length === 0, 'E4: sin ficha, sin línea');
+    const ad = td.lineaDeLaFicha(api.fichaDe({ tipo: 'amparo_directo', quejosa: 'Q', responsables: [{ autoridad: 'Sala', acto: 'sentencia' }], materia: 'civil' }));
+    ok(ad.map((x) => x.rotulo).join('|') === 'Quejosa|Responsable|Materia' && ad[1].texto === 'Sala (sentencia)',
+       'E4: amparo directo sin recurrida ni «de la revisión»');
+    // la pregunta recurrida aparte
+    const P = (pregunta, pregunta_recurrida) => ({ pregunta, pregunta_recurrida });
+    ok(td.preguntaRecurridaAparte(P('¿Puede el adquirente sustituirse?', '¿Alteró la cosa juzgada?')) === '¿Alteró la cosa juzgada?',
+       'E4: la recurrida distinta se enseña');
+    ok(td.preguntaRecurridaAparte(P('¿Alteró la cosa juzgada?', 'Alteró la cosa  juzgada')) === '',
+       'E4: igual a la decisiva (salvo signos) no se repite');
+    ok(td.preguntaRecurridaAparte(null) === '' && td.preguntaRecurridaAparte(P('x', '')) === '', 'E4: tolera que falte');
+    ok(td.decisivaYaEsElPrincipal(P('¿Puede el adquirente sustituirse?'), 'puede el adquirente sustituirse')
+       && !td.decisivaYaEsElPrincipal(P('¿Otra?'), '¿Puede?') && !td.decisivaYaEsElPrincipal(P('x'), ''),
+       'E4: «Lo que decide» sólo sobra si ya es el encabezado');
+    // el HTML
+    const t = base({ ficha: FICHA_631,
+        principal: { ...base().principal, pregunta: '¿Pregunta decisiva de prueba?', pregunta_recurrida: '¿Pregunta del a quo de prueba?' },
+        deliberacion: { origen: 'deliberacion', pregunta_decisiva: '¿Pregunta decisiva de prueba?', figura: 'Figura de prueba',
+                        proposicion_toral: null } });
+    const h = muestra('E4 · decisiva, recurrida y ficha', pintar(React.createElement(PP, props(t))));
+    const iH2 = h.indexOf('¿Pregunta decisiva de prueba?'), iRec = h.indexOf('Así lo planteó la recurrida');
+    ok(iH2 > 0 && iRec > iH2 && h.includes('¿Pregunta del a quo de prueba?'), 'E4: la decisiva arriba y la de la recurrida debajo');
+    ok(h.split('¿Pregunta decisiva de prueba?').length === 2 && h.includes('Figura de prueba'),
+       'E4: «Lo que decide» no repite el encabezado; la figura sí se enseña');
+    ok(h.includes('data-ficha') && h.includes('Recurre: </span>Tercera interesada de prueba, tercera interesada')
+       && h.includes('Materia de la revisión: </span>') && h.includes('1 aviso') && h.includes('title="aviso de ficha de prueba"'),
+       'E4: la ficha en una línea con su aviso');
+    ok(h.indexOf('data-ficha') < iH2, 'E4: la ficha va antes de la pregunta, como contexto');
+    const h0 = pintar(React.createElement(PP, props(base())));
+    ok(!h0.includes('data-ficha') && !h0.includes('Así lo planteó la recurrida'), 'E4: sin los campos, la tarjeta de siempre');
+    const igual = pintar(React.createElement(PP, props(base({ principal: { ...base().principal, pregunta_recurrida: '¿Pregunta principal de prueba?' } }))));
+    ok(!igual.includes('Así lo planteó la recurrida'), 'E4: la recurrida igual a la decisiva no se pinta');
 }
 
 const iHtml = process.argv.indexOf('--html');
