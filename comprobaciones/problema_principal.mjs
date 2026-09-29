@@ -282,8 +282,15 @@ function base(extra = {}) {
                                              recalificar: false, previsto: false, ...s }, pr);
     ok(R({ sentido: 'innecesario', relacion: 'depende' }, true).texto === 'Queda sin materia: lo absorbe el principal',
        'innecesario con el principal que prospera');
-    ok(R({ sentido: 'innecesario', relacion: 'autonoma' }, true).texto.startsWith('Se estudia aparte'),
-       'autónomo: se estudia aparte');
+    /* «autonoma»/«mixta» del árbol = LIGADO al principal con causa propia,
+       no «tema distinto» (revisión del 28-sep-2026, la 462). */
+    ok(R({ sentido: 'innecesario', relacion: 'autonoma' }, true).texto === 'Innecesario por suficiencia',
+       'autónomo e innecesario: por suficiencia, no lo absorbe el principal');
+    ok(R({ sentido: 'infundado', relacion: 'autonoma' }, false).texto === 'Ligado al principal, con causa propia: se estudia · infundado'
+       && R({ sentido: 'infundado', relacion: 'autonoma' }, false).corto === 'se estudia',
+       'autónomo: ligado al principal, se estudia con su calificación (no «tema distinto»)');
+    ok(R({ sentido: 'fundado', relacion: 'mixta' }, true).texto.startsWith('Ligado al principal, con causa propia')
+       && !R({ sentido: 'fundado', relacion: 'mixta' }, true).texto.includes('tema distinto'), 'mixta: igual que autónoma');
     ok(R({ sentido: 'innecesario' }, false).texto === 'Innecesario por suficiencia', 'innecesario sin prosperar');
     ok(R({ sentido: 'infundado', relacion: 'presupone' }, false).texto === 'Cae con lo desestimado · infundado',
        'presupone y el principal cae');
@@ -627,6 +634,165 @@ module.exports = { __R: R, useState, useRef, useEffect, useMemo, useCallback, cr
     let pedidas = 0;
     await pintarHook(null, async () => { pedidas += 1; return null; });
     ok(pedidas === 0 && res === null, 'hook: sin propuesta no pide');
+    globalThis.setTimeout = stReal; globalThis.clearTimeout = ctReal;
+}
+
+/* ═══ 6 · LA REVISIÓN DEL 28-SEP-2026 ═══
+   Los siete hallazgos de la revisión del frente del 631: la deliberación que
+   no es la del motor, los conceptos por la vía que viaja, «autonoma», la
+   deliberación en camino y la vía confirmada. */
+{
+    // LA DELIBERACIÓN: la columna «propuesta» es la del juez (fundado) y el
+    // motor dijo «infundado». Datos esquemáticos.
+    const DELIB = { origen: 'deliberacion', pregunta_decisiva: '¿Pregunta decisiva (prueba)?', figura: '', proposicion_toral: null };
+    // Las columnas y la suerte de los secundarios, cambiadas de lado: la
+    // propuesta (del juez) es la fundada, donde el 2 queda innecesario.
+    const s2 = base().secundarios[0];
+    const juezRevoca = api.tarjetaDe(base({ deliberacion: DELIB,
+        vias: { propuesta: { ...base().vias.opuesta, razon: 'Razón del juez A (prueba).' },
+                opuesta: { ...base().vias.propuesta, razon: 'Razón del juez B (prueba).' } },
+        secundarios: [{ ...s2, en_propuesta: s2.en_opuesta, en_opuesta: s2.en_propuesta }] }));
+    const eco = { enGlobal: true, globalDictado: false, sentidoGlobal: 'infundado', razonGlobal: 'Razón del motor (prueba).',
+                  sentidoMotor: 'infundado', nTocados: 0, tarjeta: juezRevoca, elegida: null };
+    ok(td.viaActivaDe(eco) === 'contraria',
+       'deliberación contraria al motor: el eco del motor NO es «la propuesta»; casa con la opuesta → la contraria');
+    ok(td.viaActivaDe({ ...eco, tarjeta: api.tarjetaDe(base()) , razonGlobal: 'Razón de la vía A (prueba).' }) === 'propuesta',
+       'sin deliberación, el eco del motor sigue siendo la propuesta');
+    // misma calificación, otra razón
+    const juezMismo = api.tarjetaDe(base({ deliberacion: DELIB,
+        vias: { propuesta: { ...base().vias.opuesta, razon: 'Causahabiencia (prueba).' },
+                opuesta: { ...base().vias.propuesta } } }));
+    const ecoF = { ...eco, sentidoGlobal: 'fundado', sentidoMotor: 'fundado', razonGlobal: 'Cosa juzgada (prueba).', tarjeta: juezMismo };
+    ok(td.viaActivaDe(ecoF) === 'criterio', 'deliberación con la misma calificación y otra razón: el eco NO es la propuesta');
+    ok(td.viaActivaDe({ ...ecoF, globalDictado: true, razonGlobal: 'Causahabiencia (prueba).' }) === 'propuesta',
+       '… dictada con la razón del juez sí lo es');
+    ok(td.viaActivaDe({ ...ecoF, razonGlobal: 'Causahabiencia (prueba).' }) === 'propuesta',
+       '… y el eco con la misma razón también');
+    // «Resolver así» dicta cuando la columna no es la del motor
+    ok(td.resolverAsiDicta(juezMismo, { sentido: 'fundado', razon: 'Cosa juzgada (prueba).' }) === true,
+       'resolver así: misma calificación que el motor, otra razón del juez → se dicta con SU razón');
+    ok(td.resolverAsiDicta(juezMismo, { sentido: 'fundado', razon: 'Causahabiencia (prueba).' }) === false,
+       'resolver así: la misma razón → volver al eco');
+    ok(td.resolverAsiDicta(juezRevoca, { sentido: 'infundado', razon: 'x' }) === true, 'resolver así: otra calificación → se dicta');
+    ok(td.resolverAsiDicta(api.tarjetaDe(base()), { sentido: 'infundado', razon: 'otra' }) === false,
+       'resolver así sin deliberación: volver a la propuesta aunque la razón difiera en la forma');
+
+    // Decision con la deliberación contraria: la tarjeta final y el botón
+    const plan = { activo: true, firma: 'f', pedir: () => Promise.reject(new Error('x')), leer: () => Promise.reject(new Error('x')) };
+    const comunes = {
+        problemas: PROBLEMAS.map((p, i) => ({ ...p, sentido: PROPUESTA.propuestas[i].sentido || undefined })),
+        onCambiar: () => {}, onGenerar: () => {}, propuesta: PROPUESTA, modo: 'global',
+        sentidoGlobal: 'infundado', razonGlobal: 'razón global', globalDictado: false,
+        tocados: new Set(), esRecurso: true, plan, tesisDelMaterial: TESIS,
+    };
+    const h = muestra('6 · deliberación contraria al motor, sin elegir', pintar(React.createElement(Decision, { ...comunes, tarjeta: juezRevoca })));
+    ok(chip(h) === 'vía: la contraria · sin confirmar', 'D6: el chip dice lo que viaja (la contraria), no «la propuesta»');
+    ok(!h.includes('Aceptar y generar el proyecto') && h.includes('Generar el proyecto'),
+       'D6: sin «Aceptar» de una vía que no es la que se enseña como propuesta');
+    ok(h.includes('que no es la de la primera columna'), 'D6: se dice que lo que viaja no es la primera columna');
+    const fin = h.slice(h.indexOf('id="asi-sale"'));
+    const p2 = fin.slice(fin.indexOf('¿P2?'), fin.indexOf('¿P3?'));
+    ok(p2.includes('Infundado') && !p2.includes('innecesario'),
+       'D6: «Así va a salir» con la suerte de la vía que viaja (infundado), no la de la fundada');
+}
+{
+    // LOS CONCEPTOS POR LA VÍA QUE VIAJA — el 631: motor «infundado»,
+    // conceptos_omitidos calculado para «fundado».
+    const CO = { hacen_falta: true, tenemos: false, donde: '', por_que: 'por qué (prueba)', fundamento: 'art. 93, fr. VI (prueba)', reasuncion: 'concesion' };
+    const f = (x) => td.conceptosQueFaltan({ co: CO, necesitaMotor: false, sentidosQueViajan: ['infundado'], conceptos: '', ...x });
+    ok(f({}).pueden === true && f({}).faltan === false, 'conceptos: la vía que no prospera no los exige, pero se ofrecen');
+    ok(f({ sentidosQueViajan: ['fundado'] }).faltan === true && f({ sentidosQueViajan: ['fundado'] }).reasuncion === 'concesion',
+       'conceptos: EL 631 — en sentido opuesto (fundado) faltan aunque el motor dijera que no');
+    ok(f({ sentidosQueViajan: ['infundado', 'esencialmente_fundado'] }).faltan === true, 'conceptos: basta que algo de lo que viaja prospere');
+    ok(f({ sentidosQueViajan: ['fundado'], conceptos: 'pegados' }).faltan === false, 'conceptos: pegados, ya no faltan');
+    ok(f({ co: { ...CO, tenemos: true }, sentidosQueViajan: ['fundado'] }).faltan === false
+       && f({ co: { ...CO, tenemos: true } }).pueden === false, 'conceptos: si constan, ni faltan ni se ofrece el cuadro');
+    ok(f({ co: undefined, necesitaMotor: true }).faltan === true && f({ co: undefined, necesitaMotor: false, sentidosQueViajan: ['fundado'] }).faltan === false,
+       'conceptos: un servidor sin el contrato → lo del motor, como antes');
+    ok(f({ necesitaMotor: true, sentidosQueViajan: ['infundado'] }).faltan === false,
+       'conceptos: con el contrato, la vía que no prospera no se bloquea por lo que necesitaba la del motor');
+
+    // /taller/proponer: se lee el contrato entero
+    const fetchReal = globalThis.fetch;
+    let cuerpo = {};
+    globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => cuerpo });
+    cuerpo = { propuestas: [], necesita_conceptos: false, conceptos_omitidos: CO };
+    const r1 = await api.proponerSolucion('631/2025', 'casa@iurexia.com');
+    ok(r1.conceptosOmitidos && r1.conceptosOmitidos.reasuncion === 'concesion' && r1.conceptosOmitidos.fundamento
+       && r1.conceptosOmitidos.hacen_falta && !r1.conceptosOmitidos.tenemos, 'proponer: conceptos_omitidos leído entero');
+    cuerpo = { propuestas: [], conceptos_omitidos: null };
+    ok((await api.proponerSolucion('1', 'a@b')).conceptosOmitidos === null, 'proponer: null = no hay nada que estudiar');
+    cuerpo = { propuestas: [] };
+    ok((await api.proponerSolucion('1', 'a@b')).conceptosOmitidos === undefined, 'proponer: sin el campo → undefined');
+    globalThis.fetch = fetchReal;
+    const tc = api.tarjetaDe(base({ conceptos_omitidos: CO, deliberacion_estado: 'EN_CURSO' }));
+    ok(tc.conceptos_omitidos.reasuncion === 'concesion' && tc.conceptos_omitidos.fundamento && tc.deliberacion_estado === 'en_curso',
+       'tarjeta: el contrato de B entero y el estado de la deliberación');
+    ok(api.tarjetaDe(base({ deliberacion_estado: 'raro' })).deliberacion_estado === '', 'tarjeta: un estado desconocido no se inventa');
+
+    // Decision montada con el 631: motor infundado, él dicta la contraria
+    const plan = { activo: true, firma: 'f', pedir: () => Promise.reject(new Error('x')), leer: () => Promise.reject(new Error('x')) };
+    const prop = { ...PROPUESTA, necesitaConceptos: false, conceptosOmitidos: CO };
+    const comunes = {
+        problemas: PROBLEMAS.map((p, i) => ({ ...p, sentido: PROPUESTA.propuestas[i].sentido || undefined })),
+        onCambiar: () => {}, onGenerar: () => {}, propuesta: prop, modo: 'global',
+        sentidoGlobal: 'infundado', razonGlobal: 'razón global', globalDictado: false,
+        tocados: new Set(), esRecurso: true, plan, tesisDelMaterial: TESIS, onConceptosViolacion: () => {},
+    };
+    const pliegue = (x) => { const i = x.indexOf('id="conceptos-violacion"'); return i < 0 ? '' : x.slice(i, x.indexOf('</details>', i)); };
+    const generar = (x) => { const k = x.indexOf('Generar sentencia en versión moderna'); return x.slice(x.lastIndexOf('<button', k), k); };
+    const h1 = pintar(React.createElement(Decision, { ...comunes, tarjeta: null }));
+    ok(pliegue(h1) && !/<details[^>]*open/.test(pliegue(h1)) && !/disabled=""/.test(generar(h1)),
+       'C631: con la vía del motor (infundado), el cuadro se ofrece cerrado y se puede generar');
+    const h2 = muestra('6 · el 631 en sentido opuesto, sin conceptos', pintar(React.createElement(Decision, { ...comunes, tarjeta: null,
+        sentidoGlobal: 'fundado', globalDictado: true, razonGlobal: 'razón de la contraria' })));
+    ok(/<details[^>]*open/.test(pliegue(h2)) && pliegue(h2).includes('revoca una concesión'),
+       'C631: en sentido opuesto el cuadro se abre y dice que se revoca una concesión');
+    ok(/disabled=""/.test(generar(h2)), 'C631: y «Generar» queda apagado');
+    ok(h2.includes('pega los conceptos de violación'), 'C631: junto al botón se dice por qué');
+    const h3 = pintar(React.createElement(Decision, { ...comunes, tarjeta: null,
+        sentidoGlobal: 'fundado', globalDictado: true, razonGlobal: 'razón de la contraria', conceptosViolacion: 'pegados (prueba)' }));
+    ok(!/disabled=""/.test(generar(h3)), 'C631: con los conceptos pegados, se puede generar');
+    // la columna de la vía que revoca enlaza al cuadro
+    const hc = pintar(React.createElement(PP, props(base())));
+    ok(columna(hc, 'opuesta').includes('href="#conceptos-violacion"'), 'C631: el aviso de la columna lleva al cuadro');
+}
+{
+    // LA DELIBERACIÓN EN CAMINO: se sigue preguntando con pausa larga y tope.
+    const FALSO = path.join(TMP, 'falso');
+    const rq = createRequire(path.join(FALSO, 'x.js'));
+    const Rf = rq('./react_falso.js');
+    const tdf = rq('./tarjetaDelPrincipal.js');
+    const vaciar = async () => { for (let k = 0; k < 20; k++) await Promise.resolve(); };
+    const relojes = [];
+    const stReal = globalThis.setTimeout, ctReal = globalThis.clearTimeout;
+    globalThis.setTimeout = (fn, ms) => { const id = relojes.length + 1; relojes.push({ id, fn, ms, vivo: true }); return id; };
+    globalThis.clearTimeout = (id) => { const r = relojes.find((x) => x.id === id); if (r) r.vivo = false; };
+    const correr = async () => { for (const r of relojes.filter((x) => x.vivo)) { r.vivo = false; r.fn(); } await vaciar(); };
+    let res = null;
+    const prop = { ...PROPUESTA };
+    let n = 0;
+    const cola = [api.tarjetaDe(base({ deliberacion_estado: 'en_curso' })),
+                  api.tarjetaDe(base({ deliberacion_estado: 'en_curso' })),
+                  api.tarjetaDe(base({ deliberacion_estado: 'listo', estado: 'reñido' }))];
+    const leer = async () => { n += 1; return cola.length ? cola.shift() : api.tarjetaDe(base()); };
+    Rf.__R.hooks = []; Rf.__R.efectos = [];
+    Rf.__R.i = 0; tdf.useTarjetaDelPrincipal(prop, '631/2025', 'casa@iurexia.com', leer);
+    Rf.__R.efectos.splice(0).forEach((f) => f()); await vaciar();
+    Rf.__R.i = 0; res = tdf.useTarjetaDelPrincipal(prop, '631/2025', 'casa@iurexia.com', leer);
+    ok(res && res.estado === 'claro' && res.deliberacion_estado === 'en_curso', 'hook: con el juez en curso, se pinta lo que hay');
+    ok(relojes.some((r) => r.vivo && r.ms === tdf.PAUSA_DELIBERACION_MS), 'hook: y se vuelve a preguntar tras la pausa larga');
+    await correr(); await correr();
+    Rf.__R.i = 0; res = tdf.useTarjetaDelPrincipal(prop, '631/2025', 'casa@iurexia.com', leer);
+    ok(n === 3 && res.estado === 'reñido' && !relojes.some((r) => r.vivo), 'hook: llega la deliberación y se deja de preguntar');
+    // tope
+    let m = 0;
+    const siempre = async () => { m += 1; return api.tarjetaDe(base({ deliberacion_estado: 'en_curso' })); };
+    const prop2 = { ...PROPUESTA };
+    Rf.__R.i = 0; tdf.useTarjetaDelPrincipal(prop2, '631/2025', 'casa@iurexia.com', siempre);
+    Rf.__R.efectos.splice(0).forEach((f) => f()); await vaciar();
+    for (let k = 0; k < tdf.REINTENTOS_DELIBERACION + 5; k++) await correr();
+    ok(m === tdf.REINTENTOS_DELIBERACION + 1 && !relojes.some((r) => r.vivo), 'hook: con tope, no pregunta para siempre');
     globalThis.setTimeout = stReal; globalThis.clearTimeout = ctReal;
 }
 

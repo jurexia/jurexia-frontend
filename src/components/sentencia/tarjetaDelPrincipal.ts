@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { PropuestaDeSolucion, RespuestaPropuesta, TesisDelAcervo } from './api';
 import { leerTarjeta } from './api';
 import type {
-    ApoyoDeLaVia, FilaDeTuTribunal, ProblemaJuridico, SuerteDelSecundario, TarjetaDecision,
+    ApoyoDeLaVia, ConceptosOmitidos, FilaDeTuTribunal, ProblemaJuridico, SuerteDelSecundario, TarjetaDecision,
     ViaDeLaTarjeta,
 } from './tipos';
 import { grupoDe, legible } from './calificaciones';
@@ -71,14 +71,24 @@ export function ladoDelSentido(t: TarjetaDecision | null | undefined, sentido: s
 /** ═══ QUÉ VÍA ESTÁ EN PANTALLA, sin estado nuevo ═══
  *  (lector2_visor.md §B.4) Se deduce de lo que viajaría al generar:
  *   · la propuesta = todo el asunto, NO dictado (eco del motor) y el sentido
- *     del motor; o, si la tarjeta propone otra cosa que el motor (con la
- *     deliberación), ese sentido dictado con SU razón;
+ *     del motor, SI la columna «propuesta» es la del motor; o esa columna
+ *     dictada con SU sentido y SU razón;
  *   · la contraria = dictado, el sentido de la opuesta y SU razón (lección 1
  *     del 631: la razón de la otra vía nunca viaja con ésta). Si la opuesta no
  *     traía razón y él pidió redactarla tras elegirla, sigue siendo la
  *     contraria;
  *   · lo demás —por problema, otra calificación, otra razón, o algún
- *     planteamiento marcado a mano— es su criterio. */
+ *     planteamiento marcado a mano— es su criterio.
+ *
+ *  CON LA DELIBERACIÓN (revisión del 28-sep-2026, AR 631/2025) la columna
+ *  «propuesta» es la vía del juez —en reñido, la de su `inclinacion`— y puede
+ *  ser la CONTRARIA a la del motor, o la misma calificación con otra razón.
+ *  Antes, el eco del motor contaba como «la propuesta» sin mirar la columna:
+ *  el principal viajaba «infundado» mientras los secundarios y «Así va a
+ *  salir» se pintaban con la suerte de la vía fundada, y el botón decía
+ *  «Aceptar» de lo que no se enseñaba. Ahora el eco del motor sólo es «la
+ *  propuesta» si la columna dice lo mismo (sentido y, con deliberación,
+ *  razón); si no, se clasifica por la vía con la que casa. */
 export function viaActivaDe(e: {
     enGlobal: boolean; globalDictado: boolean; sentidoGlobal: string; razonGlobal: string;
     sentidoMotor: string; nTocados: number; tarjeta: TarjetaDecision | null;
@@ -86,14 +96,48 @@ export function viaActivaDe(e: {
 }): ViaActiva {
     if (!e.enGlobal || e.nTocados > 0 || !e.sentidoGlobal) return 'criterio';
     const razon = (e.razonGlobal || '').trim();
-    if (!e.globalDictado && e.sentidoGlobal === e.sentidoMotor) return 'propuesta';
     const vp = e.tarjeta?.vias.propuesta;
-    if (e.globalDictado && vp && vp.sentido === e.sentidoGlobal && vp.sentido !== e.sentidoMotor
-        && razon === vp.razon.trim()) return 'propuesta';
     const vo = e.tarjeta?.vias.opuesta;
+    const delJuez = propuestaDelJuez(e.tarjeta);
+    if (!e.globalDictado && mismoSentido(e.sentidoGlobal, e.sentidoMotor)) {
+        if (!vp?.sentido || (mismoSentido(vp.sentido, e.sentidoMotor)
+                             && (!delJuez || razon === vp.razon.trim()))) return 'propuesta';
+        return ladoDelSentido(e.tarjeta, e.sentidoGlobal) === 'opuesta' ? 'contraria' : 'criterio';
+    }
+    /* La columna «propuesta» dictada con SU razón. Sin deliberación, dictar la
+       misma calificación que el motor es su criterio (pulsó la pastilla); con
+       ella, es «Resolver así» (ver `resolverAsi` en Decision). */
+    if (e.globalDictado && vp && mismoSentido(vp.sentido, e.sentidoGlobal) && razon === vp.razon.trim()
+        && (delJuez || !mismoSentido(vp.sentido, e.sentidoMotor))) return 'propuesta';
     if (e.globalDictado && vo && hayAlternativaReal(e.tarjeta) && e.sentidoGlobal === vo.sentido
         && (razon === vo.razon.trim() || (e.elegida === 'contraria' && !vo.razon.trim()))) return 'contraria';
     return 'criterio';
+}
+
+function mismoSentido(a: string | undefined | null, b: string | undefined | null): boolean {
+    return (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
+}
+
+/** ¿La columna «propuesta» es la del juez de la deliberación? El servidor
+ *  sólo manda `deliberacion` cuando armó las vías con ella
+ *  (tarjeta_decision.py, `delib_ctx`); sin ella, la columna es la global del
+ *  motor, con su razón. */
+export function propuestaDelJuez(t: TarjetaDecision | null | undefined): boolean {
+    return !!t?.deliberacion && !!t.vias.propuesta?.sentido;
+}
+
+/** «RESOLVER ASÍ»: ¿se vuelve al eco del motor o se dicta la columna? Se
+ *  dicta —sentido y razón— si la columna no es la propuesta del motor: otra
+ *  calificación, o (con la deliberación) la misma con otra razón. En el 631
+ *  con el juez encendido: vía A «fundado» por causahabiencia y el motor
+ *  «fundado» por cosa juzgada; volver al eco hacía viajar la razón que la
+ *  tarjeta no enseñaba. */
+export function resolverAsiDicta(t: TarjetaDecision | null | undefined,
+                                 motor: { sentido?: string; razon?: string } | null | undefined): boolean {
+    const vp = t?.vias.propuesta;
+    if (!vp?.sentido) return false;
+    if (!mismoSentido(vp.sentido, motor?.sentido)) return true;
+    return propuestaDelJuez(t) && vp.razon.trim() !== (motor?.razon || '').trim();
 }
 
 /** El secundario de la tarjeta que corresponde al problema `numero` (1-based,
@@ -139,7 +183,7 @@ export function rotuloDeSuerte(s: SuerteDelSecundario | null | undefined, prospe
         return { texto: 'Innecesaria por mayor beneficio (art. 189)', corto: 'art. 189', tono: 'neutro' };
     }
     if (guarda === 'procesal') return { texto: `Violación procesal: se decide${cal}`, corto: 'se decide: procesal', tono: 'oro' };
-    if (rel === 'distinto' || rel === 'autonoma') {
+    if (rel === 'distinto') {
         return { texto: `Se estudia aparte: tema distinto${cal}`, corto: 'se estudia aparte', tono: 'oro' };
     }
     if (rel === 'mayor_beneficio' || guarda === 'mayor_beneficio') {
@@ -148,10 +192,20 @@ export function rotuloDeSuerte(s: SuerteDelSecundario | null | undefined, prospe
     if (s.recalificar && !s.previsto && !sent) {
         return { texto: 'Por recalificar con la premisa de esta vía', corto: 'por recalificar', tono: 'ambar' };
     }
+    /* «autonoma» y «mixta» NO son «tema distinto» (revisión del 28-sep-2026):
+       en el árbol (arbol_decision.py, `detalle[t]`) son lo contrario —LIGADO
+       al principal, pero con causa de pedir propia— y se estudian con su
+       calificación. En la 462 el problema 2 (exhaustividad sobre la misma
+       sustitución) salía «Se estudia aparte: tema distinto» con el porqué del
+       servidor diciendo «se relaciona con el principal» justo debajo. */
+    const ligado = rel === 'autonoma' || rel === 'mixta';
     if (sent === 'innecesario' || sent === 'sin_materia') {
-        return prosperaPrincipal === true && rel !== 'autonoma'
+        return prosperaPrincipal === true && !ligado
             ? { texto: 'Queda sin materia: lo absorbe el principal', corto: 'sigue al principal', tono: 'neutro' }
             : { texto: 'Innecesario por suficiencia', corto: 'innecesario', tono: 'neutro' };
+    }
+    if (ligado) {
+        return { texto: `Ligado al principal, con causa propia: se estudia${cal}`, corto: 'se estudia', tono: 'oro' };
     }
     if (rel === 'presupone' && prosperaPrincipal === false && sent) {
         return { texto: `Cae con lo desestimado${cal}`, corto: 'cae con el principal', tono: 'neutro' };
@@ -207,6 +261,44 @@ export function ladoQueRevoca(t: TarjetaDecision | null | undefined, esRecurso: 
     if (!esRecurso) return null;
     for (const [lado, v] of lados) if (v && prosperaDeLaVia(v) === true) return lado;
     return null;
+}
+
+/** ═══ LOS CONCEPTOS DE VIOLACIÓN, POR LO QUE VIAJA (SPEC B §1) ═══
+ *  (revisión del 28-sep-2026, AR 631/2025) La pantalla bloqueaba «Generar» y
+ *  el plan sólo con `necesitaConceptos`, que el servidor calcula con el
+ *  sentido DEL MOTOR. En el 631 el motor propuso «infundado» (no hacían
+ *  falta), el secretario resolvió en sentido opuesto —revoca una concesión—
+ *  y se generaba y se pagaba un proyecto con el resolutivo del amparo en
+ *  hueco, y el plan gastaba una corrida sin conceptos y otra al pegarlos.
+ *  Ahora se mira `conceptos_omitidos` (calculado para la vía que prospera) y
+ *  si LO QUE VIAJA prospera —el mismo predicado que el servidor al generar
+ *  (redactor_adelanto: «fundado» si algún criterio prospera)—.
+ *
+ *  `co`: el de /taller/proponer (undefined = un servidor que no lo manda; null
+ *  = si prospera, no hay nada que estudiar) o, si falta, el de la tarjeta.
+ *  Devuelve `pueden` (la pantalla ofrece dónde pegarlos: alguna vía que
+ *  prospera los necesita y no constan) y `faltan` (lo que viaja prospera, no
+ *  constan y el cuadro está vacío: no se genera ni se pide el plan). */
+export function conceptosQueFaltan(e: {
+    co: ConceptosOmitidos | null | undefined;
+    necesitaMotor: boolean;
+    sentidosQueViajan: (string | undefined | null)[];
+    conceptos: string;
+}): { pueden: boolean; faltan: boolean; reasuncion: string } {
+    const pegados = !!(e.conceptos || '').trim();
+    if (!e.co) {
+        /* Un servidor sin el contrato de B (undefined), o que dice que si
+           prospera no hay nada que estudiar (null): lo que diga el motor, como
+           antes. Con el contrato los dos datos casan: `necesita_conceptos`
+           sólo es verdadero si la del motor prospera y faltan. */
+        return { pueden: e.necesitaMotor, faltan: e.necesitaMotor && !pegados, reasuncion: 'sobreseimiento' };
+    }
+    /* Con el contrato, `necesitaMotor` no cuenta: si él resuelve por la vía
+       que NO prospera, pedirle los conceptos que sólo necesita la otra
+       bloquearía «Generar» sin motivo. */
+    const pueden = e.co.hacen_falta && !e.co.tenemos;
+    const prospera = e.sentidosQueViajan.some((x) => prosperaDe(x) === true);
+    return { pueden, faltan: pueden && prospera && !pegados, reasuncion: e.co.reasuncion || 'sobreseimiento' };
 }
 
 /** EL PROPIO TRIBUNAL, POR VÍA. Una fila va a la columna cuya calificación
@@ -367,7 +459,9 @@ export function tarjetaDeLaPropuesta(
         tu_tribunal: [],
         linea_corte: { confirmadas: [], pistas: [] },
         deliberacion: null,
-        conceptos_omitidos: null,
+        // El de /taller/proponer ya viene calculado para la vía que prospera.
+        conceptos_omitidos: propuesta.conceptosOmitidos ?? null,
+        deliberacion_estado: '',
         avisos: [],
         origen: 'local',
     };
@@ -412,9 +506,21 @@ export function soltarLoTocado(problemas: ProblemaJuridico[], propuestas: Propue
    aportar, corregir un problema o volver a estudiar). Si el servidor dice
    «calculando», se vuelve a preguntar unas pocas veces; lo que llega de una
    propuesta anterior no se pinta. Un fallo no es un error del asunto: la
-   pantalla sigue con la tarjeta local. No llama a ningún modelo. */
+   pantalla sigue con la tarjeta local. No llama a ningún modelo.
+
+   Y SI LA DELIBERACIÓN VIENE EN CAMINO (revisión del 28-sep-2026): el juez
+   se lanza en segundo plano DESPUÉS de la propuesta y tarda minutos; la
+   tarjeta llegaba «lista» sin él y la pantalla no volvía a preguntar, así
+   que sus vías, el crux y el estado no se veían hasta otra propuesta o una
+   recarga. Con `deliberacion_estado: «en_curso»` se pinta lo que hay y se
+   sigue preguntando con pausa larga y tope. (Un servidor que no manda el
+   campo no hace preguntar de más.) Si llega después de que él eligiera, las
+   columnas pueden cambiar bajo su vía: `viaActivaDe` clasifica por lo que
+   VIAJA, así que el chip y los secundarios siguen diciendo la verdad. */
 export const REINTENTOS_TARJETA = 4;
 export const PAUSA_TARJETA_MS = 3_000;
+export const REINTENTOS_DELIBERACION = 20;
+export const PAUSA_DELIBERACION_MS = 15_000;
 
 export function useTarjetaDelPrincipal(
     propuesta: RespuestaPropuesta | null, numero: string, correo: string,
@@ -426,6 +532,7 @@ export function useTarjetaDelPrincipal(
         if (!propuesta || !numero) return;
         let vivo = true;
         let intentos = 0;
+        let esperas = 0;
         let reloj: ReturnType<typeof setTimeout> | null = null;
         const pedir = () => {
             leer(numero, correo).then((t) => {
@@ -436,7 +543,12 @@ export function useTarjetaDelPrincipal(
                     return;
                 }
                 setHecha({ de: propuesta, tarjeta: t });
-            }).catch(() => { /* sin la del servidor: la pantalla pinta la suya */ });
+                if (t && t.estado_calculo === 'listo' && t.deliberacion_estado === 'en_curso'
+                    && esperas < REINTENTOS_DELIBERACION) {
+                    esperas += 1;
+                    reloj = setTimeout(pedir, PAUSA_DELIBERACION_MS);
+                }
+            }).catch(() => { /* sin la del servidor (o sin la de ahora): se queda lo que ya había */ });
         };
         pedir();
         return () => { vivo = false; if (reloj) clearTimeout(reloj); };

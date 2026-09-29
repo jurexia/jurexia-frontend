@@ -9,8 +9,8 @@ import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
 import { FINAS, grupoDe, legible } from './calificaciones';
 import ProblemaPrincipal from './ProblemaPrincipal';
 import type { MarcaDeSecundario } from './ProblemaPrincipal';
-import { elegirTarjeta, ladoDelSentido, prosperaDeLaVia, rotuloDeSuerte, suerteDe,
-         tarjetaDeLaPropuesta, viaActivaDe } from './tarjetaDelPrincipal';
+import { conceptosQueFaltan, elegirTarjeta, ladoDelSentido, prosperaDeLaVia, resolverAsiDicta, rotuloDeSuerte,
+         suerteDe, tarjetaDeLaPropuesta, viaActivaDe } from './tarjetaDelPrincipal';
 import type { LadoDeLaTarjeta, ViaActiva } from './tarjetaDelPrincipal';
 import EstudiarJuntos from './EstudiarJuntos';
 import ComoSeEstudiara, { usePlanDelEstudio, jerarquiaDelPlan } from './ComoSeEstudiara';
@@ -501,7 +501,11 @@ export default function Decision({
        26-sep-2026): el texto decía «decide tú, problema por problema» pero las
        diez calificaciones sólo salían tras «Cambiar el sentido», y el botón de
        generar quedaba apagado sin salida visible. */
-    useEffect(() => { if (propuesta && !propuesta.global) setCorrigiendo(true); }, [propuesta]);
+    /* Y CON PROPUESTA GLOBAL, CERRADA (revisión del 28-sep-2026): `corrigiendo`
+       sólo subía y nunca bajaba; tras «Resolver con mi criterio» una
+       propuesta nueva dejaba la ventana abierta sobre una elección que ya no
+       existía. Cada propuesta global vuelve a la tarjeta. */
+    useEffect(() => { if (propuesta) setCorrigiendo(!propuesta.global); }, [propuesta]);
     /* ═══ LA VÍA QUE ÉL ELIGIÓ (28-sep-2026) ═══
        null hasta que pulsa uno de los tres botones de la tarjeta. Cada
        propuesta nueva la olvida: la elección era sobre otra. Sin propuesta
@@ -527,7 +531,11 @@ export default function Decision({
     const [aporteConstancia, setAporteConstancia] = useState<Record<string, { texto: string; fichero: File | null }>>({});
     const constancias = propuesta?.global?.constancias ?? [];
     const faltanIndispensables = constancias.filter((c) => c.indispensable && !constanciasAportadas?.has(c.que));
-    useEffect(() => { if (abrirCorreccion > 0) setCorrigiendo(true); }, [abrirCorreccion]);
+    /* «Quiero cambiar de sentido» desde el proyecto terminado es elegir su
+       criterio a sabiendas: abre la ventana y cuenta como vía elegida. */
+    useEffect(() => {
+        if (abrirCorreccion > 0) { setCorrigiendo(true); setViaElegida('criterio'); }
+    }, [abrirCorreccion]);
 
     const global = propuesta?.global ?? null;
     const principal = useMemo(
@@ -551,8 +559,13 @@ export default function Decision({
         enGlobal, globalDictado, sentidoGlobal, razonGlobal,
         sentidoMotor: global?.sentido ?? '', nTocados, tarjeta: tarjetaVista, elegida: viaElegida,
     });
-    /* Él eligió con un botón, o está decidiendo en su ventana. */
-    const viaConfirmada = !!viaElegida || corrigiendo;
+    /* Él eligió con un botón (o abrió su ventana, que también lo marca).
+       SÓLO `viaElegida` (revisión del 28-sep-2026): con `|| corrigiendo`, una
+       ventana abierta antes de pedir otra vez la propuesta hacía pedir el plan
+       de la propuesta nueva sin que él eligiera nada, y elegir después gastaba
+       otra corrida: dos de las cuatro de la sesión (TOPE_CORRIDAS) sobre un
+       criterio que nadie eligió. */
+    const viaConfirmada = !!viaElegida;
     /* De qué vía es la suerte que se pinta en los secundarios: la de la vía
        en pantalla; con su criterio, la de la vía cuyo grupo casa con cómo
        calificó el principal (en su ventana, lo que él marcó manda y se dice
@@ -599,9 +612,13 @@ export default function Decision({
         const vp = tarjetaVista?.vias.propuesta;
         if (!global || !vp) return;
         setViaElegida('propuesta');
+        setCorrigiendo(false);
         /* Con la deliberación, la vía propuesta puede no ser la del motor: se
-           dicta con SU razón. Sin ella (hoy, siempre) es volver a la propuesta. */
-        if (vp.sentido && vp.sentido !== global.sentido) onResolverPorLaVia?.(vp.sentido, vp.razon);
+           dicta con SU sentido y SU razón —también si la calificación coincide
+           con la del motor y la razón no (revisión del 28-sep-2026: volver al
+           eco hacía viajar la razón del motor, que la tarjeta no enseñaba)—.
+           Sin ella es volver a la propuesta. */
+        if (resolverAsiDicta(tarjetaVista, global)) onResolverPorLaVia?.(vp.sentido, vp.razon);
         else onVolverALaPropuesta?.();
         bajarA('asi-sale');
     };
@@ -609,6 +626,7 @@ export default function Decision({
         const vo = tarjetaVista?.vias.opuesta;
         if (!vo?.sentido) return;
         setViaElegida('contraria');
+        setCorrigiendo(false);
         onResolverPorLaVia?.(vo.sentido, vo.razon || '');
         bajarA('asi-sale');
     };
@@ -632,7 +650,28 @@ export default function Decision({
         : problemas.some((p, i) => seAparta[i] && !(p.criterio || '').trim());
     const todosConSentido = problemas.length > 0 && problemas.every((p) => !!p.sentido);
     const listoParaGenerar = enGlobal ? !!sentidoGlobal : todosConSentido;
-    const necesitaConceptos = !!propuesta?.necesitaConceptos && !(conceptosViolacion || '').trim();
+    /* LOS CONCEPTOS, POR LO QUE VIAJA (SPEC B §1; revisión del 28-sep-2026,
+       AR 631/2025): ver `conceptosQueFaltan`. Antes sólo contaba
+       `necesitaConceptos`, calculado con el sentido del motor: en el 631 el
+       motor dijo «infundado», él resolvió en sentido opuesto (revoca una
+       concesión) y «Generar» y el plan seguían abiertos sin los conceptos.
+       Lo que viaja: en «todo el asunto», la global y lo que él marcó; problema
+       por problema, lo que hay en pantalla (lo recalificado encima). */
+    const sentidosQueViajan = enGlobal
+        ? [sentidoGlobal, ...problemas.filter((p) => tocados?.has(p.id) && !!p.sentido).map((p) => p.sentido)]
+        : problemas.map((p) => (recalificadas[p.id] ? recalificadas[p.id].sentido : p.sentido));
+    /* El de /taller/proponer (calculado para «fundado»); si ese servidor no
+       lo manda, el de la tarjeta del servidor (calculado para la vía que
+       revoca). */
+    const coVia = propuesta?.conceptosOmitidos !== undefined ? propuesta.conceptosOmitidos
+        : tarjetaVista?.origen === 'servidor' && tarjetaVista.conceptos_omitidos ? tarjetaVista.conceptos_omitidos
+        : undefined;
+    const conceptos = conceptosQueFaltan({
+        co: coVia, necesitaMotor: !!propuesta?.necesitaConceptos,
+        sentidosQueViajan, conceptos: conceptosViolacion,
+    });
+    const necesitaConceptos = conceptos.faltan;
+    const revocaConcesion = conceptos.reasuncion === 'concesion';
     const puedeGenerar = !generando && !proponiendo && listoParaGenerar && !faltaRazon && !necesitaConceptos;
     const alguienSeAparta = enGlobal ? globalSeAparta : seAparta.some(Boolean);
 
@@ -791,7 +830,9 @@ export default function Decision({
                 ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {generando && formatoPulsado === 'estandar' ? 'Escribiendo el proyecto…'
                 : alguienSeAparta ? 'Generar con mi criterio'
-                : global ? 'Aceptar y generar el proyecto' : 'Generar el proyecto'}
+                /* «Aceptar» sólo de lo que la tarjeta enseña como propuesta:
+                   con la deliberación, el eco del motor puede ser otra vía. */
+                : global && viaActiva === 'propuesta' ? 'Aceptar y generar el proyecto' : 'Generar el proyecto'}
         </button>
     );
     const botonModerna = (
@@ -1068,18 +1109,25 @@ export default function Decision({
             )}
 
             {/* ═══ LO QUE CASI NUNCA HACE FALTA, PLEGADO ═══ */}
-            {(propuesta?.necesitaConceptos || onAportar) && (
+            {(conceptos.pueden || onAportar) && (
                 <div className="space-y-2">
-                    {propuesta?.necesitaConceptos && onConceptosViolacion && (
+                    {/* Se ofrece siempre que alguna vía que prospera los necesite
+                        y no consten; se abre sola cuando es la vía que viaja
+                        (`conceptosQueFaltan`, SPEC B §1). */}
+                    {conceptos.pueden && onConceptosViolacion && (
+                        <div id="conceptos-violacion">
                         <Pliegue titulo="Los conceptos de violación del amparo" abierto={necesitaConceptos}>
                             <p className="mb-2 text-[12px] leading-relaxed text-white/45">
-                                Se levanta un sobreseimiento y el tribunal asume jurisdicción: hay que estudiar los conceptos por
-                                primera vez, y no constan en el expediente del recurso.
+                                {revocaConcesion
+                                    ? 'Si el recurso prospera se revoca una concesión y el tribunal reasume jurisdicción: estudia los conceptos que el juez no estudió'
+                                    : 'Se levanta un sobreseimiento y el tribunal asume jurisdicción: hay que estudiar los conceptos por primera vez'}
+                                {coVia?.fundamento ? ` (${coVia.fundamento})` : ''}, y no constan en lo que se subió.
                             </p>
                             <textarea rows={5} value={conceptosViolacion} onChange={(e) => onConceptosViolacion(e.target.value)}
                                       placeholder="Pega aquí los conceptos de violación de la demanda de amparo"
                                       className="w-full resize-y rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-[14px] leading-relaxed text-white/90 placeholder:text-white/45 outline-none focus:border-accent-gold/45" />
                         </Pliegue>
+                        </div>
                     )}
                     {/* ═══ LAS CONSTANCIAS QUE EL MOTOR NECESITA VER ═══
                         David: «es vital que el modelo detecte cuándo resulte
@@ -1330,7 +1378,10 @@ export default function Decision({
                     )}
                     {necesitaConceptos && (
                         <p className="mt-2.5 text-[12px] text-amber-300/90">
-                            Este recurso levanta un sobreseimiento: pega arriba los conceptos de violación antes de generar.
+                            {revocaConcesion
+                                ? 'Por esta vía se revoca una concesión y hay que estudiar los conceptos que el juez no estudió'
+                                : 'Este recurso levanta un sobreseimiento'}: pega los conceptos de violación{' '}
+                            <a href="#conceptos-violacion" className="underline underline-offset-2">arriba</a> antes de generar.
                         </p>
                     )}
                     {/* ═══ EL CÓMPUTO DA EXTEMPORÁNEA Y NADIE LO DECIDIÓ ═══

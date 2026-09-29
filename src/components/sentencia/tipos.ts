@@ -191,6 +191,10 @@ export interface SuerteDelSecundario {
     /** «principal» | «arbol» | «motor» | «secretario». */
     de: string;
     por_que: string;
+    /** La del árbol (arbol_decision.py): «presupone» (cae con lo desestimado),
+     *  «distinto» (tema distinto), «autonoma» o «mixta» (LIGADO al principal
+     *  pero con causa de pedir propia: se estudia con su calificación),
+     *  «mayor_beneficio»… Ojo: «autonoma» NO es «tema distinto». */
     relacion: string;
     /** «procesal» | «mayor_beneficio_189» | null. */
     guarda: string | null;
@@ -235,7 +239,7 @@ export interface SecundarioDeLaTarjeta {
     numero: number;
     pregunta: string;
     clase: string;
-    /** «depende» | «presupone» | «distinto» | «autonoma». */
+    /** «depende» | «presupone» | «distinto» | «autonoma» | «mixta». */
     relacion: string;
     en_propuesta: SuerteDelSecundario | null;
     en_opuesta: SuerteDelSecundario | null;
@@ -268,6 +272,24 @@ export interface FilaDeTuTribunal {
  *  Vacío = no se sabe (la tarjeta armada en la pantalla, sin el servidor). */
 export type EstadoDeLaTarjeta = 'claro' | 'reñido' | 'no_alcanza' | '';
 
+/** EL CONTRATO DE LA SPEC B, ENTERO (art. 93, frs. I, V y VI, LA; AR 631/2025,
+ *  28-sep-2026). Lo calcula `fase_rama.conceptos_omitidos` para la vía que
+ *  PROSPERA —en /taller/proponer, para «fundado»; en la tarjeta, para la vía
+ *  que revoca—, no para la del motor: en el 631 el motor propuso «infundado»
+ *  y la vía que revoca una concesión era la contraria. */
+export interface ConceptosOmitidos {
+    hacen_falta: boolean;
+    por_que: string;
+    /** Constan ya: los aportó el secretario, o están en la demanda de las
+     *  constancias o en la recurrida (`donde`). */
+    tenemos: boolean;
+    /** «secretario» | «constancias» | «recurrida» | vacío (no constan). */
+    donde: string;
+    fundamento: string;
+    /** «concesion» (se revoca una concesión) | «sobreseimiento» (se levanta). */
+    reasuncion: string;
+}
+
 export interface TarjetaDecision {
     formato: number;
     estado_calculo: 'listo' | 'sin_propuesta' | 'calculando';
@@ -296,7 +318,12 @@ export interface TarjetaDecision {
     } | null;
     /** En la vía que revoca: los conceptos que el juez no estudió y que hay que
      *  estudiar al reasumir jurisdicción (art. 93, fr. VI, LA). */
-    conceptos_omitidos: { hacen_falta: boolean; por_que: string; tenemos: boolean } | null;
+    conceptos_omitidos: ConceptosOmitidos | null;
+    /** En qué va la deliberación del juez sobre el principal: «en_curso» = la
+     *  pantalla vuelve a preguntar (se lanza en segundo plano DESPUÉS de la
+     *  propuesta y tarda minutos); «listo», «fallo», «apagada» o vacío (un
+     *  servidor que aún no lo dice) = no se espera nada más. */
+    deliberacion_estado: '' | 'en_curso' | 'listo' | 'fallo' | 'apagada';
     avisos: string[];
     /** NO viene del servidor. «local» = armada en la pantalla con la propuesta
      *  mientras la del servidor no llega (o si el servidor aún no la sirve):

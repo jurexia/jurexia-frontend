@@ -7,7 +7,7 @@ import type { TesisDelAcervo } from './api';
 import type { ApoyoDeLaVia, FilaDeTuTribunal, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 import { fraseDe, legible } from './calificaciones';
 import {
-    apoyosParaCitar, contrasteParaVia, hayAlternativaReal, ladoQueRevoca, prosperaDeLaVia,
+    apoyosParaCitar, contrasteParaVia, hayAlternativaReal, propuestaDelJuez, ladoQueRevoca, prosperaDeLaVia,
     rotuloDeSuerte, sinRecomendar, textoDeFuerza, tribunalPorLado, vigenciaDudosa,
 } from './tarjetaDelPrincipal';
 import type { LadoDeLaTarjeta, ViaActiva } from './tarjetaDelPrincipal';
@@ -205,8 +205,13 @@ function ColumnaVia({
                     <span>
                         Por esta vía hay que estudiar los conceptos de violación que el juez no estudió
                         {co.por_que ? ` (${co.por_que})` : ''}.{' '}
-                        {co.tenemos ? 'Constan en el expediente: el estudio los contesta.'
-                                    : 'No constan en lo que se subió: apórtalos antes de generar por esta vía.'}
+                        {co.tenemos ? 'Constan en el expediente: el estudio los contesta.' : (
+                            /* Y AHORA HAY DÓNDE (revisión del 28-sep-2026): el
+                               aviso pedía aportarlos y la pantalla no daba el
+                               cuadro ni bloqueaba «Generar» por esta vía. */
+                            <>No constan en lo que se subió: <a href="#conceptos-violacion" className="underline underline-offset-2">pégalos</a> antes
+                            de generar por esta vía.</>
+                        )}
                     </span>
                 </p>
             )}
@@ -655,7 +660,12 @@ export default function ProblemaPrincipal({
             </div>
             {hayGlobal && !viaElegida && (
                 <p className="mt-2 text-[12px] leading-relaxed text-white/45">
-                    Mientras no elijas, en pantalla está la propuesta del motor: si generas así, sale con ella.
+                    {/* Con la deliberación, la primera columna es la vía del juez y
+                        lo que viaja sin elegir es el eco del motor: decirlo, no
+                        dejar que parezca la misma cosa. */}
+                    {viaActiva !== 'propuesta' && propuestaDelJuez(t)
+                        ? 'Mientras no elijas, viaja la propuesta del motor, que no es la de la primera columna: si generas así, sale con la del motor.'
+                        : 'Mientras no elijas, en pantalla está la propuesta del motor: si generas así, sale con ella.'}
                 </p>
             )}
             <div className="mt-3 flex gap-2 border-l-2 border-amber-400/40 bg-amber-400/[0.04] py-2 pl-2.5 pr-3">

@@ -10,7 +10,7 @@
  * confirma quien los tiene delante.
  */
 
-import type { ApoyoDeLaVia, FuerzaDelApoyo, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
+import type { ApoyoDeLaVia, ConceptosOmitidos, FuerzaDelApoyo, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 
 export interface EncargoAdelanto {
     numero: string;                 // «512/2026»
@@ -762,8 +762,17 @@ export interface RespuestaPropuesta {
     modelo: string;
     /** El recurso levanta un sobreseimiento y hay que estudiar los conceptos
      *  de violación por primera vez, pero no constan. El servidor ya daba el
-     *  aviso; esto es lo que hace que la pantalla ofrezca DÓNDE pegarlos. */
+     *  aviso; esto es lo que hace que la pantalla ofrezca DÓNDE pegarlos.
+     *  OJO: el servidor lo calcula con el sentido DEL MOTOR. */
     necesitaConceptos: boolean;
+    /** LO MISMO, CALCULADO PARA LA VÍA QUE PROSPERA (SPEC B §1; AR 631/2025,
+     *  28-sep-2026): el motor propuso «infundado» —`necesitaConceptos` falso—
+     *  y el secretario resolvió en sentido opuesto, que revoca una concesión.
+     *  null = si el recurso prospera no hay conceptos que estudiar; undefined
+     *  = un servidor que aún no lo manda (la pantalla se queda con
+     *  `necesitaConceptos`). La pantalla los pide cuando lo que viaja
+     *  prospera (`conceptosQueFaltan`). */
+    conceptosOmitidos?: ConceptosOmitidos | null;
 }
 
 /** Pide al motor que proponga el sentido de cada problema.
@@ -792,6 +801,8 @@ export async function proponerSolucion(
         criteriosJson: j.criterios_json ?? '',
         modelo: j.modelo ?? '',
         necesitaConceptos: Boolean(j.necesita_conceptos),
+        conceptosOmitidos: j && typeof j === 'object' && 'conceptos_omitidos' in j
+            ? conceptosOmitidosDe(j.conceptos_omitidos) : undefined,
     };
 }
 
@@ -2531,6 +2542,20 @@ function _viaDe(x: unknown): ViaDeLaTarjeta | null {
     };
 }
 
+/** El contrato de la SPEC B entero —{hacen_falta, tenemos, donde, por_que,
+ *  fundamento, reasuncion}—, leído igual en /taller/proponer y en la tarjeta.
+ *  Hasta el 28-sep-2026 sólo se tipaban los tres primeros y sólo en la
+ *  tarjeta: el de /taller/proponer no lo leía nadie. */
+export function conceptosOmitidosDe(x: unknown): ConceptosOmitidos | null {
+    const co = _o(x);
+    if (!co) return null;
+    return {
+        hacen_falta: co.hacen_falta === true, por_que: _t(co.por_que), tenemos: co.tenemos === true,
+        donde: _t(co.donde).toLowerCase(), fundamento: _t(co.fundamento),
+        reasuncion: _t(co.reasuncion).toLowerCase(),
+    };
+}
+
 export function tarjetaDe(x: unknown): TarjetaDecision | null {
     const j = _o(x);
     if (!j) return null;
@@ -2609,9 +2634,9 @@ export function tarjetaDe(x: unknown): TarjetaDecision | null {
             origen: _t(del.origen), pregunta_decisiva: _t(del.pregunta_decisiva), figura: _t(del.figura),
             proposicion_toral: pt && _t(pt.dice) ? { dice: _t(pt.dice), cita: _t(pt.cita) } : null,
         } : null,
-        conceptos_omitidos: co ? {
-            hacen_falta: co.hacen_falta === true, por_que: _t(co.por_que), tenemos: co.tenemos === true,
-        } : null,
+        conceptos_omitidos: co ? conceptosOmitidosDe(co) : null,
+        deliberacion_estado: (['en_curso', 'listo', 'fallo', 'apagada'] as const)
+            .find((x) => x === _t(j.deliberacion_estado).toLowerCase()) ?? '',
         avisos: _l(j.avisos).map(_textoDeAviso).filter(Boolean),
         origen: 'servidor',
     };
