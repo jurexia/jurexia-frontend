@@ -672,7 +672,15 @@ export default function Decision({
     });
     const necesitaConceptos = conceptos.faltan;
     const revocaConcesion = conceptos.reasuncion === 'concesion';
-    const puedeGenerar = !generando && !proponiendo && listoParaGenerar && !faltaRazon && !necesitaConceptos;
+    /* AL REVOCAR UNA CONCESIÓN SE PIDEN, NO SE EXIGEN (David, 28-sep-2026, AR
+       631/2025: «genéralo ya sin los conceptos, con el hueco, y esto da pauta
+       para pedir al secretario los conceptos de violación cuando vaya por esa
+       ruta»). El recuadro se abre solo y lo dice, pero «Generar» sigue activo:
+       el servidor deja en HUECO el punto del amparo y lo advierte, sin afirmar
+       «no ampara» sobre conceptos que nadie estudió. Al levantar un
+       sobreseimiento sigue bloqueando, como antes. */
+    const bloqueaConceptos = necesitaConceptos && !revocaConcesion;
+    const puedeGenerar = !generando && !proponiendo && listoParaGenerar && !faltaRazon && !bloqueaConceptos;
     const alguienSeAparta = enGlobal ? globalSeAparta : seAparta.some(Boolean);
 
     /* EL PLAN SE PIDE CUANDO LA DECISIÓN ESTÁ COMPLETA Y QUIETA: cada problema
@@ -683,7 +691,7 @@ export default function Decision({
        el secretario alterna entre la propuesta y la contraria antes de
        decidir, y cada alternancia es otra firma: pedir el plan de la que está
        en pantalla antes de que la elija gastaba corridas del tope de cuatro. */
-    const listoParaPlan = !!plan?.activo && viaConfirmada && listoParaGenerar && !faltaRazon && !necesitaConceptos
+    const listoParaPlan = !!plan?.activo && viaConfirmada && listoParaGenerar && !faltaRazon && !bloqueaConceptos
         && !generando && !proponiendo && !(razonando && razonando.size > 0) && !razonandoGlobal
         /* Ni mientras se recalifican los accesorios tumbados: el plan se ordena
            sobre el criterio YA recalificado (contrato_recalificar.md), y
@@ -1378,10 +1386,19 @@ export default function Decision({
                     )}
                     {necesitaConceptos && (
                         <p className="mt-2.5 text-[12px] text-amber-300/90">
-                            {revocaConcesion
-                                ? 'Por esta vía se revoca una concesión y hay que estudiar los conceptos que el juez no estudió'
-                                : 'Este recurso levanta un sobreseimiento'}: pega los conceptos de violación{' '}
-                            <a href="#conceptos-violacion" className="underline underline-offset-2">arriba</a> antes de generar.
+                            {revocaConcesion ? (
+                                <>
+                                    Por esta vía se revoca una concesión: el tribunal reasume jurisdicción y estudia los conceptos
+                                    de violación que el juez no estudió. Pégalos{' '}
+                                    <a href="#conceptos-violacion" className="underline underline-offset-2">arriba</a>; si generas
+                                    sin ellos, el punto del amparo sale en hueco y el proyecto lo advierte.
+                                </>
+                            ) : (
+                                <>
+                                    Este recurso levanta un sobreseimiento: pega los conceptos de violación{' '}
+                                    <a href="#conceptos-violacion" className="underline underline-offset-2">arriba</a> antes de generar.
+                                </>
+                            )}
                         </p>
                     )}
                     {/* ═══ EL CÓMPUTO DA EXTEMPORÁNEA Y NADIE LO DECIDIÓ ═══

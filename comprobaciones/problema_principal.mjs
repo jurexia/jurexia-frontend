@@ -750,8 +750,9 @@ module.exports = { __R: R, useState, useRef, useEffect, useMemo, useCallback, cr
         sentidoGlobal: 'fundado', globalDictado: true, razonGlobal: 'razón de la contraria' })));
     ok(/<details[^>]*open/.test(pliegue(h2)) && pliegue(h2).includes('revoca una concesión'),
        'C631: en sentido opuesto el cuadro se abre y dice que se revoca una concesión');
-    ok(/disabled=""/.test(generar(h2)), 'C631: y «Generar» queda apagado');
-    ok(h2.includes('pega los conceptos de violación'), 'C631: junto al botón se dice por qué');
+    // David, 28-sep-2026: al revocar una concesión se PIDEN, no se exigen; sin ellos, hueco y aviso.
+    ok(!/disabled=""/.test(generar(h2)), 'C631: y «Generar» sigue activo (se genera con el punto del amparo en hueco)');
+    ok(h2.includes('Pégalos') && h2.includes('hueco'), 'C631: junto al botón se pide pegarlos y se avisa del hueco');
     const h3 = pintar(React.createElement(Decision, { ...comunes, tarjeta: null,
         sentidoGlobal: 'fundado', globalDictado: true, razonGlobal: 'razón de la contraria', conceptosViolacion: 'pegados (prueba)' }));
     ok(!/disabled=""/.test(generar(h3)), 'C631: con los conceptos pegados, se puede generar');
