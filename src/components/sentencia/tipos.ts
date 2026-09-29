@@ -33,6 +33,9 @@ export interface SolucionPosible {
     falla: { que: string; fatal: boolean } | null;
     sostenible: boolean;
     papel: 'propuesta' | 'contraria' | null;
+    /** Lo que viaja si el secretario elige ESTA solución: su conclusión, su
+     *  regla, sus hechos verificados y sus efectos. '' si no llegó. */
+    razon: string;
 }
 
 export interface Fase {

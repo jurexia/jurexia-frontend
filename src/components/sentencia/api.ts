@@ -2275,6 +2275,7 @@ export function solucionesDe(x: unknown): SolucionPosible[] {
             falla: f && _t(f.que) ? { que: _t(f.que), fatal: f.fatal === true } : null,
             sostenible: o.sostenible !== false,
             papel: papel === 'propuesta' || papel === 'contraria' ? papel : null,
+            razon: _t(o.razon),
         } as SolucionPosible;
     }).filter((s): s is SolucionPosible => s !== null);
 }

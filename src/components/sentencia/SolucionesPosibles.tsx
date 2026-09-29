@@ -37,7 +37,7 @@ const ESTADO: Record<string, { texto: string; clase: string }> = {
     sin_revisar: { texto: 'sin revisar', clase: 'text-white/45' },
 };
 
-function Solucion({ s }: { s: SolucionPosible }) {
+function Solucion({ s, onResolver }: { s: SolucionPosible; onResolver?: (s: SolucionPosible) => void }) {
     const est = ESTADO[s.revision?.estado] ?? ESTADO.sin_revisar;
     return (
         <li className="rounded-md border border-white/10 bg-white/[0.02] px-3 py-2">
@@ -71,11 +71,23 @@ function Solucion({ s }: { s: SolucionPosible }) {
                     {s.revision.avisos.map((a, i) => <li key={i}>{a}</li>)}
                 </ul>
             )}
+            {/* Las dos columnas ya tienen sus botones; aquí sólo las demás. */}
+            {onResolver && !s.papel && s.sentido && s.razon && (
+                <button type="button" onClick={() => onResolver(s)} data-resolver-solucion={s.id}
+                    className="mt-2 rounded-md border border-accent-gold/40 px-2.5 py-1 text-[12px] text-accent-gold/90 hover:border-accent-gold hover:text-accent-gold">
+                    Resolver con esta solución
+                </button>
+            )}
         </li>
     );
 }
 
-export function SolucionesPosibles({ soluciones }: { soluciones?: SolucionPosible[] }) {
+export function SolucionesPosibles({ soluciones, onResolver }: {
+    soluciones?: SolucionPosible[];
+    /** Elegir una solución que no está en las columnas: viaja como la vía
+     *  contraria —su sentido y SU razón—, y la decisión sigue siendo suya. */
+    onResolver?: (s: SolucionPosible) => void;
+}) {
     if (!soluciones || soluciones.length === 0) return null;
     return (
         <details className="group mt-3">
@@ -84,7 +96,7 @@ export function SolucionesPosibles({ soluciones }: { soluciones?: SolucionPosibl
                 Las soluciones que caben ({soluciones.length})
             </summary>
             <ul className="mt-2 space-y-2">
-                {soluciones.map(s => <Solucion key={s.id} s={s} />)}
+                {soluciones.map(s => <Solucion key={s.id} s={s} onResolver={onResolver} />)}
             </ul>
         </details>
     );

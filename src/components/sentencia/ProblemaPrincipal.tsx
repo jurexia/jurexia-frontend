@@ -318,7 +318,7 @@ export default function ProblemaPrincipal({
     tarjeta, esRecurso, hayGlobal, hayPropuestas,
     viaActiva, viaElegida, ladoSecundarios, marcados = {}, razonActiva = '',
     tesis, onAbrirTesis,
-    onResolverAsi, onResolverOpuesta, onMiCriterio,
+    onResolverAsi, onResolverOpuesta, onMiCriterio, onResolverSolucion,
     onRedactarOpuesta, redactando = false,
     onProponer, puedeVerComoSale = false,
 }: {
@@ -347,6 +347,9 @@ export default function ProblemaPrincipal({
     onAbrirTesis?: (t: TesisDelAcervo) => void;
     onResolverAsi?: () => void;
     onResolverOpuesta?: () => void;
+    /** Rediseño, etapa 3: resolver con una solución de la lista que no es
+     *  ninguna de las dos columnas (su sentido y su razón). */
+    onResolverSolucion?: (sentido: string, razon: string) => void;
     onMiCriterio: () => void;
     /** «Redactar el criterio de esta vía»: una llamada al motor, sólo con clic. */
     onRedactarOpuesta?: () => void;
@@ -504,7 +507,8 @@ export default function ProblemaPrincipal({
                             )}
                         </div>
                     )}
-                    <SolucionesPosibles soluciones={t.deliberacion?.soluciones} />
+                    <SolucionesPosibles soluciones={t.deliberacion?.soluciones}
+                        onResolver={onResolverSolucion ? (s) => onResolverSolucion(s.sentido, s.razon) : undefined} />
                     {p.por_que_principal && (
                         <details className="group mt-2">
                             <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-accent-gold/80 hover:text-accent-gold">

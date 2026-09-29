@@ -939,7 +939,8 @@ const FICHA_631 = {
           resumen: 'Resumen de la reposición (prueba).', revision: { estado: 'con_pendientes', avisos: ['Hecho sin verificar: «x».'] },
           falla: { que: 'no vence la razón autónoma R1 (prueba)', fatal: true }, sostenible: true, papel: 'propuesta' },
         { id: 'S3', prospera: true, sentido: 'fundado', tipo_efecto: 'para_efectos', rama: 'concede', desenlace: [],
-          resumen: '', revision: { estado: 'incompleta', avisos: [] }, falla: null, sostenible: false, papel: null },
+          resumen: '', revision: { estado: 'incompleta', avisos: [] }, falla: null, sostenible: false, papel: null,
+          razon: 'Razón de la S3 (prueba).' },
         { prospera: true, tipo_efecto: 'basura sin id' },
     ];
     const tt = api.tarjetaDe(base({ deliberacion: { origen: 'deliberacion', pregunta_decisiva: '¿X (prueba)?', figura: '',
@@ -953,6 +954,13 @@ const FICHA_631 = {
     ok(h.includes('Falla fatal: ') && h.includes('no vence la razón autónoma R1 (prueba)') && h.includes('Su punto débil: ')
        && h.includes('con pendientes') && h.includes('Hecho sin verificar'), 'E3: la falla del juez y la revisión por código');
     ok(h.includes('Quien la argumentó dice que no se sostiene'), 'E3: la insostenible lo dice');
+    ok(!h.includes('Resolver con esta solución'), 'E3: sin la acción, ningún botón');
+    let elegida = null;
+    const hB = pintar(React.createElement(PP, { ...props(tt), onResolverSolucion: (s, r) => { elegida = [s, r]; } }));
+    ok(hB.split('Resolver con esta solución').length === 2 && hB.includes('data-resolver-solucion="S3"'),
+       'E3: con la acción, el botón sólo en la solución que no es ninguna columna (la S3)');
+    ok(tt.deliberacion.soluciones[2].razon === 'Razón de la S3 (prueba).' && tt.deliberacion.soluciones[0].razon === '',
+       'E3: la razón que viaja se lee (vacía si no llegó)');
     const h0 = pintar(React.createElement(PP, props(api.tarjetaDe(base({ deliberacion: { origen: 'deliberacion',
         pregunta_decisiva: '¿X (prueba)?', figura: '', proposicion_toral: null } })))));
     ok(!h0.includes('Las soluciones que caben') && api.tarjetaDe(base()).deliberacion === null,

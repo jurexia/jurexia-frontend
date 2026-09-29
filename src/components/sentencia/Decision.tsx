@@ -630,6 +630,16 @@ export default function Decision({
         onResolverPorLaVia?.(vo.sentido, vo.razon || '');
         bajarA('asi-sale');
     };
+    /* UNA SOLUCIÓN DE LA LISTA (rediseño, etapa 3): viaja como la contraria
+       —su sentido y SU razón—; para la pantalla es su criterio, porque no es
+       ninguna de las dos columnas. */
+    const resolverSolucion = (sentido: string, razon: string) => {
+        if (!sentido) return;
+        setViaElegida('criterio');
+        setCorrigiendo(false);
+        onResolverPorLaVia?.(sentido, razon || '');
+        bajarA('asi-sale');
+    };
     const miCriterio = () => {
         setViaElegida('criterio');
         setCorrigiendo(true);
@@ -882,6 +892,7 @@ export default function Decision({
                     onAbrirTesis={onAbrirTesis}
                     onResolverAsi={resolverAsi}
                     onResolverOpuesta={resolverOpuesta}
+                    onResolverSolucion={resolverSolucion}
                     onMiCriterio={miCriterio}
                     onRedactarOpuesta={onRazonarGlobal}
                     redactando={razonandoGlobal}
