@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Scale, ArrowLeft } from 'lucide-react';
 
 export default function TerminosPage() {
-    const fechaActualizacion = "15 de septiembre de 2026";
+    const fechaActualizacion = "28 de septiembre de 2026";
 
     return (
         <main className="min-h-screen bg-cream-300">
@@ -309,19 +309,19 @@ export default function TerminosPage() {
                                 7.5 Suspensión de la cuenta por falta de pago
                             </h3>
                             <p className="text-charcoal-700 leading-relaxed mb-4">
-                                Cuando un cargo de renovación no pueda procesarse, Iurexia reintentará el
-                                cobro durante un <strong>plazo de gracia de catorce (14) días naturales</strong>,
-                                contados desde la fecha de la factura no cubierta. Durante ese plazo la cuenta
-                                conserva su acceso íntegro y el usuario recibe avisos con el enlace para
-                                actualizar su método de pago.
+                                Cuando un cargo de renovación sea rechazado o no pueda procesarse, la cuenta
+                                pasa <strong>de inmediato</strong> al estado de <strong>suspensión por falta de
+                                pago</strong>, sin plazo de gracia. Iurexia lo notificará al usuario por correo
+                                electrónico, con el enlace para cubrir el adeudo, y seguirá intentando el cobro.
                             </p>
                             <p className="text-charcoal-700 leading-relaxed mb-4">
-                                Transcurrido ese plazo sin que el adeudo se cubra, la cuenta pasa
-                                automáticamente al estado de <strong>suspensión por falta de pago</strong>. La
-                                cuenta suspendida <strong>no permite el uso de ninguna función de la
+                                La cuenta suspendida <strong>no permite el uso de ninguna función de la
                                 plataforma</strong> —consultas, redacción de documentos, análisis de
-                                expedientes ni acceso al historial— y así permanecerá hasta que el adeudo sea
-                                cubierto.
+                                expedientes ni acceso al historial—. La única acción disponible dentro de la
+                                plataforma es la <strong>actualización del método de pago</strong>, y la cuenta
+                                así permanecerá hasta que el adeudo sea cubierto. Mientras dure la suspensión,
+                                el usuario puede solicitar la cancelación de su suscripción escribiendo a{' '}
+                                <a href="mailto:soporte@iurexia.com" className="underline">soporte@iurexia.com</a>.
                             </p>
                             <p className="text-charcoal-700 leading-relaxed mb-4">
                                 <strong>La suspensión no es una cancelación.</strong> El usuario conserva su
@@ -340,7 +340,7 @@ export default function TerminosPage() {
                             </p>
                             <p className="text-charcoal-700 leading-relaxed">
                                 Esta medida se aplica de manera general y uniforme a todo usuario con
-                                suscripción de pago cuyo adeudo rebase el plazo de gracia señalado. Si el
+                                suscripción de pago cuyo cargo de renovación sea rechazado. Si el
                                 usuario considera que la suspensión obedece a un error, o atraviesa una
                                 circunstancia que le impide cubrir el pago, puede escribir a{' '}
                                 <a href="mailto:soporte@iurexia.com" className="underline">soporte@iurexia.com</a>,

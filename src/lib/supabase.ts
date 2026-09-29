@@ -169,11 +169,9 @@ export interface UserProfile {
      *  Platinum 60). Sólo el backend los mueve (`consumir_flujo`). */
     flujos_mes_usados?: number;
     flujos_periodo?: string | null;
-    /** Fecha de la factura abierta más antigua. NULL = sin adeudo. Con valor
-     *  y SIN `suspendido_at`, el usuario está en el periodo de gracia: la
-     *  plataforma le avisa cuántos días le quedan y le abre su facturación.
-     *  Antes esto sólo existía en el registro del barrido diario, así que el
-     *  primero en enterarse de que debía era el que ya no podía entrar. */
+    /** Fecha de la factura abierta más antigua. NULL = sin adeudo. Desde el
+     *  28-sep-2026 no hay periodo de gracia —el primer rechazo suspende—, así
+     *  que ya no se enseña en pantalla: queda como registro del adeudo. */
     impago_desde: string | null;
     /** Ruta interna a la que se lleva al usuario al entrar, una vez por sesión
      *  del navegador. NULL = el chat de siempre. La pone el administrador:

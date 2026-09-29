@@ -103,9 +103,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
 
     // ── CUENTA EN PAUSA POR UN COBRO QUE NO ENTRÓ (31-ago-2026) ───────────
     //
-    // El backend manda `<!-- SUSCRIPCION_SUSPENDIDA -->` cuando la mensualidad
-    // no se pudo cobrar en catorce días. Aquí se cambia por un aviso con el
-    // botón de pagar: decirle a un abogado que no pudimos cobrarle y no
+    // El backend manda `<!-- SUSCRIPCION_SUSPENDIDA -->` cuando la cuenta está
+    // suspendida por un cobro rechazado (al primer rechazo desde el 28-sep-2026;
+    // casi nunca se ve, porque el muro de `CuentaSuspendida` tapa el chat).
+    // Aquí se cambia por un aviso con el botón de pagar: decirle a un abogado
+    // que no pudimos cobrarle y no
     // enseñarle dónde arreglarlo es media respuesta, y acaba en soporte —o en
     // una cancelación— por algo que casi siempre es una tarjeta vencida.
     const enPausaPorImpago = !isUser
