@@ -10,7 +10,7 @@
  * confirma quien los tiene delante.
  */
 
-import type { ApoyoDeLaVia, ConceptosOmitidos, FichaProcesal, FuerzaDelApoyo, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
+import type { ApoyoDeLaVia, ConceptosOmitidos, FichaProcesal, FuerzaDelApoyo, SolucionPosible, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 
 export interface EncargoAdelanto {
     numero: string;                 // «512/2026»
@@ -2257,6 +2257,27 @@ const _o = (x: unknown): _Obj | null =>
 const _l = (x: unknown): unknown[] => (Array.isArray(x) ? x : []);
 const _t = (x: unknown): string => (x === null || x === undefined ? '' : String(x)).trim();
 const _ts = (x: unknown): string[] => _l(x).map(_t).filter(Boolean);
+
+/** Las soluciones posibles de la deliberación (rediseño, etapa 3), leídas con
+ *  tolerancia: lo que no tiene id o lado no se pinta. */
+export function solucionesDe(x: unknown): SolucionPosible[] {
+    return _l(x).map((s) => {
+        const o = _o(s);
+        if (!o || !_t(o.id)) return null;
+        const rv = _o(o.revision);
+        const f = _o(o.falla);
+        const papel = _t(o.papel);
+        return {
+            id: _t(o.id), prospera: o.prospera === true, sentido: _t(o.sentido),
+            tipo_efecto: _t(o.tipo_efecto), rama: _t(o.rama), desenlace: _ts(o.desenlace).slice(0, 3),
+            resumen: _t(o.resumen),
+            revision: { estado: _t(rv?.estado) || 'sin_revisar', avisos: _ts(rv?.avisos).slice(0, 3) },
+            falla: f && _t(f.que) ? { que: _t(f.que), fatal: f.fatal === true } : null,
+            sostenible: o.sostenible !== false,
+            papel: papel === 'propuesta' || papel === 'contraria' ? papel : null,
+        } as SolucionPosible;
+    }).filter((s): s is SolucionPosible => s !== null);
+}
 const _n = (x: unknown): number | null => {
     const v = typeof x === 'number' ? x : (typeof x === 'string' && x.trim() ? Number(x) : NaN);
     return Number.isFinite(v) ? v : null;
@@ -2756,6 +2777,8 @@ export function tarjetaDe(x: unknown): TarjetaDecision | null {
         deliberacion: del ? {
             origen: _t(del.origen), pregunta_decisiva: _t(del.pregunta_decisiva), figura: _t(del.figura),
             proposicion_toral: pt && _t(pt.dice) ? { dice: _t(pt.dice), cita: _t(pt.cita) } : null,
+            // Rediseño, etapa 3: sólo si el servidor las manda (bandera).
+            ...(Array.isArray(del.soluciones) ? { soluciones: solucionesDe(del.soluciones) } : {}),
         } : null,
         conceptos_omitidos: co ? conceptosOmitidosDe(co) : null,
         ficha: fichaDe(j.ficha),

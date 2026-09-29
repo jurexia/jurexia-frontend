@@ -4,6 +4,7 @@ import React from 'react';
 import { AlertTriangle, Check, ChevronRight, Loader2, PenLine } from 'lucide-react';
 import { cn } from './primitivas';
 import { FilaDelEspejo } from './FilaDelEspejo';
+import { SolucionesPosibles } from './SolucionesPosibles';
 import type { TesisDelAcervo } from './api';
 import type { ApoyoDeLaVia, FilaDeTuTribunal, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 import { fraseDe, legible } from './calificaciones';
@@ -503,6 +504,7 @@ export default function ProblemaPrincipal({
                             )}
                         </div>
                     )}
+                    <SolucionesPosibles soluciones={t.deliberacion?.soluciones} />
                     {p.por_que_principal && (
                         <details className="group mt-2">
                             <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-accent-gold/80 hover:text-accent-gold">

@@ -19,6 +19,22 @@ export type FaseId =
 
 export type EstadoFase = 'pendiente' | 'corriendo' | 'lista' | 'espera' | 'error';
 
+/** Una solución posible del asunto (rediseño, etapa 3). La lista la enumera el
+ *  código; «papel» dice si es la columna propuesta o la contraria. */
+export interface SolucionPosible {
+    id: string;
+    prospera: boolean;
+    sentido: string;
+    tipo_efecto: string;
+    rama: string;
+    desenlace: string[];
+    resumen: string;
+    revision: { estado: 'completa' | 'con_pendientes' | 'incompleta' | 'sin_revisar' | string; avisos: string[] };
+    falla: { que: string; fatal: boolean } | null;
+    sostenible: boolean;
+    papel: 'propuesta' | 'contraria' | null;
+}
+
 export interface Fase {
     id: FaseId;
     titulo: string;
@@ -369,6 +385,10 @@ export interface TarjetaDecision {
         pregunta_decisiva: string;
         figura: string;
         proposicion_toral: { dice: string; cita: string } | null;
+        /** Rediseño, etapa 3: TODAS las soluciones que caben (no sólo las dos
+         *  columnas), cada una argumentada aparte y revisada por código. Sólo
+         *  viene si el servidor tiene encendida su bandera. */
+        soluciones?: SolucionPosible[];
     } | null;
     /** En la vía que revoca: los conceptos que el juez no estudió y que hay que
      *  estudiar al reasumir jurisdicción (art. 93, fr. VI, LA). */

@@ -72,7 +72,7 @@ const REAL = path.join(TMP, 'real');
 const conReact = [['require("react")', `require(${JSON.stringify(REACT)})`],
                   ['require("lucide-react")', `require(${JSON.stringify(LUCIDE)})`]];
 for (const f of ['api.ts', 'tipos.ts', 'calificaciones.ts', 'recalificacion.ts', 'tarjetaDelPrincipal.ts',
-                 'primitivas.tsx', 'FilaDelEspejo.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
+                 'primitivas.tsx', 'FilaDelEspejo.tsx', 'SolucionesPosibles.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
                  'EstudiarJuntos.tsx']) {
     transpilar(REAL, f, conReact);
 }
@@ -925,6 +925,38 @@ const FICHA_631 = {
     const h3 = pintar(React.createElement(PP, props(base({ principal: { ...base().principal, figura: 'Figura (prueba)' },
         deliberacion: { origen: 'deliberacion', pregunta_decisiva: '¿X?', figura: 'Figura (prueba)', proposicion_toral: null } }))));
     ok(h3.split('Figura (prueba)').length === 2, 'E-rev: si la deliberación ya enseña la figura, no se repite');
+}
+
+/* ═══ 8 · LAS SOLUCIONES QUE CABEN (rediseño, etapa 3) ═══
+   Sólo si el servidor manda la lista; cada una con su efecto, su papel, la
+   revisión por código y la falla que vio el juez. */
+{
+    const SOLS = [
+        { id: 'S1', prospera: false, sentido: 'infundado', tipo_efecto: 'niega', rama: 'niega', desenlace: ['No ampara (prueba).'],
+          resumen: 'Resumen de la que niega (prueba).', revision: { estado: 'completa', avisos: [] },
+          falla: { que: 'punto débil de prueba', fatal: false }, sostenible: true, papel: 'contraria' },
+        { id: 'S2', prospera: true, sentido: 'fundado', tipo_efecto: 'reposicion', rama: 'concede', desenlace: [],
+          resumen: 'Resumen de la reposición (prueba).', revision: { estado: 'con_pendientes', avisos: ['Hecho sin verificar: «x».'] },
+          falla: { que: 'no vence la razón autónoma R1 (prueba)', fatal: true }, sostenible: true, papel: 'propuesta' },
+        { id: 'S3', prospera: true, sentido: 'fundado', tipo_efecto: 'para_efectos', rama: 'concede', desenlace: [],
+          resumen: '', revision: { estado: 'incompleta', avisos: [] }, falla: null, sostenible: false, papel: null },
+        { prospera: true, tipo_efecto: 'basura sin id' },
+    ];
+    const tt = api.tarjetaDe(base({ deliberacion: { origen: 'deliberacion', pregunta_decisiva: '¿X (prueba)?', figura: '',
+                                                    proposicion_toral: null, soluciones: SOLS } }));
+    ok(tt.deliberacion.soluciones.length === 3 && tt.deliberacion.soluciones[1].falla.fatal === true
+       && tt.deliberacion.soluciones[0].papel === 'contraria', 'E3: la lista se lee tolerante (lo que no tiene id no pasa)');
+    const h = muestra('E3 · las soluciones que caben', pintar(React.createElement(PP, props(tt))));
+    ok(h.includes('Las soluciones que caben (3)') && h.includes('concede para reponer el procedimiento')
+       && h.includes('concede para efectos') && h.includes('la columna propuesta') && h.includes('la columna contraria'),
+       'E3: las tres, con su efecto y cuál es cada columna');
+    ok(h.includes('Falla fatal: ') && h.includes('no vence la razón autónoma R1 (prueba)') && h.includes('Su punto débil: ')
+       && h.includes('con pendientes') && h.includes('Hecho sin verificar'), 'E3: la falla del juez y la revisión por código');
+    ok(h.includes('Quien la argumentó dice que no se sostiene'), 'E3: la insostenible lo dice');
+    const h0 = pintar(React.createElement(PP, props(api.tarjetaDe(base({ deliberacion: { origen: 'deliberacion',
+        pregunta_decisiva: '¿X (prueba)?', figura: '', proposicion_toral: null } })))));
+    ok(!h0.includes('Las soluciones que caben') && api.tarjetaDe(base()).deliberacion === null,
+       'E3: sin la lista (servidor sin la bandera), la tarjeta de siempre');
 }
 
 const iHtml = process.argv.indexOf('--html');
