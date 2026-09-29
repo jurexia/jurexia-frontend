@@ -2742,8 +2742,14 @@ export function tarjetaDe(x: unknown): TarjetaDecision | null {
             const f = _o(y) ?? {};
             return {
                 expediente: _t(f.expediente), fecha: _t(f.fecha), sentido: _t(f.sentido),
-                calificacion: _t(f.calificacion).toLowerCase(), razon: _t(f.razon),
+                // «parcialmente fundado» (así lo escribe la lectura de la OAJ) es
+                // el id parcialmente_fundado de FINAS: sin esto no casaba con
+                // ninguna vía.
+                calificacion: _t(f.calificacion).toLowerCase().trim().replace(/\s+/g, '_'), razon: _t(f.razon),
                 similitud: _n(f.similitud), nivel: _t(f.nivel) || null, neun: _t(f.neun),
+                tipo_asunto: _t(f.tipo_asunto), cota_inferior: f.cota_inferior === true,
+                fuente: _t(f.fuente), pregunta: _t(f.pregunta), autoridad: _t(f.autoridad),
+                enlace_oaj: _t(f.enlace_oaj), pdf_url: _t(f.pdf_url), tema: _t(f.tema),
             };
         }).filter((f) => f.expediente),
         linea_corte: { confirmadas: _apoyosDe(lc.confirmadas), pistas: _ts(lc.pistas) },

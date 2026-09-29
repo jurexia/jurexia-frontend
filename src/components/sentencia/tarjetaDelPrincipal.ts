@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { PropuestaDeSolucion, RespuestaPropuesta, TesisDelAcervo } from './api';
+import type { FilaEspejo, PropuestaDeSolucion, RespuestaPropuesta, TesisDelAcervo } from './api';
 import { leerTarjeta } from './api';
 import type {
     ApoyoDeLaVia, ConceptosOmitidos, FichaProcesal, FilaDeTuTribunal, PrincipalDeLaTarjeta, ProblemaJuridico, SuerteDelSecundario, TarjetaDecision,
@@ -308,10 +308,37 @@ export function conceptosQueFaltan(e: {
 export function tribunalPorLado(t: TarjetaDecision | null | undefined): Record<LadoDeLaTarjeta | 'sin_lado', FilaDeTuTribunal[]> {
     const r: Record<LadoDeLaTarjeta | 'sin_lado', FilaDeTuTribunal[]> = { propuesta: [], opuesta: [], sin_lado: [] };
     for (const f of t?.tu_tribunal ?? []) {
-        const lado = f.calificacion ? ladoDelSentido(t, f.calificacion) : null;
+        // UN «POSIBLE» NO VA BAJO NINGUNA VÍA (29-sep-2026): del 50 al 84% no
+        // es el mismo problema, y ponerlo en la columna de una vía lo lee como
+        // respaldo de esa vía. Tampoco la que coincidió por el TEMA del asunto:
+        // no trae calificación de un planteamiento, sólo el resolutivo entero.
+        const aparte = f.nivel === 'posible' || f.fuente === 'tema';
+        const lado = !aparte && f.calificacion ? ladoDelSentido(t, f.calificacion) : null;
         r[lado ?? 'sin_lado'].push(f);
     }
     return r;
+}
+
+/** La fila de la tarjeta en la forma de la fila del espejo, para pintarla con
+ *  la MISMA FilaDelEspejo que «Su propio tribunal». La similitud viaja en
+ *  fracción y la fila la pinta en por ciento entero (ya venía redondeada hacia
+ *  abajo en el servidor: aquí sólo se deshace la división). */
+export function comoFilaDelEspejo(f: FilaDeTuTribunal): FilaEspejo {
+    const pct = f.similitud == null ? undefined : Math.round(f.similitud <= 1 ? f.similitud * 100 : f.similitud);
+    const neun = /^\d+$/.test(f.neun || '') ? Number(f.neun) : undefined;
+    return {
+        tipo_asunto: f.tipo_asunto, expediente: f.expediente, fecha: f.fecha, sentido: f.sentido,
+        tema: f.tema, score: 0, pdf_url: f.pdf_url,
+        ...(pct != null ? { similitud: pct, cota_inferior: f.cota_inferior } : {}),
+        ...(f.fuente === 'planteamiento' || f.fuente === 'tema' ? { fuente: f.fuente } : {}),
+        ...(f.nivel === 'posible' || f.nivel === 'mismo_problema' ? { nivel: f.nivel } : {}),
+        ...(f.pregunta ? { pregunta: f.pregunta } : {}),
+        ...(f.razon ? { razon: f.razon } : {}),
+        ...(f.calificacion ? { calificacion: legible(f.calificacion).toLowerCase() } : {}),
+        ...(f.autoridad ? { autoridad: f.autoridad } : {}),
+        ...(neun != null ? { neun } : {}),
+        ...(f.enlace_oaj ? { enlace_oaj: f.enlace_oaj } : {}),
+    };
 }
 
 /** Qué dice el contraste del principal a cada vía. El agravio que no combate

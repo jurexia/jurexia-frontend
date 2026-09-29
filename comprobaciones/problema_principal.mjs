@@ -72,7 +72,7 @@ const REAL = path.join(TMP, 'real');
 const conReact = [['require("react")', `require(${JSON.stringify(REACT)})`],
                   ['require("lucide-react")', `require(${JSON.stringify(LUCIDE)})`]];
 for (const f of ['api.ts', 'tipos.ts', 'calificaciones.ts', 'recalificacion.ts', 'tarjetaDelPrincipal.ts',
-                 'primitivas.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
+                 'primitivas.tsx', 'FilaDelEspejo.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
                  'EstudiarJuntos.tsx']) {
     transpilar(REAL, f, conReact);
 }
@@ -166,9 +166,16 @@ function base(extra = {}) {
                             constancias_indispensables: ['Constancia de prueba'], limite_protector: null },
         tu_tribunal: [
             { expediente: 'AR 10/2025', fecha: '2025-03-01', sentido: 'confirma', calificacion: 'infundado',
-              razon: 'Razón de la fila 1.', similitud: 0.8, nivel: 'mismo_problema', neun: 'n1' },
+              razon: 'Razón de la fila 1.', similitud: 0.94, nivel: 'mismo_problema', neun: '31415926',
+              tipo_asunto: 'Amparo en revisión', cota_inferior: false, fuente: 'planteamiento',
+              pregunta: '¿Pregunta del precedente 1?', enlace_oaj: 'https://ejusticia.cjf.gob.mx/BuscadorSISE/' },
             { expediente: 'AR 11/2025', fecha: '2025-04-01', sentido: 'CONCEDE', calificacion: '',
               razon: '', similitud: null, nivel: null, neun: '' },
+            // UN POSIBLE CON CALIFICACIÓN QUE CASARÍA CON UNA VÍA: no va bajo ninguna.
+            { expediente: 'AR 12/2025', fecha: '2025-05-01', sentido: 'revoca', calificacion: 'fundado',
+              razon: 'Razón del posible.', similitud: 0.66, nivel: 'posible', neun: '27182818',
+              tipo_asunto: 'Amparo en revisión', cota_inferior: true, fuente: 'planteamiento',
+              pregunta: '¿Pregunta del posible?', enlace_oaj: 'https://ejusticia.cjf.gob.mx/BuscadorSISE/' },
         ],
         linea_corte: { confirmadas: [APOYO_TCC], pistas: ['Pista de prueba sin confirmar'] },
         deliberacion: null,
@@ -316,8 +323,10 @@ function base(extra = {}) {
        'sin desenlace: en un recurso, la que prospera; en amparo directo, ninguna');
 
     const trib = td.tribunalPorLado(t);
-    ok(trib.propuesta.length === 1 && trib.opuesta.length === 0 && trib.sin_lado.length === 1,
+    ok(trib.propuesta.length === 1 && trib.opuesta.length === 0 && trib.sin_lado.length === 2,
        'tu tribunal: la fila calificada «infundado» va con la vía A; la que no trae calificación, aparte');
+    ok(trib.sin_lado.some((f) => f.expediente === 'AR 12/2025') && !trib.opuesta.some((f) => f.expediente === 'AR 12/2025'),
+       'tu tribunal: un «posible» calificado «fundado» NO va con la vía que prospera: aparte');
 
     const cA = td.contrasteParaVia({ la_combate: false, sobrevive: false }, false, true);
     const cB = td.contrasteParaVia({ la_combate: false, sobrevive: false }, true, true);
@@ -440,7 +449,26 @@ const props = (t, extra = {}) => ({
     ok(!A.includes('conceptos de violación que el juez no estudió') && B.includes('conceptos de violación que el juez no estudió')
        && B.includes('No constan en lo que se subió'), 'A: los conceptos omitidos, sólo en la vía que revoca');
     ok(h.includes('Claro: el material sostiene la propuesta') && h.includes('Razón del estado 1 (prueba).'), 'A: el estado y su porqué');
-    ok(!/\d+\s?%/.test(h), 'A: ningún porcentaje en la tarjeta');
+    // NINGÚN PORCENTAJE DEL MOTOR (su confianza no predice el acierto). La
+    // única excepción es la insignia del precedente propio: la probabilidad
+    // CALIBRADA de que sea el mismo problema, que David pidió (28-sep-2026,
+    // «opción 1 + 2») y que no es un juicio del motor sobre el asunto.
+    ok(!/\d+\s?%/.test(h.replace(/\d+% (o más )?· (mismo problema|posible)/g, '')),
+       'A: ningún porcentaje en la tarjeta fuera de la insignia calibrada de un precedente');
+    ok(A.includes('94% · mismo problema') && A.includes('¿Pregunta del precedente 1?')
+       && A.includes('Amparo en revisión AR 10/2025'),
+       'A: el precedente del mismo problema lleva su probabilidad, su pregunta y su tipo');
+    ok(A.includes('31415926') && A.includes('Buscador de la OAJ'),
+       'A: y se puede abrir: el NEUN para copiar y el Buscador de la OAJ');
+    // `columna` corta la B hasta el final del HTML: se corta aquí donde empieza
+    // lo que va aparte, debajo de las dos vías.
+    const finVias = Math.min(...['Tu tribunal en este punto', 'Posibles precedentes']
+        .map((x) => h.indexOf(x)).filter((x) => x >= 0));
+    const Bvia = h.slice(h.indexOf('data-via="opuesta"'), finVias);
+    ok(!A.includes('AR 12/2025') && !Bvia.includes('AR 12/2025')
+       && h.indexOf('AR 12/2025') > h.indexOf('Posibles precedentes')
+       && h.includes('66% o más · posible'),
+       'A: el posible NO va bajo ninguna vía: aparte, rotulado, con su cota');
     ok(h.includes('Pista de prueba sin confirmar') && h.includes('no se citan'), 'A: las pistas, dichas como no citables');
     ok(h.includes('Se estudian aparte') && h.includes('propuesta propia · inoperante'), 'A: el independiente con su propuesta');
     ok(h.includes('Constancia de prueba'), 'A: qué cambiaría la decisión');

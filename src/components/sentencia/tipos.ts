@@ -270,12 +270,26 @@ export interface FilaDeTuTribunal {
     expediente: string;
     fecha: string;
     sentido: string;
+    /** Normalizada a los ids de FINAS («parcialmente fundado» → parcialmente_fundado). */
     calificacion: string;
     razon: string;
+    /** Probabilidad calibrada en FRACCIÓN (0.57), como la manda la tarjeta. */
     similitud: number | null;
     /** «mismo_problema» | «posible» | null. */
     nivel: string | null;
     neun: string;
+    /* ═══ Lo que la fila de la OAJ trae y la tarjeta antes tiraba (29-sep-2026) ═══ */
+    tipo_asunto: string;
+    /** «57% o más»: la tabla no midió ese coseno. */
+    cota_inferior: boolean;
+    /** «planteamiento» | «tema» | '' (espejo viejo). */
+    fuente: string;
+    /** La pregunta del planteamiento del precedente: lo que se compara. */
+    pregunta: string;
+    autoridad: string;
+    enlace_oaj: string;
+    pdf_url: string;
+    tema: string;
 }
 
 /** Nunca un porcentaje: «claro», «reñido» o «no_alcanza», con sus razones.

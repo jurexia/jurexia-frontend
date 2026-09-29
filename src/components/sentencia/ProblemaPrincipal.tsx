@@ -3,12 +3,13 @@
 import React from 'react';
 import { AlertTriangle, Check, ChevronRight, Loader2, PenLine } from 'lucide-react';
 import { cn } from './primitivas';
+import { FilaDelEspejo } from './FilaDelEspejo';
 import type { TesisDelAcervo } from './api';
 import type { ApoyoDeLaVia, FilaDeTuTribunal, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 import { fraseDe, legible } from './calificaciones';
 import {
     apoyosParaCitar, contrasteParaVia, decisivaYaEsElPrincipal, hayAlternativaReal, lineaDeLaFicha,
-    preguntaRecurridaAparte, propuestaDelJuez, ladoQueRevoca, prosperaDeLaVia, rotuloDeSuerte, sinRecomendar, textoDeFuerza, tribunalPorLado, vigenciaDudosa,
+    preguntaRecurridaAparte, propuestaDelJuez, ladoQueRevoca, prosperaDeLaVia, rotuloDeSuerte, sinRecomendar, textoDeFuerza, tribunalPorLado, vigenciaDudosa, comoFilaDelEspejo,
 } from './tarjetaDelPrincipal';
 import type { LadoDeLaTarjeta, ViaActiva } from './tarjetaDelPrincipal';
 
@@ -125,19 +126,30 @@ function ChipApoyo({ a, tesis, onAbrirTesis }: {
     );
 }
 
-function FilasTribunal({ filas }: { filas: FilaDeTuTribunal[] }) {
+/* LAS SENTENCIAS DEL PROPIO TRIBUNAL, con la MISMA fila que «Su propio
+   tribunal» (FilaDelEspejo, 29-sep-2026): tipo y número, fecha, la
+   probabilidad calibrada con su nivel («94% · mismo problema», «66% o más ·
+   posible»), la pregunta del precedente, su calificación y razón, y el NEUN
+   para copiarlo con el Buscador de la OAJ —la única forma de abrirla—. Antes
+   aquí salían recortadas y no había cómo abrir ninguna. Tres a la vista; las
+   demás se cuentan, no se esconden en silencio. */
+function FilasTribunal({ filas, tope = 3 }: { filas: FilaDeTuTribunal[]; tope?: number }) {
+    const [todas, setTodas] = React.useState(false);
+    const vistas = todas ? filas : filas.slice(0, tope);
     return (
-        <ul className="mt-1 space-y-1">
-            {filas.slice(0, 3).map((f) => (
-                <li key={`${f.expediente}|${f.fecha}`} className="text-[12px] leading-snug text-white/60">
-                    <span className="text-white/75">{f.expediente}</span>
-                    {f.fecha && ` · ${f.fecha.slice(0, 10)}`}
-                    {(f.calificacion || f.sentido) && ` · ${f.calificacion ? legible(f.calificacion).toLowerCase() : f.sentido}`}
-                    {f.nivel === 'posible' && <span className="ml-1.5 text-[10px] uppercase tracking-wide text-white/45">posible</span>}
-                    {f.razon && <span className="line-clamp-2 text-white/45">{f.razon}</span>}
-                </li>
-            ))}
-        </ul>
+        <>
+            <ul className="mt-1 space-y-1.5">
+                {vistas.map((f, k) => (
+                    <FilaDelEspejo key={`${f.neun || f.expediente}|${f.fecha}|${k}`} f={comoFilaDelEspejo(f)} />
+                ))}
+            </ul>
+            {filas.length > tope && (
+                <button type="button" onClick={() => setTodas(!todas)}
+                        className="mt-1 text-[11px] text-white/45 underline decoration-white/20 underline-offset-2 hover:text-white/70">
+                    {todas ? 'ver menos' : `y ${filas.length - tope} más`}
+                </button>
+            )}
+        </>
     );
 }
 
@@ -656,10 +668,21 @@ export default function ProblemaPrincipal({
                 </div>
             )}
 
-            {hayGlobal && trib.sin_lado.length > 0 && (
+            {/* LO QUE NO VA BAJO NINGUNA VÍA, en dos bloques. Arriba, las del
+                nivel «mismo problema» cuya calificación no casa con una vía (o
+                que coincidieron por el tema del asunto); debajo, los POSIBLES
+                (50-84%), que no son el mismo problema y se revisan a mano. Con
+                o sin propuesta global: antes, sin ella, no salían. */}
+            {trib.sin_lado.some((f) => f.nivel !== 'posible') && (
                 <div className="mt-3">
                     <Rotulito>Tu tribunal en este punto · para leer, no para contar</Rotulito>
-                    <FilasTribunal filas={trib.sin_lado} />
+                    <FilasTribunal filas={trib.sin_lado.filter((f) => f.nivel !== 'posible')} />
+                </div>
+            )}
+            {trib.sin_lado.some((f) => f.nivel === 'posible') && (
+                <div className="mt-3">
+                    <Rotulito>Posibles precedentes · no son el mismo problema: revísalos tú</Rotulito>
+                    <FilasTribunal filas={trib.sin_lado.filter((f) => f.nivel === 'posible')} />
                 </div>
             )}
             {hayQueCambia && (
