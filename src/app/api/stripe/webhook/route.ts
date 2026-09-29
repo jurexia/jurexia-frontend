@@ -416,14 +416,19 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         const customerId = session.customer as string;
         const newSubscriptionId = session.subscription as string;
 
+        /* LAS VIGENTES Y LAS VENCIDAS (29-sep-2026). Desde que el checkout ya no
+           cancela nada antes de cobrar, ESTE es el único sitio donde se retira la
+           suscripción anterior, así que también tiene que ver las que están en
+           `past_due`/`unpaid` (antes sólo miraba las activas). */
         const customerSubscriptions = await stripe.subscriptions.list({
             customer: customerId,
-            status: 'active',
-            limit: 10,
+            status: 'all',
+            limit: 20,
         });
 
         const otherSubscriptions = customerSubscriptions.data.filter(
             (sub) => sub.id !== newSubscriptionId
+                && ['active', 'trialing', 'past_due', 'unpaid'].includes(sub.status)
         );
 
         if (otherSubscriptions.length > 0) {
@@ -435,11 +440,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
                 const oldPriceId = oldSub.items.data[0]?.price.id;
                 const oldPlanId = getPlanIdFromPriceId(oldPriceId || '');
 
-                if (isUpgrade(oldPlanId, newPlanId)) {
-                    // New plan is higher → cancel old (lower) subscription ✅
+                const vencida = oldSub.status === 'past_due' || oldSub.status === 'unpaid';
+                if (vencida || isUpgrade(oldPlanId, newPlanId)) {
+                    // New plan is higher (o la vieja no se estaba pagando) → cancel old ✅
                     try {
-                        await stripe.subscriptions.cancel(oldSub.id);
-                        console.log(`✅ Cancelled old subscription ${oldSub.id} (${oldPlanId} → ${newPlanId})`);
+                        /* CON PRORRATEO Y FACTURA INMEDIATA la que estaba al
+                           corriente (29-sep-2026): el tiempo pagado y no usado
+                           vuelve como saldo del cliente y se descuenta de su
+                           siguiente cobro. Sin prorrateo lo perdía entero (pagaba
+                           dos veces el mismo tramo). La vencida no se prorratea:
+                           ese periodo no se pagó. */
+                        if (vencida) {
+                            await stripe.subscriptions.cancel(oldSub.id);
+                        } else {
+                            await stripe.subscriptions.cancel(oldSub.id, { prorate: true, invoice_now: true });
+                        }
+                        console.log(`✅ Cancelled old subscription ${oldSub.id} (${oldPlanId} → ${newPlanId}${vencida ? ', vencida' : ', con prorrateo'})`);
                     } catch (cancelErr) {
                         console.error(`❌ Failed to cancel old subscription ${oldSub.id}:`, cancelErr);
                     }

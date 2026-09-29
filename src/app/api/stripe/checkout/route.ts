@@ -85,11 +85,19 @@ export async function POST(request: NextRequest) {
                     const newPlanId = getPlanIdFromPriceId(priceId);
 
                     if (isUpgrade(currentPlanId, newPlanId)) {
-                        // UPGRADE → cancel old, proceed with new checkout
-                        console.log(`🔄 UPGRADE: ${customerEmail} from ${currentPlanId} to ${newPlanId} — canceling old sub ${activeSub.id}`);
-                        await stripe.subscriptions.cancel(activeSub.id, {
-                            prorate: true,
-                        });
+                        /* UPGRADE → SE ABRE EL COBRO Y NO SE CANCELA NADA TODAVÍA
+                           (29-sep-2026). Aquí se cancelaba la suscripción vigente
+                           al CREAR el checkout, antes de que el cliente pagara el
+                           plan nuevo. Quien abría el cobro y no lo terminaba se
+                           quedaba sin el plan que ya había pagado: Carlos Elias
+                           (chly588) abrió un Ultra a las 23:55 del 28-sep, no lo
+                           pagó, y su Platinum —pagado hasta el 23-oct— se canceló
+                           en ese mismo segundo; el webhook lo bajó a gratuito.
+                           Pasó también con otros tres clientes entre agosto y
+                           septiembre. La suscripción vieja la cancela el webhook
+                           `checkout.session.completed` CUANDO el pago nuevo ya
+                           está hecho (y con prorrateo, para abonarle lo no usado). */
+                        console.log(`🔄 UPGRADE: ${customerEmail} from ${currentPlanId} to ${newPlanId} — la suscripción ${activeSub.id} se cancela al completarse el pago nuevo`);
                     } else {
                         // DOWNGRADE → block checkout, redirect to billing portal
                         console.log(`⚠️ DOWNGRADE BLOCKED: ${customerEmail} trying to go from ${currentPlanId} to ${newPlanId} — redirecting to portal`);
@@ -124,9 +132,10 @@ export async function POST(request: NextRequest) {
                         message: 'Tu suscripción tiene un pago pendiente. Te redirigimos para actualizar tu método de pago.'
                     });
                 } else {
-                    // Different plan + past_due → cancel old, proceed with upgrade
-                    console.log(`🔄 PLAN CHANGE: ${customerEmail} past_due on ${currentPriceId}, upgrading to ${priceId} — canceling old`);
-                    await stripe.subscriptions.cancel(pastDueSub.id);
+                    // Different plan + past_due → se abre el cobro del plan nuevo; la
+                    // vencida la cancela el webhook al completarse el pago (29-sep-2026:
+                    // cancelarla aquí dejaba al cliente sin nada si no terminaba de pagar).
+                    console.log(`🔄 PLAN CHANGE: ${customerEmail} past_due on ${currentPriceId}, upgrading to ${priceId} — la vencida se cancela al completarse el pago`);
                 }
             }
         }
