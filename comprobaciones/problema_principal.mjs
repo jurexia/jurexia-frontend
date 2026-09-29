@@ -867,6 +867,36 @@ const FICHA_631 = {
     const igual = pintar(React.createElement(PP, props(base({ principal: { ...base().principal, pregunta_recurrida: '¿Pregunta principal de prueba?' } }))));
     ok(!igual.includes('Así lo planteó la recurrida'), 'E4: la recurrida igual a la decisiva no se pinta');
 }
+/* ═══ 7 · REVISIÓN ADVERSARIAL DE LA FASE E ═══
+   Lo firme salía bajo «Materia de la revisión»; ni la fracción del art. 93 ni
+   la figura llegaban a la pantalla. */
+{
+    const F2 = { ...FICHA_631, materia: 'concesión (prueba)', firme: 'sobreseimiento (prueba)',
+                 art_93: { fraccion: 'VI', previo: 'II y III (prueba)', si_prospera: 'revoca (prueba); reasume (prueba); resto (prueba)',
+                           si_no_prospera: 'confirma (prueba)' } };
+    const f2 = api.fichaDe(F2);
+    ok(f2.firme === 'sobreseimiento (prueba)' && f2.materia === 'concesión (prueba)' && f2.art_93.fraccion === 'VI',
+       'E-rev: `firme` y `art_93` se leen aparte de `materia`');
+    const vieja = api.fichaDe({ ...FICHA_631, materia: 'concesión (prueba) · firme: sobreseimiento (prueba)' });
+    ok(vieja.materia === 'concesión (prueba)' && vieja.firme === 'sobreseimiento (prueba)',
+       'E-rev: un servidor anterior («… · firme: …» en materia) se parte');
+    const l2 = td.lineaDeLaFicha(f2);
+    ok(l2.map((x) => x.rotulo).join('|') === 'Quejosa|Responsables|Tercero|Recurrida|Recurre|Materia de la revisión|Firme|Art. 93',
+       'E-rev: «Firme» y «Art. 93» con su propio rótulo');
+    ok(l2[5].texto === 'concesión (prueba)' && l2[6].texto === 'sobreseimiento (prueba)'
+       && l2[7].texto === 'fr. VI · si prospera: revoca (prueba); reasume (prueba)',
+       'E-rev: lo firme no va bajo «Materia de la revisión»; la fracción y qué pasa si prospera');
+    const t2 = base({ ficha: F2, principal: { ...base().principal, pregunta: '¿Decisiva (prueba)?',
+                                              pregunta_recurrida: '¿Del a quo (prueba)?', figura: 'Figura sola (prueba)' } });
+    const tt = api.tarjetaDe(t2);
+    ok(tt.principal.figura === 'Figura sola (prueba)', 'E-rev: `principal.figura` se lee');
+    const h2 = pintar(React.createElement(PP, props(t2)));
+    ok(h2.includes('data-figura') && h2.includes('Figura sola (prueba)') && h2.includes('Firme: </span>sobreseimiento (prueba)')
+       && h2.includes('Art. 93: </span>fr. VI'), 'E-rev: la figura bajo la decisiva, lo firme aparte y la fracción en la línea');
+    const h3 = pintar(React.createElement(PP, props(base({ principal: { ...base().principal, figura: 'Figura (prueba)' },
+        deliberacion: { origen: 'deliberacion', pregunta_decisiva: '¿X?', figura: 'Figura (prueba)', proposicion_toral: null } }))));
+    ok(h3.split('Figura (prueba)').length === 2, 'E-rev: si la deliberación ya enseña la figura, no se repite');
+}
 
 const iHtml = process.argv.indexOf('--html');
 if (iHtml > 0 && process.argv[iHtml + 1]) {

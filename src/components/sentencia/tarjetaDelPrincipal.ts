@@ -436,7 +436,7 @@ export function tarjetaDeLaPropuesta(
         estado_calculo: vp ? 'listo' : 'sin_propuesta',
         huella: '',
         principal: pral ? {
-            numero: iP + 1, pregunta: pral.pregunta, pregunta_recurrida: '', clase: '',
+            numero: iP + 1, pregunta: pral.pregunta, pregunta_recurrida: '', figura: '', clase: '',
             jerarquia_de: (pral.jerarquia ?? '') === 'principal' ? 'fase3' : 'por_omision',
             por_que_principal: g?.contexto?.tema_principal ?? '',
             discrepa_motor: null,
@@ -529,6 +529,17 @@ export function lineaDeLaFicha(f: FichaProcesal | null | undefined): { rotulo: s
     }
     // En el amparo directo no hay revisión: la materia es la del juicio.
     if (f.materia) out.push({ rotulo: f.tipo.includes('directo') ? 'Materia' : 'Materia de la revisión', texto: f.materia });
+    // LO FIRME CON SU PROPIO RÓTULO y LA FRACCIÓN QUE RIGE (revisión
+    // adversarial de la fase E, AR 631/2025): el sobreseimiento del otro acto
+    // salía bajo «Materia de la revisión», y nada decía «art. 93, fr. VI» ni
+    // que, si prospera, se reasume jurisdicción.
+    if (f.firme) out.push({ rotulo: 'Firme', texto: f.firme });
+    if (f.art_93 && (f.art_93.fraccion || f.art_93.si_prospera)) {
+        const partes = [f.art_93.fraccion ? `fr. ${f.art_93.fraccion}` : '',
+                        f.art_93.si_prospera ? `si prospera: ${f.art_93.si_prospera.split(';').slice(0, 2).join(';').trim()}` : '']
+            .filter(Boolean);
+        out.push({ rotulo: 'Art. 93', texto: partes.join(' · ') });
+    }
     return out;
 }
 

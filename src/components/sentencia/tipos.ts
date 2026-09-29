@@ -231,6 +231,9 @@ export interface PrincipalDeLaTarjeta {
      *  adquirente del inmueble puede sustituirse a la actora en la ejecución).
      *  Vacío = el servidor no lo manda o coincide con la decisiva. */
     pregunta_recurrida: string;
+    /** La figura sobre la que versa la pregunta decisiva (SPEC E3), como la
+     *  reconoce el servidor; vacía si no la manda. */
+    figura: string;
     clase: string;
     /** Quién lo hizo principal: «fase3» | «secretario» | «por_omision». */
     jerarquia_de: string;
@@ -314,8 +317,16 @@ export interface FichaProcesal {
      *  Distrito) y qué resolvió por acto: «sobresee» | «concede» | «niega». */
     recurrida: { organo: string; resolvio: { acto: string; sentido: string }[] } | null;
     recurrente: { quien: string; caracter: string } | null;
-    /** Qué es materia de la revisión (lo impugnado; lo demás quedó firme). */
+    /** Qué es materia de la revisión: SÓLO lo impugnado. */
     materia: string;
+    /** Lo que quedó firme por no impugnarse, aparte (revisión adversarial de
+     *  la fase E): en el 631 el sobreseimiento del otro acto salía bajo
+     *  «Materia de la revisión», justo la confusión que la ficha evita. */
+    firme: string;
+    /** La fracción del art. 93 LA que rige, el orden de estudio previo (II y
+     *  III cuando recurre la autoridad o la tercera) y qué pasa si prospera y
+     *  si no. Null fuera de la revisión o si el servidor no lo manda. */
+    art_93: { fraccion: string; previo: string; si_prospera: string; si_no_prospera: string } | null;
     avisos: string[];
 }
 

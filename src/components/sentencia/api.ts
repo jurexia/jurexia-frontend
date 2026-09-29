@@ -2586,6 +2586,23 @@ export function fichaDe(x: unknown): FichaProcesal | null {
     const rte = _o(f.recurrente);
     const quien = rte ? _t(rte.quien ?? rte.nombre) : _t(f.recurrente);
     const caracter = _t(rte ? rte.caracter : f.caracter_recurrente);
+    // LO FIRME, APARTE (revisión adversarial de la fase E): el servidor lo
+    // manda en `firme`; uno anterior lo metía en `materia` tras « · firme: ».
+    let materia = _t(f.materia ?? f.materia_revision);
+    let firme = _t(f.firme);
+    const corte = materia.indexOf(' · firme: ');
+    if (!firme && corte >= 0) {
+        firme = materia.slice(corte + ' · firme: '.length).trim();
+        materia = materia.slice(0, corte).trim();
+    } else if (!firme && materia.startsWith('firme: ')) {
+        firme = materia.slice('firme: '.length).trim();
+        materia = '';
+    }
+    const a93 = _o(f.art_93);
+    const art_93 = a93 && (_t(a93.fraccion) || _t(a93.previo) || _t(a93.si_prospera)) ? {
+        fraccion: _t(a93.fraccion), previo: _t(a93.previo),
+        si_prospera: _t(a93.si_prospera), si_no_prospera: _t(a93.si_no_prospera),
+    } : null;
     const ficha: FichaProcesal = {
         tipo: _t(f.tipo ?? f.tipo_asunto).toLowerCase(),
         quejosa: _parte(f.quejosa ?? f.quejoso),
@@ -2593,11 +2610,13 @@ export function fichaDe(x: unknown): FichaProcesal | null {
         terceros: _uno(f.terceros ?? f.tercero).map(_parte).filter(Boolean),
         recurrida: organo || resolvio.length ? { organo, resolvio } : null,
         recurrente: quien || caracter ? { quien, caracter } : null,
-        materia: _t(f.materia ?? f.materia_revision),
+        materia,
+        firme,
+        art_93,
         avisos: _l(f.avisos).map(_textoDeAviso).filter(Boolean),
     };
     const vacia = !ficha.quejosa && !responsables.length && !ficha.terceros.length && !ficha.recurrida
-        && !ficha.recurrente && !ficha.materia;
+        && !ficha.recurrente && !ficha.materia && !ficha.firme && !ficha.art_93;
     return vacia ? null : ficha;
 }
 
@@ -2626,6 +2645,7 @@ export function tarjetaDe(x: unknown): TarjetaDecision | null {
             numero: _n(p.numero) ?? 0,
             pregunta: _t(p.pregunta),
             pregunta_recurrida: _t(p.pregunta_recurrida),
+            figura: _t(p.figura),
             clase: _t(p.clase),
             jerarquia_de: _t(p.jerarquia_de),
             por_que_principal: _t(p.por_que_principal),

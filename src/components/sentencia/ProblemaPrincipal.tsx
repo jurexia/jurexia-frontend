@@ -451,6 +451,14 @@ export default function ProblemaPrincipal({
                             <span className="text-white/40">Así lo planteó la recurrida: </span>{recurrida}
                         </p>
                     )}
+                    {/* LA FIGURA QUE DECIDE (revisión adversarial de la fase E):
+                        el servidor ya la manda en `principal.figura`; si la
+                        deliberación la enseña más abajo, no se repite. */}
+                    {p.figura && !(t.deliberacion?.figura && t.deliberacion.figura.trim() === p.figura.trim()) && (
+                        <p data-figura className="mt-1 text-[13px] leading-relaxed text-white/60">
+                            <span className="text-white/40">La figura: </span>{p.figura}
+                        </p>
+                    )}
                     <p className="mt-1 text-[12px] text-white/45">
                         {p.jerarquia_de === 'secretario' ? 'Lo marcaste tú como principal'
                             : p.jerarquia_de === 'por_omision' ? 'Principal por ser el primero: ningún paso lo marcó'
