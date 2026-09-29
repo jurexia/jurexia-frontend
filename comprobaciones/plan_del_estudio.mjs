@@ -602,6 +602,25 @@ const sinPlanDe = (estado, clave) => ({ estado, clave, plan: null, avisos: [], c
     ok(leidas === tras, 'vencida la espera ya no se pregunta a la fila');
 }
 
+{   // 7 · ETAPA 4: lo que el código ajustó y el nombre nuevo de la razón
+    const conCambios = api.planDe({ ...PLAN, cambios_sin_justificar: [
+        { segmento: 'S3', campo: 'etiqueta', antes: 'fundado', despues: 'fundado_insuficiente',
+          regla: 'fundado_a_insuficiente', cuenta: true },
+        { unidad: 'U2', campo: 'segmentos', antes: ['S1', 'S2'], despues: ['S1'], regla: 'unidad_por_dependencia',
+          descripcion: 'unidades rehechas por la jerarquía', cuenta: false },
+        { segmento: 'S9', antes: 'x' },
+    ] });
+    const cs = conCambios.cambios;
+    ok(cs.length === 2 && cs[0].objeto === 'segmento' && cs[0].id === 'S3' && cs[0].cuenta === true
+       && cs[0].descripcion === 'fundado a insuficiente', 'E4: cambios_sin_justificar se lee (sin campo no pasa; sin descripción, la regla legible)');
+    ok(cs[1].objeto === 'unidad' && cs[1].antes === 'S1, S2' && cs[1].descripcion === 'unidades rehechas por la jerarquía'
+       && cs[1].cuenta === false, 'E4: listas en texto y la descripción del servidor cuando la manda');
+    ok(Array.isArray(api.planDe(PLAN).cambios) && api.planDe(PLAN).cambios.length === 0,
+       'E4: un plan sin la lista (bandera apagada) trae cambios vacíos');
+    ok(como.razonLegible('sin_materia_por_principal') === 'queda sin materia por lo que se resuelve en el principal'
+       && como.razonLegible('cae_con_principal') === 'cae con el principal', 'E4: el nombre nuevo de la razón, y el viejo sigue');
+}
+
 Date.now = DateNowReal;
 fs.rmSync(TMP, { recursive: true, force: true });
 console.log(fallas ? `FALLAS: ${fallas} (bien: ${bien})` : `OK · ${bien} comprobaciones`);

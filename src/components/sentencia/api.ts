@@ -2224,6 +2224,21 @@ export interface ProblemaDelPlan {
     dependeDe: number | string | null;
 }
 
+/** Rediseño, etapa 4: lo que el código le cambió al planificador sin que nadie
+ *  lo justificara (`cambios_sin_justificar`). Sólo marca: no decide nada. */
+export interface CambioDelPlan {
+    objeto: 'segmento' | 'unidad' | 'plan' | string;
+    id: string;
+    campo: string;
+    antes: string;
+    despues: string;
+    regla: string;
+    /** Cómo lo dice el servidor; si no lo manda, la regla legible. */
+    descripcion: string;
+    /** true = cuenta como cambio que alguien tendría que justificar. */
+    cuenta: boolean;
+}
+
 export interface PlanDelEstudio {
     version: string;
     clave: string;
@@ -2238,6 +2253,8 @@ export interface PlanDelEstudio {
     orden: { criterio: string; porQue: string } | null;
     /** plan-6: vacía en planes viejos. */
     jerarquia: JerarquiaDeProblema[];
+    /** Etapa 4: vacía si el servidor no la manda (bandera apagada). */
+    cambios: CambioDelPlan[];
 }
 
 export interface RespuestaPlan {
@@ -2308,6 +2325,26 @@ function _idProblema(x: unknown): number | string | null {
     const t = _t(x);
     if (!t) return null;
     return /^\d+$/.test(t) ? Number(t) : t;
+}
+
+function _texto(x: unknown): string {
+    if (Array.isArray(x)) return x.map(_t).filter(Boolean).join(', ');
+    return _t(x);
+}
+
+/** `cambios_sin_justificar` leído con tolerancia (sin campo o sin regla no pasa). */
+export function cambiosDelPlan(x: unknown): CambioDelPlan[] {
+    return _l(x).map((y) => {
+        const c = _o(y);
+        if (!c || !_t(c.campo)) return null;
+        const objeto = ['segmento', 'unidad', 'plan'].find((k) => k in c) ?? '';
+        return {
+            objeto, id: objeto ? _t(c[objeto]) : '', campo: _t(c.campo),
+            antes: _texto(c.antes), despues: _texto(c.despues), regla: _t(c.regla),
+            descripcion: _t(c.descripcion) || _t(c.regla).replace(/_/g, ' '),
+            cuenta: c.cuenta === true,
+        } as CambioDelPlan;
+    }).filter((c): c is CambioDelPlan => c !== null);
 }
 
 export function planDe(x: unknown): PlanDelEstudio | null {
@@ -2388,6 +2425,7 @@ export function planDe(x: unknown): PlanDelEstudio | null {
         }).filter((p) => p.seg && p.a),
         avisos: _l(j.avisos_al_secretario).map(_textoDeAviso).filter(Boolean),
         orden: orden ? { criterio: _t(orden.criterio), porQue: _t(orden.por_que) } : null,
+        cambios: cambiosDelPlan(j.cambios_sin_justificar),
         jerarquia: _l(j.jerarquia).map((y): JerarquiaDeProblema | null => {
             const g = _o(y);
             const problema = g ? _idProblema(g.problema) : null;

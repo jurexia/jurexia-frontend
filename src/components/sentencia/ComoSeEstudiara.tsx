@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Check, Loader2 } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from './primitivas';
 import type { ProblemaJuridico } from './tipos';
 import type { PlanDelEstudio, PropuestaDelPlan, RespuestaPlan, SegmentoDelPlan } from './api';
@@ -232,6 +232,8 @@ const RAZON: Record<string, string> = {
     adhesivo_fuera_182: 'el adhesivo no se ajusta al art. 182',
     innecesario_mayor_beneficio: 'innecesario: la concesión de fondo da mayor beneficio (art. 189)',
     cae_con_principal: 'cae con el principal',
+    /* Etapa 4: el nombre nuevo de la misma razón (queda sin materia, no «cae»). */
+    sin_materia_por_principal: 'queda sin materia por lo que se resuelve en el principal',
     /* plan-6 (28-sep-2026, AR 631/2025): los secundarios se resuelven por
        dependencia del principal, no con una razón por argumento. */
     innecesario_por_suficiencia: 'innecesario por suficiencia: lo resuelto en el principal ya da todo lo que podría dar',
@@ -857,6 +859,29 @@ export default function ComoSeEstudiara({
                         <p className="text-[12px] leading-relaxed text-white/50">
                             Orden: {plan.orden.criterio ? `${humano(plan.orden.criterio)} · ` : ''}{plan.orden.porQue}
                         </p>
+                    )}
+
+                    {/* ── 5b · LO QUE EL CÓDIGO AJUSTÓ (etapa 4) ──
+                        El código corrige al planificador cuando algo no cuadra
+                        (una etiqueta, un segmento fuera del inventario, un
+                        portador). Nadie lo justificó: se enseña para que el
+                        secretario lo vea, sin cambiar nada. */}
+                    {(plan.cambios ?? []).some((c) => c.cuenta) && (
+                        <details className="group" data-cambios-del-codigo>
+                            <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-accent-gold/80 hover:text-accent-gold">
+                                <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
+                                Lo que el código ajustó ({plan.cambios.filter((c) => c.cuenta).length})
+                            </summary>
+                            <ul className="mt-2 space-y-1 text-[12px] leading-relaxed text-white/65">
+                                {plan.cambios.filter((c) => c.cuenta).map((c, k) => (
+                                    <li key={k}>
+                                        <span className="text-white/45">{c.objeto} {c.id} · {c.campo}: </span>
+                                        {c.antes || '(vacío)'} → {c.despues || '(vacío)'}
+                                        <span className="text-white/45"> — {c.descripcion}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </details>
                     )}
 
                     {/* ── 6 · AVISOS AL SECRETARIO ── */}
