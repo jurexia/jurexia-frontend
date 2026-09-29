@@ -40,7 +40,7 @@ const ESTADO: Record<string, { texto: string; clase: string }> = {
 function Solucion({ s, onResolver }: { s: SolucionPosible; onResolver?: (s: SolucionPosible) => void }) {
     const est = ESTADO[s.revision?.estado] ?? ESTADO.sin_revisar;
     return (
-        <li className="rounded-md border border-white/10 bg-white/[0.02] px-3 py-2">
+        <li className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[12px]">
                 <span className={cn('font-medium', s.prospera ? 'text-accent-gold' : 'text-white/80')}>
                     {EFECTO[s.tipo_efecto] ?? (s.prospera ? 'prospera' : 'no prospera')}
@@ -74,7 +74,7 @@ function Solucion({ s, onResolver }: { s: SolucionPosible; onResolver?: (s: Solu
             {/* Las dos columnas ya tienen sus botones; aquí sólo las demás. */}
             {onResolver && !s.papel && s.sentido && s.razon && (
                 <button type="button" onClick={() => onResolver(s)} data-resolver-solucion={s.id}
-                    className="mt-2 rounded-md border border-accent-gold/40 px-2.5 py-1 text-[12px] text-accent-gold/90 hover:border-accent-gold hover:text-accent-gold">
+                    className="mt-2 rounded-lg border border-accent-gold/40 px-2.5 py-1 text-[12px] text-accent-gold/90 hover:border-accent-gold hover:text-accent-gold">
                     Resolver con esta solución
                 </button>
             )}

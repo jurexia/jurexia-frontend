@@ -47,7 +47,7 @@ export function InsigniaDeEstado({ e }: { e?: EstadoDeLaSesion | null }) {
     const r = e.estado ? ROTULO_ESTADO[e.estado] : null;
     return (
         <div data-estado-sesion={e.estado || 'desactualizado'} title={e.motivos.join(' · ') || undefined}
-             className="flex flex-wrap items-center gap-1.5 text-[11px]">
+             className="flex flex-wrap items-center gap-1.5 text-[12px]">
             {r && <span className={cn('rounded-full border px-2 py-0.5', r.clase)}>{r.texto}</span>}
             {e.desactualizado && (
                 <span className="flex items-center gap-1 rounded-full border border-amber-400/40 px-2 py-0.5 text-amber-200/90">

@@ -612,7 +612,7 @@ const sinPlanDe = (estado, clave) => ({ estado, clave, plan: null, avisos: [], c
     ] });
     const cs = conCambios.cambios;
     ok(cs.length === 2 && cs[0].objeto === 'segmento' && cs[0].id === 'S3' && cs[0].cuenta === true
-       && cs[0].descripcion === 'fundado a insuficiente', 'E4: cambios_sin_justificar se lee (sin campo no pasa; sin descripción, la regla legible)');
+       && cs[0].descripcion === '', 'E4: cambios_sin_justificar se lee (sin campo no pasa; sin descripción del servidor, NINGUNA: la clave de la regla es vocabulario interno y no se enseña)');
     ok(cs[1].objeto === 'unidad' && cs[1].antes === 'S1, S2' && cs[1].descripcion === 'unidades rehechas por la jerarquía'
        && cs[1].cuenta === false, 'E4: listas en texto y la descripción del servidor cuando la manda');
     ok(Array.isArray(api.planDe(PLAN).cambios) && api.planDe(PLAN).cambios.length === 0,

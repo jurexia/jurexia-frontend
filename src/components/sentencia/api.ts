@@ -2345,7 +2345,11 @@ export function cambiosDelPlan(x: unknown): CambioDelPlan[] {
         return {
             objeto, id: objeto ? _t(c[objeto]) : '', campo: _t(c.campo),
             antes: _texto(c.antes), despues: _texto(c.despues), regla: _t(c.regla),
-            descripcion: _t(c.descripcion) || _t(c.regla).replace(/_/g, ' '),
+            /* SÓLO LA QUE MANDA EL SERVIDOR, en su lengua (revisión del envío,
+               29-sep): la clave de la regla con los guiones cambiados por
+               espacios es vocabulario interno, y el secretario no tiene por qué
+               leerlo. Sin descripción, el cambio no se enseña. */
+            descripcion: _t(c.descripcion),
             cuenta: c.cuenta === true,
         } as CambioDelPlan;
     }).filter((c): c is CambioDelPlan => c !== null);

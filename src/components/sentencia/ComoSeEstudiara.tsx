@@ -861,23 +861,23 @@ export default function ComoSeEstudiara({
                         </p>
                     )}
 
-                    {/* ── 5b · LO QUE EL CÓDIGO AJUSTÓ (etapa 4) ──
-                        El código corrige al planificador cuando algo no cuadra
-                        (una etiqueta, un segmento fuera del inventario, un
-                        portador). Nadie lo justificó: se enseña para que el
-                        secretario lo vea, sin cambiar nada. */}
-                    {(plan.cambios ?? []).some((c) => c.cuenta) && (
+                    {/* ── 5b · LOS AJUSTES AUTOMÁTICOS AL PLAN ──
+                        El sistema corrige el orden del estudio cuando algo no
+                        cuadra, y nadie lo justificó: se enseña para que el
+                        secretario lo vea, sin cambiar nada. Sólo los cambios
+                        que el servidor describe en lenguaje llano: el nombre
+                        del campo y la clave de la regla no le dicen nada. */}
+                    {(plan.cambios ?? []).some((c) => c.cuenta && c.descripcion) && (
                         <details className="group" data-cambios-del-codigo>
                             <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-accent-gold/80 hover:text-accent-gold">
                                 <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
-                                Lo que el código ajustó ({plan.cambios.filter((c) => c.cuenta).length})
+                                Ajustes automáticos al plan ({plan.cambios.filter((c) => c.cuenta && c.descripcion).length})
                             </summary>
                             <ul className="mt-2 space-y-1 text-[12px] leading-relaxed text-white/65">
-                                {plan.cambios.filter((c) => c.cuenta).map((c, k) => (
+                                {plan.cambios.filter((c) => c.cuenta && c.descripcion).map((c, k) => (
                                     <li key={k}>
-                                        <span className="text-white/45">{c.objeto} {c.id} · {c.campo}: </span>
-                                        {c.antes || '(vacío)'} → {c.despues || '(vacío)'}
-                                        <span className="text-white/45"> — {c.descripcion}</span>
+                                        {c.id && <span className="text-white/45">{c.id} · </span>}
+                                        {c.descripcion}
                                     </li>
                                 ))}
                             </ul>
