@@ -1347,7 +1347,14 @@ export default function ChatPage() {
     const hayDocumento = bloquesDocumento.length > 0 || vivoDocumento !== null;
     const tituloDocumento = useMemo(() => {
         const primera = messages.find((m) => m.role === 'user');
-        return primera ? tituloDeRespuesta(sinMarcadoresDeUsuario(primera.content)) : 'Documento de Iurexia';
+        if (!primera) return 'Documento de Iurexia';
+        /* La auditoría de un proyecto (29-sep-2026): su primer renglón es
+           «Archivo: proyecto.pdf», que como nombre del Word no vale. */
+        if (primera.content.includes('[AUDITAR_SENTENCIA]')) {
+            const archivo = primera.content.match(/^Archivo:\s*(.+)$/m)?.[1]?.trim().replace(/\.(pdf|docx?|txt)$/i, '');
+            return archivo && archivo !== 'Texto pegado' ? `Nota de auditoría — ${archivo}`.slice(0, 80) : 'Nota de auditoría';
+        }
+        return tituloDeRespuesta(sinMarcadoresDeUsuario(primera.content));
     }, [messages]);
 
     /* DESARROLLAR A PARTIR DE ESTE FUNDAMENTO (19-sep-2026)

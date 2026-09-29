@@ -111,8 +111,11 @@ export function filterDocumentContent(content: string): string {
             extension === 'docx' ? 'DOCX' :
                 extension === 'doc' ? 'DOC' : 'TXT';
 
-        // Return a compact card HTML instead of the full text
-        return `📄 Documento adjunto: ${fileName} (${typeLabel})`;
+        // Return a compact card HTML instead of the full text. Con el enfoque
+        // que pidió el magistrado (29-sep-2026), para que el hilo lo recuerde.
+        const enfoque = content.includes('[ENFOQUE_PRECEDENTES:FAVORABLES]')
+            ? ' · sólo los precedentes que sostienen el proyecto' : '';
+        return `📄 Documento adjunto: ${fileName} (${typeLabel})${enfoque}`;
     }
 
     // Remove content between <!-- DOCUMENTO_INICIO --> and <!-- DOCUMENTO_FIN -->

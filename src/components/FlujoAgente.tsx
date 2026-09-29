@@ -61,8 +61,24 @@ const ETAPAS: { nombre: string; titulo: string; glosa: string }[] = [
     { nombre: 'web', titulo: 'Buscando en internet', glosa: 'Las fuentes aparecen conforme se consultan — sólo dominios oficiales' },
     { nombre: 'cruzar', titulo: 'Cruzando artículos citados', glosa: 'Trae el texto de lo que el precedente invoca' },
     { nombre: 'ordenar', titulo: 'Ordenando por pertinencia', glosa: 'Lo aplicable primero' },
+    // EL AUDITOR DE SENTENCIAS (29-sep-2026): lee el proyecto y lo contrasta
+    // con lo que su propio tribunal ya resolvió (`auditor_precedentes` en el
+    // API). Sin estas filas, los 20-40 s de esa preparación se veían como una
+    // pantalla quieta.
+    { nombre: 'proyecto', titulo: 'Leyendo el proyecto', glosa: 'Los puntos que decide y lo que propone en cada uno' },
+    { nombre: 'tribunal', titulo: 'Consultando los precedentes de su tribunal', glosa: 'Las sentencias que ya resolvió sobre los mismos puntos' },
+    { nombre: 'contrastar', titulo: 'Contrastando con la línea del Tribunal', glosa: 'Qué precedentes sostienen el criterio del proyecto y cuáles no' },
     { nombre: 'redactar', titulo: 'Redactando con sus citas', glosa: 'Cada afirmación con su fuente' },
 ];
+
+/* El detalle de `tribunal` es la clave del órgano (`fase_oaj.ORGANOS_OAJ`). */
+const TRIBUNALES: Record<string, string> = {
+    '1TCC': 'Primer Tribunal Colegiado · XXII Circuito',
+    '2TCC': 'Segundo Tribunal Colegiado · XXII Circuito',
+    '3TCC': 'Tercer Tribunal Colegiado · XXII Circuito',
+    TCC_ADM: 'Tribunal Colegiado Adm. y de Trabajo · XXII Circuito',
+    TCC_PENAL: 'Tribunal Colegiado Penal y Adm. · XXII Circuito',
+};
 
 const ICONOS = {
     ley: BookText,
@@ -169,6 +185,18 @@ function fichasDe(nombre: string, detalle: string | undefined, fuentes: number |
     }
     if (nombre === 'ordenar' && detalle) {
         return [{ texto: `${detalle} resultados`, icono: 'enlace' }];
+    }
+    if (nombre === 'tribunal' && detalle) {
+        return [{ texto: TRIBUNALES[detalle] ?? detalle, icono: 'sede' }];
+    }
+    if (nombre === 'contrastar' && detalle) {
+        // «coinciden|contradicen». Con el enfoque «sólo favorables» el
+        // servidor manda 0 contrarios y aquí no se anuncian.
+        const [a, c] = detalle.split('|').map((n) => parseInt(n, 10) || 0);
+        const f: Ficha[] = [];
+        if (a) f.push({ texto: `${a} ${a === 1 ? 'sostiene' : 'sostienen'} el criterio`, icono: 'balanza' });
+        if (c) f.push({ texto: `${c} en sentido contrario`, icono: 'enlace' });
+        return f.length ? f : [{ texto: 'Sin precedentes sobre esos puntos', icono: 'enlace' }];
     }
     return [];
 }

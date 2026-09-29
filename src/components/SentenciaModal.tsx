@@ -18,6 +18,11 @@ export default function SentenciaModal({ isOpen, onClose, onSubmit, estado }: Se
     const [pastedText, setPastedText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    /* EL ENFOQUE DE LA NOTA (29-sep-2026). David: «Si el magistrado pide solo
+       invocar los que le favorecen a su postura, sí podrá hacerlo. Pero de
+       entrada, el auditor de sentencias debe darnos toda esta información».
+       De ahí que la nota completa sea la opción por omisión. */
+    const [soloFavorables, setSoloFavorables] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt'];
@@ -122,7 +127,7 @@ export default function SentenciaModal({ isOpen, onClose, onSubmit, estado }: Se
 
             // Format as special message for the backend
             const message = `[AUDITAR_SENTENCIA]
-Archivo: ${fileName}
+${soloFavorables ? '[ENFOQUE_PRECEDENTES:FAVORABLES]\n' : ''}Archivo: ${fileName}
 Estado: ${estadoParam}
 
 <!-- SENTENCIA_INICIO -->${truncNote}
@@ -158,14 +163,14 @@ ${docContent}
                         <Gavel className="w-6 h-6 text-accent-gold" />
                         <div>
                             <h2 className="font-serif text-xl font-semibold text-charcoal-900">
-                                Revisar Sentencia
+                                Auditar sentencia
                             </h2>
-                            <p className="text-xs text-charcoal-500">Auditoría jerárquica con IA</p>
+                            <p className="text-xs text-charcoal-900/60">Frente a los precedentes de su propio tribunal</p>
                         </div>
                     </div>
                     <button
                         onClick={handleClose}
-                        className="p-2 text-charcoal-600 hover:text-charcoal-900 hover:bg-cream-200 rounded-lg transition-colors"
+                        className="p-2 text-charcoal-900/60 hover:text-charcoal-900 hover:bg-cream-200 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -203,7 +208,7 @@ ${docContent}
                                     <FileText className="w-6 h-6 text-green-600" />
                                 </div>
                                 <p className="font-medium text-charcoal-900">{selectedFile.name}</p>
-                                <p className="text-xs text-charcoal-500">
+                                <p className="text-xs text-charcoal-900/60">
                                     {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                                 </p>
                                 <button
@@ -221,7 +226,7 @@ ${docContent}
                                 <p className="font-medium text-charcoal-900 text-sm">
                                     Arrastra la sentencia aquí
                                 </p>
-                                <p className="text-xs text-charcoal-500">o haz clic para seleccionar</p>
+                                <p className="text-xs text-charcoal-900/60">o haz clic para seleccionar</p>
                                 <div className="flex gap-1.5 mt-1">
                                     <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded">.pdf</span>
                                     <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">.docx</span>
@@ -234,7 +239,7 @@ ${docContent}
                     {/* Or paste text */}
                     {!selectedFile && (
                         <div className="mt-4">
-                            <label className="block text-xs font-medium text-charcoal-600 mb-1.5">
+                            <label className="block text-xs font-medium text-charcoal-900/75 mb-1.5">
                                 O pega el texto directamente:
                             </label>
                             <textarea
@@ -243,13 +248,52 @@ ${docContent}
                                 placeholder="Pega aquí el texto completo de la sentencia..."
                                 rows={4}
                                 className="w-full rounded-lg border border-cream-400 bg-white px-3 py-2 text-sm text-charcoal-900 
-                                     placeholder:text-charcoal-400 focus:outline-none focus:ring-2 focus:ring-accent-gold/30 
+                                     placeholder:text-charcoal-900/40 focus:outline-none focus:ring-2 focus:ring-accent-gold/30 
                                      focus:border-accent-gold resize-y"
                             />
                         </div>
                     )}
 
 
+
+                    {/* Qué precedentes lleva la nota */}
+                    <fieldset className="mt-5">
+                        <legend className="text-xs font-medium text-charcoal-900/75 mb-2">
+                            Precedentes de su tribunal en la nota
+                        </legend>
+                        <div className="space-y-2">
+                            {([
+                                [false, 'Nota completa (recomendada)', 'Los precedentes que sostienen el criterio del proyecto y los que resolvieron en sentido contrario, con su fecha.'],
+                                [true, 'Sólo los que sostienen el proyecto', 'La nota invoca únicamente la línea que favorece el criterio propuesto.'],
+                            ] as const).map(([valor, titulo, glosa]) => (
+                                <label
+                                    key={titulo}
+                                    className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors ${
+                                        soloFavorables === valor
+                                            ? 'border-accent-gold bg-accent-gold/10'
+                                            : 'border-cream-400 hover:bg-cream-200'
+                                    }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="enfoque-precedentes"
+                                        checked={soloFavorables === valor}
+                                        onChange={() => setSoloFavorables(valor)}
+                                        className="mt-0.5 accent-[#c9a962]"
+                                    />
+                                    <span>
+                                        <span className="block text-sm font-medium text-charcoal-900">{titulo}</span>
+                                        <span className="block text-xs text-charcoal-900/60">{glosa}</span>
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                        <p className="mt-2 text-[11px] leading-snug text-charcoal-900/60">
+                            La nota se abre en el documento: puede editarla y exportarla a Word. Si las sentencias de
+                            su tribunal aún no están en Iurexia, la nota lo indica y revisa el proyecto frente a la
+                            ley y la jurisprudencia.
+                        </p>
+                    </fieldset>
 
                     {/* Error */}
                     {error && (
@@ -264,7 +308,7 @@ ${docContent}
                 <div className="px-6 py-4 border-t border-cream-300 flex justify-end gap-3">
                     <button
                         onClick={handleClose}
-                        className="px-4 py-2 text-charcoal-600 hover:text-charcoal-900 transition-colors"
+                        className="px-4 py-2 text-charcoal-900/75 hover:text-charcoal-900 transition-colors"
                     >
                         Cancelar
                     </button>
