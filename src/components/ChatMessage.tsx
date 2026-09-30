@@ -13,6 +13,7 @@ import { enlaceOficialCoidh, esCoidh } from '@/lib/coidh';
 import { enlaceBJV, esDoctrina } from '@/lib/doctrina';
 import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
 import { type FuenteMarcador, type MetaDelServidor, type PrecedenteMeta, filterDocumentContent, formatMarkdown, limpiarMarcadoresInternos, limpiarParaExportar, procesarRespuesta, textoParaCopiar } from '@/lib/respuestaDelChat';
+import { textoDelAviso } from '@/lib/fallosChat';
 
 interface ChatMessageProps {
     message: Message;
@@ -1336,27 +1337,18 @@ export function TypingIndicator({ retryMessage, retryType }: { retryMessage?: st
         return () => clearInterval(interval);
     }, []);
 
-    // If retry message is provided, show appropriate indicator based on type
+    // If retry message is provided, show appropriate indicator based on type.
+    // El texto sale de `@/lib/fallosChat` (30-sep-2026): dice qué pasó.
     if (retryMessage) {
-        const isColdStart = retryType === 'cold';
+        const aviso = textoDelAviso(retryType);
         return (
-            <div className="flex gap-4 justify-start animate-slide-up">
+            <div className="flex gap-4 justify-start animate-slide-up" role="status" aria-live="polite">
                 <AvatarIurexia latido />
                 <div className="message-assistant px-4 py-4 border-l-4 border-amber-500">
                     <div className="flex flex-col gap-1.5">
-                        <span className="text-amber-900 font-semibold text-sm">
-                            {isColdStart
-                                ? '⏳ Despertando el servidor...'
-                                : '⏳ Servidor procesando solicitudes, reintentando...'}
-                        </span>
-                        <span className="text-amber-700 text-xs">
-                            {retryMessage}
-                        </span>
-                        <span className="text-amber-600 text-xs mt-0.5 italic">
-                            {isColdStart
-                                ? 'Esto sucede cuando el servidor ha estado inactivo. Solo llevará unos segundos.'
-                                : 'El servidor está atendiendo varias solicitudes. Tu consulta se procesará en breve.'}
-                        </span>
+                        <span className="text-amber-900 font-semibold text-sm">⏳ {aviso.titulo}</span>
+                        <span className="text-amber-700 text-xs">{retryMessage}</span>
+                        <span className="text-amber-600 text-xs mt-0.5 italic">{aviso.detalle}</span>
                     </div>
                 </div>
             </div>

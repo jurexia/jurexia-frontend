@@ -254,7 +254,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                 }
             }
 
-            const parser = new ThinkingParser();
+            let parser = new ThinkingParser();
             let isProMode = false;
             let isPlatinumMode = false;
             let isProfesionalMode = false;
@@ -407,8 +407,22 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
                     const attempt = parseInt(retryMatch[1]);
                     const delay = parseInt(retryMatch[2]);
                     const retryType = retryMatch[3] || 'cold'; // backward compat
-                    setRetryMessage(`Intento ${attempt + 1}/3 — esperando ${delay / 1000} segundos...`);
+                    setRetryMessage(`Intento ${attempt + 1}/3 — se reenvía en ${delay / 1000} s`);
                     setRetryType(retryType);
+                    /* EL REINTENTO EMPIEZA DE CERO (30-sep-2026). Si la conexión se
+                       cortó a media respuesta, el reintento trae la respuesta
+                       ENTERA otra vez, y con el analizador lleno se pegaba detrás
+                       de la mitad que ya se veía. Además, con esa burbuja a medias
+                       en pantalla el aviso de reintento ni se mostraba: la página
+                       sólo lo pinta mientras no hay respuesta. */
+                    parser = new ThinkingParser();
+                    colaMarcador = '';
+                    registrosFuera = [];
+                    if (assistantMessageAdded) {
+                        setMessages(prev => (prev.length && prev[prev.length - 1].role === 'assistant')
+                            ? prev.slice(0, -1) : prev);
+                        assistantMessageAdded = false;
+                    }
                     continue;  // Don't feed retry markers to the parser
                 }
 

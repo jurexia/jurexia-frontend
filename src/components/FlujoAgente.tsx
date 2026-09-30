@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { BadgeCheck, BookText, Check, Globe, Loader2, Link2, Landmark, Search } from 'lucide-react';
 import { ESTADOS_MEXICO } from '@/lib/estados';
 import { claveEntidad, escudoDe, fuentesElegidas, leerRecorrido, type Fuente } from '@/lib/fuentes';
+import { textoDelAviso } from '@/lib/fallosChat';
 
 /**
  * El pipeline, visible mientras trabaja — versión ramificada.
@@ -263,14 +264,17 @@ export function FlujoAgente({
     }, [filas]);
 
     if (retryMessage) {
-        const esFrio = retryType === 'cold';
+        /* El aviso dice QUÉ pasó (30-sep-2026): la conexión, el servidor
+           ocupado o un error. Antes, todo era «el servidor está atendiendo
+           varias solicitudes», también el corte de red de un iPhone. Ver
+           `@/lib/fallosChat`. */
+        const aviso = textoDelAviso(retryType);
         return (
-            <div className="flex gap-4 justify-start animate-slide-up">
+            <div className="flex gap-4 justify-start animate-slide-up" role="status" aria-live="polite">
                 <div className="message-assistant px-4 py-4 border-l-2 border-accent-gold">
-                    <p className="text-charcoal-900 font-medium text-sm">
-                        {esFrio ? 'Despertando el servidor' : 'El servidor está atendiendo varias solicitudes'}
-                    </p>
-                    <p className="text-charcoal-700 text-xs mt-1">{retryMessage}</p>
+                    <p className="text-charcoal-900 font-medium text-sm">{aviso.titulo}</p>
+                    <p className="text-charcoal-900/75 text-xs mt-1">{aviso.detalle}</p>
+                    <p className="text-charcoal-900/60 text-xs mt-1">{retryMessage}</p>
                 </div>
             </div>
         );

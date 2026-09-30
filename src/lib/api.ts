@@ -4,6 +4,7 @@
 
 import { fuentesElegidas, FUENTES } from './fuentes';
 import { esfuerzoParaEnviar } from './esfuerzo';
+import { clasificarFallo, type DatosReintento } from './fallosChat';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1390';
 
@@ -136,6 +137,9 @@ export interface OpcionesEnvio {
      *  selector «Fuentes» (25-sep-2026): con la legislación federal apagada,
      *  el primer flujo de amparo no pudo citar la Ley de Amparo. */
     todoElAcervo?: boolean;
+    /** Lo pone `streamChat` en un reintento: por qué falló el intento anterior.
+     *  El servidor lo apunta en sus registros (ver `./fallosChat`). */
+    reintento?: DatosReintento;
 }
 
 async function* streamChatInternal(
@@ -189,6 +193,7 @@ async function* streamChatInternal(
             ...(esfuerzoParaEnviar() ? { esfuerzo: esfuerzoParaEnviar() } : {}),
             ...(fuentesVerificadas().length ? { fuentes_previas: fuentesVerificadas() } : {}),
             ...(fuero ? { fuero } : {}),
+            ...(extra?.reintento ? { reintento: extra.reintento } : {}),
         }),
     });
 
@@ -197,7 +202,11 @@ async function* streamChatInternal(
     if (!response.ok) {
         const errorText = await response.text();
         console.error('[API] Error response:', errorText);
-        throw new Error(`Chat request failed: ${response.status} - ${errorText}`);
+        // CON su status (30-sep-2026): sin él, `streamChat` no distinguía un
+        // 429 o un 503 de una caída de red, y a todo le decía «servidor ocupado».
+        const fallo = new Error(`Chat request failed: ${response.status} - ${errorText.slice(0, 200)}`) as Error & { status?: number };
+        fallo.status = response.status;
+        throw fallo;
     }
 
     const reader = response.body?.getReader();
@@ -232,11 +241,13 @@ export async function* streamChat(
 ): AsyncGenerator<string, void, unknown> {
     const maxRetries = 3;
     let attempt = 0;
+    let reintento: DatosReintento | undefined;
 
     while (attempt < maxRetries) {
         try {
-            // Attempt to stream chat
-            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, signal, extra);
+            // El reintento lleva al servidor por qué falló el intento anterior.
+            yield* streamChatInternal(messages, estado, topK, accessToken, enableReasoning, userId, fuero, genioIds, signal,
+                reintento ? { ...extra, reintento } : extra);
             return; // Success - exit
         } catch (err) {
             // User-initiated stop — exit silently without retry
@@ -245,45 +256,20 @@ export async function* streamChat(
             attempt++;
             console.error(`[API] Attempt ${attempt}/${maxRetries} failed:`, err);
 
-            // Classify the error type
-            const errMsg = err instanceof Error ? err.message : String(err);
-            const status = (err as any)?.status ?? (err as any)?.response?.status ?? 0;
+            // QUÉ PASÓ, DICHO CON VERDAD (30-sep-2026): la red del abogado, el
+            // servidor ocupado (429/502/503/504) o un error. Ver `./fallosChat`.
+            const fallo = clasificarFallo(err);
 
-            // Network block: persistent fetch failures across all attempts (firewall/proxy)
-            const isNetworkBlock = (
-                (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('ERR_CONNECTION_REFUSED') || errMsg.includes('ECONNREFUSED')) &&
-                attempt >= maxRetries
-            );
-
-            // Cold start: connection refused, DNS failure, 503 Service Unavailable
-            const isColdStart = (
-                status === 503 ||
-                errMsg.includes('Failed to fetch') ||
-                errMsg.includes('NetworkError') ||
-                errMsg.includes('ECONNREFUSED') ||
-                errMsg.includes('ERR_CONNECTION_REFUSED')
-            );
-            // Busy/overloaded: 504 Gateway Timeout, 502 Bad Gateway, AbortError
-            const isBusy = (
-                status === 504 ||
-                status === 502 ||
-                errMsg.includes('AbortError') ||
-                errMsg.includes('timeout') ||
-                errMsg.includes('Timeout')
-            );
-
-            const retryType = isColdStart ? 'cold' : isBusy ? 'busy' : 'busy';
-
-            // If it's a client error (4xx), don't retry
-            if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
-                console.error('[API] Client error, not retrying:', status);
+            // Un 4xx (salvo 408 y 429) es un error de la petición: no se repite.
+            if (!fallo.reintentable) {
+                console.error('[API] Client error, not retrying:', fallo.status);
                 throw err;
             }
 
             // If we've exhausted retries, throw with a user-friendly network message
             if (attempt >= maxRetries) {
                 console.error('[API] All retry attempts exhausted');
-                if (isNetworkBlock) {
+                if (fallo.tipo === 'red') {
                     throw new Error(
                         'No se pudo conectar con el servidor de Iurexia. ' +
                         'Tu red puede estar bloqueando la conexión (firewall o proxy corporativo). ' +
@@ -295,10 +281,11 @@ export async function* streamChat(
 
             // Exponential backoff: 2s, 4s, 8s
             const delay = Math.pow(2, attempt) * 1000;
-            console.log(`[API] Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries}), type: ${retryType}...`);
+            console.log(`[API] Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries}), tipo: ${fallo.tipo}...`);
+            reintento = { intento: attempt, tipo: fallo.tipo, status: fallo.status, error: fallo.error.slice(0, 80), espera_ms: delay };
 
             // Yield a special marker for UI to show retry status with error type
-            yield `<!--RETRY:${attempt}:${delay}:${retryType}-->`;
+            yield `<!--RETRY:${attempt}:${delay}:${fallo.tipo}-->`;
 
             // Wait before retrying
             await sleep(delay);
