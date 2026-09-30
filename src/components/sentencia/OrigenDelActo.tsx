@@ -76,6 +76,10 @@ const DISTINTIVOS: Record<Exclude<VinculacionEjecutoria, 'no_consta'>, { texto: 
         texto: 'Vinculado por la ejecutoria · inoperante',
         clase: 'border-amber-400/30 bg-amber-400/[0.08] text-amber-200/90',
     },
+    consentido: {
+        texto: 'Sólo reiterado y no impugnado la primera vez · inoperante (2a./J. 113/2012)',
+        clase: 'border-amber-400/25 bg-amber-400/[0.05] text-amber-200/80',
+    },
     libre: {
         texto: 'Libertad de jurisdicción · se estudia',
         clase: 'border-emerald-400/30 bg-emerald-400/[0.07] text-emerald-200/90',
@@ -131,6 +135,8 @@ export function DistintivoEjecutoria({ origen, pregunta, bloque = false, classNa
 const RENGLONES: [VinculacionEjecutoria, string, string, boolean][] = [
     ['vinculado', 'vinculado por la ejecutoria · inoperante',
      'vinculados por la ejecutoria · inoperantes', true],
+    ['consentido', 'sólo reiterado y no impugnado la primera vez · inoperante',
+     'sólo reiterados y no impugnados la primera vez · inoperantes', false],
     ['libre', 'resuelto con libertad de jurisdicción · se estudia',
      'resueltos con libertad de jurisdicción · se estudian', true],
     ['mixto', 'con una parte vinculada y otra libre',
@@ -288,7 +294,10 @@ export default function OrigenDelActo({
             )}
 
             {/* ── LO QUE LA EJECUTORIA DEJÓ ATADO Y LO QUE NO ── */}
-            {c.consta && (c.sobreseerPropuesto || c.sobreseerConfirmado || (clasif && clasif.todoVinculado)) && (
+            {/* SÓLO LO QUE EL SERVIDOR PROPONE (revisión adversarial): «todo
+                vinculado» no basta si la ejecutoria dejó libertad; ahí se niega
+                con conceptos inoperantes, no se sobresee (2a./J. 113/2012). */}
+            {c.consta && (c.sobreseerPropuesto || c.sobreseerConfirmado) && (
                 <div data-todo-vinculado
                      data-sobreseer={c.sobreseerConfirmado ? 'confirmado' : 'propuesto'}
                      className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/35

@@ -1762,7 +1762,7 @@ function _suplenciaDe(x: unknown): PropuestaSuplencia | null {
 export type InstanciaDelActo = 'unica' | 'alzada' | '';
 /** Cómo quedó un planteamiento frente a la ejecutoria que se cumplía. */
 export type VinculacionEjecutoria =
-    | 'vinculado' | 'libre' | 'mixto' | 'exceso_defecto' | 'constitucionalidad' | 'no_consta';
+    | 'vinculado' | 'consentido' | 'libre' | 'mixto' | 'exceso_defecto' | 'constitucionalidad' | 'no_consta';
 export interface ProblemaAnteLaEjecutoria {
     /** LA LLAVE: el texto de la pregunta tal como lo lleva el pipeline. */
     pregunta: string;
@@ -1823,7 +1823,7 @@ export interface CambiosDelOrigen {
 }
 
 const _VINCULACIONES: VinculacionEjecutoria[] =
-    ['vinculado', 'libre', 'mixto', 'exceso_defecto', 'constitucionalidad', 'no_consta'];
+    ['vinculado', 'consentido', 'libre', 'mixto', 'exceso_defecto', 'constitucionalidad', 'no_consta'];
 
 /** Lee el `origen` que manda el servidor. null si no viene: la pantalla no
  *  pinta nada nuevo. Un valor fuera del catálogo cae en lo que no afirma nada
