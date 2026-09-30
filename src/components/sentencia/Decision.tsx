@@ -5,7 +5,8 @@ import { Check, Loader2, PenLine, Sparkles, ChevronRight, AlertTriangle, Zap } f
 import { cn, Pastilla } from './primitivas';
 import type { ProblemaJuridico, TarjetaDecision } from './tipos';
 import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
-              PropuestaSuplencia, DecisionSuplencia, TesisDelAcervo } from './api';
+              PropuestaSuplencia, DecisionSuplencia, TesisDelAcervo,
+              OrigenDelActoReclamado } from './api';
 import { FINAS, grupoDe, legible } from './calificaciones';
 import ProblemaPrincipal from './ProblemaPrincipal';
 import type { MarcaDeSecundario } from './ProblemaPrincipal';
@@ -13,6 +14,7 @@ import { conceptosQueFaltan, elegirTarjeta, ladoDelSentido, prosperaDeLaVia, res
          suerteDe, tarjetaDeLaPropuesta, viaActivaDe } from './tarjetaDelPrincipal';
 import type { LadoDeLaTarjeta, ViaActiva } from './tarjetaDelPrincipal';
 import EstudiarJuntos from './EstudiarJuntos';
+import { DistintivoEjecutoria } from './OrigenDelActo';
 import ComoSeEstudiara, { usePlanDelEstudio, jerarquiaDelPlan } from './ComoSeEstudiara';
 import type { EnlacePlan, JerarquiaDelPlan } from './ComoSeEstudiara';
 import { MENSAJE_SIN_CALIFICAR, porQueLegible, pendientesAlGenerar, firmaPendientes } from './recalificacion';
@@ -397,6 +399,7 @@ export default function Decision({
     onReintentarRecalificacion,
     tarjeta = null, tesisDelMaterial, onAbrirTesis,
     onVolverALaPropuesta, onResolverPorLaVia,
+    origen = null,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -495,6 +498,10 @@ export default function Decision({
     /** Resolver por otra vía entera: todo el asunto, ESE sentido dictado y SU
      *  razón —siempre la sustituye: lección 1 del 631—, y lo tocado suelto. */
     onResolverPorLaVia?: (sentido: string, razon: string) => void;
+    /** DE DÓNDE VIENE LO RECLAMADO (30-sep-2026). Si trae la clasificación
+     *  de los planteamientos frente a la ejecutoria que se cumplía, cada
+     *  tarjeta de problema lleva su distintivo (vinculado, libre…). null: nada. */
+    origen?: OrigenDelActoReclamado | null;
 }) {
     const [corrigiendo, setCorrigiendo] = useState(false);
     /* SIN PROPUESTA GLOBAL, LAS CALIFICACIONES A LA VISTA (auditoría,
@@ -897,7 +904,8 @@ export default function Decision({
                     onRedactarOpuesta={onRazonarGlobal}
                     redactando={razonandoGlobal}
                     onProponer={onProponer}
-                    puedeVerComoSale={listoParaGenerar} />
+                    puedeVerComoSale={listoParaGenerar}
+                    origen={origen} />
             )}
 
             {/* ═══ 3 · CAMBIAR EL SENTIDO: LAS DOS VÍAS DE SIEMPRE ═══ */}
@@ -1039,6 +1047,7 @@ export default function Decision({
                                                     {corrigiendoProblema === p.id ? 'corrigiendo…' : 'corregir'}
                                                 </button>
                                             )}
+                                            <DistintivoEjecutoria origen={origen} pregunta={p.pregunta} bloque />
                                         </p>
                                         )}
                                         {/* DE QUIÉN ES LA CALIFICACIÓN. Cuando el principal cambia, los

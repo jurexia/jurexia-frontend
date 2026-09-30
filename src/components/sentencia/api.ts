@@ -1744,6 +1744,120 @@ function _suplenciaDe(x: unknown): PropuestaSuplencia | null {
     };
 }
 
+/* ═══ DE DÓNDE VIENE LO RECLAMADO (30-sep-2026) ═══
+   David, sobre un amparo directo contra un juicio oral mercantil: «Siempre,
+   en amparo directo, partimos de la base de que hay una sala. Es decir, una
+   segunda instancia. Pero no siempre es así. […] La autoridad responsable era
+   el propio juez de oralidad mercantil. En segundo lugar, la sentencia había
+   sido dictada en cumplimiento».
+
+   El servidor lee del expediente quién dictó lo reclamado, si hubo alzada y si
+   se dictó en cumplimiento de una ejecutoria de amparo (`origen_acto.py`), y
+   lo manda con el asunto. Si con la ejecutoria vienen sus efectos, clasifica
+   cada planteamiento: lo que la ejecutoria dejó atado (inoperante) y lo que
+   la responsable resolvió con libertad de jurisdicción (se estudia).
+
+   LA REGLA DE ORO: `origen` null —cuentas sin la bandera, asuntos anteriores—
+   y la pantalla queda exactamente como estaba. Nada nuevo se pinta. */
+export type InstanciaDelActo = 'unica' | 'alzada' | '';
+/** Cómo quedó un planteamiento frente a la ejecutoria que se cumplía. */
+export type VinculacionEjecutoria =
+    | 'vinculado' | 'libre' | 'mixto' | 'exceso_defecto' | 'constitucionalidad' | 'no_consta';
+export interface ProblemaAnteLaEjecutoria {
+    /** LA LLAVE: el texto de la pregunta tal como lo lleva el pipeline. */
+    pregunta: string;
+    vinculacion: VinculacionEjecutoria;
+    /** El efecto de la ejecutoria que toca a este planteamiento. */
+    efecto: string;
+    porQue: string;
+    /** En los «mixto»: qué parte quedó atada y cuál se resolvió con libertad. */
+    parteVinculada: string;
+    parteLibre: string;
+}
+export interface ClasificacionDelCumplimiento {
+    problemas: ProblemaAnteLaEjecutoria[];
+    hayLibertad: boolean;
+    /** Todo lo reclamado se dictó vinculado: el amparo es improcedente
+     *  (art. 61, fracción IX, de la Ley de Amparo) y se propone sobreseer. */
+    todoVinculado: boolean;
+    resumen: string;
+}
+export interface CumplimientoDeEjecutoria {
+    consta: boolean;
+    /** «amparo directo civil 590/2023»; vacío si no se leyó el número. */
+    ejecutoria: string;
+    /** Lo que la ejecutoria mandó hacer, hasta 3,000 caracteres. */
+    efectos: string;
+    /** null mientras no haya efectos con qué clasificar. */
+    clasificacion: ClasificacionDelCumplimiento | null;
+}
+export interface OrigenDelActoReclamado {
+    /** «juez», «sala_alzada», «sala_tfja», «junta»… o vacío. Es un código del
+     *  servidor: la pantalla no lo enseña, enseña `organo`. */
+    clase: string;
+    instancia: InstanciaDelActo;
+    /** Cómo se nombra en la prosa: «el Juez», «la Sala», «la Junta». */
+    organo: string;
+    /** Una frase: «La sentencia reclamada fue dictada en ÚNICA instancia (no
+     *  hubo apelación) y en CUMPLIMIENTO de la ejecutoria del …». */
+    aviso: string;
+    /** 'leido' del expediente o 'secretario' si él lo corrigió. */
+    fuente: 'leido' | 'secretario';
+    cumplimiento: CumplimientoDeEjecutoria;
+}
+/** Lo que el secretario corrige en «De dónde viene lo reclamado». */
+export interface CambiosDelOrigen {
+    instancia?: InstanciaDelActo;
+    cumplimiento?: boolean;
+    ejecutoria?: string;
+    efectos?: string;
+}
+
+const _VINCULACIONES: VinculacionEjecutoria[] =
+    ['vinculado', 'libre', 'mixto', 'exceso_defecto', 'constitucionalidad', 'no_consta'];
+
+/** Lee el `origen` que manda el servidor. null si no viene: la pantalla no
+ *  pinta nada nuevo. Un valor fuera del catálogo cae en lo que no afirma nada
+ *  («» de instancia, «no_consta» de vinculación), nunca en otro que sí afirme. */
+export function origenDe(x: unknown): OrigenDelActoReclamado | null {
+    const j = (x && typeof x === 'object') ? x as Record<string, unknown> : null;
+    if (!j) return null;
+    const c = (j.cumplimiento && typeof j.cumplimiento === 'object')
+        ? j.cumplimiento as Record<string, unknown> : {};
+    const k = (c.clasificacion && typeof c.clasificacion === 'object')
+        ? c.clasificacion as Record<string, unknown> : null;
+    const inst = String(j.instancia ?? '');
+    const lista = (Array.isArray(k?.problemas) ? k.problemas : []) as Record<string, unknown>[];
+    return {
+        clase: String(j.clase ?? ''),
+        instancia: inst === 'unica' || inst === 'alzada' ? inst : '',
+        organo: String(j.organo ?? ''),
+        aviso: String(j.aviso ?? ''),
+        fuente: j.fuente === 'secretario' ? 'secretario' : 'leido',
+        cumplimiento: {
+            consta: !!c.consta,
+            ejecutoria: String(c.ejecutoria ?? ''),
+            efectos: String(c.efectos ?? ''),
+            clasificacion: k ? {
+                problemas: lista.filter((p) => p && typeof p === 'object').map((p) => {
+                    const v = String(p.vinculacion ?? '') as VinculacionEjecutoria;
+                    return {
+                        pregunta: String(p.pregunta ?? ''),
+                        vinculacion: _VINCULACIONES.includes(v) ? v : 'no_consta',
+                        efecto: String(p.efecto ?? ''),
+                        porQue: String(p.por_que ?? ''),
+                        parteVinculada: String(p.parte_vinculada ?? ''),
+                        parteLibre: String(p.parte_libre ?? ''),
+                    };
+                }).filter((p) => p.pregunta.trim()),
+                hayLibertad: !!k.hay_libertad,
+                todoVinculado: !!k.todo_vinculado,
+                resumen: String(k.resumen ?? ''),
+            } : null,
+        },
+    };
+}
+
 export interface ContextoDelAsunto {
     numero: string;
     tipoAsunto: string;
@@ -1781,6 +1895,10 @@ export interface ContextoDelAsunto {
      *  enseñe «Cómo se estudiará» también a quien no es de casa. Vacío si el
      *  servidor no lo manda. */
     varianteEstudio?: string;
+    /** DE DÓNDE VIENE LO RECLAMADO (30-sep-2026): única instancia o alzada,
+     *  quién lo dictó y si fue en cumplimiento de una ejecutoria. null si el
+     *  servidor no lo manda (la bandera no rige): entonces no se pinta nada. */
+    origen?: OrigenDelActoReclamado | null;
 }
 
 /* ═══ LO QUE SE QUEDÓ A MEDIAS ═══
@@ -2016,7 +2134,30 @@ export async function contextoDelAsunto(
         avisos: (j.avisos ?? []) as string[],
         suplencia: _suplenciaDe(j.suplencia),
         varianteEstudio: String(j.variante_estudio ?? ''),
+        origen: origenDe(j.origen),
     };
+}
+
+/** EL SECRETARIO CORRIGE DE DÓNDE VIENE LO RECLAMADO (30-sep-2026). Lo leído
+ *  del expediente es una propuesta: si dice «Sala» de un juez de oralidad, o
+ *  no vio que la sentencia se dictó en cumplimiento, él lo corrige aquí y lo
+ *  suyo manda. Vuelve el origen ya recalculado —con su aviso y, si hay
+ *  efectos, la clasificación de los planteamientos—.
+ *
+ *  VA EN JSON, NO EN FORMULARIO como el resto de /taller/*: así lo fija el
+ *  contrato del servidor, y un `false` o un «» deben llegar como tales, no
+ *  como la cadena "false". */
+export async function guardarOrigen(
+    numero: string, userEmail: string, cambios: CambiosDelOrigen,
+): Promise<OrigenDelActoReclamado | null> {
+    const res = await fetch(`${BASE}/taller/origen`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numero, user_email: userEmail, ...cambios }),
+    });
+    if (!res.ok) return _fallo(res);
+    const j = await res.json().catch(() => null);
+    return origenDe(j?.origen);
 }
 
 

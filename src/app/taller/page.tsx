@@ -71,6 +71,7 @@ import { opcionesDelProyecto as armarOpciones } from '@/components/sentencia/opc
 import { useTarjetaDelPrincipal, soltarLoTocado } from '@/components/sentencia/tarjetaDelPrincipal';
 import { FilaDelEspejo, esPosible, notaDelGrupo } from '@/components/sentencia/FilaDelEspejo';
 import MapaDelEstudio from '@/components/sentencia/MapaDelEstudio';
+import OrigenDelActo, { DistintivoEjecutoria } from '@/components/sentencia/OrigenDelActo';
 import type { PendienteSISE, FaltaLaFecha, ContextoDelAsunto, DecisionSuplencia } from '@/components/sentencia/api';
 import type { MaterialDelCaso, ResultadoProyecto, EstadoPiloto } from '@/components/sentencia/api';
 import type { EspejoDelTribunal, FilaEspejo } from '@/components/sentencia/api';
@@ -2829,6 +2830,9 @@ export default function TallerDeSentencias() {
                                                                         principal
                                                                     </span>
                                                                 )}
+                                                                <DistintivoEjecutoria origen={delAsunto.origen}
+                                                                                      pregunta={q.pregunta}
+                                                                                      bloque />
                                                             </span>
                                                         </li>
                                                     ))}
@@ -2893,11 +2897,38 @@ export default function TallerDeSentencias() {
                                                                 principal
                                                             </span>
                                                         )}
+                                                        <DistintivoEjecutoria origen={delAsunto.origen}
+                                                                              pregunta={q.pregunta}
+                                                                              bloque />
                                                     </span>
                                                 </li>
                                             ))}
                                         </ol>
                                     </Pliegue>
+                                )}
+
+                                {/* ═══ DE DÓNDE VIENE LO RECLAMADO (30-sep-2026) ═══
+                                    David: «Siempre, en amparo directo, partimos de
+                                    la base de que hay una sala (…) Pero no siempre
+                                    es así». Va junto a la autoridad responsable
+                                    porque son el mismo error visto de dos lados: si
+                                    lo dictó un juez de oralidad, no hubo alzada, y
+                                    si se dictó en cumplimiento, parte de lo que se
+                                    reclama ya lo decidió la ejecutoria. Sólo se
+                                    pinta si el servidor manda el origen: las cuentas
+                                    sin la bandera no ven nada nuevo. */}
+                                {delAsunto.origen && (
+                                    <OrigenDelActo origen={delAsunto.origen}
+                                                   numero={delAsunto.numero || encargo.numero}
+                                                   userEmail={correo}
+                                                   ocupado={corriendo}
+                                                   onGuardado={async (o) => {
+                                                       /* Lo guardado se ve al instante; la vuelta
+                                                          completa trae además el órgano, la voz y
+                                                          el relato con el origen nuevo. */
+                                                       if (o) setDelAsunto((d) => (d ? { ...d, origen: o } : d));
+                                                       await traerContexto(delAsunto.numero || encargo.numero);
+                                                   }} />
                                 )}
 
                                 {/* ═══ LA AUTORIDAD, CORREGIBLE HASTA EL FINAL ═══
@@ -3334,6 +3365,7 @@ export default function TallerDeSentencias() {
                               esRecurso={encargo.tipoAsunto !== 'amparo_directo'}
                               extemporanea={extemporanea} oportunidadDecidida={decision !== ''}
                               propuestaSuplencia={delAsunto?.suplencia ?? null}
+                              origen={delAsunto?.origen ?? null}
                               suplencia={suplencia}
                               onSuplencia={(d) => setSuplenciaDecidida(
                                   d ? { numero: encargo.numero, d } : null)}

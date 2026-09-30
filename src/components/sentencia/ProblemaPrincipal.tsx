@@ -5,7 +5,8 @@ import { AlertTriangle, Check, ChevronRight, Loader2, PenLine } from 'lucide-rea
 import { cn } from './primitivas';
 import { FilaDelEspejo } from './FilaDelEspejo';
 import { SolucionesPosibles } from './SolucionesPosibles';
-import type { TesisDelAcervo } from './api';
+import type { OrigenDelActoReclamado, TesisDelAcervo } from './api';
+import { DistintivoEjecutoria } from './OrigenDelActo';
 import type { ApoyoDeLaVia, FilaDeTuTribunal, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 import { fraseDe, legible } from './calificaciones';
 import {
@@ -320,7 +321,7 @@ export default function ProblemaPrincipal({
     tesis, onAbrirTesis,
     onResolverAsi, onResolverOpuesta, onMiCriterio, onResolverSolucion,
     onRedactarOpuesta, redactando = false,
-    onProponer, puedeVerComoSale = false,
+    onProponer, puedeVerComoSale = false, origen = null,
 }: {
     tarjeta: TarjetaDecision;
     esRecurso: boolean;
@@ -356,6 +357,9 @@ export default function ProblemaPrincipal({
     redactando?: boolean;
     onProponer?: () => void;
     puedeVerComoSale?: boolean;
+    /** DE DÓNDE VIENE LO RECLAMADO (30-sep-2026): con la clasificación frente
+     *  a la ejecutoria, cada pregunta lleva su distintivo. null: nada. */
+    origen?: OrigenDelActoReclamado | null;
 }) {
     const t = tarjeta;
     const p = t.principal;
@@ -458,6 +462,7 @@ export default function ProblemaPrincipal({
                         </span>
                         {p.pregunta}
                     </h2>
+                    <DistintivoEjecutoria origen={origen} pregunta={p.pregunta} bloque />
                     {/* La pregunta que decide va arriba; la del a quo, debajo y
                         como dato (SPEC E3): en el 631 el motor razonó con la de
                         la recurrida («¿alteró la cosa juzgada?») en lugar de la
@@ -551,6 +556,7 @@ export default function ProblemaPrincipal({
                                     <span className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-snug text-white/75" title={s.pregunta}>
                                         {s.pregunta}
                                     </span>
+                                    <DistintivoEjecutoria origen={origen} pregunta={s.pregunta} className="shrink-0" />
                                     {m ? (
                                         <span className="shrink-0 rounded-full border border-accent-gold/45 px-2 py-0.5 text-[12px] text-accent-gold">
                                             {m.quien}{m.sentido ? ` · ${legible(m.sentido).toLowerCase()}` : ''}
@@ -592,6 +598,7 @@ export default function ProblemaPrincipal({
                             <li key={x.numero || x.pregunta} className="flex flex-wrap items-baseline gap-x-2 text-[13px]">
                                 <span className="shrink-0 text-[12px] tabular-nums text-white/45">{String(x.numero).padStart(2, '0')}</span>
                                 <span className="line-clamp-2 min-w-0 flex-1 leading-snug text-white/75" title={x.pregunta}>{x.pregunta}</span>
+                                <DistintivoEjecutoria origen={origen} pregunta={x.pregunta} className="shrink-0" />
                                 {x.propuesta?.sentido && (
                                     <span className="shrink-0 rounded-full border border-white/15 px-2 py-0.5 text-[12px] text-white/75">
                                         propuesta propia · {legible(x.propuesta.sentido).toLowerCase()}
