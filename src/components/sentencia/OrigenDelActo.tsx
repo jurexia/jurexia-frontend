@@ -196,14 +196,17 @@ export default function OrigenDelActo({
         if (!sucio || guardando || ocupado || !numero) return;
         setGuardando(true); setError(''); setHecho(false);
         try {
-            /* VA EL FORMULARIO ENTERO, no sólo lo cambiado: es lo que él
-               confirma, y así una segunda corrección no depende de que el
-               servidor recuerde la primera. La ejecutoria y sus efectos sólo
-               viajan si marcó que se dictó en cumplimiento. */
-            const cambios: CambiosDelOrigen = {
-                instancia: borrador.instancia,
-                cumplimiento: borrador.cumplimiento,
-            };
+            /* VA EL CUMPLIMIENTO ENTERO, no sólo lo cambiado: es lo que él
+               confirma. La ejecutoria y sus efectos sólo viajan si marcó que
+               se dictó en cumplimiento. La instancia, sólo si la cambió (el
+               servidor guarda lo que él corrigió antes). */
+            const cambios: CambiosDelOrigen = { cumplimiento: borrador.cumplimiento };
+            /* LA INSTANCIA SÓLO VIAJA SI ÉL LA CAMBIÓ. «No consta» elegido
+               por él se manda como 'no_consta' (gana a la lectura); mandar «»
+               le devolvería la decisión al expediente y reaparecería lo leído. */
+            if (borrador.instancia !== base.instancia) {
+                cambios.instancia = borrador.instancia || 'no_consta';
+            }
             if (borrador.cumplimiento) {
                 cambios.ejecutoria = borrador.ejecutoria.trim();
                 cambios.efectos = borrador.efectos.trim().slice(0, TOPE_EFECTOS);

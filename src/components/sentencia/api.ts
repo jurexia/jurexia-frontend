@@ -1812,7 +1812,9 @@ export interface OrigenDelActoReclamado {
 }
 /** Lo que el secretario corrige en «De dónde viene lo reclamado». */
 export interface CambiosDelOrigen {
-    instancia?: InstanciaDelActo;
+    /** 'no_consta' lo afirma él (gana a la lectura); '' devuelve la decisión
+     *  a lo que se lea del expediente. */
+    instancia?: InstanciaDelActo | 'no_consta';
     cumplimiento?: boolean;
     ejecutoria?: string;
     efectos?: string;
