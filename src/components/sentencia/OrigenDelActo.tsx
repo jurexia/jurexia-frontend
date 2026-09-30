@@ -225,6 +225,24 @@ export default function OrigenDelActo({
         }
     };
 
+    /* EL SOBRESEIMIENTO NO SE ESCRIBE SOLO. El servidor lo propone cuando la
+       ejecutoria no dejó libertad alguna; el proyecto sólo sobresee si él lo
+       confirma aquí —y lo puede retirar—. Va aparte del formulario: no
+       depende de que haya otra cosa por guardar. */
+    const [confirmando, setConfirmando] = useState(false);
+    const confirmarSobreseer = async (valor: boolean) => {
+        if (confirmando || guardando || ocupado || !numero) return;
+        setConfirmando(true); setError('');
+        try {
+            const nuevo = await guardarOrigen(numero, userEmail, { sobreseer: valor });
+            await onGuardado?.(nuevo);
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'No se pudo guardar la decisión sobre el sobreseimiento.');
+        } finally {
+            setConfirmando(false);
+        }
+    };
+
     /* LA CLASIFICACIÓN ES LA DEL SERVIDOR, la guardada: no la del borrador.
        Mientras él escribe, lo que se cuenta es lo último que se clasificó. */
     const clasif = c.consta ? c.clasificacion : null;
@@ -267,15 +285,32 @@ export default function OrigenDelActo({
             )}
 
             {/* ── LO QUE LA EJECUTORIA DEJÓ ATADO Y LO QUE NO ── */}
-            {clasif && clasif.todoVinculado && (
+            {c.consta && (c.sobreseerPropuesto || c.sobreseerConfirmado || (clasif && clasif.todoVinculado)) && (
                 <div data-todo-vinculado
+                     data-sobreseer={c.sobreseerConfirmado ? 'confirmado' : 'propuesto'}
                      className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/35
                                 bg-amber-400/[0.07] px-3 py-2.5">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
-                    <p className="text-[13px] leading-relaxed text-amber-100/90">
-                        Todo lo reclamado se dictó vinculado por la ejecutoria: el amparo es
-                        improcedente (art. 61, fracción IX, de la Ley de Amparo) y se propone sobreseer.
-                    </p>
+                    <div className="min-w-0">
+                        <p className="text-[13px] leading-relaxed text-amber-100/90">
+                            {c.sobreseerConfirmado
+                                ? 'Confirmaste el sobreseimiento: el proyecto no estudia el fondo y sobresee por '
+                                  + 'improcedencia (arts. 61, fracción IX, y 63, fracción V, de la Ley de Amparo).'
+                                : 'Todo lo reclamado se dictó vinculado por la ejecutoria: el amparo es improcedente '
+                                  + '(art. 61, fracción IX, de la Ley de Amparo) y se propone sobreseer. El proyecto '
+                                  + 'sólo sobresee si lo confirmas.'}
+                        </p>
+                        <button type="button"
+                                onClick={() => { void confirmarSobreseer(!c.sobreseerConfirmado); }}
+                                disabled={confirmando || guardando || ocupado}
+                                title={ocupado ? 'Espera a que termine lo que está corriendo' : undefined}
+                                className="mt-2 inline-flex h-7 items-center gap-1.5 rounded-md border border-amber-300/40
+                                           px-2.5 text-[12px] font-medium text-amber-200 hover:text-amber-100
+                                           disabled:opacity-50">
+                            {confirmando && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                            {c.sobreseerConfirmado ? 'Retirar: estudiar el fondo' : 'Confirmar el sobreseimiento'}
+                        </button>
+                    </div>
                 </div>
             )}
             {clasif && clasif.problemas.length > 0 && (

@@ -1790,6 +1790,11 @@ export interface CumplimientoDeEjecutoria {
     efectos: string;
     /** null mientras no haya efectos con qué clasificar. */
     clasificacion: ClasificacionDelCumplimiento | null;
+    /** El servidor PROPONE sobreseer: nada se resolvió con libertad. */
+    sobreseerPropuesto: boolean;
+    /** Él lo confirmó: sólo entonces el proyecto sobresee (arts. 61, fr. IX,
+     *  y 63, fr. V, de la Ley de Amparo) en lugar de estudiar el fondo. */
+    sobreseerConfirmado: boolean;
 }
 export interface OrigenDelActoReclamado {
     /** «juez», «sala_alzada», «sala_tfja», «junta»… o vacío. Es un código del
@@ -1811,6 +1816,8 @@ export interface CambiosDelOrigen {
     cumplimiento?: boolean;
     ejecutoria?: string;
     efectos?: string;
+    /** Confirma (true) o retira (false) el sobreseimiento propuesto. */
+    sobreseer?: boolean;
 }
 
 const _VINCULACIONES: VinculacionEjecutoria[] =
@@ -1854,6 +1861,8 @@ export function origenDe(x: unknown): OrigenDelActoReclamado | null {
                 todoVinculado: !!k.todo_vinculado,
                 resumen: String(k.resumen ?? ''),
             } : null,
+            sobreseerPropuesto: !!c.sobreseer_propuesto,
+            sobreseerConfirmado: !!c.sobreseer_confirmado,
         },
     };
 }
