@@ -390,6 +390,69 @@ async function _fallo(res: Response): Promise<never> {
     throw new Error(textoDelError(detalle, `Error ${res.status}`));
 }
 
+/* ═══ LA RED DEL DESPACHO PARPADEA, Y ESO NO ES UN FALLO DEL TALLER (2-oct-2026) ═══
+   El 1-oct dos generaciones de la cuenta de casa acabaron en la pantalla con
+   «Failed to fetch», y el secretario las volvió a pedir aunque el servidor las
+   seguía escribiendo («se cortó la línea con la pantalla; el 253/2025 se sigue
+   escribiendo en segundo plano»): dos proyectos por uno, y dos esperas. El
+   despacho sale a internet por dos líneas y, cuando una parpadea, la petición
+   que iba por ella muere SIN respuesta. «Failed to fetch» (Chrome), «Load
+   failed» (Safari) y «NetworkError…» (Firefox) son eso: la red, no el servidor.
+
+   Dos reglas: una LECTURA se repite sola (repetirla no cuesta nada) y el error
+   de red se dice en castellano, con lo que conviene hacer. Un POST no se repite
+   aquí: repetir /resolver podría lanzar dos generaciones y cobrar dos. */
+export function esErrorDeRed(e: unknown): boolean {
+    if (!(e instanceof TypeError)) return false;
+    const m = (e.message || '').toLowerCase();
+    return m.includes('failed to fetch') || m.includes('load failed')
+        || m.includes('networkerror') || m.includes('network error')
+        || m.includes('network request failed');
+}
+
+const MENSAJE_RED = 'Se perdió la conexión con el servidor por un momento.';
+
+/** Lo que se le enseña al secretario cuando algo falla: el texto del servidor
+ *  si lo hay; si fue la red, en castellano y con qué hacer. Durante una
+ *  generación, lo que más importa decirle es que NO la repita a ciegas: el
+ *  servidor la termina, la cobra y la guarda aunque la pantalla se desconecte. */
+export function mensajeDeError(e: unknown, porOmision: string,
+                               durante?: 'generacion'): string {
+    if (esErrorDeRed(e)) {
+        return durante === 'generacion'
+            ? `${MENSAJE_RED} Si el proyecto ya se estaba escribiendo, el servidor lo `
+              + 'termina y lo guarda igual: en unos minutos estará en el historial de '
+              + 'este asunto. Revísalo antes de volver a generarlo.'
+            : `${MENSAJE_RED} Vuelve a intentarlo.`;
+    }
+    return e instanceof Error && e.message ? e.message : porOmision;
+}
+
+/** El texto de un error tal como se va a pintar: si es el mensaje crudo del
+ *  navegador por un corte de red, se dice en castellano. Cubre de una vez las
+ *  acciones de la pantalla que pasan `e.message` tal cual (proponer, consultar,
+ *  el adelanto…). */
+export function textoVisibleDelError(t: string): string {
+    const m = (t || '').trim().toLowerCase();
+    const crudo = m === 'failed to fetch' || m === 'load failed' || m === 'network error'
+        || m === 'network request failed' || m.startsWith('networkerror');
+    return crudo ? `${MENSAJE_RED} Vuelve a intentarlo.` : t;
+}
+
+/** Una LECTURA (GET) que se repite sola si la red parpadea: hasta tres veces
+ *  más, a 1, 3 y 6 segundos. Sólo para lecturas. */
+export async function leerConReintento(url: string, init?: RequestInit): Promise<Response> {
+    const esperas = [1_000, 3_000, 6_000];
+    for (let i = 0; ; i++) {
+        try {
+            return await fetch(url, init);
+        } catch (e) {
+            if (!esErrorDeRed(e) || i >= esperas.length) throw e;
+            await new Promise<void>((r) => setTimeout(r, esperas[i]));
+        }
+    }
+}
+
 /** Si el piloto sigue abierto y cuántas plazas quedan. */
 export async function estadoPiloto(userEmail: string): Promise<EstadoPiloto> {
     const res = await fetch(
@@ -965,7 +1028,7 @@ async function recuperarProyecto(
                    dos minutos de margen por si este reloj va adelantado. */
                 : Date.parse(f.generadoEn) >= inicio - 2 * 60_000);
         if (f && esDeEstaCorrida) {
-            const r2 = await fetch(
+            const r2 = await leerConReintento(
                 `${BASE}/taller/descargar?numero=${encodeURIComponent(numero)}`
                 + `&user_email=${encodeURIComponent(userEmail)}`
                 + `&version=${f.version ?? 1}`);
@@ -1271,7 +1334,7 @@ export async function resolverEnVivo(
         for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
         documento = new Blob([bytes], { type: TIPO_DOCX });
     } else {
-        const r2 = await fetch(
+        const r2 = await leerConReintento(
             `${BASE}/taller/descargar?numero=${encodeURIComponent(numero)}`
             + `&user_email=${encodeURIComponent(userEmail)}`);
         if (!r2.ok) return _fallo(r2);
@@ -2659,7 +2722,7 @@ function _respuestaPlanDe(x: unknown): RespuestaPlan {
 /** El plan que hay en la sesión, sea de la decisión que sea: la respuesta
  *  dice su `clave`, y quien pregunta compara con la que pidió. */
 export async function leerPlan(numero: string, userEmail: string): Promise<RespuestaPlan> {
-    const res = await fetch(
+    const res = await leerConReintento(
         `${BASE}/taller/plan?numero=${encodeURIComponent(numero)}`
         + `&user_email=${encodeURIComponent(userEmail)}`);
     if (!res.ok) return _fallo(res);

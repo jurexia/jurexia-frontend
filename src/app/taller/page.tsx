@@ -57,7 +57,7 @@ import {
     contextoDelAsunto, asuntosEnCurso, descargarDelAlmacen,
     documentosDelAsunto, descargarDocumento, olvidarAsunto,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
-    fichaDesdeAdmision, pedirPlan, leerPlan, recalificar,
+    fichaDesdeAdmision, pedirPlan, leerPlan, recalificar, mensajeDeError, textoVisibleDelError,
 } from '@/components/sentencia/api';
 import type { OpcionesResolver } from '@/components/sentencia/api';
 import type { EnlacePlan } from '@/components/sentencia/ComoSeEstudiara';
@@ -1373,8 +1373,7 @@ export default function TallerDeSentencias() {
             setPaso('proyecto');
             irA('proyecto', 400);
         } catch (e) {
-            setError(e instanceof Error ? e.message
-                   : 'No se pudo generar el proyecto completo.');
+            setError(mensajeDeError(e, 'No se pudo generar el proyecto completo.', 'generacion'));
         } finally { setCorriendo(false); setEscribiendo(false); setFaseSrv('preparando'); }
     }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados, esCasa, varianteEstudio, avanzarFase]);
 
@@ -1802,7 +1801,7 @@ export default function TallerDeSentencias() {
             irA('proyecto', 400);
             setPaso('proyecto');
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'No se pudo redactar el proyecto.');
+            setError(mensajeDeError(e, 'No se pudo redactar el proyecto.', 'generacion'));
             /* EL ERROR SE VE. La pantalla había bajado al estudio; el aviso
                vive arriba. Si el servidor se negó porque quedaron accesorios
                sin calificar tras el cambio de sentido, la lista está ahí. */
@@ -2183,7 +2182,7 @@ export default function TallerDeSentencias() {
                                         tras el cambio de sentido—, uno por renglón. */}
                                     <p className={cn('whitespace-pre-line text-[14px] leading-relaxed',
                                         sinProyectos ? 'text-white/90' : 'text-red-100')}>
-                                        {error}
+                                        {textoVisibleDelError(error)}
                                     </p>
                                     {/* ═══ QUEDARSE SIN PROYECTOS NO ES UN ERROR ═══
                                         David: «luego permitir a los usuarios gratuitos

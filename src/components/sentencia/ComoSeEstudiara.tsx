@@ -5,6 +5,7 @@ import { AlertTriangle, Check, ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from './primitivas';
 import type { ProblemaJuridico } from './tipos';
 import type { PlanDelEstudio, PropuestaDelPlan, RespuestaPlan, SegmentoDelPlan } from './api';
+import { mensajeDeError } from './api';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    «CÓMO SE ESTUDIARÁ»: EL PLAN DEL ESTUDIO, ANTES DE GENERAR (26-sep-2026)
@@ -138,7 +139,18 @@ export function usePlanDelEstudio(enlace: EnlacePlan, listo: boolean): EstadoDel
                     await esperar(r.estado === 'listo' && lecturas === 0 ? 0 : CADENCIA_MS);
                     lecturas += 1;
                     if (mio !== turno.current) return;
-                    const l = await leerRef.current();
+                    /* UNA LECTURA QUE FALLA NO TUMBA EL PANEL (2-oct-2026). Leer
+                       la fila no gasta corridas: si la red parpadea, se pregunta
+                       otra vez en la siguiente vuelta, hasta el límite de siempre.
+                       Antes la primera lectura perdida dejaba el panel en
+                       «Failed to fetch» con el plan haciéndose en el servidor. */
+                    let l: RespuestaPlan;
+                    try {
+                        l = await leerRef.current();
+                    } catch {
+                        if (mio !== turno.current) return;
+                        continue;
+                    }
                     if (mio !== turno.current) return;
                     if (!clave || l.clave === clave) r = l;
                     else r = { ...r, estado: 'en_curso' };
@@ -165,7 +177,7 @@ export function usePlanDelEstudio(enlace: EnlacePlan, listo: boolean): EstadoDel
                 // No se reintenta solo: con el tope de corridas, reintentar
                 // en bucle sería gastar las que quedan en el mismo error.
                 setFase('fallo');
-                setError(e instanceof Error ? e.message : 'No se pudo pedir el plan.');
+                setError(mensajeDeError(e, 'No se pudo pedir el plan.'));
             }
         }, primero.current ? PRIMER_PEDIDO_MS : ANTIRREBOTE_MS);
         // Con un plan en pantalla se queda «listo» (y se marca desactualizado);
