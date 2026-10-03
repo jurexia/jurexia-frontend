@@ -68,6 +68,8 @@ const REACT = ['require("react")', 'require("./react_falso.js")'];
 transpilar('src/components/sentencia/api.ts', 'api.js');
 transpilar('src/components/sentencia/recalificacion.ts', 'recal.js', [REACT]);
 transpilar('src/components/sentencia/opcionesDelProyecto.ts', 'opciones.js');
+// Las reglas de lo dictado frente a las preguntas (3-oct-2026), que Decision importa.
+transpilar('src/components/sentencia/trasLasPreguntas.ts', 'trasLasPreguntas.js');
 transpilar('src/components/sentencia/ComoSeEstudiara.tsx', 'como.js', [
     REACT,
     ['require("lucide-react")', 'require("./nada.js")'],

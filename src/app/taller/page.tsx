@@ -58,8 +58,9 @@ import {
     documentosDelAsunto, descargarDocumento, olvidarAsunto,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
     fichaDesdeAdmision, pedirPlan, leerPlan, recalificar, mensajeDeError, textoVisibleDelError,
-    responderPreguntas, conSentido,
+    responderPreguntas, conSentido, esFormatoNuevo, globalPropone,
 } from '@/components/sentencia/api';
+import { respetarLoDictado, recogerTrasResponder } from '@/components/sentencia/trasLasPreguntas';
 import type { OpcionesResolver, RespuestaAPregunta } from '@/components/sentencia/api';
 import PreguntasParaTi from '@/components/sentencia/PreguntasParaTi';
 import CorreccionesDelSupervisor from '@/components/sentencia/CorreccionesDelSupervisor';
@@ -622,7 +623,7 @@ export default function TallerDeSentencias() {
         && avanceAuto.propuesta !== 'listo' && avanceAuto.propuesta !== 'fallo'
         && avanceAuto.propuesta !== 'preguntas';
     const pedirAcervoRef = useRef<((usarContexto?: boolean) => Promise<void>) | null>(null);
-    const pedirPropuestaRef = useRef<((opts?: { sinContexto?: boolean; contextoTexto?: string }) => Promise<void>) | null>(null);
+    const pedirPropuestaRef = useRef<((opts?: { sinContexto?: boolean; contextoTexto?: string; trasResponder?: boolean }) => Promise<void>) | null>(null);
     const autoLanzado = useRef(false);
     /* «GENERA TODO EL PROYECTO» SE DETUVO EN LAS PREGUNTAS (2-oct-2026): al
        contestarlas y llegar la propuesta, sigue solo hasta el .docx. Una marca
@@ -1002,6 +1003,16 @@ export default function TallerDeSentencias() {
        cosas es lo que hizo que David dictara «infundado global» y recibiera un
        proyecto que amparaba. */
     const [globalDictado, setGlobalDictado] = useState(false);
+    /* Y POR REFERENCIA (3-oct-2026, revisión adversarial): `pedirPropuesta` es
+       un useCallback que no depende de él, igual que de `tocados`. Al recoger
+       la propuesta tras contestar una pregunta hay que saber si el global lo
+       dictó él para no pisarlo (`respetarLoDictado`). */
+    const globalDictadoRef = useRef(globalDictado);
+    globalDictadoRef.current = globalDictado;
+    const sentidoGlobalRef = useRef(sentidoGlobal);
+    sentidoGlobalRef.current = sentidoGlobal;
+    const modoRef = useRef(modo);
+    modoRef.current = modo;
     /* SUBE cada vez que el secretario pide cambiar el sentido desde el
        proyecto terminado: la pantalla de decisión abre su panel de
        corrección al verlo subir. */
@@ -1127,7 +1138,8 @@ export default function TallerDeSentencias() {
      *  ventana haría que el proyecto dijera otra cosa que la tarjeta. */
     const soltarLoMarcado = useCallback(() => {
         const motor = propuesta?.propuestas ?? [];
-        setProblemas((prev) => soltarLoTocado(prev, motor));
+        const formato = propuesta?.formato;
+        setProblemas((prev) => soltarLoTocado(prev, motor, formato));
         setTocados(new Set());
         olvidarRecalificacion();
         setAvisosReparto([]);
@@ -1341,11 +1353,49 @@ export default function TallerDeSentencias() {
             }
 
             // 4 · y se resuelve con lo que él propuso, sin revisión.
-            /* YA NO SE ABORTA SI EL MOTOR NO PROPONE (2-oct-2026): con la
-               propuesta por probabilidad siempre hay un lado. Con la global se
-               resuelve con ella; sin ella (una sesión vieja), el servidor reparte
-               con las propuestas que guardó (`porJurimetria`). */
-            const conGlobal = !!pro.global && conSentido(pro.global);
+            /* CON LAS BANDERAS APAGADAS (formato 2), EXACTAMENTE COMO AYER
+               (3-oct-2026, revisión adversarial): si el motor no se atrevió con
+               nada, este camino tampoco. Ese servidor manda el sentido aunque
+               declare que no alcanza, y generar con él era firmar un sentido sin
+               sustento sin pasar por la ventana de criterio. */
+            if (!esFormatoNuevo(pro.formato)) {
+                const VALIDOS = ['fundado', 'esencialmente_fundado',
+                                 'sustancialmente_fundado', 'parcialmente_fundado',
+                                 'fundado_insuficiente', 'infundado', 'inoperante',
+                                 'inatendible', 'ineficaz', 'sin_materia'];
+                /* NO SE MANDAN: sólo se cuentan. Sirven para saber si el motor se
+                   atrevió con algo; el reparto lo hace el servidor con las mismas
+                   propuestas, que ya guardó. */
+                const criterios = probs.map((q, i) => {
+                    const sug = pro.propuestas[i];
+                    if (!sug || !sug.alcanza || !VALIDOS.includes(sug.sentido || ''))
+                        return null;
+                    return {
+                        problema: q.pregunta, sentido: sug.sentido,
+                        razonamiento: sug.razon ?? '',
+                        jerarquia: sug.jerarquia ?? 'accesorio',
+                        prediccion: sug.prediccion ?? {},
+                    };
+                }).filter(Boolean);
+                if (!criterios.length && !pro.global?.alcanza) {
+                    // EL MOTOR NO SE ATREVIÓ, así que este camino tampoco. Se deja
+                    // al secretario en la ventana de criterio con todo cargado, que
+                    // es donde habría llegado por el camino largo.
+                    setModo('por_problema');
+                    setError('El motor no pudo decidir el sentido de ningún '
+                           + 'planteamiento con el material de este asunto. No se '
+                           + 'generó nada: el criterio te toca a ti, y lo tienes '
+                           + 'todo cargado más abajo.');
+                    irA('criterio', 400);
+                    return;
+                }
+            }
+            /* YA NO SE ABORTA SI EL MOTOR NO PROPONE (2-oct-2026), CON EL
+               FORMATO 3: con la propuesta por probabilidad siempre hay un lado.
+               Con la global se resuelve con ella; sin ella (una sesión vieja), el
+               servidor reparte con las propuestas que guardó (`porJurimetria`).
+               Con el 2, `globalPropone` es el `global.alcanza` de siempre. */
+            const conGlobal = globalPropone(pro);
             setEscribiendo(true);
             const rg = await resolverEnVivo(
                 encargo.numero, correo,
@@ -1380,7 +1430,7 @@ export default function TallerDeSentencias() {
         } finally { setCorriendo(false); setEscribiendo(false); setFaseSrv('preparando'); }
     }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados, esCasa, varianteEstudio, avanzarFase]);
 
-    const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean; contextoTexto?: string }) => {
+    const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean; contextoTexto?: string; trasResponder?: boolean }) => {
         setError(''); setCorriendo(true); setProponiendo(true);
         try {
             // EL CONTEXTO RECIÉN APORTADO viaja por argumento: `setContexto`
@@ -1405,10 +1455,25 @@ export default function TallerDeSentencias() {
                donde se perdía. */
             // La propuesta llegó: ahí es donde toca leer y decidir.
             irA('criterio', 500);
-            /* SIEMPRE EN «TODO EL ASUNTO» SI HAY SENTIDO (2-oct-2026, David: «el
-               motor nunca se atreve a proponer»). Se miraba `alcanza`; ahora
-               basta el sentido —la global ya viene normalizada (`globalDe`)—. */
-            if (p.global && conSentido(p.global)) {
+            /* TRAS CONTESTAR, LO QUE ÉL DICTÓ NO SE TOCA (3-oct-2026, revisión
+               adversarial): si dictó el global o marcó problemas, sólo se
+               actualiza la propuesta —la de arriba, `setPropuesta`— y el volcado
+               por problema, que ya respeta lo marcado. Ni el modo, ni el sentido,
+               ni la razón. Si el motor ahora propone otra cosa, se dice. */
+            const respetar = !!opts?.trasResponder && respetarLoDictado({
+                globalDictado: globalDictadoRef.current, nTocados: tocadosRef.current.size, modo: modoRef.current });
+            if (respetar) {
+                if (globalDictadoRef.current && p.global?.sentido && globalPropone(p)
+                    && p.global.sentido !== sentidoGlobalRef.current) {
+                    setError(`Con tus respuestas el motor ahora propone «${p.global.sentido.replace(/_/g, ' ')}». `
+                           + 'Tu sentido no se tocó: si quieres el del motor, elígelo en la tarjeta.');
+                }
+            } else if (globalPropone(p) && p.global) {
+                /* SIEMPRE EN «TODO EL ASUNTO» SI HAY SENTIDO (2-oct-2026, David:
+                   «el motor nunca se atreve a proponer»). Se miraba `alcanza`;
+                   ahora basta el sentido —la global ya viene normalizada
+                   (`globalDe`)—. Con el formato 2, `globalPropone` es el
+                   `alcanza` de siempre (3-oct-2026). */
                 setModo('global');
                 setSentidoGlobal(p.global.sentido || '');
                 // Lo pone la pantalla, no él: es un eco del motor.
@@ -1453,7 +1518,9 @@ export default function TallerDeSentencias() {
                 // con la propuesta por probabilidad siempre hay uno; en una
                 // sesión vieja, el que escribió el motor es mejor punto de
                 // partida que una calificación en blanco.
-                if (!(s && conSentido(s) && valido)) return base;
+                // Sólo con el formato 3 (3-oct-2026): con el 2, como ayer, el
+                // sentido sólo si `alcanza` (ver `conSentido`).
+                if (!(s && conSentido(s, p.formato) && valido)) return base;
                 // LA RAZÓN SE VA CON EL SENTIDO. Al volver a proponer —tras
                 // aportar la reclamación, en el 93/2026— el sentido nuevo
                 // (infundado) se pegaba sobre la razón vieja (la del fundado).
@@ -1849,14 +1916,22 @@ export default function TallerDeSentencias() {
         if (!encargo.numero || !respuestas.length) return;
         setError(''); setRespondiendo(true);
         try {
-            const r = await responderPreguntas(encargo.numero, correo, respuestas);
+            /* CON LO QUE APORTÓ (3-oct-2026, revisión adversarial): fuera del
+               paso 2 —donde la propuesta corre sola sin el contexto de la
+               pantalla— el contexto escrito o aportado viaja con las respuestas,
+               y la propuesta se recoge con él (`recogerTrasResponder`): una
+               guardada sin lo aportado no vale. */
+            const ctx = paso === 'adelanto' ? '' : contexto;
+            const r = await responderPreguntas(encargo.numero, correo, respuestas, ctx);
             if (paso === 'adelanto') {
                 autoLanzado.current = false;
                 await traerContexto(encargo.numero);
                 return;
             }
             if (r.propuesta === 'preguntas') {
-                await pedirPropuestaRef.current?.({ sinContexto: true });
+                // Aún faltan indispensables: la guardada «preguntas» no trae
+                // sentido, así que no hace falta recalcularla con el contexto.
+                await pedirPropuestaRef.current?.({ sinContexto: true, trasResponder: true });
                 return;
             }
             const limite = Date.now() + 6 * 60_000;
@@ -1875,14 +1950,15 @@ export default function TallerDeSentencias() {
                                   + 'quedaron guardadas: vuelve a pedirla en un momento.');
                 }
             }
-            /* Por la misma puerta que el encadenado del paso 2 (sin el contexto
-               de la pantalla): el servidor ya tiene la propuesta hecha con las
-               respuestas y lo aportado. */
-            await pedirPropuestaRef.current?.({ sinContexto: true });
+            /* Por la misma puerta que el encadenado del paso 2. Sin contexto en
+               pantalla, la guardada, que el servidor hizo con las respuestas;
+               con contexto, se pide con él para que no se sirva una guardada
+               hecha sin lo aportado (3-oct-2026). */
+            await pedirPropuestaRef.current?.({ ...recogerTrasResponder(ctx), trasResponder: true });
         } catch (e) {
             setError(mensajeDeError(e, 'No se pudieron guardar tus respuestas.'));
         } finally { setRespondiendo(false); }
-    }, [encargo.numero, correo, paso, traerContexto]);
+    }, [encargo.numero, correo, paso, traerContexto, contexto]);
 
     /* ═══ Y SIGUE SOLO HASTA EL .docx ═══
        Si fue «Genera todo el proyecto» el que se detuvo en las preguntas, al

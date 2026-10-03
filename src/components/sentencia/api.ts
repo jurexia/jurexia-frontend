@@ -774,12 +774,39 @@ export interface PropuestaDeSolucion {
     origen?: 'motor' | 'probabilidad' | 'arbol' | '';
 }
 
+/** ¿Habla el servidor el CONTRATO A (formato 3)? Lo manda con cualquiera de
+ *  las dos banderas de la mejora final; 2 o ausente es la respuesta de ayer.
+ *  (3-oct-2026, revisión adversarial) El front es el mismo para todas las
+ *  cuentas y no tiene banderas: la ÚNICA señal de que la lectura nueva rige
+ *  es el formato de la respuesta. */
+export function esFormatoNuevo(formato: number | null | undefined): boolean {
+    return (Number(formato) || 2) >= 3;
+}
+
 /** ¿Trae un sentido que se pueda volcar? (2-oct-2026, David: «el motor nunca
  *  se atreve a proponer»). Antes se miraba `alcanza`, y con `alcanza` falso se
  *  tiraba el sentido aunque viniera escrito: ahora la propuesta va siempre que
- *  haya un sentido, y `sostenida` dice con qué certeza. */
-export function conSentido(x: { sentido?: string | null } | null | undefined): boolean {
-    return !!(x?.sentido || '').trim();
+ *  haya un sentido, y `sostenida` dice con qué certeza.
+ *
+ *  SÓLO CON EL FORMATO 3 (3-oct-2026, revisión adversarial). Un servidor con
+ *  las banderas apagadas (formato 2) sigue mandando el sentido que escribió el
+ *  modelo aunque declare `alcanza` falso —«SIN PROPUESTA GLOBAL», medido en el
+ *  AR 631/2025—: volcarlo era firmar un sentido sin sustento y rompía la regla
+ *  de que, con las banderas apagadas, la pantalla queda idéntica. Con el
+ *  formato 2 (o sin decirlo) rige lo de siempre: sentido Y `alcanza`. */
+export function conSentido(x: { sentido?: string | null; alcanza?: boolean | null } | null | undefined,
+                           formato?: number | null): boolean {
+    if (!(x?.sentido || '').trim()) return false;
+    return esFormatoNuevo(formato) || !!x?.alcanza;
+}
+
+/** ¿Hay propuesta global que fijar en «todo el asunto»? Con el formato 3
+ *  basta su sentido (`globalDe` ya la normalizó); con el 2, exactamente la
+ *  condición de antes: `global.alcanza` (3-oct-2026, revisión adversarial). */
+export function globalPropone(p: { global?: { sentido?: string | null; alcanza?: boolean | null } | null;
+                                   formato?: number | null } | null | undefined): boolean {
+    if (!p?.global) return false;
+    return esFormatoNuevo(p.formato) ? conSentido(p.global, p.formato) : !!p.global.alcanza;
 }
 
 /** Los tres modos de decidir el sentido. */
@@ -942,9 +969,10 @@ export async function proponerSolucion(
     const res = await fetch(`${BASE}/taller/proponer`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
+    const formato = Number(j.formato) || 2;
     return {
         propuestas: j.propuestas ?? [],
-        global: globalDe(j.global),
+        global: globalDe(j.global, formato),
         contraste: Array.isArray(j.contraste)
             ? (j.contraste as ContrasteDelPlanteamiento[]) : [],
         resumen: j.resumen ?? '',
@@ -955,7 +983,7 @@ export async function proponerSolucion(
         conceptosOmitidos: j && typeof j === 'object' && 'conceptos_omitidos' in j
             ? conceptosOmitidosDe(j.conceptos_omitidos) : undefined,
         estado: j.estado === 'preguntas' ? 'preguntas' : 'lista',
-        formato: Number(j.formato) || 2,
+        formato,
         preguntas: preguntasDe(j.preguntas),
     };
 }
@@ -965,10 +993,17 @@ export async function proponerSolucion(
  *  que el servidor sí mandaba: la pantalla decía «el motor no se atrevió»
  *  sobre una propuesta que existía. Ahora se queda siempre que haya sentido;
  *  `sostenida` guarda lo que antes decía `alcanza` (un servidor anterior no
- *  la manda: se copia) y `alcanza` vale lo que dice el formato 3: hay sentido. */
-export function globalDe(x: unknown): SolucionGlobal | null {
+ *  la manda: se copia) y `alcanza` vale lo que dice el formato 3: hay sentido.
+ *
+ *  SÓLO CON EL FORMATO 3 (3-oct-2026, revisión adversarial): con el 2 (las
+ *  banderas apagadas) se lee EXACTAMENTE como ayer —`global.alcanza ? global :
+ *  null`—, aunque traiga sentido: ese servidor la declaró «SIN PROPUESTA
+ *  GLOBAL». Sin formato se lee como 2, que es lo seguro. */
+export function globalDe(x: unknown, formato?: number | null): SolucionGlobal | null {
     const g = _o(x);
-    if (!g || !(g.alcanza === true || _t(g.sentido))) return null;
+    if (!g) return null;
+    if (!esFormatoNuevo(formato)) return g.alcanza ? (g as unknown as SolucionGlobal) : null;
+    if (!(g.alcanza === true || _t(g.sentido))) return null;
     return {
         ...(g as unknown as SolucionGlobal),
         alcanza: true,
@@ -3396,14 +3431,25 @@ export function supervisorDeCabecera(h: string | null | undefined): SupervisorDe
  *  `propuesta`: «en_curso» (ya se está proponiendo) o «preguntas» (aún falta
  *  alguna indispensable). */
 export async function responderPreguntas(
-    numero: string, userEmail: string, respuestas: RespuestaAPregunta[],
+    numero: string, userEmail: string, respuestas: RespuestaAPregunta[], contexto = '',
 ): Promise<{ ok: boolean; pendientes: number; propuesta: 'en_curso' | 'preguntas' }> {
     const fd = new FormData();
     fd.append('numero', numero);
     fd.append('user_email', userEmail);
+    /* UNA RESPUESTA VACÍA VIAJA (3-oct-2026, revisión adversarial): es como se
+       RETIRA una respuesta guardada —el contrato C dice que el vacío borra la
+       anterior—. Se filtraba, y el «Sí» que el secretario quitó en pantalla
+       seguía en el servidor y entraba al proyecto como hecho de autos. Sólo se
+       descarta lo que no trae id. */
     fd.append('respuestas_json', JSON.stringify(
-        respuestas.filter((r) => r.id && (r.respuesta || '').trim())
-            .map((r) => ({ id: r.id, respuesta: r.respuesta.trim() }))));
+        respuestas.filter((r) => r.id)
+            .map((r) => ({ id: r.id, respuesta: (r.respuesta || '').trim() }))));
+    /* LO QUE APORTÓ EL SECRETARIO (3-oct-2026, revisión adversarial): la
+       propuesta que el servidor relanza al contestar se hacía sin el contexto
+       escrito o el documento aportado, y el sentido y el estudio salían de
+       insumos distintos. Si hay, se manda; si no, el campo no va (un servidor
+       anterior no lo espera). */
+    if (contexto.trim()) fd.append('contexto', contexto);
     const res = await fetch(`${BASE}/taller/responder`, { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = _o(await res.json().catch(() => null)) ?? {};

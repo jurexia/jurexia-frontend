@@ -48,7 +48,7 @@ const SENT = 'src/components/sentencia';
 const conReact = [['require("react")', `require(${JSON.stringify(REACT)})`],
                   ['require("lucide-react")', `require(${JSON.stringify(LUCIDE)})`]];
 for (const f of ['api.ts', 'tipos.ts', 'calificaciones.ts', 'recalificacion.ts', 'tarjetaDelPrincipal.ts',
-                 'primitivas.tsx', 'PreguntasParaTi.tsx', 'CorreccionesDelSupervisor.tsx']) {
+                 'primitivas.tsx', 'PreguntasParaTi.tsx', 'CorreccionesDelSupervisor.tsx', 'trasLasPreguntas.ts']) {
     const src = fs.readFileSync(path.join(RAIZ, SENT, f), 'utf8');
     let js = ts.transpileModule(src, {
         compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020,
@@ -68,6 +68,7 @@ const recal = req('./recalificacion.js');
 const PreguntasMod = req('./PreguntasParaTi.js');
 const Preguntas = PreguntasMod.default;
 const SupMod = req('./CorreccionesDelSupervisor.js');
+const tras = req('./trasLasPreguntas.js');
 const Correcciones = SupMod.default;
 
 const fetchReal = globalThis.fetch;
@@ -93,15 +94,28 @@ const PREGUNTA = (extra = {}) => ({
 /* ═══ 1 · LA PROPUESTA (CONTRATO A) ═══ */
 {
     const pedir = (cuerpo) => conFetch(() => api.proponerSolucion('1/2026', 'x@y.mx'), async () => json(cuerpo));
-    // Un servidor anterior con la global que «no alcanza» pero trae sentido.
+    /* PARIDAD CON LAS BANDERAS APAGADAS (3-oct-2026, revisión adversarial): un
+       servidor de formato 2 manda el sentido aunque declare que no alcanza
+       («SIN PROPUESTA GLOBAL», AR 631/2025). Se lee EXACTAMENTE como ayer:
+       `global.alcanza ? global : null`. */
     let r = await pedir({ propuestas: [], global: GLOBAL({ alcanza: false }) });
-    ok(r.global && r.global.sentido === 'infundado' && r.global.alcanza === true && r.global.sostenida === false,
-       'A: la global con alcanza=false y sentido se QUEDA (alcanza=true, sostenida=false)');
-    ok(r.global.probabilidad === null && r.estado === 'lista' && r.formato === 2 && r.preguntas.length === 0,
-       'A: un servidor anterior: sin probabilidad, «lista», formato 2, sin preguntas');
-    r = await pedir({ propuestas: [], global: GLOBAL({ alcanza: false, sentido: '' }) });
-    ok(r.global === null, 'A: sin sentido y sin alcanza, la global sigue fuera');
+    ok(r.global === null && r.estado === 'lista' && r.formato === 2 && r.preguntas.length === 0,
+       'A: formato 2 (banderas apagadas): la global con alcanza=false se TIRA aunque traiga sentido');
+    r = await pedir({ formato: 2, propuestas: [], global: GLOBAL({ alcanza: false }) });
+    ok(r.global === null, 'A: formato 2 dicho: igual');
     r = await pedir({ propuestas: [], global: GLOBAL() });
+    ok(r.global && r.global.alcanza === true && r.global.sentido === 'infundado' && !r.global.probabilidad,
+       'A: formato 2 con alcanza=true: la global de siempre, sin probabilidad');
+    ok(api.globalPropone(r) && !api.globalPropone({ formato: 2, global: { sentido: 'fundado', alcanza: false } }),
+       'A: globalPropone con el formato 2 es el `alcanza` de ayer');
+    // Formato 3: la global con alcanza=false y sentido se QUEDA.
+    r = await pedir({ formato: 3, propuestas: [], global: GLOBAL({ alcanza: false }) });
+    ok(r.global && r.global.sentido === 'infundado' && r.global.alcanza === true && r.global.sostenida === false,
+       'A: formato 3: la global con alcanza=false y sentido se QUEDA (alcanza=true, sostenida=false)');
+    ok(r.global.probabilidad === null && api.globalPropone(r), 'A: formato 3 sin probabilidad: propone');
+    r = await pedir({ formato: 3, propuestas: [], global: GLOBAL({ alcanza: false, sentido: '' }) });
+    ok(r.global === null, 'A: sin sentido y sin alcanza, la global sigue fuera');
+    r = await pedir({ formato: 3, propuestas: [], global: GLOBAL() });
     ok(r.global && r.global.sostenida === true, 'A: alcanza=true sin `sostenida`: sostenida=true');
     // Formato 3 con la probabilidad.
     r = await pedir({ formato: 3, estado: 'lista', propuestas: [], preguntas: [PREGUNTA({ indispensable: false, respuesta: 'si' })],
@@ -126,8 +140,11 @@ const PREGUNTA = (extra = {}) => ({
     ok(r.preguntas.map((q) => q.id).join() === 'P1,P2' && r.preguntas[0].pregunta.startsWith('¿La diligencia')
        && r.preguntas[1].tipo === 'texto' && r.preguntas[0].respuesta === null,
        'A/B: las preguntas, sin repetidas ni ilegibles; el primero de un id manda');
-    ok(api.conSentido({ sentido: ' fundado ' }) && !api.conSentido({ sentido: '' }) && !api.conSentido(null),
-       'conSentido: basta un sentido escrito');
+    ok(api.conSentido({ sentido: ' fundado ' }, 3) && !api.conSentido({ sentido: '' }, 3) && !api.conSentido(null, 3),
+       'conSentido: con el formato 3 basta un sentido escrito');
+    ok(!api.conSentido({ sentido: 'fundado', alcanza: false }, 2) && !api.conSentido({ sentido: 'fundado', alcanza: false })
+       && api.conSentido({ sentido: 'fundado', alcanza: true }, 2) && !api.conSentido({ sentido: '', alcanza: true }, 2),
+       'conSentido: con el formato 2 (o sin él), sentido Y alcanza, como ayer');
 }
 
 /* ═══ 2 · LAS RESPUESTAS EN LOTE (CONTRATO C) Y EL CONTEXTO ═══ */
@@ -138,9 +155,17 @@ const PREGUNTA = (extra = {}) => ({
         async (url, init) => { pedidos.push({ url: String(url), init }); return json({ ok: true, pendientes: 0, propuesta: 'en_curso' }); });
     const fd = pedidos[0].init.body;
     ok(pedidos[0].url.endsWith('/taller/responder') && pedidos[0].init.method === 'POST', 'C: POST a /taller/responder');
+    // (3-oct-2026) La vacía VIAJA: es como se retira una respuesta (el vacío borra la anterior).
     ok(fd.get('numero') === '1/2026' && fd.get('user_email') === 'x@y.mx'
-       && fd.get('respuestas_json') === JSON.stringify([{ id: 'P1', respuesta: 'si' }, { id: 'P3', respuesta: 'La cláusula dice X.' }]),
-       'C: todas en un envío, sin vacías ni sin id, recortadas');
+       && fd.get('respuestas_json') === JSON.stringify([{ id: 'P1', respuesta: 'si' }, { id: 'P2', respuesta: '' },
+                                                        { id: 'P3', respuesta: 'La cláusula dice X.' }]),
+       'C: todas en un envío, sin las de sin id, recortadas; la vacía viaja (retira)');
+    ok(!fd.has('contexto'), 'C: sin contexto, el campo no va (un servidor anterior no lo espera)');
+    const pedidosCtx = [];
+    await conFetch(() => api.responderPreguntas('1/2026', 'x@y.mx', [{ id: 'P1', respuesta: 'si' }], 'La cláusula aportada (prueba).'),
+        async (url, init) => { pedidosCtx.push(init.body); return json({ ok: true, pendientes: 0, propuesta: 'en_curso' }); });
+    ok(pedidosCtx[0].get('contexto') === 'La cláusula aportada (prueba).',
+       'C: el contexto que aportó el secretario viaja con las respuestas (3-oct-2026)');
     ok(r.ok && r.pendientes === 0 && r.propuesta === 'en_curso', 'C: la respuesta del servidor');
     const r2 = await conFetch(() => api.responderPreguntas('1', 'x', [{ id: 'P1', respuesta: 'no' }]),
         async () => json({ ok: true, pendientes: 1, propuesta: 'preguntas' }));
@@ -257,14 +282,19 @@ const PREGUNTA = (extra = {}) => ({
     const sinProb = td.tarjetaDeLaPropuesta({ propuestas: [], global: GLOBAL(), contraste: [],
                                               resumen: '', avisos: [], criteriosJson: '', modelo: '', necesitaConceptos: false }, PROBS);
     ok(sinProb.recomendada === null, 'local sin probabilidad: no recomienda (como antes)');
-    const porProblema = td.tarjetaDeLaPropuesta({ propuestas: [{ problema: '¿P1?', sentido: 'infundado', razon: 'r', apoyos: [],
-                                                                  confianza: 'baja', alcanza: false }], global: null, contraste: [],
-                                                  resumen: '', avisos: [], criteriosJson: '', modelo: '', necesitaConceptos: false }, PROBS);
+    const SIN_ALCANCE = { propuestas: [{ problema: '¿P1?', sentido: 'infundado', razon: 'r', apoyos: [],
+                                         confianza: 'baja', alcanza: false }], global: null, contraste: [],
+                          resumen: '', avisos: [], criteriosJson: '', modelo: '', necesitaConceptos: false };
+    const porProblema = td.tarjetaDeLaPropuesta({ ...SIN_ALCANCE, formato: 3 }, PROBS);
     ok(porProblema.vias.propuesta && porProblema.vias.propuesta.sentido === 'infundado',
-       'local por problema: el sentido va aunque `alcanza` venga falso');
-    const suelto = td.soltarLoTocado([{ id: 'a', pregunta: '¿P1?', criterio: '' }],
-                                     [{ problema: '¿P1?', sentido: 'infundado', razon: 'r', apoyos: [], confianza: '', alcanza: false }]);
-    ok(suelto[0].sentido === 'infundado', '«Resolver así» devuelve el sentido del motor aunque `alcanza` venga falso');
+       'local por problema, formato 3: el sentido va aunque `alcanza` venga falso');
+    ok(td.tarjetaDeLaPropuesta(SIN_ALCANCE, PROBS).vias.propuesta === null,
+       'local por problema, formato 2: con `alcanza` falso no hay vía propuesta (como ayer)');
+    const MOTOR = [{ problema: '¿P1?', sentido: 'infundado', razon: 'r', apoyos: [], confianza: '', alcanza: false }];
+    const suelto = td.soltarLoTocado([{ id: 'a', pregunta: '¿P1?', criterio: '' }], MOTOR, 3);
+    ok(suelto[0].sentido === 'infundado', '«Resolver así», formato 3: el sentido del motor aunque `alcanza` venga falso');
+    ok(td.soltarLoTocado([{ id: 'a', pregunta: '¿P1?', criterio: '' }], MOTOR)[0].sentido === undefined,
+       '«Resolver así», formato 2: con `alcanza` falso, nada (como ayer)');
 }
 
 /* ═══ 5 · EL HTML ═══ */
@@ -278,6 +308,18 @@ const PREGUNTA = (extra = {}) => ({
     ok(JSON.stringify(PreguntasMod.respuestasQueViajan(guardadas, { P1: 'si', P2: 'Dice X.' })) === JSON.stringify([{ id: 'P2', respuesta: 'Dice X.' }]),
        'B: lo ya guardado igual no se repite');
     ok(JSON.stringify(PreguntasMod.respuestasIniciales(guardadas)) === JSON.stringify({ P1: 'si' }), 'B: arranca con lo guardado');
+    /* RETIRAR UNA RESPUESTA (3-oct-2026, revisión adversarial): el vacío en
+       pantalla sobre una guardada viaja vacío —el servidor la borra— y la
+       indispensable vuelve a contar como sin contestar. */
+    ok(JSON.stringify(PreguntasMod.respuestasQueViajan(guardadas, { P1: '', P2: 'Dice X.' }))
+       === JSON.stringify([{ id: 'P2', respuesta: 'Dice X.' }, { id: 'P1', respuesta: '' }]),
+       'B: la retirada viaja vacía, junto con lo nuevo');
+    ok(JSON.stringify(PreguntasMod.respuestasQueViajan(guardadas, { P1: '' })) === JSON.stringify([{ id: 'P1', respuesta: '' }]),
+       'B: la retirada sola también viaja');
+    ok(PreguntasMod.indispensablesSinContestar(guardadas, { P1: '' }).map((q) => q.id).join() === 'P1',
+       'B: la indispensable retirada cuenta como sin contestar');
+    ok(PreguntasMod.indispensablesSinContestar(guardadas, {}).length === 0, 'B: sin tocarla, la guardada cuenta');
+    ok(JSON.stringify(PreguntasMod.respuestasQueViajan(P, { P2: '' })) === '[]', 'B: vaciar una que nunca se guardó no viaja');
 
     const h = pintar(React.createElement(Preguntas, { preguntas: P, onResponder: () => {}, esperando: true }));
     ok(h.includes('Preguntas para ti') && h.includes('1 indispensable') && h.includes('data-pregunta="P1"')
@@ -319,6 +361,26 @@ const PREGUNTA = (extra = {}) => ({
     ok(cab.includes('El revisor corrigió 3 cosas'), 'D: del camino plano, el número');
 }
 
+/* ═══ 5-bis · LO DICTADO FRENTE A LAS PREGUNTAS (3-oct-2026) ═══ */
+{
+    ok(tras.respetarLoDictado({ globalDictado: true, nTocados: 0, modo: 'global' })
+       && tras.respetarLoDictado({ globalDictado: false, nTocados: 2, modo: 'por_problema' })
+       && !tras.respetarLoDictado({ globalDictado: false, nTocados: 0, modo: 'por_problema' })
+       && !tras.respetarLoDictado({ globalDictado: false, nTocados: 2, modo: 'global' }),
+       'R3: se respeta si dictó el global o marcó problemas trabajando problema por problema');
+    const PR = [{ id: 'a', sentido: 'infundado' }, { id: 'b', sentido: '' }];
+    ok(tras.generarDetenidoPorPreguntas({ esperaRespuestas: true, enGlobal: true, globalDictado: false, problemas: PR })
+       && !tras.generarDetenidoPorPreguntas({ esperaRespuestas: true, enGlobal: true, globalDictado: true, problemas: PR })
+       && !tras.generarDetenidoPorPreguntas({ esperaRespuestas: false, enGlobal: true, globalDictado: false, problemas: PR }),
+       'R4: en «todo el asunto», detenido sólo con el eco del motor y la propuesta en «preguntas»');
+    ok(tras.generarDetenidoPorPreguntas({ esperaRespuestas: true, enGlobal: false, globalDictado: false, problemas: PR, tocados: new Set() })
+       && !tras.generarDetenidoPorPreguntas({ esperaRespuestas: true, enGlobal: false, globalDictado: false, problemas: PR, tocados: new Set(['a']) }),
+       'R4: problema por problema, detenido si algún sentido no lo marcó él');
+    ok(JSON.stringify(tras.recogerTrasResponder('  ')) === JSON.stringify({ sinContexto: true })
+       && JSON.stringify(tras.recogerTrasResponder('La cláusula.')) === JSON.stringify({ contextoTexto: 'La cláusula.' }),
+       'R2: con contexto la propuesta se recoge con él; sin él, la guardada');
+}
+
 /* ═══ 6 · EL CABLEADO DE page.tsx, LEÍDO EN SU FUENTE ═══ */
 {
     const pag = fs.readFileSync(path.join(RAIZ, 'src/app/taller/page.tsx'), 'utf8');
@@ -333,16 +395,30 @@ const PREGUNTA = (extra = {}) => ({
        'el botón amarillo ya no dice «No recomendado»');
     const i0 = pag.indexOf('const generarTodo = useCallback(');
     const cuerpo = pag.slice(i0, pag.indexOf('const pedirPropuesta = useCallback(', i0));
-    ok(cuerpo.includes("pro.estado === 'preguntas'") && cuerpo.includes('generarTrasResponder.current = true')
-       && !cuerpo.includes('El motor no pudo decidir el sentido'), '«Genera todo» se detiene en las preguntas y ya no aborta');
+    ok(cuerpo.includes("pro.estado === 'preguntas'") && cuerpo.includes('generarTrasResponder.current = true'),
+       '«Genera todo» se detiene en las preguntas');
+    // (3-oct-2026) Con el formato 2, el aborto de ayer sigue; con el 3, ya no aborta.
+    ok(/if \(!esFormatoNuevo\(pro\.formato\)\) \{[\s\S]{0,1500}!sug\.alcanza[\s\S]{0,1200}El motor no pudo decidir el sentido[\s\S]{0,400}return;/.test(cuerpo)
+       && cuerpo.includes('const conGlobal = globalPropone(pro);'),
+       '«Genera todo»: con el formato 2 aborta como ayer si nada alcanza; la global, por globalPropone');
     ok(/if \(!generarTrasResponder\.current \|\| corriendo[\s\S]{0,200}void pedirProyecto\('estandar'\);/.test(pag),
        'y sigue solo por efecto cuando la propuesta llega lista');
     const j0 = pag.indexOf('const pedirPropuesta = useCallback(');
     const pp = pag.slice(j0, pag.indexOf('pedirPropuestaRef.current = pedirPropuesta;', j0));
-    ok(pp.includes("p.estado === 'preguntas'") && pp.includes('conSentido(p.global)') && pp.includes('conSentido(s) && valido')
-       && !pp.includes('s.alcanza'), 'pedirPropuesta: entra en global con el sentido y vuelca aunque no «alcance»');
+    ok(pp.includes("p.estado === 'preguntas'") && pp.includes('globalPropone(p) && p.global') && pp.includes('conSentido(s, p.formato) && valido')
+       && !pp.includes('s.alcanza'), 'pedirPropuesta: la global y el volcado, según el formato (3-oct-2026)');
+    ok(/const respetar = !!opts\?\.trasResponder && respetarLoDictado\(\{\s*globalDictado: globalDictadoRef\.current, nTocados: tocadosRef\.current\.size, modo: modoRef\.current \}\);\s*if \(respetar\) \{/.test(pp)
+       && pp.indexOf('if (respetar)') < pp.indexOf("setModo('global')"),
+       'pedirPropuesta: tras responder, lo dictado no se pisa (ni modo, ni sentido, ni razón)');
+    const k0 = pag.indexOf('const responderYProponer = useCallback(');
+    const rp = pag.slice(k0, pag.indexOf('}, [encargo.numero, correo, paso, traerContexto, contexto]);', k0));
+    ok(rp.includes("const ctx = paso === 'adelanto' ? '' : contexto;")
+       && rp.includes('responderPreguntas(encargo.numero, correo, respuestas, ctx)')
+       && rp.includes('...recogerTrasResponder(ctx), trasResponder: true')
+       && !/\{ sinContexto: true \}\)/.test(rp),
+       'responderYProponer: manda el contexto y recoge la propuesta con él, marcada «tras responder»');
     ok(pag.includes('onResponderPreguntas={responderYProponer}'), 'la decisión responde en lote');
-    ok(/responderPreguntas\(encargo\.numero, correo, respuestas\)/.test(pag), 'por /taller/responder');
+    ok(/responderPreguntas\(encargo\.numero, correo, respuestas, ctx\)/.test(pag), 'por /taller/responder, con el contexto');
 }
 
 console.log(fallas ? `FALLA · ${bien} comprobaciones bien, ${fallas} mal` : `OK · ${bien} comprobaciones bien, 0 mal`);

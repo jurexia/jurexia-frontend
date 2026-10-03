@@ -7,8 +7,9 @@ import type { ProblemaJuridico, TarjetaDecision } from './tipos';
 import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
               PropuestaSuplencia, DecisionSuplencia, TesisDelAcervo,
               OrigenDelActoReclamado, RespuestaAPregunta } from './api';
-import { conSentido } from './api';
+import { conSentido, esFormatoNuevo } from './api';
 import PreguntasParaTi from './PreguntasParaTi';
+import { generarDetenidoPorPreguntas } from './trasLasPreguntas';
 import { FINAS, grupoDe, legible } from './calificaciones';
 import ProblemaPrincipal from './ProblemaPrincipal';
 import type { MarcaDeSecundario } from './ProblemaPrincipal';
@@ -534,9 +535,16 @@ export default function Decision({
        `listoParaPlan`): alternar entre las dos vías antes de decidir gastaba
        las cuatro corridas de la sesión en firmas que nadie iba a usar. */
     const [viaElegida, setViaElegida] = useState<ViaActiva | null>(null);
+    /* SALVO QUE ÉL DICTARA EL GLOBAL (3-oct-2026, revisión adversarial): la
+       única propuesta nueva que llega con `globalDictado` en pie es la que se
+       recoge tras contestar una pregunta (page.tsx no lo apaga ahí: ver
+       `respetarLoDictado`). Su elección sigue siendo suya; olvidarla hacía que
+       la tarjeta volviera a enseñar «la propuesta» como si él no hubiera
+       elegido nada. */
     useEffect(() => {
-        setViaElegida(propuesta && !propuesta.global && propuesta.estado !== 'preguntas' ? 'criterio' : null);
-    }, [propuesta]);
+        setViaElegida((prev) => (globalDictado && prev && propuesta?.global ? prev
+            : propuesta && !propuesta.global && propuesta.estado !== 'preguntas' ? 'criterio' : null));
+    }, [propuesta]); // eslint-disable-line react-hooks/exhaustive-deps
     const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
     const [textoAporte, setTextoAporte] = useState('');
     // Cuál de los dos botones se pulsó: el giro va en ése, no en los dos.
@@ -719,7 +727,13 @@ export default function Decision({
        «no ampara» sobre conceptos que nadie estudió. Al levantar un
        sobreseimiento sigue bloqueando, como antes. */
     const bloqueaConceptos = necesitaConceptos && !revocaConcesion;
-    const puedeGenerar = !generando && !proponiendo && listoParaGenerar && !faltaRazon && !bloqueaConceptos;
+    /* NI CON LA PROPUESTA EN «PREGUNTAS» Y UN SENTIDO QUE NADIE DICTÓ
+       (3-oct-2026, revisión adversarial): ver `generarDetenidoPorPreguntas`.
+       Con las indispensables sin contestar sólo genera lo que él dictó. */
+    const detenidoPorPreguntas = generarDetenidoPorPreguntas({
+        esperaRespuestas, enGlobal, globalDictado, problemas, tocados });
+    const puedeGenerar = !generando && !proponiendo && listoParaGenerar && !faltaRazon && !bloqueaConceptos
+        && !detenidoPorPreguntas;
     const alguienSeAparta = enGlobal ? globalSeAparta : seAparta.some(Boolean);
     /* El porcentaje del sentido que viaja en «todo el asunto» (2-oct-2026):
        null sin probabilidad, como antes. */
@@ -735,6 +749,7 @@ export default function Decision({
        decidir, y cada alternancia es otra firma: pedir el plan de la que está
        en pantalla antes de que la elija gastaba corridas del tope de cuatro. */
     const listoParaPlan = !!plan?.activo && viaConfirmada && listoParaGenerar && !faltaRazon && !bloqueaConceptos
+        && !detenidoPorPreguntas
         && !generando && !proponiendo && !(razonando && razonando.size > 0) && !razonandoGlobal
         /* Ni mientras se recalifican los accesorios tumbados: el plan se ordena
            sobre el criterio YA recalificado (contrato_recalificar.md), y
@@ -811,7 +826,7 @@ export default function Decision({
         return {
             id: p.id, pregunta: p.pregunta, sentido: p.sentido || '', grupo: grupos[p.id] ?? '',
             de: tocados?.has(p.id) && p.sentido ? 'tuya'
-                : conSentido(motor) ? 'del motor' : (p.sentido ? 'de la pantalla' : 'sin decidir'),
+                : conSentido(motor, propuesta?.formato) ? 'del motor' : (p.sentido ? 'de la pantalla' : 'sin decidir'),
         };
     }), [problemas, enGlobal, sentidoGlobal, globalDictado, tocados, propuesta, principal, grupos, recalificadas,  // eslint-disable-line react-hooks/exhaustive-deps
         tarjetaVista, ladoSecundarios, prosperaDelLado]);
@@ -965,7 +980,9 @@ export default function Decision({
                     puedeVerComoSale={listoParaGenerar}
                     origen={origen}
                     probabilidadMotor={global?.probabilidad ?? null}
-                    onAceptarYGenerar={global ? aceptarYGenerar : undefined}
+                    /* Sólo con el formato 3 (3-oct-2026): con las banderas
+                       apagadas la tarjeta queda como ayer, sin este botón. */
+                    onAceptarYGenerar={global && esFormatoNuevo(propuesta?.formato) ? aceptarYGenerar : undefined}
                     generando={generando}
                     esperaRespuestas={esperaRespuestas} />
             )}
@@ -1470,6 +1487,12 @@ export default function Decision({
                                         : 'se ordena cuando la decisión esté completa'}
                             </span>
                             <a href="#como-se-estudiara" className="shrink-0 text-[12px] text-accent-gold/85 hover:text-accent-gold">ver ↑</a>
+                        </p>
+                    )}
+                    {detenidoPorPreguntas && (
+                        <p data-detenido-por-preguntas className="mt-2.5 text-[12px] text-amber-300/90">
+                            Antes de generar, contesta arriba las preguntas indispensables: el sentido que hay en pantalla
+                            era del motor y ya no vale. O dicta tú el sentido.
                         </p>
                     )}
                     {faltaRazon && (

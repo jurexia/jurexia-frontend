@@ -72,7 +72,7 @@ const REAL = path.join(TMP, 'real');
 const conReact = [['require("react")', `require(${JSON.stringify(REACT)})`],
                   ['require("lucide-react")', `require(${JSON.stringify(LUCIDE)})`]];
 for (const f of ['api.ts', 'tipos.ts', 'calificaciones.ts', 'recalificacion.ts', 'tarjetaDelPrincipal.ts',
-                 'primitivas.tsx', 'FilaDelEspejo.tsx', 'SolucionesPosibles.tsx', 'OrigenDelActo.tsx', 'PreguntasParaTi.tsx', 'CorreccionesDelSupervisor.tsx', 'Espinazo.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
+                 'primitivas.tsx', 'FilaDelEspejo.tsx', 'SolucionesPosibles.tsx', 'OrigenDelActo.tsx', 'PreguntasParaTi.tsx', 'trasLasPreguntas.ts', 'CorreccionesDelSupervisor.tsx', 'Espinazo.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
                  'EstudiarJuntos.tsx']) {
     transpilar(REAL, f, conReact);
 }
@@ -1089,6 +1089,41 @@ const FICHA_631 = {
         modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global' }));
     ok(viejo.includes('Constancias del juicio de origen que el motor necesita ver') && !viejo.includes('preguntas-para-ti')
        && !viejo.includes('data-probabilidad-asi-sale'), 'P: sin preguntas ni probabilidad, lo de hoy');
+
+    /* ═══ REVISIÓN ADVERSARIAL (3-oct-2026) ═══ */
+    const generarDe = (x) => {
+        const k = x.indexOf('Generar sentencia en versión moderna');
+        return k < 0 ? '' : x.slice(x.lastIndexOf('<button', k), k);
+    };
+    // «Aceptar y generar» sólo con el formato 3: con las banderas apagadas
+    // (formato 2) la tarjeta del servidor «claro» queda como ayer.
+    const f2 = pintar(React.createElement(Decision, { ...comunes, propuesta: PROPUESTA, tarjeta: base(),
+        modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global' }));
+    ok(!f2.includes('data-aceptar-y-generar'), 'R1: formato 2: sin «Aceptar y generar» (idéntico a hoy)');
+    const f3 = pintar(React.createElement(Decision, { ...comunes, propuesta: { ...PROPUESTA, formato: 3 }, tarjeta: base(),
+        modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global' }));
+    ok(f3.includes('data-aceptar-y-generar'), 'R1: formato 3: con «Aceptar y generar»');
+    // «Generar» no se enciende con el eco del motor mientras la propuesta espera respuestas.
+    const ecoG = pintar(React.createElement(Decision, { ...comunes, propuesta: espera, tarjeta: null,
+        modo: 'global', sentidoGlobal: 'fundado', razonGlobal: 'razón del motor anterior', globalDictado: false }));
+    ok(generarDe(ecoG) && /disabled=""/.test(generarDe(ecoG)) && ecoG.includes('data-detenido-por-preguntas'),
+       'R4: «preguntas» con el eco del motor en «todo el asunto»: «Generar» apagado, y se dice por qué');
+    const suyoG = pintar(React.createElement(Decision, { ...comunes, propuesta: espera, tarjeta: null,
+        modo: 'global', sentidoGlobal: 'fundado', razonGlobal: 'su razón', globalDictado: true }));
+    ok(generarDe(suyoG) && !/disabled=""/.test(generarDe(suyoG)) && !suyoG.includes('data-detenido-por-preguntas'),
+       'R4: con el global dictado por él, sí puede generar');
+    const conSentidos = PROBLEMAS.map((p) => ({ ...p, sentido: 'infundado' }));
+    const ecoP = pintar(React.createElement(Decision, { ...comunes, propuesta: espera, tarjeta: null,
+        problemas: conSentidos, modo: 'por_problema', tocados: new Set(['a']) }));
+    ok(generarDe(ecoP) && /disabled=""/.test(generarDe(ecoP)) && ecoP.includes('data-detenido-por-preguntas'),
+       'R4: problema por problema, con sentidos del motor sin marcar: apagado');
+    const suyoP = pintar(React.createElement(Decision, { ...comunes, propuesta: espera, tarjeta: null,
+        problemas: conSentidos, modo: 'por_problema', tocados: new Set(conSentidos.map((p) => p.id)) }));
+    ok(generarDe(suyoP) && !/disabled=""/.test(generarDe(suyoP)), 'R4: todos marcados por él: puede generar');
+    const listoG = pintar(React.createElement(Decision, { ...comunes, propuesta: lista, tarjeta: null,
+        modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global', globalDictado: false }));
+    ok(!/disabled=""/.test(generarDe(listoG)) && !listoG.includes('data-detenido-por-preguntas'),
+       'R4: con la propuesta «lista», el eco del motor genera como siempre');
 }
 
 const iHtml = process.argv.indexOf('--html');

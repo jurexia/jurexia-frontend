@@ -500,8 +500,9 @@ export function tarjetaDeLaPropuesta(
         }
     } else {
         const pp = propuesta.propuestas?.[iP];
-        // El sentido va aunque `alcanza` venga falso (2-oct-2026): ver `conSentido`.
-        if (conSentido(pp)) vp = _via(pp!.sentido, pp!.razon, '', pp!.apoyos, tesis);
+        // El sentido va aunque `alcanza` venga falso (2-oct-2026), sólo con el
+        // formato 3; con el 2, como ayer (3-oct-2026): ver `conSentido`.
+        if (conSentido(pp, propuesta.formato)) vp = _via(pp!.sentido, pp!.razon, '', pp!.apoyos, tesis);
     }
     const prP = prosperaDeLaVia(vp), prO = prosperaDeLaVia(vo);
     const delMotor = (x: PropuestaDeSolucion | undefined, relacion: string): SuerteDelSecundario | null =>
@@ -666,13 +667,15 @@ export function elegirTarjeta(servidor: TarjetaDecision | null | undefined,
  *  a mano en la ventana —y lo que el reparto movió por esas marcas— se suelta:
  *  cada problema vuelve a la calificación que le propuso el motor, o a
  *  ninguna. Lo que ÉL escribió no se destruye nunca: su texto se queda. */
-export function soltarLoTocado(problemas: ProblemaJuridico[], propuestas: PropuestaDeSolucion[]): ProblemaJuridico[] {
+export function soltarLoTocado(problemas: ProblemaJuridico[], propuestas: PropuestaDeSolucion[],
+                               /** El de la respuesta (3-oct-2026): con el 2, sólo lo que «alcanza». */
+                               formato?: number | null): ProblemaJuridico[] {
     return problemas.map((q, i) => {
         const s = propuestas[i];
         const valido = sentidoValido(s?.sentido);
         const texto = (q.criterio || '').trim();
         const suya = !!texto && !!q.razonDe && !q.razonDe.delMotor;
-        if (s && conSentido(s) && valido && valido !== 'innecesario') {
+        if (s && conSentido(s, formato) && valido && valido !== 'innecesario') {
             const mismaRazon = q.razonDe?.sentido === valido && !!texto;
             return { ...q, sentido: valido,
                      criterio: suya || mismaRazon ? q.criterio : (s.razon || ''),

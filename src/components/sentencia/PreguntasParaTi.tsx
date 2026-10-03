@@ -36,21 +36,35 @@ export function respuestasIniciales(preguntas: PreguntaAlSecretario[]): Record<s
     return r;
 }
 
-/** Las indispensables que siguen sin respuesta (ni en pantalla ni guardada). */
+/** Lo que vale para una pregunta: lo de la pantalla si lo hay —también un
+ *  vacío, que es una respuesta RETIRADA—; si no, lo guardado. (3-oct-2026,
+ *  revisión adversarial) Con `||` el vacío caía en lo guardado y la retirada
+ *  seguía contando como contestada. */
+function valorDe(p: PreguntaAlSecretario, respuestas: Record<string, string>): string {
+    return (respuestas[p.id] ?? p.respuesta ?? '').trim();
+}
+
+/** Las indispensables que siguen sin respuesta (ni en pantalla ni guardada).
+ *  Una retirada en pantalla cuenta como sin contestar. */
 export function indispensablesSinContestar(preguntas: PreguntaAlSecretario[],
                                            respuestas: Record<string, string>): PreguntaAlSecretario[] {
-    return preguntas.filter((p) => p.indispensable && !(respuestas[p.id] || p.respuesta || '').trim());
+    return preguntas.filter((p) => p.indispensable && !valorDe(p, respuestas));
 }
 
 /** Lo que viaja: sólo lo contestado y que cambió respecto de lo guardado (lo
  *  ya guardado no hace falta repetirlo; el servidor lo tiene). Si nada cambió
- *  pero falta proponer, se manda lo contestado entero. */
+ *  pero falta proponer, se manda lo contestado entero.
+ *
+ *  UNA RESPUESTA RETIRADA VIAJA VACÍA (3-oct-2026, revisión adversarial): el
+ *  contrato C dice que el vacío BORRA la anterior. Se descartaba, y el «Sí»
+ *  que él quitó en pantalla seguía en el servidor y entraba al proyecto como
+ *  hecho de autos. */
 export function respuestasQueViajan(preguntas: PreguntaAlSecretario[],
                                     respuestas: Record<string, string>): RespuestaAPregunta[] {
-    const contestadas = preguntas
-        .map((p) => ({ id: p.id, respuesta: (respuestas[p.id] ?? p.respuesta ?? '').trim(), antes: (p.respuesta ?? '').trim() }))
-        .filter((x) => x.respuesta);
-    const nuevas = contestadas.filter((x) => x.respuesta !== x.antes);
+    const todas = preguntas.map((p) => ({ id: p.id, respuesta: valorDe(p, respuestas), antes: (p.respuesta ?? '').trim() }));
+    const contestadas = todas.filter((x) => x.respuesta);
+    const retiradas = todas.filter((x) => !x.respuesta && x.antes);
+    const nuevas = [...contestadas.filter((x) => x.respuesta !== x.antes), ...retiradas];
     return (nuevas.length ? nuevas : contestadas).map(({ id, respuesta }) => ({ id, respuesta }));
 }
 
@@ -137,14 +151,18 @@ export default function PreguntasParaTi({ preguntas, onResponder, enviando = fal
     const firma = preguntas.map((p) => `${p.id}:${p.respuesta ?? ''}`).join('|');
     useEffect(() => {
         setRespuestas((prev) => ({ ...respuestasIniciales(preguntas), ...Object.fromEntries(
-            Object.entries(prev).filter(([id, v]) => v && preguntas.some((p) => p.id === id && !p.respuesta))) }));
+            Object.entries(prev).filter(([id, v]) => preguntas.some((p) => p.id === id
+                // Lo tecleado de una sin respuesta guardada, y una retirada
+                // aún sin mandar (3-oct-2026): ésta no se repone sola.
+                && (v ? !p.respuesta : !!p.respuesta)))) }));
     }, [firma]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const indispensables = useMemo(() => preguntas.filter((p) => p.indispensable), [preguntas]);
     const otras = useMemo(() => preguntas.filter((p) => !p.indispensable), [preguntas]);
     const faltan = indispensablesSinContestar(preguntas, respuestas);
     const viajan = respuestasQueViajan(preguntas, respuestas);
-    const hayNuevas = preguntas.some((p) => (respuestas[p.id] ?? '').trim() && (respuestas[p.id] ?? '').trim() !== (p.respuesta ?? '').trim());
+    // Una retirada también es algo nuevo que mandar (3-oct-2026).
+    const hayNuevas = preguntas.some((p) => valorDe(p, respuestas) !== (p.respuesta ?? '').trim());
     /* Con la propuesta esperando, el botón exige las indispensables («No
        consta» cuenta: es una respuesta). Con la propuesta hecha, sólo que haya
        algo nuevo que mandar. */
