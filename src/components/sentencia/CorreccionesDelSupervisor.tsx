@@ -42,7 +42,17 @@ export function tituloDelSupervisor(s: SupervisorDelProyecto | null | undefined)
     return `El revisor corrigió ${n} ${n === 1 ? 'cosa' : 'cosas'} del proyecto`;
 }
 
+/** DÓNDE CAYÓ LA CORRECCIÓN, como se lee en el proyecto (3-oct-2026). El
+ *  supervisor revisa también el considerando de antecedentes, numerado aparte
+ *  —A1, A2…— y con `parrafo: 0`: rotularlo «párrafo 3» lo confundiría con el
+ *  tercero del estudio. Lo del estudio, como siempre; sin número, nada. */
+export function ubicacionDeCorreccion(c: CorreccionDelSupervisor): string {
+    if (c.seccion === 'antecedentes') return c.bloque ? `Antecedentes · ${c.bloque}` : 'Antecedentes';
+    return c.parrafo > 0 ? `párrafo ${c.parrafo}` : '';
+}
+
 function Fila({ c }: { c: CorreccionDelSupervisor }) {
+    const donde = ubicacionDeCorreccion(c);
     return (
         <li className="border-l-2 border-white/10 py-1.5 pl-3">
             <p className="flex flex-wrap items-baseline gap-x-2 text-[12px] text-white/45">
@@ -52,7 +62,7 @@ function Fila({ c }: { c: CorreccionDelSupervisor }) {
                         {ROTULO_CORRECCION[c.tipo]}
                     </span>
                 )}
-                {c.parrafo > 0 && <span>párrafo {c.parrafo}</span>}
+                {donde && <span>{donde}</span>}
             </p>
             {(c.antes || c.despues) && (
                 <p className="mt-1 text-[13px] leading-relaxed">

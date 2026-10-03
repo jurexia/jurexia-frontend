@@ -25,7 +25,9 @@ export type PasoDelEspinazo = 1 | 2 | 3 | 4;
 
 const PASOS: { n: PasoDelEspinazo; titulo: string; sub: string }[] = [
     { n: 1, titulo: 'Subir el auto', sub: 'Un documento, tres datos' },
-    { n: 2, titulo: 'Adelanto', sub: 'De qué va; la solución, en camino' },
+    // «ADELANTO» YA NO SE DICE (David, 3-oct-2026): son los resultandos y
+    // considerandos de procedencia; en el rótulo corto, «Procedencia».
+    { n: 2, titulo: 'Procedencia', sub: 'De qué va; la solución, en camino' },
     { n: 3, titulo: 'Decidir', sub: 'Aceptar o corregir' },
     { n: 4, titulo: 'Proyecto', sub: 'Word listo para revisar' },
 ];

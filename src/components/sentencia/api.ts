@@ -54,6 +54,12 @@ export interface EncargoAdelanto {
     ciudad?: string;
     /** `generado` escribe el documento entero; `plantilla` rellena la vieja. */
     modo?: 'generado' | 'plantilla';
+    /** EL TRÁMITE EN ESTE TRIBUNAL, tal como lo confirmó el secretario
+     *  (3-oct-2026). Viaja como `tramite_json` con las claves planas del
+     *  contrato (`ficha_tramite.de_formulario`) y SÓLO las que tienen valor y
+     *  aplican al tipo: lo que no se manda, el servidor lo busca en los papeles
+     *  y, si no consta, deja hueco con su aviso. */
+    tramite?: Tramite;
 }
 
 export interface ResultadoAdelanto {
@@ -75,7 +81,7 @@ export async function generarAdelanto(
      *  familia. Pedírsela era además la causa de un defecto real: quien subía
      *  un ADELANTO —que se detiene antes del resolutivo— recibía una sentencia
      *  sin RESUELVE ni puntos resolutivos. */
-    documentos: { plantilla?: File; acto: File; conceptos: File },
+    documentos: { plantilla?: File; acto: File; conceptos: File; admision?: File },
     userEmail: string,
 ): Promise<ResultadoAdelanto> {
     const fd = new FormData();
@@ -125,6 +131,17 @@ export async function generarAdelanto(
     if (documentos.plantilla) fd.append('plantilla', documentos.plantilla);
     fd.append('acto', documentos.acto);
     fd.append('conceptos', documentos.conceptos);
+    /* LOS RESULTANDOS DE TRÁMITE SE ESCRIBÍAN A CIEGAS (3-oct-2026). El auto
+       de admisión se leía en /taller/desde-admision para proponer la ficha y
+       se tiraba: el auto de Presidencia, el turno y el Ministerio Público
+       salían de memoria —«el MP omitió formular pedimento» afirmado sin fuente
+       en 71 de 72 proyectos de octubre—. Ahora viajan los dos: lo que el
+       secretario confirmó en «Trámite en este tribunal» (manda) y el propio
+       auto, para que el servidor ancle cada fecha al papel. Sin trámite ni
+       auto no se manda nada y el servidor sigue como estaba. */
+    const tramite = tramiteParaEnviar(encargo.tramite ?? {}, encargo.tipoAsunto ?? '');
+    if (Object.keys(tramite).length) fd.append('tramite_json', JSON.stringify(tramite));
+    if (documentos.admision) fd.append('admision', documentos.admision);
 
     const res = await fetch(`${BASE}/taller/adelanto`, { method: 'POST', body: fd });
 
@@ -138,8 +155,11 @@ export async function generarAdelanto(
 
     const cabecera = res.headers;
     const disp = cabecera.get('content-disposition') || '';
+    // EL NOMBRE QUE VE EL SECRETARIO (3-oct-2026): ya no es un «adelanto»,
+    // son los resultandos y considerandos de procedencia. Sólo es el respaldo
+    // cuando el servidor no dice cómo se llama el archivo.
     const nombre = /filename="?([^";]+)"?/.exec(disp)?.[1]
-        ?? `${encargo.numero.replace('/', '-')} ADELANTO.docx`;
+        ?? `${encargo.numero.replace('/', '-')} PROCEDENCIA.docx`;
 
     return {
         documento: await res.blob(),
@@ -302,6 +322,14 @@ export interface EstadoPiloto {
      *  estudio. Si el servidor no lo manda, la pantalla usa `puede_sise`, que
      *  sale de la misma lista (`_taller_sin_tope`). */
     es_casa?: boolean;
+    /** RESULTANDOS Y CONSIDERANDOS DE PROCEDENCIA POR TIPO (3-oct-2026): si
+     *  la bandera `procedencia_por_tipo` rige PARA ESTA CUENTA. La decide el
+     *  servidor, nunca la pantalla. Sólo con `true` se pinta «Trámite en este
+     *  tribunal» y viajan `tramite_json` y el auto de admisión. Ausente o
+     *  `false`, la pantalla queda como estaba: el servidor ignoraría esos
+     *  datos, y pedirlos sería hacer creer al secretario que entran en el
+     *  proyecto. */
+    procedencia_por_tipo?: boolean;
 }
 
 /** LAS TRES BOLSAS. La del mes caduca, las recargas no, y la prueba es de por
@@ -1734,7 +1762,13 @@ export async function generarDesdeExpediente(
     numero: string,
     userEmail: string,
     notificacion: string,
-    extra?: { magistrado?: string; secretario?: string; reglaSurtimiento?: string },
+    extra?: {
+        magistrado?: string; secretario?: string; reglaSurtimiento?: string;
+        /** «Trámite en este tribunal», tal como lo confirmó el secretario, y
+         *  el tipo con que la tarjeta lo pintó (decide qué claves aplican).
+         *  Sólo con la bandera `procedencia_por_tipo` de la cuenta. */
+        tramite?: Tramite; tipoAsunto?: string;
+    },
 ): Promise<AdelantoDesdeSISE> {
     const fd = new FormData();
     fd.append('numero', numero);
@@ -1743,6 +1777,14 @@ export async function generarDesdeExpediente(
     if (extra?.magistrado) fd.append('magistrado', extra.magistrado);
     if (extra?.secretario) fd.append('secretario', extra.secretario);
     if (extra?.reglaSurtimiento) fd.append('regla_surtimiento', extra.reglaSurtimiento);
+    /* EN EL CAMINO DE SISE LA TARJETA SE PINTABA Y LO TECLEADO SE TIRABA
+       (3-oct-2026, rev_6). «Trámite en este tribunal» aparece en el raíl junto
+       al expediente que espera, pero «Generar desde SISE» no lo mandaba: lo
+       que el secretario confirmaba ahí no entraba al proyecto y nada lo decía.
+       Viaja igual que en /taller/adelanto —sólo lo que aplica al tipo y tiene
+       valor— y, sin trámite, la petición es la de antes. */
+    const tramite = tramiteParaEnviar(extra?.tramite ?? {}, extra?.tipoAsunto ?? '');
+    if (Object.keys(tramite).length) fd.append('tramite_json', JSON.stringify(tramite));
 
     const res = await fetch(`${BASE}/taller/desde-expediente`, { method: 'POST', body: fd });
 
@@ -1773,7 +1815,7 @@ export async function generarDesdeExpediente(
     const c = res.headers;
     const disp = c.get('content-disposition') || '';
     const nombre = /filename="?([^";]+)"?/.exec(disp)?.[1]
-        ?? `${numero.replace('/', '-')} ADELANTO.docx`;
+        ?? `${numero.replace('/', '-')} PROCEDENCIA.docx`;
     return {
         documento: await res.blob(),
         nombre,
@@ -2378,11 +2420,140 @@ export interface ReglasOfrecidas {
 
 export async function reglasSurtimiento(
     tipoAsunto: string, responsable: string,
+    /** EN QUÉ CARÁCTER RECURRE QUIEN RECURRE (3-oct-2026), sólo cuando se
+     *  sabe: hoy, «autoridad» (ver `papelDelRecurrente`). Sin él, la petición
+     *  es la de siempre y el servidor ofrece la lista de los particulares. */
+    papel = '',
+    /** LA SEDE DEL COLEGIADO (C7, 3-oct-2026): en lo agrario decide si la regla
+     *  de omisión es la del Código Nacional (Ciudad de México) o la del Código
+     *  Federal (art. 321). Sin ella el servidor no afirma la Ciudad de México. */
+    tribunal = '', ciudad = '',
 ): Promise<ReglasOfrecidas> {
     const q = new URLSearchParams({ tipo_asunto: tipoAsunto || '', responsable: responsable || '' });
+    /* LA AUTORIDAD QUE RECURRE SE NOTIFICA POR OFICIO (3-oct-2026, rev_4 y
+       rev_6). El servidor ya aceptaba `papel` y la pantalla nunca lo mandaba:
+       en la revisión o la queja de una autoridad el desplegable proponía
+       «personal» —que surte al día siguiente, art. 31, fr. II— cuando la suya
+       surte desde que queda hecha (fr. I), y el plazo salía un día más largo
+       hasta que el servidor lo rehacía con su aviso. */
+    if (papel.trim()) q.set('papel', papel.trim());
+    if (tribunal.trim()) q.set('tribunal', tribunal.trim());
+    if (ciudad.trim()) q.set('ciudad', ciudad.trim());
     const res = await fetch(`${BASE}/taller/reglas-surtimiento?${q.toString()}`);
     if (!res.ok) return _fallo(res);
     return (await res.json()) as ReglasOfrecidas;
+}
+
+/* ═══ ¿RECURRE UNA AUTORIDAD? (3-oct-2026) ═══
+   El mismo vocabulario del cargo que usa el servidor
+   (`redactor_adelanto._parece_autoridad`): un particular nunca se llama
+   «Titular de…», «Juzgado…» ni «Director General de…». SIN ACENTOS en los dos
+   lados, porque el nombre llega como se tecleó. Y UNA GUARDA QUE EL SERVIDOR
+   NO TIENE: una persona moral (S.A., S. de R.L., A.C., S.C.…) no es una
+   autoridad aunque su administrador único firme por ella. En la duda se
+   contesta que no: entonces la pantalla propone la regla de siempre y es el
+   servidor quien la rehace con su aviso; al revés —proponer «oficio» a un
+   particular— el plazo saldría corto y nadie lo diría. */
+const _VOCES_AUTORIDAD = [
+    'titular', 'director', 'directora', 'unidad de', 'secretaria de',
+    'juzgado', 'tribunal', 'sala ', 'magistrad', 'juez', 'ayuntamiento', 'instituto',
+    'comision', 'fiscal', 'procurad', 'presidente municipal', 'gobernador',
+    'congreso', 'servicio de administracion', 'delegacion', 'subsecretar', 'jefe de',
+    'coordinador', 'administrador', 'autoridad', 'consejo de la judicatura',
+    // LAS UNIDADES DEL SAT SE LLAMAN «ADMINISTRACIÓN…» («Administración
+    // Desconcentrada Jurídica de…», «Administración Local de Recaudación…»)
+    // y el vocabulario del servidor no las ve. Una sociedad que se llame así
+    // queda fuera por la guarda de la persona moral.
+    'administracion desconcentrada', 'administracion local', 'administracion general',
+    'administracion central',
+];
+/* La forma con puntos vale en cualquier sitio («X, S.A. de C.V., por conducto
+   de…»); sin puntos, sólo al final del nombre, porque «sa», «ac» o «sc»
+   sueltas también son sílabas o siglas de otra cosa. */
+const _PERSONA_MORAL = new RegExp(
+    '(?:^|[\\s,])(?:s\\.\\s?a\\.|s\\.\\s?de\\s?r\\.\\s?l\\.|a\\.\\s?c\\.|s\\.\\s?c\\.|s\\.\\s?a\\.\\s?p\\.\\s?i\\.|s\\.\\s?a\\.\\s?s\\.)'
+    + '|(?:^|[\\s,])(?:sa|sa de cv|sab de cv|sapi de cv|s de rl(?: de cv)?|ac|sc|sas)\\s*$');
+
+const _sinAcentos = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+export function pareceAutoridad(nombre: string): boolean {
+    const crudo = String(nombre || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const n = ` ${_sinAcentos(crudo)} `;
+    if (!n.trim()) return false;
+    if (_PERSONA_MORAL.test(n.trim())) return false;
+    // «Secretaría» CON TILDE es la dependencia («Secretaría General de
+    // Gobierno»); «secretaria» sin ella puede ser el cargo de una persona.
+    // Es la única voz en que la tilde decide, como en el servidor.
+    return crudo.includes('secretaría') || _VOCES_AUTORIDAD.some((v) => n.includes(v));
+}
+
+/** «autoridad» cuando se sabe que recurre una autoridad en un amparo en
+ *  revisión o una queja; «» en cualquier otro caso (no consta, recurre un
+ *  particular, u otro tipo de asunto: en la revisión fiscal y el amparo
+ *  directo el servidor no mira el papel).
+ *  · `recurrente` es quien recurre cuando NO es el quejoso (el que leyó el
+ *    auto de admisión). Si es el propio quejoso escrito de otra manera, no
+ *    es otra parte.
+ *  · `quejosoRecurre`: la carátula del tipo rotula el campo «quejoso» como
+ *    el RECURRENTE a secas (la queja, 3-oct-2026: «RECURRENTE»). Entonces
+ *    ese campo es quien recurre. */
+export function papelDelRecurrente(tipoAsunto: string, recurrente: string, quejoso: string,
+                                   quejosoRecurre = false): '' | 'autoridad' {
+    const t = (tipoAsunto || '').trim().toLowerCase();
+    if (t !== 'amparo_revision' && t !== 'queja') return '';
+    const norm = (s: string) => _sinAcentos(String(s || '')).toLowerCase().replace(/[^a-z0-9ñ]+/g, ' ').trim();
+    const r = norm(recurrente), q = norm(quejoso);
+    let quien = '';
+    if (r && !(q && (r === q || r.includes(q) || q.includes(r)))) quien = recurrente;
+    else if (!r && quejosoRecurre) quien = quejoso;
+    return pareceAutoridad(quien) ? 'autoridad' : '';
+}
+
+/** QUÉ REGLA PONER CUANDO LLEGAN LAS QUE OFRECE EL SERVIDOR, y si hay que
+ *  decírselo al secretario. Cambia sola sólo en tres casos: no había regla o
+ *  era la genérica («personal»); la que había ya no está entre las ofrecidas
+ *  (una sesión reabierta de un amparo en revisión con el boletín del TFJA,
+ *  rev_4, 3-oct-2026: cambiaba EN SILENCIO); o la había puesto la pantalla
+ *  sola (`puestaSola`) y cambió lo que la decidía —quién recurre—. Lo que el
+ *  secretario eligió a propósito entre las ofrecidas no se toca. */
+export function reglaPropuesta(actual: string, puestaSola: string, r: ReglasOfrecidas | null | undefined,
+                               etiquetaVieja = ''): { regla: string; aviso: string } | null {
+    if (!r?.por_omision || !r.reglas?.length) return null;
+    const claves = r.reglas.map((x) => x.clave);
+    const generica = !actual || actual === 'personal';
+    const fuera = !!actual && !claves.includes(actual);
+    const sola = !!puestaSola && actual === puestaSola;
+    if (!(generica || fuera || sola) || actual === r.por_omision) return null;
+    const nueva = r.reglas.find((x) => x.clave === r.por_omision)?.etiqueta || r.por_omision;
+    /* LO AGRARIO CAMBIA CON LA SEDE (revisión de normas y front, 3-oct-2026).
+       Desde que la sede vuelve a pedir las reglas, teclear o corregir el
+       tribunal pasa de la personal del Código Federal a la del Código Nacional
+       (o al revés), y el aviso decía «quién recurre, la responsable»: no
+       nombraba la causa. Y la del Código Nacional entraba en silencio cuando
+       sustituía a la genérica: el transitorio Tercero deja los juicios
+       iniciados antes con el 321, que surte un día después. */
+    const agrario = r.fuero === 'agrario';
+    const nacional = r.por_omision.startsWith('cnpcf_');
+    let aviso = '';
+    if (fuera && !generica) {
+        aviso = `«${etiquetaVieja || actual}» no es de las reglas de notificación que rigen este asunto: `
+              + `se puso «${nueva}». Compruébala.`;
+    } else if (sola && !generica) {
+        aviso = agrario
+            ? `Con la sede del tribunal se propone «${nueva}»: en lo agrario la regla del taller aplica el `
+              + 'Código Nacional en la Ciudad de México y el artículo 321 del Código Federal fuera de ella. '
+              + 'Compruébala.'
+            : `Con lo que dice ahora la ficha (quién recurre, la responsable o la sede del tribunal) se `
+              + `propone «${nueva}». Compruébala.`;
+    }
+    if (agrario && nacional) {
+        aviso = (aviso ? `${aviso} ` : `Se propone «${nueva}» porque el juicio es agrario y el tribunal `
+                 + 'reside en la Ciudad de México. ')
+              + 'Si el juicio agrario se inició antes de que el Código Nacional rigiera para él, sigue con '
+              + 'la legislación con que empezó (transitorio Tercero de la reforma al artículo 167 de la Ley '
+              + 'Agraria): elige «Personal — Código Federal (art. 321)», que surte al día siguiente.';
+    }
+    return { regla: r.por_omision, aviso };
 }
 
 export interface FichaLeida {
@@ -2404,6 +2575,534 @@ export interface FichaLeida {
      *  Correspondencia Común — no siempre está, y cuando no está el
      *  secretario la teclea como hoy. ISO. */
     presentacion?: string;
+    /** EL TRÁMITE EN ESTE TRIBUNAL, leído del auto (3-oct-2026): auto de
+     *  Presidencia, turno, Ministerio Público, adhesivo… con las claves planas
+     *  del formulario. Es PROPUESTA: la pantalla la pone en «Trámite en este
+     *  tribunal» y el secretario la corrige. Siempre llega normalizado por
+     *  `tramiteDe` (vacío si el servidor aún no lo manda). */
+    tramite?: Tramite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EL TRÁMITE EN ESTE TRIBUNAL (3-oct-2026)
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «que los resultandos y considerandos de procedencia vayan impecables,
+   disminuyendo el margen de error si el secretario introduce el auto de
+   admisión y los datos correctos (fechas)».
+
+   Medido en los diez proyectos de octubre: el resultando de trámite y el de
+   turno se escribían SIN el auto de admisión ni el de turno delante. Salían
+   fechas imposibles declaradas «oportunas», «el Ministerio Público omitió
+   formular pedimento» afirmado sin fuente en 71 de 72 y una «Oficialía de
+   Partes de este Tribunal» inventada. Los datos van primero y la prosa
+   después: estas claves son las del contrato con el servidor
+   (`ficha_tramite.de_formulario` / `a_formulario`), PLANAS, con las fechas en
+   ISO. Lo que viene de aquí tiene fuente «secretario» y manda sobre lo leído.
+
+   UN DATO, UN CAMPO. El órgano que dictó el acto se pide UNA vez: en el
+   amparo directo es la «Autoridad responsable» de la carátula y la pantalla
+   la manda como `organo_acto`; en los tres recursos tiene campo propio en la
+   tarjeta. DESDE EL 3-OCT-2026 (C3 y C4) la carátula de la queja ya no lleva
+   «ÓRGANO QUE DICTÓ EL AUTO RECURRIDO» (0 de 8 engroses) ni la de la revisión
+   fiscal «SALA RESPONSABLE» (David: «hay que quitar»): el órgano ya va en el
+   V I S T O y en la competencia, y sin el renglón de la carátula su único
+   campo es el de aquí, como en el amparo en revisión desde siempre. */
+export interface Tramite {
+    /** Auto de Presidencia que forma el expediente y lo registra, SÓLO SI ES
+     *  DISTINTO DEL QUE ADMITE (cuarta ronda, 3-oct-2026, E7). En la queja
+     *  contra la autoridad responsable de un amparo directo (art. 97, fr. II)
+     *  es el que le pide el informe del artículo 101. Vacío = un mismo auto
+     *  registró y admitió, o no se sabe: el servidor lo busca en los papeles.
+     *  ISO. */
+    fecha_registro?: string;
+    /** Auto de Presidencia que admite (y registra, si fue el mismo). ISO. */
+    fecha_admision?: string;
+    fecha_turno?: string;
+    ponente_turno?: string;
+    fecha_returno?: string;
+    ponente_returno?: string;
+    /** SÓLO SI CONSTA. '' = el proyecto no dice nada del Ministerio Público:
+     *  ni que pidió ni que omitió. */
+    ministerio_publico?: '' | 'pedimento' | 'sin_pedimento';
+    adhesivo_quien?: string;
+    adhesivo_presentacion?: string;
+    adhesivo_admision?: string;
+    /** Notificación, a quien se adhiere, del auto que admitió lo principal:
+     *  de ahí corre su plazo. ISO. */
+    adhesivo_notificacion?: string;
+    /** La sentencia o el auto reclamado o recurrido. ISO. */
+    fecha_acto?: string;
+    organo_acto?: string;
+    /** Amparo directo: toca de apelación (vacío si fue de única instancia). */
+    toca?: string;
+    /** El juicio de origen: el natural en el amparo directo, el de amparo en
+     *  la revisión y la queja, el contencioso en la revisión fiscal. */
+    expediente_origen?: string;
+    /** Queja, fracción II: auto que tuvo por rendido el informe del 101. ISO. */
+    fecha_informe_101?: string;
+    /** Revisión fiscal por correo: la fecha que cuenta. ISO. */
+    deposito_postal?: string;
+    /** Se lee y se conserva, pero esta pantalla no lo pide: la regla de
+     *  notificación ya se declara en «Cómo se notificó» (un dato, un campo). */
+    forma_notificacion?: string;
+    /** Revisión fiscal: la fracción del artículo 63 de la LFPCA que hace
+     *  procedente el recurso, en romano (I a X). Vacía = «que lo decida el
+     *  proyecto»: el servidor la busca y, si no la encuentra, deja el hueco
+     *  con su aviso (3-oct-2026). */
+    fraccion_63?: string;
+    /** Revisión fiscal, fracción I: el monto del asunto en pesos, como lo
+     *  escribió el secretario. Sin la fracción I no viaja. */
+    cuantia?: string;
+    /** Amparo directo: el precepto que rige el surtimiento de la
+     *  notificación de la sentencia reclamada, escrito como lo diría el
+     *  considerando de oportunidad («el artículo 126 del Código de
+     *  Procedimientos Civiles del Estado de Querétaro»). Se copia tal cual. */
+    fundamento_surtimiento?: string;
+    /** LOS ASUNTOS RELACIONADOS QUE MARCÓ EL SECRETARIO (3-oct-2026, C6), en
+     *  el formato plano del contrato: «tipo|numero|estado» separados por «;»
+     *  («amparo_directo|452/2025|misma_sesion;revision_fiscal|33/2024|resuelto»).
+     *  Su fuente es SIEMPRE el secretario: nunca se lee de los papeles ni se
+     *  propone, y sin él el proyecto no lleva conexidad. En la tarjeta puede
+     *  traer filas a medio escribir; lo que viaja pasa por `relacionadosDe`. */
+    relacionados?: string;
+}
+
+export type ClaveTramite = keyof Tramite;
+
+/* LAS VEINTIDÓS CLAVES DEL CONTRATO (3-oct-2026): las diecisiete planas del
+   §1.1, las tres de la segunda ronda —`fraccion_63`, `cuantia` y
+   `fundamento_surtimiento`—, desde la cuarta `fecha_registro` y, desde la
+   quinta, `relacionados`, con el
+   mismo nombre que `ficha_tramite.CLAVES_FORMULARIO` en el servidor. Una
+   clave que no esté aquí no llega.
+   POR QUÉ `fecha_registro` (FIXES_R4, E7): el auto que forma y registra y el
+   que admite cabían en UN solo campo. En la queja de la fracción II son dos
+   autos —el primero registra y pide el informe del 101; el segundo lo tiene
+   por rendido y admite— y el resultando ponía la fecha de la admisión en los
+   dos (Q_335: registro el 14 de octubre, admisión el 3 de noviembre; salió
+   «3 de noviembre» dos veces y sin aviso). En la revisión fiscal, con una
+   declinatoria de por medio, el registro del 10 de febrero se atribuía al
+   auto que admitió el 15 de mayo (RF_7).
+   LA VEINTIDÓS, `relacionados` (3-oct-2026, C6). David: «siempre y cuando
+   haya asuntos relacionados. No vamos a meter conexidad en automático. Hay
+   que habilitar en el taller la opción de con un clic precisar si existen
+   asuntos relacionados y con ello se genera el considerando». La marca el
+   secretario y sólo él: con ella el proyecto lleva el considerando de
+   conexidad o de hecho notorio y el rubro dice «RELACIONADO CON…». */
+export const CLAVES_TRAMITE: ClaveTramite[] = [
+    'fecha_admision', 'fecha_turno', 'ponente_turno', 'fecha_returno', 'ponente_returno',
+    'ministerio_publico', 'adhesivo_quien', 'adhesivo_presentacion', 'adhesivo_admision',
+    'adhesivo_notificacion', 'fecha_acto', 'organo_acto', 'toca', 'expediente_origen',
+    'fecha_informe_101', 'deposito_postal', 'forma_notificacion',
+    'fraccion_63', 'cuantia', 'fundamento_surtimiento',
+    'fecha_registro',
+    'relacionados',
+];
+
+/** Las fracciones del artículo 63 de la LFPCA, en romano y en orden. */
+export const FRACCIONES_63: readonly string[] = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
+/** Las claves que son fechas: viajan y se guardan como AAAA-MM-DD. */
+export const FECHAS_TRAMITE: ReadonlySet<ClaveTramite> = new Set<ClaveTramite>([
+    'fecha_admision', 'fecha_turno', 'fecha_returno', 'adhesivo_presentacion',
+    'adhesivo_admision', 'adhesivo_notificacion', 'fecha_acto', 'fecha_informe_101',
+    'deposito_postal', 'fecha_registro',
+]);
+
+/** La familia del asunto con la que se decide qué apartados lleva el trámite.
+ *  '' si el tipo aún no se eligió. */
+export function familiaDelTramite(tipoAsunto: string): '' | 'AD' | 'AR' | 'Q' | 'RF' {
+    const t = (tipoAsunto || '').toLowerCase();
+    if (!t) return '';
+    if (/fiscal/.test(t)) return 'RF';
+    if (/queja/.test(t)) return 'Q';
+    if (/directo/.test(t)) return 'AD';
+    if (/revision|revisión/.test(t)) return 'AR';
+    return '';
+}
+
+/** QUÉ CLAVES APLICAN A CADA TIPO. La pantalla pinta y el envío manda las
+ *  mismas: si el secretario rellenó el toca de un amparo directo y luego
+ *  cambió el tipo a revisión, ese toca no viaja. El adhesivo no existe en la
+ *  queja; el informe del 101 sólo en ella; el depósito postal sólo en la
+ *  revisión fiscal (art. 63 LFPCA). DESDE EL 3-OCT-2026 (segunda ronda): el
+ *  precepto del surtimiento, sólo en el amparo directo —en los recursos el
+ *  surtimiento lo rige la Ley de Amparo y no hay que declararlo—; la fracción
+ *  del 63 y la cuantía, sólo en la revisión fiscal (la cuantía, además, sólo
+ *  viaja con la fracción I: ver `tramiteParaEnviar`). DESDE LA CUARTA RONDA,
+ *  el auto que forma y registra, en los cuatro: cualquier asunto puede
+ *  registrarse en un auto y admitirse en otro (en la queja de la fracción II,
+ *  siempre). DESDE LA QUINTA (C6), los asuntos relacionados, en los cuatro:
+ *  cualquiera puede resolverse con otro en la misma sesión o invocar como
+ *  hecho notorio una ejecutoria ya dictada. */
+export function clavesDelTramite(tipoAsunto: string): ClaveTramite[] {
+    const f = familiaDelTramite(tipoAsunto);
+    if (!f) return [];
+    const comunes: ClaveTramite[] = [
+        'fecha_registro',
+        'fecha_admision', 'fecha_turno', 'ponente_turno', 'fecha_returno', 'ponente_returno',
+        'ministerio_publico', 'fecha_acto', 'organo_acto', 'expediente_origen',
+        'relacionados',
+    ];
+    const adhesivo: ClaveTramite[] = [
+        'adhesivo_quien', 'adhesivo_presentacion', 'adhesivo_admision', 'adhesivo_notificacion',
+    ];
+    if (f === 'AD') return [...comunes, 'toca', 'fundamento_surtimiento', ...adhesivo];
+    if (f === 'AR') return [...comunes, ...adhesivo];
+    if (f === 'Q') return [...comunes, 'fecha_informe_101'];
+    return [...comunes, 'deposito_postal', 'fraccion_63', 'cuantia', ...adhesivo];
+}
+
+/** La fracción del 63 en su forma del contrato —«I» a «X»—, o '' si lo que
+ *  llega no es una de ellas. Tolera minúsculas, un «fracción» delante y el
+ *  punto final («fracción vi.» → «VI»); nunca adivina una fracción. */
+export function fraccion63De(x: unknown): string {
+    if (typeof x !== 'string') return '';
+    const r = x.trim().toUpperCase().replace(/^FRACCI[OÓ]N\s+/, '').replace(/\.$/, '').trim();
+    return FRACCIONES_63.includes(r) ? r : '';
+}
+
+const _ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOS ASUNTOS RELACIONADOS (3-oct-2026, C6)
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «siempre y cuando haya asuntos relacionados. No vamos a meter
+   conexidad en automático». Un interruptor en «Trámite en este tribunal» y,
+   encendido, hasta cuatro filas con el tipo, el número y si se resuelve en
+   la misma sesión o ya se resolvió. Con eso el servidor escribe el rubro
+   «RELACIONADO CON…», el «, relacionado con…» del V I S T O y el considerando
+   de conexidad o de hecho notorio. NADA de esto se lee de los papeles ni se
+   propone: si el secretario no lo marca, no existe.
+
+   EL CONTRATO PLANO (`ficha_tramite.CLAVES_FORMULARIO`, clave «relacionados»):
+   «tipo|numero|estado» separados por «;». Tipo: amparo_directo,
+   amparo_revision, queja o revision_fiscal; número: «452/2025» (hasta seis
+   cifras, barra y el año); estado: misma_sesion (por omisión) o resuelto.
+   Lo que no casa no viaja: el servidor lo tiraría con un aviso, y es mejor
+   que la tarjeta lo diga donde se escribió. */
+export type TipoRelacionado = 'amparo_directo' | 'amparo_revision' | 'queja' | 'revision_fiscal';
+export type EstadoRelacionado = 'misma_sesion' | 'resuelto';
+export interface Relacionado {
+    tipo: TipoRelacionado;
+    numero: string;
+    estado: EstadoRelacionado;
+}
+/** Una fila de la tarjeta, como está escrita (puede estar a medias). */
+export interface FilaRelacionado {
+    tipo: string;
+    numero: string;
+    estado: string;
+}
+
+export const TIPOS_RELACIONADO: readonly { clave: TipoRelacionado; etiqueta: string }[] = [
+    { clave: 'amparo_directo', etiqueta: 'Amparo directo' },
+    { clave: 'amparo_revision', etiqueta: 'Amparo en revisión' },
+    { clave: 'queja', etiqueta: 'Queja' },
+    { clave: 'revision_fiscal', etiqueta: 'Revisión fiscal' },
+];
+export const ESTADOS_RELACIONADO: readonly { clave: EstadoRelacionado; etiqueta: string }[] = [
+    { clave: 'misma_sesion', etiqueta: 'Se resuelve en la misma sesión' },
+    { clave: 'resuelto', etiqueta: 'Ya se resolvió' },
+];
+/** Cuatro, como en el servidor: más que eso ya no es un rubro legible. */
+export const MAX_RELACIONADOS = 4;
+/** El número del asunto relacionado: «452/2025». */
+export const NUMERO_RELACIONADO = /^\d{1,6}\/\d{4}$/;
+
+const _TIPOS_REL = new Set<string>(TIPOS_RELACIONADO.map((t) => t.clave));
+
+/** El tipo de la fila en su forma del contrato, o '' si no es uno de los
+ *  cuatro. Tolera mayúsculas, espacios y la tilde de «revisión». */
+export function tipoRelacionadoDe(x: unknown): TipoRelacionado | '' {
+    if (typeof x !== 'string') return '';
+    const t = x.trim().toLowerCase().replace(/ó/g, 'o').replace(/[\s-]+/g, '_');
+    return _TIPOS_REL.has(t) ? t as TipoRelacionado : '';
+}
+
+/* Los mismos alias que `ficha_tramite._ESTADOS_ALIAS`. */
+const _ESTADOS_REL: Record<string, EstadoRelacionado> = {
+    misma_sesion: 'misma_sesion', en_la_misma_sesion: 'misma_sesion',
+    se_resuelve_en_la_misma_sesion: 'misma_sesion', conexidad: 'misma_sesion',
+    resuelto: 'resuelto', resuelta: 'resuelto', ya_resuelto: 'resuelto',
+    ya_se_resolvio: 'resuelto', hecho_notorio: 'resuelto',
+};
+
+/** El estado, como lo lee el servidor (`ficha_tramite._estado_relacionado`):
+ *  sin estado, la misma sesión —lo que la tarjeta marca por omisión—; uno que
+ *  no se reconoce, '' (la fila no vale: el servidor la quitaría con aviso). */
+function _estadoRel(x: unknown): EstadoRelacionado | '' {
+    const e = typeof x === 'string'
+        ? x.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase()
+            .replace(/[\s-]+/g, '_').replace(/^_+|_+$/g, '')
+        : '';
+    if (!e) return 'misma_sesion';
+    return _ESTADOS_REL[e] ?? '';
+}
+
+/** El número, sin espacios ni separadores del contrato: «452 / 2025» →
+ *  «452/2025». No adivina nada más: «452-2025» se queda así y no casa. */
+export function numeroRelacionadoDe(x: unknown): string {
+    return typeof x === 'string' ? x.replace(/[|;\s]+/g, '') : '';
+}
+
+/** LAS FILAS TAL COMO ESTÁN ESCRITAS, para pintarlas: también las que aún no
+ *  valen (el número a medio teclear). Hasta cuatro. */
+export function filasDeRelacionados(x: unknown): FilaRelacionado[] {
+    if (typeof x !== 'string' || !x.trim()) return [];
+    return x.split(';').filter((s) => s.trim()).slice(0, MAX_RELACIONADOS).map((s) => {
+        const [tipo = '', numero = '', estado = ''] = s.split('|');
+        return { tipo: tipo.trim(), numero: numero.trim(), estado: estado.trim() };
+    });
+}
+
+/** Y DE VUELTA a la cadena que guarda la tarjeta (sin validar: es borrador). */
+export function filasARelacionados(filas: FilaRelacionado[]): string {
+    return filas.slice(0, MAX_RELACIONADOS)
+        .map((f) => `${f.tipo.replace(/[|;]/g, '')}|${numeroRelacionadoDe(f.numero)}|${f.estado.replace(/[|;]/g, '')}`)
+        .join(';');
+}
+
+/** LO QUE VALE, con las reglas de `ficha_tramite.relacionados_de`: la cadena
+ *  del contrato, una lista de {tipo, numero, estado} o de cadenas
+ *  «tipo|numero|estado». Fuera la fila de tipo desconocido, de número que no
+ *  sea «452/2025» o de estado que no se reconoce; el estado ausente es la
+ *  misma sesión; un asunto repetido cuenta una vez; hasta cuatro. (El propio
+ *  asunto lo quita el servidor, que sabe su número, con su aviso.) */
+export function relacionadosDe(x: unknown): Relacionado[] {
+    let filas: unknown[] = [];
+    if (typeof x === 'string') filas = x.split(';');
+    else if (Array.isArray(x)) filas = x;
+    const fuera: Relacionado[] = [];
+    const vistos = new Set<string>();
+    for (const f of filas) {
+        let tipo: unknown, numero: unknown, estado: unknown;
+        if (typeof f === 'string') {
+            [tipo, numero, estado] = f.split('|');
+        } else if (f && typeof f === 'object' && !Array.isArray(f)) {
+            ({ tipo, numero, estado } = f as Record<string, unknown>);
+        } else continue;
+        const t = tipoRelacionadoDe(tipo);
+        const n = numeroRelacionadoDe(numero);
+        const e = _estadoRel(estado);
+        if (!t || !NUMERO_RELACIONADO.test(n) || !e || vistos.has(`${t}|${n}`)) continue;
+        vistos.add(`${t}|${n}`);
+        fuera.push({ tipo: t, numero: n, estado: e });
+        if (fuera.length === MAX_RELACIONADOS) break;
+    }
+    return fuera;
+}
+
+/** La cadena del contrato, «tipo|numero|estado;…», o '' sin relacionados. */
+export function relacionadosAFormulario(lista: Relacionado[]): string {
+    return relacionadosDe(lista).map((r) => `${r.tipo}|${r.numero}|${r.estado}`).join(';');
+}
+
+/** LEE EL TRÁMITE CON TOLERANCIA: un objeto o su JSON, con las claves del
+ *  contrato y nada más. Fecha que no es ISO = vacía (nunca una fecha a medio
+ *  leer); el Ministerio Público, sólo uno de sus tres valores; la fracción
+ *  del 63, sólo una de las diez; la cuantía, sólo si trae alguna cifra (un
+ *  monto sin número no es un monto). Lo que no se entiende se tira, no rompe
+ *  la pantalla: el servidor que lo produce se escribe en paralelo a ella.
+ *  LOS RELACIONADOS (C6), en su cadena del contrato y sólo las filas que
+ *  valen; también llegan como lista de {tipo, numero, estado}. */
+export function tramiteDe(x: unknown): Tramite {
+    let o: unknown = x;
+    if (typeof o === 'string') {
+        try { o = JSON.parse(o); } catch { return {}; }
+    }
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return {};
+    const r = o as Record<string, unknown>;
+    const t: Tramite = {};
+    for (const k of CLAVES_TRAMITE) {
+        const v = r[k];
+        if (k === 'relacionados') {
+            const s = relacionadosAFormulario(relacionadosDe(v));
+            if (s) t.relacionados = s;
+            continue;
+        }
+        if (typeof v !== 'string' || !v.trim()) continue;
+        if (FECHAS_TRAMITE.has(k)) {
+            const iso = v.trim().slice(0, 10);
+            if (_ISO.test(iso)) (t as Record<string, string>)[k] = iso;
+        } else if (k === 'ministerio_publico') {
+            const mp = v.trim().toLowerCase();
+            if (mp === 'pedimento' || mp === 'sin_pedimento') t.ministerio_publico = mp;
+        } else if (k === 'fraccion_63') {
+            const fr = fraccion63De(v);
+            if (fr) t.fraccion_63 = fr;
+        } else if (k === 'cuantia') {
+            if (/\d/.test(v)) t.cuantia = v.trim();
+        } else {
+            (t as Record<string, string>)[k] = v.trim();
+        }
+    }
+    return t;
+}
+
+/** LO QUE VIAJA COMO `tramite_json`: sólo las claves que aplican al tipo y
+ *  tienen valor. Una clave vacía no se manda —«no lo sé» no es un dato— y el
+ *  servidor la busca en los papeles o deja su hueco con aviso.
+ *  LA CUANTÍA SÓLO CON LA FRACCIÓN I (3-oct-2026): la pantalla sólo la enseña
+ *  con esa fracción, y lo que el secretario no ve no puede viajar como dato
+ *  suyo. Si la tecleó con la I y luego eligió otra fracción —o «que lo decida
+ *  el proyecto»—, se queda en la pantalla y no se manda. */
+export function tramiteParaEnviar(t: Tramite, tipoAsunto: string): Partial<Record<ClaveTramite, string>> {
+    const limpio = tramiteDe(t);
+    const fuera: Partial<Record<ClaveTramite, string>> = {};
+    for (const k of clavesDelTramite(tipoAsunto)) {
+        if (k === 'cuantia' && limpio.fraccion_63 !== 'I') continue;
+        const v = limpio[k];
+        if (v) fuera[k] = v;
+    }
+    return fuera;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AL RETOMAR, LO LEÍDO NO VUELVE COMO DATO DEL SECRETARIO (3-oct-2026)
+   ═══════════════════════════════════════════════════════════════════════════
+   rev_6, verificado con las funciones reales en un amparo en revisión: la
+   primera vuelta leyó del acto la fecha (15-ene-2026), el juzgado («Juzgado
+   Primero de Distrito…») y el juicio (905/2025). Se retomó el asunto, se subió
+   la sentencia correcta (20-ene-2026, Juzgado Segundo, 77/2025)… y la ficha
+   conservó los tres datos viejos COMO DEL SECRETARIO: la pantalla los había
+   puesto en la tarjeta sin marca y los reenvió en `tramite_json`, donde todo
+   tiene fuente «secretario» y manda sobre la relectura. El juzgado cambió sin
+   un solo aviso. Lo mismo con lo leído del auto (ponente, Ministerio Público).
+
+   Ahora la sesión distingue: lo que tecleó o confirmó el secretario vuelve
+   como suyo y viaja; lo leído de los papeles vuelve como PROPUESTA, con la
+   marca de dónde se leyó, y no viaja mientras él no lo cambie o lo confirme.
+
+   EL CONTRATO QUE SE ESPERA de /taller/contexto-del-asunto (`encargo`):
+     · `tramite`        — SÓLO lo de fuente «secretario», claves planas;
+     · `tramite_leido`  — lo demás, claves planas (o {valor, fuente});
+     · `tramite_fuentes`— {clave: «auto» | «acto» | «escrito» | …}.
+   Se toleran además: las fuentes por RUTA de la ficha («acto.fecha»), cada
+   valor como {valor, fuente} y un `tramite` entero con sus fuentes al lado.
+   Y SI EL SERVIDOR NO DICE DE DÓNDE VIENE NADA (el de la segunda ronda, que
+   devuelve todo junto), todo vuelve como LEÍDO: es preferible que el
+   secretario confirme un dato suyo a que un dato viejo del papel gane, sin
+   aviso, a la relectura. */
+
+/** De dónde se leyó cada dato que la pantalla propone. «auto» = el auto de
+ *  admisión o de turno; «acto» = la resolución reclamada o recurrida;
+ *  «escrito» = la demanda o el escrito de agravios; «papeles» = de algún
+ *  papel del expediente, sin decir cuál. */
+export type FuentesTramite = Partial<Record<ClaveTramite, string>>;
+
+export interface TramiteRetomado {
+    /** Lo del secretario: vuelve sin marca y viaja como suyo. */
+    suyo: Tramite;
+    /** Lo leído de los papeles: vuelve marcado y NO viaja si no se toca. */
+    leido: Tramite;
+    fuentes: FuentesTramite;
+}
+
+/* Las rutas de la ficha de trámite y la clave del formulario que las lleva
+   (`ficha_tramite._MAPA_FORMULARIO` y `_POR_TIPO_FORMULARIO`). Las tres
+   alternativas por tipo —la responsable en el amparo directo, la Sala y el
+   expediente del TFJA en la revisión fiscal— sólo cuentan en su tipo. */
+const _RUTA_A_CLAVE: Record<string, ClaveTramite> = {
+    'registro.fecha': 'fecha_registro',
+    'admision.fecha': 'fecha_admision', 'turno.fecha': 'fecha_turno', 'turno.ponente': 'ponente_turno',
+    'returno.fecha': 'fecha_returno', 'returno.ponente': 'ponente_returno',
+    'ministerio_publico': 'ministerio_publico', 'adhesivo.quien': 'adhesivo_quien',
+    'adhesivo.presentacion': 'adhesivo_presentacion', 'adhesivo.admision': 'adhesivo_admision',
+    'adhesivo.notificacion': 'adhesivo_notificacion', 'acto.fecha': 'fecha_acto',
+    'acto.organo': 'organo_acto', 'acto.toca': 'toca', 'acto.expediente': 'expediente_origen',
+    'informe_101.fecha': 'fecha_informe_101', 'deposito_postal': 'deposito_postal',
+    'forma_notificacion': 'forma_notificacion', 'fraccion_63': 'fraccion_63', 'cuantia': 'cuantia',
+    'fundamento_surtimiento': 'fundamento_surtimiento',
+};
+const _RUTA_POR_TIPO: Record<string, Record<string, ClaveTramite>> = {
+    AD: { responsable: 'organo_acto' },
+    RF: { sala: 'organo_acto', expediente_tfja: 'expediente_origen' },
+};
+
+/** La fuente, en una de sus formas: «secretario», «auto», «acto», «escrito»
+ *  o «papeles» (cualquier otra, o ninguna). */
+export function fuenteDe(x: unknown): string {
+    const f = typeof x === 'string' ? x.trim().toLowerCase() : '';
+    if (f === 'secretario' || f === 'formulario') return 'secretario';
+    if (f.startsWith('auto')) return 'auto';
+    if (f === 'acto' || f === 'escrito') return f;
+    return 'papeles';
+}
+
+export function tramiteRetomado(encargo: unknown, tipoAsunto = ''): TramiteRetomado {
+    const vacio: TramiteRetomado = { suyo: {}, leido: {}, fuentes: {} };
+    const obj = (x: unknown): Record<string, unknown> | null => {
+        let o = x;
+        if (typeof o === 'string') { try { o = JSON.parse(o); } catch { return null; } }
+        return o && typeof o === 'object' && !Array.isArray(o) ? o as Record<string, unknown> : null;
+    };
+    const en = obj(encargo);
+    if (!en) return vacio;
+    const fam = familiaDelTramite(tipoAsunto);
+    const claveDe = (k: string): ClaveTramite | '' => {
+        if ((CLAVES_TRAMITE as string[]).includes(k)) return k as ClaveTramite;
+        return (fam && _RUTA_POR_TIPO[fam]?.[k]) || _RUTA_A_CLAVE[k] || '';
+    };
+    /* Un grupo de valores: claves planas, cada una con su texto o con
+       {valor, fuente}. Devuelve los valores (normalizados por `tramiteDe`) y
+       las fuentes que vinieran dentro. */
+    const grupo = (x: unknown) => {
+        const o = obj(x);
+        const valores: Record<string, unknown> = {};
+        const fuentes: Record<string, string> = {};
+        if (!o) return { valores: {} as Tramite, fuentes };
+        for (const [k, v] of Object.entries(o)) {
+            if (k === 'fuentes') continue;
+            if (v && typeof v === 'object' && !Array.isArray(v)) {
+                const vo = v as Record<string, unknown>;
+                valores[k] = vo.valor ?? vo.value ?? '';
+                if (vo.fuente !== undefined) fuentes[k] = fuenteDe(vo.fuente);
+            } else {
+                valores[k] = v;
+            }
+        }
+        return { valores: tramiteDe(valores), fuentes };
+    };
+    const principal = grupo(en.tramite ?? en.tramite_json);
+    const aparte = grupo(en.tramite_leido);
+    // Las fuentes que vinieron al lado, por clave o por ruta de la ficha.
+    const fuentes: Record<string, string> = { ...principal.fuentes, ...aparte.fuentes };
+    for (const fx of [obj(en.tramite_fuentes), obj(en.fuentes_tramite), obj(obj(en.tramite)?.fuentes)]) {
+        if (!fx) continue;
+        // Primero las claves del formulario, después las rutas: la clave manda.
+        const pares = Object.entries(fx).sort(([a], [b]) =>
+            Number(!(CLAVES_TRAMITE as string[]).includes(a)) - Number(!(CLAVES_TRAMITE as string[]).includes(b)));
+        for (const [k, v] of pares) {
+            const c = claveDe(k);
+            if (c && fuentes[c] === undefined) fuentes[c] = fuenteDe(v);
+        }
+    }
+    const r: TramiteRetomado = { suyo: {}, leido: {}, fuentes: {} };
+    const poner = (dest: Tramite, k: ClaveTramite, v: string) => { (dest as Record<string, string>)[k] = v; };
+    // El servidor separó lo leído (aunque hoy no haya nada leído): lo que
+    // quede en `tramite` sin fuente es del secretario.
+    const hayLeidoAparte = obj(en.tramite_leido) !== null;
+    for (const [k, v] of Object.entries(principal.valores) as [ClaveTramite, string][]) {
+        const f = fuentes[k];
+        // SUYO sólo con prueba: el servidor lo separó (`tramite_leido` aparte)
+        // y no lo marcó como leído, o lo marcó «secretario». LOS RELACIONADOS
+        // SIEMPRE (C6): nunca se leen de los papeles, así que lo que vuelva
+        // lo marcó él, y el interruptor vuelve encendido.
+        const esSuyo = k === 'relacionados' || f === 'secretario' || (hayLeidoAparte && f === undefined);
+        if (esSuyo) { poner(r.suyo, k, v); continue; }
+        poner(r.leido, k, v);
+        r.fuentes[k] = f && f !== 'secretario' ? f : 'papeles';
+    }
+    for (const [k, v] of Object.entries(aparte.valores) as [ClaveTramite, string][]) {
+        if (r.suyo[k]) continue;          // lo del secretario manda
+        if (k === 'relacionados' || fuentes[k] === 'secretario') {
+            poner(r.suyo, k, v); delete r.leido[k]; delete r.fuentes[k]; continue;
+        }
+        poner(r.leido, k, v);
+        r.fuentes[k] = fuentes[k] || 'papeles';
+    }
+    return r;
 }
 
 export async function fichaDesdeAdmision(
@@ -2416,8 +3115,15 @@ export async function fichaDesdeAdmision(
                             { method: 'POST', body: fd });
     if (!res.ok) return _fallo(res);
     const j = await res.json();
+    // LOS RELACIONADOS NO SE LEEN DEL AUTO (C6, 3-oct-2026): «no vamos a
+    // meter conexidad en automático». Si algún día llegaran aquí, no se
+    // proponen: sólo el secretario los marca.
+    const tramite = tramiteDe(j.ficha?.tramite);
+    delete tramite.relacionados;
     return {
-        ficha: (j.ficha ?? {}) as FichaLeida,
+        // EL TRÁMITE LLEGA NORMALIZADO: claves del contrato, fechas ISO. Si el
+        // servidor todavía no lo manda, un objeto vacío y nada cambia.
+        ficha: { ...((j.ficha ?? {}) as FichaLeida), tramite },
         leidos: (j.leidos ?? []) as string[],
         avisos: (j.avisos ?? []) as string[],
         // La regla de notificación que corresponde a la responsable leída.
@@ -3375,6 +4081,13 @@ export interface CorreccionDelSupervisor {
     antes: string;
     despues: string;
     motivo: string;
+    /** DÓNDE CAYÓ (3-oct-2026): el supervisor revisa ahora también el
+     *  considerando de antecedentes. Sus correcciones llegan con
+     *  `seccion: 'antecedentes'`, `parrafo: 0` y el bloque («A3»), numerado
+     *  aparte del estudio. Sin la clave, es del estudio, como siempre. */
+    seccion?: 'estudio' | 'antecedentes';
+    /** Sólo en antecedentes: «A3». '' si el servidor no lo dice. */
+    bloque?: string;
 }
 export interface SupervisorDelProyecto {
     estado: 'aplicado' | 'sin_cambios' | 'fallo' | 'apagado' | 'vencido';
@@ -3408,6 +4121,17 @@ export function supervisorDe(x: unknown): SupervisorDelProyecto | null {
             despues: _t(c.despues).slice(0, 400),
             motivo: _t(c.motivo),
         };
+        /* LA CORRECCIÓN DE UN ANTECEDENTE NO ES UN PÁRRAFO DEL ESTUDIO
+           (3-oct-2026). El servidor numera los antecedentes aparte —A1, A2…—
+           y manda `parrafo: 0` para que nadie lea «párrafo 3» donde dice
+           «A3». Sólo se acepta un bloque con esa forma; otro texto no se
+           pinta como si fuera una ubicación. */
+        if (_t(c.seccion).toLowerCase() === 'antecedentes') {
+            r.seccion = 'antecedentes';
+            r.parrafo = 0;
+            const b = _t(c.bloque).toUpperCase().replace(/\s+/g, '');
+            r.bloque = /^A\d{1,4}$/.test(b) ? b : '';
+        }
         return r.antes || r.despues || r.motivo ? r : null;
     }).filter((c): c is CorreccionDelSupervisor => c !== null);
     return {

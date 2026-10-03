@@ -223,7 +223,10 @@ function Reanudar({ asuntos, onAbrir, onDescargar }: {
                             <span className="shrink-0 text-[12px] text-white/45">
                                 {a.problemas > 0
                                     ? `${a.problemas} planteamiento${a.problemas === 1 ? '' : 's'}`
-                                    : 'sin adelanto'}
+                                    /* «Adelanto» ya no se dice (3-oct-2026). Corto,
+                                       y nunca «sin procedencia», que se leería
+                                       como un juicio de improcedencia. */
+                                    : 'procedencia sin generar'}
                             </span>
                         )}
                     </button>
@@ -488,7 +491,7 @@ export default function EntradaTaller({
                     leía «3 · Generar el adelanto» y tenía que ir a buscar
                     dónde se generaba. Ahora el paso tres TRAE el botón: se
                     lee la instrucción y se pulsa en el mismo sitio. */}
-                <Paso n={3} titulo="Generar el adelanto"
+                <Paso n={3} titulo="Generar resultandos y considerandos de procedencia"
                       activo={!!hayFicha && !!hayDocumentos}
                       porque="Con eso el taller lee el expediente y te devuelve el asunto entendido: antecedentes, qué resolvió, qué se alega y los planteamientos. Todavía no decide nada.">
                     {accion}

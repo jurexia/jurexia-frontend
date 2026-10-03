@@ -39,7 +39,11 @@ import OpinionProyecto from '@/components/sentencia/OpinionProyecto';
 import type { DestinoVuelta } from '@/components/sentencia/ConfirmarVolver';
 import Decision from '@/components/sentencia/Decision';
 import FormularioEncargo, { ENCARGO_VACIO, faltaEnEncargo } from '@/components/sentencia/FormularioEncargo';
-import type { TipoAsunto } from '@/components/sentencia/api';
+import TramiteDelTribunal, {
+    tramiteConLaFicha, TRAMITE_VACIO, alRetomar, conLoLeidoDelAuto, confirmarLoLeido, sinLoNoTocado,
+    type EstadoTramite,
+} from '@/components/sentencia/TramiteDelTribunal';
+import type { TipoAsunto, Tramite } from '@/components/sentencia/api';
 import type { Encargo } from '@/components/sentencia/FormularioEncargo';
 import AvisoBorrador, { AvisoPiloto } from '@/components/sentencia/AvisoBorrador';
 import { Tarjeta, Rotulo, cn } from '@/components/sentencia/primitivas';
@@ -59,6 +63,7 @@ import {
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
     fichaDesdeAdmision, pedirPlan, leerPlan, recalificar, mensajeDeError, textoVisibleDelError,
     responderPreguntas, conSentido, esFormatoNuevo, globalPropone,
+    tramiteRetomado, tramiteParaEnviar, familiaDelTramite,
 } from '@/components/sentencia/api';
 import { respetarLoDictado, recogerTrasResponder } from '@/components/sentencia/trasLasPreguntas';
 import type { OpcionesResolver, RespuestaAPregunta } from '@/components/sentencia/api';
@@ -90,7 +95,7 @@ const FASES_BASE: Fase[] = [
     { id: 'busqueda', titulo: 'Búsqueda por problema', detalle: 'Un RAG dirigido a cada problema, con registro verificado.', estado: 'pendiente' },
     { id: 'criterio', titulo: 'Tu criterio', detalle: 'El único paso que no se automatiza. Decide y explica por qué.', estado: 'pendiente', requiereHumano: true },
     { id: 'estudio', titulo: 'Estudio de fondo', detalle: 'Tu criterio manda el sentido; el corpus, la forma; la ley, el fundamento.', estado: 'pendiente' },
-    { id: 'ensamblado', titulo: 'Ensamblado en tu plantilla', detalle: 'Se rellenan los huecos del adelanto. No se construye un Word nuevo.', estado: 'pendiente' },
+    { id: 'ensamblado', titulo: 'Ensamblado en tu plantilla', detalle: 'Se rellenan los huecos de los resultandos y considerandos de procedencia. No se construye un Word nuevo.', estado: 'pendiente' },
 ];
 
 /** Qué fases están hechas según dónde vamos. */
@@ -416,10 +421,43 @@ export default function TallerDeSentencias() {
     const [pasoArchivos, setPasoArchivos] = useState<PasoArchivos | null>(null);
     const [fichando, setFichando] = useState(false);
     const [fichado, setFichado] = useState<string[]>([]);
+    /* ═══ EL TRÁMITE EN ESTE TRIBUNAL (3-oct-2026) ═══
+       Auto de Presidencia, turno, Ministerio Público, adhesivo, returno y lo
+       reclamado o recurrido: los datos con que se componen los resultandos y
+       considerandos de procedencia. `tramite` es lo que el secretario ve y
+       confirma (manda); `leido`, lo que propusieron los papeles tal cual
+       llegó, para marcar su origen mientras siga igual. Y el propio auto se
+       guarda para mandarlo con la petición: así el servidor ancla cada fecha
+       al papel en vez de fiarse de una prosa escrita a ciegas.
+       TERCERA RONDA (3-oct-2026): las cuatro piezas de la tarjeta —valor,
+       leído, de dónde se leyó y lo leído al retomar que aún no viaja— van en
+       UN estado, porque cambian juntas (`EstadoTramite`). Al retomar, lo
+       leído vuelve marcado y no viaja hasta que el secretario lo cambie o lo
+       confirme: si viajara, le ganaría a la relectura (rev_6, AR con el
+       juzgado y el juicio cambiados sin aviso). */
+    const [tarjetaTramite, setTarjetaTramite] = useState<EstadoTramite>(TRAMITE_VACIO);
+    const tramite = tarjetaTramite.valor;
+    const setTramite = useCallback(
+        (t: Tramite) => setTarjetaTramite((p) => ({ ...p, valor: t })), []);
+    const [autoAdmision, setAutoAdmision] = useState<File | null>(null);
     const leerAdmision = useCallback(async (archivo: File) => {
         setError(''); setFichando(true); setFichado([]);
         try {
             const { ficha, leidos, avisos, reglas } = await fichaDesdeAdmision(correo, archivo);
+            setAutoAdmision(archivo);
+            /* LO LEÍDO ES PROPUESTA y no pisa lo que él ya escribió, igual que
+               en la ficha. El juicio de origen que ya leía `fase_admision`
+               sirve de propuesta en los recursos y en la revisión fiscal; en
+               el amparo directo NO, porque ahí «el juicio o toca de origen»
+               puede ser cualquiera de los dos y el toca no es el expediente. */
+            const leido: Tramite = { ...(ficha.tramite ?? {}) };
+            const fam = familiaDelTramite(ficha.tipo_asunto ?? '');
+            if (!leido.expediente_origen && fam && fam !== 'AD' && ficha.expediente_origen?.trim()) {
+                leido.expediente_origen = ficha.expediente_origen.trim();
+            }
+            // No pisa lo escrito; sí lo leído al retomar que nadie tocó: la
+            // lectura nueva le gana a la vieja (`conLoLeidoDelAuto`).
+            setTarjetaTramite((prev) => conLoLeidoDelAuto(prev, leido));
             setEncargo((prev) => {
                 const x = { ...prev };
                 // LA REGLA DE NOTIFICACIÓN DEL FUERO. Leída la responsable, el
@@ -510,6 +548,14 @@ export default function TallerDeSentencias() {
     }, [correo]);
 
     const [piloto, setPiloto] = useState<EstadoPiloto | null>(null);
+    /* ═══ LA BANDERA DE LA CUENTA (3-oct-2026, `procedencia_por_tipo`) ═══
+       Sólo si el servidor dice que rige para esta cuenta se pinta «Trámite en
+       este tribunal» y viajan el trámite y el auto de admisión. Sin la
+       respuesta —aún no llega, o falló— cuenta como apagada: el servidor
+       ignoraría esos datos, y una tarjeta que se llena y no entra en el
+       proyecto es peor que no tenerla. Con la bandera apagada la pantalla
+       queda como estaba. */
+    const procedenciaPorTipo = piloto?.procedencia_por_tipo === true;
 
     const [encargo, setEncargo] = useState<Encargo>(ENCARGO_VACIO);
     /* EL TIPO ELEGIDO, que gobierna cómo se llama cada cosa en pantalla. */
@@ -684,14 +730,38 @@ export default function TallerDeSentencias() {
         setGuardados(await documentosDelAsunto(num, correo));
     }, [correo]);
 
+    /* EL TRÁMITE QUE VIAJA: el de la tarjeta, completado con lo que la ficha
+       ya dice donde la tarjeta no tiene campo propio (el órgano del acto es la
+       figura de la carátula SÓLO en el amparo directo: desde C3 y C4, 3-oct-
+       2026, la queja y la revisión fiscal lo piden en la tarjeta y el servidor
+       no toma `responsable` como su órgano; el adhesivo de la revisión, el de
+       la carátula si no se tocó). Se calcula una vez y lo usan el envío y la
+       huella.
+       LO LEÍDO AL RETOMAR QUE NADIE TOCÓ NO VIAJA (3-oct-2026): se enseña
+       con su marca, pero mandarlo sería firmarlo como dato del secretario. */
+    const adherenteFicha = (encargo as unknown as Record<string, string | undefined>).adherente;
+    const tramiteAEnviar = useMemo(() => tramiteConLaFicha(
+        sinLoNoTocado(tramite, tarjetaTramite.sinConfirmar), encargo.tipoAsunto, {
+            responsable: encargo.responsable, adherente: adherenteFicha,
+        }), [tramite, tarjetaTramite.sinConfirmar, encargo.tipoAsunto, encargo.responsable, adherenteFicha]);
+    /* LO QUE DE VERDAD SALE, según la bandera de la cuenta: sin ella no viajan
+       ni el trámite ni el auto —el servidor los ignoraría— y la petición es
+       byte por byte la de antes. */
+    const tramiteDelEnvio = procedenciaPorTipo ? tramiteAEnviar : undefined;
+    const autoDelEnvio = procedenciaPorTipo ? (autoAdmision ?? undefined) : undefined;
+
     /* Los campos de la ficha que mueven el cómputo o el documento. Si uno
-       cambia después del adelanto, hay que releer el expediente. */
+       cambia después del adelanto, hay que releer el expediente. EL TRÁMITE
+       TAMBIÉN (3-oct-2026), y sólo con la bandera: una fecha de turno
+       corregida después de leer el expediente no entra en los resultandos
+       hasta volver a generarlos. Sin la bandera, la huella es la de siempre. */
     const huellaFicha = useMemo(() => JSON.stringify([
         encargo.tipoAsunto, encargo.notificacion, encargo.presentacion,
         encargo.reglaSurtimiento, encargo.surteEfectos, encargo.plazo,
         encargo.responsable, encargo.inhabilesResponsable,
         (encargo.diasInhabilesExtra ?? []).join(','),
-    ]), [encargo]);
+        ...(tramiteDelEnvio ? [tramiteParaEnviar(tramiteDelEnvio, encargo.tipoAsunto)] : []),
+    ]), [encargo, tramiteDelEnvio]);
     const fichaCambiada = !!fichaDelAdelanto && fichaDelAdelanto !== huellaFicha;
     /* AL REANUDAR, lo leído corresponde a la ficha que acaba de recuperarse:
        se sella en cuanto está puesta, para no acusar un cambio que no hubo. */
@@ -733,7 +803,8 @@ export default function TallerDeSentencias() {
             const c = await contextoDelAsunto(numero, correo);
             if (!c) {
                 setError(`No se pudo recuperar el ${numero}: la sesión ya no está `
-                       + 'en la base. Vuelve a generar el adelanto con sus documentos.');
+                       + 'en la base. Vuelve a generar los resultandos y considerandos '
+                       + 'de procedencia con sus documentos.');
                 return;
             }
             setDelAsunto(c);
@@ -762,6 +833,19 @@ export default function TallerDeSentencias() {
                 notificacion: (en.notificacion || '').slice(0, 10) || e.notificacion,
                 presentacion: (en.presentacion || '').slice(0, 10) || e.presentacion,
             }));
+            /* EL TRÁMITE, SI LA SESIÓN LO GUARDÓ con las claves del formulario.
+               Si no, la tarjeta queda vacía —nunca con el trámite del asunto
+               que estuviera antes en pantalla— y el servidor conserva el suyo.
+               LO SUYO Y LO LEÍDO, SEPARADOS (3-oct-2026, rev_6): lo que tecleó
+               el secretario vuelve como suyo; lo leído de los papeles vuelve
+               marcado con su origen y no viaja hasta que lo cambie o lo
+               confirme. Antes todo volvía sin marca y se reenviaba como suyo:
+               en un AR retomado, el juzgado y el juicio de la sentencia vieja
+               le ganaban a los de la corregida, y el juzgado cambiaba sin
+               aviso. Si el servidor no dice de dónde viene un dato, cuenta
+               como leído (`tramiteRetomado`). */
+            setTarjetaTramite(alRetomar(tramiteRetomado(c.encargo, c.tipoAsunto)));
+            setAutoAdmision(null);
             setVia('archivos');
             setPasoArchivos('formulario');
             setMaterial(null);
@@ -851,7 +935,12 @@ export default function TallerDeSentencias() {
         if (!elegido) return;
         setError(''); setErrorSise(''); setCorriendo(true);
         try {
-            const r = await generarDesdeExpediente(elegido, correo, fechaNotif);
+            /* LA TARJETA DEL RAÍL TAMBIÉN VIAJA EN EL CAMINO DE SISE
+               (3-oct-2026, rev_6): se pintaba junto al expediente que espera
+               y lo que el secretario confirmaba en ella se tiraba sin aviso.
+               Sólo con la bandera de la cuenta, como en /taller/adelanto. */
+            const r = await generarDesdeExpediente(elegido, correo, fechaNotif,
+                tramiteDelEnvio ? { tramite: tramiteDelEnvio, tipoAsunto: encargo.tipoAsunto } : undefined);
             descargar(r);
             setExtemporanea(r.oportunidad === 'EXTEMPORANEA');
             if (r.oportunidad === 'EXTEMPORANEA') {
@@ -875,7 +964,7 @@ export default function TallerDeSentencias() {
                 setErrorSise(e instanceof Error ? e.message : 'No se pudo generar desde SISE.');
             }
         } finally { setCorriendo(false); }
-    }, [elegido, correo, fechaNotif]);
+    }, [elegido, correo, fechaNotif, tramiteDelEnvio, encargo.tipoAsunto, huellaFicha]);
 
     const borrarYOtro = useCallback(async () => {
         if (!confirmaBorrar) { setConfirmaBorrar(true); return; }
@@ -911,8 +1000,12 @@ export default function TallerDeSentencias() {
                   tipoAsunto: encargo.tipoAsunto,
                   // El documento se escribe entero. La ruta de plantilla queda
                   // sólo para quien suba la suya a propósito.
-                  modo: ficheros.plantilla ? 'plantilla' : 'generado' },
-                { plantilla: ficheros.plantilla, acto: ficheros.acto!, conceptos: ficheros.conceptos! },
+                  modo: ficheros.plantilla ? 'plantilla' : 'generado',
+                  // El trámite que confirmó en «Trámite en este tribunal»
+                  // (sólo con la bandera de la cuenta).
+                  tramite: tramiteDelEnvio },
+                { plantilla: ficheros.plantilla, acto: ficheros.acto!, conceptos: ficheros.conceptos!,
+                  admision: autoDelEnvio },
                 correo,
             );
             descargar(r);
@@ -924,9 +1017,10 @@ export default function TallerDeSentencias() {
             autoLanzado.current = false;
             void traerContexto(encargo.numero);
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'No se pudo generar el adelanto.');
+            setError(e instanceof Error ? e.message
+                : 'No se pudieron generar los resultandos y considerandos de procedencia.');
         } finally { setCorriendo(false); }
-    }, [encargo, ficheros, correo]);
+    }, [encargo, ficheros, correo, tramiteDelEnvio, autoDelEnvio]);
 
     const pedirAcervo = useCallback(async (usarContexto: boolean = true) => {
         setError(''); setCorriendo(true);
@@ -1269,9 +1363,10 @@ export default function TallerDeSentencias() {
             // 1 · el adelanto: los dos PDF leídos, la ficha y los problemas.
             const ade = await generarAdelanto(
                 { ...encargo, tipoAsunto: encargo.tipoAsunto,
-                  modo: ficheros.plantilla ? 'plantilla' : 'generado' },
+                  modo: ficheros.plantilla ? 'plantilla' : 'generado',
+                  tramite: tramiteDelEnvio },
                 { plantilla: ficheros.plantilla, acto: ficheros.acto!,
-                  conceptos: ficheros.conceptos! },
+                  conceptos: ficheros.conceptos!, admision: autoDelEnvio },
                 correo);
             descargar(ade);
             setPaso('adelanto');
@@ -1428,7 +1523,8 @@ export default function TallerDeSentencias() {
         } catch (e) {
             setError(mensajeDeError(e, 'No se pudo generar el proyecto completo.', 'generacion'));
         } finally { setCorriendo(false); setEscribiendo(false); setFaseSrv('preparando'); }
-    }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados, esCasa, varianteEstudio, avanzarFase]);
+    }, [encargo, ficheros, correo, contexto, traerContexto, traerGuardados, esCasa, varianteEstudio, avanzarFase,
+        tramiteDelEnvio, autoDelEnvio]);
 
     const pedirPropuesta = useCallback(async (opts?: { sinContexto?: boolean; contextoTexto?: string; trasResponder?: boolean }) => {
         setError(''); setCorriendo(true); setProponiendo(true);
@@ -1701,6 +1797,7 @@ export default function TallerDeSentencias() {
         setDocumentos([]);
         setFicheros({});
         setEncargo(ENCARGO_VACIO);
+        setTarjetaTramite(TRAMITE_VACIO); setAutoAdmision(null);
         setFichaDelAdelanto('');
         setPasoArchivos(null);
         setVia(null);
@@ -2094,13 +2191,39 @@ export default function TallerDeSentencias() {
     /* ═══ LA FICHA, LOS DOCUMENTOS Y LA PLANTILLA, UNA SOLA VEZ ═══
        Se pintan dentro del paso 1 mientras se está en él, y después quedan
        plegados en el raíl —para leer y comprobar, no para volver a empezar—. */
-    const fichaJsx = (
+    /* LA FICHA Y, DEBAJO, EL TRÁMITE EN ESTE TRIBUNAL (3-oct-2026). Van juntos
+       a todas partes —el paso 1, el camino de SISE y el pliegue del raíl—
+       porque son la misma cosa vista en dos tiempos: quién es quién, y qué ha
+       pasado desde que el asunto llegó. El trámite sólo se pinta cuando hay
+       tipo: sin él no se sabe si hay toca, adhesivo o informe del 101.
+       Y SÓLO CON LA BANDERA de la cuenta (`procedencia_por_tipo`): sin ella,
+       la ficha se pinta sola, sin envoltorio, exactamente como antes. */
+    const formularioJsx = (
         <FormularioEncargo valor={encargo} onCambiar={setEncargo} onTipo={setTipoSel}
-                                           deshabilitado={corriendo || paso !== 'ficha'}
-                                           activa={paso === 'ficha' && via === 'archivos'
-                                                   && !(!!encargo.numero && !!encargo.tipoAsunto)}
-                                           delAuto={pasoArchivos === 'admision'}
-                                           onDelAuto={(v) => setPasoArchivos(v ? 'admision' : 'formulario')} />
+                           deshabilitado={corriendo || paso !== 'ficha'}
+                           activa={paso === 'ficha' && via === 'archivos'
+                                   && !(!!encargo.numero && !!encargo.tipoAsunto)}
+                           delAuto={pasoArchivos === 'admision'}
+                           onDelAuto={(v) => setPasoArchivos(v ? 'admision' : 'formulario')} />
+    );
+    const fichaJsx = !procedenciaPorTipo ? formularioJsx : (
+        <div className="grid gap-4">
+            {formularioJsx}
+            {!!encargo.tipoAsunto && (
+                <TramiteDelTribunal valor={tramite} onCambiar={setTramite}
+                                    tipoAsunto={encargo.tipoAsunto} tipo={tipoSel}
+                                    leido={tarjetaTramite.leido} fuentes={tarjetaTramite.fuentes}
+                                    sinConfirmar={tarjetaTramite.sinConfirmar}
+                                    onConfirmarLeido={(ks) => setTarjetaTramite((p) => confirmarLoLeido(p, ks))}
+                                    adherente={adherenteFicha}
+                                    deshabilitado={corriendo || paso !== 'ficha'}
+                                    mesInicial={encargo.presentacion
+                                        ? encargo.presentacion.slice(0, 7) : undefined}
+                                    /* EL PROPIO NÚMERO (C6, 3-oct-2026): la fila que
+                                       relaciona el asunto consigo mismo se avisa ahí. */
+                                    numeroAsunto={encargo.numero} />
+            )}
+        </div>
     );
     const documentosJsx = (
         <PanelDocumentos documentos={documentos} onSoltar={soltar} onQuitar={quitar}
@@ -2436,7 +2559,11 @@ export default function TallerDeSentencias() {
                                     {corriendo
                                         ? <Loader2 className="h-4 w-4 animate-spin" />
                                         : <FileText className="h-4 w-4" />}
-                                    {corriendo ? 'Leyendo el expediente…' : 'Generar el adelanto'}
+                                    {/* «ADELANTO» YA NO SE DICE (David, 3-oct-2026): son
+                                        los resultandos y considerandos de procedencia.
+                                        Sólo cambia el texto; la ruta y las claves no. */}
+                                    {corriendo ? 'Leyendo el expediente…'
+                                               : 'Generar resultandos y considerandos de procedencia'}
                                 </button>
                                 {falta.length > 0 && (
                                     <p className="mt-2 text-[12px] leading-relaxed text-white/45">
@@ -2763,7 +2890,7 @@ export default function TallerDeSentencias() {
                                 {corriendo && paso === 'ficha'
                                     ? <Loader2 className="h-4 w-4 animate-spin" />
                                     : <FileText className="h-4 w-4" />}
-                                Generar adelanto
+                                Generar resultandos y considerandos de procedencia
                             </button>
                             )}
             {/* ═══ EL PASO QUE SE PERDÍA ═══
@@ -2960,7 +3087,8 @@ export default function TallerDeSentencias() {
                                     Cambiaste la ficha después de leer el expediente.
                                     <span className="text-white/65"> El cómputo del plazo y los datos del
                                     documento se quedaron con los de la vuelta anterior: vuelve a
-                                    generar el adelanto para que el cambio entre.</span>
+                                    generar los resultandos y considerandos de procedencia para
+                                    que el cambio entre.</span>
                                 </p>
                             </div>
                         )}

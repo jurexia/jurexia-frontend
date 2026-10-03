@@ -35,7 +35,10 @@
 
 import React from 'react';
 import { Tarjeta, Rotulo, cn } from './primitivas';
-import { obtenerTipos, reglasSurtimiento, type TipoAsunto, type ReglaSurtimiento } from './api';
+import {
+    obtenerTipos, reglasSurtimiento, papelDelRecurrente, reglaPropuesta,
+    type TipoAsunto, type ReglaSurtimiento,
+} from './api';
 import Calendario, { comprimirTramos, expandirTramos } from './Calendario';
 
 export interface Encargo {
@@ -303,27 +306,56 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
     onCambiarRef.current = onCambiar;
     const valorRef = React.useRef(valor);
     valorRef.current = valor;
+    const viasRef = React.useRef(vias);
+    viasRef.current = vias;
+    /* LA REGLA QUE PUSO LA PANTALLA SOLA (3-oct-2026). Si después cambia lo
+       que la decidió —quién recurre—, se vuelve a proponer; si el secretario
+       la eligió en el desplegable, ya es suya y no se toca. */
+    const reglaPuestaSola = React.useRef('');
+    /* Y SI SE CAMBIA SOLA UNA REGLA QUE NO ERA LA GENÉRICA, SE DICE. Una
+       sesión reabierta de un amparo en revisión con el boletín del TFJA
+       pasaba a «personal» sin que nadie lo viera (rev_4). */
+    const [avisoRegla, setAvisoRegla] = React.useState('');
+    /* ¿RECURRE UNA AUTORIDAD? (3-oct-2026, rev_4 y rev_6) El servidor aceptaba
+       el papel para proponer «oficio» —surte desde que queda hecha, art. 31,
+       fr. I, de la Ley de Amparo— y la pantalla nunca lo mandaba: en la
+       revisión o la queja de una autoridad se proponía la notificación
+       personal y el plazo salía un día más largo. Se manda sólo cuando se
+       sabe: el recurrente leído del auto, o —en la queja, cuya carátula
+       rotula «RECURRENTE» el campo del quejoso— lo escrito en ese campo. */
+    const quejosoRecurre = !!tipo?.caratula?.some((f) => f.clave === 'quejoso'
+        && /RECURRENTE/i.test(f.etiqueta) && !/QUEJOS/i.test(f.etiqueta));
+    const papel = papelDelRecurrente(valor.tipoAsunto, valor.recurrente ?? '', valor.quejoso ?? '',
+                                     quejosoRecurre);
+    // OTRO ASUNTO, OTRA HISTORIA: lo que la pantalla puso sola en el anterior
+    // no autoriza a cambiar la regla de éste (al retomar, la de la sesión).
+    React.useEffect(() => { reglaPuestaSola.current = ''; setAvisoRegla(''); },
+                    [valor.numero, valor.tipoAsunto]);
     React.useEffect(() => {
         if (!valor.tipoAsunto) return;
         let vivo = true;
         const t = setTimeout(() => {
-            reglasSurtimiento(valor.tipoAsunto, valor.responsable || '')
+            /* LA SEDE VIAJA (C7, 3-oct-2026): en lo agrario, con el colegiado en
+               la Ciudad de México la regla de omisión es la del Código Nacional. */
+            reglasSurtimiento(valor.tipoAsunto, valor.responsable || '', papel,
+                              valor.tribunal || '', valor.ciudad || '')
                 .then((r) => {
                     if (!vivo || !r?.reglas?.length) return;
+                    const actual = reglaActual.current;
+                    const vieja = viasRef.current.find((x) => x.clave === actual)?.etiqueta || '';
                     setVias(r.reglas);
                     setFueroReglas(r.fuero || '');
-                    const claves = r.reglas.map((x) => x.clave);
-                    const actual = reglaActual.current;
-                    if (r.por_omision && (!actual || actual === 'personal' || !claves.includes(actual))) {
-                        if (actual !== r.por_omision) {
-                            onCambiarRef.current({ ...valorRef.current, reglaSurtimiento: r.por_omision });
-                        }
+                    const p = reglaPropuesta(actual, reglaPuestaSola.current, r, vieja);
+                    if (p) {
+                        reglaPuestaSola.current = p.regla;
+                        setAvisoRegla(p.aviso);
+                        onCambiarRef.current({ ...valorRef.current, reglaSurtimiento: p.regla });
                     }
                 })
                 .catch(() => { /* se queda el respaldo */ });
         }, 350);
         return () => { vivo = false; clearTimeout(t); };
-    }, [valor.tipoAsunto, valor.responsable]);
+    }, [valor.tipoAsunto, valor.responsable, papel, valor.tribunal, valor.ciudad]);
     /* EL TIPO SUBE. La pantalla de arriba lo necesita para rotular los dos
        documentos con el nombre que les corresponde: en un recurso no se sube
        «el acto reclamado» sino la SENTENCIA RECURRIDA, y no se suben
@@ -555,13 +587,23 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                                ? 'Tribunal estatal: cómo surte efectos lo dice la ley de esa entidad; declara tú la fecha'
                                : 'No se adivina: mueve el cómputo hasta tres días'}>
                     <select className={campo} value={valor.reglaSurtimiento}
-                            onChange={(e) => set('reglaSurtimiento', e.target.value)}>
+                            onChange={(e) => {
+                                // Elegida a mano: ya es suya y nada la cambia solo.
+                                reglaPuestaSola.current = '';
+                                setAvisoRegla('');
+                                set('reglaSurtimiento', e.target.value);
+                            }}>
                         {(vias.some((x) => x.clave === valor.reglaSurtimiento) ? vias
                             : [...vias, { clave: valor.reglaSurtimiento, etiqueta: valor.reglaSurtimiento, dias_habiles: 0, fundamento: '' }]
                         ).map(({ clave, etiqueta }) => (
                             <option key={clave} value={clave} className="bg-charcoal-900">{etiqueta}</option>
                         ))}
                     </select>
+                    {avisoRegla && (
+                        <span className="mt-1 block text-[12px] leading-relaxed text-accent-gold/80">
+                            {avisoRegla}
+                        </span>
+                    )}
                 </Campo>
 
                 {/* ═══ OTRA REGLA: DOS FECHAS, DECLARADAS ═══
@@ -692,8 +734,9 @@ export default function FormularioEncargo({ valor, onCambiar, deshabilitado, onT
                 <p className="text-[12px] leading-relaxed text-white/45">
                     Este proyecto llevará {tipo.apartados.considerandos.length} considerandos
                     —{tipo.apartados.considerandos.join(', ').toLowerCase()}— y se dirá
-                    «{tipo.combate}», no otra cosa. Medido sobre {tipo.medido_sobre} adelantos
-                    reales de esta clase de asunto.
+                    «{tipo.combate}», no otra cosa. Medido sobre los resultandos y
+                    considerandos de procedencia de {tipo.medido_sobre} asuntos reales de
+                    esta clase.
                 </p>
                 </div>
                 )}

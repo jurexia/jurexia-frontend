@@ -47,7 +47,8 @@ const FICHAS: Record<string, Ficha> = {
             'El asunto queda guardado en el servidor y aparece en «Asuntos en curso».',
             'Los proyectos que ya generaste se siguen descargando desde ahí.',
         ],
-        pierde: ['Esta pantalla se vacía: al volver al asunto se reanuda desde el adelanto.'],
+        pierde: ['Esta pantalla se vacía: al volver al asunto se reanuda desde los resultandos '
+                 + 'y considerandos de procedencia.'],
         cuesta: 'Salir no consume nada de tu contador.',
     },
     '1': {
@@ -60,14 +61,18 @@ const FICHAS: Record<string, Ficha> = {
         pierde: [
             'La consulta del acervo, la propuesta y tus calificaciones de esta vuelta.',
             'Para que un cambio de la ficha entre en el cómputo y en el proyecto hay que '
-            + 'generar el adelanto otra vez: el expediente se vuelve a leer entero '
-            + '(varios minutos de proceso).',
+            + 'generar otra vez los resultandos y considerandos de procedencia: el '
+            + 'expediente se vuelve a leer entero (varios minutos de proceso).',
         ],
         cuesta: 'Releer el expediente no toca tu contador; generar el proyecto otra vez, sí: uno.',
     },
+    /* «ADELANTO» YA NO SE DICE (David, 3-oct-2026): son los resultandos y
+       considerandos de procedencia. El botón usa la forma corta, la del paso
+       del espinazo («Procedencia»); el título, la completa. Sólo cambia el
+       texto: el destino sigue siendo el paso 2. */
     '2': {
-        titulo: 'Volver al adelanto',
-        verbo: 'Volver al adelanto',
+        titulo: 'Volver a los resultandos y considerandos de procedencia',
+        verbo: 'Volver a la procedencia',
         conserva: [
             'La ficha y la lectura del expediente que ya se hizo.',
             'El proyecto de esta vuelta, descargable desde el historial.',
