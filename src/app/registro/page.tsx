@@ -8,6 +8,7 @@ import { signInWithGoogle, signInWithApple } from '@/lib/supabase';
 import { destinoTrasEntrar } from '@/lib/destino-tras-entrar';
 import { entrarConCodigo, pedirCodigo } from '@/lib/entrada-con-codigo';
 import { OfertaContrasena, PasoCodigo } from '@/components/EntradaConCodigo';
+import LemaOpenAI from '@/components/LemaOpenAI';
 
 export default function RegistroPage() {
     const router = useRouter();
@@ -128,10 +129,11 @@ export default function RegistroPage() {
         <main className="min-h-screen bg-cream-300 flex items-center justify-center px-4 py-12">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <Link href="/" className="flex items-center justify-center gap-3 mb-8 group">
+                <Link href="/" className="mb-8 flex flex-col items-center gap-2 group">
                     <span className="font-serif text-3xl font-semibold text-charcoal-900 tracking-tight">
                         Iurex<span className="text-accent-gold">ia</span>
                     </span>
+                    <LemaOpenAI tamano="text-[11px]" />
                 </Link>
 
                 {/* Register Card */}

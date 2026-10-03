@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useRequireAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from '@/components/UserAvatar';
+import LemaOpenAI from '@/components/LemaOpenAI';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jurexia-api.onrender.com';
 
@@ -853,10 +854,11 @@ export default function RedactorSentenciaPage() {
                 <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(45deg, #c9a962 1px, transparent 1px), linear-gradient(-45deg, #c9a962 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
                     <div className="flex items-center gap-3">
-                        <Link href="/chat" className="flex items-center gap-2 group">
-                            <span className="font-serif text-xl font-semibold text-white">
+                        <Link href="/chat" className="flex flex-col gap-1 group">
+                            <span className="font-serif text-xl font-semibold leading-none text-white">
                                 Iurex<span className="text-[#c9a962]">ia</span>
                             </span>
+                            <LemaOpenAI sobreOscuro tamano="text-[8.5px]" />
                         </Link>
                         <div className="h-5 w-px bg-white/10" />
                         <span className="text-xs text-[#c9a962]/70 tracking-wider uppercase font-medium">

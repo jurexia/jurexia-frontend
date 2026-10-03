@@ -67,13 +67,16 @@ export default function DemoEnVivo(props: Partial<DemoProps> = {}) {
     const {
         src = '/demo/consulta.mp4',
         poster = '/demo/consulta-poster.jpg',
-        descripcion = 'Demostración: una consulta sobre prisión preventiva oficiosa, la respuesta con sus criterios y el PDF oficial de la Constitución abierto en el artículo citado.',
+        descripcion = 'Demostración con el chat de hoy: una consulta sobre prisión preventiva oficiosa; Iurexia lee la consulta, fija la jurisdicción y recorre el acervo, escribe la respuesta en un documento con catorce citas verificadas y una de ellas abre la Constitución en el artículo 19, resaltado.',
         titulo = <>Pregunta como le preguntarías a{' '}<span className="text-accent-gold">un colega</span></>,
-        entradilla = 'La respuesta trae los criterios que la sostienen. Pulsa cualquiera y se abre el documento oficial en la página exacta, con el texto subrayado. Sin salir de la conversación.',
+        entradilla = 'La respuesta trae los criterios que la sostienen. Pulsa cualquiera y se abre el documento oficial en la página exacta, con el texto resaltado. Sin salir de la conversación.',
+        // Los mismos rótulos, con sus segundos, que el capítulo de /plataforma:
+        // es el mismo vídeo (capitulos-demo.tsx).
         rotulos = [
-            ['La pregunta', 'En lenguaje llano, como se plantea en el despacho.'],
-            ['La respuesta', 'Con los criterios y las normas que la sostienen.'],
-            ['La prueba', 'El PDF oficial, en su página, con el texto subrayado.'],
+            ['La pregunta', 'En lenguaje llano, como se plantea en el despacho.', 0],
+            ['El trabajo, a la vista', 'Lee la consulta, fija la jurisdicción y recorre el acervo.', 8.1],
+            ['El documento', 'La respuesta se escribe en una hoja que puedes editar y llevar a Word.', 13.2],
+            ['La prueba', 'Cada cita abre su documento oficial, en la página exacta y resaltada.', 21.2],
         ] as Rotulo[],
         cta = { href: '/chat', texto: 'Pruébalo con tu propia consulta',
                 nota: 'Plan gratuito, sin tarjeta. Se registra en un minuto.' },

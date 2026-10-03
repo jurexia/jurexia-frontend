@@ -91,9 +91,9 @@ function Escritorio() {
 
     return (
         <div className="min-h-screen bg-cream-300">
-            <Navbar />
+            <Navbar plataforma />
 
-            <main className="mx-auto max-w-6xl px-4 pb-20 pt-24 sm:px-6">
+            <main className="mx-auto max-w-6xl px-4 pb-20 pt-20 sm:px-6">
                 {/*
                   Dos cosas distintas, y conviene que se noten distintas: las
                   carpetas son el archivo del despacho («¿qué tengo yo de este

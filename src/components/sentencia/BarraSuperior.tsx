@@ -11,6 +11,7 @@ import { ArrowLeft, ChevronDown, Circle, FileText } from 'lucide-react';
 import { Wordmark, cn } from './primitivas';
 import type { Asunto } from './tipos';
 import type { BolsaProyectos } from './api';
+import LemaOpenAI from '@/components/LemaOpenAI';
 
 const ETIQUETA_TIPO: Record<Asunto['tipo'], string> = {
     amparo_directo: 'Amparo directo',
@@ -43,7 +44,10 @@ export default function BarraSuperior({
 
                 <span className="h-4 w-px bg-white/[0.09]" />
 
-                <Wordmark className="text-[16px] text-white/90" />
+                <span className="flex flex-col gap-1">
+                    <Wordmark className="text-[16px] leading-none text-white/90" />
+                    <LemaOpenAI sobreOscuro tamano="text-[8.5px]" />
+                </span>
                 <span className="hidden text-[12px] uppercase tracking-[0.14em] text-white/45 sm:inline">
                     Taller de sentencias
                 </span>

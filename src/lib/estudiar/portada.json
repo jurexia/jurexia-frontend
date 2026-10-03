@@ -1,0 +1,102 @@
+[
+ {
+  "id": "v62",
+  "slug": "sistema-interamericano",
+  "numero": "I.1",
+  "titulo": "El sistema interamericano de derechos humanos",
+  "subtitulo": "Su obligatoriedad en México y el control de convencionalidad",
+  "miniatura": "/estudiar/miniaturas/sistema-interamericano-640.webp",
+  "duracion": 155,
+  "publicado": "2026-09-29T12:00:00-06:00"
+ },
+ {
+  "id": "v63",
+  "slug": "prision-preventiva-oficiosa-y-arraigo",
+  "numero": "I.2",
+  "titulo": "Prisión preventiva oficiosa y arraigo",
+  "subtitulo": "Lo que ordenó la Corte Interamericana y lo que respondió México",
+  "miniatura": "/estudiar/miniaturas/prision-preventiva-oficiosa-y-arraigo-640.webp",
+  "duracion": 133,
+  "publicado": "2026-09-29T12:00:00-06:00"
+ },
+ {
+  "id": "v69",
+  "slug": "todavia-hay-jueces-en-mexico",
+  "numero": "II.1",
+  "titulo": "¿Todavía hay jueces en México?",
+  "subtitulo": "El juicio de amparo: su nacimiento, su esplendor y su retroceso",
+  "miniatura": "/estudiar/miniaturas/todavia-hay-jueces-en-mexico-640.webp",
+  "duracion": 601,
+  "publicado": "2026-10-01T21:45:00-06:00"
+ },
+ {
+  "id": "v66",
+  "slug": "amparo-indirecto-contra-actos-en-juicio",
+  "numero": "II.2",
+  "titulo": "Amparo indirecto contra actos en juicio",
+  "subtitulo": "Por qué lo desechan y cuándo sí procede: derechos sustantivos y adjetivos",
+  "miniatura": "/estudiar/miniaturas/amparo-indirecto-contra-actos-en-juicio-640.webp",
+  "duracion": 300,
+  "publicado": "2026-10-01T17:00:00-06:00"
+ },
+ {
+  "id": "v70",
+  "slug": "suspension-en-el-amparo",
+  "numero": "II.3",
+  "titulo": "Llegar a tiempo",
+  "subtitulo": "La suspensión en el juicio de amparo, de 1590 a 2026",
+  "miniatura": "/estudiar/miniaturas/suspension-en-el-amparo-640.webp",
+  "duracion": 599,
+  "publicado": "2026-10-03T17:00:00-06:00"
+ },
+ {
+  "id": "v68",
+  "slug": "amparo-contra-la-constitucion",
+  "numero": "II.4",
+  "titulo": "¿Se puede pedir amparo contra la Constitución?",
+  "subtitulo": "La puerta que la Suprema Corte abrió y cerró, de 1996 a 2026",
+  "miniatura": "/estudiar/miniaturas/amparo-contra-la-constitucion-640.webp",
+  "duracion": 347,
+  "publicado": "2026-09-30T17:00:00-06:00"
+ },
+ {
+  "id": "v67",
+  "slug": "amparo-y-redes-sociales",
+  "numero": "II.5",
+  "titulo": "Te silenciaron en redes, ¿procede el amparo?",
+  "subtitulo": "Funcionarios, plataformas digitales y la autoridad responsable en el juicio de amparo",
+  "miniatura": "/estudiar/miniaturas/amparo-y-redes-sociales-640.webp",
+  "duracion": 480,
+  "publicado": "2026-10-06T17:00:00-06:00"
+ },
+ {
+  "id": "v65",
+  "slug": "clausulas-petreas",
+  "numero": "III.1",
+  "titulo": "Cláusulas pétreas",
+  "subtitulo": "¿Puede ser inconstitucional una reforma a la Constitución?",
+  "miniatura": "/estudiar/miniaturas/clausulas-petreas-640.webp",
+  "duracion": 344,
+  "publicado": "2026-09-29T17:00:00-06:00"
+ },
+ {
+  "id": "v72",
+  "slug": "test-de-proporcionalidad",
+  "numero": "IV.1",
+  "titulo": "Cuatro preguntas que pueden cambiar una ley",
+  "subtitulo": "El test de proporcionalidad, de la policía prusiana a la Suprema Corte mexicana",
+  "miniatura": "/estudiar/miniaturas/test-de-proporcionalidad-640.webp",
+  "duracion": 1198,
+  "publicado": "2026-10-04T17:00:00-06:00"
+ },
+ {
+  "id": "v71",
+  "slug": "lo-ordinario-se-presume",
+  "numero": "IV.2",
+  "titulo": "Lo ordinario se presume, lo extraordinario se prueba",
+  "subtitulo": "Los principios ontológico y lógico de la carga de la prueba",
+  "miniatura": "/estudiar/miniaturas/lo-ordinario-se-presume-640.webp",
+  "duracion": 366,
+  "publicado": "2026-10-01T20:10:00-06:00"
+ }
+]

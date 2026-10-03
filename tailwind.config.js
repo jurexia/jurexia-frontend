@@ -42,6 +42,9 @@ module.exports = {
             fontFamily: {
                 serif: ['var(--font-serif)', 'Playfair Display', 'Georgia', 'serif'],
                 sans: ['var(--font-sans)', 'Inter', 'system-ui', 'sans-serif'],
+                // La letra de lectura de «Estudiar y pensar» (la de los PDF). La
+                // variable sólo existe dentro de /estudiar; fuera cae en Georgia.
+                lectura: ['var(--font-lectura)', 'Newsreader', 'Georgia', 'serif'],
             },
             animation: {
                 'fade-in': 'fadeIn 0.5s ease-out',

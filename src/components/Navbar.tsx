@@ -7,6 +7,13 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '@/app/leyesestatales/adminGuard';
 import { UserAvatar } from './UserAvatar';
+import dynamic from 'next/dynamic';
+import LemaOpenAI from './LemaOpenAI';
+
+/* La barra de trabajo sólo se descarga cuando hace falta (página de la
+   plataforma y sesión abierta): las páginas públicas no cargan la lateral del
+   chat, sus carpetas ni sus consultas. */
+const MarcoTrabajo = dynamic(() => import('./trabajo/MarcoTrabajo'), { ssr: false });
 
 const ADMIN_EMAIL = 'administracion@iurexia.com';
 
@@ -18,19 +25,35 @@ const RADIO = 'rounded-lg';
 const TEXTO = 'text-[0.9375rem] font-medium tracking-[-0.011em]';
 const BOTON = `inline-flex ${ALTO_CONTROL} ${RADIO} ${TEXTO} items-center justify-center whitespace-nowrap px-4 transition-colors duration-200`;
 
-const ENLACES = [
+/* «Estudiar y pensar» (3-oct-2026): las lecciones del canal de YouTube con su
+   material de lectura. Lleva el punto de sección nueva.
+
+   CON SEIS ENLACES LA FILA YA NO CABE A 1024 PX (medido: el bloque de la
+   derecha acababa en 1090 px; con sesión son siete enlaces). Por eso la barra
+   completa aparece desde 1280 (xl) y por debajo queda el menú. El nombre
+   entero se lee desde 1360 px; antes, «Estudiar». Con sesión abierta siempre
+   «Estudiar»: con «Mis carpetas» son siete enlaces y la fila mide 1,216 px
+   como máximo (max-w-7xl), a cualquier ancho de pantalla. */
+const ENLACES: { href: string; etiqueta: string; corta?: string; destacado?: boolean }[] = [
     { href: '/plataforma', etiqueta: 'Plataforma' },
     { href: '/soluciones', etiqueta: 'Soluciones' },
     { href: '/connect', etiqueta: 'Connect', destacado: true },
     { href: '/precios', etiqueta: 'Precios' },
     { href: '/seguridad', etiqueta: 'Seguridad' },
+    { href: '/estudiar', etiqueta: 'Estudiar y pensar', corta: 'Estudiar', destacado: true },
 ];
 
 /* `sobreOscuro` lo activa la portada, que arranca con un hero de vídeo oscuro:
    allí la barra va transparente con texto blanco y sólo se vuelve crema cuando
    el contenido claro llega por debajo. En el resto de páginas no se pasa y la
-   barra es crema desde el primer píxel. */
-export default function Navbar({ sobreOscuro = false }: { sobreOscuro?: boolean }) {
+   barra es crema desde el primer píxel.
+
+   `plataforma` lo pasan las páginas de la plataforma (Mi trabajo, Lo último,
+   Normativa, el perfil, Estudiar y pensar…): con sesión abierta no se pinta
+   esta barra pública sino la barra de trabajo del chat (MarcoTrabajo); sin
+   sesión, esta. Mientras se sabe si hay sesión no se pinta ninguna, para no
+   enseñar una y cambiarla por la otra. */
+export default function Navbar({ sobreOscuro = false, plataforma = false }: { sobreOscuro?: boolean; plataforma?: boolean }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [anclada, setAnclada] = useState(!sobreOscuro);
     const { user, profile, loading } = useAuth();
@@ -74,6 +97,11 @@ export default function Navbar({ sobreOscuro = false }: { sobreOscuro?: boolean 
         };
     }, [isMenuOpen]);
 
+    if (plataforma) {
+        if (isLoading) return null;
+        if (isLoggedIn) return <MarcoTrabajo />;
+    }
+
     const enlaces = isLoggedIn
         ? [...ENLACES, { href: '/carpetas', etiqueta: 'Mis carpetas' }]
         : ENLACES;
@@ -105,11 +133,11 @@ export default function Navbar({ sobreOscuro = false }: { sobreOscuro?: boolean 
                     sólo lo que necesita, así el menú queda centrado de verdad
                     respecto a la página —no respecto a lo que sobre a los lados,
                     que es lo que descuadraba la barra anterior. */}
-                <div className="grid h-16 grid-cols-[auto_1fr] items-center gap-4 lg:h-[72px] lg:grid-cols-[1fr_auto_1fr]">
+                <div className="grid h-16 grid-cols-[auto_1fr] items-center gap-4 xl:h-[72px] xl:grid-cols-[1fr_auto_1fr]">
 
                     {/* ── Izquierda: marca + Sálvame ── */}
                     <div className="flex items-center gap-3 justify-self-start">
-                        <Link href="/" className="flex items-center" aria-label="Iurexia — inicio">
+                        <Link href="/" className="flex flex-col items-start gap-1" aria-label="Iurexia — inicio. Now powered by OpenAI">
                             {/* La marca no cambia nunca de tipografía: Playfair/Georgia 600. */}
                             <span
                                 className={`font-serif text-2xl font-semibold leading-none transition-colors duration-300 ${
@@ -118,6 +146,7 @@ export default function Navbar({ sobreOscuro = false }: { sobreOscuro?: boolean 
                             >
                                 Iurex<span className="text-accent-gold">ia</span>
                             </span>
+                            <LemaOpenAI sobreOscuro={enClaro} tamano="text-[9px]" />
                         </Link>
 
                         <span
@@ -144,22 +173,29 @@ export default function Navbar({ sobreOscuro = false }: { sobreOscuro?: boolean 
                     </div>
 
                     {/* ── Centro: navegación ── */}
-                    <div className="hidden items-center justify-self-center lg:flex">
+                    <div className="hidden items-center justify-self-center xl:flex">
                         {enlaces.map((e) => (
                             <EnlaceNav
                                 key={e.href}
                                 href={e.href}
-                                activo={pathname === e.href}
+                                activo={pathname === e.href || pathname?.startsWith(e.href + '/')}
                                 destacado={e.destacado}
                                 claro={enClaro}
                             >
-                                {e.etiqueta}
+                                {e.corta ? (
+                                    isLoggedIn ? e.corta : (
+                                        <>
+                                            <span className="min-[1360px]:hidden">{e.corta}</span>
+                                            <span className="hidden min-[1360px]:inline">{e.etiqueta}</span>
+                                        </>
+                                    )
+                                ) : e.etiqueta}
                             </EnlaceNav>
                         ))}
                     </div>
 
                     {/* ── Derecha: dos acciones, siempre dos ── */}
-                    <div className="hidden items-center gap-2 justify-self-end lg:flex">
+                    <div className="hidden items-center gap-2 justify-self-end xl:flex">
                         {isAdminEmail && (
                             <Link href="/admin" aria-label="Administrador" title="Administrador" className={iconoUtilidad}>
                                 <Shield className="h-4 w-4" />
@@ -202,7 +238,7 @@ export default function Navbar({ sobreOscuro = false }: { sobreOscuro?: boolean 
                     </div>
 
                     {/* ── Móvil ── */}
-                    <div className="flex items-center gap-2 justify-self-end lg:hidden">
+                    <div className="flex items-center gap-2 justify-self-end xl:hidden">
                         {isLoggedIn && !isLoading && <UserAvatar />}
                         <button
                             type="button"
@@ -221,7 +257,7 @@ export default function Navbar({ sobreOscuro = false }: { sobreOscuro?: boolean 
                 Opaco a propósito: con fondo translúcido el vídeo del hero se
                 transparentaba detrás de los enlaces y el menú se leía sucio. */}
             <div
-                className={`overflow-hidden border-t border-charcoal-900/[0.07] bg-cream-200 shadow-[0_12px_24px_-12px_rgba(26,26,26,0.12)] transition-[max-height,opacity] duration-300 ease-out lg:hidden ${
+                className={`overflow-hidden border-t border-charcoal-900/[0.07] bg-cream-200 shadow-[0_12px_24px_-12px_rgba(26,26,26,0.12)] transition-[max-height,opacity] duration-300 ease-out xl:hidden ${
                     isMenuOpen ? 'max-h-[calc(100vh-4rem)] opacity-100' : 'pointer-events-none max-h-0 opacity-0'
                 }`}
             >

@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import RegalaIurexia, { IconoRegalo } from '@/components/RegalaIurexia';
 import { COLORES as COLORES_CARPETA } from '@/components/CarpetaIcono';
 import {
@@ -25,11 +26,13 @@ import {
     Plus,
     ArrowUpRight,
     Check,
+    GraduationCap,
 } from 'lucide-react';
 import { Conversation } from '@/lib/conversations';
 import { nombreCarpeta, type Expediente } from '@/lib/expedientes';
 import { tituloLimpio, type Vinculos } from '@/lib/consultas-carpeta';
 import { flujoPorId } from '@/lib/flujos';
+import LemaOpenAI from '@/components/LemaOpenAI';
 
 /* ═══ LA BARRA DE TRABAJO (25-sep-2026) ════════════════════════════════════
    Rediseñada sobre el espacio de trabajo de Astra for Law. Lo que cambió:
@@ -264,6 +267,11 @@ function ChatSidebar({
     const [menu, setMenu] = useState<Menu | null>(null);
     const [abiertas, setAbiertas] = useState<Set<string>>(() => new Set());
     const [verTodas, setVerTodas] = useState(false);
+    /* Fuera del chat la misma barra vive en las páginas de la plataforma
+       (MarcoTrabajo): ahí se marca dónde está uno. En el chat no se marca nada. */
+    const ruta = usePathname() ?? '';
+    const enCarpetas = ruta === '/carpetas' || ruta.startsWith('/carpetas/');
+    const enEstudiar = ruta === '/estudiar' || ruta.startsWith('/estudiar/');
 
     // El estado de colapso vive en localStorage y se publica como variable CSS
     // (--sidebar-w) para que el encabezado, el pie y el área de mensajes del
@@ -488,6 +496,14 @@ function ChatSidebar({
                 >
                     <FolderOpen className="h-[18px] w-[18px]" />
                 </Link>
+                <Link
+                    href="/estudiar"
+                    title="Estudiar y pensar"
+                    aria-label="Estudiar y pensar"
+                    className={`grid h-9 w-9 place-items-center rounded-lg transition-colors hover:bg-white/[0.07] hover:text-white ${enEstudiar ? 'bg-white/[0.085] text-white' : 'text-white/60'}`}
+                >
+                    <GraduationCap className="h-[18px] w-[18px]" />
+                </Link>
             </div>
             <div className="mt-auto pb-4">
                 <button
@@ -510,13 +526,14 @@ function ChatSidebar({
         <div className="flex h-full min-h-0 flex-col">
             {/* ── Marca: mide lo mismo que el encabezado del chat (h-14) ── */}
             <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-white/[0.07] pl-5 pr-3">
-                <Link href="/" title="Ir al inicio" className="transition-opacity hover:opacity-80">
+                <Link href="/" title="Ir al inicio" className="flex flex-col gap-1 transition-opacity hover:opacity-80">
                     <span
-                        className="text-[1.3rem] font-semibold tracking-[-0.01em] text-white"
+                        className="text-[1.3rem] font-semibold leading-none tracking-[-0.01em] text-white"
                         style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
                     >
                         Iurex<span style={{ color: '#c9a962' }}>ia</span>
                     </span>
+                    <LemaOpenAI sobreOscuro tamano="text-[9px]" />
                 </Link>
                 {movil ? (
                     <button
@@ -574,13 +591,24 @@ function ChatSidebar({
                     <Link
                         href="/carpetas"
                         onClick={cerrarMovil}
-                        className="flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-[13px] text-white/80 transition-colors hover:bg-white/[0.05] hover:text-white"
+                        aria-current={enCarpetas ? 'page' : undefined}
+                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-[13px] transition-colors hover:bg-white/[0.05] hover:text-white ${enCarpetas ? 'bg-white/[0.085] text-white' : 'text-white/80'}`}
                     >
-                        <FolderOpen className="h-4 w-4 flex-shrink-0 text-white/50" />
+                        <FolderOpen className={`h-4 w-4 flex-shrink-0 ${enCarpetas ? 'text-[#c9a962]' : 'text-white/50'}`} />
                         Mis carpetas
                         {hayCarpetas && carpetas!.length > 0 && (
                             <span className="ml-auto text-[11px] text-white/35">{carpetas!.length}</span>
                         )}
+                    </Link>
+                    {/* Las lecciones del canal de YouTube, con su lectura (3-oct-2026). */}
+                    <Link
+                        href="/estudiar"
+                        onClick={cerrarMovil}
+                        aria-current={enEstudiar ? 'page' : undefined}
+                        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-[13px] transition-colors hover:bg-white/[0.05] hover:text-white ${enEstudiar ? 'bg-white/[0.085] text-white' : 'text-white/80'}`}
+                    >
+                        <GraduationCap className={`h-4 w-4 flex-shrink-0 ${enEstudiar ? 'text-[#c9a962]' : 'text-white/50'}`} />
+                        Estudiar y pensar
                     </Link>
                 </nav>
 

@@ -7,6 +7,7 @@ import { signInWithEmail, signInWithGoogle, signInWithApple, resetPassword } fro
 import { destinoTrasEntrar, recordarDestino } from '@/lib/destino-tras-entrar';
 import { EntrarConCodigo } from '@/components/EntradaConCodigo';
 import BotonProbar from '@/components/BotonProbar';
+import LemaOpenAI from '@/components/LemaOpenAI';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -102,10 +103,11 @@ export default function LoginPage() {
         <main className="min-h-screen bg-cream-300 flex items-center justify-center px-4">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <Link href="/" className="flex items-center justify-center gap-3 mb-8 group">
+                <Link href="/" className="mb-8 flex flex-col items-center gap-2 group">
                     <span className="font-serif text-3xl font-semibold text-charcoal-900 tracking-tight">
                         Iurex<span className="text-accent-gold">ia</span>
                     </span>
+                    <LemaOpenAI tamano="text-[11px]" />
                 </Link>
 
                 {/* Login Card */}

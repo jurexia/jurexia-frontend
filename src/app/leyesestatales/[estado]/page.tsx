@@ -9,6 +9,7 @@ import { getEstadoBySlug, CategoriaLeyes, CATEGORIA_META, Ley, getTotalLeyes } f
 import { ChevronDown, ChevronRight, ArrowLeft, BookOpen, FileText, ExternalLink, Scale, Search } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { isAdmin } from '../adminGuard';
+import PieDePagina from '@/components/PieDePagina';
 
 export default function EstadoPage() {
     const { user, loading } = useAuth();
@@ -207,24 +208,7 @@ export default function EstadoPage() {
             </section>
 
             {/* Footer */}
-            <footer className="py-12 bg-cream-300 border-t border-black/5">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
-                        </div>
-                        <div className="flex gap-8 text-sm text-charcoal-600">
-                            <Link href="/privacidad" className="hover:text-charcoal-900 transition-colors">Privacidad</Link>
-                            <Link href="/terminos" className="hover:text-charcoal-900 transition-colors">Términos</Link>
-                            <Link href="/conocenos" className="hover:text-charcoal-900 transition-colors">Conócenos</Link>
-                            <a href="mailto:soporte@iurexia.com" className="hover:text-charcoal-900 transition-colors">Contacto</a>
-                        </div>
-                        <p className="text-sm text-charcoal-500">
-                            © 2026 Iurexia. Todos los derechos reservados.
-                        </p>
-                    </div>
-                </div>
-            </footer>
+            <PieDePagina />
         </main>
     );
 }

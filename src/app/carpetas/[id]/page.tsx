@@ -251,7 +251,7 @@ function Detalle() {
     if (cargando) {
         return (
             <div className="min-h-screen bg-cream-300">
-                <Navbar />
+                <Navbar plataforma />
                 <div className="mx-auto max-w-4xl px-4 pt-28">
                     <div className="h-48 animate-pulse rounded-xl border border-cream-400 bg-cream-100" />
                 </div>
@@ -262,7 +262,7 @@ function Detalle() {
     if (!expediente) {
         return (
             <div className="min-h-screen bg-cream-300">
-                <Navbar />
+                <Navbar plataforma />
                 <div className="mx-auto max-w-4xl px-4 pt-28 text-center">
                     <h1 className="font-serif text-2xl text-charcoal-900">
                         Esta carpeta ya no existe
@@ -283,7 +283,7 @@ function Detalle() {
 
     return (
         <div className="min-h-screen bg-cream-300">
-            <Navbar />
+            <Navbar plataforma />
 
             <input
                 ref={entradaArchivo}

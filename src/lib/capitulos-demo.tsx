@@ -21,6 +21,21 @@
    Judicatura Federal. */
 
 import type { Capitulo } from '@/components/DemoCapitulos';
+import type { Rotulo } from '@/components/DemoEnVivo';
+
+/* LAS GRABACIONES DEL 3-OCT-2026. Las cuatro de antes enseñaban el chat de
+   antes del 25-sep —la barra de Genios, Fuero y Materia, Buscar/Redactar— y
+   las carpetas con la barra pública de la web. Se regrabaron con la cuenta
+   demo sobre una compilación de producción de la rama, con la barra de trabajo
+   y «Now powered by OpenAI». Lo que se ve es la plataforma real; sólo se
+   acelera la espera. El tercer elemento de cada rótulo es el segundo en que
+   empieza ese momento en el vídeo montado. */
+export const ROTULOS_CONSULTA: Rotulo[] = [
+    ['La pregunta', 'En lenguaje llano, como se plantea en el despacho.', 0],
+    ['El trabajo, a la vista', 'Lee la consulta, fija la jurisdicción y recorre el acervo.', 8.1],
+    ['El documento', 'La respuesta se escribe en una hoja que puedes editar y llevar a Word.', 13.2],
+    ['La prueba', 'Cada cita abre su documento oficial, en la página exacta y resaltada.', 21.2],
+];
 
 export const CONSULTA: Capitulo = {
     id: 'consulta',
@@ -32,16 +47,12 @@ export const CONSULTA: Capitulo = {
         </>
     ),
     entradilla:
-        'La respuesta trae los criterios que la sostienen. Pulsa cualquiera y se abre el documento oficial en la página exacta, con el texto subrayado. Sin salir de la conversación.',
+        'La respuesta trae los criterios que la sostienen. Pulsa cualquiera y se abre el documento oficial en la página exacta, con el texto resaltado. Sin salir de la conversación.',
     src: '/demo/consulta.mp4',
     poster: '/demo/consulta-poster.jpg',
     descripcion:
-        'Demostración: una consulta sobre prisión preventiva oficiosa, la respuesta con sus criterios y el PDF oficial de la Constitución abierto en el artículo citado.',
-    rotulos: [
-        ['La pregunta', 'En lenguaje llano, como se plantea en el despacho.'],
-        ['La respuesta', 'Con los criterios y las normas que la sostienen.'],
-        ['La prueba', 'El PDF oficial, en su página, con el texto subrayado.'],
-    ],
+        'Demostración con el chat de hoy: una consulta sobre prisión preventiva oficiosa; Iurexia lee la consulta, fija la jurisdicción y recorre el acervo, escribe la respuesta en un documento con catorce citas verificadas y una de ellas abre la Constitución en el artículo 19, resaltado.',
+    rotulos: ROTULOS_CONSULTA,
     url: 'iurexia.com/chat',
 };
 
@@ -55,16 +66,16 @@ export const REDACCION: Capitulo = {
         </>
     ),
     entradilla:
-        'Le cuentas el asunto como se lo contarías a un pasante: partes, acto reclamado, fechas y los agravios que quieres desarrollar. Iurexia redacta la demanda entera, con sus fundamentos citados y trazados al acervo. Y termina donde trabajas: el .docx abierto en tu Word.',
+        'Le cuentas el asunto como se lo contarías a un pasante: partes, acto reclamado, fechas y los agravios que quieres desarrollar, y eliges con qué esfuerzo se redacta. Iurexia escribe la demanda entera en una hoja que puedes editar, con sus fundamentos citados y verificados. Y termina donde trabajas: un .docx que abres en tu Word.',
     src: '/demo/redaccion.mp4',
     poster: '/demo/redaccion-poster.jpg',
     descripcion:
-        'Demostración: en el modo de redacción profesional se describe un amparo directo laboral con sus cuatro conceptos de violación, Iurexia redacta la demanda completa con sus citas trazadas al acervo, se exporta a DOCX y el documento se abre en Word.',
+        'Demostración con datos ficticios: se elige el esfuerzo Platinum, se describe un amparo directo laboral con sus agravios, Iurexia escribe la demanda completa en el documento con doce citas verificadas y se exporta a Word.',
     rotulos: [
-        ['El encargo', 'Partes, acto reclamado, fechas y los agravios a desarrollar.', 0],
-        ['La demanda', 'Entera: proemio, oportunidad, conceptos y petitorios.', 6.6],
-        ['Las citas', 'Nueve trazadas al acervo, y la que no se pudo comprobar, dicha.', 18.2],
-        ['En tu Word', 'El .docx que abres y sigues escribiendo.', 24.7],
+        ['El esfuerzo', 'Platinum: el motor más potente, con argumentos en capas.', 0],
+        ['El encargo', 'Partes, acto reclamado, fechas y los agravios a desarrollar.', 6.6],
+        ['La demanda', 'Entera, en una hoja que puedes editar, con sus citas verificadas.', 16.4],
+        ['En tu Word', 'El .docx que abres y sigues escribiendo.', 26.4],
     ],
     url: 'iurexia.com/chat',
 };
@@ -83,11 +94,11 @@ export const CARPETAS: Capitulo = {
     src: '/demo/carpeta.mp4',
     poster: '/demo/carpeta-poster.jpg',
     descripcion:
-        'Demostración: se crea una carpeta con su objetivo, se suben los documentos del asunto y la carpeta responde con el porcentaje de avance y la lista de lo que falta.',
+        'Demostración con datos ficticios: se crea la carpeta de un amparo directo con su objetivo, se suben la demanda y la sentencia reclamada, y la carpeta responde con lo que todavía falta acreditar y los riesgos que no se habían visto.',
     rotulos: [
         ['El objetivo', 'La carpeta nace sabiendo qué hay que conseguir.', 0],
-        ['El expediente', 'Se sube lo que haya: escritos, acuerdos, pruebas.', 16],
-        ['Lo que falta', 'El avance acreditado y la lista de lo pendiente.', 22.8],
+        ['El expediente', 'Se sube lo que haya: la demanda, la sentencia, las pruebas.', 16.2],
+        ['Lo que falta', 'Qué le falta al expediente y qué riesgos quizá no viste.', 25.3],
     ],
     url: 'iurexia.com/carpetas',
 };
@@ -110,8 +121,8 @@ export const SEGUIMIENTO: Capitulo = {
         'Demostración: se busca el tribunal, se escribe el número de expediente, Iurexia prueba los tipos de asunto hasta dar con él y devuelve la carátula real del portal con su NEUN y sus últimos acuerdos.',
     rotulos: [
         ['El tribunal', 'Se busca por nombre. Están los 949 órganos del Poder Judicial de la Federación.', 0],
-        ['El número', 'Y el tipo de asunto: si no lo sabes, Iurexia los prueba todos.', 8.3],
-        ['La carátula', 'La que devuelve el portal, con su NEUN y su historial. Sólo entonces se guarda.', 12.3],
+        ['El número', 'Y el tipo de asunto: si no lo sabes, Iurexia los prueba todos.', 9.0],
+        ['La carátula', 'La que devuelve el portal, con su NEUN y su historial. Sólo entonces se guarda.', 15.5],
     ],
     url: 'iurexia.com/carpetas',
 };

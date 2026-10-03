@@ -19,6 +19,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
 import { supabase } from '@/lib/supabase';
 import {
     ArrowLeft, ArrowUpRight, BookOpen, Building2, Cpu, Landmark,
@@ -181,9 +182,13 @@ export default function LoUltimoPage() {
     }, [activo, busqueda, traer]);
 
     return (
-        <main className="min-h-screen bg-cream-300">
+        <main className="min-h-screen bg-cream-300 pt-[var(--alto-barra)]">
+            {/* La barra de arriba: con sesión, la de trabajo del chat (de ahí se
+                llega, con «Lo último»); sin sesión, la de la web. La cabecera de
+                la página se pega justo debajo de ella. */}
+            <Navbar plataforma />
             {/* ── Cabecera ── */}
-            <div className="border-b border-charcoal-900/[0.07] bg-cream-300/85 backdrop-blur-md sticky top-0 z-20">
+            <div className="sticky top-[var(--alto-barra)] z-20 border-b border-charcoal-900/[0.07] bg-cream-300/85 backdrop-blur-md">
                 <div className="mx-auto max-w-4xl px-4 sm:px-6">
                     <div className="flex items-center gap-3 pt-5">
                         <Link

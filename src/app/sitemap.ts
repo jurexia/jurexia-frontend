@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { LECCIONES } from '@/lib/estudiar/catalogo'
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const baseUrl = 'https://iurexia.com'
@@ -11,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         { path: '/soluciones', priority: 0.8, changefreq: 'monthly' as const },
         { path: '/salvame', priority: 0.8, changefreq: 'monthly' as const },
         { path: '/precios', priority: 0.8, changefreq: 'monthly' as const },
+        { path: '/estudiar', priority: 0.8, changefreq: 'weekly' as const },
         { path: '/tutorial', priority: 0.7, changefreq: 'monthly' as const },
         { path: '/conocenos', priority: 0.7, changefreq: 'monthly' as const },
         { path: '/secretarios', priority: 0.7, changefreq: 'monthly' as const },
@@ -20,7 +22,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
         { path: '/terminos', priority: 0.3, changefreq: 'yearly' as const },
     ]
 
-    return publicRoutes.map((route) => ({
+    // Cada lección de «Estudiar y pensar» tiene su página.
+    const lecciones = LECCIONES.map((l) => ({
+        path: `/estudiar/${l.slug}`, priority: 0.7, changefreq: 'monthly' as const,
+    }))
+
+    return [...publicRoutes, ...lecciones].map((route) => ({
         url: `${baseUrl}${route.path}`,
         lastModified: new Date(),
         changeFrequency: route.changefreq,

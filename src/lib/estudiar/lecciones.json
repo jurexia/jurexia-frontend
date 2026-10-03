@@ -1,0 +1,3620 @@
+{
+ "canal": "https://www.youtube.com/@iurexia",
+ "ejes": [
+  {
+   "id": "interamericano",
+   "numero": "I",
+   "titulo": "Derechos humanos y sistema interamericano",
+   "descripcion": "Las obligaciones internacionales de México en derechos humanos y cómo se hacen valer ante los jueces del país."
+  },
+  {
+   "id": "amparo",
+   "numero": "II",
+   "titulo": "El juicio de amparo",
+   "descripcion": "Cómo nació, contra qué procede, cuándo hay que pedir la suspensión y dónde están hoy sus límites."
+  },
+  {
+   "id": "constitucion",
+   "numero": "III",
+   "titulo": "Constitución y Poder Judicial",
+   "descripcion": "Los límites del poder que reforma la Constitución y las garantías de quienes juzgan."
+  },
+  {
+   "id": "razonamiento",
+   "numero": "IV",
+   "titulo": "Argumentación y prueba",
+   "descripcion": "Herramientas del razonamiento jurídico: cómo se pondera un derecho frente a una ley y cómo se prueba un hecho."
+  }
+ ],
+ "lecciones": [
+  {
+   "id": "v62",
+   "slug": "sistema-interamericano",
+   "eje": "interamericano",
+   "publicada": true,
+   "youtube": "Xwtt7vm_Jy8",
+   "publicado": "2026-09-29T12:00:00-06:00",
+   "tituloVideo": "El sistema interamericano: la garantía que no se elige en las urnas",
+   "duracion": 155,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Un nuevo Poder Judicial"
+    },
+    {
+     "segundo": 33,
+     "titulo": "La garantía que no se elige en las urnas"
+    },
+    {
+     "segundo": 55,
+     "titulo": "Un juez mexicano y el control de convencionalidad"
+    },
+    {
+     "segundo": 73,
+     "titulo": "De Almonacid a Radilla"
+    },
+    {
+     "segundo": 87,
+     "titulo": "El peso que no se le ha dado"
+    },
+    {
+     "segundo": 107,
+     "titulo": "El sistema interamericano en Iurexia"
+    },
+    {
+     "segundo": 122,
+     "titulo": "Dónde nace el control de convencionalidad"
+    }
+   ],
+   "titulo": "El sistema interamericano de derechos humanos",
+   "tituloPlano": "El sistema interamericano de derechos humanos",
+   "subtitulo": "Su obligatoriedad en México y el control de convencionalidad",
+   "corto": "El sistema interamericano",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "sistema interamericano",
+    "Convención Americana sobre Derechos Humanos",
+    "Corte Interamericana de Derechos Humanos",
+    "Comisión Interamericana",
+    "control de convencionalidad",
+    "Sergio García Ramírez",
+    "contradicción de tesis 293/2011"
+   ],
+   "resumen": "Cuando se debilitan los contrapesos internos, queda una garantía que no se elige en las urnas: el sistema interamericano de derechos humanos. Esta lectura explica cómo funciona, cuándo y cómo México se sometió a él, por qué la jurisprudencia de la Corte Interamericana obliga a los jueces mexicanos y de dónde viene el control de convencionalidad, expresión que apareció por primera vez en el voto de un juez mexicano. Termina con la tensión entre esas obligaciones y las restricciones de la Constitución.",
+   "resumenPlano": "Cuando se debilitan los contrapesos internos, queda una garantía que no se elige en las urnas: el sistema interamericano de derechos humanos. Esta lectura explica cómo funciona, cuándo y cómo México se sometió a él, por qué la jurisprudencia de la Corte Interamericana obliga a los jueces mexicanos y de dónde viene el control de convencionalidad, expresión que apareció por primera vez en el voto de un juez mexicano. Termina con la tensión entre esas obligaciones y las restricciones de la Constitución.",
+   "ideas": [
+    "El sistema interamericano tiene dos órganos: la Comisión, que recomienda, y la Corte, que juzga y ordena.",
+    "México se adhirió a la Convención Americana en 1981 y aceptó la competencia contenciosa de la Corte en 1998.",
+    "Según la Suprema Corte, la jurisprudencia interamericana vincula a todos los jueces mexicanos cuando es más favorable a la persona.",
+    "La expresión «control de convencionalidad» apareció por primera vez en el sistema interamericano en un voto del juez mexicano Sergio García Ramírez (2003).",
+    "Su cumplimiento enfrenta límites: en 2022 y 2023 la Corte ordenó a México suprimir el arraigo y adecuar la prisión preventiva oficiosa, y en 2024 la Constitución amplió esa prisión preventiva."
+   ],
+   "secciones": [
+    "Introducción: una garantía que no se elige",
+    "Qué es el sistema interamericano",
+    "México en el sistema interamericano",
+    "El control de convencionalidad",
+    "La práctica: una garantía que no siempre se cumple",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Sergio García Ramírez",
+     "fechas": "1938 – 2024",
+     "campo": "Derecho penal; derechos humanos.",
+     "quien": "Jurista mexicano, investigador del Instituto de Investigaciones Jurídicas de la UNAM, procurador general de la República y juez de la Corte Interamericana de Derechos Humanos de 1998 a 2009, tribunal que presidió.",
+     "aporte": "Acuñó en el sistema interamericano la expresión «control de convencionalidad». En votos posteriores sostuvo que ese control, en el ámbito interno, puede ser difuso, es decir, quedar en manos de todos los tribunales."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Jurisprudencias P./J. 20/2014 y P./J. 21/2014 (10a.), Pleno de la Suprema Corte (contradicción de tesis 293/2011)",
+     "extracto": "Los derechos humanos de la Constitución y de los tratados constituyen el parámetro de control de regularidad constitucional, «pero cuando en la Constitución haya una restricción expresa al ejercicio de los derechos humanos, se deberá estar a lo que indica la norma constitucional» (P./J. 20/2014).",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "etiqueta": "",
+     "titulo": "Corte IDH, <em>Myrna Mack Chang vs. Guatemala</em>, sentencia de 25 de noviembre de 2003, voto razonado del juez Sergio García Ramírez, párr. 27",
+     "extracto": "«[…] dejando sus actuaciones fuera del “control de convencionalidad” que trae consigo la jurisdicción de la Corte internacional […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "etiqueta": "",
+     "titulo": "Corte IDH, <em>Radilla Pacheco vs. México</em>, sentencia de 23 de noviembre de 2009, párr. 339",
+     "extracto": "«[…] el Poder Judicial debe ejercer un “control de convencionalidad” ex officio entre las normas internas y la Convención Americana […].»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Convención Americana sobre Derechos Humanos",
+     "definicion": "Tratado de 1969, también llamado Pacto de San José, que reconoce derechos y crea la Comisión y la Corte Interamericanas."
+    },
+    {
+     "termino": "Competencia contenciosa",
+     "definicion": "Facultad de la Corte Interamericana de juzgar a un Estado que la ha aceptado y de condenarlo."
+    },
+    {
+     "termino": "Control de convencionalidad",
+     "definicion": "Deber de las autoridades de verificar que las normas internas sean compatibles con la Convención y con la interpretación de la Corte Interamericana."
+    },
+    {
+     "termino": "<em>Ex officio</em>",
+     "definicion": "De oficio, sin necesidad de que las partes lo soliciten."
+    },
+    {
+     "termino": "Control difuso",
+     "definicion": "Modelo en el que cualquier juez puede dejar de aplicar, en el caso concreto, una norma contraria a la Constitución o a los tratados."
+    },
+    {
+     "termino": "Restricción constitucional expresa",
+     "definicion": "Límite a un derecho humano establecido en el texto de la Constitución, que según la contradicción de tesis 293/2011 prevalece sobre el tratado."
+    }
+   ],
+   "preguntas": [
+    "¿Qué diferencia hay entre las funciones de la Comisión y las de la Corte Interamericana?",
+    "¿En qué condiciones vincula a los jueces mexicanos la jurisprudencia de la Corte Interamericana, según la contradicción de tesis 293/2011?",
+    "¿Qué aportó Sergio García Ramírez al concepto de control de convencionalidad, y con qué precisión debe afirmarse?",
+    "Explique la evolución del control de convencionalidad de <em>Almonacid</em> (2006) a <em>Radilla</em> (2009).",
+    "¿Por qué la regla de las restricciones constitucionales expresas genera tensión con las sentencias de la Corte Interamericana?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Convención Americana sobre Derechos Humanos (Pacto de San José), 22 de noviembre de 1969. México se adhirió en 1981 y reconoció la competencia contenciosa de la Corte Interamericana en 1998.",
+     "url": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 10 de junio de 2011, reforma constitucional en materia de derechos humanos, art. 1.º",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/dof/CPEUM_ref_194_10jun11.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 20/2014 (10a.), Pleno de la SCJN (contradicción de tesis 293/2011), registro digital 2006224.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006224"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 21/2014 (10a.), Pleno de la SCJN (contradicción de tesis 293/2011), registro digital 2006225.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006225"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Myrna Mack Chang vs. Guatemala</em>, sentencia de 25 de noviembre de 2003, Serie C No. 101, voto razonado de Sergio García Ramírez, párr. 27.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_101_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Almonacid Arellano y otros vs. Chile</em>, sentencia de 26 de septiembre de 2006, Serie C No. 154, párr. 124.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_154_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Trabajadores Cesados del Congreso (Aguado Alfaro y otros) vs. Perú</em>, sentencia de 24 de noviembre de 2006, Serie C No. 158, párr. 128.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_158_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Radilla Pacheco vs. México</em>, sentencia de 23 de noviembre de 2009, Serie C No. 209, párr. 339.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_209_esp.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis P. LXVII/2011 (9a.), Pleno de la SCJN (expediente Varios 912/2010), «Control de convencionalidad ex officio en un modelo de control difuso de constitucionalidad», registro digital 160589.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/160589"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Tzompaxtle Tecpile y otros vs. México</em>, sentencia de 7 de noviembre de 2022, Serie C No. 470, párr. 118.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_470_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso García Rodríguez y otro vs. México</em>, sentencia de 25 de enero de 2023, Serie C No. 482, párrs. 176, 300 y 301.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_482_esp.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 31 de diciembre de 2024, edición vespertina, reforma al art. 19 constitucional.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5746525&fecha=31/12/2024"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-sistema-interamericano.pdf",
+    "paginas": 7,
+    "kb": 919,
+    "palabras": 1307,
+    "minutos": 5
+   },
+   "portada": "/estudiar/portadas/sistema-interamericano.webp",
+   "miniatura": "/estudiar/miniaturas/sistema-interamericano.webp",
+   "miniatura640": "/estudiar/miniaturas/sistema-interamericano-640.webp"
+  },
+  {
+   "id": "v63",
+   "slug": "prision-preventiva-oficiosa-y-arraigo",
+   "eje": "interamericano",
+   "publicada": true,
+   "youtube": "qL9W7GlYT68",
+   "publicado": "2026-09-29T12:00:00-06:00",
+   "tituloVideo": "Prisión preventiva oficiosa y arraigo: lo que ordenó la Corte Interamericana a México",
+   "duracion": 133,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "La pregunta"
+    },
+    {
+     "segundo": 18,
+     "titulo": "Prisión preventiva oficiosa y arraigo"
+    },
+    {
+     "segundo": 30,
+     "titulo": "97,090 personas presas sin sentencia"
+    },
+    {
+     "segundo": 41,
+     "titulo": "Lo que ordenó la Corte Interamericana"
+    },
+    {
+     "segundo": 64,
+     "titulo": "Las reformas de 2024 y 2025"
+    },
+    {
+     "segundo": 84,
+     "titulo": "Cómo sostener la defensa con Iurexia"
+    }
+   ],
+   "titulo": "Prisión preventiva oficiosa y arraigo",
+   "tituloPlano": "Prisión preventiva oficiosa y arraigo",
+   "subtitulo": "Lo que ordenó la Corte Interamericana y lo que respondió México",
+   "corto": "Prisión preventiva oficiosa y arraigo",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "prisión preventiva oficiosa",
+    "arraigo",
+    "presunción de inocencia",
+    "libertad personal",
+    "Corte Interamericana de Derechos Humanos",
+    "control de convencionalidad",
+    "artículo 19 constitucional"
+   ],
+   "resumen": "En México, la acusación por ciertos delitos basta para que una persona vaya a prisión mientras se le juzga, sin que el juez pueda valorar si hace falta: es la prisión preventiva oficiosa. El arraigo permite privar de la libertad incluso antes de acusar. Esta lectura explica ambas figuras, las cifras que las miden, las recomendaciones de la Comisión Interamericana y de la ONU, las sentencias en que la Corte Interamericana ordenó a México eliminarlas o adecuarlas, la respuesta legislativa de 2024 y 2025, y los argumentos con que hoy se discuten ante los tribunales.",
+   "resumenPlano": "En México, la acusación por ciertos delitos basta para que una persona vaya a prisión mientras se le juzga, sin que el juez pueda valorar si hace falta: es la prisión preventiva oficiosa. El arraigo permite privar de la libertad incluso antes de acusar. Esta lectura explica ambas figuras, las cifras que las miden, las recomendaciones de la Comisión Interamericana y de la ONU, las sentencias en que la Corte Interamericana ordenó a México eliminarlas o adecuarlas, la respuesta legislativa de 2024 y 2025, y los argumentos con que hoy se discuten ante los tribunales.",
+   "ideas": [
+    "La prisión preventiva oficiosa se impone por el solo tipo de delito, sin que el juez valore si es necesaria; el arraigo priva de la libertad antes de la acusación.",
+    "Según el INEGI, la mitad de las personas adultas presas sin sentencia en México lo estaban por prisión preventiva oficiosa.",
+    "La Comisión Interamericana y la ONU recomiendan eliminarlas; la Corte Interamericana, en dos sentencias contra México (2022 y 2023), lo ordenó, incluso en la Constitución.",
+    "En diciembre de 2024 México amplió el catálogo y ordenó atenerse a la literalidad del artículo 19; en 2025 limitó la suspensión en el amparo.",
+    "La defensa se construye con los tratados, las órdenes de la Corte y la interpretación conforme, pero debe enfrentar obstáculos concretos."
+   ],
+   "secciones": [
+    "Introducción: una pregunta",
+    "Dos figuras",
+    "Lo que dicen los órganos internacionales",
+    "La respuesta de México",
+    "Cómo se argumenta hoy",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [],
+   "documentos": [
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "",
+     "titulo": "Constitución Política de los Estados Unidos Mexicanos, art. 19, párrafo segundo (reforma publicada en el <em>Diario Oficial</em> el 31 de diciembre de 2024)",
+     "extracto": "«El juez ordenará la prisión preventiva oficiosamente, en los casos de abuso o violencia sexual contra menores, delincuencia organizada, extorsión, delitos previstos en las leyes aplicables cometidos para la ilegal introducción y desvío, producción […] y distribución de precursores químicos y sustancias químicas esenciales, drogas sintéticas, fentanilo y derivados, homicidio doloso, feminicidio, violación, secuestro, trata de personas, robo de casa habitación […], contrabando y cualquier actividad relacionada con falsos comprobantes fiscales, en los términos fijados por la ley.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "etiqueta": "",
+     "titulo": "Corte IDH, <em>Tzompaxtle Tecpile y otros vs. México</em>, sentencia de 7 de noviembre de 2022, puntos resolutivos 7 y 8",
+     "extracto": "«El Estado deberá dejar sin efecto en su ordenamiento interno las disposiciones relativas al arraigo de naturaleza pre – procesal […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "etiqueta": "",
+     "titulo": "Corte IDH, <em>García Rodríguez y otro vs. México</em>, sentencia de 25 de enero de 2023, párrs. 300 y 301",
+     "extracto": "«[…] el Estado deberá dejar sin efecto, en su ordenamiento jurídico, toda la normatividad, incluyendo la constitucional, relacionada con el arraigo como medida de naturaleza pre-procesal […].»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Prisión preventiva",
+     "definicion": "Medida cautelar que priva de la libertad a una persona acusada mientras se le juzga."
+    },
+    {
+     "termino": "Prisión preventiva oficiosa",
+     "definicion": "La que el juez debe imponer de manera automática por el tipo de delito, sin valorar su necesidad."
+    },
+    {
+     "termino": "Arraigo pre-procesal",
+     "definicion": "Privación de la libertad de una persona antes de que se le acuse, para facilitar la investigación."
+    },
+    {
+     "termino": "Presunción de inocencia",
+     "definicion": "Derecho de toda persona acusada a ser tratada como inocente mientras no se demuestre su culpabilidad."
+    },
+    {
+     "termino": "Control de convencionalidad",
+     "definicion": "Deber de las autoridades de aplicar la Convención Americana y la interpretación de la Corte Interamericana, por encima de las normas internas que las contradigan."
+    },
+    {
+     "termino": "Interpretación conforme",
+     "definicion": "Lectura de una norma interna que la hace compatible con la Constitución y los tratados, sin inaplicarla."
+    }
+   ],
+   "preguntas": [
+    "¿En qué se distingue la prisión preventiva justificada de la prisión preventiva oficiosa?",
+    "¿Por qué los órganos internacionales consideran la prisión preventiva oficiosa contraria a la presunción de inocencia?",
+    "¿Qué diferencia jurídica hay entre una recomendación de la Comisión Interamericana y una orden de la Corte Interamericana?",
+    "¿Qué ordenó la Corte Interamericana en <em>García Rodríguez y otro vs. México</em> respecto de la Constitución mexicana?",
+    "¿Qué cambió la reforma de diciembre de 2024 al artículo 19?",
+    "Construya un argumento de defensa contra la imposición de la prisión preventiva oficiosa y señale el principal obstáculo que debería enfrentar."
+   ],
+   "fuentes": [
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 31 de diciembre de 2024, edición vespertina, decreto por el que se reforma el párrafo segundo del art. 19 constitucional.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5746525&fecha=31/12/2024"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos vigente, arts. 16 y 19.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "dato",
+     "tipoNombre": "Estadística oficial",
+     "referencia": "INEGI, Censos Penitenciarios 2026 (boletín de julio de 2026): personas adultas privadas de la libertad sin sentencia.",
+     "url": ""
+    },
+    {
+     "tipo": "cidh",
+     "tipoNombre": "Comisión Interamericana",
+     "referencia": "Comisión Interamericana de Derechos Humanos, <em>Informe sobre el uso de la prisión preventiva en las Américas</em>, 2013.",
+     "url": "https://www.oas.org/es/cidh/ppl/informes/pdfs/informe-pp-2013-es.pdf"
+    },
+    {
+     "tipo": "cidh",
+     "tipoNombre": "Comisión Interamericana",
+     "referencia": "Comisión Interamericana de Derechos Humanos, <em>Informe Anual 2024</em>, capítulo V, seguimiento de recomendaciones a México.",
+     "url": "https://www.oas.org/es/cidh/docs/anual/2024/capitulos/IA2024_5_MEX_ES.PDF"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "Comité de Derechos Humanos de la ONU, observaciones finales sobre el sexto informe periódico de México (2019).",
+     "url": "https://documents.un.org/doc/undoc/gen/g19/336/14/pdf/g1933614.pdf"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "Comité contra la Tortura de la ONU, observaciones finales sobre el séptimo informe periódico de México (2019).",
+     "url": "https://documents.un.org/doc/undoc/gen/g19/225/01/pdf/g1922501.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Tzompaxtle Tecpile y otros vs. México</em>, sentencia de 7 de noviembre de 2022, Serie C No. 470, párrs. 118 y 219, puntos resolutivos 7 y 8.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_470_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso García Rodríguez y otro vs. México</em>, sentencia de 25 de enero de 2023, Serie C No. 482, párrs. 174, 300 y 301, puntos resolutivos 13 y 14.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_482_esp.pdf"
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Convención Americana sobre Derechos Humanos (1969), arts. 7, 8.2 y 24.",
+     "url": ""
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Pacto Internacional de Derechos Civiles y Políticos (1966), art. 9.",
+     "url": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 12 de abril de 2019, reforma al art. 19 constitucional.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5557700&fecha=12/04/2019"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo vigente (última reforma DOF 16 de octubre de 2025), art. 166, fr. I.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LAmp.pdf"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Jurisprudencia PR.P.CN. J/13 P (11a.), Pleno Regional en Materia Penal de la Región Centro-Norte, registro digital 2027280; véase, tras la reforma de 2025, la tesis con registro 2031701.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027280"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 21/2014 (10a.), Pleno de la SCJN, registro digital 2006225.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006225"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis registro digital 2027539, «Prisión preventiva oficiosa. El artículo 167 del Código Nacional de Procedimientos Penales en la porción que la regula es inconvencional, de conformidad con la sentencia emitida por la Corte Interamericana de Derechos Humanos en el caso García Rodríguez y otro».",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027539"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis registro digital 2027756, «Prisión preventiva oficiosa. Con base en la interpretación conforme y pro persona del segundo párrafo del artículo 19 de la Constitución General, es factible acatar el fallo emitido por la Corte Interamericana de Derechos Humanos en el caso García Rodríguez».",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027756"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 20/2014 (10a.), Pleno de la SCJN, registro digital 2006224.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006224"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis registro digital 2027585, «Prisión preventiva oficiosa. Los jueces federales y locales se encuentran imposibilitados jurídicamente para inaplicar en un caso concreto, mediante un ejercicio de control de convencionalidad ex officio, las disposiciones legales que regulan dicha medida cautelar».",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027585"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, amparo en revisión 186/2024, proyecto listado para la sesión del 13 de agosto de 2025 (no votado).",
+     "url": "https://www.scjn.gob.mx/sites/default/files/listas/documento_dos/2025-07/20251107%20AR%20186-2024.pdf"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-prision-preventiva-oficiosa-y-arraigo.pdf",
+    "paginas": 7,
+    "kb": 817,
+    "palabras": 1503,
+    "minutos": 10
+   },
+   "portada": "/estudiar/portadas/prision-preventiva-oficiosa-y-arraigo.webp",
+   "miniatura": "/estudiar/miniaturas/prision-preventiva-oficiosa-y-arraigo.webp",
+   "miniatura640": "/estudiar/miniaturas/prision-preventiva-oficiosa-y-arraigo-640.webp"
+  },
+  {
+   "id": "v69",
+   "slug": "todavia-hay-jueces-en-mexico",
+   "eje": "amparo",
+   "publicada": true,
+   "youtube": "_AT10poWvp4",
+   "publicado": "2026-10-01T21:45:00-06:00",
+   "tituloVideo": "¿Todavía hay jueces en México? Nacimiento, esplendor y retroceso del juicio de amparo",
+   "duracion": 601,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "«Todavía hay jueces en Berlín»"
+    },
+    {
+     "segundo": 53,
+     "titulo": "Montesquieu: el poder debe detener al poder"
+    },
+    {
+     "segundo": 79,
+     "titulo": "1836: el Supremo Poder Conservador"
+    },
+    {
+     "segundo": 101,
+     "titulo": "Rejón y la Constitución de Yucatán"
+    },
+    {
+     "segundo": 138,
+     "titulo": "Otero y el Acta de Reformas de 1847"
+    },
+    {
+     "segundo": 165,
+     "titulo": "La primera sentencia de amparo, 1849"
+    },
+    {
+     "segundo": 190,
+     "titulo": "El amparo Vega: a un juez no se le castiga por su sentencia"
+    },
+    {
+     "segundo": 220,
+     "titulo": "1857, 1917, 1994 y 2011"
+    },
+    {
+     "segundo": 247,
+     "titulo": "El esplendor: 2017, 2021 y 2023"
+    },
+    {
+     "segundo": 276,
+     "titulo": "La respuesta del poder"
+    },
+    {
+     "segundo": 307,
+     "titulo": "La rigidez: una Constitución no se cambia con cualquier mayoría"
+    },
+    {
+     "segundo": 355,
+     "titulo": "2024: una mayoría calificada que las urnas no dieron"
+    },
+    {
+     "segundo": 435,
+     "titulo": "El desmontaje: junio y septiembre de 2024"
+    },
+    {
+     "segundo": 463,
+     "titulo": "La jueza de Veracruz y los 175 años"
+    },
+    {
+     "segundo": 489,
+     "titulo": "Se cierran las puertas"
+    },
+    {
+     "segundo": 517,
+     "titulo": "La Ley de Amparo de 2025"
+    },
+    {
+     "segundo": 536,
+     "titulo": "Lo que Montesquieu temía"
+    },
+    {
+     "segundo": 574,
+     "titulo": "¿Todavía hay jueces en México?"
+    }
+   ],
+   "titulo": "¿Todavía hay jueces en México?",
+   "tituloPlano": "¿Todavía hay jueces en México?",
+   "subtitulo": "El juicio de amparo: su nacimiento, su esplendor y su retroceso",
+   "corto": "¿Todavía hay jueces en México?",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "juicio de amparo",
+    "Manuel Crescencio Rejón",
+    "Mariano Otero",
+    "fórmula Otero",
+    "separación de poderes",
+    "rigidez constitucional",
+    "reforma judicial de 2024"
+   ],
+   "resumen": "El juicio de amparo nació para que ningún poder se volviera árbitro de los destinos de las personas sin una autoridad que moderara sus abusos. Esta lectura sigue su historia: la idea de Montesquieu, el Supremo Poder Conservador de 1836, el proyecto de Rejón en Yucatán (1840-1841), la fórmula Otero (1847), las primeras sentencias, la expansión de 2011 y el esplendor de la última década. Examina después la mayoría calificada de 2024 frente a los límites del artículo 54 constitucional y las reformas de 2024 y 2025 que redujeron los alcances del amparo.",
+   "resumenPlano": "El juicio de amparo nació para que ningún poder se volviera árbitro de los destinos de las personas sin una autoridad que moderara sus abusos. Esta lectura sigue su historia: la idea de Montesquieu, el Supremo Poder Conservador de 1836, el proyecto de Rejón en Yucatán (1840-1841), la fórmula Otero (1847), las primeras sentencias, la expansión de 2011 y el esplendor de la última década. Examina después la mayoría calificada de 2024 frente a los límites del artículo 54 constitucional y las reformas de 2024 y 2025 que redujeron los alcances del amparo.",
+   "ideas": [
+    "El amparo es el instrumento con el que una persona puede pedir a un juez federal que la proteja frente a los actos de cualquier autoridad que violen sus derechos.",
+    "Rejón lo propuso en Yucatán (1840) contra la idea de un poder conservador sin control; Otero lo llevó a toda la República en 1847, con la fórmula de los efectos particulares.",
+    "Entre 2011 y 2023 vivió su mayor esplendor: interés legítimo, amparo contra omisiones, derechos de los tratados y efectos que beneficiaban a todos.",
+    "La Constitución es rígida a propósito: el artículo 54 busca que ninguna fuerza política pueda reformarla sola. En 2024, con el 58 % de los votos, una coalición obtuvo el 73 % de la Cámara de Diputados.",
+    "Entre 2024 y 2025, varias reformas prohibieron los efectos generales, cerraron el amparo contra reformas constitucionales y endurecieron la suspensión."
+   ],
+   "secciones": [
+    "Introducción: el molinero de Sanssouci",
+    "La idea: el poder debe detener al poder",
+    "El nacimiento del amparo",
+    "El crecimiento y el esplendor",
+    "La respuesta del poder",
+    "La mayoría calificada y la rigidez constitucional",
+    "El desmontaje (2024-2025)",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Montesquieu",
+     "fechas": "1689 – 1755",
+     "campo": "Filosofía política; derecho.",
+     "quien": "Charles-Louis de Secondat, barón de Montesquieu, magistrado del Parlamento de Burdeos y escritor francés de la Ilustración.",
+     "aporte": "En <em>Del espíritu de las leyes</em> (1748) formuló la separación de los poderes legislativo, ejecutivo y judicial como garantía de la libertad, base del constitucionalismo moderno."
+    },
+    {
+     "nombre": "Manuel Crescencio Rejón",
+     "fechas": "1799 – 1849",
+     "campo": "Política; derecho constitucional.",
+     "quien": "Político yucateco, formado en el Seminario de San Ildefonso de Mérida. Fue legislador y ministro de Relaciones Exteriores.",
+     "aporte": "Propuso en 1840 el juicio de amparo para Yucatán, inspirado en el control judicial que Tocqueville describió en <em>La democracia en América</em>. Es considerado uno de los creadores del amparo."
+    },
+    {
+     "nombre": "Mariano Otero",
+     "fechas": "1817 – 1850",
+     "campo": "Derecho constitucional; política.",
+     "quien": "Abogado y político jalisciense, diputado al Congreso Constituyente de 1846-1847 y ministro de Relaciones Exteriores.",
+     "aporte": "Su voto particular de 1847 llevó el amparo a la Constitución federal y fijó el principio de relatividad de las sentencias, que rigió el amparo mexicano durante más de siglo y medio."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "etiqueta": "Doctrina",
+     "titulo": "Montesquieu, <em>De l'esprit des lois</em> (1748), libro XI, capítulos IV y VI",
+     "extracto": "«Es una experiencia eterna que todo hombre que tiene poder tiende a abusar de él; avanza hasta que encuentra límites. […] Para que no se pueda abusar del poder, es preciso que, por la disposición de las cosas, el poder detenga al poder.»",
+     "traducido": true,
+     "idioma": "francés"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "",
+     "titulo": "Leyes Constitucionales de 1836, Segunda Ley, art. 17",
+     "extracto": "«Este Supremo Poder no es responsable de sus operaciones mas que á Dios y á la opinion pública, y sus individuos en ningun caso podrán ser juzgados ni reconvenidos por sus opiniones.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Documento histórico",
+     "titulo": "Exposición de motivos del proyecto de Constitución de Yucatán (23 de diciembre de 1840), reproducida por José Luis Soberanes",
+     "extracto": "«Por eso os propone se revista á la Corte suprema de justicia de un poder suficiente, para oponerse á las providencias anti-constitucionales del Congreso, y á las ilegales del Poder ejecutivo, en las ofensas que hagan á los derechos políticos y civiles de los habitantes del Estado […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "",
+     "titulo": "Acta Constitutiva y de Reformas (1847), art. 25",
+     "extracto": "«Los tribunales de la Federación ampararán a cualquiera habitante de la República, en el ejercicio y conservación de los derechos que le concedan esta Constitución y las leyes constitucionales, contra todo ataque de los poderes legislativo y ejecutivo, ya de la Federación, ya de los Estados, limitándose dichos tribunales a impartir su protección en el caso particular sobre que verse el proceso, sin hacer ninguna declaración general respecto de la ley o del acto que lo motivare.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Sentencia histórica",
+     "titulo": "Sentencia del Juzgado de Distrito de San Luis Potosí, 13 de agosto de 1849",
+     "extracto": "«[…] la circunstancia de no haberse reglamentado el modo y términos en que tal protección debe dispensarse, no es ni puede ser obstáculo para cumplir con ese sagrado deber […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "leg",
+     "tipoNombre": "Proceso legislativo",
+     "etiqueta": "Iniciativa de reforma",
+     "titulo": "Iniciativa de reformas constitucionales presentada por los grupos del PRI, el PAN y el PARM, 19 de agosto de 1993",
+     "extracto": "«[…] que un partido, por la fuerza de sus votos, pueda eventualmente alcanzar las dos terceras partes en la integración de la Cámara. La propuesta imposibilita que este supuesto se dé en la práctica, es decir, establece claramente que un partido político, de hoy en adelante, por sí solo no podrá reformar la Constitución.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "",
+     "titulo": "Decreto de reforma constitucional en materia judicial, <em>Diario Oficial de la Federación</em>, 15 de septiembre de 2024, transitorio décimo primero",
+     "extracto": "«Para la interpretación y aplicación de este Decreto, los órganos del Estado y toda autoridad jurisdiccional deberán atenerse a su literalidad y no habrá lugar a interpretaciones análogas o extensivas que pretendan inaplicar, suspender, modificar o hacer nugatorios sus términos o su vigencia, ya sea de manera total o parcial.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "",
+     "titulo": "Decreto de reforma a los arts. 105 y 107 constitucionales, <em>Diario Oficial de la Federación</em>, 31 de octubre de 2024",
+     "extracto": "Art. 105: «Son improcedentes las controversias constitucionales o acciones de inconstitucionalidad que tengan por objeto controvertir las adiciones o reformas a esta Constitución.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Juicio de amparo",
+     "definicion": "Proceso ante los tribunales federales para proteger a las personas frente a normas generales, actos u omisiones de autoridad que violen sus derechos humanos."
+    },
+    {
+     "termino": "Fórmula Otero o principio de relatividad",
+     "definicion": "Regla según la cual la sentencia de amparo protege sólo a quien lo promovió, sin declarar la invalidez general de la norma."
+    },
+    {
+     "termino": "Interés legítimo",
+     "definicion": "Posibilidad de promover amparo sin ser titular de un derecho subjetivo, cuando el acto afecta a la persona por su especial situación frente al orden jurídico."
+    },
+    {
+     "termino": "Omisión legislativa",
+     "definicion": "Incumplimiento del deber, impuesto por la Constitución, de expedir una ley."
+    },
+    {
+     "termino": "Acción de inconstitucionalidad",
+     "definicion": "Medio de control, creado en 1994, para impugnar ante la Suprema Corte la constitucionalidad de una norma general."
+    },
+    {
+     "termino": "Declaratoria general de inconstitucionalidad",
+     "definicion": "Resolución de la Suprema Corte que, tras una jurisprudencia, expulsa una norma con efectos para todos."
+    },
+    {
+     "termino": "Rigidez constitucional",
+     "definicion": "Exigencia de un procedimiento más difícil que el ordinario para reformar la Constitución."
+    },
+    {
+     "termino": "Sobrerrepresentación",
+     "definicion": "Diferencia entre el porcentaje de curules y el porcentaje de votos de una fuerza política."
+    }
+   ],
+   "preguntas": [
+    "¿Por qué Rejón consideraba «monstruoso» un poder conservador como el de 1836?",
+    "¿Qué establece la fórmula Otero y cómo se flexibilizó a partir de 2011?",
+    "¿Qué principio quedó sentado con el amparo Vega de 1869?",
+    "Explique el propósito del artículo 54 constitucional según la iniciativa de 1993 y las dos lecturas que se dieron en 2024.",
+    "¿Qué efectos tuvo la reforma del 31 de octubre de 2024 sobre los juicios que estaban en trámite?",
+    "¿Por qué se afirma que los derechos humanos existen para proteger lo que ninguna mayoría puede votar?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "François Andrieux, «Le Meunier Sans-Souci» (1797).",
+     "url": "https://fr.wikisource.org/wiki/Le_Meunier_Sans-Souci"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Montesquieu, <em>De l'esprit des lois</em> (1748), libro XI, capítulos IV y VI (ed. de 1777).",
+     "url": "https://fr.wikisource.org/wiki/Esprit_des_lois_(1777)/L11/C4"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Leyes Constitucionales de la República Mexicana (1836), Segunda Ley, arts. 12 y 17.",
+     "url": "https://www.ordenjuridico.gob.mx/Constitucion/1836.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "José Luis Soberanes Fernández, «La Constitución yucateca de 1841 y su juicio de amparo», IIJ-UNAM, 1998 (reproduce la exposición de motivos del proyecto de 1840).",
+     "url": "https://archivos.juridicas.unam.mx/www/bjv/libros/1/116/40.pdf"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Acta Constitutiva y de Reformas (1847), art. 25, Museo de las Constituciones (UNAM).",
+     "url": "https://museodelasconstituciones.unam.mx/wp-content/uploads/2025/12/1847-Acta-constitutiva-y-de-reformas.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "«La primera sentencia de amparo de 1849», transcripción, IIJ-UNAM.",
+     "url": "https://archivos.juridicas.unam.mx/www/bjv/libros/7/3065/28.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Alfonso Jaime Martínez Lazcano, «Historia del juicio de amparo contra leyes: el amparo Vega», <em>Revista IUS</em>, núm. 43, 2019.",
+     "url": "https://www.redalyc.org/journal/2932/293259573007/html/"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de la República Mexicana (1857), arts. 92, 101 y 102.",
+     "url": "https://www.ordenjuridico.gob.mx/Constitucion/1857.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Universal</em>, sobre la reforma de 1994 que redujo la Corte de 26 a 11 ministros.",
+     "url": "https://www.eluniversal.com.mx/nacion/1994-cuando-zedillo-bajo-de-26-a-11-a-los-ministros-de-la-suprema-corte/"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 6 de junio de 2011, reforma constitucional en materia de amparo (art. 107).",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5193266&fecha=06/06/2011"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo en revisión 1359/2015, 15 de noviembre de 2017 (síntesis de Artículo 19).",
+     "url": "https://articulo19.org/wp-content/uploads/2017/10/si%CC%81ntesis-1359_2015-PO-A19.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Expansión</em>, 19 de marzo de 2021, sobre la suspensión definitiva con efectos generales de la reforma eléctrica.",
+     "url": "https://expansion.mx/empresas/2021/03/19/privados-consiguen-suspension-definitiva-reforma-electrica"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Expansión Política</em>, 22 de junio de 2023, sobre la invalidez de la segunda parte del «Plan B».",
+     "url": "https://politica.expansion.mx/mexico/2023/06/22/corte-invalida-la-segunda-parte-del-plan-b-electoral"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Infobae</em>, 19 de marzo de 2021, sobre la carta del presidente acerca del juez Gómez Fierro.",
+     "url": "https://www.infobae.com/america/mexico/2021/03/19/arturo-saldivar-revelo-en-que-va-la-investigacion-que-amlo-exigio-sobre-juan-pablo-gomez-fierro-el-juez-que-suspendio-su-reforma-electrica/"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Animal Político</em>, 6 de abril de 2022.",
+     "url": "https://animalpolitico.com/2022/04/amlo-califica-abogados-patronales-ministros-corte"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Expansión Política</em>, 9 de mayo de 2023, sobre el «supremo poder conservador» y el «Plan C».",
+     "url": "https://politica.expansion.mx/presidencia/2023/05/09/amlo-estalla-contra-corte-por-plan-b-va-por-iniciativa-para-elegir-ministros"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos vigente, arts. 54 (fr. IV y V) y 135.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "leg",
+     "tipoNombre": "Proceso legislativo",
+     "referencia": "Iniciativa de reformas a los arts. 41, 54, 56, 60, 63, 74, 82 y 100 constitucionales, 19 de agosto de 1993, <em>Crónica Parlamentaria</em>, Cámara de Diputados.",
+     "url": "https://cronica.diputados.gob.mx/Iniciativas/55/166.html"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "INE, acuerdo INE/CG2129/2024, 23 de agosto de 2024 (votación nacional emitida, topes e integración de la Cámara).",
+     "url": "https://repositoriodocumental.ine.mx/xmlui/bitstream/handle/123456789/176370/CGex202408-23-ap-4.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Federal de Instituciones y Procedimientos Electorales, reforma publicada en el DOF el 22 de noviembre de 1996, art. 59, párr. 4.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/abro/cofipe/COFIPE_ref08_22nov96.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Financiero</em>, 23 de agosto de 2024, sobre la votación del Consejo General del INE.",
+     "url": "https://www.elfinanciero.com.mx/nacional/2024/08/23/que-consejeros-del-ine-votaron-a-favor-y-quienes-en-contra-de-la-sobrerrepresentacion-de-morena-en-el-congreso/"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Proceso</em>, 28 de agosto de 2024, y <em>CNN en Español</em>, 29 de agosto de 2024, sobre la resolución del Tribunal Electoral y el voto de Janine Otálora.",
+     "url": "https://www.proceso.com.mx/nacional/2024/8/28/tepjf-confirma-acuerdo-del-ine-con-el-que-morena-tendra-mayoria-calificada-en-camara-baja-334299.html"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Expansión Política</em>, 11 de septiembre de 2024, sobre la aprobación de la reforma judicial en el Senado.",
+     "url": "https://politica.expansion.mx/congreso/2024/09/11/senado-aprueba-la-reforma-judicial"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Jesús Orozco Henríquez, «¿Por qué es inconstitucional una sobrerrepresentación superior al 8 % y a 300 diputaciones?», <em>Nexos</em>, 12 de agosto de 2024.",
+     "url": "https://eljuegodelacorte.nexos.com.mx/por-que-es-inconstitucional-una-sobrerrepresentacion-superior-al-8-y-a-300-diputaciones/"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 14 de junio de 2024, reforma a los arts. 129 y 148 de la Ley de Amparo.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5730585&fecha=14/06/2024"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 15 de septiembre de 2024, edición vespertina, reforma judicial (arts. 94, 96, 107 y transitorios).",
+     "url": "https://dof.gob.mx/abrirPDF.php?archivo=15092024-VES.pdf&anio=2024&repo=repositorio/"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Universal</em>, 18 de octubre de 2024, «No vamos a bajar la publicación».",
+     "url": "https://www.eluniversal.com.mx/nacion/no-vamos-a-bajar-la-publicacion-sheinbaum-responde-a-jueza-que-ordeno-eliminar-reforma-judicial-del-dof/"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 31 de octubre de 2024, edición vespertina, reforma a los arts. 105 y 107 constitucionales.",
+     "url": "https://dof.gob.mx/abrirPDF.php?archivo=31102024-VES.pdf&anio=2024&repo=repositorio/"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Financiero</em>, 5 de noviembre de 2024, sobre la votación de la Suprema Corte en la acción contra la reforma judicial.",
+     "url": "https://www.elfinanciero.com.mx/nacional/2024/11/05/reforma-judicial-que-ministros-votaron-a-favor-y-en-contra-para-declararla-inconstitucional/"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "INE, Central Electoral, 2 de junio de 2025, participación en la elección judicial.",
+     "url": "https://centralelectoral.ine.mx/2025/06/02/porcentaje-de-participacion-ciudadana-en-la-jornada-electoral-del-peepjf-2024-2025-esta-entre-el-12-57-y-el-13-32/"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo vigente (última reforma, DOF 16 de octubre de 2025), arts. 5 y 129, fr. XIV.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LAmp.pdf"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-todavia-hay-jueces-en-mexico.pdf",
+    "paginas": 11,
+    "kb": 1055,
+    "palabras": 2713,
+    "minutos": 15
+   },
+   "portada": "/estudiar/portadas/todavia-hay-jueces-en-mexico.webp",
+   "miniatura": "/estudiar/miniaturas/todavia-hay-jueces-en-mexico.webp",
+   "miniatura640": "/estudiar/miniaturas/todavia-hay-jueces-en-mexico-640.webp"
+  },
+  {
+   "id": "v66",
+   "slug": "amparo-indirecto-contra-actos-en-juicio",
+   "eje": "amparo",
+   "publicada": true,
+   "youtube": "sjo58qWwd4o",
+   "publicado": "2026-10-01T17:00:00-06:00",
+   "tituloVideo": "Amparo indirecto contra actos en juicio: por qué lo desechan y cuándo sí procede",
+   "duracion": 300,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Desechada por improcedente"
+    },
+    {
+     "segundo": 16,
+     "titulo": "¿Qué hizo mal?"
+    },
+    {
+     "segundo": 32,
+     "titulo": "La regla: artículo 107, fracción V"
+    },
+    {
+     "segundo": 50,
+     "titulo": "Las dos condiciones (P./J. 37/2014)"
+    },
+    {
+     "segundo": 77,
+     "titulo": "Derechos sustantivos y adjetivos"
+    },
+    {
+     "segundo": 103,
+     "titulo": "La trampa del «grado predominante o superior»"
+    },
+    {
+     "segundo": 123,
+     "titulo": "Actos contra los que es improcedente"
+    },
+    {
+     "segundo": 147,
+     "titulo": "La prueba: ¿desaparece el agravio si gana?"
+    },
+    {
+     "segundo": 166,
+     "titulo": "Cuándo sí procede"
+    },
+    {
+     "segundo": 202,
+     "titulo": "Qué hacer con la violación procesal"
+    },
+    {
+     "segundo": 234,
+     "titulo": "Dos preguntas antes de promover"
+    },
+    {
+     "segundo": 266,
+     "titulo": "Consultarlo con Iurexia"
+    },
+    {
+     "segundo": 279,
+     "titulo": "Cierre"
+    }
+   ],
+   "titulo": "Amparo indirecto contra actos en juicio",
+   "tituloPlano": "Amparo indirecto contra actos en juicio",
+   "subtitulo": "Por qué lo desechan y cuándo sí procede: derechos sustantivos y adjetivos",
+   "corto": "Amparo indirecto contra actos en juicio",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "amparo indirecto",
+    "actos de imposible reparación",
+    "derechos sustantivos",
+    "derechos adjetivos",
+    "violaciones procesales",
+    "amparo directo",
+    "artículo 107, fracción V, de la Ley de Amparo"
+   ],
+   "resumen": "Desde la Ley de Amparo de 2013, el amparo indirecto contra actos dictados dentro de un juicio sólo procede cuando afectan materialmente derechos sustantivos. Esta lectura explica la regla del artículo 107, fracción V, las dos condiciones que fijó el Pleno de la Suprema Corte, la diferencia entre derechos sustantivos y adjetivos, por qué dejó de aplicarse el criterio del «grado predominante o superior», qué actos cumplen la regla y cuáles no, y qué hacer con una violación procesal: prepararla durante el juicio y hacerla valer en el amparo directo.",
+   "resumenPlano": "Desde la Ley de Amparo de 2013, el amparo indirecto contra actos dictados dentro de un juicio sólo procede cuando afectan materialmente derechos sustantivos. Esta lectura explica la regla del artículo 107, fracción V, las dos condiciones que fijó el Pleno de la Suprema Corte, la diferencia entre derechos sustantivos y adjetivos, por qué dejó de aplicarse el criterio del «grado predominante o superior», qué actos cumplen la regla y cuáles no, y qué hacer con una violación procesal: prepararla durante el juicio y hacerla valer en el amparo directo.",
+   "ideas": [
+    "Contra actos dictados dentro de un juicio, el amparo indirecto procede sólo si son de imposible reparación: si afectan materialmente derechos sustantivos.",
+    "Dos condiciones: que el acto impida ejercer un derecho en forma presente y que ese derecho sea sustantivo, no procesal.",
+    "Los derechos sustantivos son los «bienes de la vida»: patrimonio, familia, estado civil, libertad, honor, intimidad.",
+    "Prueba práctica: si el agravio desaparecería al ganar el juicio, el acto es adjetivo y debe esperar al amparo directo.",
+    "La violación procesal no queda sin defensa: se impugna durante el juicio y se hace valer contra la sentencia definitiva."
+   ],
+   "secciones": [
+    "Introducción: desechada por improcedente",
+    "Dos vías: amparo directo e indirecto",
+    "La regla: el artículo 107, fracción V",
+    "Las dos condiciones",
+    "Derechos sustantivos y adjetivos",
+    "La trampa: el «grado predominante o superior»",
+    "Contra qué actos es improcedente",
+    "Cuándo sí procede",
+    "Qué hacer con la violación procesal",
+    "Dos preguntas antes de promover",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [],
+   "documentos": [
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "",
+     "titulo": "Ley de Amparo, art. 107, fracción V",
+     "extracto": "El amparo indirecto procede «[c]ontra actos en juicio cuyos efectos sean de imposible reparación, entendiéndose por ellos los que afecten materialmente derechos sustantivos tutelados en la Constitución Política de los Estados Unidos Mexicanos y en los tratados internacionales de los que el Estado Mexicano sea parte».",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Jurisprudencia P./J. 37/2014 (10a.), Pleno de la Suprema Corte, registro digital 2006589",
+     "extracto": "«[…] la primera, consistente en la exigencia de que se trate de actos \"que afecten materialmente derechos\", lo que equivale a situar el asunto en aquellos supuestos en los que el acto autoritario impide el libre ejercicio de algún derecho en forma presente, incluso antes del dictado del fallo definitivo; y la segunda, en el sentido de que estos \"derechos\" afectados materialmente revistan la categoría de derechos \"sustantivos\", expresión antagónica a los derechos de naturaleza formal o adjetiva, derechos estos últimos en los que la afectación no es actual -a diferencia de los sustantivos- sino que depende de que llegue o no a trascender al desenlace del juicio o procedimiento […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "etiqueta": "",
+     "titulo": "Jurisprudencia I.8o.C. J/2 (10a.), Octavo Tribunal Colegiado en Materia Civil del Primer Circuito, «Derechos sustantivos. Su diferencia con los derechos adjetivos», registro digital 2013976",
+     "extracto": "«De acuerdo con la doctrina, son derechos sustantivos los que se identifican con los bienes de la vida. En ese sentido, pueden considerarse sustantivos, sin pretender asignarles un orden, entre otros, los derechos patrimoniales, los que surgen de las relaciones de familia y del estado civil de las personas, la vida misma, la libertad personal, la de conciencia, la de expresión, el derecho al honor, a la intimidad, etc. En cambio, los derechos procesales o instrumentales, también llamados adjetivos, son únicamente el medio para hacer observar o proteger el derecho sustantivo.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Jurisprudencia P./J. 1/2016 (10a.), Pleno de la Suprema Corte, registro digital 2011428",
+     "extracto": "«Consecuentemente, no pueden seguir aplicándose los criterios que admiten la procedencia del juicio de amparo indirecto contra violaciones formales, adjetivas o procesales, cuando los efectos que producen afectan a las partes en grado predominante o superior […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Jurisprudencia 2a./J. 29/2021 (10a.), Segunda Sala, registro digital 2023342",
+     "extracto": "«[…] cuyas consecuencias sólo tienen que ver con la afectación a derechos adjetivos o procesales que inciden, en todo caso, en las posiciones que van tomando las partes dentro del procedimiento con vista a obtener un fallo favorable, pero que de obtenerlo, sus efectos o consecuencias se extinguirán en la realidad de los hechos, sin haber originado afectación alguna a los derechos fundamentales de la persona o a su esfera jurídica y, por el contrario, si la sentencia le es desfavorable, podrá reclamarla en la vía de amparo directo […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "",
+     "titulo": "Ley de Amparo, art. 171",
+     "extracto": "«Al reclamarse la sentencia definitiva, laudo o resolución que ponga fin al juicio, deberán hacerse valer las violaciones a las leyes del procedimiento, siempre y cuando la persona quejosa las haya impugnado durante la tramitación del juicio, mediante el recurso o medio de defensa que, en su caso, señale la ley ordinaria respectiva y la violación procesal trascienda al resultado del fallo.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Amparo indirecto",
+     "definicion": "El que se promueve ante un juez de distrito contra normas generales, actos fuera de juicio y, excepcionalmente, actos en juicio de imposible reparación, entre otros."
+    },
+    {
+     "termino": "Amparo directo",
+     "definicion": "El que se promueve ante un tribunal colegiado contra sentencias definitivas y resoluciones que ponen fin al juicio; en él se hacen valer también las violaciones procesales."
+    },
+    {
+     "termino": "Acto de imposible reparación",
+     "definicion": "El que afecta materialmente derechos sustantivos, de modo que su daño no se repara con una sentencia favorable."
+    },
+    {
+     "termino": "Derecho sustantivo",
+     "definicion": "El que protege un bien de la vida: patrimonio, familia, estado civil, libertad, honor, intimidad."
+    },
+    {
+     "termino": "Derecho adjetivo o procesal",
+     "definicion": "El que establece las reglas para obtener del Estado la protección de los derechos sustantivos."
+    },
+    {
+     "termino": "Violación procesal",
+     "definicion": "Infracción a las leyes del procedimiento cometida durante el juicio."
+    },
+    {
+     "termino": "Desechamiento de plano",
+     "definicion": "Rechazo inmediato de la demanda por una causa manifiesta e indudable de improcedencia."
+    }
+   ],
+   "preguntas": [
+    "¿Qué dos condiciones derivó el Pleno de la Suprema Corte del artículo 107, fracción V, de la Ley de Amparo?",
+    "Explique la diferencia entre un derecho sustantivo y uno adjetivo con dos ejemplos de cada uno.",
+    "¿Por qué ya no pueden aplicarse los criterios del «grado predominante o superior»?",
+    "Aplique la «prueba» de la Segunda Sala a la resolución que declara infundada una recusación.",
+    "¿Por qué la resolución que deja insubsistente un embargo sí es de imposible reparación?",
+    "¿Qué debe hacer un abogado durante el juicio para poder reclamar después una violación procesal en el amparo directo?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo (DOF 2 de abril de 2013; texto vigente, última reforma DOF 16 de octubre de 2025), arts. 107, fr. V; 113; 170, fr. I; 171 y 172.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LAmp.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 37/2014 (10a.), Pleno, registro digital 2006589.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006589"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Jurisprudencia I.8o.C. J/2 (10a.), Octavo Tribunal Colegiado en Materia Civil del Primer Circuito, registro digital 2013976.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2013976"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 1/2016 (10a.), Pleno, registro digital 2011428.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2011428"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Jurisprudencia PC.I.C. J/7 C (10a.), Pleno en Materia Civil del Primer Circuito, registro digital 2007462.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2007462"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 2a./J. 29/2021 (10a.), Segunda Sala, registro digital 2023342.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2023342"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis aislada VII.2o.C.20 K (10a.), registro digital 2008004.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2008004"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 74/2019 (10a.), Primera Sala, registro digital 2021227.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2021227"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Jurisprudencia PR.C.CS. J/21 C (11a.), Pleno Regional en Materia Civil de la Región Centro-Sur, registro digital 2028036.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2028036"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis aislada VII.2o.C.159 C (10a.), registro digital 2017947.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2017947"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-amparo-indirecto-contra-actos-en-juicio.pdf",
+    "paginas": 7,
+    "kb": 694,
+    "palabras": 1620,
+    "minutos": 10
+   },
+   "portada": "/estudiar/portadas/amparo-indirecto-contra-actos-en-juicio.webp",
+   "miniatura": "/estudiar/miniaturas/amparo-indirecto-contra-actos-en-juicio.webp",
+   "miniatura640": "/estudiar/miniaturas/amparo-indirecto-contra-actos-en-juicio-640.webp"
+  },
+  {
+   "id": "v70",
+   "slug": "suspension-en-el-amparo",
+   "eje": "amparo",
+   "publicada": true,
+   "youtube": "xuMC9zwai88",
+   "publicado": "2026-10-03T17:00:00-06:00",
+   "tituloVideo": "Llegar a tiempo: nacimiento, esplendor y retroceso de la suspensión en el amparo",
+   "duracion": 599,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Veracruz, 1879"
+    },
+    {
+     "segundo": 33,
+     "titulo": "La suspensión: llegar antes que el daño"
+    },
+    {
+     "segundo": 61,
+     "titulo": "1590: el amparo colonial"
+    },
+    {
+     "segundo": 90,
+     "titulo": "1861-1869: la urgencia notoria"
+    },
+    {
+     "segundo": 114,
+     "titulo": "La leva: el amparo contra el ejército"
+    },
+    {
+     "segundo": 140,
+     "titulo": "La ley de 1882"
+    },
+    {
+     "segundo": 170,
+     "titulo": "El siglo XX: la suspensión congelada"
+    },
+    {
+     "segundo": 207,
+     "titulo": "Calamandrei y la apariencia del buen derecho"
+    },
+    {
+     "segundo": 231,
+     "titulo": "1993-1996: la tesis de Góngora Pimentel y la Suprema Corte"
+    },
+    {
+     "segundo": 265,
+     "titulo": "2011-2013: restituir, no sólo congelar"
+    },
+    {
+     "segundo": 289,
+     "titulo": "2016-2020: un verdadero amparo provisional"
+    },
+    {
+     "segundo": 327,
+     "titulo": "Protegidas a tiempo"
+    },
+    {
+     "segundo": 358,
+     "titulo": "La regla de la reversibilidad"
+    },
+    {
+     "segundo": 379,
+     "titulo": "Efectos generales (2021)"
+    },
+    {
+     "segundo": 403,
+     "titulo": "La carta contra un juez"
+    },
+    {
+     "segundo": 420,
+     "titulo": "Los candados de 2024"
+    },
+    {
+     "segundo": 446,
+     "titulo": "La suspensión que no se obedeció"
+    },
+    {
+     "segundo": 468,
+     "titulo": "La Ley de Amparo de 2025"
+    },
+    {
+     "segundo": 508,
+     "titulo": "La nueva Suprema Corte (2025-2026)"
+    },
+    {
+     "segundo": 531,
+     "titulo": "Nunca fue un privilegio"
+    },
+    {
+     "segundo": 560,
+     "titulo": "Llegar a tiempo"
+    }
+   ],
+   "titulo": "Llegar a tiempo",
+   "tituloPlano": "Llegar a tiempo",
+   "subtitulo": "La suspensión en el juicio de amparo, de 1590 a 2026",
+   "corto": "Llegar a tiempo",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "suspensión del acto reclamado",
+    "juicio de amparo",
+    "apariencia del buen derecho",
+    "peligro en la demora",
+    "tutela anticipada",
+    "efectos restitutorios",
+    "Ley de Amparo de 2025"
+   ],
+   "resumen": "Un amparo que llega cuando el daño ya está hecho no ampara a nadie. La suspensión del acto reclamado existe para que la justicia llegue antes. Esta lectura sigue su historia: los mandamientos de amparo de la Nueva España, la «urgencia notoria» de las primeras leyes, la ley de 1882 que castigaba al juez que no suspendía una condena a muerte, la apariencia del buen derecho y los efectos restitutorios del siglo XXI, y los límites que le impusieron las reformas de 2024 y 2025.",
+   "resumenPlano": "Un amparo que llega cuando el daño ya está hecho no ampara a nadie. La suspensión del acto reclamado existe para que la justicia llegue antes. Esta lectura sigue su historia: los mandamientos de amparo de la Nueva España, la «urgencia notoria» de las primeras leyes, la ley de 1882 que castigaba al juez que no suspendía una condena a muerte, la apariencia del buen derecho y los efectos restitutorios del siglo XXI, y los límites que le impusieron las reformas de 2024 y 2025.",
+   "ideas": [
+    "La suspensión paraliza el acto reclamado mientras se resuelve el amparo, para que la sentencia no llegue tarde.",
+    "Su semilla es colonial: los mandamientos de amparo protegían una posesión antes de decidir quién tenía el derecho.",
+    "Durante el siglo XX sólo podía congelar las cosas; desde la apariencia del buen derecho (1996) y la Ley de Amparo de 2013 puede, además, restituir provisionalmente.",
+    "Su límite razonable es la reversibilidad: puede adelantar lo que se pide, siempre que pueda deshacerse si el quejoso pierde.",
+    "Desde 2024, las reformas prohibieron los efectos generales y multiplicaron los casos en que no procede; la suspensión de oficio contra lo que pone en peligro la vida sigue vigente."
+   ],
+   "secciones": [
+    "Introducción: Veracruz, 1879",
+    "Qué es la suspensión",
+    "Los orígenes: proteger primero, juzgar después",
+    "El siglo XX: una suspensión que sólo congelaba",
+    "La apariencia del buen derecho",
+    "El esplendor: la suspensión que devuelve (2011-2023)",
+    "Los candados (2021-2026)",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Piero Calamandrei",
+     "fechas": "1889 – 1956",
+     "campo": "Derecho procesal civil; derecho constitucional.",
+     "quien": "Jurista italiano, profesor en Florencia y diputado de la Asamblea Constituyente que redactó la Constitución italiana de 1947.",
+     "aporte": "Su <em>Introducción al estudio sistemático de las providencias cautelares</em> (1936) fundó la teoría moderna de las medidas cautelares, basada en la apariencia del buen derecho y el peligro en la demora."
+    },
+    {
+     "nombre": "Giuseppe Chiovenda",
+     "fechas": "1872 – 1937",
+     "campo": "Derecho procesal civil.",
+     "quien": "Jurista italiano, profesor en Roma y fundador de la escuela procesal italiana moderna.",
+     "aporte": "Formuló la máxima de que el tiempo necesario para obtener la razón no debe causar daño a quien tiene la razón, fundamento de toda medida cautelar."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Documento colonial",
+     "titulo": "Mandamiento del virrey Luis de Velasco al alcalde mayor de Tula, 20 de octubre de 1590 (transcrito por Andrés Lira)",
+     "extracto": "«[…] los amparéis en dichas tierras […] ni consentir que se las tomen ni ocupen, ni inquieten en su posesión sin ser oídos y por fuero y derecho vencidos […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Leyes de amparo del siglo XIX",
+     "titulo": "Ley de amparo de 1861, art. 4, y ley de 20 de enero de 1869, art. 5",
+     "extracto": "1861: «[…] excepto el caso en que sea de urgencia notoria la suspensión del acto ó providencia que motiva la queja, pues entonces lo declarará desde luego bajo su responsabilidad.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "Ley de amparo de 1882",
+     "titulo": "Ley de 14 de diciembre de 1882, arts. 8, 12 y 14",
+     "extracto": "Art. 8: en casos urgentes, «la petición del amparo y de la suspensión del acto […] puede hacerse al Juez de Distrito, aun por telégrafo».",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Jurisprudencia P./J. 15/96, Pleno de la Suprema Corte (contradicción de tesis 3/95)",
+     "extracto": "«[…] de modo tal que, según un cálculo de probabilidades, sea posible anticipar que en la sentencia de amparo se declarará la inconstitucionalidad del acto reclamado.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "",
+     "titulo": "Ley de Amparo (<em>Diario Oficial de la Federación</em>, 2 de abril de 2013), art. 147, segundo párrafo",
+     "extracto": "«[…] de ser jurídica y materialmente posible, restablecerá provisionalmente al quejoso en el goce del derecho violado mientras se dicta sentencia ejecutoria en el juicio de amparo.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Jurisprudencia 2a./J. 22/2023 (11a.), Segunda Sala, registro digital 2026730",
+     "extracto": "«La suspensión del acto reclamado es, por definición, un beneficio transitorio.» Puede tener efectos restitutorios «cuando, en la eventualidad de que resuelva de forma adversa a la quejosa, puedan retrotraerse los efectos de la suspensión».",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Suspensión del acto reclamado",
+     "definicion": "Medida cautelar que ordena paralizar el acto impugnado mientras se resuelve el juicio de amparo."
+    },
+    {
+     "termino": "Suspensión de oficio y de plano",
+     "definicion": "La que el juez concede sin petición, en el auto de admisión, frente a actos de especial gravedad (art. 126 de la Ley de Amparo)."
+    },
+    {
+     "termino": "Suspensión provisional y definitiva",
+     "definicion": "La primera se decide al recibir la demanda, con base en lo que expone el quejoso; la segunda, en el incidente de suspensión, después de oír a las partes."
+    },
+    {
+     "termino": "Apariencia del buen derecho (<em>fumus boni iuris</em>)",
+     "definicion": "Probabilidad razonable de que el quejoso obtenga una sentencia favorable."
+    },
+    {
+     "termino": "Peligro en la demora (<em>periculum in mora</em>)",
+     "definicion": "Riesgo de que el daño se consume, o sea irreparable, si se espera a la sentencia."
+    },
+    {
+     "termino": "Efectos restitutorios o de tutela anticipada",
+     "definicion": "Los que restablecen provisionalmente al quejoso en el goce del derecho violado, en lugar de sólo conservar la situación."
+    },
+    {
+     "termino": "Interés social",
+     "definicion": "Beneficio de la colectividad que el juez debe ponderar frente al interés del quejoso."
+    },
+    {
+     "termino": "Efectos generales",
+     "definicion": "Los que alcanzan a todas las personas en la misma situación, y no sólo a quien pidió el amparo."
+    }
+   ],
+   "preguntas": [
+    "¿Por qué se dice que los mandamientos de amparo coloniales contienen la semilla de la suspensión?",
+    "¿Qué medidas de la ley de 1882 muestran que la suspensión se concebía como una carrera contra el tiempo?",
+    "¿Qué diferencia hay entre una suspensión que sólo conserva la situación y una con efectos restitutorios?",
+    "Explique la apariencia del buen derecho y el peligro en la demora con un ejemplo propio.",
+    "¿Por qué la reversibilidad es un límite razonable de la tutela anticipada?",
+    "Elija una de las reformas de 2024 o 2025 y argumente a favor y en contra de ella."
+   ],
+   "fuentes": [
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Miguel Alessio Robles, «Mátalos en caliente», en <em>Senderos</em>, Biblioteca Jurídica Virtual del IIJ-UNAM.",
+     "url": "https://archivos.juridicas.unam.mx/www/bjv/libros/6/2845/10.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "Carlos Tello Díaz, «Mátalos en caliente», <em>Letras Libres</em>, 1 de octubre de 2018.",
+     "url": "https://letraslibres.com/revista/matalos-en-caliente/"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo vigente (última reforma, DOF 16 de octubre de 2025), arts. 126, 128, 129, 138, 147, 148 y 166.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LAmp.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Andrés Lira González, <em>El amparo colonial y el juicio de amparo mexicano</em>, México, FCE, 1972, pp. 35 y 40, citado por Miguel Malagón Pinzón, «Antecedentes hispánicos del juicio de amparo y de la acción de tutela», <em>Estudios Socio-Jurídicos</em>, 5 (1), 2003.",
+     "url": "https://www.redalyc.org/pdf/733/73350103.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Alejandro Morales Becerra, «Las leyes de amparo en el siglo XIX», <em>Revista de la Facultad de Derecho de México</em>, UNAM (leyes de 1861, art. 4; 1869, art. 5; 1882, arts. 8, 12, 14 y 65).",
+     "url": "https://revistas-colaboracion.juridicas.unam.mx/index.php/rev-facultad-derecho-mx/article/viewFile/28127/25398"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Mario Ramírez Rancaño, «Ejército federal, jefes políticos, amparos, deserciones: 1872-1914», <em>Estudios de Historia Moderna y Contemporánea de México</em>, 47, 2014, cuadro 3.",
+     "url": "https://www.elsevier.es/es-revista-estudios-historia-moderna-contemporanea-mexico-97-articulo-ejercito-federal-jefes-politicos-amparos-S0185262014703342"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Ley Orgánica de los artículos 101 y 102 de la Constitución, 14 de diciembre de 1882 (Dublán y Lozano, t. XVI), facsímil en el acervo de la SCJN.",
+     "url": "http://www.internet2.scjn.gob.mx/red/marco/PDF/h-1881-1889/b-ley-organica-arts-101-Y-102-14-dic-1882.pdf"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, texto original de 1917, art. 107, fr. X.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/cpeum/CPEUM_orig_05feb1917.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo de 10 de enero de 1936 (abrogada), art. 123.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/abro/lamp/LAmp_abro.pdf"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos vigente, art. 107, fr. X y XVII.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, Quinta Época, revisión del incidente de suspensión 8663/40, 22 de agosto de 1941, registro digital 326955.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/326955"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Jurisprudencia II.3o. J/37, Tercer Tribunal Colegiado del Segundo Circuito, 1992, registro digital 217665.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/217665"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Piero Calamandrei, <em>Introducción al estudio sistemático de las providencias cautelares</em> (1936), trad. de Santiago Sentís Melendo, 1945, p. 77, citado en una obra del IIJ-UNAM.",
+     "url": "https://archivos.juridicas.unam.mx/www/bjv/libros/11/5472/5.pdf"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis I.3o.A 125 K, Tercer Tribunal Colegiado en Materia Administrativa del Primer Circuito, incidente en revisión 2233/93, 21 de octubre de 1993, ponente Genaro David Góngora Pimentel, registro digital 213282.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/213282"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 15/96, Pleno (contradicción de tesis 3/95), registro digital 200136.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/200136"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 2a./J. 204/2009, Segunda Sala, registro digital 165659.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/165659"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 6 de junio de 2011, reforma al art. 107 constitucional.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5193266&fecha=06/06/2011"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo, texto original (DOF 2 de abril de 2013), arts. 129, 138 y 147.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/lamp/LAmp_orig_02abr13.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 21/2016 (10a.), Primera Sala, registro digital 2011829.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2011829"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 19/2020 (10a.), Pleno, registro digital 2022619.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2022619"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 2a./J. 40/2020 (10a.), Segunda Sala, registro digital 2022231.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2022231"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 6/2022 (11a.), registro digital 2025292, y jurisprudencia XVII.1o.P.A. J/2 K (11a.), registro digital 2025172.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2025292"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis I.1o.P.106 P (10a.), registro digital 2016556.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2016556"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Jurisprudencia PR.P.CN. J/13 P (11a.), Pleno Regional en Materia Penal de la Región Centro-Norte, registro digital 2027280.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027280"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 193/2023 (11a.), Primera Sala, registro digital 2027846.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2027846"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 2a./J. 22/2023 (11a.), Segunda Sala (contradicción de criterios 338/2022), registro digital 2026730.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2026730"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis I.11o.A.3 A (11a.), registro digital 2024098.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2024098"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Expansión</em>, 19 de marzo de 2021, y <em>La Jornada</em>, 11 de marzo de 2021, sobre la suspensión de la reforma eléctrica.",
+     "url": "https://expansion.mx/empresas/2021/03/19/privados-consiguen-suspension-definitiva-reforma-electrica"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Excélsior</em>, 15 de marzo de 2021, sobre la carta del presidente al presidente de la Suprema Corte.",
+     "url": "https://www.excelsior.com.mx/nacional/lopez-obrador-envio-carta-a-zaldivar-por-freno-a-reforma-electrica/1437935"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 14 de junio de 2024, reforma a la Ley de Amparo (arts. 129 y 148).",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5730585&fecha=14/06/2024"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 15 de septiembre de 2024, edición vespertina, reforma judicial (arts. 105 y 107).",
+     "url": "https://dof.gob.mx/abrirPDF.php?archivo=15092024-VES.pdf&anio=2024&repo=repositorio/"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Expansión Política</em>, 24 de abril de 2024, sobre el dictamen de la reforma a la Ley de Amparo.",
+     "url": "https://politica.expansion.mx/congreso/2024/04/24/cambios-ley-de-amparo-2024"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "México Evalúa, «Reformas que desamparan», 3 de octubre de 2025 (con la exposición de motivos de la iniciativa).",
+     "url": "https://www.mexicoevalua.org/wp-content/uploads/2025/10/2025-10-04-mexicoevalua-leyamparo.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Universal</em>, octubre de 2024, «No vamos a bajar la publicación».",
+     "url": "https://www.eluniversal.com.mx/nacion/no-vamos-a-bajar-la-publicacion-sheinbaum-responde-a-jueza-que-ordeno-eliminar-reforma-judicial-del-dof/"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 2/2025 (12a.), Pleno, registro digital 2031441.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2031441"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, revisión en incidente de suspensión 1/2026, 12 de agosto de 2026 (proyecto), y nota del Semanario a la jurisprudencia 2a./J. 87/2019 (registro 2019978).",
+     "url": "https://www2.scjn.gob.mx/Juridica/Engroses/Cerrados/Publico/Proyecto/2026/07/R_REV_INC_SUSP1_2026.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Infobae</em>, 13 de agosto de 2026, sobre los bloqueos de cuentas de la UIF.",
+     "url": "https://www.infobae.com/mexico/2026/08/13/suprema-corte-reitera-que-la-uif-puede-bloquear-cuentas-en-investigaciones-nacionales/"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Proceso</em>, 18 de noviembre de 2025, y <em>MVS Noticias</em>, 17 de noviembre de 2025, sobre la jueza suspendida por el Tribunal de Disciplina Judicial.",
+     "url": "https://www.proceso.com.mx/nacional/justicia/2025/11/18/tribunal-de-disciplina-suspende-jueza-por-presuntamente-entorpecer-extradicion-de-florian-tudor-361001.html"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis I.11o.A.3 K (12a.), queja 421/2025, publicada en agosto de 2026, registro digital 2032507.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2032507"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-suspension-en-el-amparo.pdf",
+    "paginas": 11,
+    "kb": 1051,
+    "palabras": 2697,
+    "minutos": 15
+   },
+   "portada": "/estudiar/portadas/suspension-en-el-amparo.webp",
+   "miniatura": "/estudiar/miniaturas/suspension-en-el-amparo.webp",
+   "miniatura640": "/estudiar/miniaturas/suspension-en-el-amparo-640.webp"
+  },
+  {
+   "id": "v68",
+   "slug": "amparo-contra-la-constitucion",
+   "eje": "amparo",
+   "publicada": true,
+   "youtube": "Yy2zXGXPZpw",
+   "publicado": "2026-09-30T17:00:00-06:00",
+   "tituloVideo": "¿Se puede pedir amparo contra la Constitución? La puerta que la Suprema Corte abrió y cerró",
+   "duracion": 347,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "¿Amparo contra la Constitución?"
+    },
+    {
+     "segundo": 24,
+     "titulo": "Del mundo a México"
+    },
+    {
+     "segundo": 39,
+     "titulo": "1996: la reforma y el exregente"
+    },
+    {
+     "segundo": 75,
+     "titulo": "1997 y 1999: la primera puerta"
+    },
+    {
+     "segundo": 113,
+     "titulo": "2002: más de trescientos municipios"
+    },
+    {
+     "segundo": 144,
+     "titulo": "2008: la puerta se reabre"
+    },
+    {
+     "segundo": 171,
+     "titulo": "2009: la tesis P. LXXV/2009"
+    },
+    {
+     "segundo": 224,
+     "titulo": "2011 y 2013: se cierra y se escribe"
+    },
+    {
+     "segundo": 249,
+     "titulo": "2024: la reforma judicial"
+    },
+    {
+     "segundo": 272,
+     "titulo": "El voto de la ministra Ríos Farjat"
+    },
+    {
+     "segundo": 293,
+     "titulo": "Hoy"
+    },
+    {
+     "segundo": 319,
+     "titulo": "Estudiarlo con Iurexia"
+    }
+   ],
+   "titulo": "¿Se puede pedir amparo contra la Constitución?",
+   "tituloPlano": "¿Se puede pedir amparo contra la Constitución?",
+   "subtitulo": "La puerta que la Suprema Corte abrió y cerró, de 1996 a 2026",
+   "corto": "¿Amparo contra la Constitución?",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "amparo contra reformas constitucionales",
+    "poder reformador",
+    "poder constituyente",
+    "control de la reforma constitucional",
+    "cláusulas pétreas",
+    "Suprema Corte de Justicia de la Nación",
+    "artículo 61 de la Ley de Amparo"
+   ],
+   "resumen": "¿Puede un juez revisar una reforma a la Constitución? En México, la Suprema Corte ha respondido que sí, después que no, luego otra vez que sí, y hoy la propia Constitución dice que no. Esta lectura recorre esa historia caso por caso, del amparo de Manuel Camacho Solís (1997-1999) a la reforma constitucional de 2024, y explica la distinción entre el poder constituyente y el poder reformador que está en el centro del debate.",
+   "resumenPlano": "¿Puede un juez revisar una reforma a la Constitución? En México, la Suprema Corte ha respondido que sí, después que no, luego otra vez que sí, y hoy la propia Constitución dice que no. Esta lectura recorre esa historia caso por caso, del amparo de Manuel Camacho Solís (1997-1999) a la reforma constitucional de 2024, y explica la distinción entre el poder constituyente y el poder reformador que está en el centro del debate.",
+   "ideas": [
+    "El poder reformador no es el constituyente: es un poder constituido, regulado y limitado por la propia Constitución.",
+    "1997: la Corte admitió el amparo de Camacho porque ninguna norma lo prohibía; en 1999 lo negó en el fondo, pero el principio quedó.",
+    "2002: cerró la puerta; reformar la Constitución sería una función soberana «no sujeta a ningún tipo de control externo».",
+    "2008-2009: la reabrió; un Estado constitucional debe prever controles sobre las reformas que se aparten de las reglas.",
+    "La Ley de Amparo de 2013 y la Constitución en 2024 escribieron la prohibición; la pregunta de fondo sigue abierta."
+   ],
+   "secciones": [
+    "Introducción: la historia de una puerta",
+    "El problema: constituyente y reformador",
+    "La primera puerta: el amparo de Camacho (1996-1999)",
+    "La puerta se cierra: la reforma indígena (2002)",
+    "La puerta se reabre (2008-2009)",
+    "La puerta se cierra por escrito (2011-2013)",
+    "2024-2026: la Constitución lo dice",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Manuel Camacho Solís",
+     "fechas": "1946 – 2015",
+     "campo": "Política; administración pública.",
+     "quien": "Político mexicano, jefe del Departamento del Distrito Federal de 1988 a 1993.",
+     "aporte": "Su amparo planteó por primera vez ante la Suprema Corte si procede el juicio de amparo contra el procedimiento de reforma a la Constitución."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "",
+     "titulo": "Decreto de reforma constitucional, <em>Diario Oficial de la Federación</em>, 22 de agosto de 1996, transitorio noveno",
+     "extracto": "El requisito «debe entenderse aplicable a todo ciudadano que haya sido titular de dicho órgano, aunque lo haya desempeñado bajo distinta denominación».",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "",
+     "titulo": "SCJN, <em>Serie Debates</em>, Pleno, n.º 11 (1997), síntesis del amparo en revisión 2996/96",
+     "extracto": "«[…] no existe disposición expresa que prohíba el ejercicio de la acción de amparo en contra del proceso de reformas a la Ley Suprema […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "",
+     "titulo": "SCJN, Pleno, controversia constitucional 82/2001, 6 de septiembre de 2002, y jurisprudencia P./J. 39/2002",
+     "extracto": "La función de reformar la Constitución constituye «una función soberana no sujeta a ningún tipo de control externo, porque en la conformación del órgano y en la atribución constitucional de su función se encuentra su propia garantía».",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Tesis aislada P. LXXV/2009, Pleno, «Poder reformador de la Constitución. El procedimiento reformatorio relativo emanado de este órgano con facultades limitadas, es susceptible de control constitucional», registro digital 165713",
+     "extracto": "«No puede identificarse al Poder Reformador de la Constitución con el Poder Constituyente, debido a que la propia Norma Fundamental establece ciertos límites al primero […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "",
+     "titulo": "Ley de Amparo (<em>Diario Oficial de la Federación</em>, 2 de abril de 2013), art. 61, fracción I",
+     "extracto": "El juicio de amparo es improcedente «contra adiciones o reformas a la Constitución Política de los Estados Unidos Mexicanos».",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Versión taquigráfica",
+     "titulo": "SCJN, Pleno, sesión de 5 de noviembre de 2024 (acción de inconstitucionalidad 164/2024 y acumuladas), intervención de la ministra Ríos Farjat",
+     "extracto": "«[…] una cosa es limitarnos frente a reformas constitucionales regulares y otra es analizar reformas constitucionales medulares, que son las que se realizan sobre cláusulas pétreas.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Poder constituyente",
+     "definicion": "Poder originario que crea una Constitución; no está sujeto a normas jurídicas previas."
+    },
+    {
+     "termino": "Poder reformador o constituyente permanente",
+     "definicion": "Órgano que puede modificar la Constitución siguiendo el procedimiento que ella misma establece (en México, art. 135)."
+    },
+    {
+     "termino": "Cláusula pétrea",
+     "definicion": "Contenido de una Constitución que no puede ser modificado ni siquiera mediante reforma."
+    },
+    {
+     "termino": "Improcedencia",
+     "definicion": "Causa que impide al juez estudiar el fondo de un asunto."
+    },
+    {
+     "termino": "Sobreseimiento",
+     "definicion": "Resolución que pone fin al juicio sin decidir el fondo, por existir una causa de improcedencia."
+    },
+    {
+     "termino": "Controversia constitucional",
+     "definicion": "Juicio ante la Suprema Corte entre órdenes o poderes del Estado por invasión de competencias o violaciones a la Constitución."
+    },
+    {
+     "termino": "Tesis aislada y jurisprudencia",
+     "definicion": "La tesis aislada orienta; la jurisprudencia es obligatoria para los órganos jurisdiccionales."
+    }
+   ],
+   "preguntas": [
+    "¿En qué se distinguen el poder constituyente y el poder reformador, y por qué importa esa distinción para el control judicial?",
+    "¿Qué razón dio la mayoría en 1997 para admitir el amparo de Camacho, y cómo respondieron a ella la ley de 2013 y la Constitución en 2024?",
+    "¿Por qué la Corte consideró en 2002 que la reforma constitucional no estaba sujeta a control externo?",
+    "Explique el argumento central de la tesis P. LXXV/2009.",
+    "¿Qué distinción propuso la ministra Ríos Farjat entre reformas regulares y medulares?",
+    "¿Quién debe proteger el núcleo de una Constitución si sus reformas no pueden revisarse? Argumente su respuesta."
+   ],
+   "fuentes": [
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos vigente, arts. 105, 107 y 135.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 22 de agosto de 1996, decreto de reforma constitucional (art. 122, apartado C, base segunda, fr. I; transitorios séptimo y noveno), imagen publicada por la Cámara de Diputados.",
+     "url": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, <em>Serie Debates</em>, Pleno, n.º 11, «Amparo contra el procedimiento de reformas a la Constitución», 1997 (síntesis y votación del amparo en revisión 2996/96; demanda y agravios de Manuel Camacho Solís).",
+     "url": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, versión taquigráfica de la sesión del Pleno de 9 de septiembre de 1999 (amparo en revisión 1334/98), págs. 6, 9 y 11.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis P. LXII/99, Pleno, registro digital 193249.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/193249"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "Moisés Jaime Bailón Corres, <em>Derechos indígenas en México 2001-2019</em>, CNDH, 2019, págs. 27-31.",
+     "url": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, controversia constitucional 82/2001 (San Pedro Quiatoní, Oaxaca), 6 de septiembre de 2002. Las hojas del engrose llevan por error el encabezado «48/2001».",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 39/2002, Pleno, registro digital 185941; véase también P./J. 40/2002 (registro 186044).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/185941"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 13 de noviembre de 2007, reforma electoral (art. 41, base III, apartado A).",
+     "url": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, amparo en revisión 186/2008 (Centro Empresarial de Jalisco, S. P.), 29 de septiembre de 2008.",
+     "url": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis aislada P. LXXV/2009, Pleno, <em>Semanario Judicial de la Federación y su Gaceta</em>, Novena Época, t. XXX, diciembre de 2009, pág. 14, registro digital 165713.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/165713"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, versión taquigráfica de la sesión del Pleno de 28 de marzo de 2011 (amparo en revisión 2021/2009).",
+     "url": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo, texto original (DOF 2 de abril de 2013), art. 61, fr. I.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/lamp/LAmp_orig_02abr13.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, versión taquigráfica de la sesión del Pleno de 5 de noviembre de 2024 (acción de inconstitucionalidad 164/2024 y acumuladas), págs. 96 y 135.",
+     "url": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 31 de octubre de 2024, edición vespertina, reforma a los arts. 105 y 107 constitucionales.",
+     "url": "https://dof.gob.mx/abrirPDF.php?archivo=31102024-VES.pdf&anio=2024&repo=repositorio/"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, versión taquigráfica de la sesión del Pleno de 28 de mayo de 2026 (amparo en revisión 555/2025).",
+     "url": ""
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-amparo-contra-la-constitucion.pdf",
+    "paginas": 7,
+    "kb": 875,
+    "palabras": 1732,
+    "minutos": 10
+   },
+   "portada": "/estudiar/portadas/amparo-contra-la-constitucion.webp",
+   "miniatura": "/estudiar/miniaturas/amparo-contra-la-constitucion.webp",
+   "miniatura640": "/estudiar/miniaturas/amparo-contra-la-constitucion-640.webp"
+  },
+  {
+   "id": "v67",
+   "slug": "amparo-y-redes-sociales",
+   "eje": "amparo",
+   "publicada": true,
+   "youtube": "j4yOMsJ6az0",
+   "publicado": "2026-10-06T17:00:00-06:00",
+   "tituloVideo": "Te silenciaron en redes. ¿Procede el juicio de amparo en ese caso?",
+   "duracion": 480,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Te bloquearon y te suspendieron"
+    },
+    {
+     "segundo": 19,
+     "titulo": "¿Mismo daño, misma vía?"
+    },
+    {
+     "segundo": 39,
+     "titulo": "Giro 1: «Es mi cuenta personal»"
+    },
+    {
+     "segundo": 62,
+     "titulo": "El caso real: amparo en revisión 1005/2018"
+    },
+    {
+     "segundo": 93,
+     "titulo": "Qué reclamar contra el alcalde"
+    },
+    {
+     "segundo": 119,
+     "titulo": "Si no tiene cargo, y los límites del bloqueo"
+    },
+    {
+     "segundo": 147,
+     "titulo": "Giro 2: la plataforma"
+    },
+    {
+     "segundo": 166,
+     "titulo": "Artículo 5o., fracción II, de la Ley de Amparo"
+    },
+    {
+     "segundo": 194,
+     "titulo": "El examen de dos pasos (1a. XXI/2020)"
+    },
+    {
+     "segundo": 221,
+     "titulo": "Las preguntas difíciles"
+    },
+    {
+     "segundo": 250,
+     "titulo": "El mejor argumento y la objeción más sólida"
+    },
+    {
+     "segundo": 289,
+     "titulo": "Giro 3: «Pero era verdad»"
+    },
+    {
+     "segundo": 307,
+     "titulo": "La malicia efectiva"
+    },
+    {
+     "segundo": 338,
+     "titulo": "Tres preguntas distintas"
+    },
+    {
+     "segundo": 358,
+     "titulo": "Giro 4: una autoridad lo ordenó"
+    },
+    {
+     "segundo": 394,
+     "titulo": "Las conclusiones"
+    },
+    {
+     "segundo": 420,
+     "titulo": "Entrar al juicio no es ganarlo"
+    },
+    {
+     "segundo": 442,
+     "titulo": "La otra ruta: juicio ordinario y amparo directo"
+    },
+    {
+     "segundo": 457,
+     "titulo": "La paradoja resuelta"
+    }
+   ],
+   "titulo": "Te silenciaron en redes, ¿procede el amparo?",
+   "tituloPlano": "Te silenciaron en redes, ¿procede el amparo?",
+   "subtitulo": "Funcionarios, plataformas digitales y la autoridad responsable en el juicio de amparo",
+   "corto": "Te silenciaron en redes",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "juicio de amparo",
+    "autoridad responsable",
+    "particulares equiparados a autoridad",
+    "artículo 5o. de la Ley de Amparo",
+    "libertad de expresión",
+    "acceso a la información",
+    "malicia efectiva",
+    "plataformas digitales"
+   ],
+   "resumen": "Cuando un funcionario bloquea a una persona en sus redes, o una plataforma suspende su cuenta, ¿procede el amparo? Antes de discutir si hubo censura, el juez debe resolver si quien actuó es autoridad. Esta lectura explica el artículo 5o., fracción II, de la Ley de Amparo, el caso del fiscal que bloqueó a un periodista, el examen de dos pasos para los particulares, los criterios sobre plataformas y la ruta procesal.",
+   "resumenPlano": "Cuando un funcionario bloquea a una persona en sus redes, o una plataforma suspende su cuenta, ¿procede el amparo? Antes de discutir si hubo censura, el juez debe resolver si quien actuó es autoridad. Esta lectura explica el artículo 5o., fracción II, de la Ley de Amparo, el caso del fiscal que bloqueó a un periodista, el examen de dos pasos para los particulares, los criterios sobre plataformas y la ruta procesal.",
+   "ideas": [
+    "El amparo procede contra autoridades y, sólo en los casos de ley, contra particulares que actúan como ellas.",
+    "Un funcionario que informa sobre su gestión en una cuenta «personal» puede ser autoridad si bloquea a alguien.",
+    "Para los particulares se exige un nexo normativo con el Estado y una función de interés público.",
+    "Los criterios publicados tratan las reglas de las plataformas como contrato; no hay jurisprudencia de la Corte que las considere autoridad.",
+    "Que un contenido esté protegido no abre, por sí solo, la vía del amparo."
+   ],
+   "secciones": [
+    "Introducción: un caso, tres preguntas",
+    "Quién es autoridad en el juicio de amparo",
+    "Los funcionarios y sus cuentas «personales»",
+    "Los particulares: el examen de dos pasos",
+    "Las plataformas digitales",
+    "Contenido protegido no es vía abierta",
+    "Cuando una autoridad ordena el retiro",
+    "La ruta procesal",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [],
+   "documentos": [
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "",
+     "titulo": "Ley de Amparo (texto vigente, última reforma DOF 16 de octubre de 2025), art. 5o., fracción II",
+     "extracto": "Es autoridad responsable, «con independencia de su naturaleza formal, la que dicta, ordena, ejecuta o trata de ejecutar el acto que crea, modifica o extingue situaciones jurídicas en forma unilateral y obligatoria; u omita el acto que de realizarse crearía, modificaría o extinguiría dichas situaciones jurídicas».",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Tesis aislada 2a. XXXIV/2019 (10a.), Segunda Sala, registro digital 2020024",
+     "extracto": "«[…] las cuentas de redes sociales utilizadas por los servidores públicos para compartir información relacionada con su gestión gubernamental adquieren notoriedad pública y se convierten en relevantes para el interés general. […] los contenidos compartidos a través de las redes sociales gozan de una presunción de publicidad, y bajo el principio de máxima publicidad […] deben ser accesibles para cualquier persona, razón por la cual bloquear o no permitir el acceso a un usuario sin una causa justificada, atenta contra los derechos de libertad de expresión y de acceso a la información de la ciudadanía.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Tesis aislada 1a. XXI/2020 (10a.), Primera Sala, «Amparo indirecto contra actos de particulares. Interpretación del artículo 5o., fracción II, segundo párrafo, de la Ley de Amparo», registro digital 2021955",
+     "extracto": "«[…] para caracterizar a un acto de particular como acto de autoridad debe cumplirse un estándar de dos pasos. El primero exige relacionar el reclamo de la violación constitucional al ejercicio de una prerrogativa o poder normativo cuya fuente sea de una autoridad estatal […]. Este primer paso puede denominarse del \"nexo\", el cual es formal y busca excluir dentro del ámbito de actos justiciables en amparo, aquellos de los particulares cuyo único fundamento es una relación de coordinación solamente. El segundo paso es material y exige evaluar la materialidad de dicha prerrogativa, es decir, si el acto reviste un interés público diferenciado […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "etiqueta": "",
+     "titulo": "Tesis aislada I.20o.A.1 A (12a.), Vigésimo Tribunal Colegiado en Materia Administrativa del Primer Circuito, registro digital 2031537",
+     "extracto": "«El uso de dicha red social deriva de una relación contractual privada entre los usuarios y la empresa, regida por sus términos y condiciones, en la que el Estado mantiene una postura neutral respecto a sus contenidos. La decisión de mantener o eliminar publicaciones no proviene de una potestad estatal, no se ejecuta en el ámbito de un servicio o espacio público, ni se encuentra prevista en una norma general que delegue a la empresa una función pública.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Jurisprudencia 1a./J. 80/2019 (10a.), Primera Sala, registro digital 2020798",
+     "extracto": "«[…] para que se actualice ésta no es suficiente que la información difundida resulte falsa, pues ello conllevaría a imponer sanciones a informadores que son diligentes en sus investigaciones, por el simple hecho de no poder probar en forma fehaciente todos y cada uno de los aspectos de la información difundida […].»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Autoridad responsable",
+     "definicion": "Quien dicta, ordena, ejecuta o trata de ejecutar un acto que crea, modifica o extingue situaciones jurídicas en forma unilateral y obligatoria, o quien omite un acto debido."
+    },
+    {
+     "termino": "Particular equiparado a autoridad",
+     "definicion": "Persona privada que realiza actos equivalentes a los de autoridad, que afectan derechos, con funciones determinadas por una norma general."
+    },
+    {
+     "termino": "Acto reclamado",
+     "definicion": "La norma, acto u omisión que se impugna en el amparo."
+    },
+    {
+     "termino": "Interés legítimo",
+     "definicion": "Posibilidad de promover amparo por una afectación real y diferenciada, derivada de la especial situación de la persona frente al orden jurídico, aunque no sea titular de un derecho subjetivo."
+    },
+    {
+     "termino": "Malicia efectiva",
+     "definicion": "Estándar según el cual sólo hay responsabilidad por información de interés público difundida a sabiendas de su falsedad o con total despreocupación por su verdad."
+    },
+    {
+     "termino": "Principio de definitividad",
+     "definicion": "Obligación de agotar los recursos ordinarios antes de promover amparo, salvo las excepciones legales."
+    },
+    {
+     "termino": "Sobreseimiento",
+     "definicion": "Resolución que termina el juicio sin estudiar el fondo, por una causa de improcedencia."
+    }
+   ],
+   "preguntas": [
+    "¿Qué tres condiciones exige el artículo 5o., fracción II, para que un particular sea autoridad responsable?",
+    "¿Por qué el bloqueo del fiscal de Veracruz fue considerado acto de autoridad aunque la cuenta fuera «personal»?",
+    "Explique los dos pasos del examen propuesto en la tesis 1a. XXI/2020 con un ejemplo propio.",
+    "¿Por qué los criterios publicados consideran contractuales las normas comunitarias de una plataforma?",
+    "¿Qué diferencia hay entre que un contenido esté protegido por la libertad de expresión y que proceda el amparo contra quien lo retiró?",
+    "¿Contra quién debe promoverse el amparo cuando una plataforma retira un contenido por orden de una autoridad?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo (texto vigente, última reforma DOF 16 de octubre de 2025), arts. 1o., 5o. (fr. I y II), 17, 61, 63 y 170.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LAmp.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Segunda Sala, amparo en revisión 1005/2018, 20 de marzo de 2019, párrs. 57, 84, 91 y 276.",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/2/2018/2/2_246865_4243_firmado.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis aislada 2a. XXXIV/2019 (10a.), Segunda Sala, registro digital 2020024.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2020024"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis aislada 2a. XXXV/2019 (10a.), Segunda Sala, registro digital 2020025.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2020025"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis aislada 2a. XXXVIII/2019 (10a.), Segunda Sala, registro digital 2020010.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2020010"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis aislada 1a. XXI/2020 (10a.), Primera Sala, registro digital 2021955.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2021955"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo en revisión 327/2017, 27 de noviembre de 2019 (sinopsis).",
+     "url": "https://www.supremacorte.gob.mx/sites/default/files/sinopsis_asuntos_destacados/documento/2020-02/1S-271119-AGOM-0327.pdf"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis aislada I.20o.A.1 A (12a.), Vigésimo Tribunal Colegiado en Materia Administrativa del Primer Circuito, registro digital 2031537.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2031537"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis aislada XVII.2o.P.A.28 A (11a.), registro digital 2029125 (se verificó su rubro).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2029125"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Milenio</em>, septiembre de 2026, sobre los juicios contra Meta y Google en México; véase también <em>Nexos</em>, «¿Las redes sociales son una autoridad?».",
+     "url": "https://www.milenio.com/politica/meta-google-enfrentan-juicios-mexico-derechos-humanos"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>XEVT</em>, septiembre de 2026, sobre la suspensión provisional que ordenó reactivar las cuentas de un activista.",
+     "url": "https://www.xevt.com/nacional/activista-obtiene-fallo-judicial-para-que-restauren-sus-redes-sociales-senala-ataques-por-parte-de-morena/441654"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 38/2013 (10a.), Primera Sala, registro digital 2003303.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2003303"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 32/2013 (10a.), Primera Sala, registro digital 2003304.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2003304"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 80/2019 (10a.), Primera Sala, registro digital 2020798.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2020798"
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Tratado entre México, Estados Unidos y Canadá, capítulo 19 (Comercio Digital), art. 19.17 y anexo 19-A.",
+     "url": "https://www.gob.mx/cms/uploads/attachment/file/465801/19ESPComercioDigital.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 15/2012 (9a.), Primera Sala, registro digital 159936.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/159936"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-amparo-y-redes-sociales.pdf",
+    "paginas": 9,
+    "kb": 793,
+    "palabras": 2247,
+    "minutos": 10
+   },
+   "portada": "/estudiar/portadas/amparo-y-redes-sociales.webp",
+   "miniatura": "/estudiar/miniaturas/amparo-y-redes-sociales.webp",
+   "miniatura640": "/estudiar/miniaturas/amparo-y-redes-sociales-640.webp"
+  },
+  {
+   "id": "v65",
+   "slug": "clausulas-petreas",
+   "eje": "constitucion",
+   "publicada": true,
+   "youtube": "ZQQWz2Bfa6k",
+   "publicado": "2026-09-29T17:00:00-06:00",
+   "tituloVideo": "¿Puede ser inconstitucional una reforma a la Constitución? Las cláusulas pétreas",
+   "duracion": 344,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "¿Puede una mayoría quitarle derechos a una minoría?"
+    },
+    {
+     "segundo": 15,
+     "titulo": "Cláusulas pétreas"
+    },
+    {
+     "segundo": 26,
+     "titulo": "Marbury v. Madison (1803)"
+    },
+    {
+     "segundo": 50,
+     "titulo": "Kelsen y el tribunal constitucional (1920)"
+    },
+    {
+     "segundo": 62,
+     "titulo": "Poder constituyente y poder reformador"
+    },
+    {
+     "segundo": 86,
+     "titulo": "Alemania: la cláusula de eternidad"
+    },
+    {
+     "segundo": 116,
+     "titulo": "Brasil: las cláusulas pétreas"
+    },
+    {
+     "segundo": 140,
+     "titulo": "Francia: una cláusula sin juez"
+    },
+    {
+     "segundo": 156,
+     "titulo": "India: la estructura básica"
+    },
+    {
+     "segundo": 193,
+     "titulo": "Colombia e Israel"
+    },
+    {
+     "segundo": 219,
+     "titulo": "Honduras: el filo del otro lado"
+    },
+    {
+     "segundo": 243,
+     "titulo": "México: la reforma judicial"
+    },
+    {
+     "segundo": 270,
+     "titulo": "El voto de la ministra Ríos Farjat"
+    },
+    {
+     "segundo": 299,
+     "titulo": "Hoy"
+    },
+    {
+     "segundo": 316,
+     "titulo": "Estudiarlo con Iurexia"
+    }
+   ],
+   "titulo": "Cláusulas pétreas",
+   "tituloPlano": "Cláusulas pétreas",
+   "subtitulo": "¿Puede ser inconstitucional una reforma a la Constitución?",
+   "corto": "Cláusulas pétreas",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "cláusulas pétreas",
+    "control de constitucionalidad",
+    "poder constituyente",
+    "poder reformador",
+    "estructura básica",
+    "sustitución de la Constitución",
+    "derecho constitucional comparado"
+   ],
+   "resumen": "¿Puede una mayoría, cumpliendo todas las reglas, reformar la Constitución para quitarle sus derechos a una minoría? Esta lectura explica de dónde viene el control judicial de constitucionalidad (Marbury v. Madison, 1803; Kelsen, 1920), la distinción entre poder constituyente y poder reformador (Sieyès, 1789) y las respuestas de Alemania, Brasil, Francia, la India, Colombia, Israel y Honduras a la idea de un núcleo constitucional intocable. Termina con el debate mexicano de 2024.",
+   "resumenPlano": "¿Puede una mayoría, cumpliendo todas las reglas, reformar la Constitución para quitarle sus derechos a una minoría? Esta lectura explica de dónde viene el control judicial de constitucionalidad (Marbury v. Madison, 1803; Kelsen, 1920), la distinción entre poder constituyente y poder reformador (Sieyès, 1789) y las respuestas de Alemania, Brasil, Francia, la India, Colombia, Israel y Honduras a la idea de un núcleo constitucional intocable. Termina con el debate mexicano de 2024.",
+   "ideas": [
+    "El control de constitucionalidad nació para revisar leyes: una ley contraria a la Constitución es nula (Marbury, 1803).",
+    "Las cláusulas pétreas plantean una pregunta más difícil: si una reforma a la propia Constitución puede ser inválida.",
+    "Alemania y Brasil las escribieron en su Constitución; la India y Colombia las derivaron de la idea de que reformar no es destruir ni sustituir.",
+    "La doctrina corta por los dos lados: en Honduras se invocaron derechos para permitir la reelección indefinida.",
+    "México no tiene cláusulas pétreas escritas, y desde 2024 su Constitución prohíbe impugnar las reformas constitucionales."
+   ],
+   "secciones": [
+    "Introducción: una pregunta de medio mundo",
+    "El origen del control de constitucionalidad",
+    "Poder constituyente y poder reformador",
+    "Las respuestas del mundo",
+    "El caso mexicano",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "John Marshall",
+     "fechas": "1755 – 1835",
+     "campo": "Derecho constitucional; judicatura.",
+     "quien": "Abogado y político de Virginia, secretario de Estado y presidente de la Corte Suprema de los Estados Unidos de 1801 a 1835.",
+     "aporte": "En <em>Marbury v. Madison</em> fundó el control judicial de constitucionalidad: los jueces pueden dejar de aplicar una ley contraria a la Constitución."
+    },
+    {
+     "nombre": "Hans Kelsen",
+     "fechas": "1881 – 1973",
+     "campo": "Teoría del derecho; derecho constitucional.",
+     "quien": "Jurista austriaco nacido en Praga, autor de la <em>Teoría pura del derecho</em> y juez del Tribunal Constitucional de Austria; tras el ascenso del nazismo enseñó en Ginebra y en los Estados Unidos.",
+     "aporte": "Concibió el tribunal constitucional como un órgano especializado que anula las leyes contrarias a la Constitución, modelo adoptado por buena parte de Europa y de América Latina."
+    },
+    {
+     "nombre": "Emmanuel-Joseph Sieyès",
+     "fechas": "1748 – 1836",
+     "campo": "Teoría política; derecho constitucional.",
+     "quien": "Clérigo y político francés, figura central de la Revolución francesa y miembro del Directorio y del Consulado.",
+     "aporte": "Su folleto <em>¿Qué es el Tercer Estado?</em> (1789) formuló la distinción entre poder constituyente y poderes constituidos, base de toda la discusión sobre los límites de la reforma constitucional."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "etiqueta": "Corte Suprema de EE. UU.",
+     "titulo": "<em>Marbury v. Madison</em>, 5 U.S. (1 Cranch) 137, 177 (1803)",
+     "extracto": "«[…] un acto de la legislatura contrario a la constitución es nulo.»",
+     "traducido": true,
+     "idioma": "inglés"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Documento histórico",
+     "titulo": "Emmanuel-Joseph Sieyès, <em>¿Qué es el Tercer Estado?</em>, 3.ª ed., 1789, pág. 111",
+     "extracto": "«La constitución no es obra del poder constituido, sino del poder constituyente. Ningún poder delegado puede cambiar las condiciones de su delegación.»",
+     "traducido": true,
+     "idioma": "francés"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Ley alemana",
+     "titulo": "Ley de 24 de marzo de 1933 (<em>Reichsgesetzblatt</em>, 1933, parte I, n.º 25, pág. 141)",
+     "extracto": "«[…] una vez comprobado que se cumplen los requisitos de la legislación que reforma la Constitución: Artículo 1. Las leyes del Reich podrán ser acordadas también por el Gobierno del Reich, además del procedimiento previsto en la Constitución del Reich.»",
+     "traducido": true,
+     "idioma": "alemán"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "Constitución alemana",
+     "titulo": "Ley Fundamental de la República Federal de Alemania (1949), art. 79, párrafo 3",
+     "extracto": "«Es inadmisible una reforma de esta Ley Fundamental que afecte la organización de la Federación en Länder, la participación de los Länder en la legislación o los principios de los artículos 1 y 20.»",
+     "traducido": true,
+     "idioma": "alemán"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "etiqueta": "Suprema Corte de la India",
+     "titulo": "<em>Kesavananda Bharati v. State of Kerala</em>, [1973] Supp. S.C.R. 1, 24 de abril de 1973",
+     "extracto": "«El art. 368 no faculta al Parlamento para alterar la estructura básica o el marco de la Constitución.»",
+     "traducido": true,
+     "idioma": "inglés"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Versión taquigráfica",
+     "titulo": "SCJN, Pleno, sesión de 5 de noviembre de 2024, intervención de la ministra Ríos Farjat, págs. 96, 101 y 134",
+     "extracto": "«[…] una cosa es limitarnos frente a reformas constitucionales regulares y otra es analizar reformas constitucionales medulares, que son las que se realizan sobre cláusulas pétreas.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Control de constitucionalidad",
+     "definicion": "Facultad de los jueces de revisar si las normas o los actos son conformes con la Constitución."
+    },
+    {
+     "termino": "Modelo difuso y modelo concentrado",
+     "definicion": "En el primero, cualquier juez puede inaplicar una ley inconstitucional; en el segundo, sólo un tribunal especializado puede anularla."
+    },
+    {
+     "termino": "Poder constituyente",
+     "definicion": "Poder originario que crea la Constitución."
+    },
+    {
+     "termino": "Poder reformador",
+     "definicion": "Órgano que modifica la Constitución conforme al procedimiento que ella misma establece."
+    },
+    {
+     "termino": "Cláusula pétrea o de eternidad",
+     "definicion": "Contenido constitucional que no puede ser modificado, ni siquiera por el poder reformador."
+    },
+    {
+     "termino": "Estructura básica",
+     "definicion": "Doctrina de la Suprema Corte de la India según la cual una reforma no puede alterar los rasgos esenciales de la Constitución."
+    },
+    {
+     "termino": "Sustitución de la Constitución",
+     "definicion": "Doctrina colombiana según la cual reformar no autoriza a reemplazar la Constitución por otra distinta."
+    }
+   ],
+   "preguntas": [
+    "¿Qué principio fijó <em>Marbury v. Madison</em> y en qué se distingue el modelo europeo de control que impulsó Kelsen?",
+    "Explique la distinción de Sieyès entre poder constituyente y poder constituido, y su relación con el artículo 135 de la Constitución mexicana.",
+    "¿Por qué la experiencia alemana de 1933 explica la cláusula de eternidad de 1949?",
+    "Compare la doctrina de la estructura básica (India) con la de la sustitución de la Constitución (Colombia).",
+    "¿Qué enseña el caso de Honduras sobre los riesgos de las cláusulas pétreas?",
+    "¿Qué distinción propuso la ministra Ríos Farjat entre reformas regulares y medulares?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>Marbury v. Madison</em>, 5 U.S. (1 Cranch) 137, 177 (24 de febrero de 1803), <em>U.S. Reports</em>, Biblioteca del Congreso.",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep005/usrep005137/usrep005137.pdf"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "<em>Bundes-Verfassungsgesetz</em> de Austria, 1 de octubre de 1920, art. 140.",
+     "url": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "Emmanuel-Joseph Sieyès, <em>Qu'est-ce que le Tiers-État ?</em>, 3.ª ed., 1789, pág. 111 (ejemplar de la BnF, en Wikimedia Commons).",
+     "url": ""
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos vigente, arts. 105, 107 y 135.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Gesetz zur Behebung der Not von Volk und Reich</em>, 24 de marzo de 1933, <em>Reichsgesetzblatt</em> 1933, parte I, n.º 25, pág. 141.",
+     "url": "https://de.wikisource.org/wiki/Gesetz_zur_Behebung_der_Not_von_Volk_und_Reich"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Ley Fundamental de la República Federal de Alemania, art. 79.",
+     "url": "https://www.gesetze-im-internet.de/gg/art_79.html"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución de la República Federativa de Brasil (1988), art. 60, § 4.º",
+     "url": "https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Supremo Tribunal Federal de Brasil, ADI 939, 15 de diciembre de 1993.",
+     "url": ""
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Constitución francesa de 1958, art. 89 (traducción oficial); Conseil constitutionnel, decisión 2003-469 DC, 26 de marzo de 2003.",
+     "url": "https://www.conseil-constitutionnel.fr/decision/2003/2003469DC.htm"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Suprema Corte de la India, <em>Kesavananda Bharati v. State of Kerala</em>, [1973] Supp. S.C.R. 1, 24 de abril de 1973.",
+     "url": ""
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Suprema Corte de la India, <em>Indira Nehru Gandhi v. Raj Narain</em>, [1976] 2 S.C.R. 347 (1975); <em>Minerva Mills v. Union of India</em>, [1981] 1 S.C.R. 206 (1980); <em>Supreme Court Advocates-on-Record Assn. v. Union of India</em>, [2015] 13 S.C.R. 1 (16 de octubre de 2015).",
+     "url": ""
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Corte Constitucional de Colombia, sentencia C-551 de 2003.",
+     "url": "https://www.corteconstitucional.gov.co/relatoria/2003/C-551-03.htm"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Corte Constitucional de Colombia, sentencia C-141 de 2010.",
+     "url": "https://www.corteconstitucional.gov.co/relatoria/2010/C-141-10.htm"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Suprema Corte de Israel, HCJ 5658/23, 1 de enero de 2024, voto de la presidenta emérita Esther Hayut, párr. 214 (versión en inglés).",
+     "url": ""
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Corte Suprema de Justicia de Honduras, Sala de lo Constitucional, fallo de 22 de abril de 2015, pág. 31.",
+     "url": ""
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte Interamericana de Derechos Humanos, Opinión Consultiva OC-28/21, 7 de junio de 2021.",
+     "url": "https://www.corteidh.or.cr/docs/opiniones/seriea_28_esp.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 39/2002, Pleno de la SCJN, registro digital 185941.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/185941"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, versión taquigráfica de la sesión del Pleno de 5 de noviembre de 2024 (acción de inconstitucionalidad 164/2024 y acumuladas).",
+     "url": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 31 de octubre de 2024, edición vespertina, reforma a los arts. 105 y 107 constitucionales.",
+     "url": "https://dof.gob.mx/abrirPDF.php?archivo=31102024-VES.pdf&anio=2024&repo=repositorio/"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, versión taquigráfica de la sesión del Pleno de 28 de mayo de 2026 (amparo en revisión 555/2025).",
+     "url": ""
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-clausulas-petreas.pdf",
+    "paginas": 8,
+    "kb": 1008,
+    "palabras": 1898,
+    "minutos": 10
+   },
+   "portada": "/estudiar/portadas/clausulas-petreas.webp",
+   "miniatura": "/estudiar/miniaturas/clausulas-petreas.webp",
+   "miniatura640": "/estudiar/miniaturas/clausulas-petreas-640.webp"
+  },
+  {
+   "id": "v72",
+   "slug": "test-de-proporcionalidad",
+   "eje": "razonamiento",
+   "publicada": true,
+   "youtube": "O7RUhI2zOCU",
+   "publicado": "2026-10-04T17:00:00-06:00",
+   "tituloVideo": "Cuatro preguntas que pueden cambiar una ley: el test de proporcionalidad",
+   "duracion": 1198,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "4 de noviembre de 2015"
+    },
+    {
+     "segundo": 41,
+     "titulo": "El test de proporcionalidad"
+    },
+    {
+     "segundo": 79,
+     "titulo": "Reglas y principios"
+    },
+    {
+     "segundo": 117,
+     "titulo": "Prusia, 1794: las medidas necesarias"
+    },
+    {
+     "segundo": 156,
+     "titulo": "Fleiner, 1913: cañones contra gorriones"
+    },
+    {
+     "segundo": 194,
+     "titulo": "Alemania, 1949-1958: el caso Lüth"
+    },
+    {
+     "segundo": 245,
+     "titulo": "La farmacia de Traunreut y los peldaños de 1971"
+    },
+    {
+     "segundo": 292,
+     "titulo": "Estados Unidos: Lochner, 1905"
+    },
+    {
+     "segundo": 334,
+     "titulo": "Carolene Products y la nota 4"
+    },
+    {
+     "segundo": 375,
+     "titulo": "Korematsu, 1944"
+    },
+    {
+     "segundo": 417,
+     "titulo": "Loving, 1967"
+    },
+    {
+     "segundo": 463,
+     "titulo": "Ruth Bader Ginsburg, abogada"
+    },
+    {
+     "segundo": 496,
+     "titulo": "Thurgood Marshall y el espectro de estándares"
+    },
+    {
+     "segundo": 541,
+     "titulo": "Frontiero y Craig: el escrutinio intermedio"
+    },
+    {
+     "segundo": 587,
+     "titulo": "Robert Alexy y la ley de la ponderación"
+    },
+    {
+     "segundo": 634,
+     "titulo": "Canadá: el caso Oakes"
+    },
+    {
+     "segundo": 678,
+     "titulo": "Virginia, 1996: Ginsburg, jueza"
+    },
+    {
+     "segundo": 719,
+     "titulo": "México toma las dos tradiciones"
+    },
+    {
+     "segundo": 757,
+     "titulo": "Los militares con VIH, 2007"
+    },
+    {
+     "segundo": 814,
+     "titulo": "La reforma de 2011"
+    },
+    {
+     "segundo": 852,
+     "titulo": "El caso de la marihuana"
+    },
+    {
+     "segundo": 896,
+     "titulo": "Fin legítimo e idoneidad"
+    },
+    {
+     "segundo": 926,
+     "titulo": "La necesidad"
+    },
+    {
+     "segundo": 967,
+     "titulo": "La balanza"
+    },
+    {
+     "segundo": 1000,
+     "titulo": "El poder del test: quitar el exceso"
+    },
+    {
+     "segundo": 1034,
+     "titulo": "Jurisprudencia y declaratoria general"
+    },
+    {
+     "segundo": 1072,
+     "titulo": "Otros cinco casos"
+    },
+    {
+     "segundo": 1126,
+     "titulo": "Dar razones"
+    },
+    {
+     "segundo": 1166,
+     "titulo": "Cuatro preguntas"
+    }
+   ],
+   "titulo": "Cuatro preguntas que pueden cambiar una ley",
+   "tituloPlano": "Cuatro preguntas que pueden cambiar una ley",
+   "subtitulo": "El test de proporcionalidad, de la policía prusiana a la Suprema Corte mexicana",
+   "corto": "Cuatro preguntas que pueden cambiar una ley",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "test de proporcionalidad",
+    "ponderación",
+    "escrutinio estricto",
+    "categorías sospechosas",
+    "libre desarrollo de la personalidad",
+    "Robert Alexy",
+    "amparo en revisión 237/2014"
+   ],
+   "resumen": "El test de proporcionalidad es el método con el que un juez decide si una regla que restringe un derecho humano está justificada: pregunta qué fin persigue, si sirve para alcanzarlo, si existe otra medida que dañe menos y si lo que se gana vale lo que se sacrifica. Esta lectura sigue su formación en Alemania, el modelo paralelo de los niveles de escrutinio en los Estados Unidos, la teoría de Robert Alexy y su aplicación en México, grada por grada, en el caso del autoconsumo de marihuana.",
+   "resumenPlano": "El test de proporcionalidad es el método con el que un juez decide si una regla que restringe un derecho humano está justificada: pregunta qué fin persigue, si sirve para alcanzarlo, si existe otra medida que dañe menos y si lo que se gana vale lo que se sacrifica. Esta lectura sigue su formación en Alemania, el modelo paralelo de los niveles de escrutinio en los Estados Unidos, la teoría de Robert Alexy y su aplicación en México, grada por grada, en el caso del autoconsumo de marihuana.",
+   "ideas": [
+    "El test hace cuatro preguntas a una regla que restringe un derecho: ¿persigue un fin legítimo?, ¿es idónea?, ¿es necesaria?, ¿es proporcional en sentido estricto?",
+    "Nació en el derecho de policía prusiano: sólo «las medidas necesarias» (1794); la policía no debe disparar con cañones a los gorriones (Fleiner, 1913).",
+    "Los Estados Unidos crearon otro modelo, los niveles de escrutinio: más exigencia cuanto más sospechoso es el criterio de la ley o más importante el derecho.",
+    "México adoptó las dos tradiciones: el escrutinio estricto para las distinciones sospechosas y las cuatro gradas para las libertades.",
+    "El test no derriba la norma general: la ajusta a la medida del derecho y obliga al juez a dar razones."
+   ],
+   "secciones": [
+    "Introducción: cuatro preguntas a una ley",
+    "El problema: reglas contra principios",
+    "Los orígenes alemanes",
+    "Estados Unidos: los niveles de escrutinio",
+    "La teoría y la fórmula: Alexy y Oakes",
+    "México: dos herramientas",
+    "El caso de la marihuana, grada por grada",
+    "Otros casos, con sus sentencias",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Fritz Fleiner",
+     "fechas": "1867 – 1937",
+     "campo": "Derecho administrativo y constitucional.",
+     "quien": "Jurista suizo, profesor de derecho público en universidades suizas y alemanas; en 1913 enseñaba en Heidelberg.",
+     "aporte": "Su manual de derecho administrativo sistematizó la jurisprudencia prusiana sobre los límites de la policía. La imagen de los cañones contra los gorriones se volvió la expresión clásica del principio de necesidad."
+    },
+    {
+     "nombre": "Oliver Wendell Holmes Jr.",
+     "fechas": "1841 – 1935",
+     "campo": "Derecho; filosofía del derecho.",
+     "quien": "Jurista estadounidense, autor de <em>The Common Law</em> (1881) y ministro de la Corte Suprema de 1902 a 1932.",
+     "aporte": "Sus votos disidentes defendieron la deferencia al legislador democrático en materia económica y la libertad de expresión. Su disidencia en <em>Lochner</em> es una de las más citadas de la historia judicial."
+    },
+    {
+     "nombre": "Harlan Fiske Stone",
+     "fechas": "1872 – 1946",
+     "campo": "Derecho constitucional.",
+     "quien": "Decano de la Facultad de Derecho de Columbia, procurador general de los Estados Unidos y ministro de la Corte Suprema desde 1925; la presidió de 1941 a 1946.",
+     "aporte": "La nota 4 de <em>Carolene Products</em> fundó la idea de que los jueces deben ser más exigentes cuando una ley afecta a minorías que el proceso político no protege."
+    },
+    {
+     "nombre": "Ruth Bader Ginsburg",
+     "fechas": "1933 – 2020",
+     "campo": "Derecho constitucional; igualdad de género.",
+     "quien": "Abogada y profesora estadounidense. Litigó ante la Corte Suprema los grandes casos de discriminación por sexo de los años setenta y fue ministra de esa Corte de 1993 a 2020.",
+     "aporte": "Construyó, caso por caso, el escrutinio de las distinciones por sexo. Como ministra escribió <em>United States v. Virginia</em> (1996), que exige una justificación «sumamente persuasiva»."
+    },
+    {
+     "nombre": "Thurgood Marshall",
+     "fechas": "1908 – 1993",
+     "campo": "Derecho constitucional; derechos civiles.",
+     "quien": "Abogado de la Asociación Nacional para el Progreso de las Personas de Color, ganó <em>Brown v. Board of Education</em> (1954) contra la segregación escolar. Fue el primer ministro afroamericano de la Corte Suprema (1967-1991).",
+     "aporte": "Su idea de un «espectro de estándares» anticipó una revisión graduada según la importancia del derecho, cercana a la ponderación."
+    },
+    {
+     "nombre": "Robert Alexy",
+     "fechas": "Nació en 1945",
+     "campo": "Filosofía del derecho; derecho constitucional.",
+     "quien": "Jurista alemán, profesor de la Universidad de Kiel. Autor de la <em>Teoría de la argumentación jurídica</em> (1978) y de la <em>Teoría de los derechos fundamentales</em> (1985).",
+     "aporte": "Explicó los derechos fundamentales como principios que se ponderan y formuló la ley de la ponderación, hoy presente en la jurisprudencia constitucional de muchos países, incluido México."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Ley prusiana",
+     "titulo": "<em>Allgemeines Landrecht für die Preußischen Staaten</em> (1794), segunda parte, título 17, § 10",
+     "extracto": "«Tomar las medidas necesarias para conservar la tranquilidad, la seguridad y el orden públicos, y para evitar el peligro que amenace al público o a alguno de sus miembros, es el oficio de la policía.»",
+     "traducido": true,
+     "idioma": "alemán"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "etiqueta": "Doctrina",
+     "titulo": "Fritz Fleiner, <em>Institutionen des Deutschen Verwaltungsrechts</em>, 3.ª ed., Tubinga, 1913, § 23, pág. 376",
+     "extracto": "«La restricción de la libertad individual nunca debe exceder la medida absolutamente necesaria. La policía no debe disparar con cañones a los gorriones. Si, por ejemplo, un tabernero sirve aguardiente contra lo que permite su licencia, la policía no puede simplemente cerrar la taberna; para alcanzar su fin dispone primero de medios más suaves.»",
+     "traducido": true,
+     "idioma": "alemán"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "etiqueta": "Tribunal Constitucional alemán",
+     "titulo": "BVerfGE 30, 292 (<em>Erdölbevorratung</em>), resolución de 16 de marzo de 1971",
+     "extracto": "«El medio empleado por el legislador debe ser idóneo y necesario para alcanzar el fin perseguido. El medio es idóneo si con su ayuda puede favorecerse el resultado deseado; es necesario si el legislador no hubiera podido elegir otro medio igualmente eficaz que no restringiera el derecho fundamental, o que lo restringiera de manera menos sensible.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "etiqueta": "Corte Suprema de EE. UU.",
+     "titulo": "<em>United States v. Carolene Products Co.</em>, 304 U.S. 144 (1938), nota 4",
+     "extracto": "«[…] si el prejuicio contra minorías aisladas y separadas puede ser una condición especial que tiende a reducir seriamente el funcionamiento de los procesos políticos en los que ordinariamente se confía para proteger a las minorías, y que puede exigir un examen judicial correspondientemente más riguroso.»",
+     "traducido": true,
+     "idioma": "inglés"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "etiqueta": "Doctrina",
+     "titulo": "Robert Alexy, <em>Teoría de los derechos fundamentales</em>, prefacio a la 3.ª edición en castellano (CEPC)",
+     "extracto": "«La ley de ponderación reza: Cuanto mayor sea el grado de la falta de satisfacción o de la afectación de un principio, tanto mayor tiene que ser la importancia de satisfacción del otro.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Jurisprudencia P./J. 131/2007, Pleno de la Suprema Corte, diciembre de 2007",
+     "extracto": "«El legislador a través de dicha causa legal de retiro persigue, como finalidad constitucionalmente válida, la eficacia de las fuerzas armadas, así como la protección de la integridad de sus miembros y de terceros; sin embargo, dicha regulación […] carece de proporcionalidad y razonabilidad jurídica, toda vez que: 1) es inadecuada para alcanzar la finalidad mencionada, porque la ciencia médica […] ha demostrado la inexactitud de que quienes porten dichos virus sean -per se- agentes de contagio directo […]; 2) es desproporcional, porque el legislador, para alcanzar el mencionado objetivo, tenía a su disposición alternativas menos gravosas para el militar implicado, considerando que la legislación castrense hace posible su traslado a un área distinta […].»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Test de proporcionalidad",
+     "definicion": "Método para decidir si una medida que restringe un derecho está justificada, mediante cuatro gradas: fin legítimo, idoneidad, necesidad y proporcionalidad en sentido estricto."
+    },
+    {
+     "termino": "Idoneidad",
+     "definicion": "Aptitud de la medida para contribuir, en algún grado, al fin que persigue."
+    },
+    {
+     "termino": "Necesidad",
+     "definicion": "Exigencia de que no exista otra medida igualmente eficaz que restrinja menos el derecho."
+    },
+    {
+     "termino": "Proporcionalidad en sentido estricto",
+     "definicion": "Comparación entre el beneficio que la medida produce y la afectación que causa al derecho."
+    },
+    {
+     "termino": "Ponderación",
+     "definicion": "Operación de pesar dos principios en conflicto según su importancia en el caso concreto."
+    },
+    {
+     "termino": "Escrutinio estricto",
+     "definicion": "Examen judicial reforzado de las distinciones basadas en categorías sospechosas, que exige una finalidad imperiosa y la medida menos restrictiva."
+    },
+    {
+     "termino": "Categoría sospechosa",
+     "definicion": "Criterio de distinción, como la raza, el sexo o la religión, que hace presumir que una ley discrimina."
+    },
+    {
+     "termino": "Declaratoria general de inconstitucionalidad",
+     "definicion": "Resolución de la Suprema Corte que expulsa una norma con efectos para todos, tras una jurisprudencia que el legislador no corrigió."
+    }
+   ],
+   "preguntas": [
+    "¿Cuáles son las cuatro gradas del test de proporcionalidad y en qué orden se examinan?",
+    "¿Qué relación hay entre la frase de Fleiner sobre los cañones y los gorriones y la grada de necesidad?",
+    "¿Qué lección dejó el caso <em>Lochner</em> sobre los riesgos de ponderar sin método?",
+    "Compare los niveles de escrutinio estadounidenses con la escalera alemana. ¿Qué tomó México de cada tradición?",
+    "¿Por qué la prohibición absoluta del autoconsumo de marihuana superó la idoneidad pero no la necesidad?",
+    "¿Por qué se dice que el test no derriba la norma general, sino que la ajusta?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo en revisión 237/2014, sentencia de 4 de noviembre de 2015, versión pública (síntesis, pág. III; sentencia, págs. 65, 75-76, 79-80 y 90).",
+     "url": "https://www.scjn.gob.mx/derechos-humanos/sites/default/files/sentencias-emblematicas/sentencia/2020-01/AR%20237-2014%20v.%20p%C3%BAblica%20PDF.pdf"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Allgemeines Landrecht für die Preußischen Staaten</em> (1794), segunda parte, título 17, § 10 (Bayerische Staatsbibliothek).",
+     "url": "https://archive.org/details/10726093bsb/page/n311/mode/1up"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Fritz Fleiner, <em>Institutionen des Deutschen Verwaltungsrechts</em>, 3.ª ed., Tubinga, 1913, § 23, pág. 376.",
+     "url": "https://archive.org/details/institutionendes00flei"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Ley Fundamental de la República Federal de Alemania (1949), art. 1, párr. 1.",
+     "url": "https://www.gesetze-im-internet.de/gg/art_1.html"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Tribunal Constitucional Federal alemán, BVerfGE 7, 198 (<em>Lüth</em>), sentencia de 15 de enero de 1958.",
+     "url": "https://www.servat.unibe.ch/dfr/bv007198.html"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Tribunal Constitucional Federal alemán, BVerfGE 7, 377 (<em>Apotheken-Urteil</em>), sentencia de 11 de junio de 1958.",
+     "url": "https://www.servat.unibe.ch/dfr/bv007377.html"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Tribunal Constitucional Federal alemán, BVerfGE 30, 292 (<em>Erdölbevorratung</em>), resolución de 16 de marzo de 1971.",
+     "url": "https://www.servat.unibe.ch/dfr/bv030292.html"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>Lochner v. New York</em>, 198 U.S. 45 (1905), y voto disidente de Oliver Wendell Holmes.",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep198/usrep198045/usrep198045.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>United States v. Carolene Products Co.</em>, 304 U.S. 144 (1938), nota 4.",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep304/usrep304144/usrep304144.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>Korematsu v. United States</em>, 323 U.S. 214 (1944).",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep323/usrep323214/usrep323214.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>Loving v. Virginia</em>, 388 U.S. 1 (1967).",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep388/usrep388001/usrep388001.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Gerald Gunther, «Foreword: In Search of Evolving Doctrine on a Changing Court», <em>Harvard Law Review</em>, vol. 86, 1972, pp. 1 y 8.",
+     "url": ""
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>Reed v. Reed</em>, 404 U.S. 71 (1971).",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep404/usrep404071/usrep404071.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>San Antonio Independent School District v. Rodriguez</em>, 411 U.S. 1 (1973), voto disidente de Thurgood Marshall, págs. 98-99.",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep411/usrep411001/usrep411001.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>Frontiero v. Richardson</em>, 411 U.S. 677 (1973).",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep411/usrep411677/usrep411677.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>Craig v. Boren</em>, 429 U.S. 190 (1976).",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep429/usrep429190/usrep429190.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>United States v. Virginia</em>, 518 U.S. 515 (1996), opinión de Ruth Bader Ginsburg.",
+     "url": "https://tile.loc.gov/storage-services/service/ll/usrep/usrep518/usrep518515/usrep518515.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Robert Alexy, <em>Teoría de los derechos fundamentales</em>, Madrid, CEC, 1993, pág. 86; prefacio a la 3.ª ed. en castellano, CEPC, 2022.",
+     "url": "https://www.cepc.gob.es/sites/default/files/2022-08/a-1012-primeras-pp-2229-teoria-de-los-derechos-fundamentales-3ed-ferros-2.pdf"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Corte Suprema de Canadá, <em>R. v. Oakes</em>, [1986] 1 S.C.R. 103, 28 de febrero de 1986, pág. 139.",
+     "url": "https://scc-csc.lexum.com/scc-csc/scc-csc/en/item/117/index.do"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis 1a. CXXXIII/2004, Primera Sala (amparo directo en revisión 988/2004), registro digital 179904.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/179904"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 55/2006, Primera Sala, registro digital 174247.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/174247"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 131/2007, Pleno (amparo en revisión 2146/2005 y otros), registro digital 170590.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/170590"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia P./J. 130/2007, Pleno, registro digital 170740.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/170740"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 10 de junio de 2011, reforma constitucional en materia de derechos humanos, art. 1.º",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/dof/CPEUM_ref_194_10jun11.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis 1a. CI/2013 (10a.), Primera Sala, registro digital 2003250; véase también la jurisprudencia 1a./J. 87/2015 (registro 2010595).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2003250"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 10/2019 (10a.), Primera Sala, febrero de 2019, registro digital 2019365.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2019365"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, declaratoria general de inconstitucionalidad 1/2018, resolución de 28 de junio de 2021.",
+     "url": "https://www.scjn.gob.mx/derechos-humanos/sites/default/files/sentencias-emblematicas/sentencia/2022-07/DGI%201-2018.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 43/2015 (10a.), Primera Sala, registro digital 2009407.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2009407"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 1a./J. 28/2015 (10a.), Primera Sala, registro digital 2009591.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2009591"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis VI.3o.C.4 C (10a.), Tercer Tribunal Colegiado en Materia Civil del Sexto Circuito, 2017, registro digital 2014901.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2014901"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis 2a. XCI/2017 (10a.), Segunda Sala, junio de 2017, registro digital 2014439.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2014439"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis I.6o.A.28 A (10a.), Sexto Tribunal Colegiado en Materia Administrativa del Primer Circuito, 2020, registro digital 2021906.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2021906"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Jurisprudencia 2a./J. 10/2019 (10a.), Segunda Sala, registro digital 2019276.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2019276"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-test-de-proporcionalidad.pdf",
+    "paginas": 13,
+    "kb": 1209,
+    "palabras": 3997,
+    "minutos": 20
+   },
+   "portada": "/estudiar/portadas/test-de-proporcionalidad.webp",
+   "miniatura": "/estudiar/miniaturas/test-de-proporcionalidad.webp",
+   "miniatura640": "/estudiar/miniaturas/test-de-proporcionalidad-640.webp"
+  },
+  {
+   "id": "v71",
+   "slug": "lo-ordinario-se-presume",
+   "eje": "razonamiento",
+   "publicada": true,
+   "youtube": "INRZQ08nH64",
+   "publicado": "2026-10-01T20:10:00-06:00",
+   "tituloVideo": "Lo ordinario se presume, lo extraordinario se prueba: el principio que pocos abogados usan",
+   "duracion": 366,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "¿Caballos o cebras?"
+    },
+    {
+     "segundo": 28,
+     "titulo": "La regla que casi nadie cita"
+    },
+    {
+     "segundo": 55,
+     "titulo": "La tesis de la Primera Sala (2014)"
+    },
+    {
+     "segundo": 82,
+     "titulo": "Framarino, el autor de la fórmula (1895)"
+    },
+    {
+     "segundo": 103,
+     "titulo": "El testimonio universal de las cosas"
+    },
+    {
+     "segundo": 115,
+     "titulo": "Leibniz, Hume, Laplace y Sagan"
+    },
+    {
+     "segundo": 157,
+     "titulo": "La jaula y el pingüino de McCarthy"
+    },
+    {
+     "segundo": 184,
+     "titulo": "Los taxis de Tversky y Kahneman"
+    },
+    {
+     "segundo": 216,
+     "titulo": "Liverpool, 1863, y Alemania"
+    },
+    {
+     "segundo": 249,
+     "titulo": "Cómo opera al juzgar"
+    },
+    {
+     "segundo": 268,
+     "titulo": "Dos versiones y los extremos de un periodo"
+    },
+    {
+     "segundo": 286,
+     "titulo": "El principio lógico"
+    },
+    {
+     "segundo": 314,
+     "titulo": "Lo que se pierde de vista"
+    },
+    {
+     "segundo": 334,
+     "titulo": "Pregúntele a Iurexia"
+    },
+    {
+     "segundo": 350,
+     "titulo": "Cierre"
+    }
+   ],
+   "titulo": "Lo ordinario se presume, lo extraordinario se prueba",
+   "tituloPlano": "Lo ordinario se presume, lo extraordinario se prueba",
+   "subtitulo": "Los principios ontológico y lógico de la carga de la prueba",
+   "corto": "Lo ordinario se presume",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "carga de la prueba",
+    "principio ontológico",
+    "principio lógico",
+    "presunción humana",
+    "máximas de la experiencia",
+    "res ipsa loquitur",
+    "prueba prima facie"
+   ],
+   "resumen": "Quien afirma lo ordinario no necesita probarlo; quien afirma lo extraordinario, sí. Esta regla, llamada principio ontológico de la prueba, está en el Código Federal de Procedimientos Civiles de 1943 y en una tesis de la Primera Sala de la Suprema Corte (2014), y la acompaña el principio lógico: lo positivo se prueba con más facilidad que lo negativo. La lectura explica ambos principios, su origen en la obra de Nicola Framarino dei Malatesta (1895), cómo operan en el Código Nacional de Procedimientos Civiles y Familiares y por qué la filosofía, la estadística y el derecho comparado llegaron a la misma idea.",
+   "resumenPlano": "Quien afirma lo ordinario no necesita probarlo; quien afirma lo extraordinario, sí. Esta regla, llamada principio ontológico de la prueba, está en el Código Federal de Procedimientos Civiles de 1943 y en una tesis de la Primera Sala de la Suprema Corte (2014), y la acompaña el principio lógico: lo positivo se prueba con más facilidad que lo negativo. La lectura explica ambos principios, su origen en la obra de Nicola Framarino dei Malatesta (1895), cómo operan en el Código Nacional de Procedimientos Civiles y Familiares y por qué la filosofía, la estadística y el derecho comparado llegaron a la misma idea.",
+   "ideas": [
+    "Principio ontológico: lo ordinario se presume y lo extraordinario se prueba. La carga recae en quien afirma lo que se aparta del curso normal de las cosas.",
+    "Principio lógico, subordinado al anterior: lo positivo se prueba con más facilidad que lo negativo, porque admite pruebas directas e indirectas.",
+    "En México los recogen el Código Federal de Procedimientos Civiles (arts. 81 y 83), la tesis 1a. CCCXCVI/2014 y varios tribunales colegiados.",
+    "La misma idea aparece en Leibniz, Hume, Laplace y Sagan, en la inteligencia artificial y en la estadística de las tasas base.",
+    "En la práctica: no gastar prueba en lo que el juez ya presume, y exigir prueba de la afirmación extraordinaria de la contraparte."
+   ],
+   "secciones": [
+    "Introducción: ¿caballos o cebras?",
+    "La regla en el derecho mexicano",
+    "El principio lógico",
+    "Cómo opera al juzgar",
+    "La misma idea fuera de los tribunales",
+    "El derecho comparado",
+    "Quiénes aparecen en esta lectura",
+    "Conclusión: lo que se pierde de vista"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [],
+   "documentos": [
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "",
+     "titulo": "Código Federal de Procedimientos Civiles (<em>Diario Oficial de la Federación</em>, 24 de febrero de 1943), arts. 81 y 83",
+     "extracto": "«ARTICULO 81.- El actor debe probar los hechos constitutivos de su acción y el reo los de sus excepciones.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Tesis aislada 1a. CCCXCVI/2014 (10a.), Primera Sala, «Carga de la prueba. Su distribución a partir de los principios lógico y ontológico», registro digital 2007973",
+     "extracto": "«[…] el principio ontológico parte de la siguiente premisa: lo ordinario se presume, lo extraordinario se prueba, y se funda, en que el enunciado que trata sobre lo ordinario se presenta, desde luego, por sí mismo, con un elemento de prueba que se apoya en la experiencia común; en tanto que el aserto que versa sobre lo extraordinario se manifiesta, por el contrario, destituido de todo principio de prueba; así, tener ese sustento o carecer de él, es lo que provoca que la carga de la prueba se desplace hacia la parte que formula enunciados sobre hechos extraordinarios […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "etiqueta": "Doctrina",
+     "titulo": "Nicola Framarino dei Malatesta, <em>La logica delle prove in criminale</em>, Turín, 1895, vol. I, cap. IV, págs. 119-120",
+     "extracto": "«[…] lo extraordinario se prueba: he aquí el principio supremo de la carga de la prueba; principio supremo que llamaría ontológico […]», porque se funda «en el modo natural de ser de las cosas». Quien afirma lo extraordinario tiene en su contra «la voz universal de las cosas».",
+     "traducido": true,
+     "idioma": "italiano"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "",
+     "titulo": "Código Nacional de Procedimientos Civiles y Familiares (<em>Diario Oficial de la Federación</em>, 7 de junio de 2023), art. 338",
+     "extracto": "«Hay presunción legal cuando la Ley la establece expresamente y cuando la consecuencia nace inmediata y directamente de la Ley; hay presunción humana, cuando de un hecho debidamente probado, se deduce otro que es consecuencia ordinaria de aquél.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "etiqueta": "Ciencia",
+     "titulo": "John McCarthy, «Applications of circumscription to formalizing common-sense knowledge», <em>Artificial Intelligence</em>, 28 (1986), § 3",
+     "extracto": "«Si le encargo que me construya una jaula para pájaros y usted no le pone techo, puedo negarme a pagarla, aunque usted le diga al juez que nunca le dije que mi pájaro podía volar. En cambio, si me quejo de que desperdició dinero al ponerle techo a una jaula que yo destinaba a un pingüino, el juez le dará la razón a usted: si el pájaro no podía volar, yo tenía que decirlo.»",
+     "traducido": true,
+     "idioma": "inglés"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "etiqueta": "Tribunal inglés",
+     "titulo": "<em>Byrne v Boadle</em> (1863) 2 Hurlstone &amp; Coltman 722, Court of Exchequer, pág. 728",
+     "extracto": "«Un barril no podría salir rodando de un almacén sin alguna negligencia, y decir que el demandante que resulta herido por él debe llamar a testigos del almacén para probar la negligencia me parece absurdo.»",
+     "traducido": true,
+     "idioma": "inglés"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "etiqueta": "Tribunal alemán",
+     "titulo": "<em>Bundesgerichtshof</em>, sentencia de 19 de enero de 2010, VI ZR 33/09",
+     "extracto": "«La prueba de la primera apariencia opera en los cursos típicos de los acontecimientos, es decir, en los casos en que un determinado hecho, según la experiencia de la vida, apunta a una causa determinada de la producción de un resultado.»",
+     "traducido": true,
+     "idioma": "alemán"
+    }
+   ],
+   "cronologias": [],
+   "glosario": [
+    {
+     "termino": "Carga de la prueba",
+     "definicion": "Obligación procesal de una parte de demostrar los hechos en que funda su pretensión, so pena de que no se tengan por probados."
+    },
+    {
+     "termino": "Principio ontológico",
+     "definicion": "Regla según la cual lo ordinario se presume y lo extraordinario debe probarse."
+    },
+    {
+     "termino": "Principio lógico",
+     "definicion": "Regla según la cual la carga recae preferentemente en quien afirma un hecho positivo, porque es más fácil de probar que uno negativo."
+    },
+    {
+     "termino": "Presunción humana",
+     "definicion": "Deducción que hace el juez, a partir de un hecho probado, de otro que es su consecuencia ordinaria."
+    },
+    {
+     "termino": "Negación indefinida",
+     "definicion": "Negación sin límites de tiempo o lugar («nunca he estado ahí»), que no puede demostrarse directamente."
+    },
+    {
+     "termino": "<em>Res ipsa loquitur</em>",
+     "definicion": "«La cosa habla por sí misma»; doctrina del derecho anglosajón según la cual ciertos accidentes son, por sí mismos, indicio de negligencia."
+    },
+    {
+     "termino": "Prueba <em>prima facie</em>",
+     "definicion": "Técnica que permite partir del curso típico de los hechos mientras la contraparte no pruebe circunstancias que lo desvirtúen."
+    },
+    {
+     "termino": "Tasa base",
+     "definicion": "Frecuencia con que algo ocurre en general; el punto de partida de cualquier estimación de probabilidad."
+    }
+   ],
+   "preguntas": [
+    "¿Qué relación hay entre el artículo 83 del Código Federal de Procedimientos Civiles y el principio ontológico?",
+    "Según la tesis 1a. CCCXCVI/2014, ¿por qué la carga de la prueba se desplaza hacia quien afirma lo extraordinario?",
+    "Explique la diferencia entre una negación concreta y una indefinida, y a quién corresponde probar en cada caso.",
+    "¿Por qué la respuesta intuitiva en el problema de los taxis es errónea? ¿Qué enseña sobre la valoración de un testimonio?",
+    "¿En qué se parecen <em>res ipsa loquitur</em> y la prueba <em>prima facie</em> alemana al principio ontológico?",
+    "¿En qué se distingue la carga dinámica de la prueba de los principios ontológico y lógico?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Máxima de la enseñanza médica «when you hear hoofbeats, think of horses, not zebras», atribuida a Theodore Woodward (Universidad de Maryland, finales de la década de 1940).",
+     "url": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Federal de Procedimientos Civiles (DOF 24 de febrero de 1943), arts. 81 y 83, texto de la Cámara de Diputados.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CFPC.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Tesis aislada 1a. CCCXCVI/2014 (10a.), Primera Sala, «Carga de la prueba. Su distribución a partir de los principios lógico y ontológico», registro digital 2007973 (amparo directo 55/2013, 21 de mayo de 2014, ponente José Ramón Cossío Díaz).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2007973"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Nicola Framarino dei Malatesta, <em>La logica delle prove in criminale</em>, Turín, Unione Tipografico-Editrice, 1895, vol. I, cap. IV, págs. 119-120.",
+     "url": ""
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis aislada I.4o.C.196 C, Cuarto Tribunal Colegiado en Materia Civil del Primer Circuito, registro digital 165431.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/165431"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código General del Proceso de Colombia (Ley 1564 de 2012), art. 167.",
+     "url": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Nacional de Procedimientos Civiles y Familiares (DOF 7 de junio de 2023), arts. 338 y 343.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CNPCF.pdf"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis aislada II.1o.24 K (10a.), registro digital 2013711.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2013711"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis aislada XI.1o.A.T.63 A (9a.), Primer Tribunal Colegiado en Materias Administrativa y de Trabajo del Décimo Primer Circuito, registro digital 160201.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/160201"
+    },
+    {
+     "tipo": "tcc",
+     "tipoNombre": "Tribunal colegiado",
+     "referencia": "Tesis aislada I.18o.A.32 K (10a.), Décimo Octavo Tribunal Colegiado en Materia Administrativa del Primer Circuito, «Carga dinámica de la prueba. Su concepto y justificación», registro digital 2019351.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2019351"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "G. W. Leibniz, carta al duque Anton Ulrich de Brunswick (1692), en <em>Sämtliche Schriften und Briefe</em>, serie I, vol. 7, n.º 76.",
+     "url": ""
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "David Hume, <em>Philosophical Essays concerning Human Understanding</em>, Londres, A. Millar, 1748, ensayo X («Of Miracles»), pág. 175.",
+     "url": "https://archive.org/details/humehumanunderstanding"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Pierre-Simon Laplace, <em>Essai philosophique sur les probabilités</em>, París, Courcier, 1814, pág. 12.",
+     "url": "https://archive.org/details/essaiphilosophi00laplgoog"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Carl Sagan, <em>Cosmos</em>, episodio 12, «Encyclopaedia Galactica» (PBS, 14 de diciembre de 1980). El lema aparece antes en Marcello Truzzi, <em>Zetetic Scholar</em>, n.º 1 (1978).",
+     "url": ""
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "John McCarthy, «Applications of circumscription to formalizing common-sense knowledge», <em>Artificial Intelligence</em>, vol. 28, 1986, § 3.",
+     "url": ""
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Amos Tversky y Daniel Kahneman, «Evidential impact of base rates», en D. Kahneman, P. Slovic y A. Tversky (eds.), <em>Judgment under Uncertainty: Heuristics and Biases</em>, Cambridge University Press, 1982.",
+     "url": ""
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "<em>Byrne v Boadle</em> (1863) 2 Hurlstone &amp; Coltman 722, Court of Exchequer, págs. 725 y 728.",
+     "url": "https://archive.org/details/exchequerreport09chamgoog"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "Bundesgerichtshof (Tribunal Federal de Justicia de Alemania), Sala VI de lo Civil, sentencia de 19 de enero de 2010, VI ZR 33/09.",
+     "url": ""
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-lo-ordinario-se-presume.pdf",
+    "paginas": 9,
+    "kb": 1030,
+    "palabras": 2417,
+    "minutos": 10
+   },
+   "portada": "/estudiar/portadas/lo-ordinario-se-presume.webp",
+   "miniatura": "/estudiar/miniaturas/lo-ordinario-se-presume.webp",
+   "miniatura640": "/estudiar/miniaturas/lo-ordinario-se-presume-640.webp"
+  }
+ ]
+}

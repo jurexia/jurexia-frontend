@@ -332,7 +332,7 @@ export default function PerfilPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-cream-200">
-                <Navbar />
+                <Navbar plataforma />
                 <div className="max-w-4xl mx-auto px-4 py-12">
                     <div className="animate-pulse space-y-6">
                         <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -352,7 +352,7 @@ export default function PerfilPage() {
     if (!profile) {
         return (
             <div className="min-h-screen bg-cream-200">
-                <Navbar />
+                <Navbar plataforma />
                 <div className="max-w-4xl mx-auto px-4 py-12">
                     <div className="bg-white rounded-2xl shadow-sm border border-cream-300 p-8 text-center">
                         <p className="text-charcoal-700 mb-4">
@@ -638,7 +638,7 @@ export default function PerfilPage() {
 
     return (
         <div className="min-h-screen bg-cream-200">
-            <Navbar />
+            <Navbar plataforma />
 
             {/* pt-24: el encabezado fijo tapaba «Mi Perfil». */}
             <main className="mx-auto max-w-5xl px-4 pb-16 pt-24">

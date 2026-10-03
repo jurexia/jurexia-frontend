@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Zap, Users, Shield, FileSearch, Gavel, FileCheck, Compass, BookOpen, MapPin, CheckCircle, Lock, Eye, Server, TrendingUp, PenTool } from 'lucide-react';
+import { ArrowRight, Zap, Users, Shield, FileSearch, Gavel, FileCheck, Compass, BookOpen, MapPin, CheckCircle, Lock, Eye, Server, TrendingUp, PenTool } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
+import PieDePagina from '@/components/PieDePagina';
 
 export default function SolucionesPage() {
     return (
@@ -380,19 +381,7 @@ export default function SolucionesPage() {
             </section>
 
             {/* Footer */}
-            <footer className="py-12 bg-white border-t border-black/5">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <Scale className="w-6 h-6" />
-                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
-                        </div>
-                        <p className="text-sm text-charcoal-500">
-                            © 2026 Iurexia. Todos los derechos reservados.
-                        </p>
-                    </div>
-                </div>
-            </footer>
+            <PieDePagina />
         </main>
     );
 }

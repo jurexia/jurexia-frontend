@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare, Brain, Paperclip, TrendingUp, PenLine, FileEdit, Gavel, Library, BarChart3 } from 'lucide-react';
+import { ArrowRight, Search, Shield, MapPin, CheckCircle, Zap, FileText, BookOpen, Globe, MessageSquare, TrendingUp } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import DemoCapitulos from '@/components/DemoCapitulos';
 import { CAPITULOS } from '@/lib/capitulos-demo';
 import { useEffect, useRef, useState } from 'react';
+import PieDePagina from '@/components/PieDePagina';
 
 export default function PlataformaPage() {
     return (
@@ -25,104 +26,34 @@ export default function PlataformaPage() {
                         Infraestructura de inteligencia artificial diseñada para expandir radicalmente la capacidad operativa de las firmas legales y empresas en México. Automatiza la investigación jurisprudencial, acelera el flujo de nuevos asuntos y audita resoluciones masivas; liberando a los abogados para enfocarse en el trabajo estratégico de más alto valor y recuperando horas rentables.
                     </p>
 
-                    {/* Platform Preview */}
-                    <div className="relative mt-16 mb-20 mx-auto max-w-4xl text-left pointer-events-none select-none">
-                        <div className="bg-[#141414] rounded-[2rem] p-4 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border-[8px] border-charcoal-900 border-b-[12px]">
-                            <div className="bg-cream-300 rounded-xl overflow-hidden shadow-inner flex flex-col h-[500px]">
-                                {/* Browser Toolbar */}
-                                <div className="flex items-center gap-2 px-4 py-3 bg-white/70 border-b border-black/5">
-                                    <div className="flex gap-1.5 w-16">
-                                        <div className="w-3 h-3 rounded-full bg-charcoal-900/20"></div>
-                                        <div className="w-3 h-3 rounded-full bg-charcoal-900/15"></div>
-                                        <div className="w-3 h-3 rounded-full bg-charcoal-900/10"></div>
+                    {/* EL CHAT DE HOY (3-oct-2026). Aquí había un dibujo del chat
+                        de antes del 25-sep —Buscar/Redactar, el rayo y las cuatro
+                        herramientas en fila—, que ya no es lo que el abogado ve al
+                        entrar. Ahora es una captura de la plataforma real: la barra
+                        de trabajo con carpetas y consultas, Mi trabajo · Lo último
+                        · Normativa · Redactor PJF, y la caja con Fuentes y
+                        Esfuerzo. Un dibujo dice «así se vería»; la captura, «así
+                        es». Se rehace con scratchpad/web/chat_hoy.py si cambia. */}
+                    <div className="relative mt-16 mb-20 mx-auto max-w-5xl text-left select-none">
+                        <div className="rounded-[1.75rem] bg-[#141414] p-3 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] ring-1 ring-black/40 sm:p-4">
+                            <div className="overflow-hidden rounded-xl bg-cream-300">
+                                <div className="flex items-center gap-2 border-b border-black/5 bg-white/70 px-4 py-2.5">
+                                    <div className="flex w-16 gap-1.5">
+                                        <div className="h-3 w-3 rounded-full bg-charcoal-900/20"></div>
+                                        <div className="h-3 w-3 rounded-full bg-charcoal-900/15"></div>
+                                        <div className="h-3 w-3 rounded-full bg-charcoal-900/10"></div>
                                     </div>
-                                    <div className="flex-1 text-center text-xs text-charcoal-500 font-medium">iurexia.app</div>
+                                    <div className="flex-1 text-center text-xs font-medium text-charcoal-900/50">iurexia.com/chat</div>
                                     <div className="w-16"></div>
                                 </div>
-
-                                {/* Inner Chat view */}
-                                <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 relative">
-                                    <div className="mb-4">
-                                        <span className="font-serif text-3xl sm:text-4xl font-semibold text-charcoal-900">
-                                            Iurex<span className="text-accent-gold">ia</span>
-                                        </span>
-                                    </div>
-                                    <h2 className="font-serif text-xl sm:text-2xl font-medium text-charcoal-900 mb-6 text-center">
-                                        ¿En qué te puedo ayudar, Licenciado?
-                                    </h2>
-
-                                    <div className="font-serif italic text-charcoal-900/40 text-sm mb-6 text-center max-w-md hidden sm:block">
-                                        "Consulto la legislación de mi estado con el artículo y su fuente oficial..."
-                                    </div>
-
-                                    {/* Fuero y materia: dos etiquetas sobrias sobre el cuadro,
-                                        como en el chat. Antes era un conmutador Federal/Común
-                                        con degradado dorado que ya no existe en la plataforma. */}
-                                    <div className="mb-5 flex justify-center gap-1.5">
-                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium border border-accent-gold bg-cream-100 text-accent-brown">
-                                            <MapPin className="w-3 h-3" />
-                                            Oaxaca
-                                        </div>
-                                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium border border-cream-400 bg-white text-charcoal-700">
-                                            Amparo
-                                        </div>
-                                    </div>
-
-                                    {/* Cuadro del chat */}
-                                    <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-cream-300 p-2 sm:p-3 relative z-10">
-                                        {/* Rayo + Buscar + Redactar, en ese orden.
-                                            El rayo es sólo icono y se pone dorado al activarse. */}
-                                        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-cream-300 mb-2">
-                                            <div className="w-[26px] h-[26px] flex items-center justify-center rounded-lg bg-accent-gold text-charcoal-900">
-                                                <Zap className="w-3.5 h-3.5" />
-                                            </div>
-                                            <button className="flex items-center gap-1.5 px-3 py-1 bg-charcoal-900 text-cream-100 rounded-lg text-xs font-medium">
-                                                <Search className="w-3.5 h-3.5" />
-                                                <span>Buscar</span>
-                                            </button>
-                                            <button className="flex items-center gap-1.5 px-3 py-1 text-charcoal-700 rounded-lg text-xs font-medium">
-                                                <PenLine className="w-3.5 h-3.5" />
-                                                <span>Redactar</span>
-                                            </button>
-                                        </div>
-
-                                        <div className="flex items-center px-3">
-                                            <div className="w-full text-charcoal-900 py-2 text-[15px] leading-relaxed overflow-hidden whitespace-nowrap overflow-ellipsis">
-                                                ¿Qué plazo tengo para responder una solicitud de acceso a la información pública en Oaxaca?
-                                            </div>
-                                            <div className="flex flex-shrink-0 ml-auto items-center gap-2 pl-2">
-                                                <button className="hidden sm:flex p-2 rounded-lg text-charcoal-700 bg-cream-200 border border-cream-400">
-                                                    <Paperclip className="w-4 h-4" />
-                                                </button>
-                                                <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-accent-gold text-charcoal-900">
-                                                    <ArrowRight className="w-4 h-4" />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Las cuatro herramientas reales. Antes decía
-                                            «GENIOS: Amparo · Mercantil · Civil», que no
-                                            corresponde a nada de lo que hay hoy en el chat. */}
-                                        <div className="grid grid-cols-4 gap-1.5 w-full mt-3 pt-3 border-t border-cream-300 px-1 pb-1">
-                                            <div className="flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[10px] font-medium bg-charcoal-900 text-cream-100">
-                                                <FileEdit className="w-2.5 h-2.5 flex-shrink-0" />
-                                                <span className="truncate">Escrito legal</span>
-                                            </div>
-                                            <div className="flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[10px] font-medium bg-charcoal-900/90 text-cream-100/90">
-                                                <Gavel className="w-2.5 h-2.5 flex-shrink-0" />
-                                                <span className="truncate">Sentencia</span>
-                                            </div>
-                                            <div className="flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[10px] font-medium bg-charcoal-900/90 text-cream-100/90">
-                                                <Library className="w-2.5 h-2.5 flex-shrink-0" />
-                                                <span className="truncate">Precedentes</span>
-                                            </div>
-                                            <div className="flex items-center justify-center gap-1 px-1 py-[6px] rounded-md text-[10px] font-medium bg-charcoal-900/90 text-cream-100/90">
-                                                <BarChart3 className="w-2.5 h-2.5 flex-shrink-0" />
-                                                <span className="truncate">Jurimetría</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src="/plataforma/chat-hoy.webp"
+                                    alt="El chat de Iurexia: a la izquierda la barra de trabajo con nueva consulta, flujos de trabajo, carpetas y consultas; arriba Mi trabajo, Lo último, Normativa y Redactor PJF; al centro la caja de consulta con Fuentes y Esfuerzo."
+                                    width={1792}
+                                    height={1120}
+                                    className="block h-auto w-full"
+                                />
                             </div>
                         </div>
                     </div>
@@ -234,21 +165,24 @@ export default function PlataformaPage() {
                 bgColor="bg-cream-300"
             />
 
-            {/* Feature 4: Arquitectura Multi-Genio PRO */}
+            {/* Feature 4: Flujos de trabajo. Sustituye a «Arquitectura
+                Multi-Genio» (3-oct-2026): los Genios salieron del producto el
+                25-sep y esta página seguía vendiéndolos. Lo que hay hoy en su
+                lugar son los siete flujos que arrancan en el chat. */}
             <FeatureSection
-                id="arquitectura-multi-genio"
-                badge="✦ EXCLUSIVO PRO"
-                title={<>Arquitectura <span className="text-accent-gold">Multi-Genio</span></>}
-                subtitle="El mejor equipo de especialistas legales"
-                description="Una capa de inteligencia artificial avanzada compuesta por expertos (Amparo, CIDH, Civil, etc.) que se activan con un clic dentro del chat. Utilizables de forma independiente o activando hasta 2 de manera concurrente, analizan el contexto completo de tu consulta para generar razonamientos jurídicos interdisciplinarios con fundamento verificado."
+                id="flujos-de-trabajo"
+                badge="✦ PRO Y PLATINUM"
+                title={<>Flujos de <span className="text-accent-gold">trabajo</span></>}
+                subtitle="Del encargo al escrito terminado, parte por parte"
+                description="Iurexia construye contigo la demanda de amparo, la contestación, el escrito de agravios o la revisión del contrato, parte por parte y con todo el acervo a la vista. En cada parte propone lo que deduce de tu encargo y de tu carpeta —ya marcado, para que sólo confirmes—, te pide lo que falta y, si hace falta un documento, te lo pide en vez de suponerlo."
                 features={[
-                    "Razonamiento jurídico profundo y específico por materia",
-                    "Uso concurrente de hasta 2 expertos virtuales para perspectivas completas",
-                    "Fundamentación automatizada con artículos constitucionales y tesis verificadas",
-                    "Análisis contextual filtrado por jurisdicción estatal y federal",
-                    "Exclusivo para usuarios Pro y Platinum — no disponible en plan gratuito"
+                    "Siete flujos: amparo indirecto y directo, contestación, agravios, revisión de contrato, teoría del caso y dictamen",
+                    "Cada dato propuesto y marcado: tú sólo confirmas",
+                    "Pide el documento que falta en vez de inventar el dato",
+                    "Redacta con todo el acervo y con sus citas",
+                    "30 flujos al mes en Pro y 60 en Platinum, sin gastar consultas"
                 ]}
-                visual={<GenioAmparoVisual />}
+                visual={<FlujoVisual />}
                 bgColor="bg-white"
                 reverse
             />
@@ -271,21 +205,23 @@ export default function PlataformaPage() {
                 bgColor="bg-cream-300"
             />
 
-            {/* Feature 6: Redacción Pro */}
+            {/* Feature 6: Esfuerzo de redacción. Era «Redacción Pro», un
+                interruptor que el chat ya no tiene: desde el 25-sep la caja
+                lleva el desplegable «Esfuerzo» con tres escalones (3-oct-2026). */}
             <FeatureSection
-                id="redaccion-pro"
-                badge="✦ EXCLUSIVO PRO Y PLATINUM"
-                title={<>Redacción <span className="text-accent-gold">Pro</span></>}
-                subtitle="Calidad significativamente superior en cada documento"
-                description="Redacción Pro utiliza un motor de razonamiento profundo de última generación. La calidad del texto es considerablemente superior al modo de redacción normal: argumentación más coherente, subsunción jurídica completa y prosa de nivel SCJN."
+                id="esfuerzo-de-redaccion"
+                badge="BÁSICO · PRO · PLATINUM"
+                title={<>Esfuerzo de <span className="text-accent-gold">redacción</span></>}
+                subtitle="Tú decides cuánto razona Iurexia antes de escribir"
+                description="Al pedir un escrito —«Redacta una demanda de…»— eliges con qué motor se redacta, en el desplegable que está junto a «Fuentes». Las demás consultas no cambian: el esfuerzo sólo se aplica cuando pides un escrito."
                 features={[
-                    "Motor de razonamiento profundo de última generación",
-                    "Argumentación estructurada con subsunción jurídica completa",
-                    "Prosa de nivel SCJN — calidad significativamente superior al modo normal",
-                    "Fundamentación automatizada con artículos y tesis verificadas",
-                    "Disponible en planes Pro y Platinum"
+                    "Básico: escrito completo, ágil y bien estructurado, en todos los planes",
+                    "Pro: razona a fondo cada argumento antes de escribir",
+                    "Platinum: el motor más potente, con escritos más extensos y argumentos en capas",
+                    "En los tres, fundamentación con artículos y tesis verificadas contra el acervo",
+                    "Pro en el plan Pro; Platinum en el plan Platinum"
                 ]}
-                visual={<RedaccionProVisual />}
+                visual={<EsfuerzoVisual />}
                 bgColor="bg-white"
                 reverse
             />
@@ -449,19 +385,7 @@ export default function PlataformaPage() {
             </section>
 
             {/* Footer */}
-            <footer className="py-12 bg-white border-t border-black/5">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <Scale className="w-6 h-6" />
-                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
-                        </div>
-                        <p className="text-sm text-charcoal-500">
-                            © 2026 Iurexia. Todos los derechos reservados.
-                        </p>
-                    </div>
-                </div>
-            </footer>
+            <PieDePagina />
         </main>
     );
 }
@@ -825,84 +749,97 @@ function JurimetriaVisual() {
     );
 }
 
-function GenioAmparoVisual() {
+/* El flujo, como lo enseña el chat: el escrito y sus partes, lo que Iurexia
+   tomó del encargo y de la carpeta, los datos ya marcados y el que falta. */
+function FlujoVisual() {
     return (
         <div className="bg-gradient-to-br from-cream-200 to-cream-300 rounded-3xl p-8 shadow-lg">
             <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-accent-gold/20 flex flex-col items-center justify-center relative">
-                        <div className="flex gap-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-accent-gold/50"></span>
-                            <span className="w-1.5 h-1.5 rounded-full bg-accent-gold"></span>
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-charcoal-900 flex items-center justify-center">
+                        <svg className="w-[18px] h-[18px] text-accent-gold" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="3" y="3" width="8" height="8" rx="2" />
+                            <path d="M7 11v4a2 2 0 0 0 2 2h4" />
+                            <rect x="13" y="13" width="8" height="8" rx="2" />
+                        </svg>
+                    </div>
+                    <div className="min-w-0">
+                        <p className="font-medium text-charcoal-900 text-sm">Demanda de amparo indirecto</p>
+                        <p className="text-accent-brown text-xs">Parte 2 de 4 · Antecedentes y preceptos violados</p>
+                    </div>
+                </div>
+                <div className="mt-4 grid grid-cols-4 gap-1.5" aria-hidden="true">
+                    <span className="h-1.5 rounded-full bg-charcoal-900" />
+                    <span className="h-1.5 rounded-full bg-accent-gold" />
+                    <span className="h-1.5 rounded-full bg-cream-400" />
+                    <span className="h-1.5 rounded-full bg-cream-400" />
+                </div>
+
+                <div className="mt-5 rounded-lg bg-cream-100 border border-cream-300 px-3.5 py-3">
+                    <p className="text-[10px] uppercase tracking-wider text-charcoal-900/50 mb-1.5">Proceso</p>
+                    <ul className="space-y-1 text-[12px] leading-snug text-charcoal-900/70">
+                        <li>Tomé del encargo el acto reclamado y la fecha del oficio</li>
+                        <li>De la carpeta: la sentencia que acredita el concubinato</li>
+                        <li>Falta la fecha de notificación para computar el plazo</li>
+                    </ul>
+                </div>
+
+                <p className="mt-4 text-xs font-semibold text-charcoal-900">
+                    Preceptos violados <span className="ml-1 rounded-md bg-accent-gold/15 px-1.5 py-px text-[9px] font-bold uppercase text-accent-brown">Sugerido</span>
+                </p>
+                <div className="mt-1.5 space-y-1">
+                    {[['Artículos 1o. y 4o. constitucionales', true], ['Artículo 123, apartado A, fracción XXIX', true], ['Artículo 24 de la Convención Americana', false]].map(([t, marcado]) => (
+                        <div key={t as string} className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[12px] ${marcado ? 'border-accent-gold/60 bg-accent-gold/[0.07] text-charcoal-900' : 'border-cream-400 text-charcoal-900/55'}`}>
+                            <span className={`grid h-3 w-3 place-items-center rounded-[3px] border ${marcado ? 'border-accent-gold bg-accent-gold' : 'border-charcoal-900/30'}`}>
+                                {marcado && <svg className="h-2 w-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>}
+                            </span>
+                            {t as string}
                         </div>
-                    </div>
-                    <span className="font-medium text-charcoal-900">Genios Especializados</span>
-                    <span className="ml-auto px-2 py-0.5 rounded-lg bg-accent-gold/10 text-accent-brown text-[10px] font-bold">PRO</span>
+                    ))}
                 </div>
 
-                <div className="space-y-3 mb-4">
-                    <div className="p-3 bg-cream-100 rounded-lg border border-cream-300">
-                        <p className="text-[10px] text-charcoal-500 uppercase tracking-wider mb-1">Consulta</p>
-                        <p className="text-sm text-charcoal-800">¿Cómo impugno una orden de aprehensión sin fundamentación considerando los criterios interamericanos?</p>
-                    </div>
-                    <div className="p-3 bg-accent-gold/[0.07] rounded-lg border border-accent-gold/20">
-                        <p className="text-[10px] text-accent-brown uppercase tracking-wider mb-1">Perspectiva Combinada</p>
-                        <p className="text-sm text-charcoal-700">Vía amparo indirecto (Art. 107 L.A.) alegando violación al debido proceso. La Corte IDH en <i>Caso Cabrera García</i> establece que toda restricción a la libertad personal debe...</p>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-cream-300">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-accent-gold animate-pulse" />
-                        <span className="text-xs text-accent-brown font-medium">Amparo + CIDH Activos</span>
-                    </div>
-                    <span className="text-xs text-charcoal-500">Solo Plan Pro/Platinum</span>
+                <div className="mt-5 flex items-center justify-between gap-3 pt-3 border-t border-cream-300">
+                    <span className="text-xs font-medium text-accent-brown">Falta 1 dato</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-charcoal-900 px-3 py-1.5 text-[11.5px] font-semibold text-white opacity-60">
+                        Redactar esta parte →
+                    </span>
                 </div>
             </div>
         </div>
     );
 }
-
-function RedaccionProVisual() {
+/* El desplegable «Esfuerzo» tal como se abre en el chat: los tres escalones
+   con su descripción, Platinum elegido. */
+function EsfuerzoVisual() {
+    const escalones = [
+        { nombre: 'Básico', detalle: 'Escrito completo, ágil y bien estructurado.', plan: 'Todos los planes', elegido: false },
+        { nombre: 'Pro', detalle: 'Razona a fondo cada argumento antes de escribir.', plan: 'Plan Pro', elegido: false },
+        { nombre: 'Platinum', detalle: 'El motor más potente: escritos más extensos y argumentos en capas.', plan: 'Plan Platinum', elegido: true },
+    ];
     return (
-        <div className="bg-gradient-to-br from-[#0f1626] to-[#1a2540] rounded-3xl p-8 shadow-lg">
-            <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#c9a962]" />
-                    <span className="text-white/60 text-xs font-medium uppercase tracking-wider">Redacción Pro</span>
-                </div>
-                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-lg font-bold">PRO</span>
-            </div>
-
-            {/* Comparison */}
-            <div className="space-y-4">
-                {/* Normal mode */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] px-2 py-0.5 bg-white/10 text-white/50 rounded-lg font-medium">NORMAL</span>
-                    </div>
-                    <p className="text-sm text-white/40 leading-relaxed">
-                        El acto reclamado viola el artículo 14 constitucional porque no se respetó el debido proceso...
-                    </p>
-                </div>
-
-                {/* Pro mode */}
-                <div className="bg-[#c9a962]/10 border border-[#c9a962]/30 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-lg font-bold">REDACCIÓN PRO</span>
-                        <span className="text-[9px] bg-[#c9a962] text-charcoal-900 px-1.5 py-0.5 rounded-lg font-bold">NUEVO</span>
-                    </div>
-                    <p className="text-sm text-white/80 leading-relaxed">
-                        El acto de autoridad impugnado transgrede la garantía de audiencia prevista en el artículo 14 de la Constitución Política de los Estados Unidos Mexicanos, al haberse emitido sin agotar el procedimiento que exige la subsunción del supuesto normativo en el caso concreto...
-                    </p>
-                </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
-                <span className="text-xs text-white/30">Motor de razonamiento profundo</span>
-                <span className="text-xs text-[#c9a962] font-medium">Calidad SCJN</span>
+        <div className="bg-gradient-to-br from-cream-200 to-cream-300 rounded-3xl p-8 shadow-lg">
+            <div className="mx-auto max-w-sm overflow-hidden rounded-2xl border border-charcoal-900/10 bg-white shadow-sm">
+                <p className="border-b border-charcoal-900/[0.07] px-5 py-3.5 text-center font-serif text-[1.0625rem] text-charcoal-900">
+                    Esfuerzo de redacción
+                </p>
+                <ul>
+                    {escalones.map((e) => (
+                        <li key={e.nombre} className={`flex items-start gap-3 px-5 py-3.5 ${e.elegido ? 'bg-accent-gold/[0.07]' : ''}`}>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold text-charcoal-900">{e.nombre}</p>
+                                <p className="mt-0.5 text-[12.5px] leading-snug text-charcoal-900/65">{e.detalle}</p>
+                                <p className="mt-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-accent-brown">{e.plan}</p>
+                            </div>
+                            <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border ${e.elegido ? 'border-charcoal-900 bg-charcoal-900' : 'border-charcoal-900/25'}`}>
+                                {e.elegido && <CheckCircle className="h-3 w-3 text-white" />}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+                <p className="border-t border-charcoal-900/[0.07] px-5 py-3 text-center text-[12px] leading-snug text-charcoal-900/60">
+                    Se aplica cuando pides un escrito. Las demás consultas no cambian.
+                </p>
             </div>
         </div>
     );
 }
-

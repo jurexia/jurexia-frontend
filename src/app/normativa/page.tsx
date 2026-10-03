@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { ESTADOS, getTotalLeyes, FEDERAL_LEYES } from '../leyesestatales/estadosData';
+import PieDePagina from '@/components/PieDePagina';
 import {
     BookOpen, ArrowRight, Scale, FileText, ExternalLink, Globe2,
     Landmark, Search, MapPin, Shield, Users, Gavel, ChevronRight,
@@ -310,7 +311,7 @@ export default function NormativaNacionalPage() {
 
     return (
         <main className="min-h-screen bg-cream-300">
-            <Navbar />
+            <Navbar plataforma />
 
             {/* ─── Hero Section ─── */}
             <section className="relative pt-32 pb-20 px-4 sm:px-6 overflow-hidden">
@@ -755,22 +756,7 @@ export default function NormativaNacionalPage() {
             </section>
 
             {/* Footer */}
-            <footer className="py-12 border-t border-cream-400 bg-cream-300">
-                <div className="max-w-6xl mx-auto px-6">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <span className="font-serif text-xl font-semibold text-charcoal-900 tracking-wide">Iurex<span className="text-accent-gold">ia</span></span>
-                        </div>
-                        <div className="flex gap-8 text-sm text-charcoal-500 font-medium">
-                            <Link href="/privacidad" className="hover:text-accent-gold transition-colors">Privacidad</Link>
-                            <Link href="/terminos" className="hover:text-accent-gold transition-colors">Términos</Link>
-                            <Link href="/conocenos" className="hover:text-accent-gold transition-colors">Conócenos</Link>
-                            <a href="mailto:soporte@iurexia.com" className="hover:text-accent-gold transition-colors">Contacto</a>
-                        </div>
-                        <p className="text-sm text-charcoal-400">© 2026 Iurexia. Todos los derechos reservados.</p>
-                    </div>
-                </div>
-            </footer>
+            <PieDePagina />
         </main>
     );
 }

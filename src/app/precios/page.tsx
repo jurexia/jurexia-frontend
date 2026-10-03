@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Check, Calendar, Loader2, AlertTriangle, ShieldCheck, Lock, CreditCard, FileText } from 'lucide-react';
+import { ArrowRight, Check, Calendar, Loader2, AlertTriangle, ShieldCheck, Lock, CreditCard, FileText } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
@@ -10,6 +10,7 @@ import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import { PLANS } from '@/lib/stripe';
 import { RejillaCubos, CircuitoNeuronal } from '@/components/FondosDePlan';
 import Image from 'next/image';
+import PieDePagina from '@/components/PieDePagina';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SUSCRIBIRSE A ULTRA SECRETARIOS
@@ -628,19 +629,7 @@ export default function PreciosPage() {
             </section>
 
             {/* Footer */}
-            <footer className="py-12 bg-cream-300 border-t border-black/5">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <Scale className="w-6 h-6" />
-                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
-                        </div>
-                        <p className="text-sm text-charcoal-500">
-                            © 2026 Iurexia. Todos los derechos reservados.
-                        </p>
-                    </div>
-                </div>
-            </footer>
+            <PieDePagina />
         </main>
     );
 }

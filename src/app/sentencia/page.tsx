@@ -7,8 +7,7 @@ import { useRequireAuth } from '@/lib/useAuth';
 import { UserAvatar } from '@/components/UserAvatar';
 import { auditSentencia, SentenciaAuditResponse, SentenciaHallazgo } from '@/lib/api';
 import { Crown } from 'lucide-react';
-
-
+import LemaOpenAI from '@/components/LemaOpenAI';
 
 function SeveridadBadge({ severidad }: { severidad: string }) {
     const colors: Record<string, string> = {
@@ -269,8 +268,11 @@ export default function SentenciaPage() {
             <div className="fixed top-0 left-0 right-0 z-50 bg-cream-300/90 backdrop-blur-md border-b border-black/5">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
                     <Link href="/chat" className="flex items-center gap-2 group">
-                        <span className="font-serif text-xl font-semibold text-charcoal-900">
-                            Iurex<span className="text-accent-gold">ia</span>
+                        <span className="flex flex-col gap-1">
+                            <span className="font-serif text-xl font-semibold leading-none text-charcoal-900">
+                                Iurex<span className="text-accent-gold">ia</span>
+                            </span>
+                            <LemaOpenAI tamano="text-[8.5px]" />
                         </span>
                         <span className="text-xs text-charcoal-400 border-l border-charcoal-200 pl-2 ml-1">Centinela de Sentencias</span>
                     </Link>

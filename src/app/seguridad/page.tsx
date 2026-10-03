@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowRight, Shield, Lock, Eye, CreditCard, Server, FileCheck, CheckCircle, ChevronDown } from 'lucide-react';
+import { ArrowRight, Shield, Lock, Eye, CreditCard, Server, FileCheck, CheckCircle, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { useState } from 'react';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
+import PieDePagina from '@/components/PieDePagina';
 
 /* ───────── Page ───────── */
 export default function SeguridadPage() {
@@ -244,19 +245,7 @@ export default function SeguridadPage() {
             </section>
 
             {/* Footer */}
-            <footer className="py-12 bg-cream-300 border-t border-black/5">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <Scale className="w-6 h-6" />
-                            <span className="font-serif text-xl font-semibold">Iurex<span className="text-accent-gold">ia</span></span>
-                        </div>
-                        <p className="text-sm text-charcoal-500">
-                            © 2026 Iurexia. Todos los derechos reservados.
-                        </p>
-                    </div>
-                </div>
-            </footer>
+            <PieDePagina />
         </main>
     );
 }

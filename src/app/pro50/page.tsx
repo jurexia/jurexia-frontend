@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { redirectToCheckout } from '@/lib/stripe-client';
 import { PLANS } from '@/lib/stripe';
+import LemaOpenAI from '@/components/LemaOpenAI';
 
 const CODIGO = 'PRO50';
 const VIGENCIA = '17 de octubre de 2026';
@@ -53,7 +54,7 @@ export default function Pro50Page() {
         <div className="min-h-screen bg-cream-200 px-4 py-10 sm:py-16">
             <div className="mx-auto w-full max-w-lg">
                 <Link href="/" className="block font-serif text-2xl font-semibold tracking-wide text-charcoal-900">Iurexia</Link>
-                <div className="mb-8 mt-2 text-[10px] uppercase tracking-[0.2em] text-accent-brown">Legal Tech</div>
+                <LemaOpenAI tamano="text-[11px]" className="mb-8 mt-2" />
 
                 <div className="rounded-2xl border border-cream-300 bg-white p-7 sm:p-9">
                     <div className="text-[11px] uppercase tracking-[0.16em] text-accent-brown">Oferta para usuarios de Iurexia</div>

@@ -53,7 +53,7 @@ export default function TutorialPage() {
     return (
         <main className="min-h-screen bg-cream-300">
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(VIDEO_LD) }} />
-            <Navbar />
+            <Navbar plataforma />
 
             <section className="px-4 pb-8 pt-28 sm:px-6 sm:pt-32">
                 <div className="mx-auto max-w-3xl text-center">

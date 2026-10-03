@@ -75,7 +75,7 @@ import { categoriasDe, nombreCarpeta, subirDocumento } from '@/lib/expedientes';
 import { contextoDeCarpeta, contextoDeConsulta, olvidarContextoCarpeta } from '@/lib/contexto-carpeta';
 import type { CamposCoidh } from '@/lib/coidh';
 import type { CamposDoctrina } from '@/lib/doctrina';
-
+import LemaOpenAI from '@/components/LemaOpenAI';
 
 /* Identifica una respuesta por su propio texto. `Message` no lleva id y el
    índice de la lista se mueve al llegar mensajes nuevos; la huella del texto,
@@ -1667,6 +1667,7 @@ export default function ChatPage() {
                                             Iurex<span className="text-accent-gold">ia</span>
                                         </span>
                                     </Link>
+                                    <LemaOpenAI tamano="text-[11px] sm:text-[12px]" className="mt-1.5 sm:mt-2" />
                                 </div>
                                 <h2 className="font-serif text-lg sm:text-2xl font-medium text-charcoal-900 mb-3 sm:mb-4">
                                     {carpetaActivaId

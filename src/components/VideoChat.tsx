@@ -3,11 +3,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 
-/* La pieza del chat (v43, 1:52), entre el vídeo de portada y la franja de
+/* La pieza de la plataforma, entre el vídeo de portada y la franja de
    despachos. Al modo de harvey.ai: arranca sola, en bucle y SIN sonido; el
    sonido —voz, efectos y música— sólo entra cuando la persona lo pide con un
    clic, y ese clic la reinicia desde el principio para que la oiga entera.
-   Con «menos movimiento» activado se queda en el póster. */
+   Con «menos movimiento» activado se queda en el póster.
+
+   3-oct-2026: era la v43 (1:52), grabada con el chat de antes —la barra de
+   Genios, el selector Auto·Civil·Penal, Buscar/Redactar—. Ahora es la v61,
+   «La plataforma» (1:59, 1280×720 para la web), que enseña el chat de hoy:
+   Fuentes, Esfuerzo, las herramientas, los flujos de trabajo y la carpeta.
+   La v43 sigue en /video/iurexia-chat.mp4 porque el GIF de los correos la
+   anuncia. */
 export default function VideoChat() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [conSonido, setConSonido] = useState(false);
@@ -45,7 +52,7 @@ export default function VideoChat() {
         <section id="video-chat" className="scroll-mt-20 bg-cream-300 px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
             <div className="mx-auto max-w-5xl">
                 <p className="mb-5 text-center text-[11px] uppercase tracking-[0.16em] text-accent-brown">
-                    El chat de Iurexia, en un minuto y medio
+                    La plataforma, en dos minutos
                 </p>
                 <div
                     className="group relative cursor-pointer overflow-hidden rounded-xl bg-charcoal-900 shadow-[0_24px_60px_-20px_rgba(20,18,16,0.45)]"
@@ -64,9 +71,9 @@ export default function VideoChat() {
                         muted
                         playsInline
                         preload="metadata"
-                        poster="/video/iurexia-chat-poster.webp"
+                        poster="/video/iurexia-plataforma-poster.webp"
                     >
-                        <source src="/video/iurexia-chat.mp4" type="video/mp4" />
+                        <source src="/video/iurexia-plataforma.mp4" type="video/mp4" />
                     </video>
 
                     {/* la invitación a escuchar: discreta, abajo a la derecha */}

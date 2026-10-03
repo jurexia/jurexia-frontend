@@ -103,7 +103,7 @@ export default function AgentePage() {
 
     return (
         <main className="min-h-screen bg-cream-300">
-            <Navbar />
+            <Navbar plataforma />
 
             <div className="mx-auto max-w-3xl px-4 pb-20 pt-28 sm:px-6 sm:pt-32">
 

@@ -2265,3 +2265,37 @@ h6 {
         linear-gradient(180deg, #3a3222 0%, #241f15 55%, #1a160e 100%) !important;
     border-color: rgba(201,169,98,0.6) !important;
 }
+
+/* ═══ LA BARRA DE TRABAJO FUERA DEL CHAT (3-oct-2026) ═══
+   `MarcoTrabajo` (lo monta <Navbar plataforma /> con sesión) pone la clase en
+   <html>. La lateral es fija, así que el cuerpo le deja su ancho —el mismo
+   --sidebar-w que publica ChatSidebar al plegarse o desplegarse— y lo que sólo
+   es de la web pública (el pie) no se pinta dentro de la plataforma.
+
+   --alto-barra es el alto de la barra que haya arriba: la pública (64 px, 72
+   desde 1280) o la de trabajo (56). Lo usan las páginas con cabecera pegajosa
+   para no quedar debajo de ella. */
+:root {
+  --alto-barra: 4rem;
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --alto-barra: 4.5rem;
+  }
+}
+
+html.con-barra-trabajo {
+  --alto-barra: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  html.con-barra-trabajo body {
+    padding-left: var(--sidebar-w, 18rem);
+    transition: padding-left 300ms ease;
+  }
+}
+
+html.con-barra-trabajo .solo-publico {
+  display: none;
+}

@@ -1,32 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { Scale, ArrowLeft, Shield } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import PieDePagina from '@/components/PieDePagina';
+import { Shield } from 'lucide-react';
 
 export default function PrivacidadPage() {
     const fechaActualizacion = "4 de febrero de 2026";
 
     return (
         <main className="min-h-screen bg-cream-300">
-            {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-cream-300/80 backdrop-blur-md border-b border-black/5">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="flex items-center justify-between h-16">
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <span className="font-serif text-2xl font-semibold text-charcoal-900">
-                                Iurex<span className="text-accent-gold">ia</span>
-                            </span>
-                        </Link>
-                        <Link
-                            href="/"
-                            className="flex items-center gap-2 text-sm text-charcoal-600 hover:text-charcoal-900 transition-colors"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Volver al inicio
-                        </Link>
-                    </div>
-                </div>
-            </nav>
+            {/* La barra de la web, la misma de todas las páginas (3-oct-2026).
+                Antes ésta llevaba la suya: la marca y «Volver al inicio». */}
+            <Navbar />
 
             {/* Content */}
             <article className="pt-28 pb-20 px-4">
@@ -323,6 +309,8 @@ export default function PrivacidadPage() {
                     </div>
                 </div>
             </article>
+
+            <PieDePagina />
         </main>
     );
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
-import { MessageSquare, ArrowRight } from 'lucide-react';
+import { MessageSquare, ArrowRight, ChevronDown, ChevronUp, FileText, Gem, Mic, Paperclip } from 'lucide-react';
 
 interface HeroCTAProps {
     className?: string;
@@ -42,38 +42,52 @@ export function HeroCTA({ className = '' }: HeroCTAProps) {
 
     // Default state (loading OR unauthenticated): Show demo prompt with login link
     // No skeleton/pulse — this is the stable default that everyone sees first
+    /* LA CAJA DE HOY (3-oct-2026). Esto imitaba la caja de antes —«📎 Subir
+       documento», «🔍 Buscar» en azul, el interruptor Buscar/Redactar que el
+       chat ya no tiene—. Ahora es la caja que ve quien entra: el texto, el
+       documento listo, micrófono, clip y enviar; y abajo Fuentes, Esfuerzo y
+       «Desplegar herramientas». Sin emojis, como el resto de la web. */
     return (
-        <Link href="/login" className={className}>
-            <div className="chat-input-container p-6 cursor-pointer hover:shadow-lg transition-shadow">
-                {/* Sample prompt preview */}
-                <div className="flex items-start gap-3 mb-4">
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-lg">
-                        <span className="text-red-500">📄</span>
-                        <span className="text-sm text-charcoal-700">Demanda.pdf</span>
-                        <span className="text-xs text-gray-400">2.4 MB</span>
+        <Link href="/login" className={`block ${className}`} aria-label="Probar Iurexia: entra y haz tu consulta">
+            <div className="rounded-2xl border border-charcoal-900/10 bg-white px-4 pb-3 pt-3.5 text-left shadow-[0_10px_30px_-14px_rgba(15,14,13,0.22)] transition-shadow duration-300 hover:shadow-[0_16px_40px_-14px_rgba(15,14,13,0.3)]">
+                <div className="flex items-start gap-3">
+                    <p className="min-w-0 flex-1 py-1 text-[15px] leading-relaxed text-charcoal-900">
+                        ¿Qué fundamentos le faltan a esta demanda? Señálame los artículos mal citados y los que faltan.
+                    </p>
+                    <div className="flex flex-shrink-0 items-center gap-2 pt-0.5">
+                        <span className="hidden items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 sm:flex">
+                            <FileText className="h-3.5 w-3.5 text-blue-600" />
+                            <span className="text-[10px] font-bold uppercase tracking-tight text-blue-800">Doc listo</span>
+                        </span>
+                        <Mic className="hidden h-[18px] w-[18px] text-charcoal-900/40 sm:block" />
+                        <Paperclip className="h-[18px] w-[18px] text-charcoal-900/40" />
+                        <span className="grid h-9 w-9 place-items-center rounded-full bg-charcoal-900">
+                            <ArrowRight className="h-4 w-4 text-white" />
+                        </span>
                     </div>
                 </div>
-
-                <p className="text-charcoal-600 text-base leading-relaxed">
-                    Analiza esta demanda de amparo indirecto y encuentra la jurisprudencia
-                    aplicable de la Suprema Corte...
-                </p>
-
-                {/* Action buttons */}
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-3 text-sm text-gray-500">
-                        <span className="flex items-center gap-1.5">
-                            <span>📎</span> Subir documento
+                <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-charcoal-900/[0.06] pt-2.5">
+                    <span className="flex h-7 items-center gap-1.5 rounded-full border border-charcoal-900/15 bg-white px-2 text-charcoal-700">
+                        <span className="flex items-center -space-x-1.5">
+                            {['/fuentes/corteidh.png', '/fuentes/scjn.png', '/fuentes/diputados.png'].map((src) => (
+                                <span key={src} className="grid h-4 w-4 place-items-center rounded-full bg-white ring-1 ring-charcoal-900/10">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={src} alt="" className="h-3 w-3 object-contain" />
+                                </span>
+                            ))}
                         </span>
-                        <span className="flex items-center gap-1.5 text-blue-600 font-medium">
-                            <span>🔍</span> Buscar
-                        </span>
-                    </div>
-                    <div className="w-10 h-10 bg-charcoal-900 rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                    </div>
+                        <span className="text-[11px] font-semibold">Fuentes</span>
+                        <ChevronDown className="h-3 w-3" />
+                    </span>
+                    <span className="flex h-7 items-center gap-1.5 rounded-full border border-charcoal-900/15 bg-white px-2.5 text-[11px] text-charcoal-700">
+                        <Gem className="h-3.5 w-3.5" />
+                        Esfuerzo <span className="font-semibold text-charcoal-900">Platinum</span>
+                        <ChevronDown className="h-3 w-3" />
+                    </span>
+                    <span className="flex items-center gap-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-charcoal-900/55">
+                        <ChevronUp className="h-3 w-3" />
+                        Desplegar herramientas
+                    </span>
                 </div>
             </div>
         </Link>

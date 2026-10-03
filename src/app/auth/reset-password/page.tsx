@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, updatePassword } from '@/lib/supabase';
+import LemaOpenAI from '@/components/LemaOpenAI';
 
 export default function ResetPasswordPage() {
     const router = useRouter();
@@ -115,10 +116,11 @@ export default function ResetPasswordPage() {
         <main className="min-h-screen bg-cream-300 flex items-center justify-center px-4">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <Link href="/" className="flex items-center justify-center gap-2 mb-8">
+                <Link href="/" className="mb-8 flex flex-col items-center gap-2">
                     <span className="font-serif text-3xl font-semibold text-charcoal-900">
                         Iurex<span className="text-accent-gold">ia</span>
                     </span>
+                    <LemaOpenAI tamano="text-[11px]" />
                 </Link>
 
                 {/* Reset Password Card */}
