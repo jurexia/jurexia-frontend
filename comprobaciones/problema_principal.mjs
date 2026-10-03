@@ -72,7 +72,7 @@ const REAL = path.join(TMP, 'real');
 const conReact = [['require("react")', `require(${JSON.stringify(REACT)})`],
                   ['require("lucide-react")', `require(${JSON.stringify(LUCIDE)})`]];
 for (const f of ['api.ts', 'tipos.ts', 'calificaciones.ts', 'recalificacion.ts', 'tarjetaDelPrincipal.ts',
-                 'primitivas.tsx', 'FilaDelEspejo.tsx', 'SolucionesPosibles.tsx', 'Espinazo.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
+                 'primitivas.tsx', 'FilaDelEspejo.tsx', 'SolucionesPosibles.tsx', 'OrigenDelActo.tsx', 'PreguntasParaTi.tsx', 'CorreccionesDelSupervisor.tsx', 'Espinazo.tsx', 'ProblemaPrincipal.tsx', 'Decision.tsx', 'ComoSeEstudiara.tsx',
                  'EstudiarJuntos.tsx']) {
     transpilar(REAL, f, conReact);
 }
@@ -252,8 +252,16 @@ function base(extra = {}) {
        'inoperante frente a infundado: NO es contraria');
     ok(!td.hayAlternativaReal(api.tarjetaDe(base({ vias: { propuesta: base().vias.propuesta, opuesta: null } }))),
        'sin opuesta: no hay alternativa');
-    ok(td.sinRecomendar(api.tarjetaDe(base({ estado: 'reñido' }))) && td.sinRecomendar(api.tarjetaDe(base({ estado: 'no_alcanza' })))
+    // Un servidor anterior sólo recomienda con «claro»: reñido y no alcanza
+    // llegan con `recomendada: null`.
+    ok(td.sinRecomendar(api.tarjetaDe(base({ estado: 'reñido', recomendada: null })))
+       && td.sinRecomendar(api.tarjetaDe(base({ estado: 'no_alcanza', recomendada: null })))
        && !td.sinRecomendar(t), 'reñido y no alcanza no recomiendan; claro sí');
+    // CONTRATO E (2-oct-2026): con la propuesta por probabilidad el servidor
+    // recomienda la propuesta siempre que tenga sentido; el estado es certeza.
+    ok(!td.sinRecomendar(api.tarjetaDe(base({ estado: 'reñido', recomendada: 'propuesta' })))
+       && !td.sinRecomendar(api.tarjetaDe(base({ estado: 'no_alcanza', recomendada: 'propuesta' }))),
+       'con «recomendada: propuesta», reñido y no alcanza ya no quitan la recomendación');
     ok(td.ladoDelSentido(t, 'inoperante') === 'propuesta' && td.ladoDelSentido(t, 'esencialmente_fundado') === 'opuesta'
        && td.ladoDelSentido(t, '') === null, 'la vía de una calificación, por grupo');
 
@@ -987,6 +995,100 @@ const FICHA_631 = {
     const soloViejo = api.estadoSesionDe({ estado: '', desactualizado: true, motivos: [] });
     ok(soloViejo && soloViejo.estado === '' && pintar(React.createElement(esp.InsigniaDeEstado, { e: soloViejo })).includes('desactualizado'),
        'E4: desactualizado sin estado también se enseña');
+}
+
+/* ═══ 10 · LA PROPUESTA SIEMPRE Y LAS PREGUNTAS (2-oct-2026) ═══
+   David: «el motor nunca se atreve a proponer (…) si hay un 50.01% de
+   probabilidad hacia un lado sea esa la propuesta» y «simplificar el tema de
+   constancias» a preguntas. Con la probabilidad (CONTRATOS A y E) la columna
+   se rotula «Te propongo · NN %», «Resolver así» va en dorado aunque sea
+   reñido y hay «Aceptar y generar». Sin ella, todo como antes (lo prueban las
+   secciones 3 y 4, que no la traen). */
+{
+    const PROB = { p: 0.68, lado: 'no_prospera', explicacion: 'Tasa del tribunal y dos precedentes (prueba).' };
+    const conProb = base({ estado: 'reñido', recomendada: 'propuesta', probabilidad: PROB, estado_por_que: [] });
+    const h = muestra('P · reñido con probabilidad', pintar(React.createElement(PP, props(conProb, { onAceptarYGenerar: () => {} }))));
+    const A = columna(h, 'propuesta');
+    ok(A.includes('Te propongo · 68 %') && !h.includes('Vía A') && !h.includes('Vía B'),
+       'P: «Te propongo · 68 %» aunque sea reñido; ya no «Vía A / Vía B»');
+    ok(/border-accent-gold/.test(boton(h, 'Resolver así')) && !h.includes('Resolver por la vía A'),
+       'P: «Resolver así» en dorado aunque el estado sea reñido');
+    ok(boton(h, 'Aceptar y generar').includes('data-aceptar-y-generar') && fila3(h).indexOf('Aceptar y generar') < fila3(h).indexOf('Resolver así'),
+       'P: «Aceptar y generar», primero');
+    ok(h.includes('Reñido: las dos vías se sostienen; te propongo la más probable.') && !h.includes('Ninguna se rotula'),
+       'P: el estado queda como grado de certeza y ya no quita la recomendación');
+    ok(h.includes('data-por-que-lado') && h.includes('Por qué este lado') && h.includes('Tasa del tribunal y dos precedentes (prueba).'),
+       'P: la explicación, plegada en «Por qué este lado»');
+    ok(!h.includes('data-volteo'), 'P: sin volteo, no hay línea de volteo');
+    const na = pintar(React.createElement(PP, props(base({ estado: 'no_alcanza', recomendada: 'propuesta', probabilidad: PROB }),
+                                                    { onAceptarYGenerar: () => {} })));
+    ok(na.includes('Certeza baja') && fila3(na).indexOf('Aceptar y generar') < fila3(na).indexOf('Resolver con mi criterio')
+       && !/border-accent-gold/.test(boton(na, 'Resolver con mi criterio')),
+       'P: «no alcanza» con recomendación: certeza baja, la propuesta primero y «mi criterio» sin dorar');
+    // EL VOLTEO, con la probabilidad de la propuesta (CONTRATO A).
+    const g = api.probabilidadDe({ p_prospera: 0.32, lado: 'no_prospera', volteada: true, sentido_motor: 'fundado',
+                                   explicacion: 'explicación de la propuesta' });
+    const v = muestra('P · volteada', pintar(React.createElement(PP, props(base({ estado: '', recomendada: null, probabilidad: null }),
+        { probabilidadMotor: g, esRecurso: false, onAceptarYGenerar: () => {} }))));
+    ok(v.includes('data-volteo') && v.includes('El motor leía conceder; la jurimetría del tribunal inclina a negar: 68 %.'),
+       'P: si la probabilidad volteó lo que leía el motor, se dice en una línea');
+    ok(columna(v, 'propuesta').includes('Te propongo · 68 %') && v.includes('explicación de la propuesta'),
+       'P: sin la de la tarjeta, el porcentaje y el porqué de la propuesta');
+    // SIN PROBABILIDAD Y SIN RECOMENDACIÓN: como antes, y sin «Aceptar y generar».
+    const r = pintar(React.createElement(PP, props(base({ estado: 'reñido', recomendada: null }), { onAceptarYGenerar: () => {} })));
+    ok(r.includes('Vía A') && !r.includes('Aceptar y generar') && !/\d+ %/.test(r),
+       'P: reñido sin recomendación ni probabilidad: «Vía A», sin aceptar a ciegas y sin porcentaje');
+    // SIN GLOBAL: fuera «el motor no se atrevió»; si espera respuestas, se dice.
+    const sg = pintar(React.createElement(PP, props(base(), { hayGlobal: false, hayPropuestas: true })));
+    ok(!sg.includes('no se atrevió') && sg.includes('El motor propuso problema por problema'), 'P: fuera «el motor no se atrevió»');
+    const er = pintar(React.createElement(PP, props(base(), { hayGlobal: false, hayPropuestas: false, esperaRespuestas: true,
+                                                              onProponer: () => {} })));
+    ok(er.includes('La propuesta espera tus respuestas') && !er.includes('Volver a pedir la propuesta'),
+       'P: esperando respuestas lo dice, y no ofrece volver a pedirla');
+
+    // DECISION: «preguntas» arriba, en lugar de las constancias.
+    const PREG = [
+        { id: 'P1', pregunta: '¿El emplazamiento carece de cercioramiento? (prueba)', tipo: 'si_no', para_que: 'para qué',
+          problema: 1, indispensable: true, afirma_la_parte: 'afirma', cita_escrito: '', el_acto: 'no_se_pronuncia',
+          si_si: 'fundado', si_no: 'infundado', si_no_contesta: 'carga', respuesta: null },
+        { id: 'P2', pregunta: '¿Qué dice la cláusula sexta? (prueba)', tipo: 'texto', para_que: '', problema: 2,
+          indispensable: false, afirma_la_parte: '', cita_escrito: '', el_acto: 'no_se_pronuncia',
+          si_si: '', si_no: '', si_no_contesta: '', respuesta: null },
+    ];
+    const comunes = {
+        problemas: PROBLEMAS, onCambiar: () => {}, onGenerar: () => {}, modo: 'por_problema',
+        tocados: new Set(), esRecurso: true, tesisDelMaterial: TESIS, onAportar: () => {}, onResponderPreguntas: () => {},
+    };
+    const espera = { ...PROPUESTA, propuestas: [], global: null, estado: 'preguntas', formato: 3, preguntas: PREG };
+    const d = muestra('Decision · esperando respuestas', pintar(React.createElement(Decision, { ...comunes, propuesta: espera, tarjeta: null })));
+    ok(d.includes('id="preguntas-para-ti"') && d.includes('data-preguntas="esperando"')
+       && d.indexOf('preguntas-para-ti') < d.indexOf('id="problema-principal"'),
+       'P: «Preguntas para ti», ARRIBA de la decisión');
+    ok(!d.includes('Constancias del juicio de origen') && !d.includes('id="mi-criterio"'),
+       'P: sin el pliegue de constancias y sin abrir la ventana de su criterio');
+    ok(d.includes('La propuesta espera tus respuestas'), 'P: la tarjeta del principal dice que espera');
+    // Con la propuesta hecha y preguntas contestadas: compacta, y sin constancias.
+    const lista = { ...PROPUESTA, estado: 'lista', formato: 3,
+                    preguntas: [{ ...PREG[0], respuesta: 'si' }],
+                    global: { ...PROPUESTA.global, probabilidad: api.probabilidadDe({ p_prospera: 0.32, lado: 'no_prospera' }) } };
+    const dl = muestra('Decision · lista con probabilidad', pintar(React.createElement(Decision, { ...comunes, propuesta: lista, tarjeta: null,
+        modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global', globalDictado: false })));
+    ok(dl.includes('data-preguntas="afinar"') && !dl.includes('Constancias del juicio de origen')
+       && !dl.includes('constancia que el motor considera'), 'P: con preguntas, las constancias viejas no se piden');
+    ok(columna(dl, 'propuesta').includes('Te propongo · 68 %') && dl.includes('data-aceptar-y-generar'),
+       'P: la tarjeta local con la probabilidad de la propuesta y «Aceptar y generar»');
+    const fin = dl.slice(dl.indexOf('id="asi-sale"'));
+    ok(fin.includes('data-probabilidad-asi-sale') && fin.includes('Es el lado más probable según la jurimetría del tribunal: 68 %.'),
+       'P: «Así va a salir» dice la probabilidad de lo que viaja');
+    const contra = pintar(React.createElement(Decision, { ...comunes, propuesta: lista, tarjeta: null,
+        modo: 'global', sentidoGlobal: 'fundado', razonGlobal: 'otra', globalDictado: true }));
+    ok(contra.slice(contra.indexOf('id="asi-sale"')).includes('Va contra el lado más probable según la jurimetría del tribunal: 32 %.'),
+       'P: si va contra el lado más probable, se dice');
+    // Sin preguntas (servidor anterior): las constancias de siempre.
+    const viejo = pintar(React.createElement(Decision, { ...comunes, propuesta: PROPUESTA, tarjeta: null,
+        modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global' }));
+    ok(viejo.includes('Constancias del juicio de origen que el motor necesita ver') && !viejo.includes('preguntas-para-ti')
+       && !viejo.includes('data-probabilidad-asi-sale'), 'P: sin preguntas ni probabilidad, lo de hoy');
 }
 
 const iHtml = process.argv.indexOf('--html');

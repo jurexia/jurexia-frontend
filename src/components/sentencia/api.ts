@@ -10,7 +10,7 @@
  * confirma quien los tiene delante.
  */
 
-import type { ApoyoDeLaVia, ConceptosOmitidos, FichaProcesal, FuerzaDelApoyo, SolucionPosible, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
+import type { ApoyoDeLaVia, ConceptosOmitidos, FichaProcesal, FuerzaDelApoyo, ProbabilidadDeLaTarjeta, SolucionPosible, SuerteDelSecundario, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 
 export interface EncargoAdelanto {
     numero: string;                 // «512/2026»
@@ -512,6 +512,10 @@ export interface ResultadoProyecto {
     /** DÓNDE CONTESTÓ EL ESTUDIO CADA ARGUMENTO (Paso 2, 26-sep-2026). Sólo con
      *  las variantes que escriben marcas (v3/v4); null en las demás. */
     mapa?: MapaDelEstudio | null;
+    /** LO QUE CORRIGIÓ EL SUPERVISOR antes de entregar (2-oct-2026, CONTRATO
+     *  D). null/undefined = no hubo supervisor (bandera apagada o un servidor
+     *  anterior). */
+    supervisor?: SupervisorDelProyecto | null;
 }
 
 /* ═══ LA OPINIÓN DEL SECRETARIO SOBRE CADA PROYECTO ═══
@@ -760,6 +764,22 @@ export interface PropuestaDeSolucion {
     /** «principal» es aquel del que dependen los demás: si prospera, el
      *  estudio de los otros queda sin materia. */
     jerarquia?: 'principal' | 'accesorio';
+    /** (2-oct-2026, CONTRATO A) Lo que antes quería decir `alcanza`: que el
+     *  material sostiene el sentido con holgura. Con la propuesta por
+     *  probabilidad `alcanza` es verdadero siempre que haya sentido, y esto
+     *  queda como grado de certeza. undefined = un servidor anterior. */
+    sostenida?: boolean;
+    /** De dónde salió el sentido: el motor, la probabilidad (lo volteó) o el
+     *  árbol de decisión. */
+    origen?: 'motor' | 'probabilidad' | 'arbol' | '';
+}
+
+/** ¿Trae un sentido que se pueda volcar? (2-oct-2026, David: «el motor nunca
+ *  se atreve a proponer»). Antes se miraba `alcanza`, y con `alcanza` falso se
+ *  tiraba el sentido aunque viniera escrito: ahora la propuesta va siempre que
+ *  haya un sentido, y `sostenida` dice con qué certeza. */
+export function conSentido(x: { sentido?: string | null } | null | undefined): boolean {
+    return !!(x?.sentido || '').trim();
 }
 
 /** Los tres modos de decidir el sentido. */
@@ -783,8 +803,16 @@ export interface SolucionGlobal {
      *  inercia. */
     en_contra: string;
     /** false = el motor no alcanzó a proponerla. Se declara el hueco; no se
-     *  rellena con la del problema principal. */
+     *  rellena con la del problema principal. (2-oct-2026) Desde el formato 3
+     *  es verdadero siempre que haya sentido: lo que antes decía esto lo dice
+     *  `sostenida`. */
     alcanza: boolean;
+    /** Lo que antes significaba `alcanza` (CONTRATO A). En un servidor anterior
+     *  se copia de `alcanza`. */
+    sostenida?: boolean;
+    /** LA PROBABILIDAD DEL SENTIDO (CONTRATO A): el lado con más del 50% es la
+     *  propuesta. null/undefined = un servidor que aún no la manda. */
+    probabilidad?: ProbabilidadDelSentido | null;
     /** EL CONTEXTO EN PROSA. Cuatro párrafos que sustituyen al volcado del
      *  acervo: es lo primero que lee el secretario y con lo que forma su
      *  criterio, sin volver al expediente. */
@@ -887,6 +915,15 @@ export interface RespuestaPropuesta {
      *  `necesitaConceptos`). La pantalla los pide cuando lo que viaja
      *  prospera (`conceptosQueFaltan`). */
     conceptosOmitidos?: ConceptosOmitidos | null;
+    /** (2-oct-2026, CONTRATO A) «preguntas» = el motor no propone hasta que el
+     *  secretario conteste las indispensables: `propuestas` vacío y `global`
+     *  null. Ausente = «lista», como siempre. */
+    estado?: 'lista' | 'preguntas';
+    /** 3 desde la propuesta por probabilidad; 2 o ausente, un servidor anterior. */
+    formato?: number;
+    /** Las preguntas al secretario (CONTRATO B). Con «lista», las no
+     *  indispensables y las ya contestadas, para enseñarlas. */
+    preguntas?: PreguntaAlSecretario[];
 }
 
 /** Pide al motor que proponga el sentido de cada problema.
@@ -907,7 +944,7 @@ export async function proponerSolucion(
     const j = await res.json();
     return {
         propuestas: j.propuestas ?? [],
-        global: j.global?.alcanza ? (j.global as SolucionGlobal) : null,
+        global: globalDe(j.global),
         contraste: Array.isArray(j.contraste)
             ? (j.contraste as ContrasteDelPlanteamiento[]) : [],
         resumen: j.resumen ?? '',
@@ -917,6 +954,26 @@ export async function proponerSolucion(
         necesitaConceptos: Boolean(j.necesita_conceptos),
         conceptosOmitidos: j && typeof j === 'object' && 'conceptos_omitidos' in j
             ? conceptosOmitidosDe(j.conceptos_omitidos) : undefined,
+        estado: j.estado === 'preguntas' ? 'preguntas' : 'lista',
+        formato: Number(j.formato) || 2,
+        preguntas: preguntasDe(j.preguntas),
+    };
+}
+
+/** LA GLOBAL NO SE TIRA SI TRAE SENTIDO (2-oct-2026). Se descartaba entera con
+ *  `alcanza` falso, y con ella su sentido, su alternativa y las constancias
+ *  que el servidor sí mandaba: la pantalla decía «el motor no se atrevió»
+ *  sobre una propuesta que existía. Ahora se queda siempre que haya sentido;
+ *  `sostenida` guarda lo que antes decía `alcanza` (un servidor anterior no
+ *  la manda: se copia) y `alcanza` vale lo que dice el formato 3: hay sentido. */
+export function globalDe(x: unknown): SolucionGlobal | null {
+    const g = _o(x);
+    if (!g || !(g.alcanza === true || _t(g.sentido))) return null;
+    return {
+        ...(g as unknown as SolucionGlobal),
+        alcanza: true,
+        sostenida: typeof g.sostenida === 'boolean' ? g.sostenida : g.alcanza === true,
+        probabilidad: probabilidadDe(g.probabilidad),
     };
 }
 
@@ -992,6 +1049,7 @@ export async function fichaProyecto(numero: string, userEmail: string): Promise<
         modo: String(p.modo ?? ''),
         criterios: [],
         mapa: mapaDe(p),
+        supervisor: supervisorDe(p.supervisor),
     };
 }
 
@@ -1048,6 +1106,8 @@ async function recuperarProyecto(
                 /* El mapa del estudio también se recupera: la ficha lo guarda
                    igual que el «listo» lo traía (Paso 2). */
                 mapa: f.mapa ?? null,
+                // Y las correcciones del supervisor, que la ficha guarda igual.
+                supervisor: f.supervisor ?? null,
             };
         }
         if (Date.now() >= limite) {
@@ -1215,6 +1275,12 @@ export async function resolverEnVivo(
      *  dato propio. Lo añadido va en el .docx, no en el texto que se vio
      *  escribirse (integración, 26-sep-2026). */
     onCompletando?: () => void,
+    /** EL SUPERVISOR REVISA EL PROYECTO (evento «revisando», 2-oct-2026,
+     *  CONTRATO D): con el estudio escrito, un modelo barato lo lee entero
+     *  —congruencia, citas, hechos no acreditados, extensión— y corrige antes
+     *  de componer el .docx. Sin decirlo, la pantalla parecería colgada justo
+     *  cuando el texto ya terminó de llegar. */
+    onRevisando?: () => void,
 ): Promise<ResultadoProyecto> {
     const fd = formularioDelResolver(numero, userEmail, opciones);
 
@@ -1294,6 +1360,8 @@ export async function resolverEnVivo(
                     onRecalificado?.();
                 } else if (ev.tipo === 'completando') {
                     onCompletando?.();
+                } else if (ev.tipo === 'revisando') {
+                    onRevisando?.();
                 } else if (ev.tipo === 'error') {
                     /* El motor dice que falló: eso no se recupera, se cuenta.
                        Con la lista, si la trae (p. ej. los accesorios que
@@ -1354,6 +1422,7 @@ export async function resolverEnVivo(
         textoHuecos: huecos.map(String),
         version: Number(listo.version || 0) || undefined,
         mapa: mapaDe(listo),
+        supervisor: supervisorDe(listo.supervisor),
     };
 }
 
@@ -1440,6 +1509,8 @@ export async function resolverConCriterio(
         textoAvisos: (h.get('X-Avisos-Detalle') || '')
             .split(' | ').map((x) => x.trim()).filter(Boolean),
         textoHuecos: [],
+        // El camino plano sólo dice cuántas corrigió el supervisor.
+        supervisor: supervisorDeCabecera(h.get('x-supervisor')),
     };
 }
 
@@ -1946,9 +2017,14 @@ export interface ContextoDelAsunto {
     relato: string;
     /** CÓMO VA LO QUE CORRE SOLO tras el adelanto: la consulta del acervo, el
      *  contraste y la propuesta. Cada uno: '' (no empezó) · 'en_curso' ·
-     *  'listo' · 'fallo'. La pantalla lo pregunta cada pocos segundos y, con
-     *  la propuesta lista, la pide y pasa a decidir. */
+     *  'listo' · 'fallo' (y, en la propuesta, 'preguntas' desde el 2-oct-2026:
+     *  espera las respuestas del secretario). La pantalla lo pregunta cada
+     *  pocos segundos y, con la propuesta lista, la pide y pasa a decidir. */
     avance: { consulta: string; contraste: string; propuesta: string };
+    /** LAS PREGUNTAS AL SECRETARIO, con su respuesta (2-oct-2026, CONTRATO C).
+     *  Con `avance.propuesta` = «preguntas» la propuesta espera a que conteste
+     *  las indispensables. Vacía en un servidor anterior. */
+    preguntas?: PreguntaAlSecretario[];
     /** Rediseño, etapa 4: UNA insignia con el punto en que está el asunto y si
      *  lo hecho quedó desactualizado. null si el servidor no la manda. */
     estadoSesion: EstadoDeLaSesion | null;
@@ -2011,6 +2087,8 @@ export interface FichaProyecto {
     /** El mapa del estudio con que se guardó (Paso 2): lo mismo que traía el
      *  evento «listo», para que volver al asunto enseñe la misma pestaña. */
     mapa?: MapaDelEstudio | null;
+    /** Lo que corrigió el supervisor (2-oct-2026), igual que en el «listo». */
+    supervisor?: SupervisorDelProyecto | null;
 }
 
 export interface AsuntoEnCurso {
@@ -2188,6 +2266,7 @@ export async function contextoDelAsunto(
             propuesta: String(j.avance?.propuesta?.estado ?? ''),
         },
         estadoSesion: estadoSesionDe(j.estado_sesion),
+        preguntas: preguntasDe(j.preguntas),
         problemas: (j.problemas ?? []) as ContextoDelAsunto['problemas'],
         encargo: (j.encargo ?? null) as Record<string, string> | null,
         proyecto: j.proyecto
@@ -2203,6 +2282,7 @@ export async function contextoDelAsunto(
                 criterios: (j.proyecto.criterios ?? []) as FichaProyecto['criterios'],
                 parcial: !!j.proyecto.parcial,
                 mapa: mapaDe(j.proyecto),
+                supervisor: supervisorDe(j.proyecto.supervisor),
             }
             : null,
         avisos: (j.avisos ?? []) as string[],
@@ -3091,7 +3171,24 @@ export function tarjetaDe(x: unknown): TarjetaDecision | null {
         deliberacion_estado: (['en_curso', 'listo', 'fallo', 'apagada'] as const)
             .find((x) => x === _t(j.deliberacion_estado).toLowerCase()) ?? '',
         avisos: _l(j.avisos).map(_textoDeAviso).filter(Boolean),
+        probabilidad: probabilidadDeLaTarjetaDe(j.probabilidad),
         origen: 'servidor',
+    };
+}
+
+/** CONTRATO E (2-oct-2026): la probabilidad del lado que la tarjeta recomienda.
+ *  `p` se guarda tal cual —fracción—; quien la pinta la lee como la del lado
+ *  que gana (`pctDelLado`, tarjetaDelPrincipal.ts), que por la regla del
+ *  50.01% es siempre el mayor de los dos. Ilegible o sin número = null. */
+function probabilidadDeLaTarjetaDe(x: unknown): ProbabilidadDeLaTarjeta | null {
+    const o = _o(x);
+    const p = o ? _n(o.p) : null;
+    if (!o || p === null) return null;
+    const lado = _t(o.lado).toLowerCase();
+    return {
+        p: Math.min(1, Math.max(0, p > 1 ? p / 100 : p)),
+        lado: lado === 'prospera' || lado === 'no_prospera' ? lado : '',
+        explicacion: _t(o.explicacion),
     };
 }
 
@@ -3104,4 +3201,213 @@ export async function leerTarjeta(numero: string, userEmail: string): Promise<Ta
     if (res.status === 404 || res.status === 405) return null;
     if (!res.ok) return _fallo(res);
     return tarjetaDe(await res.json().catch(() => null));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LA MEJORA FINAL DEL REDACTOR (2-oct-2026)
+   ═══════════════════════════════════════════════════════════════════════════
+   David: «el motor siempre pide constancias (…) simplificarlo a preguntas
+   como ¿El emplazamiento carece de cercioramiento?»; «el motor nunca se
+   atreve a proponer (…) si hay un 50.01% de probabilidad hacia un lado sea
+   esa la propuesta»; y un supervisor que revise el proyecto y corrija sus
+   errores. Aquí viven los contratos que lo traen a la pantalla (A, B, C y D
+   del paquete): la pregunta al secretario, la probabilidad del sentido y las
+   correcciones del supervisor. TODO SE LEE CON TOLERANCIA: una sesión vieja o
+   un servidor con las banderas apagadas no mandan nada de esto, y entonces la
+   pantalla se queda exactamente como estaba. */
+
+/** CONTRATO B. Una pregunta cerrada sobre lo que el acto reclamado no dice.
+ *  `indispensable` la calcula el servidor por código (el principal, las dos
+ *  respuestas llevan a desenlaces distintos y el acto no se pronuncia): con
+ *  una indispensable sin contestar no hay propuesta. */
+export interface PreguntaAlSecretario {
+    /** Estable del servidor («P1»…): es por donde viaja la respuesta, nunca
+     *  por el texto. */
+    id: string;
+    pregunta: string;
+    tipo: 'si_no' | 'texto';
+    para_que: string;
+    /** El problema al que sirve, 1-based (0 = no lo dice). */
+    problema: number;
+    indispensable: boolean;
+    /** Lo que sostiene la parte: se pregunta precisamente porque no se da
+     *  por cierto (David, 2-oct-2026). */
+    afirma_la_parte: string;
+    cita_escrito: string;
+    el_acto: string;
+    /** Cómo se califica si la respuesta es sí / no. */
+    si_si: string;
+    si_no: string;
+    /** Lo que supone el motor si nadie contesta: la carga de la prueba. */
+    si_no_contesta: string;
+    /** null = sin contestar; «si» · «no» · «no_consta» · o el texto. */
+    respuesta: string | null;
+}
+
+/** La respuesta de una pregunta, como viaja a /taller/responder. */
+export interface RespuestaAPregunta { id: string; respuesta: string }
+
+export function preguntaDe(x: unknown): PreguntaAlSecretario | null {
+    const o = _o(x);
+    const id = o ? _t(o.id) : '';
+    const pregunta = o ? _t(o.pregunta) : '';
+    if (!o || !id || !pregunta) return null;
+    const r = o.respuesta === null || o.respuesta === undefined ? '' : _t(o.respuesta);
+    return {
+        id, pregunta,
+        tipo: _t(o.tipo).toLowerCase() === 'texto' ? 'texto' : 'si_no',
+        para_que: _t(o.para_que),
+        problema: _n(o.problema) ?? 0,
+        indispensable: o.indispensable === true,
+        afirma_la_parte: _t(o.afirma_la_parte),
+        cita_escrito: _t(o.cita_escrito),
+        el_acto: _t(o.el_acto),
+        si_si: _t(o.si_si),
+        si_no: _t(o.si_no),
+        si_no_contesta: _t(o.si_no_contesta),
+        respuesta: r || null,
+    };
+}
+
+/** La lista, sin las ilegibles ni los ids repetidos (el primero manda). */
+export function preguntasDe(x: unknown): PreguntaAlSecretario[] {
+    const vistos = new Set<string>();
+    const out: PreguntaAlSecretario[] = [];
+    for (const y of _l(x)) {
+        const p = preguntaDe(y);
+        if (!p || vistos.has(p.id)) continue;
+        vistos.add(p.id);
+        out.push(p);
+    }
+    return out;
+}
+
+/** CONTRATO A. La probabilidad del sentido (probabilidad_sentido.py): la tasa
+ *  con que prospera este tipo de asunto en el tribunal, los precedentes del
+ *  mismo problema y el voto del motor con su razón de verosimilitud medida en
+ *  Kingston. `lado` es el que gana (más del 50%), y es el que se propone. */
+export interface ProbabilidadDelSentido {
+    p_prospera: number | null;
+    lado: 'prospera' | 'no_prospera' | null;
+    fuente: 'jurimetria' | 'motor' | '';
+    tasa: number | null;
+    n_tasa: number;
+    precedentes: { n: number; a_favor: number; en_contra: number; filas: unknown[] };
+    motor: 1 | 0 | null;
+    explicacion: string;
+    /** La propuesta del motor iba al otro lado y la probabilidad la volteó. */
+    volteada: boolean;
+    /** Lo que el motor había leído antes del volteo. */
+    sentido_motor: string;
+}
+
+export function probabilidadDe(x: unknown): ProbabilidadDelSentido | null {
+    const o = _o(x);
+    if (!o) return null;
+    const lado = _t(o.lado).toLowerCase();
+    const p = _n(o.p_prospera);
+    const pr = _o(o.precedentes);
+    const fuente = _t(o.fuente).toLowerCase();
+    const motor = _n(o.motor);
+    const r: ProbabilidadDelSentido = {
+        p_prospera: p === null ? null : Math.min(1, Math.max(0, p > 1 ? p / 100 : p)),
+        lado: lado === 'prospera' || lado === 'no_prospera' ? lado : null,
+        fuente: fuente === 'jurimetria' || fuente === 'motor' ? fuente : '',
+        tasa: _n(o.tasa),
+        n_tasa: _n(o.n_tasa) ?? 0,
+        precedentes: {
+            n: _n(pr?.n) ?? 0, a_favor: _n(pr?.a_favor) ?? 0, en_contra: _n(pr?.en_contra) ?? 0,
+            filas: _l(pr?.filas),
+        },
+        motor: motor === 1 ? 1 : motor === 0 ? 0 : null,
+        explicacion: _t(o.explicacion),
+        volteada: o.volteada === true,
+        sentido_motor: _t(o.sentido_motor).toLowerCase(),
+    };
+    // Sin lado ni número no hay nada que decir: es como si no viniera.
+    return r.lado || r.p_prospera !== null ? r : null;
+}
+
+/** CONTRATO D. Lo que el supervisor corrigió del proyecto antes de entregarlo. */
+export type TipoDeCorreccion = 'error_juridico' | 'incongruencia' | 'hecho_no_acreditado' | 'cita'
+    | 'repeticion' | 'extension' | 'redaccion';
+export interface CorreccionDelSupervisor {
+    tipo: TipoDeCorreccion | '';
+    /** 1-based, el párrafo del estudio (0 = no lo dice). */
+    parrafo: number;
+    antes: string;
+    despues: string;
+    motivo: string;
+}
+export interface SupervisorDelProyecto {
+    estado: 'aplicado' | 'sin_cambios' | 'fallo' | 'apagado' | 'vencido';
+    modelo: string;
+    segundos: number;
+    correcciones: CorreccionDelSupervisor[];
+    descartadas: number;
+    /** Sólo el camino plano (cabecera x-supervisor): cuántas fueron, sin la
+     *  lista. En los demás, la longitud de `correcciones`. */
+    total: number;
+}
+
+const _TIPOS_CORRECCION: TipoDeCorreccion[] = ['error_juridico', 'incongruencia', 'hecho_no_acreditado',
+    'cita', 'repeticion', 'extension', 'redaccion'];
+
+export function supervisorDe(x: unknown): SupervisorDelProyecto | null {
+    const o = _o(x);
+    if (!o) return null;
+    const est = _t(o.estado).toLowerCase();
+    const estados = ['aplicado', 'sin_cambios', 'fallo', 'apagado', 'vencido'] as const;
+    const estado = estados.find((e) => e === est);
+    if (!estado) return null;
+    const correcciones = _l(o.correcciones).map((y) => {
+        const c = _o(y);
+        if (!c) return null;
+        const tipo = _t(c.tipo).toLowerCase();
+        const r: CorreccionDelSupervisor = {
+            tipo: _TIPOS_CORRECCION.find((k) => k === tipo) ?? '',
+            parrafo: _n(c.parrafo) ?? 0,
+            antes: _t(c.antes).slice(0, 400),
+            despues: _t(c.despues).slice(0, 400),
+            motivo: _t(c.motivo),
+        };
+        return r.antes || r.despues || r.motivo ? r : null;
+    }).filter((c): c is CorreccionDelSupervisor => c !== null);
+    return {
+        estado, modelo: _t(o.modelo), segundos: _n(o.segundos) ?? 0, correcciones,
+        descartadas: _n(o.descartadas) ?? 0, total: correcciones.length,
+    };
+}
+
+/** El camino plano sólo dice cuántas: «3 correcciones». */
+export function supervisorDeCabecera(h: string | null | undefined): SupervisorDelProyecto | null {
+    const m = /(\d+)/.exec(h || '');
+    if (!m) return null;
+    const n = Number(m[1]);
+    return { estado: n > 0 ? 'aplicado' : 'sin_cambios', modelo: '', segundos: 0, correcciones: [],
+             descartadas: 0, total: n };
+}
+
+/** CONTRATO C. Las respuestas del secretario, todas en un solo envío. El
+ *  servidor las guarda en la sesión (con -w 2 nada vive en la memoria de un
+ *  worker), tira la propuesta guardada y la vuelve a pedir en segundo plano.
+ *  `propuesta`: «en_curso» (ya se está proponiendo) o «preguntas» (aún falta
+ *  alguna indispensable). */
+export async function responderPreguntas(
+    numero: string, userEmail: string, respuestas: RespuestaAPregunta[],
+): Promise<{ ok: boolean; pendientes: number; propuesta: 'en_curso' | 'preguntas' }> {
+    const fd = new FormData();
+    fd.append('numero', numero);
+    fd.append('user_email', userEmail);
+    fd.append('respuestas_json', JSON.stringify(
+        respuestas.filter((r) => r.id && (r.respuesta || '').trim())
+            .map((r) => ({ id: r.id, respuesta: r.respuesta.trim() }))));
+    const res = await fetch(`${BASE}/taller/responder`, { method: 'POST', body: fd });
+    if (!res.ok) return _fallo(res);
+    const j = _o(await res.json().catch(() => null)) ?? {};
+    return {
+        ok: j.ok !== false,
+        pendientes: _n(j.pendientes) ?? 0,
+        propuesta: _t(j.propuesta) === 'preguntas' ? 'preguntas' : 'en_curso',
+    };
 }

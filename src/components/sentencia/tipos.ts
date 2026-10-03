@@ -311,9 +311,20 @@ export interface FilaDeTuTribunal {
     tema: string;
 }
 
-/** Nunca un porcentaje: «claro», «reñido» o «no_alcanza», con sus razones.
- *  Vacío = no se sabe (la tarjeta armada en la pantalla, sin el servidor). */
+/** «claro», «reñido» o «no_alcanza», con sus razones. Vacío = no se sabe (la
+ *  tarjeta armada en la pantalla, sin el servidor). Desde el 2-oct-2026
+ *  (CONTRATO E) es el GRADO DE CERTEZA y ya no quita la recomendación: el
+ *  porcentaje, si lo hay, viaja aparte en `probabilidad`. */
 export type EstadoDeLaTarjeta = 'claro' | 'reñido' | 'no_alcanza' | '';
+
+/** LA PROBABILIDAD DEL LADO QUE SE RECOMIENDA (CONTRATO E, 2-oct-2026). David:
+ *  «si hay un 50.01% de probabilidad hacia un lado sea esa la propuesta de
+ *  resolución». `p` en fracción; `lado` «prospera» | «no_prospera» | ''. */
+export interface ProbabilidadDeLaTarjeta {
+    p: number;
+    lado: 'prospera' | 'no_prospera' | '';
+    explicacion: string;
+}
 
 /** EL CONTRATO DE LA SPEC B, ENTERO (art. 93, frs. I, V y VI, LA; AR 631/2025,
  *  28-sep-2026). Lo calcula `fase_rama.conceptos_omitidos` para la vía que
@@ -404,6 +415,10 @@ export interface TarjetaDecision {
      *  servidor que aún no lo dice) = no se espera nada más. */
     deliberacion_estado: '' | 'en_curso' | 'listo' | 'fallo' | 'apagada';
     avisos: string[];
+    /** (2-oct-2026, CONTRATO E) La probabilidad del lado recomendado. null o
+     *  ausente = el servidor no la manda (bandera apagada): la tarjeta se
+     *  pinta como antes, sin porcentaje. */
+    probabilidad?: ProbabilidadDeLaTarjeta | null;
     /** NO viene del servidor. «local» = armada en la pantalla con la propuesta
      *  mientras la del servidor no llega (o si el servidor aún no la sirve):
      *  sin estado, sin fuerza de los apoyos y con la suerte de los secundarios

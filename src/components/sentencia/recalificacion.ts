@@ -466,10 +466,17 @@ export function firmaPendientes(l: PendienteAlGenerar[]): string {
    pasa en las cuentas sin plan: no hay «ordenando» y el primer texto tarda un
    minuto más. Nunca se vuelve atrás: un «recalificando» tardío no tapa lo que
    ya se está ordenando o escribiendo. */
-export type FaseDelFlujo = 'preparando' | 'recalificando' | 'ordenando' | 'escribiendo';
-export type EventoDelFlujo = 'recalificando' | 'recalificado' | 'ordenando' | 'texto';
+/* «REVISANDO» (2-oct-2026, CONTRATO D): con el estudio ya escrito, el
+   supervisor lo lee entero y corrige antes de componer el documento. Llega
+   después del último texto y gana a todo: el texto ya terminó de llegar y, sin
+   decirlo, la tarjeta se quedaría en «Escribiendo el estudio» un minuto más
+   sin que se mueva nada. Un texto tardío la devuelve a «escribiendo». */
+export type FaseDelFlujo = 'preparando' | 'recalificando' | 'ordenando' | 'escribiendo' | 'revisando';
+export type EventoDelFlujo = 'recalificando' | 'recalificado' | 'ordenando' | 'texto' | 'revisando';
 export function faseTras(actual: FaseDelFlujo, ev: EventoDelFlujo): FaseDelFlujo {
+    if (ev === 'revisando') return 'revisando';
     if (ev === 'texto') return 'escribiendo';
+    if (actual === 'revisando') return actual;
     if (ev === 'ordenando') return actual === 'escribiendo' ? actual : 'ordenando';
     if (ev === 'recalificando') return actual === 'preparando' ? 'recalificando' : actual;
     return actual === 'recalificando' ? 'preparando' : actual;
@@ -477,6 +484,14 @@ export function faseTras(actual: FaseDelFlujo, ev: EventoDelFlujo): FaseDelFlujo
 /** El rótulo y el párrafo de la tarjeta, por fase. `hayTexto`: ya llegó algo
  *  que pintar (el estudio o «componiendo»). */
 export function rotuloDelFlujo(fase: FaseDelFlujo, hayTexto: boolean): { titulo: string; cuerpo: string } {
+    if (fase === 'revisando') {
+        return {
+            titulo: 'Revisando el proyecto: congruencia, citas y extensión…',
+            /* Sólo se ve si aún no había texto (el camino que no lo emite):
+               con texto, el estudio escrito se queda a la vista. */
+            cuerpo: 'El estudio ya está escrito. Un revisor lo lee entero antes de entregarlo: que el resolutivo diga lo mismo que el estudio, que cada cita exista, que no se dé por cierto lo que sólo afirma una parte, y que no repita ni se alargue. Lo que corrija te lo enseñamos al terminar.',
+        };
+    }
     if (hayTexto || fase === 'escribiendo') return { titulo: 'Escribiendo el estudio', cuerpo: '' };
     if (fase === 'ordenando') {
         return {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { FilaEspejo, PropuestaDeSolucion, RespuestaPropuesta, TesisDelAcervo } from './api';
-import { leerTarjeta } from './api';
+import type { FilaEspejo, ProbabilidadDelSentido, PropuestaDeSolucion, RespuestaPropuesta, TesisDelAcervo } from './api';
+import { conSentido, leerTarjeta } from './api';
 import type {
     ApoyoDeLaVia, ConceptosOmitidos, FichaProcesal, FilaDeTuTribunal, PrincipalDeLaTarjeta, ProblemaJuridico, SuerteDelSecundario, TarjetaDecision,
     ViaDeLaTarjeta,
@@ -51,9 +51,81 @@ export function hayAlternativaReal(t: TarjetaDecision | null | undefined): boole
 }
 
 /** Reñido o no alcanza: las dos columnas pesan igual y ninguna se rotula «te
- *  propongo»; son «vía A» y «vía B» (contrato_tarjeta.md). */
+ *  propongo»; son «vía A» y «vía B» (contrato_tarjeta.md).
+ *
+ *  SALVO QUE EL SERVIDOR RECOMIENDE (2-oct-2026, CONTRATO E). David: «el motor
+ *  nunca se atreve a proponer (…) si hay un 50.01% de probabilidad hacia un
+ *  lado sea esa la propuesta». Con la propuesta por probabilidad el servidor
+ *  manda `recomendada: «propuesta»` siempre que haya sentido, y el estado
+ *  queda como grado de certeza: «reñido» ya no borra la recomendación. Un
+ *  servidor anterior sólo recomienda con «claro», así que sin la bandera esto
+ *  dice lo mismo que antes. */
 export function sinRecomendar(t: TarjetaDecision | null | undefined): boolean {
+    if (t?.recomendada === 'propuesta') return false;
     return t?.estado === 'reñido' || t?.estado === 'no_alcanza';
+}
+
+/* ═══ LA PROBABILIDAD DEL LADO QUE SE PROPONE (2-oct-2026) ═══
+   La tarjeta del servidor la manda en `probabilidad` (CONTRATO E); la
+   propuesta, en `global.probabilidad` (CONTRATO A, con `p_prospera`). Se pinta
+   como el porcentaje del LADO QUE GANA, y ése es siempre el mayor de los dos:
+   la regla del 50.01% propone el lado con más probabilidad. Así da igual que
+   `p` venga como la del lado o como la de que prospere. */
+export function pctDelLado(p: number | null | undefined): number | null {
+    if (p === null || p === undefined || !Number.isFinite(p)) return null;
+    const f = p > 1 ? p / 100 : p;
+    return Math.round(Math.max(f, 1 - f) * 100);
+}
+
+export interface ProbabilidadVisible {
+    /** Entero, del lado que se propone; null = hay probabilidad sin número
+     *  (sin tasa para este tipo: manda el motor). */
+    pct: number | null;
+    lado: 'prospera' | 'no_prospera' | '';
+    explicacion: string;
+    /** El motor leía el otro lado y la probabilidad lo volteó. */
+    volteada: boolean;
+    sentidoMotor: string;
+}
+
+/** La que se enseña: la de la tarjeta del servidor si la trae; si no, la de la
+ *  propuesta. null = ninguna de las dos la manda (bandera apagada): entonces
+ *  nada lleva porcentaje, como antes. */
+export function probabilidadVisible(t: TarjetaDecision | null | undefined,
+                                    g?: ProbabilidadDelSentido | null): ProbabilidadVisible | null {
+    const pt = t?.probabilidad ?? null;
+    if (!pt && !g) return null;
+    const lado = pt?.lado || g?.lado || '';
+    return {
+        pct: pt ? pctDelLado(pt.p) : pctDelLado(g?.p_prospera),
+        lado,
+        explicacion: pt?.explicacion || g?.explicacion || '',
+        volteada: !!g?.volteada,
+        sentidoMotor: g?.sentido_motor || '',
+    };
+}
+
+/** El porcentaje de UN sentido, con la probabilidad del lado que gana: el
+ *  mismo si va del mismo lado, el complemento si va al contrario. null si no
+ *  se sabe de qué lado es (sin materia, innecesario) o no hay número. */
+export function pctDelSentido(pv: ProbabilidadVisible | null | undefined, sentido: string | undefined | null): number | null {
+    if (!pv || pv.pct === null || !pv.lado) return null;
+    const pr = prosperaDe(sentido);
+    if (pr === null) return null;
+    return pr === (pv.lado === 'prospera') ? pv.pct : 100 - pv.pct;
+}
+
+/** «El motor leía conceder; la jurimetría del tribunal inclina a negar: 68 %».
+ *  Vacío si no hubo volteo. En el amparo directo se dice conceder/negar; en
+ *  un recurso, que prospere o no. */
+export function fraseDelVolteo(pv: ProbabilidadVisible | null | undefined, esRecurso: boolean): string {
+    if (!pv?.volteada || !pv.lado) return '';
+    const prospera = pv.lado === 'prospera';
+    const verbo = (si: boolean) => (esRecurso ? (si ? 'que el recurso prospere' : 'que no prospere') : (si ? 'conceder' : 'negar'));
+    const motor = pv.sentidoMotor ? prosperaDe(pv.sentidoMotor) : !prospera;
+    const leia = motor === null ? `«${legible(pv.sentidoMotor).toLowerCase()}»` : verbo(motor);
+    return `El motor leía ${leia}; la jurimetría del tribunal inclina a ${verbo(prospera)}`
+        + (pv.pct !== null ? `: ${pv.pct} %` : '') + '.';
 }
 
 /** ¿De qué vía es esta calificación del principal? Por grupo: «inoperante» es
@@ -428,7 +500,8 @@ export function tarjetaDeLaPropuesta(
         }
     } else {
         const pp = propuesta.propuestas?.[iP];
-        if (pp?.sentido && pp.alcanza) vp = _via(pp.sentido, pp.razon, '', pp.apoyos, tesis);
+        // El sentido va aunque `alcanza` venga falso (2-oct-2026): ver `conSentido`.
+        if (conSentido(pp)) vp = _via(pp!.sentido, pp!.razon, '', pp!.apoyos, tesis);
     }
     const prP = prosperaDeLaVia(vp), prO = prosperaDeLaVia(vo);
     const delMotor = (x: PropuestaDeSolucion | undefined, relacion: string): SuerteDelSecundario | null =>
@@ -472,7 +545,10 @@ export function tarjetaDeLaPropuesta(
             prediccion: pral.prediccion?.frase ? { frase: pral.prediccion.frase, n: pral.prediccion.n } : null,
         } : null,
         vias: { propuesta: vp, opuesta: vo },
-        recomendada: null,
+        /* Con la probabilidad del sentido (CONTRATO A) la propuesta se
+           recomienda también en la tarjeta local; sin ella, como antes: la
+           local no recomienda nada. */
+        recomendada: vp && g?.probabilidad ? 'propuesta' : null,
         estado: '',
         estado_por_que: [],
         secundarios,
@@ -480,7 +556,10 @@ export function tarjetaDeLaPropuesta(
         que_la_cambiaria: g ? {
             en_contra: g.en_contra || '',
             crux: null,
-            constancias_indispensables: (g.constancias ?? []).filter((c) => c.indispensable).map((c) => c.que),
+            // Con preguntas (2-oct-2026) las constancias ya no se piden: las
+            // sustituyen las preguntas, que van arriba de la tarjeta.
+            constancias_indispensables: propuesta.preguntas?.length ? []
+                : (g.constancias ?? []).filter((c) => c.indispensable).map((c) => c.que),
             limite_protector: g.via_protectora?.limite || null,
         } : null,
         tu_tribunal: [],
@@ -492,6 +571,7 @@ export function tarjetaDeLaPropuesta(
         ficha: null,
         deliberacion_estado: '',
         avisos: [],
+        probabilidad: null,
         origen: 'local',
     };
 }
@@ -592,7 +672,7 @@ export function soltarLoTocado(problemas: ProblemaJuridico[], propuestas: Propue
         const valido = sentidoValido(s?.sentido);
         const texto = (q.criterio || '').trim();
         const suya = !!texto && !!q.razonDe && !q.razonDe.delMotor;
-        if (s && s.alcanza && valido && valido !== 'innecesario') {
+        if (s && conSentido(s) && valido && valido !== 'innecesario') {
             const mismaRazon = q.razonDe?.sentido === valido && !!texto;
             return { ...q, sentido: valido,
                      criterio: suya || mismaRazon ? q.criterio : (s.razon || ''),

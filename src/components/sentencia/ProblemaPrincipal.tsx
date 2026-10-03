@@ -1,17 +1,18 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, Check, ChevronRight, Loader2, PenLine } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Loader2, PenLine, Sparkles } from 'lucide-react';
 import { cn } from './primitivas';
 import { FilaDelEspejo } from './FilaDelEspejo';
 import { SolucionesPosibles } from './SolucionesPosibles';
-import type { OrigenDelActoReclamado, TesisDelAcervo } from './api';
+import type { OrigenDelActoReclamado, ProbabilidadDelSentido, TesisDelAcervo } from './api';
 import { DistintivoEjecutoria } from './OrigenDelActo';
 import type { ApoyoDeLaVia, FilaDeTuTribunal, TarjetaDecision, ViaDeLaTarjeta } from './tipos';
 import { fraseDe, legible } from './calificaciones';
 import {
     apoyosParaCitar, contrasteParaVia, decisivaYaEsElPrincipal, hayAlternativaReal, lineaDeLaFicha,
     preguntaRecurridaAparte, propuestaDelJuez, ladoQueRevoca, prosperaDeLaVia, rotuloDeSuerte, sinRecomendar, textoDeFuerza, tribunalPorLado, vigenciaDudosa, comoFilaDelEspejo,
+    fraseDelVolteo, probabilidadVisible,
 } from './tarjetaDelPrincipal';
 import type { LadoDeLaTarjeta, ViaActiva } from './tarjetaDelPrincipal';
 
@@ -43,6 +44,16 @@ import type { LadoDeLaTarjeta, ViaActiva } from './tarjetaDelPrincipal';
    columnas llevan el mismo marco, ninguna es dorada antes de que él elija, y
    con el estado «reñido» o «no alcanza» ninguna se rotula «te propongo»:
    son la vía A y la vía B, y el botón dorado deja de ser el de aceptar.
+
+   LA PROPUESTA SIEMPRE (2-oct-2026). David: «el motor nunca se atreve a
+   proponer. Si ya tenemos jurimetría y sólo hay dos sentidos (…) si hay un
+   50.01% de probabilidad hacia un lado sea esa la propuesta de resolución
+   para que el secretario pueda generar el proyecto en automático». Con la
+   probabilidad del sentido (CONTRATOS A y E) la columna propuesta se rotula
+   «Te propongo · NN %», «Resolver así» va en dorado aunque el estado sea
+   reñido —el estado queda como grado de certeza— y hay un botón que acepta y
+   genera de una vez. Sin la probabilidad (un servidor anterior, o la bandera
+   apagada) todo se pinta como antes.
 
    Pura: todo llega por props (la tarjeta ya elegida —la del servidor o la
    local—, la vía en pantalla y las acciones). La lógica vive en
@@ -159,9 +170,11 @@ function FilasTribunal({ filas, tope = 3 }: { filas: FilaDeTuTribunal[]; tope?: 
  *  eligió se enmarca en oro, y sólo después de elegirla. */
 function ColumnaVia({
     rotulo, lado, via, apagada, activa, esRecurso, tarjeta, tribunal, revoca,
-    tesis, onAbrirTesis, extra,
+    tesis, onAbrirTesis, extra, recomendada = false,
 }: {
     rotulo: string;
+    /** La que se recomienda (2-oct-2026): su rótulo va en dorado. */
+    recomendada?: boolean;
     lado: LadoDeLaTarjeta;
     via: ViaDeLaTarjeta | null;
     /** La leyenda de la columna sin vía real: eso también informa. */
@@ -199,7 +212,7 @@ function ColumnaVia({
         <div data-via={lado}
              className={cn('rounded-xl border bg-white/[0.02] p-3.5 transition-colors',
                  activa ? 'border-accent-gold/45' : 'border-white/10')}>
-            <Rotulito className={activa ? 'text-accent-gold/90' : undefined}>
+            <Rotulito className={activa || recomendada ? 'text-accent-gold/90' : undefined}>
                 {rotulo}{activa && ' · elegida'}
             </Rotulito>
             <h3 className="mt-2 font-serif text-[16px] font-medium leading-snug text-white">
@@ -322,6 +335,7 @@ export default function ProblemaPrincipal({
     onResolverAsi, onResolverOpuesta, onMiCriterio, onResolverSolucion,
     onRedactarOpuesta, redactando = false,
     onProponer, puedeVerComoSale = false, origen = null,
+    probabilidadMotor = null, onAceptarYGenerar, generando = false, esperaRespuestas = false,
 }: {
     tarjeta: TarjetaDecision;
     esRecurso: boolean;
@@ -360,6 +374,16 @@ export default function ProblemaPrincipal({
     /** DE DÓNDE VIENE LO RECLAMADO (30-sep-2026): con la clasificación frente
      *  a la ejecutoria, cada pregunta lleva su distintivo. null: nada. */
     origen?: OrigenDelActoReclamado | null;
+    /** LA PROBABILIDAD DEL SENTIDO que trajo la propuesta (2-oct-2026,
+     *  CONTRATO A): el porcentaje si la tarjeta no lo trae, y si la
+     *  probabilidad volteó lo que leía el motor. */
+    probabilidadMotor?: ProbabilidadDelSentido | null;
+    /** «ACEPTAR Y GENERAR»: fija la vía propuesta y genera el proyecto de una
+     *  vez (2-oct-2026). Sin él no se pinta. */
+    onAceptarYGenerar?: () => void;
+    generando?: boolean;
+    /** La propuesta espera las respuestas del secretario (estado «preguntas»). */
+    esperaRespuestas?: boolean;
 }) {
     const t = tarjeta;
     const p = t.principal;
@@ -367,7 +391,13 @@ export default function ProblemaPrincipal({
     const vo = t.vias.opuesta;
     const alt = hayGlobal && hayAlternativaReal(t);
     const neutras = sinRecomendar(t);
-    const noAlcanza = t.estado === 'no_alcanza';
+    /* LA RECOMENDACIÓN POR PROBABILIDAD (2-oct-2026): con ella el estado es el
+       grado de certeza y ya no tumba la propuesta. Sin ella (servidor
+       anterior), `recomienda` es falso y todo queda como estaba. */
+    const pv = hayGlobal ? probabilidadVisible(t, probabilidadMotor) : null;
+    const recomienda = hayGlobal && !!vp && (t.recomendada === 'propuesta' || !!pv);
+    const noAlcanza = t.estado === 'no_alcanza' && !recomienda;
+    const volteo = fraseDelVolteo(pv, esRecurso);
     const revoca = ladoQueRevoca(t, esRecurso);
     const trib = tribunalPorLado(t);
     const prosperaLado = ladoSecundarios === 'opuesta' ? prosperaDeLaVia(vo)
@@ -383,7 +413,7 @@ export default function ProblemaPrincipal({
     /* LOS TRES BOTONES. Con «no alcanza», el de su criterio va primero y es el
        dorado; con «reñido», ninguno es dorado: dorar «resolver así» sería
        recomendar lo que el estado dice que no se puede recomendar. */
-    const doradoAsi = hayGlobal && !neutras;
+    const doradoAsi = hayGlobal && (!neutras || recomienda);
     const botonAsi = hayGlobal && vp ? (
         <button key="asi" type="button" onClick={onResolverAsi}
                 aria-pressed={viaElegida && viaActiva === 'propuesta'}
@@ -414,7 +444,21 @@ export default function ProblemaPrincipal({
             Resolver con mi criterio
         </button>
     );
-    const botones = noAlcanza ? [botonCriterio, botonAsi, botonOpuesta] : [botonAsi, botonOpuesta, botonCriterio];
+    /* «ACEPTAR Y GENERAR» (2-oct-2026): la propuesta, de un clic hasta el
+       .docx. Va primero y es el único relleno en dorado; «Resolver así» sigue
+       para quien quiere ver antes cómo sale. Sólo cuando la tarjeta
+       recomienda la propuesta: sin recomendación (reñido o no alcanza en un
+       servidor anterior) aceptar a ciegas sería lo que la tarjeta dice que no. */
+    const botonAceptar = recomienda && onAceptarYGenerar ? (
+        <button key="aceptar" type="button" onClick={onAceptarYGenerar} disabled={generando}
+                data-aceptar-y-generar
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-b from-[#e3c98a] to-accent-gold px-4
+                           text-[14px] font-semibold text-charcoal-900 transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40">
+            {generando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {generando ? 'Escribiendo el proyecto…' : 'Aceptar y generar'}
+        </button>
+    ) : null;
+    const botones = noAlcanza ? [botonCriterio, botonAsi, botonOpuesta] : [botonAceptar, botonAsi, botonOpuesta, botonCriterio];
 
     const rotuloVia = viaActiva === 'propuesta' ? 'la propuesta' : viaActiva === 'contraria' ? 'la contraria' : 'tu criterio';
 
@@ -584,6 +628,8 @@ export default function ProblemaPrincipal({
                     <p className="mt-1.5 text-[12px] leading-relaxed text-white/45">
                         {hayGlobal
                             ? <>Se resuelven solos con el principal. Si alguno no te convence, «Resolver con mi criterio».</>
+                            : esperaRespuestas
+                            ? <>Se califican cuando el motor proponga con tus respuestas.</>
                             : <>Cada uno lleva la calificación que le propuso el motor; corrígela abajo si no la compartes.</>}
                         {t.origen === 'local' && t.secundarios.some((s) => s.en_propuesta?.previsto || s.en_opuesta?.previsto)
                             && ' «Previsto» es lo que escribió el motor para esa vía; el árbol de decisión lo confirma al generar.'}
@@ -615,13 +661,18 @@ export default function ProblemaPrincipal({
                 </div>
             )}
 
-            {/* ── EL ESTADO: nunca un porcentaje ── */}
+            {/* ── EL ESTADO ── Sin probabilidad, nunca un porcentaje: la banda dice
+                claro, reñido o no alcanza. Con ella (2-oct-2026) la banda es el
+                grado de certeza y la propuesta se sostiene igual: el porcentaje
+                va en la columna y en «Por qué este lado». */}
             {t.estado && (
                 <div data-estado-banda={t.estado}
                      className={cn('mt-4 border-l-2 py-2 pl-2.5 pr-3',
                          t.estado === 'claro' ? 'border-white/15 bg-white/[0.02]' : 'border-amber-400/40 bg-amber-400/[0.04]')}>
                     <p className={cn('text-[13px] font-medium', t.estado === 'claro' ? 'text-white/75' : 'text-amber-200/90')}>
                         {t.estado === 'claro' ? 'Claro: el material sostiene la propuesta'
+                            : recomienda && t.estado === 'reñido' ? 'Reñido: las dos vías se sostienen; te propongo la más probable.'
+                            : recomienda ? 'Certeza baja: el material no basta para darla por clara; te propongo la más probable.'
                             : t.estado === 'reñido' ? 'Reñido: las dos vías se sostienen. Ninguna se rotula como recomendada; decides tú.'
                             : 'No alcanza para recomendar una vía. Resuelve con tu criterio, o aporta lo que falta.'}
                     </p>
@@ -633,10 +684,30 @@ export default function ProblemaPrincipal({
                 </div>
             )}
 
+            {/* EL VOLTEO, EN UNA LÍNEA (2-oct-2026): si la propuesta no es lo que
+                leía el motor, se dice; quien firma tiene que saber que el lado lo
+                puso la jurimetría del tribunal y no la lectura del asunto. */}
+            {volteo && (
+                <p data-volteo className="mt-4 flex gap-1.5 border-l-2 border-accent-gold/45 py-1 pl-2 text-[13px] leading-relaxed text-accent-gold/90">
+                    {volteo}
+                </p>
+            )}
+            {pv?.explicacion && (
+                <details data-por-que-lado className="group mt-2">
+                    <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[12px] text-accent-gold/80 hover:text-accent-gold">
+                        <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
+                        Por qué este lado
+                    </summary>
+                    <p className="mt-1.5 whitespace-pre-line text-[13px] leading-relaxed text-white/75">{pv.explicacion}</p>
+                </details>
+            )}
+
             {/* ── 3 · LAS DOS VÍAS, DEL MISMO PESO ── */}
             {hayGlobal ? (
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <ColumnaVia rotulo={neutras ? TITULO_VIA.a : TITULO_VIA.propuesta} lado="propuesta" via={vp}
+                    <ColumnaVia rotulo={neutras ? TITULO_VIA.a
+                                    : pv?.pct != null ? `${TITULO_VIA.propuesta} · ${pv.pct} %` : TITULO_VIA.propuesta}
+                                recomendada={recomienda} lado="propuesta" via={vp}
                                 activa={viaElegida && viaActiva === 'propuesta'} esRecurso={esRecurso} tarjeta={t}
                                 tribunal={trib.propuesta} revoca={revoca === 'propuesta'}
                                 tesis={tesis} onAbrirTesis={onAbrirTesis} />
@@ -674,8 +745,13 @@ export default function ProblemaPrincipal({
                                     tesis={tesis} onAbrirTesis={onAbrirTesis} />
                     ) : null}
                     <p className="mt-3 text-[13px] leading-relaxed text-white/60">
-                        {hayPropuestas
-                            ? 'El motor no se atrevió con un sentido para todo el asunto: propuso problema por problema. Abajo, en tu ventana, corrige lo que no compartas y genera.'
+                        {/* (2-oct-2026) Fuera «el motor no se atrevió»: con la
+                            propuesta por probabilidad siempre hay sentido, y si
+                            espera tus respuestas, se dice eso. */}
+                        {esperaRespuestas
+                            ? 'La propuesta espera tus respuestas: contéstalas arriba y el motor propone con ellas delante.'
+                            : hayPropuestas
+                            ? 'El motor propuso problema por problema. Abajo, en tu ventana, corrige lo que no compartas y genera.'
                             : 'Con el material de este asunto el motor no propuso ningún sentido. Decide tú, problema por problema.'}
                     </p>
                 </div>
@@ -727,7 +803,7 @@ export default function ProblemaPrincipal({
                         Ver cómo va a salir ↓
                     </a>
                 )}
-                {onProponer && !hayGlobal && !hayPropuestas && (
+                {onProponer && !hayGlobal && !hayPropuestas && !esperaRespuestas && (
                     <button type="button" onClick={onProponer}
                             className="inline-flex h-10 items-center rounded-xl border border-white/10 px-3.5 text-[13px] font-medium text-white/60 transition hover:text-white">
                         Volver a pedir la propuesta

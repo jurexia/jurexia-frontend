@@ -80,6 +80,9 @@ transpilar('src/components/sentencia/Decision.tsx', 'decision.js', [
     ['require("./EstudiarJuntos")', 'require("./nada.js")'],
     ['require("./ComoSeEstudiara")', 'require("./como_espia.js")'],
     ['require("./recalificacion")', 'require("./recal.js")'],
+    ['require("./OrigenDelActo")', 'require("./nada.js")'],
+    // Las preguntas al secretario (2-oct-2026) se prueban en problema_principal.mjs.
+    ['require("./PreguntasParaTi")', 'require("./nada.js")'],
 ]);
 /* LA TARJETA DEL PROBLEMA PRINCIPAL (28-sep-2026), que Decision monta en
    lugar de «la frase»: con el mismo React falso, se pinta entera en el árbol
@@ -92,6 +95,10 @@ transpilar('src/components/sentencia/ProblemaPrincipal.tsx', 'ProblemaPrincipal.
     REACT,
     ['require("lucide-react")', 'require("./nada.js")'],
     ['require("./primitivas")', 'require("./primitivas_falsas.js")'],
+    // Lo que la tarjeta monta y aquí no se mira (se prueban aparte).
+    ['require("./FilaDelEspejo")', 'require("./nada.js")'],
+    ['require("./SolucionesPosibles")', 'require("./nada.js")'],
+    ['require("./OrigenDelActo")', 'require("./nada.js")'],
 ]);
 fs.writeFileSync(path.join(TMP, 'nada.js'),
     'module.exports = new Proxy({}, { get: () => () => null });');
@@ -1240,6 +1247,49 @@ const botonDe = (arbol, re) => buscar(arbol, (n) => n.type === 'button' && re.te
        'promete lo que recibe el estudio: calificación conjunta y una respuesta por argumento');
     ok(!/si atacan consideraciones distintas/.test(t), 'no promete lo que ninguna variante hace');
     ok(/sale del grupo y se te avisa/.test(t), 'y dice que el que queda sin estudiar sale del grupo (el servidor lo hace y avisa)');
+}
+
+/* ═══ 14 · «ACEPTAR Y GENERAR» (2-oct-2026) ═══
+   David: «la propuesta de resolución para que el secretario pueda generar el
+   proyecto en automático». El botón fija la vía propuesta y genera en el
+   pintado siguiente —por efecto, no encadenando: el estado de la vía aún no
+   ha llegado cuando arrancaría la generación—. Si algo impide generar, no se
+   genera. Y sin probabilidad ni recomendación, el botón no aparece. */
+{
+    const pedidos = [];
+    const vueltas = [];
+    const GL = { sentido: 'infundado', razon: 'razón global', problema_que_decide: '', efecto: '', apoyos: [],
+                 confianza: 'media', en_contra: '', alcanza: true, sostenida: false,
+                 contexto: { hechos: '', resolvio: '', combate: '', tema_principal: '' },
+                 alternativa: { sentido: 'fundado', razon: 'razón contraria', efecto: '', apoyos: [] }, checklist: [],
+                 probabilidad: api.probabilidadDe({ p_prospera: 0.3, lado: 'no_prospera' }) };
+    const props = baseDecision({
+        onGenerar: (f) => pedidos.push(f), onVolverALaPropuesta: () => vueltas.push('propuesta'),
+        modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global', globalDictado: false,
+        tocados: new Set(), abrirCorreccion: 0,
+        propuesta: { ...baseDecision().propuesta, global: GL, estado: 'lista', formato: 3, preguntas: [] },
+    });
+    let a = pintarDecision(props);
+    const b = botonDe(a, /^Aceptar y generar$/);
+    ok(!!b, 'con la probabilidad, la tarjeta ofrece «Aceptar y generar»');
+    b.props.onClick();
+    ok(pedidos.length === 0, 'el clic no genera en el acto: espera al pintado siguiente');
+    a = repintarDecision(props);
+    ok(vueltas.join() === 'propuesta' && pedidos.join() === 'estandar',
+       'fija la vía propuesta y, en el pintado siguiente, genera la estándar');
+    a = repintarDecision(props);
+    ok(pedidos.length === 1, 'y una sola vez');
+    // Si algo impide generar (los conceptos de un sobreseimiento que se levanta), no genera.
+    pedidos.length = 0;
+    const p2 = { ...props, propuesta: { ...props.propuesta, necesitaConceptos: true } };
+    a = pintarDecision(p2);
+    botonDe(a, /^Aceptar y generar$/).props.onClick();
+    a = repintarDecision(p2);
+    ok(pedidos.length === 0, 'si algo impide generar, «Aceptar y generar» no genera (la tarjeta final dice por qué)');
+    // Sin probabilidad (servidor anterior) la tarjeta local no recomienda: no hay botón.
+    const p3 = { ...props, propuesta: { ...props.propuesta, global: { ...GL, probabilidad: null } } };
+    a = pintarDecision(p3);
+    ok(!botonDe(a, /^Aceptar y generar$/), 'sin probabilidad ni recomendación, no hay «Aceptar y generar»');
 }
 
 fs.rmSync(TMP, { recursive: true, force: true });

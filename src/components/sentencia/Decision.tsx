@@ -6,12 +6,14 @@ import { cn, Pastilla } from './primitivas';
 import type { ProblemaJuridico, TarjetaDecision } from './tipos';
 import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
               PropuestaSuplencia, DecisionSuplencia, TesisDelAcervo,
-              OrigenDelActoReclamado } from './api';
+              OrigenDelActoReclamado, RespuestaAPregunta } from './api';
+import { conSentido } from './api';
+import PreguntasParaTi from './PreguntasParaTi';
 import { FINAS, grupoDe, legible } from './calificaciones';
 import ProblemaPrincipal from './ProblemaPrincipal';
 import type { MarcaDeSecundario } from './ProblemaPrincipal';
 import { conceptosQueFaltan, elegirTarjeta, ladoDelSentido, prosperaDeLaVia, resolverAsiDicta, rotuloDeSuerte,
-         suerteDe, tarjetaDeLaPropuesta, viaActivaDe } from './tarjetaDelPrincipal';
+         suerteDe, tarjetaDeLaPropuesta, viaActivaDe, probabilidadVisible, pctDelSentido } from './tarjetaDelPrincipal';
 import type { LadoDeLaTarjeta, ViaActiva } from './tarjetaDelPrincipal';
 import EstudiarJuntos from './EstudiarJuntos';
 import { DistintivoEjecutoria } from './OrigenDelActo';
@@ -400,6 +402,7 @@ export default function Decision({
     tarjeta = null, tesisDelMaterial, onAbrirTesis,
     onVolverALaPropuesta, onResolverPorLaVia,
     origen = null,
+    onResponderPreguntas, respondiendo = false,
 }: {
     problemas: ProblemaJuridico[];
     onCambiar: (id: string, campo: 'criterio' | 'sentido', valor: string) => void;
@@ -502,6 +505,10 @@ export default function Decision({
      *  de los planteamientos frente a la ejecutoria que se cumplía, cada
      *  tarjeta de problema lleva su distintivo (vinculado, libre…). null: nada. */
     origen?: OrigenDelActoReclamado | null;
+    /** LAS PREGUNTAS AL SECRETARIO (2-oct-2026, CONTRATO C): manda todas las
+     *  respuestas en lote y la página vuelve a pedir la propuesta cuando esté. */
+    onResponderPreguntas?: (r: RespuestaAPregunta[]) => void | Promise<void>;
+    respondiendo?: boolean;
 }) {
     const [corrigiendo, setCorrigiendo] = useState(false);
     /* SIN PROPUESTA GLOBAL, LAS CALIFICACIONES A LA VISTA (auditoría,
@@ -512,7 +519,13 @@ export default function Decision({
        sólo subía y nunca bajaba; tras «Resolver con mi criterio» una
        propuesta nueva dejaba la ventana abierta sobre una elección que ya no
        existía. Cada propuesta global vuelve a la tarjeta. */
-    useEffect(() => { if (propuesta) setCorrigiendo(!propuesta.global); }, [propuesta]);
+    /* (2-oct-2026) Si la propuesta ESPERA RESPUESTAS no hay global, pero eso
+       no es «decide tú»: la ventana se queda cerrada y arriba van las
+       preguntas. */
+    const esperaRespuestas = propuesta?.estado === 'preguntas';
+    useEffect(() => {
+        if (propuesta) setCorrigiendo(!propuesta.global && propuesta.estado !== 'preguntas');
+    }, [propuesta]);
     /* ═══ LA VÍA QUE ÉL ELIGIÓ (28-sep-2026) ═══
        null hasta que pulsa uno de los tres botones de la tarjeta. Cada
        propuesta nueva la olvida: la elección era sobre otra. Sin propuesta
@@ -521,7 +534,9 @@ export default function Decision({
        `listoParaPlan`): alternar entre las dos vías antes de decidir gastaba
        las cuatro corridas de la sesión en firmas que nadie iba a usar. */
     const [viaElegida, setViaElegida] = useState<ViaActiva | null>(null);
-    useEffect(() => { setViaElegida(propuesta && !propuesta.global ? 'criterio' : null); }, [propuesta]);
+    useEffect(() => {
+        setViaElegida(propuesta && !propuesta.global && propuesta.estado !== 'preguntas' ? 'criterio' : null);
+    }, [propuesta]);
     const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
     const [textoAporte, setTextoAporte] = useState('');
     // Cuál de los dos botones se pulsó: el giro va en ése, no en los dos.
@@ -536,7 +551,14 @@ export default function Decision({
     const [editando, setEditando] = useState<{ id: string; texto: string } | null>(null);
     /* Lo que se está tecleando/adjuntando para cada constancia pedida. */
     const [aporteConstancia, setAporteConstancia] = useState<Record<string, { texto: string; fichero: File | null }>>({});
-    const constancias = propuesta?.global?.constancias ?? [];
+    /* LAS PREGUNTAS SUSTITUYEN A LAS CONSTANCIAS (2-oct-2026, David: «simplificar
+       el tema de constancias y no ser tan exigentes»). Si la propuesta trae
+       preguntas, el pliegue de constancias y su aviso junto al botón no se
+       pintan; si trae constancias viejas y ninguna pregunta (un servidor
+       anterior), todo sigue como estaba. */
+    const preguntas = propuesta?.preguntas ?? [];
+    const usaPreguntas = preguntas.length > 0 || esperaRespuestas;
+    const constancias = usaPreguntas ? [] : (propuesta?.global?.constancias ?? []);
     const faltanIndispensables = constancias.filter((c) => c.indispensable && !constanciasAportadas?.has(c.que));
     /* «Quiero cambiar de sentido» desde el proyecto terminado es elegir su
        criterio a sabiendas: abre la ventana y cuenta como vía elegida. */
@@ -699,6 +721,10 @@ export default function Decision({
     const bloqueaConceptos = necesitaConceptos && !revocaConcesion;
     const puedeGenerar = !generando && !proponiendo && listoParaGenerar && !faltaRazon && !bloqueaConceptos;
     const alguienSeAparta = enGlobal ? globalSeAparta : seAparta.some(Boolean);
+    /* El porcentaje del sentido que viaja en «todo el asunto» (2-oct-2026):
+       null sin probabilidad, como antes. */
+    const pctAsiSale = enGlobal && sentidoGlobal
+        ? pctDelSentido(probabilidadVisible(tarjetaVista, global?.probabilidad ?? null), sentidoGlobal) : null;
 
     /* EL PLAN SE PIDE CUANDO LA DECISIÓN ESTÁ COMPLETA Y QUIETA: cada problema
        con sentido, la razón escrita donde se aparta, los conceptos pegados si
@@ -785,7 +811,7 @@ export default function Decision({
         return {
             id: p.id, pregunta: p.pregunta, sentido: p.sentido || '', grupo: grupos[p.id] ?? '',
             de: tocados?.has(p.id) && p.sentido ? 'tuya'
-                : motor?.sentido && motor.alcanza ? 'del motor' : (p.sentido ? 'de la pantalla' : 'sin decidir'),
+                : conSentido(motor) ? 'del motor' : (p.sentido ? 'de la pantalla' : 'sin decidir'),
         };
     }), [problemas, enGlobal, sentidoGlobal, globalDictado, tocados, propuesta, principal, grupos, recalificadas,  // eslint-disable-line react-hooks/exhaustive-deps
         tarjetaVista, ladoSecundarios, prosperaDelLado]);
@@ -808,6 +834,26 @@ export default function Decision({
         setFormatoPulsado(f);
         onGenerar(f);
     };
+    /* ═══ «ACEPTAR Y GENERAR» (2-oct-2026) ═══
+       David: «la propuesta de resolución para que el secretario pueda generar
+       el proyecto en automático». Fija la vía propuesta y genera. NO se
+       encadenan las dos llamadas: el estado que fija `resolverAsi` (la vía, el
+       sentido y la razón de la página) no ha llegado cuando arrancaría la
+       generación —page.tsx lo dice junto a «Genera todo el proyecto»—. Se deja
+       una marca y el efecto genera en el pintado siguiente, con el estado ya
+       puesto; si para entonces algo impide generar (conceptos que faltan, una
+       razón que escribir), no se genera: la pantalla ya bajó a «Así va a salir»,
+       donde se dice por qué. */
+    const [generarTrasAceptar, setGenerarTrasAceptar] = useState(false);
+    const aceptarYGenerar = () => {
+        resolverAsi();
+        setGenerarTrasAceptar(true);
+    };
+    useEffect(() => {
+        if (!generarTrasAceptar) return;
+        setGenerarTrasAceptar(false);
+        if (viaActiva === 'propuesta' && puedeGenerar) generar('estandar');
+    }, [generarTrasAceptar]); // eslint-disable-line react-hooks/exhaustive-deps
     const generarAsi = () => {
         const f = pedidoDetenido?.formato ?? 'estandar';
         setPendientesVistos(firmaGen);
@@ -883,7 +929,19 @@ export default function Decision({
                 GENERARSE: se genera en un solo sitio, la tarjeta final (David,
                 16-sep-2026: «no múltiples botones que confundan»). Aquí se
                 elige la vía y se baja a ver con qué sale. El aviso de
-                extemporaneidad vive junto al botón que genera. */}
+                extemporaneidad vive junto al botón que genera. LA EXCEPCIÓN
+                (2-oct-2026): «Aceptar y generar», cuando la tarjeta recomienda
+                la propuesta —David: «para que el secretario pueda generar el
+                proyecto en automático»—; baja igual a «Así va a salir». */}
+            {/* ═══ 0 · PREGUNTAS PARA TI (2-oct-2026) ═══
+                Arriba de la decisión: con una indispensable sin contestar no
+                hay propuesta que decidir. Con la propuesta hecha, las que
+                quedan (no indispensables o ya contestadas) van plegadas. */}
+            {preguntas.length > 0 && (
+                <PreguntasParaTi preguntas={preguntas} onResponder={onResponderPreguntas}
+                                 enviando={respondiendo} esperando={esperaRespuestas}
+                                 compacta={!esperaRespuestas} />
+            )}
             {tarjetaVista && problemas.length > 0 && (
                 <ProblemaPrincipal
                     tarjeta={tarjetaVista}
@@ -905,7 +963,11 @@ export default function Decision({
                     redactando={razonandoGlobal}
                     onProponer={onProponer}
                     puedeVerComoSale={listoParaGenerar}
-                    origen={origen} />
+                    origen={origen}
+                    probabilidadMotor={global?.probabilidad ?? null}
+                    onAceptarYGenerar={global ? aceptarYGenerar : undefined}
+                    generando={generando}
+                    esperaRespuestas={esperaRespuestas} />
             )}
 
             {/* ═══ 3 · CAMBIAR EL SENTIDO: LAS DOS VÍAS DE SIEMPRE ═══ */}
@@ -1330,6 +1392,17 @@ export default function Decision({
                                     {globalDictado ? 'tu calificación' : 'la del motor'}
                                 </span>
                             )}
+                        </p>
+                    )}
+                    {/* LA PROBABILIDAD DE LO QUE VIAJA (2-oct-2026): la del lado
+                        del sentido que sale, con la jurimetría del tribunal. Si
+                        va contra el lado más probable, se dice. */}
+                    {enGlobal && pctAsiSale !== null && (
+                        <p data-probabilidad-asi-sale className={cn('mt-1 text-[13px]',
+                            pctAsiSale >= 50 ? 'text-accent-gold/90' : 'text-amber-300/90')}>
+                            {pctAsiSale >= 50
+                                ? `Es el lado más probable según la jurimetría del tribunal: ${pctAsiSale} %.`
+                                : `Va contra el lado más probable según la jurimetría del tribunal: ${pctAsiSale} %. Asegúrate de que tu razón lo sostiene.`}
                         </p>
                     )}
                     <ul className="mt-2 grid gap-1">

@@ -58,8 +58,11 @@ import {
     documentosDelAsunto, descargarDocumento, olvidarAsunto,
     URL_EXTENSION, URL_COMPLEMENTO, URL_SISE, descartarPendiente,
     fichaDesdeAdmision, pedirPlan, leerPlan, recalificar, mensajeDeError, textoVisibleDelError,
+    responderPreguntas, conSentido,
 } from '@/components/sentencia/api';
-import type { OpcionesResolver } from '@/components/sentencia/api';
+import type { OpcionesResolver, RespuestaAPregunta } from '@/components/sentencia/api';
+import PreguntasParaTi from '@/components/sentencia/PreguntasParaTi';
+import CorreccionesDelSupervisor from '@/components/sentencia/CorreccionesDelSupervisor';
 import type { EnlacePlan } from '@/components/sentencia/ComoSeEstudiara';
 import {
     useRecalificacion, idsPorRecalificar, aplicarReparto, pendientesVivos,
@@ -612,11 +615,19 @@ export default function TallerDeSentencias() {
        Los dos callbacks que hacen el trabajo se definen más abajo; se llaman
        por referencia para no adelantar su declaración. */
     const avanceAuto = delAsunto?.avance ?? { consulta: '', contraste: '', propuesta: '' };
+    /* «PREGUNTAS» TAMBIÉN DETIENE EL SONDEO (2-oct-2026): la propuesta espera
+       las respuestas del secretario y preguntar cada cuatro segundos no la va
+       a mover. Al responder vuelve a «en_curso» y el sondeo sigue solo. */
     const autoEnCurso = paso === 'adelanto' && !!delAsunto
-        && avanceAuto.propuesta !== 'listo' && avanceAuto.propuesta !== 'fallo';
+        && avanceAuto.propuesta !== 'listo' && avanceAuto.propuesta !== 'fallo'
+        && avanceAuto.propuesta !== 'preguntas';
     const pedirAcervoRef = useRef<((usarContexto?: boolean) => Promise<void>) | null>(null);
     const pedirPropuestaRef = useRef<((opts?: { sinContexto?: boolean; contextoTexto?: string }) => Promise<void>) | null>(null);
     const autoLanzado = useRef(false);
+    /* «GENERA TODO EL PROYECTO» SE DETUVO EN LAS PREGUNTAS (2-oct-2026): al
+       contestarlas y llegar la propuesta, sigue solo hasta el .docx. Una marca
+       y no un estado: no pinta nada y no debe sobrevivir a una vuelta atrás. */
+    const generarTrasResponder = useRef(false);
     useEffect(() => {
         if (!autoEnCurso || corriendo || !encargo.numero) return;
         const t = setTimeout(() => { void traerContexto(encargo.numero); }, 4000);
@@ -1313,41 +1324,32 @@ export default function TallerDeSentencias() {
             const pro = await proponerSolucion(encargo.numero, correo, contexto);
             setPropuesta(pro);
 
-            // 4 · y se resuelve con lo que él propuso, sin revisión.
-            const VALIDOS = ['fundado', 'esencialmente_fundado',
-                             'sustancialmente_fundado', 'parcialmente_fundado',
-                             'fundado_insuficiente', 'infundado', 'inoperante',
-                             'inatendible', 'ineficaz', 'sin_materia'];
-            /* NO SE MANDAN: sólo se cuentan. Sirven para saber si el motor se
-               atrevió con algo; el reparto lo hace el servidor con las mismas
-               propuestas, que ya guardó. */
-            const criterios = probs.map((q, i) => {
-                const sug = pro.propuestas[i];
-                if (!sug || !sug.alcanza || !VALIDOS.includes(sug.sentido || ''))
-                    return null;
-                return {
-                    problema: q.pregunta, sentido: sug.sentido,
-                    razonamiento: sug.razon ?? '',
-                    jerarquia: sug.jerarquia ?? 'accesorio',
-                    prediccion: sug.prediccion ?? {},
-                };
-            }).filter(Boolean);
-            if (!criterios.length && !pro.global?.alcanza) {
-                // EL MOTOR NO SE ATREVIÓ, así que este camino tampoco. Se deja
-                // al secretario en la ventana de criterio con todo cargado, que
-                // es donde habría llegado por el camino largo.
-                setModo('por_problema');
-                setError('El motor no pudo decidir el sentido de ningún '
-                       + 'planteamiento con el material de este asunto. No se '
-                       + 'generó nada: el criterio te toca a ti, y lo tienes '
-                       + 'todo cargado más abajo.');
-                irA('criterio', 400);
+            /* 3-bis · SI LA PROPUESTA ESPERA RESPUESTAS, SE DETIENE AQUÍ Y SIGUE
+               SOLA (2-oct-2026). David: «no se genera ninguna propuesta hasta que
+               no se respondan esas preguntas, sólo si se consideran
+               indispensables». Se enseñan las preguntas y se deja la marca: al
+               contestarlas, en cuanto la propuesta llega lista, el efecto
+               `generarTrasResponder` genera el proyecto hasta el .docx sin otro
+               clic. */
+            if (pro.estado === 'preguntas') {
+                generarTrasResponder.current = true;
+                setError('Antes de proponer, el motor necesita que contestes unas preguntas sobre lo que la '
+                       + 'sentencia no dice. Contéstalas en «Preguntas para ti»: en cuanto lo hagas, el '
+                       + 'proyecto se genera solo.');
+                irA('preguntas-para-ti', 400);
                 return;
             }
+
+            // 4 · y se resuelve con lo que él propuso, sin revisión.
+            /* YA NO SE ABORTA SI EL MOTOR NO PROPONE (2-oct-2026): con la
+               propuesta por probabilidad siempre hay un lado. Con la global se
+               resuelve con ella; sin ella (una sesión vieja), el servidor reparte
+               con las propuestas que guardó (`porJurimetria`). */
+            const conGlobal = !!pro.global && conSentido(pro.global);
             setEscribiendo(true);
             const rg = await resolverEnVivo(
                 encargo.numero, correo,
-                pro.global?.alcanza
+                conGlobal && pro.global
                     ? { sentidoGlobal: pro.global.sentido,
                         razonGlobal: pro.global.razon,
                         globalDictado: false,
@@ -1366,7 +1368,8 @@ export default function TallerDeSentencias() {
                 () => avanzarFase('ordenando'),
                 () => avanzarFase('recalificando'),
                 () => avanzarFase('recalificado'),
-                () => setAvance((x) => x + '\n\n… completando los argumentos que quedaron sin su respuesta (va en el documento)'));
+                () => setAvance((x) => x + '\n\n… completando los argumentos que quedaron sin su respuesta (va en el documento)'),
+                () => avanzarFase('revisando'));
             setProyecto(rg);
             descargarProyecto(rg);
             void traerGuardados(encargo.numero);
@@ -1385,6 +1388,14 @@ export default function TallerDeSentencias() {
             const p = await proponerSolucion(encargo.numero, correo,
                                              opts?.sinContexto ? '' : (opts?.contextoTexto ?? contexto));
             setPropuesta(p);
+            /* LA PROPUESTA ESPERA LAS RESPUESTAS (2-oct-2026, CONTRATO A): no
+               hay sentido que volcar ni modo que fijar; la decisión enseña las
+               preguntas arriba y, al contestarlas, se vuelve a pedir
+               (`responderYProponer`). Lo que ya hubiera en pantalla se queda. */
+            if (p.estado === 'preguntas') {
+                irA('criterio', 500);
+                return;
+            }
             /* SE ENTRA DIRECTO A LA DECISIÓN, con la propuesta del motor ya
                puesta. Es lo que automatiza el trabajo: el caso frecuente es
                seguirla, y el secretario llega a una pantalla que ya dice cómo
@@ -1394,7 +1405,10 @@ export default function TallerDeSentencias() {
                donde se perdía. */
             // La propuesta llegó: ahí es donde toca leer y decidir.
             irA('criterio', 500);
-            if (p.global?.alcanza) {
+            /* SIEMPRE EN «TODO EL ASUNTO» SI HAY SENTIDO (2-oct-2026, David: «el
+               motor nunca se atreve a proponer»). Se miraba `alcanza`; ahora
+               basta el sentido —la global ya viene normalizada (`globalDe`)—. */
+            if (p.global && conSentido(p.global)) {
                 setModo('global');
                 setSentidoGlobal(p.global.sentido || '');
                 // Lo pone la pantalla, no él: es un eco del motor.
@@ -1435,7 +1449,11 @@ export default function TallerDeSentencias() {
                 if (tocadosRef.current.has(q.id)) {
                     return { ...base, criterio: q.criterio || s?.razon || '' };
                 }
-                if (!(s && s.alcanza && valido)) return base;
+                // EL SENTIDO SE VUELCA AUNQUE `alcanza` VENGA FALSO (2-oct-2026):
+                // con la propuesta por probabilidad siempre hay uno; en una
+                // sesión vieja, el que escribió el motor es mejor punto de
+                // partida que una calificación en blanco.
+                if (!(s && conSentido(s) && valido)) return base;
                 // LA RAZÓN SE VA CON EL SENTIDO. Al volver a proponer —tras
                 // aportar la reclamación, en el 93/2026— el sentido nuevo
                 // (infundado) se pegaba sobre la razón vieja (la del fundado).
@@ -1548,6 +1566,7 @@ export default function TallerDeSentencias() {
     /** Lo que se borra en CUALQUIER vuelta atrás: lo que cuelga de la
      *  decisión. Ni el acervo ni la lectura del expediente. */
     const limpiarDecision = useCallback(() => {
+        generarTrasResponder.current = false;
         setProyecto(null);
         setPrevio(null);
         setAvance('');
@@ -1753,6 +1772,9 @@ export default function TallerDeSentencias() {
            espera o hace el plan de esta decisión antes de la primera línea.
            Se apaga con el primer trozo de texto. */
         const alOrdenar = () => avanzarFase('ordenando');
+        /* «REVISANDO EL PROYECTO…» (2-oct-2026): el supervisor lee el estudio
+           ya escrito y corrige antes de componer el documento. */
+        const alRevisar = () => avanzarFase('revisando');
         try {
             if (modo === 'global') {
                 // POR EL FLUJO, NO POR LA LLAMADA BLOQUEANTE. El servidor
@@ -1772,7 +1794,8 @@ export default function TallerDeSentencias() {
                     (t) => { avanzarFase('texto'); setAvance((x) => x + t); },
                     () => setAvance((x) => x + '\n\n… componiendo el documento'),
                     alOrdenar, alRecalificar, alRecalificado,
-                    () => setAvance((x) => x + '\n\n… completando los argumentos que quedaron sin su respuesta (va en el documento)'));
+                    () => setAvance((x) => x + '\n\n… completando los argumentos que quedaron sin su respuesta (va en el documento)'),
+                    alRevisar);
                 setProyecto(rg);
                 descargarProyecto(rg);
                 void traerGuardados(encargo.numero);
@@ -1795,7 +1818,8 @@ export default function TallerDeSentencias() {
                 },
                 () => setAvance((x) => x + '\n\n… componiendo el documento'),
                 alOrdenar, alRecalificar, alRecalificado,
-                    () => setAvance((x) => x + '\n\n… completando los argumentos que quedaron sin su respuesta (va en el documento)'));
+                    () => setAvance((x) => x + '\n\n… completando los argumentos que quedaron sin su respuesta (va en el documento)'),
+                    alRevisar);
             setProyecto(r);
             descargarProyecto(r);
             irA('proyecto', 400);
@@ -1808,6 +1832,70 @@ export default function TallerDeSentencias() {
             irA('error-del-taller', 200);
         } finally { setCorriendo(false); setEscribiendo(false); setFaseSrv('preparando'); }
     }, [encargo.numero, correo, modo, irA, traerGuardados, avanzarFase]);
+
+    /* ═══ LAS RESPUESTAS DEL SECRETARIO (2-oct-2026, CONTRATO C) ═══
+       David: «simplificarlo a preguntas como ¿El emplazamiento carece de
+       cercioramiento?». Van todas en UN envío: el servidor las guarda en la
+       sesión (con -w 2 nada vive en la memoria de un worker), tira la propuesta
+       guardada y la vuelve a pedir en segundo plano. Aquí se espera a que esté
+       y se recoge por la puerta de siempre (`pedirPropuesta`).
+         · En el paso 2 no hace falta más: el sondeo del avance vuelve a correr
+           con «en_curso» y, lista, pasa solo a decidir.
+         · En la decisión se pregunta aquí mismo cada cuatro segundos.
+         · Si aún falta alguna indispensable, se pide la propuesta otra vez y
+           llega con las preguntas que quedan. */
+    const [respondiendo, setRespondiendo] = useState(false);
+    const responderYProponer = useCallback(async (respuestas: RespuestaAPregunta[]) => {
+        if (!encargo.numero || !respuestas.length) return;
+        setError(''); setRespondiendo(true);
+        try {
+            const r = await responderPreguntas(encargo.numero, correo, respuestas);
+            if (paso === 'adelanto') {
+                autoLanzado.current = false;
+                await traerContexto(encargo.numero);
+                return;
+            }
+            if (r.propuesta === 'preguntas') {
+                await pedirPropuestaRef.current?.({ sinContexto: true });
+                return;
+            }
+            const limite = Date.now() + 6 * 60_000;
+            for (;;) {
+                await new Promise<void>((ok) => setTimeout(ok, 4000));
+                const c = await contextoDelAsunto(encargo.numero, correo).catch(() => null);
+                if (c) setDelAsunto(c);
+                const e = c?.avance.propuesta ?? '';
+                if (e === 'listo' || e === 'preguntas') break;
+                if (e === 'fallo') {
+                    throw new Error('La propuesta con tus respuestas falló en el servidor. Tus respuestas quedaron '
+                                  + 'guardadas: vuelve a pedir la propuesta.');
+                }
+                if (Date.now() > limite) {
+                    throw new Error('La propuesta con tus respuestas está tardando más de lo normal. Tus respuestas '
+                                  + 'quedaron guardadas: vuelve a pedirla en un momento.');
+                }
+            }
+            /* Por la misma puerta que el encadenado del paso 2 (sin el contexto
+               de la pantalla): el servidor ya tiene la propuesta hecha con las
+               respuestas y lo aportado. */
+            await pedirPropuestaRef.current?.({ sinContexto: true });
+        } catch (e) {
+            setError(mensajeDeError(e, 'No se pudieron guardar tus respuestas.'));
+        } finally { setRespondiendo(false); }
+    }, [encargo.numero, correo, paso, traerContexto]);
+
+    /* ═══ Y SIGUE SOLO HASTA EL .docx ═══
+       Si fue «Genera todo el proyecto» el que se detuvo en las preguntas, al
+       llegar la propuesta lista se genera con ella. Por efecto y no encadenado:
+       el modo, el sentido y la razón que fija `pedirPropuesta` sólo están
+       puestos en el pintado siguiente (`pedirProyecto` los lee por
+       `opcionesRef`). */
+    useEffect(() => {
+        if (!generarTrasResponder.current || corriendo || respondiendo || proponiendo || !propuesta) return;
+        if (propuesta.estado === 'preguntas') return;
+        generarTrasResponder.current = false;
+        void pedirProyecto('estandar');
+    }, [propuesta, corriendo, respondiendo, proponiendo, pedirProyecto]);
 
     /* ═══ LA RECALIFICACIÓN DE LOS TUMBADOS, PEDIDA DESDE LA PANTALLA ═══
        Sólo en «problema por problema», que es donde el principal se cambia
@@ -2624,29 +2712,33 @@ export default function TallerDeSentencias() {
                                 fallo) o para repetir la búsqueda con el contexto
                                 que el secretario escribió. */}
                             {paso === 'adelanto' && delAsunto && avanceAuto.propuesta !== 'fallo'
-                             && (autoEnCurso || avanceAuto.propuesta === 'listo') && (
+                             && (autoEnCurso || avanceAuto.propuesta === 'listo' || avanceAuto.propuesta === 'preguntas') && (
                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
                                     {([['consulta', 'Buscando en el acervo'],
                                        ['contraste', 'Contrastando los planteamientos'],
                                        ['propuesta', 'Proponiendo la solución']] as const).map(([k, t]) => {
                                         const e = avanceAuto[k];
+                                        // (2-oct-2026) «preguntas»: la propuesta espera tus respuestas.
+                                        const espera = e === 'preguntas';
                                         return (
                                             <span key={k} className={cn('inline-flex items-center gap-1.5',
                                                 e === 'listo' ? 'text-white/75'
-                                                    : e === 'en_curso' ? 'text-accent-gold'
+                                                    : e === 'en_curso' || espera ? 'text-accent-gold'
                                                         : 'text-white/40')}>
                                                 <span className={cn('inline-block h-1.5 w-1.5 rounded-full',
                                                     e === 'listo' ? 'bg-emerald-400'
                                                         : e === 'en_curso'
                                                             ? 'bg-accent-gold animate-[latido_1.4s_ease-in-out_infinite]'
-                                                            : 'bg-white/20')} />
-                                                {t}{e === 'en_curso' ? '…' : ''}
+                                                            : espera ? 'bg-accent-gold' : 'bg-white/20')} />
+                                                {espera ? 'Esperando tus respuestas' : t}{e === 'en_curso' ? '…' : ''}
                                             </span>
                                         );
                                     })}
                                     <span className="basis-full text-[12px] text-white/45">
                                         {avanceAuto.propuesta === 'listo'
                                             ? 'La propuesta está lista: se abre el paso 3.'
+                                            : avanceAuto.propuesta === 'preguntas'
+                                            ? 'Antes de proponer, el motor necesita que contestes lo que la sentencia no dice: abajo, «Preguntas para ti».'
                                             : 'En cuanto esté la propuesta, pasas a decidir. Mientras, lee el asunto.'}
                                     </span>
                                 </div>
@@ -2682,6 +2774,21 @@ export default function TallerDeSentencias() {
                             </button>
                             )}
                         </div>
+
+                        {/* ═══ PREGUNTAS PARA TI, EN EL PASO 2 (2-oct-2026) ═══
+                            La propuesta corre sola tras el adelanto y, si necesita
+                            saber algo que la sentencia no dice, se detiene aquí:
+                            no se propone nada hasta que contestes las
+                            indispensables. Al responder, el sondeo sigue solo y
+                            pasa a decidir. */}
+                        {paso === 'adelanto' && avanceAuto.propuesta === 'preguntas'
+                         && (delAsunto?.preguntas?.length ?? 0) > 0 && (
+                            <div className="mt-4">
+                                <PreguntasParaTi preguntas={delAsunto?.preguntas ?? []}
+                                                 onResponder={responderYProponer}
+                                                 enviando={respondiendo} esperando />
+                            </div>
+                        )}
 
             {/* ═══ EL ATAJO DE UN SOLO CLIC ═══
                 David: «una opción con un botón amarillo desde el principio que
@@ -2721,15 +2828,22 @@ export default function TallerDeSentencias() {
                                     : <Zap className="h-4 w-4" />}
                                 Genera todo el proyecto
                             </button>
+                            {/* (2-oct-2026, David: «si hay un 50.01% de probabilidad
+                                hacia un lado sea esa la propuesta (…) para que el
+                                secretario pueda generar el proyecto en automático»)
+                                Ya no dice «No recomendado»: el motor siempre propone
+                                el lado más probable, y si le falta algo que sólo tú
+                                sabes, se detiene a preguntártelo. */}
                             <p className="mt-1.5 text-[12px] leading-relaxed text-white/45">
-                                Se decide por jurimetría. No recomendado.
+                                Con la propuesta del motor: el lado más probable.
                             </p>
                             <p className="mt-1 text-[12px] leading-relaxed text-white/45">
-                                Salta los ocho pasos y entrega el proyecto terminado,
-                                con el sentido que el motor considere acertado. Nadie
-                                lo revisa antes de escribirlo: si no coincide con tu
-                                criterio, el cambio corre por tu cuenta. Cuesta lo
-                                mismo que el camino con supervisión.
+                                Salta los pasos y entrega el proyecto terminado, con el
+                                sentido que tenga más probabilidad según la jurimetría
+                                del tribunal y la lectura del asunto. Si el motor necesita
+                                algo que la sentencia no dice, se detiene a preguntártelo
+                                y, al contestar, sigue solo. Revísalo antes de firmar.
+                                Cuesta lo mismo que el camino con supervisión.
                             </p>
                         </div>
                         )}
@@ -3380,7 +3494,9 @@ export default function TallerDeSentencias() {
                               tesisDelMaterial={material?.tesis}
                               onAbrirTesis={setTesisAbierta}
                               onVolverALaPropuesta={volverALaPropuesta}
-                              onResolverPorLaVia={resolverPorLaVia} />
+                              onResolverPorLaVia={resolverPorLaVia}
+                              onResponderPreguntas={responderYProponer}
+                              respondiendo={respondiendo} />
                     )}
 
                     {/* EL ESTUDIO, VIÉNDOSE ESCRIBIR. Antes aquí no había nada
@@ -3569,6 +3685,7 @@ export default function TallerDeSentencias() {
                                 textoHuecos: previo.huecos,
                             }} />
                             )}
+                            {!previo.parcial && <CorreccionesDelSupervisor supervisor={previo.supervisor} />}
                             {/* EL MAPA DEL ESTUDIO, IGUAL QUE EL DÍA QUE SE GENERÓ
                                 (Paso 2): viene en la ficha. No se lee el plan de la
                                 sesión: pudo cambiar después de este proyecto. */}
@@ -3643,6 +3760,9 @@ export default function TallerDeSentencias() {
                                 textoAvisos: proyecto.textoAvisos,
                                 textoHuecos: proyecto.textoHuecos,
                             }} />
+                            {/* LO QUE CORRIGIÓ EL SUPERVISOR (2-oct-2026), junto al
+                                aviso de borrador y aparte de él. */}
+                            <CorreccionesDelSupervisor supervisor={proyecto.supervisor} />
                             {/* ═══ EL MAPA DEL ESTUDIO (Paso 2, 26-sep-2026) ═══
                                 Debajo del aviso de borrador, no en su lugar: el
                                 aviso es condición de lanzamiento y va siempre a la
