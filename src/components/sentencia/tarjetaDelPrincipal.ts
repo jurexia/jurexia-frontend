@@ -115,7 +115,7 @@ export function pctDelSentido(pv: ProbabilidadVisible | null | undefined, sentid
     return pr === (pv.lado === 'prospera') ? pv.pct : 100 - pv.pct;
 }
 
-/** «El motor leía conceder; la jurimetría del tribunal inclina a negar: 68 %».
+/** «El motor leía conceder; el examen de las dos vías se inclina por negar: 68 %».
  *  Vacío si no hubo volteo. En el amparo directo se dice conceder/negar; en
  *  un recurso, que prospere o no. */
 export function fraseDelVolteo(pv: ProbabilidadVisible | null | undefined, esRecurso: boolean): string {
@@ -124,7 +124,7 @@ export function fraseDelVolteo(pv: ProbabilidadVisible | null | undefined, esRec
     const verbo = (si: boolean) => (esRecurso ? (si ? 'que el recurso prospere' : 'que no prospere') : (si ? 'conceder' : 'negar'));
     const motor = pv.sentidoMotor ? prosperaDe(pv.sentidoMotor) : !prospera;
     const leia = motor === null ? `«${legible(pv.sentidoMotor).toLowerCase()}»` : verbo(motor);
-    return `El motor leía ${leia}; la jurimetría del tribunal inclina a ${verbo(prospera)}`
+    return `El motor leía ${leia}; el examen de las dos vías se inclina por ${verbo(prospera)}`
         + (pv.pct !== null ? `: ${pv.pct} %` : '') + '.';
 }
 

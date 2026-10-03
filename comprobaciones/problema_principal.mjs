@@ -1030,7 +1030,7 @@ const FICHA_631 = {
                                    explicacion: 'explicación de la propuesta' });
     const v = muestra('P · volteada', pintar(React.createElement(PP, props(base({ estado: '', recomendada: null, probabilidad: null }),
         { probabilidadMotor: g, esRecurso: false, onAceptarYGenerar: () => {} }))));
-    ok(v.includes('data-volteo') && v.includes('El motor leía conceder; la jurimetría del tribunal inclina a negar: 68 %.'),
+    ok(v.includes('data-volteo') && v.includes('El motor leía conceder; el examen de las dos vías se inclina por negar: 68 %.'),
        'P: si la probabilidad volteó lo que leía el motor, se dice en una línea');
     ok(columna(v, 'propuesta').includes('Te propongo · 68 %') && v.includes('explicación de la propuesta'),
        'P: sin la de la tarjeta, el porcentaje y el porqué de la propuesta');
@@ -1078,11 +1078,11 @@ const FICHA_631 = {
     ok(columna(dl, 'propuesta').includes('Te propongo · 68 %') && dl.includes('data-aceptar-y-generar'),
        'P: la tarjeta local con la probabilidad de la propuesta y «Aceptar y generar»');
     const fin = dl.slice(dl.indexOf('id="asi-sale"'));
-    ok(fin.includes('data-probabilidad-asi-sale') && fin.includes('Es el lado más probable según la jurimetría del tribunal: 68 %.'),
+    ok(fin.includes('data-probabilidad-asi-sale') && fin.includes('Es el lado más probable según el examen de las dos vías: 68 %.'),
        'P: «Así va a salir» dice la probabilidad de lo que viaja');
     const contra = pintar(React.createElement(Decision, { ...comunes, propuesta: lista, tarjeta: null,
         modo: 'global', sentidoGlobal: 'fundado', razonGlobal: 'otra', globalDictado: true }));
-    ok(contra.slice(contra.indexOf('id="asi-sale"')).includes('Va contra el lado más probable según la jurimetría del tribunal: 32 %.'),
+    ok(contra.slice(contra.indexOf('id="asi-sale"')).includes('Va contra el lado más probable según el examen de las dos vías: 32 %.'),
        'P: si va contra el lado más probable, se dice');
     // Sin preguntas (servidor anterior): las constancias de siempre.
     const viejo = pintar(React.createElement(Decision, { ...comunes, propuesta: PROPUESTA, tarjeta: null,

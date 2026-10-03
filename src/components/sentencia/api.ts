@@ -3282,14 +3282,16 @@ export function preguntasDe(x: unknown): PreguntaAlSecretario[] {
     return out;
 }
 
-/** CONTRATO A. La probabilidad del sentido (probabilidad_sentido.py): la tasa
- *  con que prospera este tipo de asunto en el tribunal, los precedentes del
- *  mismo problema y el voto del motor con su razón de verosimilitud medida en
- *  Kingston. `lado` es el que gana (más del 50%), y es el que se propone. */
+/** CONTRATO A. La probabilidad del sentido (probabilidad_sentido.py +
+ *  examinador.py): la RAZONADA por el examen de las dos vías que el motor
+ *  escribió (David, 2-oct-2026: «lo que resuelve es la inteligencia en el
+ *  razonamiento jurídico»), no la tasa del tribunal. Sin examen, `fuente` es
+ *  «motor» y no hay número. Los precedentes del tribunal sólo avisan
+ *  (`precedentes_aviso`). `lado` es el que gana (más del 50%) y se propone. */
 export interface ProbabilidadDelSentido {
     p_prospera: number | null;
     lado: 'prospera' | 'no_prospera' | null;
-    fuente: 'jurimetria' | 'motor' | '';
+    fuente: 'examinador' | 'jurimetria' | 'motor' | '';
     tasa: number | null;
     n_tasa: number;
     precedentes: { n: number; a_favor: number; en_contra: number; filas: unknown[] };
@@ -3312,7 +3314,7 @@ export function probabilidadDe(x: unknown): ProbabilidadDelSentido | null {
     const r: ProbabilidadDelSentido = {
         p_prospera: p === null ? null : Math.min(1, Math.max(0, p > 1 ? p / 100 : p)),
         lado: lado === 'prospera' || lado === 'no_prospera' ? lado : null,
-        fuente: fuente === 'jurimetria' || fuente === 'motor' ? fuente : '',
+        fuente: fuente === 'examinador' || fuente === 'jurimetria' || fuente === 'motor' ? fuente : '',
         tasa: _n(o.tasa),
         n_tasa: _n(o.n_tasa) ?? 0,
         precedentes: {

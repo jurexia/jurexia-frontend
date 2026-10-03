@@ -1395,14 +1395,14 @@ export default function Decision({
                         </p>
                     )}
                     {/* LA PROBABILIDAD DE LO QUE VIAJA (2-oct-2026): la del lado
-                        del sentido que sale, con la jurimetría del tribunal. Si
+                        del sentido que sale, según el examen de las dos vías. Si
                         va contra el lado más probable, se dice. */}
                     {enGlobal && pctAsiSale !== null && (
                         <p data-probabilidad-asi-sale className={cn('mt-1 text-[13px]',
                             pctAsiSale >= 50 ? 'text-accent-gold/90' : 'text-amber-300/90')}>
                             {pctAsiSale >= 50
-                                ? `Es el lado más probable según la jurimetría del tribunal: ${pctAsiSale} %.`
-                                : `Va contra el lado más probable según la jurimetría del tribunal: ${pctAsiSale} %. Asegúrate de que tu razón lo sostiene.`}
+                                ? `Es el lado más probable según el examen de las dos vías: ${pctAsiSale} %.`
+                                : `Va contra el lado más probable según el examen de las dos vías: ${pctAsiSale} %. Asegúrate de que tu razón lo sostiene.`}
                         </p>
                     )}
                     <ul className="mt-2 grid gap-1">

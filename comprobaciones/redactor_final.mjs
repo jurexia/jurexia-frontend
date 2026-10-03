@@ -243,9 +243,9 @@ const PREGUNTA = (extra = {}) => ({
     ok(td.pctDelSentido(pv, 'infundado') === 68 && td.pctDelSentido(pv, 'inoperante') === 68
        && td.pctDelSentido(pv, 'fundado') === 32 && td.pctDelSentido(pv, 'sin_materia') === null,
        'el porcentaje de un sentido: el del lado, o su complemento');
-    ok(td.fraseDelVolteo(pv, false) === 'El motor leía conceder; la jurimetría del tribunal inclina a negar: 68 %.',
+    ok(td.fraseDelVolteo(pv, false) === 'El motor leía conceder; el examen de las dos vías se inclina por negar: 68 %.',
        `el volteo en una línea, en el amparo directo (${td.fraseDelVolteo(pv, false)})`);
-    ok(td.fraseDelVolteo(pv, true) === 'El motor leía que el recurso prospere; la jurimetría del tribunal inclina a que no prospere: 68 %.',
+    ok(td.fraseDelVolteo(pv, true) === 'El motor leía que el recurso prospere; el examen de las dos vías se inclina por que no prospere: 68 %.',
        'y en un recurso');
     ok(td.fraseDelVolteo({ ...pv, volteada: false }, false) === '', 'sin volteo, nada');
 

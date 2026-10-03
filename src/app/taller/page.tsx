@@ -2839,8 +2839,8 @@ export default function TallerDeSentencias() {
                             </p>
                             <p className="mt-1 text-[12px] leading-relaxed text-white/45">
                                 Salta los pasos y entrega el proyecto terminado, con el
-                                sentido que tenga más probabilidad según la jurimetría
-                                del tribunal y la lectura del asunto. Si el motor necesita
+                                sentido que el examen de las dos vías considere más
+                                probable. Si el motor necesita
                                 algo que la sentencia no dice, se detiene a preguntártelo
                                 y, al contestar, sigue solo. Revísalo antes de firmar.
                                 Cuesta lo mismo que el camino con supervisión.
