@@ -42,7 +42,8 @@ export default function HomePage() {
             {/* Hero con vídeo de fondo. El titular y los botones viven ahí. */}
             <HeroVideo />
 
-            {/* El anuncio central: ahora con los modelos de OpenAI (3-oct-2026). */}
+            {/* «Now powered by OpenAI», en voz baja: un rótulo traslúcido que se
+                desvanece al bajar, el logotipo oficial y una línea (3-oct-2026). */}
             <AnuncioOpenAI />
 
             {/* La pieza del chat (v43), bajo la portada y sobre la vitrina.
@@ -202,7 +203,7 @@ export default function HomePage() {
                     </AnimatedSection>
                     <AnimatedSection animation="fade-in" delay={100}>
                         <p className="text-center text-charcoal-600 mb-12 max-w-3xl mx-auto text-base sm:text-lg">
-                            ChatGPT es una herramienta general increíble, pero <strong className="text-charcoal-900">no fue diseñada para el sistema jurídico mexicano</strong>. Iurexia trabaja con modelos de OpenAI, pero no los deja responder de memoria: los pone a razonar sobre el derecho mexicano verificado. Aquí está la diferencia:
+                            ChatGPT es una herramienta general increíble, pero <strong className="text-charcoal-900">no fue diseñada para el sistema jurídico mexicano</strong>. Iurexia usa modelos de OpenAI, pero no los deja responder de memoria: los pone a razonar sobre el derecho mexicano verificado. Aquí está la diferencia:
                         </p>
                     </AnimatedSection>
 

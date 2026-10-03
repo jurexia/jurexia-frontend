@@ -1,88 +1,102 @@
+'use client';
+
 import Link from 'next/link';
-import { ArrowRight, Landmark, ShieldCheck, Sparkles } from 'lucide-react';
+import { Playfair_Display } from 'next/font/google';
+import { useEffect, useRef } from 'react';
 
-/* ═══ EL ANUNCIO: IUREXIA, AHORA CON OPENAI (3-oct-2026) ═══
-   David: «la estrategia es apalancarnos de OpenAI para impulsar confianza…
-   un mensaje inteligente que nos proteja pero que a su vez dé al usuario la
-   confianza de que está ante modelos de punta (porque sí lo está)».
+/* ═══ «NOW POWERED BY OPENAI», EN VOZ BAJA (3-oct-2026, segunda versión) ═══
+   La primera fue una tarjeta oscura con titular y tres columnas, y David la
+   rechazó: «está muy grande, domina mucho la pantalla». Lo que pidió es otra
+   cosa: decirlo «tenuemente y de manera muy profesional y elegante», con un
+   rótulo grande que cruce la pantalla, traslúcido, que se desvanezca al
+   bajar, el logotipo oficial de OpenAI y, debajo, el mensaje en una línea.
 
-   El orden del mensaje es el argumento:
-   1. QUÉ CAMBIÓ: los modelos de punta de OpenAI, la empresa detrás de ChatGPT,
-      en el núcleo de la consulta y de la redacción. Es lo que da confianza.
-   2. QUÉ NO CAMBIÓ: el modelo no responde de memoria; trabaja sobre el acervo
-      mexicano verificado y cada cita se coteja. Es lo que nos protege: la
-      respuesta sigue siendo de Iurexia y con sus fuentes, no «lo que dijo
-      ChatGPT».
-   3. LA PRIVACIDAD, con las palabras de David: la integración cumple la
-      política de privacidad; los datos no se comparten ni entrenan modelos,
-      ni propios ni de terceros, incluido OpenAI.
+   Las pautas de marca de OpenAI (openai.com/brand, aceptadas al bajar el
+   paquete de logotipos) mandan sobre cómo se hace:
+   · el logotipo va TAL CUAL: sin transparencias, efectos ni texturas, y con
+     su espacio libre (el archivo oficial ya lo trae como margen). Por eso lo
+     traslúcido es el rótulo, que es letra nuestra; el logotipo va entero;
+   · nunca más prominente que la marca propia: va a la altura de la «Iurexia»
+     de la barra, no al tamaño del rótulo;
+   · la marca denominativa sola, sin el «Blossom»;
+   · sin lenguaje de alianza: «trabajamos con», «colaboramos con» o «nos
+     asociamos con» están vetados a quien no es socio. Se dice qué tecnología
+     se usa y dónde: «en algunas funciones», porque Sálvame, la Consulta rápida
+     y el Básico corren con otros proveedores.
 
-   El alcance se dice con precisión («el núcleo de la consulta y de la
-   redacción») porque no todos los módulos corren con OpenAI: Sálvame, por
-   ejemplo, no. Va justo bajo la portada de vídeo: es lo primero que se lee. */
+   El rótulo va en cursiva porque es inglés: en la tipografía española los
+   extranjerismos se escriben en cursiva. */
 
-const PUNTOS = [
-    {
-        Icono: Sparkles,
-        titulo: 'Modelos de punta',
-        texto: 'Los de OpenAI, en el núcleo de la consulta y de la redacción: razonan con más profundidad y escriben con más precisión.',
-    },
-    {
-        Icono: Landmark,
-        titulo: 'Con fuentes mexicanas',
-        texto: 'El modelo razona sobre el acervo de Iurexia —legislación federal y de las 32 entidades, jurisprudencia y precedentes— y cada cita abre su documento oficial.',
-    },
-    {
-        Icono: ShieldCheck,
-        titulo: 'Tu información, protegida',
-        texto: 'Tus datos no se comparten ni se usan para entrenar modelos, ni propios ni de terceros, incluido OpenAI.',
-    },
-];
+const cursiva = Playfair_Display({
+    subsets: ['latin'],
+    weight: '400',
+    style: 'italic',
+    display: 'swap',
+});
 
 export default function AnuncioOpenAI() {
+    const rotulo = useRef<HTMLParagraphElement>(null);
+
+    /* Se desvanece al bajar: entero mientras está en la mitad baja de la
+       pantalla y nada cuando su centro llega arriba, subiendo un poco más
+       despacio que la página. Con «menos movimiento» se queda quieto. */
+    useEffect(() => {
+        const el = rotulo.current;
+        if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        let cuadro = 0;
+        const pintar = () => {
+            cuadro = 0;
+            const r = el.getBoundingClientRect();
+            const alto = window.innerHeight || 1;
+            const t = Math.min(1, Math.max(0, (r.top + r.height / 2 - alto * 0.12) / (alto * 0.43)));
+            el.style.opacity = (t * t * (3 - 2 * t)).toFixed(3);
+            el.style.transform = `translate3d(0, ${((1 - t) * -24).toFixed(1)}px, 0)`;
+        };
+        const alMover = () => {
+            if (!cuadro) cuadro = requestAnimationFrame(pintar);
+        };
+
+        pintar();
+        window.addEventListener('scroll', alMover, { passive: true });
+        window.addEventListener('resize', alMover);
+        return () => {
+            cancelAnimationFrame(cuadro);
+            window.removeEventListener('scroll', alMover);
+            window.removeEventListener('resize', alMover);
+        };
+    }, []);
+
     return (
-        <section id="openai" aria-labelledby="anuncio-openai" className="scroll-mt-20 bg-cream-300 px-4 pb-10 pt-6 sm:px-6 sm:pb-14">
-            <div className="relative mx-auto max-w-5xl overflow-hidden rounded-2xl bg-charcoal-950 px-6 py-10 text-white shadow-[0_30px_60px_-30px_rgba(15,14,13,0.6)] sm:px-12 sm:py-14">
-                {/* Un filete de oro arriba: la noticia, sin estridencias. */}
-                <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent-gold to-transparent" />
+        <section id="openai" aria-labelledby="openai-titulo" className="scroll-mt-20 bg-cream-300 px-4 pb-12 pt-3 sm:px-6 sm:pb-16 lg:px-8">
+            <h2 id="openai-titulo" className="sr-only">Now powered by OpenAI</h2>
 
-                <div className="mx-auto max-w-3xl text-center">
-                    <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-gold">
-                        <span className="h-1.5 w-1.5 rounded-full bg-accent-gold" aria-hidden />
-                        Novedad · Now powered by OpenAI
-                    </p>
-                    <h2 id="anuncio-openai" className="mt-5 font-serif text-3xl font-semibold leading-tight [text-wrap:balance] sm:text-[2.6rem]">
-                        Iurexia ahora trabaja con los modelos de punta de <span className="text-accent-gold">OpenAI</span>
-                    </h2>
-                    <p className="mt-5 text-[1rem] leading-relaxed text-white/70 sm:text-[1.0625rem]">
-                        Incorporamos a la arquitectura de Iurexia los modelos de lenguaje de última generación de
-                        OpenAI, la empresa detrás de ChatGPT. Y no responden de memoria: trabajan sobre nuestro
-                        acervo jurídico, y cada cita se coteja con su documento oficial antes de llegar a ti.
-                    </p>
-                </div>
+            <div className="mx-auto max-w-7xl [container-type:inline-size]">
+                <p ref={rotulo} aria-hidden className={`${cursiva.className} rotulo-openai`}>
+                    Now powered by
+                </p>
 
-                <ul className="mt-10 grid gap-6 border-t border-white/10 pt-8 md:grid-cols-3 md:gap-8">
-                    {PUNTOS.map(({ Icono, titulo, texto }) => (
-                        <li key={titulo}>
-                            <Icono className="h-5 w-5 text-accent-gold" aria-hidden />
-                            <h3 className="mt-3 font-sans text-[15px] font-semibold text-white">{titulo}</h3>
-                            <p className="mt-1.5 text-[14px] leading-relaxed text-white/65">{texto}</p>
-                        </li>
-                    ))}
-                </ul>
-
-                <div className="mt-10 flex flex-col items-center gap-4 border-t border-white/10 pt-8 text-center sm:flex-row sm:justify-between sm:text-left">
-                    <p className="max-w-2xl text-[13.5px] leading-relaxed text-white/60">
-                        La implementación de los servicios de OpenAI se realizó asegurando el cumplimiento de nuestra
-                        rigurosa política de privacidad.
+                <div className="mt-5 flex flex-col items-center gap-3 text-center sm:mt-3 sm:flex-row sm:items-center sm:justify-between sm:gap-10 sm:text-left">
+                    {/* El archivo oficial, sin tocar (public/terceros/openai). */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src="/terceros/openai/OAI_OpenAI_Wordmark_Black.svg"
+                        alt="OpenAI"
+                        width={1212}
+                        height={542}
+                        className="h-11 w-auto shrink-0 sm:order-2 sm:-mr-4 sm:h-12"
+                    />
+                    <p className="max-w-md text-[14px] leading-relaxed text-charcoal-900/60 sm:order-1 sm:max-w-2xl sm:text-[15px]">
+                        En algunas funciones, Iurexia incorpora ahora los modelos más avanzados de OpenAI, que
+                        maximizan la calidad de la herramienta{' '}
+                        <Link
+                            href="/seguridad"
+                            className="underline decoration-charcoal-900/25 decoration-dotted underline-offset-4 transition-colors hover:text-charcoal-900 hover:decoration-charcoal-900/60"
+                        >
+                            sin comprometer tu privacidad
+                        </Link>
+                        .
                     </p>
-                    <Link
-                        href="/seguridad"
-                        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border border-white/20 px-4 text-[0.875rem] font-medium text-white/85 transition-colors hover:border-white/40 hover:text-white"
-                    >
-                        Cómo protegemos tu información
-                        <ArrowRight className="h-4 w-4 text-accent-gold" />
-                    </Link>
                 </div>
             </div>
         </section>
