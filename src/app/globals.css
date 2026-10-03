@@ -2299,31 +2299,3 @@ html.con-barra-trabajo {
 html.con-barra-trabajo .solo-publico {
   display: none;
 }
-
-/* ═══ «Now powered by» (AnuncioOpenAI) ═══
-   El rótulo cruza el ancho del contenedor: la letra se mide en unidades del
-   contenedor (cqi), así llena el renglón en un teléfono y en una pantalla
-   ancha sin saltar de línea. Es tinta casi transparente que se aclara hacia
-   abajo, como una marca de agua; el relleno de abajo y de los lados deja
-   sitio a los rabos de la «p» y de la «y» y al vuelo de la cursiva, que el
-   recorte del degradado se comería. */
-.rotulo-openai {
-  font-size: 12vw;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  text-align: center;
-  padding: 0 0.04em 0.16em;
-  color: transparent;
-  background-image: linear-gradient(180deg, rgb(26 26 26 / 0.14) 12%, rgb(26 26 26 / 0.045) 88%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  user-select: none;
-  will-change: opacity, transform;
-}
-
-@supports (font-size: 1cqi) {
-  .rotulo-openai {
-    font-size: 14.5cqi;
-  }
-}

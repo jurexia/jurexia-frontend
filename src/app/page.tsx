@@ -42,8 +42,8 @@ export default function HomePage() {
             {/* Hero con vídeo de fondo. El titular y los botones viven ahí. */}
             <HeroVideo />
 
-            {/* «Now powered by OpenAI», en voz baja: un rótulo traslúcido que se
-                desvanece al bajar, el logotipo oficial y una línea (3-oct-2026). */}
+            {/* «Iurexia, now powered by OpenAI»: el símbolo oficial, la frase y una
+                línea, sobrios, que se desvanecen al bajar (3-oct-2026). */}
             <AnuncioOpenAI />
 
             {/* La pieza del chat (v43), bajo la portada y sobre la vitrina.
