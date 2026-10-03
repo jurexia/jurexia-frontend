@@ -7,6 +7,7 @@ import DemoCapitulos from '@/components/DemoCapitulos';
 import { CAPITULOS } from '@/lib/capitulos-demo';
 import { useEffect, useRef, useState } from 'react';
 import PieDePagina from '@/components/PieDePagina';
+import VideoChat from '@/components/VideoChat';
 
 export default function PlataformaPage() {
     return (
@@ -59,6 +60,17 @@ export default function PlataformaPage() {
                     </div>
                 </div>
             </section>
+
+            {/* UNA SEMANA CON IUREXIA (3-oct-2026): la pieza de producto rehecha
+                en Blender —un asunto laboral de lunes a viernes, de la
+                investigación a la audiencia— justo después del hero. El menú
+                «Plataforma» de la barra la enlaza con /plataforma#video. */}
+            <VideoChat
+                id="video"
+                src="/video/iurexia-una-semana.mp4"
+                poster="/video/iurexia-una-semana-poster.webp"
+                rotulo="Una semana con Iurexia, en dos minutos"
+            />
 
             {/* Purpose Section */}
             <section className="py-16 bg-white border-t border-black/5">
@@ -436,7 +448,7 @@ function FeatureSection({
         <section
             id={id}
             ref={sectionRef}
-            className={`py-24 ${bgColor} overflow-hidden`}
+            className={`scroll-mt-20 py-24 ${bgColor} overflow-hidden`}
         >
             <div className="max-w-7xl mx-auto px-4">
                 <div className={`flex flex-col ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-16`}>

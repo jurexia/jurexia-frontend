@@ -15,7 +15,15 @@ import { Volume2, VolumeX } from 'lucide-react';
    Fuentes, Esfuerzo, las herramientas, los flujos de trabajo y la carpeta.
    La v43 sigue en /video/iurexia-chat.mp4 porque el GIF de los correos la
    anuncia. */
-export default function VideoChat() {
+/* 3-oct-2026: el mismo reproductor sirve a /plataforma con «Una semana con
+   Iurexia» (la v61 rehecha en Blender, 2:08). Sin propiedades es la pieza de
+   la portada, como siempre. */
+export default function VideoChat({
+    id = 'video-chat',
+    src = '/video/iurexia-plataforma.mp4',
+    poster = '/video/iurexia-plataforma-poster.webp',
+    rotulo = 'La plataforma, en dos minutos',
+}: { id?: string; src?: string; poster?: string; rotulo?: string } = {}) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [conSonido, setConSonido] = useState(false);
 
@@ -49,10 +57,10 @@ export default function VideoChat() {
     return (
         // `id` para que los correos de campaña lleven directo aquí: el GIF del
         // correo es un avance, y quien lo pulsa viene a ver la pieza entera.
-        <section id="video-chat" className="scroll-mt-20 bg-cream-300 px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
+        <section id={id} className="scroll-mt-20 bg-cream-300 px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
             <div className="mx-auto max-w-5xl">
                 <p className="mb-5 text-center text-[11px] uppercase tracking-[0.16em] text-accent-brown">
-                    La plataforma, en dos minutos
+                    {rotulo}
                 </p>
                 <div
                     className="group relative cursor-pointer overflow-hidden rounded-xl bg-charcoal-900 shadow-[0_24px_60px_-20px_rgba(20,18,16,0.45)]"
@@ -71,9 +79,9 @@ export default function VideoChat() {
                         muted
                         playsInline
                         preload="metadata"
-                        poster="/video/iurexia-plataforma-poster.webp"
+                        poster={poster}
                     >
-                        <source src="/video/iurexia-plataforma.mp4" type="video/mp4" />
+                        <source src={src} type="video/mp4" />
                     </video>
 
                     {/* la invitación a escuchar: discreta, abajo a la derecha */}
