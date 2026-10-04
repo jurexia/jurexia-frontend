@@ -24,6 +24,12 @@
    "numero": "IV",
    "titulo": "Argumentación y prueba",
    "descripcion": "Herramientas del razonamiento jurídico: cómo se pondera un derecho frente a una ley y cómo se prueba un hecho."
+  },
+  {
+   "id": "penal",
+   "numero": "V",
+   "titulo": "Derecho penal",
+   "descripcion": "A quién puede castigar el Estado, con qué garantías, y qué debe hacer con quien no puede ser castigado."
   }
  ],
  "lecciones": [
@@ -2756,6 +2762,722 @@
    "miniatura640": "/estudiar/miniaturas/clausulas-petreas-640.webp"
   },
   {
+   "id": "v73",
+   "slug": "inamovilidad-judicial",
+   "eje": "constitucion",
+   "publicada": true,
+   "youtube": "e4tHLF6duCc",
+   "publicado": "2026-10-05T17:00:00-06:00",
+   "tituloVideo": "Inamovible, no intocable: por qué no se puede remover a un juez, y por qué no es intocable",
+   "duracion": 1038,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Lima, 1997; Pensilvania, 2003-2008"
+    },
+    {
+     "segundo": 46,
+     "titulo": "Una sola garantía, dos lados"
+    },
+    {
+     "segundo": 79,
+     "titulo": "Inglaterra, 1686: los jueces del rey"
+    },
+    {
+     "segundo": 115,
+     "titulo": "El Acta de Establecimiento y Jorge III"
+    },
+    {
+     "segundo": 147,
+     "titulo": "Hamilton y El Federalista 78"
+    },
+    {
+     "segundo": 183,
+     "titulo": "El juicio a Samuel Chase"
+    },
+    {
+     "segundo": 216,
+     "titulo": "México, 1824-1917"
+    },
+    {
+     "segundo": 250,
+     "titulo": "1928-1982: la petición presidencial"
+    },
+    {
+     "segundo": 298,
+     "titulo": "1994"
+    },
+    {
+     "segundo": 321,
+     "titulo": "Perú: el Tribunal Constitucional"
+    },
+    {
+     "segundo": 357,
+     "titulo": "Ecuador: la Corte cesada en una noche"
+    },
+    {
+     "segundo": 390,
+     "titulo": "Honduras: la madrugada del 12 de diciembre"
+    },
+    {
+     "segundo": 422,
+     "titulo": "Pakistán, Hungría y Polonia"
+    },
+    {
+     "segundo": 470,
+     "titulo": "Por qué importa: el sujeto del derecho es usted"
+    },
+    {
+     "segundo": 522,
+     "titulo": "México hoy: 2021 y 2024"
+    },
+    {
+     "segundo": 562,
+     "titulo": "El Tribunal de Disciplina Judicial"
+    },
+    {
+     "segundo": 616,
+     "titulo": "La otra mitad"
+    },
+    {
+     "segundo": 652,
+     "titulo": "Los Principios de Bangalore"
+    },
+    {
+     "segundo": 680,
+     "titulo": "Francis Bacon, 1621"
+    },
+    {
+     "segundo": 717,
+     "titulo": "Lord Hewart: que se vea que se hace justicia"
+    },
+    {
+     "segundo": 743,
+     "titulo": "Martin Manton: la justicia no está en venta"
+    },
+    {
+     "segundo": 768,
+     "titulo": "Los ocho jueces removidos en EE. UU."
+    },
+    {
+     "segundo": 793,
+     "titulo": "Los niños del condado de Luzerne"
+    },
+    {
+     "segundo": 844,
+     "titulo": "La casa del juez: Samuel Kent"
+    },
+    {
+     "segundo": 882,
+     "titulo": "La casa del juez en México"
+    },
+    {
+     "segundo": 930,
+     "titulo": "Donde se unen las dos mitades"
+    },
+    {
+     "segundo": 965,
+     "titulo": "No basta con proteger al juez"
+    },
+    {
+     "segundo": 1001,
+     "titulo": "El buen juez, por su casa empieza"
+    }
+   ],
+   "titulo": "Inamovible, no intocable",
+   "tituloPlano": "Inamovible, no intocable",
+   "subtitulo": "La estabilidad de los jueces como garantía de los ciudadanos, y sus límites",
+   "corto": "Inamovible, no intocable",
+   "nivel": "licenciatura",
+   "actualizado": "2 de octubre de 2026",
+   "claves": [
+    "inamovilidad judicial",
+    "independencia judicial",
+    "separación de poderes",
+    "Corte Interamericana de Derechos Humanos",
+    "responsabilidad de los jueces",
+    "ética judicial",
+    "reforma judicial de 2024"
+   ],
+   "resumen": "La inamovilidad judicial es la garantía de que un juez no puede ser separado de su cargo por los otros poderes, salvo por causas graves previstas en la ley y probadas en un procedimiento con todas las garantías. Esta lectura explica su origen en Inglaterra y en los Estados Unidos, su accidentada historia en las constituciones mexicanas y cómo la entienden hoy la Corte Interamericana y otros tribunales internacionales: como una garantía de la persona que acude a un juez. Examina después su límite: protege las decisiones del juez, no su conducta.",
+   "resumenPlano": "La inamovilidad judicial es la garantía de que un juez no puede ser separado de su cargo por los otros poderes, salvo por causas graves previstas en la ley y probadas en un procedimiento con todas las garantías. Esta lectura explica su origen en Inglaterra y en los Estados Unidos, su accidentada historia en las constituciones mexicanas y cómo la entienden hoy la Corte Interamericana y otros tribunales internacionales: como una garantía de la persona que acude a un juez. Examina después su límite: protege las decisiones del juez, no su conducta.",
+   "ideas": [
+    "La inamovilidad no es un premio para el juez: existe para que quien litiga contra el poder tenga un juez que pueda darle la razón sin temor a represalias.",
+    "Nació como respuesta a reyes que destituían a los jueces que no fallaban a su favor. El Acta de Establecimiento inglesa (1701) la fijó en una fórmula: los jueces sirven «mientras se conduzcan bien».",
+    "En México no ha sido una línea recta: de los ministros «perpetuos» de 1824 a la petición presidencial de destitución (1928-1982), la sustitución de la Corte en 1994 y la elección judicial de 2024.",
+    "Para la Corte Interamericana, un juez no puede ser destituido por el contenido de sus decisiones, salvo infracciones intencionales a la ley o incompetencia comprobada.",
+    "La garantía no es absoluta: admite la destitución por conductas graves, probadas en un procedimiento justo. Protege la decisión del juez, no su conducta."
+   ],
+   "secciones": [
+    "Introducción: dos historias",
+    "Qué es la inamovilidad judicial",
+    "Antecedentes: de los jueces del rey a la buena conducta",
+    "El panorama internacional e interamericano",
+    "La Constitución mexicana hoy",
+    "La otra mitad: la garantía no es un escudo",
+    "Donde se unen las dos mitades",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [
+    {
+     "nombre": "Jorge III",
+     "fechas": "1738 – 1820",
+     "campo": "Monarquía británica.",
+     "quien": "Rey de Gran Bretaña e Irlanda desde 1760 hasta su muerte; en su reinado se independizaron las colonias norteamericanas.",
+     "aporte": "Presentó la independencia judicial ante el Parlamento como una garantía de los derechos de los súbditos, no como un favor del monarca ni un privilegio de los jueces."
+    },
+    {
+     "nombre": "Alexander Hamilton",
+     "fechas": "1755 o 1757 – 1804",
+     "campo": "Derecho constitucional; ciencia política; hacienda pública.",
+     "quien": "Abogado y político estadounidense, delegado a la Convención de Filadelfia y primer secretario del Tesoro (1789-1795).",
+     "aporte": "Escribió con James Madison y John Jay <em>El Federalista</em> (1787-1788). El n.º 78 es la defensa clásica de la independencia judicial y del control judicial de las leyes."
+    },
+    {
+     "nombre": "Samuel Chase",
+     "fechas": "1741 – 1811",
+     "campo": "Derecho; judicatura federal de los Estados Unidos.",
+     "quien": "Abogado de Maryland, firmante de la Declaración de Independencia y ministro de la Corte Suprema desde 1796.",
+     "aporte": "Es el único ministro de la Corte Suprema estadounidense sometido a juicio político. Su absolución fijó el precedente de que a un juez no se le remueve por sus opiniones."
+    },
+    {
+     "nombre": "Francis Bacon",
+     "fechas": "1561 – 1626",
+     "campo": "Filosofía; derecho; política.",
+     "quien": "Filósofo y jurista inglés; procurador general y, desde 1618, lord canciller de Inglaterra, el cargo judicial más alto del reino.",
+     "aporte": "Uno de los fundadores del método científico moderno (<em>Novum Organum</em>, 1620) y autor de los <em>Ensayos</em>. Su caída es un precedente temprano de que ni el juez de más alto rango está por encima de la responsabilidad."
+    },
+    {
+     "nombre": "Gordon Hewart, lord Hewart",
+     "fechas": "1870 – 1943",
+     "campo": "Derecho inglés; judicatura.",
+     "quien": "Abogado y político liberal británico; procurador general y, de 1922 a 1940, <em>Lord Chief Justice</em> de Inglaterra, el juez de mayor rango del país.",
+     "aporte": "Convirtió la apariencia de imparcialidad en un requisito de la justicia. En <em>The New Despotism</em> (1929) advirtió contra la expansión de los poderes de la administración."
+    },
+    {
+     "nombre": "Martin T. Manton",
+     "fechas": "1880 – 1946",
+     "campo": "Derecho; judicatura federal de los Estados Unidos.",
+     "quien": "Juez federal de Nueva York desde 1916 y del Tribunal de Apelaciones del Segundo Circuito desde 1918. Renunció en 1939.",
+     "aporte": "Su condena dejó una regla citada desde entonces: la actuación judicial no está en venta, aunque el fallo comprado sea correcto."
+    }
+   ],
+   "documentos": [
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "etiqueta": "",
+     "titulo": "Corte IDH, <em>Reverón Trujillo vs. Venezuela</em>, sentencia de 30 de junio de 2009, párr. 146",
+     "extracto": "«Los términos en que está redactado este artículo indican que el sujeto del derecho es el justiciable, la persona situada frente al juez que resolverá la causa que se le ha sometido.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Ley inglesa",
+     "titulo": "<em>Act of Settlement</em>, 12 &amp; 13 Will. III c. 2 (1701), sección III",
+     "extracto": "«[…] los nombramientos de los jueces se hagan <em>quam diu se bene gesserint</em> [mientras se conduzcan bien] y sus salarios se fijen y establezcan; pero que, a petición de ambas Cámaras del Parlamento, sea lícito removerlos.»",
+     "traducido": true,
+     "idioma": "inglés"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "etiqueta": "El Federalista",
+     "titulo": "Alexander Hamilton, <em>El Federalista</em>, n.º 78 (28 de mayo de 1788)",
+     "extracto": "«[…] como nada puede contribuir tanto a su firmeza e independencia como la permanencia en el cargo, esta cualidad puede considerarse con justicia un ingrediente indispensable de su constitución y, en gran medida, la ciudadela de la justicia pública y de la seguridad pública.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "",
+     "titulo": "Reforma al art. 111 constitucional, <em>Diario Oficial de la Federación</em>, 20 de agosto de 1928",
+     "extracto": "«El Presidente de la República podrá pedir ante la Cámara de Diputados la destitución, por mala conducta, de cualquiera de los Ministros de la Suprema Corte de Justicia de la Nación, de los Magistrados de Circuito, de los Jueces de Distrito […]. En estos casos, si la Cámara de Diputados, primero, y la Cámara de Senadores, después, declaran por mayoría absoluta de votos justificada la petición, el funcionario acusado quedará privado desde luego de su puesto […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "etiqueta": "",
+     "titulo": "Corte IDH, <em>Ríos Avalos y otro vs. Paraguay</em>, sentencia de 19 de agosto de 2021, párr. 107",
+     "extracto": "«[…] es inviable que el juicio político o la eventual destitución de juezas o jueces […] se fundamente en el contenido de las decisiones que hayan dictado, en el entendido que la protección de la independencia judicial impide deducir responsabilidad por los votos y opiniones que se emitan en el ejercicio de la función jurisdiccional, con la excepción de infracciones intencionales al ordenamiento jurídico o comprobada incompetencia.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "etiqueta": "",
+     "titulo": "Constitución Política de los Estados Unidos Mexicanos, art. 100 (reforma de 15 de septiembre de 2024)",
+     "extracto": "El Tribunal de Disciplina Judicial podrá «sancionar a las personas servidoras públicas que incurran en actos u omisiones contrarias a la ley, a la administración de justicia o a los principios de objetividad, imparcialidad, independencia, profesionalismo o excelencia […]».",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "eur",
+     "tipoNombre": "Tribunal europeo",
+     "etiqueta": "Tribunal de Justicia de la UE",
+     "titulo": "TJUE (Gran Sala), C-791/19, <em>Comisión c. Polonia</em>, 15 de julio de 2021, apartados 138 y 156",
+     "extracto": "«[…] resulta esencial […] que el hecho de que una resolución judicial contenga un posible error en la interpretación y la aplicación de las normas […], o en la apreciación de los hechos y la valoración de las pruebas, no pueda, por sí solo, dar lugar a que se genere la responsabilidad disciplinaria del juez en cuestión […].»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "etiqueta": "Naciones Unidas · ética judicial",
+     "titulo": "<em>Comentario relativo a los Principios de Bangalore sobre la conducta judicial</em> (UNODC, 2013), párr. 22",
+     "extracto": "«La independencia judicial no es un privilegio ni una prerrogativa del juez considerado individualmente. Es la responsabilidad impuesta a cada juez para permitirle fallar una controversia en forma honesta e imparcial sobre la base del derecho y de la prueba, sin presiones ni influencias externas y sin temor a la interferencia de nadie.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "etiqueta": "Tribunal inglés",
+     "titulo": "<em>R v Sussex Justices, ex parte McCarthy</em> [1924] 1 KB 256, resolución de 9 de noviembre de 1923",
+     "extracto": "«[…] es de importancia fundamental que la justicia no solo se haga, sino que se vea, de manera manifiesta e indudable, que se hace.»",
+     "traducido": true,
+     "idioma": "inglés"
+    },
+    {
+     "tipo": "leg",
+     "tipoNombre": "Proceso legislativo",
+     "etiqueta": "Iniciativa de reforma",
+     "titulo": "Iniciativa del Ejecutivo Federal en materia de reforma del Poder Judicial, <em>Gaceta Parlamentaria</em>, 5 de febrero de 2024",
+     "extracto": "«[…] es de dominio público que en el Poder Judicial persisten actos de corrupción, favoritismos y nepotismo en el acceso o promoción a la carrera judicial y a los cargos de mando […].»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [
+    {
+     "titulo": "La estabilidad de los juzgadores federales en las constituciones mexicanas",
+     "filas": [
+      {
+       "anio": "1824",
+       "texto": "Constitución Federal, art. 126: los integrantes de la Corte Suprema «serán perpetuos en este destino, y sólo podrán ser removidos con arreglo a las leyes»."
+      },
+      {
+       "anio": "1857",
+       "texto": "Constitución, art. 92: los ministros duran seis años y se eligen por elección indirecta en primer grado."
+      },
+      {
+       "anio": "1917",
+       "texto": "Constitución, art. 94: a partir de 1923, ministros, magistrados y jueces «sólo podrán ser removidos cuando observen mala conducta y previo el juicio de responsabilidad respectivo»."
+      },
+      {
+       "anio": "1928",
+       "texto": "El Presidente de la República puede pedir la destitución, por mala conducta, de cualquier ministro, magistrado o juez; basta que ambas cámaras la declaren justificada por mayoría absoluta, sin juicio."
+      },
+      {
+       "anio": "1934",
+       "texto": "El cargo se limita a seis años, al ritmo del periodo presidencial; la petición presidencial subsiste."
+      },
+      {
+       "anio": "1944",
+       "texto": "Vuelve la inamovilidad, pero se conserva la petición presidencial, con un añadido: el Presidente debe oír antes al juez «en lo privado»."
+      },
+      {
+       "anio": "1982",
+       "texto": "Los juzgadores sólo pueden ser privados de sus puestos «en los términos del Título Cuarto». La petición presidencial, que duró cincuenta y cuatro años, desaparece."
+      },
+      {
+       "anio": "1994",
+       "texto": "Concluyen las funciones de los veintiséis ministros; la nueva Corte tiene once ministros por quince años, se crea el Consejo de la Judicatura Federal y se amplían los medios de control constitucional."
+      },
+      {
+       "anio": "2024",
+       "texto": "Ministros, magistrados y jueces pasan a ser electos por voto popular; se crea un Tribunal de Disciplina Judicial."
+      }
+     ]
+    }
+   ],
+   "glosario": [
+    {
+     "termino": "Inamovilidad judicial",
+     "definicion": "Garantía de que el juez permanece en su cargo durante el periodo previsto y sólo puede ser separado por causas graves establecidas en la ley, mediante un procedimiento con garantías."
+    },
+    {
+     "termino": "Independencia judicial",
+     "definicion": "Condición de que el juez resuelva conforme al derecho y a las pruebas, sin presiones de otros poderes, de las partes o de sus superiores."
+    },
+    {
+     "termino": "Justiciable",
+     "definicion": "Persona que acude a un tribunal, o es llevada ante él, para que se resuelva su caso."
+    },
+    {
+     "termino": "<em>Quamdiu se bene gesserint</em>",
+     "definicion": "«Mientras se conduzcan bien»; fórmula del Acta de Establecimiento inglesa (1701) que ató la permanencia del juez a su buena conducta."
+    },
+    {
+     "termino": "Juicio político (<em>impeachment</em>)",
+     "definicion": "Procedimiento ante órganos legislativos para separar de su cargo a altos servidores públicos por faltas graves."
+    },
+    {
+     "termino": "Desviación de poder",
+     "definicion": "Uso de una facultad legal para un fin distinto del que la ley le asigna; por ejemplo, invocar una facultad de control para castigar a un juez por sus sentencias."
+    },
+    {
+     "termino": "Responsabilidad disciplinaria",
+     "definicion": "Obligación del juez de responder ante un órgano de disciplina por sus faltas. Es distinta de la revisión de sus fallos mediante recursos."
+    }
+   ],
+   "preguntas": [
+    "¿Por qué se afirma que el titular de la garantía de inamovilidad es el justiciable y no el juez? ¿Qué matiz añadió la Corte Interamericana en 2013?",
+    "¿Qué cambió el Acta de Establecimiento de 1701 respecto de la situación de los jueces bajo Jacobo II?",
+    "Explique el argumento de Hamilton en <em>El Federalista</em> 78 sobre la debilidad del poder judicial.",
+    "Identifique en la historia constitucional mexicana dos momentos en que la estabilidad de los jueces se debilitó y dos en que se fortaleció.",
+    "¿Por qué es importante distinguir entre la revisión de un fallo mediante recursos y la responsabilidad disciplinaria del juez?",
+    "¿De qué manera la conducta indebida de algunos jueces puede afectar la estabilidad de todos?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso del Tribunal Constitucional vs. Perú</em>, sentencia de 31 de enero de 2001, Serie C No. 71, párrs. 56.25, 75, 84 y 120.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_71_esp.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>Wallace v. Powell</em>, n.º 3:09-cv-286 (M.D. Pa.), memorándum de 16 de agosto de 2022.",
+     "url": "https://www.govinfo.gov/content/pkg/USCOURTS-pamd-3_09-cv-00286/pdf/USCOURTS-pamd-3_09-cv-00286-44.pdf"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "Principios básicos relativos a la independencia de la judicatura (1985), principios 12 y 18, en ONUDD, <em>Recopilación de reglas y normas de las Naciones Unidas en la esfera de la prevención del delito y la justicia penal</em>, 2007.",
+     "url": "https://www.unodc.org/pdf/criminal_justice/Compendium_UN_Standards_and_Norms_CP_and_CJ_Spanish.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Reverón Trujillo vs. Venezuela</em>, sentencia de 30 de junio de 2009, Serie C No. 197, párrs. 70 y 146.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_197_esp.pdf"
+    },
+    {
+     "tipo": "eti",
+     "tipoNombre": "Ética judicial",
+     "referencia": "Cumbre Judicial Iberoamericana, <em>Código Iberoamericano de Ética Judicial</em> (2006, reformado en 2014 y 2023), art. 1.",
+     "url": "https://www.cumbrejudicial.org/sites/default/files/2023-05/Codigo%20Iberoamericano%20Etica%20Judicial.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso de la Corte Suprema de Justicia (Quintana Coello y otros) vs. Ecuador</em>, sentencia de 23 de agosto de 2013, Serie C No. 266, párrs. 85, 147, 153-154, 177 y 178.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_266_esp.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Thomas B. Macaulay, <em>The History of England from the Accession of James II</em>, vol. 2 (1848), cap. VI.",
+     "url": "https://www.gutenberg.org/ebooks/2439"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Edward Foss, <em>The Judges of England</em>, vol. VII (1864).",
+     "url": "https://archive.org/details/vol7judgesofengl00foss"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Act of Settlement</em>, 12 &amp; 13 Will. III c. 2 (1701), sección III, texto original.",
+     "url": "https://www.legislation.gov.uk/aep/Will3/12-13/2/section/III/enacted"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Journal of the House of Lords</em>, vol. 30, sesión de 3 de marzo de 1761 (discurso de Jorge III).",
+     "url": "https://www.british-history.ac.uk/lords-jrnl/vol30/pp74-101"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Constitución de los Estados Unidos (1787), art. III, sección 1.",
+     "url": "https://www.archives.gov/founding-docs/constitution-transcript"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Alexander Hamilton, <em>The Federalist</em> n.º 78 (28 de mayo de 1788), <em>Founders Online</em>, Archivos Nacionales de EE. UU.",
+     "url": "https://founders.archives.gov/documents/Hamilton/01-04-02-0241"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Senado de los Estados Unidos, Oficina Histórica, «Impeachment Trial of Justice Samuel Chase, 1804-05».",
+     "url": "https://www.senate.gov/about/powers-procedures/impeachment/impeachment-chase.htm"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Federal de los Estados Unidos Mexicanos (1824), art. 126.",
+     "url": "https://www.diputados.gob.mx/biblioteca/bibdig/const_mex/const_1824.pdf"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de la República Mexicana (1857), art. 92.",
+     "url": "https://www.diputados.gob.mx/biblioteca/bibdig/const_mex/const_1857.pdf"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, texto original (<em>Diario Oficial</em>, 5 de febrero de 1917), art. 94.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/dof/CPEUM_orig_05feb1917_ima.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 20 de agosto de 1928, reforma a los arts. 94 y 111, entre otros.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/dof/CPEUM_ref_005_20ago28_ima.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 15 de diciembre de 1934, reforma al art. 94.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/dof/CPEUM_ref_021_15dic34_ima.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 21 de septiembre de 1944, reforma a los arts. 94 y 111.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/dof/CPEUM_ref_038_21sep44_ima.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 28 de diciembre de 1982, reforma al Título Cuarto y al art. 94.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/dof/CPEUM_ref_099_28dic82_ima.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 31 de diciembre de 1994, reforma constitucional en materia judicial, artículo segundo transitorio.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/dof/CPEUM_ref_133_31dic94_ima.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "<em>Diario Oficial de la Federación</em>, 15 de septiembre de 2024, edición vespertina, reforma del Poder Judicial (arts. 94, 97 y 100).",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5738985&fecha=15/09/2024"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "Comité de Derechos Humanos, Observación general n.º 32, CCPR/C/GC/32 (2007), párr. 20.",
+     "url": "https://documents.un.org/doc/undoc/gen/g07/437/74/pdf/g0743774.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Pleno, contradicción de tesis 293/2011, y jurisprudencia P./J. 21/2014 (10a.), registro digital 2006225.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006225"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Gutiérrez Navas y otros vs. Honduras</em>, sentencia de 29 de noviembre de 2023, Serie C No. 514, párrs. 47 y 119.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_514_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Ríos Avalos y otro vs. Paraguay</em>, sentencia de 19 de agosto de 2021, Serie C No. 429, párrs. 107 y 114.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_429_esp.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso Apitz Barbera y otros vs. Venezuela</em>, sentencia de 5 de agosto de 2008, Serie C No. 182, párrs. 84 y 86.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_182_esp.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "BBC News, texto de la proclamación del estado de emergencia en Pakistán, 3 de noviembre de 2007; véase también Human Rights Watch, <em>Destroying Legality</em>, 2007.",
+     "url": "http://news.bbc.co.uk/2/hi/south_asia/7077136.stm"
+    },
+    {
+     "tipo": "eur",
+     "tipoNombre": "Tribunal europeo",
+     "referencia": "Tribunal Europeo de Derechos Humanos (Gran Sala), <em>Baka c. Hungría</em>, n.º 20261/12, 23 de junio de 2016, § 151.",
+     "url": "https://hudoc.echr.coe.int/eng?i=001-163113"
+    },
+    {
+     "tipo": "eur",
+     "tipoNombre": "Tribunal europeo",
+     "referencia": "Tribunal de Justicia de la Unión Europea (Gran Sala), asunto C-791/19, <em>Comisión c. Polonia</em>, 15 de julio de 2021, apartados 138 y 156, y fallo.",
+     "url": "https://eur-lex.europa.eu/legal-content/ES/TXT/?uri=CELEX:62019CJ0791"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Excélsior</em>, 15 de marzo de 2021.",
+     "url": "https://www.excelsior.com.mx/nacional/lopez-obrador-envio-carta-a-zaldivar-por-freno-a-reforma-electrica/1437935"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Infobae</em>, 18 de octubre de 2024.",
+     "url": "https://www.infobae.com/mexico/2024/10/18/sheinbaum-responde-a-jueza-tras-ordenarle-bajar-la-reforma-judicial-del-dof-no-esta-por-encima-del-pueblo/"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Proceso</em>, 18 de noviembre de 2025.",
+     "url": "https://www.proceso.com.mx/nacional/justicia/2025/11/18/tribunal-de-disciplina-suspende-jueza-por-presuntamente-entorpecer-extradicion-de-florian-tudor-361001.html"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Expansión Política</em>, 18 de septiembre de 2026.",
+     "url": "https://politica.expansion.mx/mexico/2026/09/18/jufed-presion-jueces-cambios-adscripcion-sanciones"
+    },
+    {
+     "tipo": "cidh",
+     "tipoNombre": "Comisión Interamericana",
+     "referencia": "Comisión Interamericana de Derechos Humanos, <em>Garantías para la independencia de las y los operadores de justicia</em>, 2013, párr. 216.",
+     "url": "https://www.oas.org/es/cidh/defensores/docs/pdf/operadores-de-justicia-2013.pdf"
+    },
+    {
+     "tipo": "idh",
+     "tipoNombre": "Corte Interamericana",
+     "referencia": "Corte IDH, <em>Caso López Lone y otros vs. Honduras</em>, sentencia de 5 de octubre de 2015, Serie C No. 302, párrs. 200 y 259.",
+     "url": "https://www.corteidh.or.cr/docs/casos/articulos/seriec_302_esp.pdf"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "Relatora Especial sobre la independencia de los magistrados y abogados, informe A/HRC/26/32 (2014), párr. 84.",
+     "url": "https://documents.un.org/doc/undoc/gen/g14/139/21/pdf/g1413921.pdf"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "Consejo Económico y Social de la ONU, resolución 2006/23, anexo: Principios de Bangalore sobre la conducta judicial, valor 3.",
+     "url": "https://www.unodc.org/pdf/corruption/corruption_judicial_res_s.pdf"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "ONUDD, <em>Comentario relativo a los Principios de Bangalore sobre la conducta judicial</em>, 2013, párr. 22.",
+     "url": "https://www.unodc.org/documents/corruption/Publications/2012/V1380121-SPAN_eBook.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Francis Bacon, «Of Judicature», en <em>Essays, Civil and Moral</em>.",
+     "url": "https://en.wikisource.org/wiki/Essays,_civil_and_moral_(Harvard_Classics)/Of_Judicature"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Journal of the House of Lords</em>, vol. 3, 30 de abril de 1621 (confesión de Bacon).",
+     "url": "https://www.british-history.ac.uk/lords-jrnl/vol3/pp97-103"
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Journal of the House of Lords</em>, vol. 3, 3 de mayo de 1621 (sentencia).",
+     "url": "https://www.british-history.ac.uk/lords-jrnl/vol3/pp104-106"
+    },
+    {
+     "tipo": "ext",
+     "tipoNombre": "Tribunal extranjero",
+     "referencia": "<em>R v Sussex Justices, ex parte McCarthy</em> [1924] 1 KB 256; [1923] EWHC KB 1.",
+     "url": "https://www.bailii.org/ew/cases/EWHC/KB/1923/1.html"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>United States v. Manton</em>, 107 F.2d 834 (2d Cir. 1939).",
+     "url": "https://static.case.law/f2d/107/html/0834-01.html"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Federal Judicial Center, «Impeachments of Federal Judges».",
+     "url": "https://www.fjc.gov/history/judges/impeachments-federal-judges"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Interbranch Commission on Juvenile Justice (Pensilvania), <em>Report</em>, mayo de 2010.",
+     "url": "https://www.pacourts.us/Storage/media/pdfs/20210208/161601-interbranchcommissiononjuvenilejustice.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Departamento de Justicia de EE. UU., Distrito Medio de Pensilvania, comunicado de 24 de mayo de 2013.",
+     "url": "https://www.justice.gov/usao-mdpa/pr/us-court-appeals-upholds-ciavarella-s-conviction-and-sentence"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Cámara de Representantes de EE. UU., H. Res. 520 (111.º Congreso), 19 de junio de 2009.",
+     "url": "https://www.govinfo.gov/content/pkg/BILLS-111hres520eh/pdf/BILLS-111hres520eh.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "<em>Congressional Record</em>, 19 de junio de 2009, pág. H7055.",
+     "url": "https://www.govinfo.gov/content/pkg/CREC-2009-06-19/pdf/CREC-2009-06-19-pt1-PgH7055.pdf"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "Federal Judiciary Workplace Conduct Working Group, <em>Report</em>, 1 de junio de 2018.",
+     "url": "https://www.uscourts.gov/sites/default/files/workplace_conduct_working_group_final_report_0.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>Noroeste</em>, 29 de enero de 2020.",
+     "url": "https://www.noroeste.com.mx/nacional/cjf-suspende-a-magistrado-federal-por-acoso-sexual-amenazas-de-muerte-a-empleados-etcetera-BTNO1186025"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Universal</em>, 16 de marzo de 2022.",
+     "url": "https://www.eluniversal.com.mx/nacion/judicatura-destituye-juez-por-grave-acoso-sexual-13-mujeres/"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "Consejo de la Judicatura Federal, informe sobre el Padrón Electrónico de Relaciones Familiares, 9 de diciembre de 2022, págs. 2 y 9.",
+     "url": "https://apps.cjf.gob.mx/NuevoPJF/media/pdf/Punto_SEADS_informe_PERF_9_12_22.pdf"
+    },
+    {
+     "tipo": "leg",
+     "tipoNombre": "Proceso legislativo",
+     "referencia": "Iniciativa del Ejecutivo Federal en materia de reforma del Poder Judicial, <em>Gaceta Parlamentaria</em>, 5 de febrero de 2024.",
+     "url": "https://gaceta.diputados.gob.mx/PDF/65/2024/feb/20240205-15.pdf"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-inamovilidad-judicial.pdf",
+    "paginas": 16,
+    "kb": 1359,
+    "palabras": 5250,
+    "minutos": 25
+   },
+   "portada": "/estudiar/portadas/inamovilidad-judicial.webp",
+   "miniatura": "/estudiar/miniaturas/inamovilidad-judicial.webp",
+   "miniatura640": "/estudiar/miniaturas/inamovilidad-judicial-640.webp"
+  },
+  {
    "id": "v72",
    "slug": "test-de-proporcionalidad",
    "eje": "razonamiento",
@@ -3615,6 +4337,489 @@
    "portada": "/estudiar/portadas/lo-ordinario-se-presume.webp",
    "miniatura": "/estudiar/miniaturas/lo-ordinario-se-presume.webp",
    "miniatura640": "/estudiar/miniaturas/lo-ordinario-se-presume-640.webp"
+  },
+  {
+   "id": "v76",
+   "slug": "inimputabilidad",
+   "eje": "penal",
+   "publicada": true,
+   "youtube": "z6XUeSNn5KI",
+   "publicado": "2026-10-07T17:00:00-06:00",
+   "tituloVideo": "Goyo Cárdenas: 34 años encerrado sin condena | La inimputabilidad en México",
+   "duracion": 888,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "23 de septiembre de 1976: un invitado en la Cámara"
+    },
+    {
+     "segundo": 48,
+     "titulo": "El caso, con sus documentos"
+    },
+    {
+     "segundo": 85,
+     "titulo": "Antes de él, ellas"
+    },
+    {
+     "segundo": 124,
+     "titulo": "Septiembre de 1942"
+    },
+    {
+     "segundo": 169,
+     "titulo": "¿Loco o criminal? La batalla de los peritos"
+    },
+    {
+     "segundo": 209,
+     "titulo": "Modestino y el principio de culpabilidad"
+    },
+    {
+     "segundo": 252,
+     "titulo": "El Código Penal de 1931"
+    },
+    {
+     "segundo": 305,
+     "titulo": "1943: el proceso suspendido"
+    },
+    {
+     "segundo": 353,
+     "titulo": "La Castañeda y la fuga de Navidad"
+    },
+    {
+     "segundo": 387,
+     "titulo": "Lecumberri: un hombre en suspenso"
+    },
+    {
+     "segundo": 429,
+     "titulo": "El amparo de 1950"
+    },
+    {
+     "segundo": 463,
+     "titulo": "1976: el dictamen y la boleta 49510"
+    },
+    {
+     "segundo": 515,
+     "titulo": "Transitorio o permanente"
+    },
+    {
+     "segundo": 559,
+     "titulo": "La Cámara de Diputados, 1976"
+    },
+    {
+     "segundo": 602,
+     "titulo": "La leyenda y los documentos"
+    },
+    {
+     "segundo": 642,
+     "titulo": "Su tesis de 1982"
+    },
+    {
+     "segundo": 682,
+     "titulo": "La reforma de 1984"
+    },
+    {
+     "segundo": 727,
+     "titulo": "El procedimiento para inimputables"
+    },
+    {
+     "segundo": 775,
+     "titulo": "La Convención y la Suprema Corte"
+    },
+    {
+     "segundo": 823,
+     "titulo": "Dos fracasos frente a frente"
+    },
+    {
+     "segundo": 863,
+     "titulo": "Un procedimiento, una defensa y un plazo"
+    }
+   ],
+   "titulo": "Goyo Cárdenas y la inimputabilidad",
+   "tituloPlano": "Goyo Cárdenas y la inimputabilidad",
+   "subtitulo": "Un caso de 1942 para entender a quién puede castigar el Estado",
+   "corto": "Goyo Cárdenas y la inimputabilidad",
+   "nivel": "licenciatura",
+   "actualizado": "4 de octubre de 2026",
+   "claves": [
+    "imputabilidad",
+    "inimputabilidad",
+    "principio de culpabilidad",
+    "medidas de seguridad",
+    "suspensión del proceso",
+    "Código Penal de 1931",
+    "procedimiento para inimputables",
+    "derechos de las personas con discapacidad"
+   ],
+   "resumen": "En 1942, Gregorio Cárdenas Hernández confesó la muerte de cuatro mujeres. Su proceso se suspendió en 1943 por una locura sobrevenida y sólo se reabrió en 1976, cuando quedó libre por la excluyente del trastorno mental transitorio. Con ese caso, esta lectura explica la imputabilidad y la inimputabilidad: el principio de culpabilidad, el Código Penal de 1931, la reforma de 1984, el Código Nacional de 2014 y la Convención sobre los Derechos de las Personas con Discapacidad.",
+   "resumenPlano": "En 1942, Gregorio Cárdenas Hernández confesó la muerte de cuatro mujeres. Su proceso se suspendió en 1943 por una locura sobrevenida y sólo se reabrió en 1976, cuando quedó libre por la excluyente del trastorno mental transitorio. Con ese caso, esta lectura explica la imputabilidad y la inimputabilidad: el principio de culpabilidad, el Código Penal de 1931, la reforma de 1984, el Código Nacional de 2014 y la Convención sobre los Derechos de las Personas con Discapacidad.",
+   "ideas": [
+    "La imputabilidad es la capacidad de comprender el carácter ilícito del hecho y de conducirse conforme a ello; sin ella no hay culpabilidad ni pena.",
+    "El Código Penal de 1931 sólo excusaba el trastorno transitorio; al enfermo permanente lo recluía sin plazo.",
+    "Ser inimputable en el momento del hecho no es lo mismo que enfermar durante el proceso: lo segundo sólo suspende el juicio.",
+    "Desde 1984 la medida de tratamiento tiene un tope, y desde 2014 el inimputable tiene un procedimiento con garantías.",
+    "La Convención sobre los Derechos de las Personas con Discapacidad cuestiona el internamiento forzoso por discapacidad."
+   ],
+   "secciones": [
+    "Introducción: un caso de 1942",
+    "Imputabilidad, inimputabilidad y culpabilidad",
+    "El régimen del Código Penal de 1931",
+    "El caso ante la ley (1943-1976)",
+    "La Cámara de 1976 y la leyenda del indulto",
+    "La crítica y la reforma",
+    "El derecho vigente",
+    "La Convención sobre los Derechos de las Personas con Discapacidad",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [],
+   "documentos": [
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "etiqueta": "Derecho romano",
+     "titulo": "<em>Digesto</em>, 48.8.12 (Modestino, <em>libro sexto regularum</em>)",
+     "extracto": "«Si un niño o un furioso matan a un hombre, no quedan sujetos a la ley Cornelia, porque al uno lo ampara la inocencia de su intención y al otro lo excusa la desgracia de su destino.»",
+     "traducido": true,
+     "idioma": "latín"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "",
+     "titulo": "Código Penal de 1931 (<em>Diario Oficial</em>, 14 de agosto de 1931), art. 15, fracción II",
+     "extracto": "«Hallarse el acusado, al cometer la infracción, en un estado de inconsciencia de sus actos, determinado por el empleo accidental e involuntario de substancias tóxicas, embriagantes o enervantes, o por un estado toxinfeccioso agudo o por un trastorno mental involuntario de carácter patológico y transitorio.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "",
+     "titulo": "Código Penal de 1931, art. 68",
+     "extracto": "«Los locos, idiotas, imbéciles, o los que sufran cualquiera otra debilidad, enfermedad o anomalía mentales, y que hayan ejecutado hechos o incurrido en omisiones definidos como delitos, serán recluídos en manicomios o en departamentos especiales, por todo el tiempo necesario para su curación […]. En igual forma procederá el juez con los procesados o condenados que enloquezcan, en los términos que determine el Código de Procedimientos Penales.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "",
+     "titulo": "Tesis 300097, Primera Sala, «Reclusión de procesados que enloquezcan» (amparo penal en revisión 3002/49, 8 de junio de 1950, unanimidad de cuatro votos)",
+     "extracto": "«[…] sin que el Manicomio General sea siempre el lugar adecuado para internar al acusado durante la enfermedad mental, por no llenar la condición b), o sea, por no ofrecer las debidas seguridades para evitar una nueva fuga del propio acusado […]»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "etiqueta": "",
+     "titulo": "<em>El Nacional</em>, 8 de septiembre de 1976, p. 16 (los puntos resolutivos)",
+     "extracto": "«[…] se decreta la libertad por haber operado la hipótesis prevista en la fracción II del artículo 15 del Código […] en lo que se refiere a los delitos de homicidio.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "leg",
+     "tipoNombre": "Proceso legislativo",
+     "etiqueta": "",
+     "titulo": "<em>Diario de los Debates</em>, Cámara de Diputados, L Legislatura, año I, núm. 20, 23 de septiembre de 1976",
+     "extracto": "«[…] logró transformarse a sí mismo, readaptarse socialmente, rehizo su vida, terminó sus estudios de medicina, hizo estudios de abogacía, escribió varios libros […]. Me da gusto que esté aquí entre nosotros: Gregorio Cárdenos [sic] Hernández.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "",
+     "titulo": "Código Penal, art. 69, reformado (<em>Diario Oficial</em>, 13 de enero de 1984)",
+     "extracto": "«En ningún caso la medida de tratamiento impuesta por el juez penal, excederá de la duración que corresponda al máximo de la pena aplicable al delito.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "etiqueta": "",
+     "titulo": "Código Nacional de Procedimientos Penales, art. 419",
+     "extracto": "«[…] el Tribunal de enjuiciamiento resolverá el caso indicando que hay base suficiente para la imposición de la medida de seguridad que resulte aplicable […]. Si no se acreditan estos requisitos, el Tribunal de enjuiciamiento absolverá al inimputable. La medida de seguridad en ningún caso podrá tener mayor duración a la pena que le pudiera corresponder en caso de que sea imputable.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [
+    {
+     "titulo": "El caso Cárdenas ante la ley",
+     "filas": [
+      {
+       "anio": "1942",
+       "texto": "7 de septiembre: hallazgo de los cuerpos; 16 de septiembre: formal prisión, causa 1350/1942."
+      },
+      {
+       "anio": "1943",
+       "texto": "Se suspende el procedimiento y se ordena su reclusión «el tiempo que sea necesario para su curación»; ingresa en La Castañeda el 8 de noviembre."
+      },
+      {
+       "anio": "1947",
+       "texto": "Se fuga de La Castañeda la noche de Navidad."
+      },
+      {
+       "anio": "1948",
+       "texto": "21 de enero: vuelve a la Penitenciaría de Lecumberri."
+      },
+      {
+       "anio": "1950",
+       "texto": "La Primera Sala resuelve su amparo (tesis 300097)."
+      },
+      {
+       "anio": "1976",
+       "texto": "Agosto: dictamen de Velasco Fernández y reapertura del proceso; 7 de septiembre: libertad por la fracción II del artículo 15."
+      },
+      {
+       "anio": "1982",
+       "texto": "Presenta su tesis de licenciatura en la UNAM, sobre la inimputabilidad."
+      }
+     ]
+    }
+   ],
+   "glosario": [
+    {
+     "termino": "Imputabilidad",
+     "definicion": "Capacidad de comprender el carácter ilícito del hecho y de conducirse conforme a esa comprensión; presupuesto de la culpabilidad."
+    },
+    {
+     "termino": "Inimputabilidad",
+     "definicion": "Falta de esa capacidad en el momento del hecho, por trastorno mental o desarrollo intelectual retardado; excluye la responsabilidad penal."
+    },
+    {
+     "termino": "Principio de culpabilidad",
+     "definicion": "Sólo puede imponerse una pena a quien pudo comprender y dirigir su conducta conforme a la norma."
+    },
+    {
+     "termino": "Medida de seguridad",
+     "definicion": "Consecuencia jurídica que no se funda en la culpa, sino en la necesidad de tratamiento o de prevención; al inimputable no se le impone pena."
+    },
+    {
+     "termino": "Trastorno sobrevenido",
+     "definicion": "El que aparece durante el proceso; suspende el juicio, pero no decide la responsabilidad."
+    },
+    {
+     "termino": "Excluyente de responsabilidad",
+     "definicion": "Circunstancia que impide considerar penalmente responsable al autor de un hecho típico."
+    },
+    {
+     "termino": "Ajustes razonables",
+     "definicion": "Modificaciones del procedimiento que permiten a una persona con discapacidad ejercer sus derechos en igualdad de condiciones."
+    }
+   ],
+   "preguntas": [
+    "¿Qué diferencia hay entre ser inimputable en el momento del hecho y sufrir un trastorno durante el proceso? ¿Qué consecuencia tiene cada situación?",
+    "¿Por qué el carácter transitorio o permanente del trastorno era decisivo bajo el Código Penal de 1931?",
+    "¿Por qué era jurídicamente imposible indultar a Cárdenas en 1976?",
+    "¿Qué límite introdujo la reforma de 1984 y qué añadió la jurisprudencia 1a./J. 14/2006?",
+    "Describa las etapas del procedimiento para inimputables del Código Nacional. ¿Qué regla de 1931 conserva?",
+    "¿Qué cuestiona la Convención sobre los Derechos de las Personas con Discapacidad del tratamiento penal de los inimputables?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Ana Luisa Luna, «Goyo Cárdenas, un asesino diferente», en J. L. Trueba Lara (ed.), <em>Crónica negra del crimen en México</em>, México, Plaza y Janés, 2001, pp. 13-37.",
+     "url": ""
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Tesis de Cruz Romero (UNAM, 2007), que transcribe el expediente de 1942 del Servicio Secreto.",
+     "url": "https://ru.dgb.unam.mx/bitstream/20.500.14330/TES01000628815/3/0628815.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "J. J. Zarranz Imirizaldu, «El controvertido informe del Dr. Lafora sobre Gregorio (Goyo) Cárdenas, \"el estrangulador de Tacuba\"», <em>Neurosciences and History</em> 8(1), 2020, pp. 1-11.",
+     "url": "https://nah.sen.es/vmfiles/vol8/NAHV8N120201_11ES.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Alfonso Quiroz Cuarón, <em>Un estrangulador de mujeres</em>, México, 1952.",
+     "url": ""
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Pablo Piccato, <em>A History of Infamy: Crime, Truth, and Justice in Mexico</em>, Oakland, University of California Press, 2017, pp. 137-143.",
+     "url": ""
+    },
+    {
+     "tipo": "hist",
+     "tipoNombre": "Documento histórico",
+     "referencia": "<em>Digesto</em>, 48.8.12 (Modestino, <em>libro sexto regularum</em>).",
+     "url": "https://droitromain.univ-grenoble-alpes.fr/Corpus/d-48.htm"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Sergio García Ramírez, <em>La imputabilidad en el derecho penal mexicano</em>, 2.ª ed., México, UNAM, 1981, cap. V.",
+     "url": "https://archivos.juridicas.unam.mx/www/bjv/libros/1/385/9.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Penal Federal, texto vigente, arts. 15 y 69.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPF.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Suprema Corte, tesis de 1957 que emplean el término «inimputables» (registros 264785 y 264776).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/264785"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Código Penal para el Distrito y Territorios Federales, <em>Diario Oficial</em>, 14 de agosto de 1931, arts. 15, 68, 69 y 94.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/cpf/CPF_orig_14ago31_ima.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Suprema Corte, Primera Sala, tesis 306674, amparo penal en revisión 1134/44, 26 de abril de 1944.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/306674"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Código de Procedimientos Penales para el Distrito y Territorios Federales, <em>Diario Oficial</em>, 29 de agosto de 1931, arts. 477 y 479.",
+     "url": "https://dof.gob.mx/nota_to_imagen_fs.php?codnota=4532701&fecha=29/08/1931&cod_diario=193397"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Nacional</em>, 9 de noviembre de 1943, 2.ª secc., p. 4.",
+     "url": "https://hndm.iib.unam.mx/consulta/publicacion/pdf/558a35c17d1ed64f16bcb991.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Nacional</em>, 27 de diciembre de 1947, 2.ª secc., pp. 1 y 3.",
+     "url": "https://hndm.iib.unam.mx/consulta/publicacion/pdf/558a36357d1ed64f16c46b19.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Informador</em>, 22 de enero de 1948, p. 1.",
+     "url": "https://hndm.iib.unam.mx/consulta/publicacion/pdf/558a35a87d1ed64f16bb0339.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Suprema Corte, Primera Sala, tesis 300097, amparo penal en revisión 3002/49, Cárdenas Hernández Gregorio, 8 de junio de 1950.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/300097"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley Nacional de Ejecución Penal, art. 192.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LNEP.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Nacional</em>, 14 de agosto de 1976, p. 12.",
+     "url": "https://hndm.iib.unam.mx/consulta/publicacion/pdf/558a38fe7d1ed64f16ecb670.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Informador</em>, 20 de agosto de 1976, p. 9-A.",
+     "url": "https://hndm.iib.unam.mx/consulta/publicacion/pdf/558a39947d1ed64f16f3fb84.pdf"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Nacional</em>, 8 de septiembre de 1976, p. 16.",
+     "url": "https://hndm.iib.unam.mx/consulta/publicacion/pdf/558a39017d1ed64f16ecc9d3.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Gregorio Cárdenas Hernández, «Insuficiencia de nuestra legislación en la inimputabilidad por ausencia o disminución de capacidad mental», tesis de licenciatura, UNAM, ENEP Aragón, 1982, pp. II y 204-206.",
+     "url": "https://repositorio.unam.mx/contenidos/ficha/insuficiencia-de-nuestra-legislacion-en-la-inimputabilidad-por-ausencia-o-disminucion-de-capacidad-mental-269832"
+    },
+    {
+     "tipo": "leg",
+     "tipoNombre": "Proceso legislativo",
+     "referencia": "<em>Diario de los Debates</em> de la Cámara de Diputados, L Legislatura, año I, núm. 20, 23 de septiembre de 1976.",
+     "url": "https://cronica.diputados.gob.mx/DDebates/50/1er/Ord/19760923.html"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Informador</em>, 24 de septiembre de 1976, p. 12-A.",
+     "url": "https://hndm.iib.unam.mx/consulta/publicacion/pdf/558a39967d1ed64f16f41b13.pdf"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Ley de Indulto, <em>Diario Oficial</em>, 8 de diciembre de 1938, art. 4, fracc. VIII.",
+     "url": "https://dof.gob.mx/nota_to_imagen_fs.php?codnota=4443969&fecha=08/12/1938&cod_diario=187624"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "Decreto de reformas al Código Penal, <em>Diario Oficial</em>, 13 de enero de 1984 (arts. 15, 24, 68 y 69).",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/ref/cpf/CPF_ref46_13ene84_ima.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "Suprema Corte, Primera Sala, jurisprudencia 1a./J. 14/2006 (registro 174698).",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/174698"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Nacional de Procedimientos Penales, arts. 331, 332 y 414-419.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CNPP.pdf"
+    },
+    {
+     "tipo": "trat",
+     "tipoNombre": "Tratado",
+     "referencia": "Convención sobre los Derechos de las Personas con Discapacidad, decreto promulgatorio, <em>Diario Oficial</em>, 2 de mayo de 2008, art. 14.",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5033826&fecha=02/05/2008"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "Comité sobre los Derechos de las Personas con Discapacidad, observaciones finales sobre México, CRPD/C/MEX/CO/1, 2014, párr. 30.",
+     "url": "https://documents.un.org/doc/undoc/gen/g14/191/80/pdf/g1419180.pdf"
+    },
+    {
+     "tipo": "onu",
+     "tipoNombre": "Naciones Unidas",
+     "referencia": "Comité sobre los Derechos de las Personas con Discapacidad, <em>Arturo Medina Vela vs. México</em>, CRPD/C/22/D/32/2015, dictamen de 6 de septiembre de 2019, párr. 10.4.",
+     "url": "https://documents.un.org/doc/undoc/gen/g19/306/89/pdf/g1930689.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "Suprema Corte, Primera Sala, amparo en revisión 115/2024, 11 de junio de 2025, párr. 186 y resolutivos.",
+     "url": "https://www2.scjn.gob.mx/juridica/engroses/1/2024/2/2_329216_7320_firmado.pdf"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-inimputabilidad.pdf",
+    "paginas": 10,
+    "kb": 978,
+    "palabras": 2736,
+    "minutos": 15
+   },
+   "portada": "/estudiar/portadas/inimputabilidad.webp",
+   "miniatura": "/estudiar/miniaturas/inimputabilidad.webp",
+   "miniatura640": "/estudiar/miniaturas/inimputabilidad-640.webp"
   }
  ]
 }
