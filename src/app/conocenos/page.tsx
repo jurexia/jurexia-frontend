@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import Navbar from '@/components/Navbar';
 import PieDePagina from '@/components/PieDePagina';
 import Lamina from '@/components/web/Lamina';
-import { Antetitulo, Boton, Entrada, Titulo } from '@/components/web/sistema';
+import { Antetitulo, Boton, Entrada, ObraDeFondo, Titulo } from '@/components/web/sistema';
 import { claseWeb } from '@/lib/fuentes-web';
 
 export const metadata: Metadata = {
@@ -255,7 +255,8 @@ export default function ConocenosPage() {
             </div>
 
             {/* La llamada final, con sus dos caminos de siempre */}
-            <section className="mt-10 bg-tinta text-cream-100 sm:mt-16">
+            <section className="relative isolate mt-10 overflow-hidden bg-tinta text-cream-100 sm:mt-16">
+                <ObraDeFondo arte="/web/arte/puertas.webp" />
                 <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:flex-row lg:items-center lg:justify-between lg:px-8">
                     <div className="max-w-2xl">
                         <p className="font-serif text-display-xs font-normal [text-wrap:balance] sm:text-display-s">

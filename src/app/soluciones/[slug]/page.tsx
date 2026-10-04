@@ -51,7 +51,7 @@ export default function SolucionPage({ params }: { params: { slug: string } }) {
             filas={[]}
         >
             {/* Preguntas de ejemplo */}
-            <Seccion tono="tinta" espacio="amplio">
+            <Seccion tono="tinta" espacio="amplio" arte="/web/arte/claustro.webp">
                 <Antetitulo oscuro className="mb-4">Cómo se pregunta</Antetitulo>
                 <Titulo oscuro escala="bloque" className="max-w-2xl">Preguntas como éstas, con su fundamento</Titulo>
                 <div className="mt-12 grid gap-px overflow-hidden rounded-xl bg-white/10 md:grid-cols-3">

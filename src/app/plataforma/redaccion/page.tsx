@@ -79,7 +79,7 @@ export default function RedaccionPage() {
             ]}
         >
             {/* Los siete flujos */}
-            <Seccion tono="tinta" espacio="amplio">
+            <Seccion tono="tinta" espacio="amplio" arte="/web/arte/tintero.webp">
                 <Antetitulo oscuro className="mb-4">Siete flujos</Antetitulo>
                 <Titulo oscuro escala="bloque" className="max-w-2xl">Los escritos de siempre, guiados paso a paso</Titulo>
                 <div className="mt-12 grid gap-px overflow-hidden rounded-xl bg-white/10 sm:grid-cols-2 lg:grid-cols-4">

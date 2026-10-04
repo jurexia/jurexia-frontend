@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, ChevronRight, KeyRound, Lock, ShieldCheck, Trash2, CreditCard, EyeOff } from 'lucide-react';
 import type { ReactNode } from 'react';
 import BotonProbar from '@/components/BotonProbar';
-import { Antetitulo, Boton, clasesBoton, EnlaceFlecha, Entrada, Seccion, Titulo } from '@/components/web/sistema';
+import { Antetitulo, Boton, clasesBoton, EnlaceFlecha, Entrada, ObraDeFondo, Seccion, Titulo } from '@/components/web/sistema';
 
 /* ═══ LOS MÓDULOS QUE SE REPITEN (3-oct-2026) ═══
    Harvey cierra cada página con los mismos bloques —la plataforma, la
@@ -81,9 +81,9 @@ export const CIFRAS: { cifra: string; texto: string }[] = [
     { cifra: '97%', texto: 'De las citas abren su documento oficial' },
 ];
 
-export function Cifras({ titulo = 'El acervo, medido', entrada }: { titulo?: ReactNode; entrada?: ReactNode }) {
+export function Cifras({ titulo = 'El acervo, medido', entrada, arte = '/web/arte/lomos.webp' }: { titulo?: ReactNode; entrada?: ReactNode; arte?: string }) {
     return (
-        <Seccion tono="tinta" espacio="amplio">
+        <Seccion tono="tinta" espacio="amplio" arte={arte}>
             <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-20">
                 <div>
                     <Antetitulo oscuro className="mb-4">En cifras</Antetitulo>
@@ -114,10 +114,10 @@ const CONTROLES = [
     { Icono: CreditCard, titulo: 'Pagos con Stripe', texto: 'Iurexia no ve ni guarda los datos de tu tarjeta.' },
 ];
 
-export function BloqueSeguridad({ tono = 'tinta' }: { tono?: 'tinta' | 'marfil' }) {
+export function BloqueSeguridad({ tono = 'tinta', arte = '/web/arte/archivo.webp' }: { tono?: 'tinta' | 'marfil'; arte?: string }) {
     const oscuro = tono === 'tinta';
     return (
-        <Seccion tono={tono} espacio="amplio" className={oscuro ? 'border-t border-white/[0.06]' : ''}>
+        <Seccion tono={tono} espacio="amplio" arte={oscuro ? arte : undefined} className={oscuro ? 'border-t border-white/[0.06]' : ''}>
             <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-20">
                 <div>
                     <Antetitulo oscuro={oscuro} className="mb-4">Seguridad</Antetitulo>
@@ -186,9 +186,10 @@ export function OtrosModulos({ actual, titulo = 'Una plataforma para todo el tra
 }
 
 /* ── La llamada final, igual en todas las páginas ── */
-export function CierreCTA({ titulo = 'Empieza hoy con Iurexia', entrada = 'Pregunta como se lo plantearías a un colega y comprueba cada fuente.' }: { titulo?: ReactNode; entrada?: ReactNode }) {
+export function CierreCTA({ titulo = 'Empieza hoy con Iurexia', entrada = 'Pregunta como se lo plantearías a un colega y comprueba cada fuente.', arte = '/web/arte/puertas.webp' }: { titulo?: ReactNode; entrada?: ReactNode; arte?: string }) {
     return (
-        <section className="bg-tinta text-cream-100">
+        <section className="relative isolate overflow-hidden bg-tinta text-cream-100">
+            <ObraDeFondo arte={arte} />
             <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:flex-row lg:items-center lg:justify-between lg:px-8">
                 <div className="max-w-2xl">
                     <p className="font-serif text-display-xs font-normal sm:text-display-s">{titulo}</p>

@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import PieDePagina from '@/components/PieDePagina';
 
-import { clasesBoton } from '@/components/web/sistema';
+import { clasesBoton, ObraDeFondo } from '@/components/web/sistema';
 import Lamina from '@/components/web/Lamina';
 import { claseWeb } from '@/lib/fuentes-web';
 /* ───────── Page ───────── */
@@ -205,7 +205,8 @@ export default function SeguridadPage() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 bg-charcoal-900 text-white overflow-hidden">
+            <section className="relative isolate py-20 bg-charcoal-900 text-white overflow-hidden">
+                <ObraDeFondo arte="/web/arte/archivo.webp" />
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <AnimateOnScroll>
                         <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-6 [text-wrap:balance]">

@@ -126,7 +126,7 @@ function dibujar(lienzo: HTMLCanvasElement, patron: Patron, tono: TonoLamina, se
 }
 
 // El velo sobre una obra: para que el texto que va encima se lea, o para bajarle el contraste.
-const VELO: Record<'arriba' | 'suave', Record<TonoLamina, string>> = {
+const VELO: Record<'arriba' | 'suave' | 'denso', Record<TonoLamina, string>> = {
     arriba: {
         tinta: 'linear-gradient(180deg, rgba(15,14,13,0.92) 0%, rgba(15,14,13,0.72) 40%, rgba(15,14,13,0.25) 100%)',
         piedra: 'linear-gradient(180deg, rgba(239,236,230,0.94) 0%, rgba(239,236,230,0.7) 40%, rgba(239,236,230,0.2) 100%)',
@@ -136,6 +136,12 @@ const VELO: Record<'arriba' | 'suave', Record<TonoLamina, string>> = {
         tinta: 'linear-gradient(180deg, rgba(15,14,13,0.35), rgba(15,14,13,0.45))',
         piedra: 'linear-gradient(180deg, rgba(239,236,230,0.25), rgba(239,236,230,0.35))',
         marfil: 'linear-gradient(180deg, rgba(239,236,230,0.25), rgba(239,236,230,0.35))',
+    },
+    // Para tablas y listas con mucho texto encima: la obra queda como textura.
+    denso: {
+        tinta: 'linear-gradient(180deg, rgba(15,14,13,0.86), rgba(15,14,13,0.8))',
+        piedra: 'linear-gradient(180deg, rgba(239,236,230,0.88), rgba(239,236,230,0.82))',
+        marfil: 'linear-gradient(180deg, rgba(239,236,230,0.88), rgba(239,236,230,0.82))',
     },
 };
 
@@ -154,7 +160,7 @@ export default function Lamina({
     semilla?: number;
     /** Una de las obras de public/web/arte: si se da, sustituye al guilloché. */
     arte?: string;
-    velo?: 'arriba' | 'suave';
+    velo?: 'arriba' | 'suave' | 'denso';
     prioridad?: boolean;
     className?: string;
     children?: ReactNode;

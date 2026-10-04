@@ -2337,3 +2337,46 @@ html.con-barra-trabajo .solo-publico {
     animation: aparecer 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
 }
+
+/* ═══ Revelar al bajar (comparativa, 4-oct-2026) ═══
+   David pidió efectos al desplazarse en la tabla comparativa. Sólo se esconde
+   lo que el script marcó con `.revelar-activo` (la tabla estaba por debajo de
+   la pantalla al cargar) y sólo si el sistema no pide menos movimiento: sin
+   JavaScript, todo se ve quieto. Las filas entran una tras otra (--retraso),
+   la palomita dorada se dibuja y el hilo de oro sigue al desplazamiento. */
+@media (prefers-reduced-motion: no-preference) {
+  .revelar-activo .revelar {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 800ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 800ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: var(--retraso, 0ms);
+  }
+
+  .revelar-activo .revelar.visto {
+    opacity: 1;
+    transform: none;
+  }
+
+  .revelar-activo .trazo {
+    stroke-dasharray: 22;
+    stroke-dashoffset: 22;
+    transition: stroke-dashoffset 650ms ease-out;
+    transition-delay: calc(var(--retraso, 0ms) + 320ms);
+  }
+
+  .revelar-activo .visto .trazo {
+    stroke-dashoffset: 0;
+  }
+
+  .revelar-activo .hilo {
+    transform: scaleY(0);
+    transition: transform 160ms linear;
+  }
+}
+
+@media print {
+  .revelar-activo .revelar {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

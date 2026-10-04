@@ -40,11 +40,23 @@ const ANCHO = {
     normal: 'max-w-7xl',
 } as const;
 
+/* Una obra de public/web/arte detrás de una sección en tinta (segunda serie,
+   4-oct-2026: David, «úsalas en más apartados… sobre todo donde haya negros de
+   fondo»). El velo asegura que el texto se lea: en escritorio deja ver la obra
+   a la derecha, donde las obras tienen su motivo; en teléfono, donde el texto
+   ocupa todo el ancho, el velo es parejo. */
+const VELO_OBRA = {
+    // 0.7 a la derecha, no menos: con 0.55 las rejas del archivo cruzaban el texto pequeño de la lista.
+    ancho: 'linear-gradient(90deg, rgba(15,14,13,0.95) 0%, rgba(15,14,13,0.88) 45%, rgba(15,14,13,0.7) 100%)',
+    estrecho: 'linear-gradient(180deg, rgba(15,14,13,0.86) 0%, rgba(15,14,13,0.8) 100%)',
+} as const;
+
 export function Seccion({
     id,
     tono = 'marfil',
     espacio = 'normal',
     ancho = 'normal',
+    arte,
     className = '',
     children,
     etiqueta,
@@ -53,15 +65,30 @@ export function Seccion({
     tono?: Tono;
     espacio?: keyof typeof ESPACIO;
     ancho?: keyof typeof ANCHO;
+    /** Una obra de public/web/arte, sólo para secciones en tinta. */
+    arte?: string;
     className?: string;
     children: ReactNode;
     /** aria-label cuando la sección no tiene un título visible. */
     etiqueta?: string;
 }) {
     return (
-        <section id={id} aria-label={etiqueta} className={`scroll-mt-20 ${FONDO[tono]} ${ESPACIO[espacio]} ${className}`}>
+        <section id={id} aria-label={etiqueta} className={`scroll-mt-20 ${FONDO[tono]} ${ESPACIO[espacio]} ${arte ? 'relative isolate overflow-hidden' : ''} ${className}`}>
+            {arte && <ObraDeFondo arte={arte} />}
             <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${ANCHO[ancho]}`}>{children}</div>
         </section>
+    );
+}
+
+/** Las capas de la obra (imagen y velo); el contenedor tiene que ser `relative isolate overflow-hidden`. */
+export function ObraDeFondo({ arte }: { arte: string }) {
+    return (
+        <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={arte} alt="" aria-hidden loading="lazy" decoding="async" className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover object-right" />
+            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 lg:hidden" style={{ background: VELO_OBRA.estrecho }} />
+            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 hidden lg:block" style={{ background: VELO_OBRA.ancho }} />
+        </>
     );
 }
 

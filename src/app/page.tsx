@@ -12,7 +12,7 @@ import Lamina from '@/components/web/Lamina';
 import AcordeonModulos, { type ItemModulo } from '@/components/web/AcordeonModulos';
 import Testimonios from '@/components/web/Testimonios';
 import Comparativa from '@/components/web/Comparativa';
-import { BloqueSeguridad, Captura, Cifras, CierreCTA } from '@/components/web/bloques';
+import { BloqueSeguridad, Cifras, CierreCTA } from '@/components/web/bloques';
 import { Antetitulo, Boton, Encabezado, Seccion } from '@/components/web/sistema';
 
 import { claseWeb } from '@/lib/fuentes-web';
@@ -29,8 +29,9 @@ import { claseWeb } from '@/lib/fuentes-web';
    4. para quién es (abogados y despachos · Poder Judicial), con el producto
       real en cada tarjeta;
    5. qué hace, función por función, con sus grabaciones;
-   6. qué dicen quienes lo usan; en qué se distingue de un modelo general
-      (con el logotipo de ChatGPT); el acervo en cifras; la seguridad;
+   6. qué dicen quienes lo usan; en qué se distingue de una IA genérica
+      (sin ChatGPT desde el 4-oct: Iurexia usa modelos de OpenAI); el acervo
+      en cifras; la seguridad;
    7. y el conocimiento gratuito (Estudiar y pensar) antes del cierre.
    Salieron de la portada —no del sitio— la tarjeta de ciudadanos, la caja de
    chat dibujada, la demo por capítulos (ahora es el acordeón) y Connect, que
@@ -101,30 +102,9 @@ export default function HomePage() {
             {/* 1. El vídeo de la bandera: no se toca (David, 3-oct-2026). */}
             <HeroVideo />
 
-            {/* El producto, sin bajar: como en harvey.ai, la plataforma real se
-                ve desde la primera pantalla. Se monta sobre el borde inferior
-                del vídeo, que ya funde a crema, sin tapar el titular ni los
-                botones (el solape es menor en pantallas bajas y en teléfono). */}
-            <div className="relative z-20 -mt-10 px-4 sm:-mt-20 sm:px-6 lg:-mt-28 lg:px-8">
-                <div className="mx-auto max-w-6xl aparecer [animation-delay:350ms]">
-                    <Lamina tono="tinta" arte="/web/arte/biblioteca.webp" prioridad className="rounded-2xl shadow-[0_40px_90px_-35px_rgba(15,14,13,0.55)]">
-                        <div className="px-3 pt-5 sm:px-10 sm:pt-10 lg:px-16">
-                            <div className="mx-auto max-w-5xl translate-y-px">
-                                <Captura
-                                    src="/web/producto/consulta.webp"
-                                    alt="Una consulta resuelta en Iurexia: 12 citas, las 12 verificadas, agrupadas por fuente oficial, con 8 tesis confirmadas en el Semanario."
-                                    ancho={2000}
-                                    alto={1250}
-                                    barra="iurexia.com/chat"
-                                    prioridad
-                                />
-                            </div>
-                        </div>
-                    </Lamina>
-                </div>
-            </div>
-
-            {/* 2. «Iurexia, now powered by OpenAI». */}
+            {/* 2. «Iurexia, now powered by OpenAI». (Entre el vídeo y esta franja
+                hubo una captura del chat encimada al vídeo; David no le vio
+                sentido y se quitó el 4-oct-2026.) */}
             <AnuncioOpenAI />
 
             {/* 3. La plataforma en dos minutos y, debajo, los despachos. */}
@@ -216,7 +196,7 @@ export default function HomePage() {
             {/* 6. Lo que dicen quienes lo usan. */}
             <Testimonios />
 
-            {/* 7. Un modelo general frente a Iurexia (con el logotipo de ChatGPT). */}
+            {/* 7. Una IA genérica frente a Iurexia: sin ChatGPT, porque Iurexia usa modelos de OpenAI (David, 4-oct-2026). */}
             <Comparativa />
 
             {/* 8. El acervo, medido, y la seguridad: los dos oscuros seguidos, como Harvey. */}
