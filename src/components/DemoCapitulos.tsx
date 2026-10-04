@@ -74,7 +74,7 @@ export default function DemoCapitulos({
                             >
                                 0{i + 1}
                             </span>
-                            <span className="mt-0.5 block font-serif text-sm font-bold leading-tight text-charcoal-900">
+                            <span className="mt-0.5 block text-sm font-medium leading-tight text-tinta">
                                 {c.funcion}
                             </span>
                             <span className="mt-1 block text-[12px] leading-snug text-charcoal-900/55">

@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import PieDePagina from '@/components/PieDePagina';
 
+import { clasesBoton } from '@/components/web/sistema';
 export default function SolucionesPage() {
     return (
         <main className="min-h-screen bg-cream-300">
@@ -15,17 +16,17 @@ export default function SolucionesPage() {
             <section className="pt-32 pb-20 px-4">
                 <div className="max-w-5xl mx-auto text-center">
                     <AnimateOnScroll delay={0}>
-                        <p className="text-accent-brown font-medium mb-4 tracking-wide">SOLUCIONES</p>
+                        <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">SOLUCIONES</p>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.1}>
-                        <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
+                        <h1 className="font-serif text-[2.6rem] leading-[1.05] sm:text-display-l lg:text-display-xl font-normal text-tinta mb-8 [text-wrap:balance]">
                             Del rezago a la
                             <br />
-                            <span className="text-accent-gold">estrategia legal</span>
+                            estrategia legal
                         </h1>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
-                        <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
+                        <p className="text-xl text-piedra-700 max-w-3xl mx-auto mb-12">
                             Iurexia transforma tareas rutinarias en ventajas estratégicas para tu práctica jurídica.
                             Acelera tu trabajo legal con precisión y fundamento.
                         </p>
@@ -59,10 +60,10 @@ export default function SolucionesPage() {
             <section className="py-20 bg-cream-300 border-t border-black/5">
                 <div className="max-w-6xl mx-auto px-4">
                     <AnimateOnScroll>
-                        <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-3 text-center">
-                            Encuentra tu <span className="text-accent-gold">perfil</span>
+                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-3 text-center [text-wrap:balance]">
+                            Encuentra tu perfil
                         </h2>
-                        <p className="text-center text-charcoal-600 mb-12 max-w-2xl mx-auto">
+                        <p className="text-center text-piedra-700 mb-12 max-w-2xl mx-auto">
                             La misma base de datos, distintas formas de trabajarla.
                         </p>
                     </AnimateOnScroll>
@@ -124,8 +125,8 @@ export default function SolucionesPage() {
                                             </span>
                                         )}
                                     </div>
-                                    <h3 className="font-serif text-xl font-semibold text-charcoal-900 mb-2.5">{p.titulo}</h3>
-                                    <p className="text-[0.9375rem] leading-relaxed text-charcoal-600 mb-4">{p.texto}</p>
+                                    <h3 className="font-serif text-xl font-normal text-tinta mb-2.5">{p.titulo}</h3>
+                                    <p className="text-[0.9375rem] leading-relaxed text-piedra-700 mb-4">{p.texto}</p>
                                     <div className="flex flex-wrap gap-1.5">
                                         {p.herramientas.map((h) => (
                                             <span key={h} className="rounded-md border border-charcoal-900/10 px-2 py-1 text-[11px] font-medium text-charcoal-700">
@@ -145,11 +146,11 @@ export default function SolucionesPage() {
                 <div className="max-w-6xl mx-auto px-4">
                     <AnimateOnScroll>
                         <div className="text-center mb-16">
-                            <p className="text-accent-brown font-medium mb-4 tracking-wide">APLICACIONES</p>
-                            <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
-                                Cómo usan Iurexia <span className="text-accent-gold">los profesionales</span>
+                            <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">APLICACIONES</p>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-6 [text-wrap:balance]">
+                                Cómo usan Iurexia los profesionales
                             </h2>
-                            <p className="text-xl text-charcoal-600 max-w-2xl mx-auto">
+                            <p className="text-xl text-piedra-700 max-w-2xl mx-auto">
                                 Desde investigación hasta análisis de demandas, Iurexia potencia cada etapa del trabajo legal.
                             </p>
                         </div>
@@ -180,11 +181,11 @@ export default function SolucionesPage() {
                 <div className="max-w-6xl mx-auto px-4">
                     <AnimateOnScroll>
                         <div className="text-center mb-16">
-                            <p className="text-accent-brown font-medium mb-4 tracking-wide">PLATAFORMA</p>
-                            <h2 className="font-serif text-4xl md:text-5xl font-medium mb-6">
-                                Herramientas diseñadas <span className="text-accent-gold">para el éxito</span>
+                            <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-white/55">PLATAFORMA</p>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-6 [text-wrap:balance]">
+                                Herramientas diseñadas para el éxito
                             </h2>
-                            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                            <p className="text-xl text-white/55 max-w-2xl mx-auto">
                                 Cada funcionalidad de Iurexia está construida específicamente para el sistema jurídico mexicano.
                             </p>
                         </div>
@@ -212,10 +213,10 @@ export default function SolucionesPage() {
                 <div className="max-w-6xl mx-auto px-4">
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
-                            <h3 className="font-serif text-2xl md:text-3xl font-medium text-charcoal-900 mb-4">
-                                Seguridad de <span className="text-accent-gold">nivel empresarial</span>
+                            <h3 className="font-serif text-2xl md:text-3xl font-normal text-tinta mb-4">
+                                Seguridad de nivel empresarial
                             </h3>
-                            <p className="text-charcoal-600 max-w-2xl mx-auto">
+                            <p className="text-piedra-700 max-w-2xl mx-auto">
                                 Iurexia cumple con los estándares más altos de seguridad y privacidad para proteger tu información.
                             </p>
                         </div>
@@ -261,14 +262,14 @@ export default function SolucionesPage() {
                                     </svg>
                                     EXCLUSIVO PLATINUM
                                 </div>
-                                <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6 leading-tight">
+                                <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-6 [text-wrap:balance]">
                                     Asesoría legal
                                     <br />
-                                    <span className="text-accent-gold">
+                                    
                                         personalizada
-                                    </span>
+                                    
                                 </h2>
-                                <p className="text-lg text-charcoal-600 mb-8 leading-relaxed">
+                                <p className="text-lg text-piedra-700 mb-8 leading-relaxed">
                                     Más allá de la tecnología, Iurexia te conecta con <strong>abogados altamente especializados</strong> que refinan contigo la estrategia legal que ideaste en la plataforma. Una consulta directa desde la plataforma para pulir cada detalle de tu caso.
                                 </p>
 
@@ -287,7 +288,7 @@ export default function SolucionesPage() {
                                                 </div>
                                                 <div>
                                                     <h4 className="font-medium text-charcoal-900">{item.title}</h4>
-                                                    <p className="text-charcoal-600 text-sm">{item.desc}</p>
+                                                    <p className="text-piedra-700 text-sm">{item.desc}</p>
                                                 </div>
                                             </div>
                                         </AnimateOnScroll>
@@ -296,7 +297,7 @@ export default function SolucionesPage() {
 
                                 <Link
                                     href="/precios"
-                                    className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-lg hover:bg-charcoal-800 transition-colors"
+                                    className={clasesBoton()}
                                 >
                                     Conocer Plan Platinum
                                     <ArrowRight className="w-5 h-5" />
@@ -315,10 +316,10 @@ export default function SolucionesPage() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
                                         </div>
-                                        <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                                        <h3 className="font-serif text-2xl font-normal text-tinta mb-2">
                                             Equipo Legal Iurexia
                                         </h3>
-                                        <p className="text-charcoal-500 text-sm">
+                                        <p className="text-piedra-600 text-sm">
                                             Especialistas a tu disposición
                                         </p>
                                     </div>
@@ -329,13 +330,13 @@ export default function SolucionesPage() {
                                             <span className="text-charcoal-700 font-medium">Disponible para consultas</span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4 text-center">
-                                            <div className="p-4 bg-gray-50 rounded-xl">
+                                            <div className="p-4 bg-piedra-50 rounded-xl">
                                                 <p className="text-2xl font-bold text-charcoal-900">VIP</p>
-                                                <p className="text-xs text-charcoal-500">Soporte dedicado</p>
+                                                <p className="text-xs text-piedra-600">Soporte dedicado</p>
                                             </div>
-                                            <div className="p-4 bg-gray-50 rounded-xl">
+                                            <div className="p-4 bg-piedra-50 rounded-xl">
                                                 <p className="text-2xl font-bold text-charcoal-900">700</p>
-                                                <p className="text-xs text-charcoal-500">Consultas/mes</p>
+                                                <p className="text-xs text-piedra-600">Consultas/mes</p>
                                             </div>
                                         </div>
                                     </div>
@@ -350,19 +351,19 @@ export default function SolucionesPage() {
             <section className="py-20 bg-cream-300 overflow-hidden">
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <AnimateOnScroll>
-                        <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-6">
-                            Transforma tu práctica legal <span className="text-accent-gold">con IA</span>
+                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-6 [text-wrap:balance]">
+                            Transforma tu práctica legal con IA
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.15}>
-                        <p className="text-lg text-charcoal-600 mb-8">
+                        <p className="text-lg text-piedra-700 mb-8">
                             Únete a los profesionales del derecho que ya optimizan su trabajo con Iurexia.
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.3} direction="scale">
                         <Link
                             href="/chat"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-lg hover:bg-charcoal-800 transition-colors"
+                            className={clasesBoton()}
                         >
                             Probar Gratis
                             <ArrowRight className="w-5 h-5" />
@@ -374,7 +375,7 @@ export default function SolucionesPage() {
             {/* Nota de uso responsable */}
             <section className="py-8 bg-cream-200">
                 <div className="max-w-4xl mx-auto text-center px-4">
-                    <p className="text-sm text-charcoal-500">
+                    <p className="text-sm text-piedra-600">
                         <strong>Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
                     </p>
                 </div>
@@ -392,8 +393,8 @@ function BenefitCard({ icon, title, description }: { icon: React.ReactNode; titl
     return (
         <div className="p-8 rounded-2xl bg-cream-300 hover:shadow-lg transition-all duration-300">
             <div className="text-accent-brown mb-4">{icon}</div>
-            <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">{title}</h3>
-            <p className="text-charcoal-600 leading-relaxed">{description}</p>
+            <h3 className="font-serif text-xl font-normal text-tinta mb-3">{title}</h3>
+            <p className="text-piedra-700 leading-relaxed">{description}</p>
         </div>
     );
 }
@@ -404,8 +405,8 @@ function UseCaseCard({ icon, title, description }: { icon: React.ReactNode; titl
             <div className="w-12 h-12 rounded-xl bg-accent-brown/10 flex items-center justify-center text-accent-brown mb-4">
                 {icon}
             </div>
-            <h3 className="font-serif text-lg font-medium text-charcoal-900 mb-2">{title}</h3>
-            <p className="text-sm text-charcoal-600 leading-relaxed">{description}</p>
+            <h3 className="font-serif text-lg font-normal text-tinta mb-2">{title}</h3>
+            <p className="text-sm text-piedra-700 leading-relaxed">{description}</p>
         </div>
     );
 }
@@ -416,10 +417,10 @@ function PlatformFeatureCard({ title, description, href }: { title: string; desc
             href={href}
             className="block p-8 rounded-2xl bg-charcoal-800 hover:bg-charcoal-700 transition-all duration-300 group"
         >
-            <h3 className="text-xl font-medium text-white mb-3 group-hover:text-accent-brown transition-colors">
+            <h3 className="text-xl font-normal text-white mb-3 group-hover:text-accent-brown transition-colors">
                 {title}
             </h3>
-            <p className="text-gray-400 mb-4">{description}</p>
+            <p className="text-white/55 mb-4">{description}</p>
             <span className="text-accent-brown font-medium inline-flex items-center gap-1 text-sm">
                 Ver más
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

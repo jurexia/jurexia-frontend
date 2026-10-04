@@ -19,6 +19,7 @@ import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
 import { Gem, Check, Upload, Loader2, ShieldCheck, ExternalLink } from 'lucide-react';
 
+import { clasesBoton } from '@/components/web/sistema';
 type Autorizacion = {
     despacho: string | null; cargo: string | null; testimonio: string | null;
     enlace: string | null; logo_path: string | null; foto_path: string | null;
@@ -39,7 +40,7 @@ function Casilla({ marcado, alCambiar, titulo, detalle }: {
     marcado: boolean; alCambiar: (v: boolean) => void; titulo: string; detalle: string;
 }) {
     return (
-        <label className="flex gap-3 p-3 rounded-lg border border-cream-400 bg-white cursor-pointer hover:border-charcoal-300 transition-colors">
+        <label className="flex gap-3 p-3 rounded-lg border border-cream-400 bg-white cursor-pointer hover:border-piedra-300 transition-colors">
             <input type="checkbox" checked={marcado} onChange={e => alCambiar(e.target.checked)}
                 className="mt-0.5 w-4 h-4 shrink-0 accent-charcoal-900" />
             <span>
@@ -159,7 +160,7 @@ export default function VitrinaPage() {
             <div className="min-h-screen bg-cream-50">
                 <Navbar />
                 <div className="flex items-center justify-center py-32">
-                    <Loader2 className="w-6 h-6 animate-spin text-charcoal-400" />
+                    <Loader2 className="w-6 h-6 animate-spin text-piedra-500" />
                 </div>
             </div>
         );
@@ -175,7 +176,7 @@ export default function VitrinaPage() {
                         <div className="w-11 h-11 rounded-full bg-charcoal-900 flex items-center justify-center mb-4">
                             <Check className="w-5 h-5 text-cream-100" />
                         </div>
-                        <h1 className="text-2xl font-serif text-charcoal-900 mb-3">
+                        <h1 className="text-2xl font-serif text-tinta mb-3 font-normal [text-wrap:balance]">
                             Recibido, y gracias.
                         </h1>
                         <p className="text-charcoal-700 mb-4">
@@ -193,7 +194,7 @@ export default function VitrinaPage() {
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-charcoal-900 text-cream-100 text-[11px] font-medium tracking-wide mb-4">
                                 <Gem className="w-3 h-3" /> INVITACIÓN
                             </span>
-                            <h1 className="text-3xl sm:text-4xl font-serif text-charcoal-900 mb-4 leading-tight">
+                            <h1 className="text-3xl sm:text-4xl font-serif text-tinta mb-4 leading-tight font-normal [text-wrap:balance]">
                                 Aparezca en Iurexia
                             </h1>
                             <p className="text-charcoal-700 leading-relaxed">
@@ -226,7 +227,7 @@ export default function VitrinaPage() {
                                 </label>
                                 <input readOnly value={profile?.full_name || ''}
                                     className="w-full px-4 py-2.5 rounded-lg border border-cream-400 bg-cream-100 text-charcoal-700 text-sm" />
-                                <p className="text-xs text-charcoal-500 mt-1">
+                                <p className="text-xs text-piedra-600 mt-1">
                                     Si quiere cambiarlo, edítelo en su perfil antes de enviar.
                                 </p>
                             </div>
@@ -234,7 +235,7 @@ export default function VitrinaPage() {
                             <div className="grid sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-charcoal-900 mb-1.5">
-                                        Despacho <span className="text-charcoal-500 font-normal">(opcional)</span>
+                                        Despacho <span className="text-piedra-600 font-normal">(opcional)</span>
                                     </label>
                                     <input value={despacho} onChange={e => setDespacho(e.target.value)}
                                         placeholder="Nombre de su firma"
@@ -242,7 +243,7 @@ export default function VitrinaPage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-charcoal-900 mb-1.5">
-                                        Cargo <span className="text-charcoal-500 font-normal">(opcional)</span>
+                                        Cargo <span className="text-piedra-600 font-normal">(opcional)</span>
                                     </label>
                                     <input value={cargo} onChange={e => setCargo(e.target.value)}
                                         placeholder="Socio, litigante, asociado…"
@@ -257,7 +258,7 @@ export default function VitrinaPage() {
                                 <textarea value={testimonio} onChange={e => setTestimonio(e.target.value)} rows={5}
                                     placeholder="En qué le ha servido, con sus palabras. Lo concreto convence más que lo elogioso: qué hacía antes, qué hace ahora, cuánto tiempo le ahorra."
                                     className="w-full px-4 py-3 rounded-lg border border-cream-400 bg-white text-charcoal-900 text-sm resize-y" />
-                                <p className="text-xs text-charcoal-500 mt-1">
+                                <p className="text-xs text-piedra-600 mt-1">
                                     Lo escribe usted y se publica tal cual. No lo redactamos ni lo
                                     maquillamos: un testimonio escrito por nosotros no sería suyo.
                                 </p>
@@ -279,11 +280,11 @@ export default function VitrinaPage() {
                                 ] as const).map(([cual, titulo, pista, ruta, acepta]) => (
                                     <div key={cual}>
                                         <label className="block text-sm font-medium text-charcoal-900 mb-1.5">
-                                            {titulo} <span className="text-charcoal-500 font-normal">(opcional)</span>
+                                            {titulo} <span className="text-piedra-600 font-normal">(opcional)</span>
                                         </label>
                                         <label className={`flex items-center justify-center gap-2 px-4 py-6 rounded-lg border border-dashed cursor-pointer transition-colors ${
                                             ruta ? 'border-accent-gold bg-accent-gold/5 text-charcoal-900'
-                                                 : 'border-cream-400 bg-white text-charcoal-700 hover:border-charcoal-300'}`}>
+                                                 : 'border-cream-400 bg-white text-charcoal-700 hover:border-piedra-300'}`}>
                                             <input type="file" accept={acepta} className="hidden"
                                                 onChange={e => { const f = e.target.files?.[0]; if (f) subir(f, cual); }} />
                                             {subiendo === cual
@@ -292,7 +293,7 @@ export default function VitrinaPage() {
                                                        : <Upload className="w-4 h-4" />}
                                             <span className="text-sm">{ruta ? 'Recibido' : 'Subir archivo'}</span>
                                         </label>
-                                        <p className="text-xs text-charcoal-500 mt-1">{pista}</p>
+                                        <p className="text-xs text-piedra-600 mt-1">{pista}</p>
                                     </div>
                                 ))}
                             </div>
@@ -302,7 +303,7 @@ export default function VitrinaPage() {
                                 publicidad engañosa (art. 32 LFPC), y aquí el lector es abogado. */}
                             <div className="pt-2">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <ShieldCheck className="w-4 h-4 text-charcoal-500" />
+                                    <ShieldCheck className="w-4 h-4 text-piedra-600" />
                                     <p className="text-sm font-medium text-charcoal-900">
                                         Qué autoriza, exactamente
                                     </p>
@@ -341,13 +342,13 @@ export default function VitrinaPage() {
                             )}
 
                             <button onClick={enviar} disabled={guardando || !cNombre}
-                                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-charcoal-900 text-cream-100 font-medium hover:bg-charcoal-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                className={`${clasesBoton()} w-full`}>
                                 {guardando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Gem className="w-4 h-4" />}
                                 {guardando ? 'Enviando…' : 'Reservar el lugar de mi firma'}
                             </button>
 
                             <a href="/privacidad" target="_blank" rel="noopener noreferrer"
-                                className="flex items-center justify-center gap-1 text-xs text-charcoal-500 hover:text-charcoal-700">
+                                className="flex items-center justify-center gap-1 text-xs text-piedra-600 hover:text-charcoal-700">
                                 Aviso de privacidad <ExternalLink className="w-3 h-3" />
                             </a>
                         </div>

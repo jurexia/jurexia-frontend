@@ -38,6 +38,32 @@ module.exports = {
                     brown: '#8b7355',
                     gold: '#c9a962',
                 },
+                // ═══ EL SISTEMA DE LA WEB PÚBLICA (3-oct-2026) ═══
+                // Tras el barrido de harvey.ai: una tinta, el crema de la casa y
+                // una sola escala de grises CÁLIDOS. Sustituye a los grises fríos
+                // de Tailwind (gray-300/400/500) que se colaban en la web y a los
+                // charcoal-600…100 que nunca existieron. El dorado queda para la
+                // marca y los detalles finos, no para palabras ni botones.
+                tinta: '#0f0e0d',
+                piedra: {
+                    50: '#faf9f6',
+                    100: '#f1efe9',
+                    200: '#e4e1d9',
+                    300: '#cfcbc3',
+                    400: '#aaa59c',
+                    500: '#8b867e',
+                    600: '#6c6861',
+                    700: '#4d4a44',
+                    800: '#33312c',
+                },
+            },
+            // Cinco tamaños de título para toda la web, siempre en Playfair 400.
+            fontSize: {
+                'display-xl': ['4.5rem', { lineHeight: '1.04', letterSpacing: '-0.02em' }],
+                'display-l': ['3.5rem', { lineHeight: '1.07', letterSpacing: '-0.018em' }],
+                'display-m': ['2.75rem', { lineHeight: '1.1', letterSpacing: '-0.015em' }],
+                'display-s': ['2rem', { lineHeight: '1.15', letterSpacing: '-0.01em' }],
+                'display-xs': ['1.5rem', { lineHeight: '1.25', letterSpacing: '-0.005em' }],
             },
             fontFamily: {
                 serif: ['var(--font-serif)', 'Playfair Display', 'Georgia', 'serif'],

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
 import Navbar from '@/components/Navbar';
 
+import { clasesBoton } from '@/components/web/sistema';
 /* Reescrita el 3-ago-2026. La página era la única del sitio en azul: 62
    estilos en línea con hex a mano (#60a5fa, #2563eb, degradados azul→dorado)
    que el barrido de paleta no podía tocar porque no eran clases de Tailwind.
@@ -30,18 +31,18 @@ export default function ConnectPage() {
             {/* ── Hero ── */}
             <section className="px-4 pb-16 pt-32 sm:px-6 sm:pb-20 sm:pt-40">
                 <div className="mx-auto max-w-3xl text-center">
-                    <span className="mb-6 inline-flex items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-charcoal-600">
+                    <span className="mb-6 inline-flex items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-piedra-700">
                         <Shield className="h-3 w-3 text-accent-gold" />
                         Iurexia Connect
                     </span>
 
-                    <h1 className="mb-6 font-serif text-4xl font-semibold leading-[1.1] tracking-[-0.02em] text-charcoal-900 sm:text-5xl md:text-6xl">
+                    <h1 className="mb-6 text-[2.6rem] leading-[1.05] tracking-[-0.02em] sm:text-display-l font-serif font-normal text-tinta [text-wrap:balance]">
                         La justicia exige seriedad.
                         <br />
-                        <span className="text-accent-gold">Encuentra representación real.</span>
+                        Encuentra representación real.
                     </h1>
 
-                    <p className="mx-auto mb-9 max-w-xl text-base leading-relaxed text-charcoal-600 sm:text-lg">
+                    <p className="mx-auto mb-9 max-w-xl text-base leading-relaxed text-piedra-700 sm:text-lg">
                         La libertad, la salud y el patrimonio no son un juego. Iurexia te
                         conecta <strong className="font-semibold text-charcoal-900">sin costo</strong> con
                         abogados cuya cédula profesional ha sido verificada.
@@ -64,7 +65,7 @@ export default function ConnectPage() {
                         </Link>
                     </div>
 
-                    <p className="mt-4 text-xs text-charcoal-500">
+                    <p className="mt-4 text-xs text-piedra-600">
                         {user ? 'Acceso directo al directorio verificado' : 'Inicia sesión para acceder al directorio'}
                     </p>
                 </div>
@@ -80,10 +81,10 @@ export default function ConnectPage() {
                             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-accent-brown">
                                 Para abogados
                             </p>
-                            <h2 className="mb-4 font-serif text-2xl font-semibold leading-tight text-charcoal-900 sm:text-3xl">
-                                La red está abierta. El requisito es tu <span className="text-accent-gold">cédula</span>
+                            <h2 className="mb-4 font-serif text-display-xs font-normal text-tinta sm:text-display-s [text-wrap:balance]">
+                                La red está abierta. El requisito es tu cédula
                             </h2>
-                            <p className="max-w-xl text-[0.9375rem] leading-relaxed text-charcoal-600 sm:text-base">
+                            <p className="max-w-xl text-[0.9375rem] leading-relaxed text-piedra-700 sm:text-base">
                                 Cualquier abogado puede formar parte de Connect: no hace falta
                                 invitación ni contactos. Verificamos tu cédula profesional contra
                                 el registro oficial y, una vez validada, tu perfil entra al
@@ -101,7 +102,7 @@ export default function ConnectPage() {
                                         </span>
                                         <span>
                                             <span className="block text-sm font-semibold text-charcoal-900">{titulo}</span>
-                                            <span className="block text-[13px] leading-snug text-charcoal-600">{texto}</span>
+                                            <span className="block text-[13px] leading-snug text-piedra-700">{texto}</span>
                                         </span>
                                     </li>
                                 ))}
@@ -110,7 +111,7 @@ export default function ConnectPage() {
 
                         <Link
                             href={user ? '/perfil' : '/registro'}
-                            className="inline-flex h-11 items-center justify-center rounded-lg bg-charcoal-900 px-6 text-[0.9375rem] font-medium text-white transition-colors hover:bg-charcoal-800 md:w-48"
+                            className={clasesBoton()}
                         >
                             Verificar mi cédula
                         </Link>
@@ -122,10 +123,10 @@ export default function ConnectPage() {
             <section className="py-16 sm:py-20">
                 <div className="mx-auto max-w-5xl px-4 sm:px-6">
                     <div className="mx-auto mb-12 max-w-2xl text-center">
-                        <h2 className="mb-5 font-serif text-2xl font-semibold text-charcoal-900 sm:text-3xl md:text-4xl">
-                            Por qué creamos <span className="text-accent-gold">Connect</span>
+                        <h2 className="mb-5 text-[2.1rem] leading-[1.1] tracking-[-0.015em] sm:text-display-m font-serif font-normal text-tinta [text-wrap:balance]">
+                            Por qué creamos Connect
                         </h2>
-                        <p className="mb-4 leading-relaxed text-charcoal-600">
+                        <p className="mb-4 leading-relaxed text-piedra-700">
                             En México miles de personas pierden su patrimonio, su libertad o su
                             tranquilidad simplemente porque{' '}
                             <strong className="font-medium text-charcoal-900">
@@ -133,7 +134,7 @@ export default function ConnectPage() {
                             </strong>{' '}
                             que les dé una representación de calidad.
                         </p>
-                        <p className="leading-relaxed text-charcoal-600">
+                        <p className="leading-relaxed text-piedra-700">
                             Connect es el puente: la IA lee el caso y encuentra al especialista
                             correcto, y cada abogado del directorio tiene sus credenciales
                             validadas.
@@ -163,8 +164,8 @@ export default function ConnectPage() {
                                 className="rounded-xl border border-cream-400 bg-white p-6 transition-colors duration-300 hover:border-accent-gold/50"
                             >
                                 <c.icono className="mb-4 h-5 w-5 text-accent-gold" />
-                                <h3 className="mb-2 font-serif text-lg font-semibold text-charcoal-900">{c.titulo}</h3>
-                                <p className="text-[0.9375rem] leading-relaxed text-charcoal-600">{c.texto}</p>
+                                <h3 className="mb-2 font-serif text-lg font-normal text-tinta">{c.titulo}</h3>
+                                <p className="text-[0.9375rem] leading-relaxed text-piedra-700">{c.texto}</p>
                             </div>
                         ))}
                     </div>
@@ -176,24 +177,24 @@ export default function ConnectPage() {
                 <div className="mx-auto max-w-5xl space-y-14 px-4 sm:px-6">
                     <div className="grid items-start gap-8 md:grid-cols-2">
                         <div>
-                            <h3 className="mb-4 font-serif text-xl font-semibold text-charcoal-900 sm:text-2xl">
+                            <h3 className="mb-4 font-serif text-xl font-normal text-tinta sm:text-2xl">
                                 El coyotaje y la informalidad
                             </h3>
-                            <p className="mb-4 text-[0.9375rem] leading-relaxed text-charcoal-600">
+                            <p className="mb-4 text-[0.9375rem] leading-relaxed text-piedra-700">
                                 Buscar abogado en redes sociales o foros sin regular expone a la
                                 gente al fraude. Hay quien toma el anticipo y desaparece, o
                                 carece de la cédula necesaria para litigar ante juzgados
                                 federales.
                             </p>
-                            <p className="text-[0.9375rem] leading-relaxed text-charcoal-600">
+                            <p className="text-[0.9375rem] leading-relaxed text-piedra-700">
                                 Con Connect, quien tiene una urgencia ve en segundos a los
                                 abogados verificados de su estado.
                             </p>
                         </div>
                         <div className="rounded-xl border border-cream-400 bg-cream-200 p-8">
                             <div className="flex items-center gap-3 rounded-lg border border-charcoal-900/10 bg-white px-4 py-3">
-                                <Search className="h-4 w-4 flex-shrink-0 text-charcoal-400" />
-                                <span className="text-sm text-charcoal-500">
+                                <Search className="h-4 w-4 flex-shrink-0 text-piedra-500" />
+                                <span className="text-sm text-piedra-600">
                                     Me acaban de despedir sin darme finiquito…
                                 </span>
                             </div>
@@ -202,15 +203,15 @@ export default function ConnectPage() {
 
                     <div className="grid items-start gap-8 md:grid-cols-2">
                         <div className="md:order-2">
-                            <h3 className="mb-4 font-serif text-xl font-semibold text-charcoal-900 sm:text-2xl">
+                            <h3 className="mb-4 font-serif text-xl font-normal text-tinta sm:text-2xl">
                                 IA que entiende el derecho
                             </h3>
-                            <p className="mb-4 text-[0.9375rem] leading-relaxed text-charcoal-600">
+                            <p className="mb-4 text-[0.9375rem] leading-relaxed text-piedra-700">
                                 Nadie tiene por qué saber qué rama del derecho le toca. Quien
                                 describe «problemas con los linderos de mi rancho» no sabe que
                                 necesita a un agrarista o a un civilista.
                             </p>
-                            <p className="text-[0.9375rem] leading-relaxed text-charcoal-600">
+                            <p className="text-[0.9375rem] leading-relaxed text-piedra-700">
                                 La búsqueda semántica lee la petición, determina la materia y
                                 ordena a los abogados validados según su especialización.
                             </p>
@@ -220,7 +221,7 @@ export default function ConnectPage() {
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
                                         <p className="text-sm font-semibold text-charcoal-900">Lic. A. Ramírez</p>
-                                        <p className="text-xs text-charcoal-500">Querétaro</p>
+                                        <p className="text-xs text-piedra-600">Querétaro</p>
                                     </div>
                                     <span className="flex-shrink-0 rounded-md bg-accent-gold/15 px-2 py-0.5 text-xs font-semibold text-accent-brown">
                                         95% afinidad
@@ -228,7 +229,7 @@ export default function ConnectPage() {
                                 </div>
                                 <div className="mt-3 flex flex-wrap gap-1.5">
                                     {['Civil', 'Corporativo'].map((m) => (
-                                        <span key={m} className="rounded-md border border-charcoal-900/10 px-2 py-0.5 text-[11px] text-charcoal-600">
+                                        <span key={m} className="rounded-md border border-charcoal-900/10 px-2 py-0.5 text-[11px] text-piedra-700">
                                             {m}
                                         </span>
                                     ))}
@@ -245,8 +246,8 @@ export default function ConnectPage() {
             {/* ── Cierre ── */}
             <section className="bg-charcoal-900 py-16 text-white sm:py-20">
                 <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
-                    <h2 className="mb-4 font-serif text-2xl font-semibold sm:text-3xl">
-                        ¿Eres abogado o <span className="text-accent-gold">necesitas uno</span>?
+                    <h2 className="mb-4 font-serif text-display-xs font-normal sm:text-display-s [text-wrap:balance]">
+                        ¿Eres abogado o necesitas uno?
                     </h2>
                     <p className="mx-auto mb-8 max-w-xl leading-relaxed text-white/60">
                         Connect existe para profesionalizar el enlace entre litigantes éticos y
@@ -261,7 +262,7 @@ export default function ConnectPage() {
                         </button>
                         <Link
                             href={user ? '/perfil' : '/registro'}
-                            className="inline-flex h-12 items-center justify-center rounded-lg border border-white/25 px-7 text-[0.9375rem] font-medium text-white transition-colors hover:border-white/50 hover:bg-white/10"
+                            className={clasesBoton({ variante: 'secundario', oscuro: true })}
                         >
                             Verificar mi cédula
                         </Link>

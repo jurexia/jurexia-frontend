@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import PieDePagina from '@/components/PieDePagina';
 
+import { clasesBoton } from '@/components/web/sistema';
 /* ───────── Page ───────── */
 export default function SeguridadPage() {
     return (
@@ -17,17 +18,17 @@ export default function SeguridadPage() {
             <section className="pt-32 pb-20 px-4">
                 <div className="max-w-5xl mx-auto text-center">
                     <AnimateOnScroll delay={0}>
-                        <p className="text-accent-brown font-medium mb-4 tracking-wide">SEGURIDAD</p>
+                        <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">SEGURIDAD</p>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.1}>
-                        <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
+                        <h1 className="font-serif text-[2.6rem] leading-[1.05] sm:text-display-l lg:text-display-xl font-normal text-tinta mb-8 [text-wrap:balance]">
                             Protección de
                             <br />
-                            <span className="text-accent-gold">nivel empresarial</span>
+                            nivel empresarial
                         </h1>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
-                        <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
+                        <p className="text-xl text-piedra-700 max-w-3xl mx-auto mb-12">
                             Tu información legal es confidencial. Iurexia está diseñada con los más altos estándares de seguridad para proteger tus consultas, documentos y transacciones.
                         </p>
                     </AnimateOnScroll>
@@ -52,11 +53,11 @@ export default function SeguridadPage() {
                 <div className="max-w-6xl mx-auto px-4">
                     <AnimateOnScroll>
                         <div className="text-center mb-16">
-                            <p className="text-accent-brown font-medium mb-4 tracking-wide">PRINCIPIOS FUNDAMENTALES</p>
-                            <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
-                                La seguridad es <span className="text-accent-gold">nuestra prioridad</span>
+                            <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">PRINCIPIOS FUNDAMENTALES</p>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-6 [text-wrap:balance]">
+                                La seguridad es nuestra prioridad
                             </h2>
-                            <p className="text-xl text-charcoal-600 max-w-2xl mx-auto">
+                            <p className="text-xl text-piedra-700 max-w-2xl mx-auto">
                                 Hemos construido Iurexia desde cero con la protección de tu información como pilar central.
                             </p>
                         </div>
@@ -85,11 +86,11 @@ export default function SeguridadPage() {
                     <div className="grid md:grid-cols-2 gap-16 items-center">
                         <AnimateOnScroll direction="left">
                             <div>
-                                <p className="text-accent-brown font-medium mb-4 tracking-wide">FLUJO DE DATOS</p>
-                                <h3 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-6">
-                                    ¿Qué sucede con <span className="text-accent-gold">tu información?</span>
+                                <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">FLUJO DE DATOS</p>
+                                <h3 className="font-serif text-3xl md:text-4xl font-normal text-tinta mb-6">
+                                    ¿Qué sucede con tu información?
                                 </h3>
-                                <p className="text-charcoal-600 leading-relaxed mb-8">
+                                <p className="text-piedra-700 leading-relaxed mb-8">
                                     Cuando realizas una consulta en Iurexia, tu pregunta se procesa de forma segura para buscar en nuestra base de datos jurídica verificada. Los resultados se generan sin almacenar el contenido de tu consulta a largo plazo.
                                 </p>
                                 <ul className="space-y-4">
@@ -129,11 +130,11 @@ export default function SeguridadPage() {
                 <div className="max-w-5xl mx-auto px-4">
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
-                            <p className="text-accent-brown font-medium mb-4 tracking-wide">SECRETO PROFESIONAL</p>
-                            <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
-                                Lo que deberías preguntarle a <span className="text-accent-gold">cualquier IA jurídica</span>
+                            <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">SECRETO PROFESIONAL</p>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-4 [text-wrap:balance]">
+                                Lo que deberías preguntarle a cualquier IA jurídica
                             </h2>
-                            <p className="text-charcoal-600 max-w-2xl mx-auto">
+                            <p className="text-piedra-700 max-w-2xl mx-auto">
                                 Antes de escribir el nombre de un cliente en una herramienta de
                                 inteligencia artificial, estas cuatro preguntas separan a las que
                                 puedes usar de las que no.
@@ -162,17 +163,17 @@ export default function SeguridadPage() {
                         ].map((q, i) => (
                             <AnimateOnScroll key={q.pregunta} delay={i * 0.1}>
                                 <div className="h-full rounded-xl border border-cream-400 bg-white p-6">
-                                    <h3 className="mb-2.5 font-serif text-lg font-semibold text-charcoal-900">
+                                    <h3 className="mb-2.5 font-serif text-lg font-normal text-tinta">
                                         {q.pregunta}
                                     </h3>
-                                    <p className="text-[0.9375rem] leading-relaxed text-charcoal-600">{q.respuesta}</p>
+                                    <p className="text-[0.9375rem] leading-relaxed text-piedra-700">{q.respuesta}</p>
                                 </div>
                             </AnimateOnScroll>
                         ))}
                     </div>
 
                     <AnimateOnScroll delay={0.4}>
-                        <p className="mt-8 text-center text-sm text-charcoal-500 max-w-2xl mx-auto">
+                        <p className="mt-8 text-center text-sm text-piedra-600 max-w-2xl mx-auto">
                             El secreto profesional sigue siendo tuyo: ninguna herramienta te releva
                             de él. Iurexia está construida para que puedas cumplirlo, no para
                             sustituirlo.
@@ -186,9 +187,9 @@ export default function SeguridadPage() {
                 <div className="max-w-4xl mx-auto px-4">
                     <AnimateOnScroll>
                         <div className="text-center mb-16">
-                            <p className="text-accent-brown font-medium mb-4 tracking-wide">PREGUNTAS FRECUENTES</p>
-                            <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900">
-                                Seguridad <span className="text-accent-gold">en detalle</span>
+                            <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">PREGUNTAS FRECUENTES</p>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta [text-wrap:balance]">
+                                Seguridad en detalle
                             </h2>
                         </div>
                     </AnimateOnScroll>
@@ -214,19 +215,19 @@ export default function SeguridadPage() {
             <section className="py-20 bg-charcoal-900 text-white overflow-hidden">
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <AnimateOnScroll>
-                        <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                            Tu información está segura <span className="text-accent-gold">con Iurexia</span>
+                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-6 [text-wrap:balance]">
+                            Tu información está segura con Iurexia
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.15}>
-                        <p className="text-lg text-gray-400 mb-8">
+                        <p className="text-lg text-white/55 mb-8">
                             Comienza a trabajar con la tranquilidad de saber que tu información está protegida.
                         </p>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.3} direction="scale">
                         <Link
                             href="/chat"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-charcoal-900 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                            className={clasesBoton({ oscuro: true })}
                         >
                             Comenzar ahora
                             <ArrowRight className="w-5 h-5" />
@@ -238,8 +239,8 @@ export default function SeguridadPage() {
             {/* Nota de uso responsable */}
             <section className="py-8 bg-charcoal-800">
                 <div className="max-w-4xl mx-auto text-center px-4">
-                    <p className="text-sm text-gray-400">
-                        <strong className="text-gray-300">Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
+                    <p className="text-sm text-white/55">
+                        <strong className="text-white/70">Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
                     </p>
                 </div>
             </section>
@@ -265,8 +266,8 @@ function SecurityCard({ icon, title, description }: { icon: React.ReactNode; tit
     return (
         <div className="p-8 rounded-2xl bg-cream-300 hover:shadow-lg transition-all duration-300">
             <div className="text-accent-brown mb-4">{icon}</div>
-            <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">{title}</h3>
-            <p className="text-charcoal-600 leading-relaxed">{description}</p>
+            <h3 className="font-serif text-xl font-normal text-tinta mb-3">{title}</h3>
+            <p className="text-piedra-700 leading-relaxed">{description}</p>
         </div>
     );
 }
@@ -282,17 +283,17 @@ function DataFlowVisual() {
             <div className="space-y-4">
                 <FlowStep number={1} title="Tu consulta" description="Cifrada desde tu navegador" />
                 <div className="flex justify-center">
-                    <div className="w-0.5 h-6 bg-gray-200"></div>
+                    <div className="w-0.5 h-6 bg-piedra-200"></div>
                 </div>
                 <FlowStep number={2} title="Procesamiento seguro" description="Búsqueda en base documental" />
                 <div className="flex justify-center">
-                    <div className="w-0.5 h-6 bg-gray-200"></div>
+                    <div className="w-0.5 h-6 bg-piedra-200"></div>
                 </div>
                 <FlowStep number={3} title="Respuesta cifrada" description="Solo visible para ti" />
             </div>
 
-            <div className="pt-6 border-t border-gray-100 text-center">
-                <p className="text-xs text-gray-500">Sin almacenamiento de consultas a largo plazo</p>
+            <div className="pt-6 border-t border-piedra-100 text-center">
+                <p className="text-xs text-piedra-600">Sin almacenamiento de consultas a largo plazo</p>
             </div>
         </div>
     );
@@ -300,13 +301,13 @@ function DataFlowVisual() {
 
 function FlowStep({ number, title, description }: { number: number; title: string; description: string }) {
     return (
-        <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+        <div className="flex items-center gap-4 p-3 bg-piedra-50 rounded-lg">
             <div className="w-8 h-8 bg-charcoal-900 text-white rounded-full flex items-center justify-center text-sm font-medium">
                 {number}
             </div>
             <div>
                 <p className="font-medium text-charcoal-900">{title}</p>
-                <p className="text-sm text-gray-500">{description}</p>
+                <p className="text-sm text-piedra-600">{description}</p>
             </div>
         </div>
     );
@@ -316,13 +317,13 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="border border-piedra-200 rounded-xl overflow-hidden">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-6 text-left bg-white hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between p-6 text-left bg-white hover:bg-cream-200 transition-colors"
             >
                 <span className="font-medium text-charcoal-900">{question}</span>
-                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-5 h-5 text-piedra-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             <div
                 className="overflow-hidden transition-all duration-300 ease-in-out"
@@ -332,7 +333,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
                 }}
             >
                 <div className="px-6 pb-6 bg-white">
-                    <p className="text-charcoal-600 leading-relaxed">{answer}</p>
+                    <p className="text-piedra-700 leading-relaxed">{answer}</p>
                 </div>
             </div>
         </div>

@@ -24,11 +24,14 @@ export default function BotonProbar({
     children = 'Probar sin registrarme',
     className = '',
     sub,
+    subClassName = 'text-xs text-charcoal-500',
 }: {
     children?: React.ReactNode;
     className?: string;
     /** Una línea debajo, para decir qué cuesta: nada. */
     sub?: string;
+    /** El tono de esa línea (sobre fondo oscuro no puede ir en gris carbón). */
+    subClassName?: string;
 }) {
     const router = useRouter();
     const [abriendo, setAbriendo] = useState(false);
@@ -60,7 +63,7 @@ export default function BotonProbar({
                 {abriendo ? 'Abriendo…' : children}
                 {!abriendo && <ArrowRight className="h-4 w-4" />}
             </button>
-            {sub && !error && <span className="text-xs text-charcoal-500">{sub}</span>}
+            {sub && !error && <span className={subClassName}>{sub}</span>}
             {error && <span className="text-xs text-red-700">{error}</span>}
         </div>
     );

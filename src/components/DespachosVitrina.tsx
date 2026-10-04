@@ -40,7 +40,7 @@ export default function DespachosVitrina() {
     return (
         <section className="border-y border-charcoal-900/[0.06] bg-cream-100/60 py-8 sm:py-10 px-4">
             <div className="max-w-5xl mx-auto">
-                <p className="text-center text-[11px] uppercase tracking-[0.16em] text-accent-brown mb-6">
+                <p className="text-center text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600 mb-6">
                     Despachos que ejercen con Iurexia
                 </p>
 

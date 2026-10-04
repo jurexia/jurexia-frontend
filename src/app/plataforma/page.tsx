@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import PieDePagina from '@/components/PieDePagina';
 import VideoChat from '@/components/VideoChat';
 
+import { clasesBoton } from '@/components/web/sistema';
 export default function PlataformaPage() {
     return (
         <main className="min-h-screen bg-cream-300">
@@ -17,13 +18,13 @@ export default function PlataformaPage() {
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-4">
                 <div className="max-w-5xl mx-auto text-center">
-                    <p className="text-accent-brown font-medium mb-4 tracking-wide">PLATAFORMA</p>
-                    <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
+                    <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">PLATAFORMA</p>
+                    <h1 className="font-serif text-[2.6rem] leading-[1.05] sm:text-display-l lg:text-display-xl font-normal text-tinta mb-8 [text-wrap:balance]">
                         Diseñada para el
                         <br />
-                        <span className="text-accent-gold">Derecho Mexicano</span>
+                        Derecho Mexicano
                     </h1>
-                    <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-12">
+                    <p className="text-xl text-piedra-700 max-w-3xl mx-auto mb-12">
                         Infraestructura de inteligencia artificial diseñada para expandir radicalmente la capacidad operativa de las firmas legales y empresas en México. Automatiza la investigación jurisprudencial, acelera el flujo de nuevos asuntos y audita resoluciones masivas; liberando a los abogados para enfocarse en el trabajo estratégico de más alto valor y recuperando horas rentables.
                     </p>
 
@@ -77,18 +78,18 @@ export default function PlataformaPage() {
                 <div className="max-w-5xl mx-auto px-4">
                     <div className="grid md:grid-cols-2 gap-16">
                         <div>
-                            <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-6">
-                                Escala las operaciones de <span className="text-accent-gold">tu Firma</span>
+                            <h2 className="font-serif text-display-s font-normal text-tinta mb-6 [text-wrap:balance]">
+                                Escala las operaciones de tu Firma
                             </h2>
-                            <p className="text-charcoal-600 leading-relaxed">
+                            <p className="text-piedra-700 leading-relaxed">
                                 Transforma drásticamente los márgenes de rentabilidad, especialmente en casos de tarifa fija (Fixed-Fee). Reduce las horas no facturables dedicadas a buscar precedentes o redactar revisiones iniciales. Iurexia multiplica tu capacidad de respuesta, permitiéndote tomar más clientela sin tener que contratar más personal.
                             </p>
                         </div>
                         <div className="border-l-4 border-accent-brown pl-8">
-                            <h2 className="font-serif text-3xl font-medium text-charcoal-900 mb-6">
-                                Reduce costos en equipos <span className="text-accent-gold">In-House</span>
+                            <h2 className="font-serif text-display-s font-normal text-tinta mb-6 [text-wrap:balance]">
+                                Reduce costos en equipos In-House
                             </h2>
-                            <p className="text-charcoal-600 leading-relaxed">
+                            <p className="text-piedra-700 leading-relaxed">
                                 Para departamentos corporativos, Iurexia agiliza la respuesta a consultas de las demás áreas del negocio. Disminuye agresivamente el gasto en despachos de abogados externos resolviendo internamente y con certeza las primeras fases de la estrategia legal corporativa.
                             </p>
                         </div>
@@ -101,10 +102,10 @@ export default function PlataformaPage() {
                 una por función, y el visitante elige cuál ver. */}
             <section id="demos" className="scroll-mt-24 py-16 bg-cream-300">
                 <div className="max-w-[1100px] mx-auto px-4 sm:px-6 mb-8">
-                    <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-medium text-center text-charcoal-900 mb-3 sm:mb-4">
-                        Mira cómo <span className="text-accent-gold">funciona</span>
+                    <h2 className="font-serif text-[2.1rem] leading-[1.1] tracking-[-0.015em] sm:text-display-m font-normal text-center text-tinta mb-3 sm:mb-4 [text-wrap:balance]">
+                        Mira cómo funciona
                     </h2>
-                    <p className="text-center text-base sm:text-lg text-charcoal-600 max-w-2xl mx-auto px-2">
+                    <p className="text-center text-base sm:text-lg text-piedra-700 max-w-2xl mx-auto px-2">
                         Cuatro grabaciones de la plataforma trabajando. Elige la función y
                         mírala de principio a fin.
                     </p>
@@ -115,9 +116,9 @@ export default function PlataformaPage() {
             {/* Zero Hallucinations Section */}
             <section className="py-16 bg-charcoal-900 text-white">
                 <div className="max-w-5xl mx-auto px-4 text-center">
-                    <p className="text-accent-brown font-medium mb-4 tracking-wide">ARQUITECTURA TRAZABLE</p>
-                    <h3 className="font-serif text-3xl md:text-4xl font-medium mb-6">Genera respuestas <span className="text-accent-gold">verificadas.</span></h3>
-                    <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                    <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-white/55">ARQUITECTURA TRAZABLE</p>
+                    <h3 className="font-serif text-3xl md:text-4xl font-normal mb-6">Genera respuestas verificadas.</h3>
+                    <p className="text-xl text-white/55 max-w-3xl mx-auto">
                         Iurexia opera con <strong>Security by Design (Blindaje de Datos)</strong>, protegiendo el secreto profesional de los litigios. Todas las respuestas proceden de <strong className="text-white">fuentes jurídicas públicas</strong>, y a diferencia de los modelos de IA tradicionales, en Iurexia <strong className="text-accent-gold">jamás usamos la información confidencial de tus casos o clientes para entrenar nuestros modelos</strong> compartidos.
                     </p>
                 </div>
@@ -260,11 +261,11 @@ export default function PlataformaPage() {
             <section className="py-24 bg-charcoal-900 text-white">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="text-center mb-16">
-                        <p className="text-accent-brown font-medium mb-4 tracking-wide">FUENTES DE DATOS</p>
-                        <h2 className="font-serif text-4xl md:text-5xl font-medium mb-6">
-                            Conocimiento legal <span className="text-accent-gold">completo</span>
+                        <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-white/55">FUENTES DE DATOS</p>
+                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-6 [text-wrap:balance]">
+                            Conocimiento legal completo
                         </h2>
-                        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                        <p className="text-xl text-white/55 max-w-2xl mx-auto">
                             Acceso a la base de datos legal más completa de México
                         </p>
                     </div>
@@ -308,14 +309,14 @@ export default function PlataformaPage() {
                             </svg>
                             EXCLUSIVO PLATINUM
                         </div>
-                        <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-6">
+                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-6 [text-wrap:balance]">
                             Más que tecnología:
                             <br />
-                            <span className="text-accent-gold">
+                            
                                 acompañamiento humano
-                            </span>
+                            
                         </h2>
-                        <p className="text-xl text-charcoal-600 max-w-3xl mx-auto">
+                        <p className="text-xl text-piedra-700 max-w-3xl mx-auto">
                             La plataforma te da las herramientas. Nuestro equipo legal te ayuda a perfeccionar la estrategia.
                         </p>
                     </div>
@@ -325,10 +326,10 @@ export default function PlataformaPage() {
                             <div className="w-14 h-14 rounded-2xl bg-accent-gold/10 flex items-center justify-center mb-6">
                                 <MessageSquare className="w-7 h-7 text-white" />
                             </div>
-                            <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">
+                            <h3 className="font-serif text-xl font-normal text-tinta mb-3">
                                 Consulta directa mediante la plataforma
                             </h3>
-                            <p className="text-charcoal-600 leading-relaxed">
+                            <p className="text-piedra-700 leading-relaxed">
                                 Escribe a un abogado especializado que revisa tu caso y afina la estrategia que ideaste con la plataforma, directamente desde Iurexia.
                             </p>
                         </div>
@@ -339,10 +340,10 @@ export default function PlataformaPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                 </svg>
                             </div>
-                            <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">
+                            <h3 className="font-serif text-xl font-normal text-tinta mb-3">
                                 Respaldo profesional formal
                             </h3>
-                            <p className="text-charcoal-600 leading-relaxed">
+                            <p className="text-piedra-700 leading-relaxed">
                                 Contrato de prestación de servicios profesionales que garantiza formalidad y confidencialidad en cada interacción.
                             </p>
                         </div>
@@ -353,10 +354,10 @@ export default function PlataformaPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
                             </div>
-                            <h3 className="font-serif text-xl font-medium text-charcoal-900 mb-3">
+                            <h3 className="font-serif text-xl font-normal text-tinta mb-3">
                                 Abogados especializados
                             </h3>
-                            <p className="text-charcoal-600 leading-relaxed">
+                            <p className="text-piedra-700 leading-relaxed">
                                 Profesionales con dominio profundo del derecho mexicano, listos para orientarte con precisión y experiencia.
                             </p>
                         </div>
@@ -365,7 +366,7 @@ export default function PlataformaPage() {
                     <div className="text-center mt-12">
                         <Link
                             href="/precios"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-lg hover:bg-charcoal-800 transition-colors"
+                            className={clasesBoton()}
                         >
                             Conocer Plan Platinum
                             <ArrowRight className="w-5 h-5" />
@@ -377,20 +378,20 @@ export default function PlataformaPage() {
             {/* CTA Section */}
             <section className="py-20 bg-cream-300">
                 <div className="max-w-4xl mx-auto text-center px-4">
-                    <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-6">
-                        Experimenta el futuro de la <span className="text-accent-gold">práctica legal</span>
+                    <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-6 [text-wrap:balance]">
+                        Experimenta el futuro de la práctica legal
                     </h2>
-                    <p className="text-lg text-charcoal-600 mb-8">
+                    <p className="text-lg text-piedra-700 mb-8">
                         Únete a los profesionales del derecho que ya transforman su práctica con IA.
                     </p>
                     <Link
                         href="/chat"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 text-white font-medium rounded-lg hover:bg-charcoal-800 transition-colors mb-8"
+                        className={`${clasesBoton()} mb-8`}
                     >
                         Comenzar ahora
                         <ArrowRight className="w-5 h-5" />
                     </Link>
-                    <p className="text-sm text-charcoal-500 max-w-2xl mx-auto mt-6">
+                    <p className="text-sm text-piedra-600 max-w-2xl mx-auto mt-6">
                         <strong>Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
                     </p>
                 </div>
@@ -458,11 +459,11 @@ function FeatureSection({
                             }`}
                     >
                         <p className="text-accent-brown font-medium mb-4 tracking-wide text-sm">{badge}</p>
-                        <h2 className="font-serif text-4xl md:text-5xl font-medium text-charcoal-900 mb-4">
+                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-4 [text-wrap:balance]">
                             {title}
                         </h2>
-                        <p className="text-xl text-charcoal-500 mb-6">{subtitle}</p>
-                        <p className="text-charcoal-600 mb-8 leading-relaxed">{description}</p>
+                        <p className="text-xl text-piedra-600 mb-6">{subtitle}</p>
+                        <p className="text-piedra-700 mb-8 leading-relaxed">{description}</p>
 
                         <ul className="space-y-4">
                             {features.map((feature, index) => (
@@ -499,9 +500,9 @@ function HybridSearchVisual() {
             <div className="bg-white rounded-2xl p-6 shadow-sm mb-4">
                 <div className="flex items-center gap-3 mb-4">
                     <Search className="w-5 h-5 text-charcoal-800" />
-                    <span className="text-charcoal-600">derecho del tanto arrendamiento</span>
+                    <span className="text-piedra-700">derecho del tanto arrendamiento</span>
                 </div>
-                <div className="h-px bg-gray-100 mb-4"></div>
+                <div className="h-px bg-piedra-100 mb-4"></div>
                 <div className="space-y-3">
                     <ResultItem
                         score={0.92}
@@ -523,7 +524,7 @@ function HybridSearchVisual() {
                     />
                 </div>
             </div>
-            <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+            <div className="flex items-center justify-center gap-4 text-sm text-piedra-600">
                 <span className="flex items-center gap-1">
                     <Zap className="w-4 h-4 text-accent-gold" />
                     Búsqueda Híbrida Verificada
@@ -562,8 +563,8 @@ function SentinelAgentVisual() {
                     </div>
 
                     {/* Risk */}
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                        <span className="text-sm text-gray-500">Riesgo General:</span>
+                    <div className="flex items-center justify-between pt-2 border-t border-piedra-100">
+                        <span className="text-sm text-piedra-600">Riesgo General:</span>
                         <span className="px-3 py-1 bg-accent-gold/15 text-accent-gold text-sm font-medium rounded-lg">
                             MEDIO
                         </span>
@@ -597,22 +598,22 @@ function JurisdictionalFiltersVisual() {
                             key={state.name}
                             className={`flex items-center justify-between p-3 rounded-lg transition-all ${state.active
                                 ? 'bg-accent-gold/[0.07] border border-accent-gold/30'
-                                : 'bg-gray-50 border border-gray-100 opacity-50'
+                                : 'bg-piedra-50 border border-piedra-100 opacity-50'
                                 }`}
                         >
-                            <span className={`text-sm ${state.active ? 'text-accent-gold font-medium' : 'text-gray-400'}`}>
+                            <span className={`text-sm ${state.active ? 'text-accent-gold font-medium' : 'text-piedra-500'}`}>
                                 {state.federal && '🇲🇽 '}{state.name}
                             </span>
                             {state.active ? (
                                 <CheckCircle className="w-4 h-4 text-accent-gold" />
                             ) : (
-                                <div className="w-4 h-4 rounded-full border-2 border-gray-300"></div>
+                                <div className="w-4 h-4 rounded-full border-2 border-piedra-300"></div>
                             )}
                         </div>
                     ))}
                 </div>
 
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-xs text-piedra-600 text-center">
                     Solo resultados de JALISCO + FEDERAL
                 </p>
             </div>
@@ -638,14 +639,14 @@ function ResultItem({
     };
 
     return (
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-3 bg-piedra-50 rounded-lg">
             <div>
                 <p className="text-sm font-medium text-charcoal-900">{title}</p>
                 <span className={`text-xs px-2 py-0.5 rounded ${colors[color]}`}>{type}</span>
             </div>
             <div className="text-right">
                 <p className="text-lg font-semibold text-charcoal-900">{(score * 100).toFixed(0)}%</p>
-                <p className="text-xs text-gray-400">relevancia</p>
+                <p className="text-xs text-piedra-500">relevancia</p>
             </div>
         </div>
     );
@@ -668,8 +669,8 @@ function DataSourceCard({
             <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-4xl font-serif font-medium text-white">{count}</span>
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">{title}</h3>
-            <p className="text-gray-400">{description}</p>
+            <h3 className="text-xl font-normal text-white mb-2">{title}</h3>
+            <p className="text-white/55">{description}</p>
         </div>
     );
 }
@@ -693,27 +694,27 @@ function PrecedentesVisual() {
                 <div className="flex items-center gap-3 mb-4">
                     <BookOpen className="w-6 h-6 text-slate-600" />
                     <span className="font-medium text-charcoal-900">Precedentes</span>
-                    <span className="ml-auto text-xs text-charcoal-500">111,248 sentencias</span>
+                    <span className="ml-auto text-xs text-piedra-600">111,248 sentencias</span>
                 </div>
 
                 <div className="space-y-3">
                     {results.map((item, i) => (
-                        <div key={i} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <div key={i} className="p-3 bg-piedra-50 rounded-lg border border-piedra-100">
                             <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-mono text-charcoal-500">Circ. {item.circuito} · {item.tribunal}</span>
+                                    <span className="text-xs font-mono text-piedra-600">Circ. {item.circuito} · {item.tribunal}</span>
                                     <span className={`text-[10px] px-2 py-0.5 rounded-lg font-bold ${sentidoStyle[item.sentido]}`}>
                                         {item.sentido}
                                     </span>
                                 </div>
                                 <span className="text-sm font-semibold text-charcoal-900">{item.match}%</span>
                             </div>
-                            <p className="text-xs text-charcoal-600">{item.tema}</p>
+                            <p className="text-xs text-piedra-700">{item.tema}</p>
                         </div>
                     ))}
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
+                <div className="mt-4 pt-3 border-t border-piedra-100 flex items-center justify-between text-xs text-piedra-500">
                     <span>6 circuitos activos</span>
                     <span className="text-accent-brown font-medium">corpus creciente →</span>
                 </div>
@@ -727,10 +728,10 @@ function JurimetriaVisual() {
         <div className="bg-gradient-to-br from-[#0f1626] to-[#1a2540] rounded-3xl p-8 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-[#c9a962]" />
+                    <TrendingUp className="w-4 h-4 text-accent-gold" />
                     <span className="text-white/60 text-xs font-medium uppercase tracking-wider">Jurimetría Predictiva</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-[#c9a962] rounded-lg font-bold">PLATINUM</span>
+                <span className="text-[10px] px-2 py-0.5 bg-[#c9a962]/20 text-accent-gold rounded-lg font-bold">PLATINUM</span>
             </div>
 
             <div className="bg-red-900/20 border border-red-800/40 rounded-2xl p-5 mb-4">

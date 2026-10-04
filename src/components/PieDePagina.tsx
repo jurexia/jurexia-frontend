@@ -103,7 +103,7 @@ export default function PieDePagina({ className = '' }: { className?: string }) 
 
                     {COLUMNAS.map((c) => (
                         <div key={c.titulo}>
-                            <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-charcoal-900/55">
+                            <h3 className="font-sans text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">
                                 {c.titulo}
                             </h3>
                             <ul className="mt-4 space-y-2.5">

@@ -11,6 +11,7 @@ import {
 import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
+import { clasesBoton } from '@/components/web/sistema';
 export default function SecretariosPage() {
 
     return (
@@ -36,9 +37,9 @@ export default function SecretariosPage() {
                             </AnimateOnScroll>
 
                             <AnimateOnScroll delay={0.1}>
-                                <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-medium leading-tight mb-6">
+                                <h1 className="font-serif text-[2.6rem] leading-[1.05] tracking-[-0.02em] sm:text-display-l font-normal mb-6 [text-wrap:balance]">
                                     El arsenal legal del<br />
-                                    <span className="text-[#c9a962]">secretario moderno</span>
+                                    secretario moderno
                                 </h1>
                             </AnimateOnScroll>
 
@@ -66,7 +67,7 @@ export default function SecretariosPage() {
                                 <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
                                     <Link
                                         href="/tcc-beta"
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#c9a962] px-6 py-3.5 text-[15px] font-bold text-[#0f0e0d] whitespace-nowrap transition-colors hover:bg-[#d8bd7d]"
+                                        className={clasesBoton({ oscuro: true })}
                                     >
                                         Probar gratis
                                         <ArrowRight className="w-4 h-4" />
@@ -75,7 +76,7 @@ export default function SecretariosPage() {
                                         quien entra decidido no baja a buscarlo. */}
                                     <Link
                                         href="/precios?plan=ultra_secretarios"
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c9a962]/45 px-6 py-3.5 text-[15px] font-semibold text-[#c9a962] whitespace-nowrap transition-colors hover:bg-[#c9a962]/10"
+                                        className={clasesBoton({ variante: 'secundario', oscuro: true })}
                                     >
                                         Suscribirme · $999/mes
                                     </Link>
@@ -192,8 +193,8 @@ export default function SecretariosPage() {
                     <AnimateOnScroll>
                         <div className="text-center mb-16">
                             <p className="text-[#c9a962] font-medium mb-4 tracking-wide text-sm">EL DESAFÍO</p>
-                            <h2 className="font-serif text-3xl md:text-4xl font-medium mb-6">
-                                El estudio de fondo consume <span className="text-[#c9a962]">horas de tu jornada</span>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-6 [text-wrap:balance]">
+                                El estudio de fondo consume horas de tu jornada
                             </h2>
                             <p className="text-white/60 max-w-2xl mx-auto text-lg">
                                 Revisar actas, identificar agravios, buscar jurisprudencia aplicable, fundar y motivar cada concepto de violación...
@@ -264,8 +265,8 @@ export default function SecretariosPage() {
                     <AnimateOnScroll>
                         <div className="text-center mb-16">
                             <p className="text-[#c9a962] font-medium mb-4 tracking-wide text-sm">CAPACIDADES</p>
-                            <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">
-                                Una herramienta diseñada para <span className="text-[#c9a962]">tu flujo de trabajo</span>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-4 [text-wrap:balance]">
+                                Una herramienta diseñada para tu flujo de trabajo
                             </h2>
                         </div>
                     </AnimateOnScroll>
@@ -340,7 +341,7 @@ export default function SecretariosPage() {
                                     <div className="w-12 h-12 rounded-xl bg-[#c9a962]/10 flex items-center justify-center text-[#c9a962] mb-4 group-hover:bg-[#c9a962]/20 transition-colors">
                                         {feature.icon}
                                     </div>
-                                    <h3 className="font-serif text-lg font-medium mb-2 text-white">{feature.title}</h3>
+                                    <h3 className="font-serif text-lg font-normal mb-2 text-white">{feature.title}</h3>
                                     <p className="text-sm text-white/60 leading-relaxed">{feature.desc}</p>
                                 </div>
                             </AnimateOnScroll>
@@ -355,7 +356,7 @@ export default function SecretariosPage() {
                     <AnimateOnScroll>
                         <div className="text-center mb-16">
                             <p className="text-[#c9a962] font-medium mb-4 tracking-wide text-sm">PROCESO</p>
-                            <h2 className="font-serif text-3xl md:text-4xl font-medium">
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal [text-wrap:balance]">
                                 ¿Cómo funciona?
                             </h2>
                         </div>
@@ -371,7 +372,7 @@ export default function SecretariosPage() {
                             <AnimateOnScroll key={i} delay={i * 0.1}>
                                 <div className="relative text-center">
                                     <div className="text-5xl font-bold text-[#c9a962]/10 mb-4">{item.step}</div>
-                                    <h3 className="font-serif text-lg font-medium mb-2">{item.title}</h3>
+                                    <h3 className="font-serif text-lg font-normal mb-2">{item.title}</h3>
                                     <p className="text-sm text-white/60">{item.desc}</p>
                                     {i < 3 && (
                                         <ArrowRight className="hidden md:block absolute -right-4 top-8 w-6 h-6 text-[#c9a962]/30" />
@@ -391,8 +392,8 @@ export default function SecretariosPage() {
                             <div className="absolute -top-3 left-8 px-4 py-1 bg-[#c9a962]/15 border border-[#c9a962]/30 rounded-full">
                                 <span className="text-[11px] font-bold text-[#c9a962] tracking-widest">USO RESPONSABLE</span>
                             </div>
-                            <h3 className="font-serif text-2xl md:text-3xl font-medium text-white mb-3 mt-2">
-                                El criterio es tuyo. <span className="text-[#c9a962]">Siempre.</span>
+                            <h3 className="font-serif text-2xl md:text-3xl font-normal text-white mb-3 mt-2">
+                                El criterio es tuyo. Siempre.
                             </h3>
                             <p className="text-white/60 mb-8 max-w-2xl leading-relaxed">
                                 Iurexia no resuelve asuntos ni sustituye el juicio jurisdiccional. Es una herramienta que amplía la capacidad técnica del secretario — la responsabilidad del fallo permanece íntegramente en el operador jurídico.
@@ -421,8 +422,8 @@ export default function SecretariosPage() {
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
                             <p className="text-[#c9a962] font-medium mb-4 tracking-wide text-sm">PLAN EXCLUSIVO</p>
-                            <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">
-                                Plan Secretario <span className="text-[#c9a962]">PJF</span>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-4 [text-wrap:balance]">
+                                Plan Secretario PJF
                             </h2>
                             <p className="text-white/60 max-w-2xl mx-auto">
                                 Diseñado específicamente para Secretarios de Acuerdos, Proyectistas y funcionarios del Poder Judicial de la Federación.
@@ -456,7 +457,7 @@ export default function SecretariosPage() {
                                             Quien llegaba aquí decidido a pagar no tenía dónde. */}
                                         <Link
                                             href="/precios?plan=ultra_secretarios"
-                                            className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#c9a962] text-[#0f0e0d] font-bold text-lg rounded-xl whitespace-nowrap transition-colors hover:bg-[#d8bd7d]"
+                                            className={`${clasesBoton({ oscuro: true })} w-full`}
                                         >
                                             Contratar el plan
                                             <ArrowRight className="w-5 h-5" />
@@ -510,7 +511,7 @@ export default function SecretariosPage() {
                 <div className="max-w-3xl mx-auto">
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
-                            <h2 className="font-serif text-3xl md:text-4xl font-medium">
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal [text-wrap:balance]">
                                 Preguntas frecuentes
                             </h2>
                         </div>
@@ -570,9 +571,9 @@ export default function SecretariosPage() {
                         </div>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.1}>
-                        <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">
+                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-4 [text-wrap:balance]">
                             Tu capacidad intelectual,<br />
-                            <span className="text-[#c9a962]">multiplicada</span>
+                            multiplicada
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
@@ -583,7 +584,7 @@ export default function SecretariosPage() {
                     <AnimateOnScroll delay={0.3} direction="scale">
                         <Link
                             href="/tcc-beta"
-                            className="inline-flex items-center gap-2 px-10 py-5 bg-[#c9a962] text-[#0f0e0d] font-bold text-lg rounded-xl whitespace-nowrap transition-colors hover:bg-[#d8bd7d]"
+                            className={clasesBoton({ oscuro: true })}
                         >
                             Genera tu primer proyecto gratis
                             <ArrowRight className="w-5 h-5" />

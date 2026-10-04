@@ -26,7 +26,7 @@ export function HeroCTA({ className = '' }: HeroCTAProps) {
                                 <h3 className="font-serif text-xl font-semibold text-charcoal-900">
                                     Continuar al chat
                                 </h3>
-                                <p className="text-charcoal-600 text-sm">
+                                <p className="text-piedra-700 text-sm">
                                     Comienza una nueva consulta legal
                                 </p>
                             </div>

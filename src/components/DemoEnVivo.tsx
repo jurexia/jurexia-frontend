@@ -68,7 +68,7 @@ export default function DemoEnVivo(props: Partial<DemoProps> = {}) {
         src = '/demo/consulta.mp4',
         poster = '/demo/consulta-poster.jpg',
         descripcion = 'Demostración con el chat de hoy: una consulta sobre prisión preventiva oficiosa; Iurexia lee la consulta, fija la jurisdicción y recorre el acervo, escribe la respuesta en un documento con catorce citas verificadas y una de ellas abre la Constitución en el artículo 19, resaltado.',
-        titulo = <>Pregunta como le preguntarías a{' '}<span className="text-accent-gold">un colega</span></>,
+        titulo = <>Pregunta como le preguntarías a un colega</>,
         entradilla = 'La respuesta trae los criterios que la sostienen. Pulsa cualquiera y se abre el documento oficial en la página exacta, con el texto resaltado. Sin salir de la conversación.',
         // Los mismos rótulos, con sus segundos, que el capítulo de /plataforma:
         // es el mismo vídeo (capitulos-demo.tsx).
@@ -147,7 +147,7 @@ export default function DemoEnVivo(props: Partial<DemoProps> = {}) {
 
                 <AnimatedSection animation="slide-up">
                     <div className="mx-auto max-w-2xl text-center">
-                        <p className="font-serif text-2xl font-bold leading-tight text-charcoal-900 sm:text-3xl md:text-4xl">
+                        <p className="font-serif text-[2.1rem] font-normal leading-[1.1] tracking-[-0.015em] text-tinta [text-wrap:balance] sm:text-display-m">
                             {titulo}
                         </p>
                         <p className="mt-4 text-base leading-relaxed text-charcoal-900/70 sm:text-lg">
@@ -254,7 +254,7 @@ export default function DemoEnVivo(props: Partial<DemoProps> = {}) {
                                             puesto ? 'text-accent-gold' : 'text-charcoal-900/30'}`}>
                                             0{i + 1}
                                         </p>
-                                        <p className="mt-1 font-serif text-sm font-bold text-charcoal-900">
+                                        <p className="mt-1 text-sm font-medium text-tinta">
                                             {t}
                                         </p>
                                         <p className="mt-1 text-[13px] leading-snug text-charcoal-900/60">

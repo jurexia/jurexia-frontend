@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import { MessageSquare } from 'lucide-react';
+import { clasesBoton } from '@/components/web/sistema';
 
 /* Hero con vídeo de fondo, al modo de harvey.ai: el vídeo va silenciado, en
    bucle y sin controles, y encima se apilan tres capas de oscurecimiento que
@@ -75,10 +76,10 @@ export default function HeroVideo() {
             {/* ── Contenido ── */}
             <div className="relative z-20 mx-auto w-full max-w-7xl px-4 pb-16 pt-28 sm:px-6 lg:px-8 lg:pb-20 lg:pt-24">
                 <div className="max-w-2xl">
-                    <h1 className="font-serif text-[2.5rem] font-semibold leading-[1.05] tracking-[-0.02em] text-white sm:text-6xl lg:text-7xl">
+                    <h1 className="font-serif text-[2.6rem] font-normal leading-[1.04] tracking-[-0.02em] text-white sm:text-display-l lg:text-display-xl">
                         El ejercicio,
                         <br />
-                        <span className="text-accent-gold">perfeccionado</span>
+                        <span>perfeccionado</span>
                     </h1>
 
                     <p className="mt-6 max-w-xl text-base leading-relaxed text-white/70 sm:mt-7 sm:text-lg">
@@ -90,15 +91,15 @@ export default function HeroVideo() {
                     <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
                         <Link
                             href="/registro"
-                            className="inline-flex h-12 items-center justify-center rounded-lg bg-white px-7 text-[0.9375rem] font-medium text-charcoal-900 transition-colors duration-200 hover:bg-cream-200"
+                            className={clasesBoton({ oscuro: true })}
                         >
                             Probar Gratis
                         </Link>
                         <Link
                             href="/chat"
-                            className="inline-flex h-12 items-center justify-center rounded-lg border border-white/25 px-7 text-[0.9375rem] font-medium text-white transition-colors duration-200 hover:border-white/50 hover:bg-white/10"
+                            className={clasesBoton({ variante: 'secundario', oscuro: true })}
                         >
-                            <MessageSquare className="mr-2 h-4 w-4 text-accent-gold" />
+                            <MessageSquare className="h-4 w-4 text-accent-gold" />
                             Ir al Chat
                         </Link>
                     </div>

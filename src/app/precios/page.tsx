@@ -12,6 +12,7 @@ import { RejillaCubos, CircuitoNeuronal } from '@/components/FondosDePlan';
 import Image from 'next/image';
 import PieDePagina from '@/components/PieDePagina';
 
+import { clasesBoton } from '@/components/web/sistema';
 /* ═══════════════════════════════════════════════════════════════════════════
    SUSCRIBIRSE A ULTRA SECRETARIOS
    ═══════════════════════════════════════════════════════════════════════════
@@ -52,7 +53,7 @@ function BotonUltra() {
         <button
             onClick={suscribir}
             disabled={cargando}
-            className="inline-flex items-center gap-2 rounded-full bg-accent-gold px-7 py-3.5 text-sm font-bold text-[#0a0f1a] transition-colors hover:bg-[#d8bd7d] disabled:opacity-60"
+            className={clasesBoton({ oscuro: true })}
         >
             {cargando
                 ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -74,14 +75,14 @@ export default function PreciosPage() {
             <section className="pt-32 pb-12 px-4">
                 <div className="max-w-5xl mx-auto text-center">
                     <AnimateOnScroll delay={0.1}>
-                        <h1 className="font-serif text-5xl md:text-7xl font-medium text-charcoal-900 leading-tight mb-8">
+                        <h1 className="font-serif text-[2.6rem] leading-[1.05] sm:text-display-l lg:text-display-xl font-normal text-tinta mb-8 [text-wrap:balance]">
                             Inversión transparente,
                             <br />
-                            <span className="text-accent-gold">valor comprobado</span>
+                            valor comprobado
                         </h1>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.2}>
-                        <p className="text-xl text-charcoal-600 max-w-3xl mx-auto mb-10">
+                        <p className="text-xl text-piedra-700 max-w-3xl mx-auto mb-10">
                             Elige el plan que se adapte a tu práctica. Comienza gratis y escala cuando lo necesites. Cancela cuando quieras.
                         </p>
                     </AnimateOnScroll>
@@ -90,13 +91,13 @@ export default function PreciosPage() {
                     <AnimateOnScroll delay={0.3}>
                         <div className="flex flex-col items-center gap-6">
                             <div className="flex items-center justify-center gap-3">
-                                <div className="relative inline-flex items-center bg-charcoal-100 rounded-full p-1 shadow-inner">
+                                <div className="relative inline-flex items-center bg-piedra-100 rounded-full p-1 shadow-inner">
                                     <button
                                         onClick={() => setBillingPeriod('monthly')}
                                         className={`relative z-10 px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                                             !isAnnual
                                                 ? 'bg-charcoal-900 text-white shadow-lg'
-                                                : 'text-charcoal-500 hover:text-charcoal-700'
+                                                : 'text-piedra-600 hover:text-charcoal-700'
                                         }`}
                                     >
                                         Mensual
@@ -106,7 +107,7 @@ export default function PreciosPage() {
                                         className={`relative z-10 px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
                                             isAnnual
                                                 ? 'bg-charcoal-900 text-white shadow-lg'
-                                                : 'text-charcoal-500 hover:text-charcoal-700'
+                                                : 'text-piedra-600 hover:text-charcoal-700'
                                         }`}
                                     >
                                         Anual
@@ -150,7 +151,7 @@ export default function PreciosPage() {
                                     "Filtros de jurisdicción",
                                     "Acceso a base documental completa",
                                     "Lee documentos de hasta 20 hojas",
-                                    <span className="text-gray-400">Sin flujos de trabajo ni análisis de documentos</span>
+                                    <span className="text-piedra-500">Sin flujos de trabajo ni análisis de documentos</span>
                                 ]}
                                 buttonText="Comenzar Gratis"
                                 buttonHref="/chat"
@@ -195,11 +196,11 @@ export default function PreciosPage() {
                                 savingsBadge={isAnnual ? 'Ahorras $298 MXN' : undefined}
                                 features={[
                                     <span className="font-semibold text-white">140 consultas/mes</span>,
-                                    <><span className="font-semibold text-white">30 flujos de trabajo/mes</span> <span className="text-gray-500">· escritos completos paso a paso</span></>,
+                                    <><span className="font-semibold text-white">30 flujos de trabajo/mes</span> <span className="text-white/45">· escritos completos paso a paso</span></>,
                                     "IA Jurídica Avanzada (análisis complejo y deducción)",
                                     "Análisis de documentos (auditoría y mejoras)",
                                     <>Lee documentos de hasta <span className="font-semibold text-white">100 hojas</span></>,
-                                    <>Precedentes Judiciales por Circuito <span className="text-gray-500">· 6 circuitos activos</span></>,
+                                    <>Precedentes Judiciales por Circuito <span className="text-white/45">· 6 circuitos activos</span></>,
                                     "Redacción Pro — motor de razonamiento profundo",
                                     "Registra tu cédula para conectar clientes",
                                     "Filtros por entidad federativa y marco federal",
@@ -224,11 +225,11 @@ export default function PreciosPage() {
                                 savingsBadge={isAnnual ? 'Ahorras $1,198 MXN' : undefined}
                                 features={[
                                     <span className="font-semibold text-white">560 consultas/mes — cuatro veces el volumen de Pro</span>,
-                                    <><span className="font-semibold text-white">60 flujos de trabajo/mes</span> <span className="text-gray-500">· escritos completos paso a paso</span></>,
+                                    <><span className="font-semibold text-white">60 flujos de trabajo/mes</span> <span className="text-white/45">· escritos completos paso a paso</span></>,
                                     <span className="font-semibold text-white">IA Jurídica de Élite (máxima precisión argumentativa)</span>,
                                     "Análisis de documentos y auditoría",
-                                    <>Precedentes Judiciales por Circuito <span className="text-gray-500">· 6 circuitos activos</span></>,
-                                    <><span className="font-semibold text-white">Redacción Platinum</span> <span className="text-gray-500">· el motor más potente, escritos más extensos</span></>,
+                                    <>Precedentes Judiciales por Circuito <span className="text-white/45">· 6 circuitos activos</span></>,
+                                    <><span className="font-semibold text-white">Redacción Platinum</span> <span className="text-white/45">· el motor más potente, escritos más extensos</span></>,
                                     "Registra tu cédula para conectar clientes",
                                     "Consulta con el equipo legal de Iurexia",
                                     "Soporte VIP dedicado"
@@ -252,24 +253,24 @@ export default function PreciosPage() {
             {/* Trust Signal Strip */}
             <section className="py-6 px-4">
                 <div className="max-w-5xl mx-auto">
-                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-charcoal-500 text-xs">
+                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-piedra-600 text-xs">
                         <div className="flex items-center gap-1.5">
                             <ShieldCheck className="w-4 h-4 text-accent-gold" />
                             <span>Pago seguro con <strong className="text-charcoal-700">Stripe</strong></span>
                         </div>
-                        <span className="hidden sm:inline text-charcoal-300">·</span>
+                        <span className="hidden sm:inline text-piedra-400">·</span>
                         <div className="flex items-center gap-1.5">
                             <Lock className="w-3.5 h-3.5 text-accent-gold" />
                             <span>Cifrado SSL de extremo a extremo</span>
                         </div>
-                        <span className="hidden sm:inline text-charcoal-300">·</span>
+                        <span className="hidden sm:inline text-piedra-400">·</span>
                         <div className="flex items-center gap-1.5">
-                            <CreditCard className="w-3.5 h-3.5 text-charcoal-400" />
+                            <CreditCard className="w-3.5 h-3.5 text-piedra-500" />
                             <span>Visa · Mastercard · AMEX</span>
                         </div>
-                        <span className="hidden sm:inline text-charcoal-300">·</span>
+                        <span className="hidden sm:inline text-piedra-400">·</span>
                         <span>Cancela cuando quieras · Sin cargos ocultos</span>
-                        <span className="hidden sm:inline text-charcoal-300">·</span>
+                        <span className="hidden sm:inline text-piedra-400">·</span>
                         <span>Tus datos y consultas son 100% confidenciales</span>
                     </div>
                 </div>
@@ -291,9 +292,9 @@ export default function PreciosPage() {
                                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-accent-gold/15 border border-accent-gold/30 mb-4">
                                         <span className="text-[10px] font-bold text-accent-gold tracking-widest">PLAN ULTRA SECRETARIOS · $999 MXN/mes · DISPONIBLE</span>
                                     </div>
-                                    <h3 className="font-serif text-xl md:text-2xl font-medium text-white mb-3">
+                                    <h3 className="font-serif text-xl md:text-2xl font-normal text-white mb-3">
                                         Herramientas exclusivas para el<br />
-                                        <span className="text-accent-gold">Poder Judicial de la Federación</span>
+                                        Poder Judicial de la Federación
                                     </h3>
                                     <ul className="space-y-2 mb-4">
                                         {[
@@ -438,14 +439,14 @@ export default function PreciosPage() {
                                     <BotonUltra />
                                     <Link
                                         href="/tcc-beta"
-                                        className="inline-flex items-center gap-2 rounded-full border border-accent-gold/50 px-7 py-3.5 text-sm font-bold text-accent-gold transition-colors hover:bg-accent-gold/10"
+                                        className={clasesBoton({ variante: 'secundario', oscuro: true })}
                                     >
                                         Genera tu primer proyecto gratis
                                         <ArrowRight className="h-4 w-4" />
                                     </Link>
                                     <Link
                                         href="/secretarios"
-                                        className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3.5 text-sm font-medium text-white/75 transition-colors hover:border-accent-gold/45 hover:text-white"
+                                        className="inline-flex h-12 items-center gap-2 px-2 text-[0.9375rem] font-medium text-white/70 underline-offset-4 transition-colors hover:text-white hover:underline"
                                     >
                                         Ver más sobre el plan
                                     </Link>
@@ -464,10 +465,10 @@ export default function PreciosPage() {
                 <div className="max-w-6xl mx-auto px-4">
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
-                            <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
-                                Comparación <span className="text-accent-gold">de planes</span>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-4 [text-wrap:balance]">
+                                Comparación de planes
                             </h2>
-                            <p className="text-charcoal-600">
+                            <p className="text-piedra-700">
                                 Todas las funciones incluidas según tu plan
                             </p>
                         </div>
@@ -477,12 +478,12 @@ export default function PreciosPage() {
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="border-b border-gray-200">
+                                    <tr className="border-b border-piedra-200">
                                         <th className="text-left py-4 px-3 font-medium text-charcoal-900">Característica</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900">Gratuito</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900">Básico</th>
                                         <th className="text-center py-4 px-3 font-medium text-charcoal-900 bg-accent-brown/5">Pro</th>
-                                        <th className="text-center py-4 px-3 font-bold text-accent-gold bg-[#111425] border-x-2 border-t-2 border-accent-gold/40 rounded-t-2xl shadow-lg">Platinum</th>
+                                        <th className="text-center py-4 px-3 font-bold text-accent-gold bg-tinta border-x-2 border-t-2 border-accent-gold/40 rounded-t-2xl shadow-lg">Platinum</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -518,15 +519,15 @@ export default function PreciosPage() {
                                     />
                                     <ComparisonRow
                                         feature={
-                                            <span className="flex items-center gap-1.5 font-semibold text-charcoal-400">
+                                            <span className="flex items-center gap-1.5 font-semibold text-piedra-500">
                                                 Redactor de Sentencias TCC
-                                                <span className="text-[9px] border border-charcoal-300 text-charcoal-500 px-1.5 py-0.5 rounded font-bold">EN DESARROLLO</span>
+                                                <span className="text-[9px] border border-piedra-300 text-piedra-600 px-1.5 py-0.5 rounded font-bold">EN DESARROLLO</span>
                                             </span>
                                         }
                                         free="—"
                                         basico="—"
                                         pro="—"
-                                        platinum={<span className="text-gray-400 text-xs font-normal">Próximamente</span>}
+                                        platinum={<span className="text-piedra-500 text-xs font-normal">Próximamente</span>}
                                         goldFeature={false}
                                         isLast={true}
                                     />
@@ -542,8 +543,8 @@ export default function PreciosPage() {
                 <div className="max-w-4xl mx-auto px-4">
                     <AnimateOnScroll>
                         <div className="text-center mb-12">
-                            <h2 className="font-serif text-3xl md:text-4xl font-medium text-charcoal-900 mb-4">
-                                Preguntas <span className="text-accent-gold">frecuentes</span>
+                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-4 [text-wrap:balance]">
+                                Preguntas frecuentes
                             </h2>
                         </div>
                     </AnimateOnScroll>
@@ -575,15 +576,15 @@ export default function PreciosPage() {
             <section className="py-20 bg-charcoal-900 text-white overflow-hidden">
                 <div className="max-w-4xl mx-auto text-center px-4">
                     <AnimateOnScroll>
-                        <h2 className="font-serif text-3xl md:text-4xl font-medium mb-4">
-                            Potencia tu práctica legal <span className="text-accent-gold">hoy</span>
+                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-4 [text-wrap:balance]">
+                            Potencia tu práctica legal hoy
                         </h2>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.15}>
-                        <p className="text-gray-300 mb-3 max-w-2xl mx-auto text-lg">
+                        <p className="text-white/70 mb-3 max-w-2xl mx-auto text-lg">
                             Más de 600 abogados ya confían en Iurexia para sus investigaciones jurídicas.
                         </p>
-                        <p className="text-gray-500 mb-8 max-w-2xl mx-auto text-sm">
+                        <p className="text-white/45 mb-8 max-w-2xl mx-auto text-sm">
                             Comienza gratis o activa el Plan Pro para construir escritos completos con los flujos de trabajo.
                         </p>
                     </AnimateOnScroll>
@@ -591,28 +592,28 @@ export default function PreciosPage() {
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Link
                                 href="/precios#pro"
-                                className="inline-flex items-center gap-2 px-8 py-4 bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold rounded-lg transition-colors shadow-lg shadow-charcoal-900/20"
+                                className={clasesBoton({ oscuro: true })}
                             >
                                 Activar Plan Pro — $149/mes
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
                             <Link
                                 href="/chat"
-                                className="inline-flex items-center gap-2 px-8 py-4 border border-white/20 text-white font-medium rounded-lg hover:bg-white/5 transition-colors"
+                                className={clasesBoton({ variante: 'secundario', oscuro: true })}
                             >
                                 Comenzar Gratis
                             </Link>
                         </div>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.5}>
-                        <div className="flex items-center justify-center gap-4 mt-8 text-gray-500 text-xs">
+                        <div className="flex items-center justify-center gap-4 mt-8 text-white/45 text-xs">
                             <div className="flex items-center gap-1.5">
                                 <ShieldCheck className="w-3.5 h-3.5 text-accent-gold" />
                                 <span>Pago seguro con Stripe</span>
                             </div>
-                            <span className="text-gray-700">·</span>
+                            <span className="text-white/20">·</span>
                             <span>Sin tarjeta para plan gratuito</span>
-                            <span className="text-gray-700">·</span>
+                            <span className="text-white/20">·</span>
                             <span>Cancela cuando quieras</span>
                         </div>
                     </AnimateOnScroll>
@@ -622,7 +623,7 @@ export default function PreciosPage() {
             {/* Nota de uso responsable */}
             <section className="py-8 bg-cream-200">
                 <div className="max-w-4xl mx-auto text-center px-4">
-                    <p className="text-sm text-charcoal-500">
+                    <p className="text-sm text-piedra-600">
                         <strong>Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
                     </p>
                 </div>
@@ -839,14 +840,13 @@ function PricingCard({
             ? 'bg-white text-charcoal-900'
             : 'bg-charcoal-900 text-white';
 
-    const buttonBaseStyles = `block w-full text-center py-3 px-6 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`;
-    /* En la destacada el botón va en oro: es la única llamada a la acción de
-       la fila que no es negro sobre blanco, y por eso se ve primero. */
-    const buttonColorStyles = highlighted
-        ? 'bg-accent-gold text-charcoal-900 hover:bg-accent-gold/90 font-semibold'
-        : fondo
-            ? 'bg-white text-charcoal-900 hover:bg-white/90 font-semibold'
-            : 'bg-charcoal-900 text-white hover:bg-charcoal-800';
+    const buttonBaseStyles = `flex h-12 w-full items-center justify-center rounded-lg px-6 text-[0.9375rem] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`;
+    /* Los dos botones del sistema (3-oct-2026): crema sobre las tarjetas
+       oscuras y tinta sobre las claras. La destacada ya se distingue por su
+       fondo y su sello; el oro queda para el sello, no para el botón. */
+    const buttonColorStyles = highlighted || fondo
+        ? 'bg-cream-100 text-tinta hover:bg-white'
+        : 'bg-tinta text-cream-100 hover:bg-charcoal-800';
 
     return (
         <div className={`relative rounded-3xl p-8 pt-10 transition-all duration-300 flex flex-col h-full ${cardStyles}`}>
@@ -870,18 +870,18 @@ function PricingCard({
                         }`}>
                         <PrecioAnimado valor={price} />
                     </span>
-                    <span className={oscura ? 'text-gray-400' : 'text-charcoal-500'}>
+                    <span className={oscura ? 'text-white/55' : 'text-piedra-600'}>
                         {period}
                     </span>
                 </div>
                 {originalPrice && (
-                    <p className={`text-sm line-through ${highlighted ? 'text-gray-500' : oscura ? 'text-gray-400' : 'text-charcoal-400'
+                    <p className={`text-sm line-through ${highlighted ? 'text-white/45' : oscura ? 'text-white/55' : 'text-piedra-500'
                         }`}>
                         <PrecioAnimado valor={originalPrice} /> {period}
                     </p>
                 )}
                 {unitPrice && (
-                    <p className={`mt-1 text-xs font-medium ${highlighted ? 'text-accent-gold' : oscura ? 'text-gray-300' : 'text-charcoal-500'}`}>
+                    <p className={`mt-1 text-xs font-medium ${highlighted ? 'text-accent-gold' : oscura ? 'text-white/70' : 'text-piedra-600'}`}>
                         <PrecioAnimado valor={unitPrice} />
                     </p>
                 )}
@@ -892,7 +892,7 @@ function PricingCard({
                 )}
             </div>
 
-            <p className={`text-sm mb-6 ${oscura ? 'text-gray-400' : 'text-charcoal-600'
+            <p className={`text-sm mb-6 ${oscura ? 'text-white/55' : 'text-piedra-700'
                 }`}>
                 {description}
             </p>
@@ -911,7 +911,7 @@ function PricingCard({
                                 <span className="text-accent-gold text-sm leading-5 shrink-0">✦</span>
                                 <span>
                                     <span className="block text-sm font-bold text-white">{titulo}</span>
-                                    <span className="block text-xs leading-snug text-gray-400">{detalle}</span>
+                                    <span className="block text-xs leading-snug text-white/55">{detalle}</span>
                                 </span>
                             </li>
                         ))}
@@ -923,7 +923,7 @@ function PricingCard({
                 {features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-3">
                         <Check className="w-5 h-5 flex-shrink-0 mt-0.5 text-accent-gold" />
-                        <span className={`text-sm ${oscura ? 'text-gray-300' : 'text-charcoal-700'
+                        <span className={`text-sm ${oscura ? 'text-white/70' : 'text-charcoal-700'
                             }`}>
                             {feature}
                         </span>
@@ -932,7 +932,7 @@ function PricingCard({
             </ul>
 
             {note && (
-                <p className={`mb-6 text-xs leading-relaxed ${oscura ? 'text-gray-400' : 'text-charcoal-500'}`}>
+                <p className={`mb-6 text-xs leading-relaxed ${oscura ? 'text-white/55' : 'text-piedra-600'}`}>
                     {note}
                 </p>
             )}
@@ -970,10 +970,10 @@ function PricingCard({
                         <div className="w-16 h-16 bg-accent-gold/15 rounded-full flex items-center justify-center mx-auto mb-4">
                             <AlertTriangle className="w-8 h-8 text-accent-gold" />
                         </div>
-                        <h3 className="font-serif text-2xl font-medium text-charcoal-900 mb-2">
+                        <h3 className="font-serif text-2xl font-normal text-tinta mb-2">
                             Aviso Importante
                         </h3>
-                        <p className="text-charcoal-600 mb-6 text-sm">
+                        <p className="text-piedra-700 mb-6 text-sm">
                             El <strong>Plan Básico</strong> es excelente para búsquedas rápidas en nuestra base de datos, pero <span className="font-semibold text-charcoal-900">NO incluye los flujos de trabajo ni las auditorías de sentencias.</span>
                             <br /><br />
                             Si necesitas razonamiento jurídico avanzado, te recomendamos el <strong className="text-accent-gold">Plan Pro</strong>.
@@ -1002,11 +1002,11 @@ function PricingCard({
                             <button
                                 onClick={handleSubscribe}
                                 disabled={loading}
-                                className="w-full px-4 py-2 border border-charcoal-200 text-charcoal-500 rounded-xl hover:bg-gray-50 transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-2 border border-piedra-200 text-piedra-600 rounded-xl hover:bg-piedra-50 transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Procesando...' : 'Continuar con Plan Básico'}
                             </button>
-                            <p className="text-xs text-charcoal-400 mt-1">Más del 80% de nuestros suscriptores eligen el Plan Pro.</p>
+                            <p className="text-xs text-piedra-500 mt-1">Más del 80% de nuestros suscriptores eligen el Plan Pro.</p>
                         </div>
                     </div>
                 </div>
@@ -1036,15 +1036,15 @@ function ComparisonRow({
     const isExclusive = free === '—' && basico === '—' && pro === '—';
 
     return (
-        <tr className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+        <tr className="border-b border-piedra-100 hover:bg-piedra-50/50 transition-colors">
             <td className={`py-4 px-3 ${goldFeature ? 'text-accent-gold font-medium' : 'text-charcoal-700'}`}>{feature}</td>
-            <td className="py-4 px-3 text-center text-charcoal-600">{free}</td>
-            <td className="py-4 px-3 text-center text-charcoal-600 font-medium bg-stone-50/50">{basico}</td>
+            <td className="py-4 px-3 text-center text-piedra-700">{free}</td>
+            <td className="py-4 px-3 text-center text-piedra-700 font-medium bg-stone-50/50">{basico}</td>
             <td className="py-4 px-3 text-center text-charcoal-900 bg-accent-brown/5 font-medium">{pro}</td>
             <td className={`py-4 px-3 text-center font-medium border-x-2 border-accent-gold/30 shadow-md transition-all ${
                 isExclusive 
-                    ? "bg-[#0b0c10] text-[#c9a962] font-bold border-accent-gold/45 shadow-accent-gold/5" 
-                    : "bg-[#111425] text-gray-200"
+                    ? "bg-tinta text-accent-gold font-bold border-accent-gold/45 shadow-accent-gold/5" 
+                    : "bg-tinta text-piedra-200"
             } ${
                 isLast ? "rounded-b-2xl border-b-2 border-accent-gold/45" : ""
             }`}>
@@ -1062,13 +1062,13 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+        <div className="border border-piedra-200 rounded-xl overflow-hidden bg-white">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between p-6 text-left hover:bg-piedra-50 transition-colors"
             >
                 <span className="font-medium text-charcoal-900">{question}</span>
-                <span className={`text-2xl text-charcoal-400 transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`}>
+                <span className={`text-2xl text-piedra-500 transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`}>
                     +
                 </span>
             </button>
@@ -1080,7 +1080,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
                 }}
             >
                 <div className="px-6 pb-6">
-                    <p className="text-charcoal-600 leading-relaxed">{answer}</p>
+                    <p className="text-piedra-700 leading-relaxed">{answer}</p>
                 </div>
             </div>
         </div>
