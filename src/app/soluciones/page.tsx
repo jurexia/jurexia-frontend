@@ -6,7 +6,8 @@ import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import PieDePagina from '@/components/PieDePagina';
 
-import { clasesBoton } from '@/components/web/sistema';
+import { Antetitulo, Boton, clasesBoton, Seccion } from '@/components/web/sistema';
+import { CierreCTA } from '@/components/web/bloques';
 export default function SolucionesPage() {
     return (
         <main className="min-h-screen bg-cream-300">
@@ -347,30 +348,28 @@ export default function SolucionesPage() {
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-20 bg-cream-300 overflow-hidden">
-                <div className="max-w-4xl mx-auto text-center px-4">
-                    <AnimateOnScroll>
-                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-6 [text-wrap:balance]">
-                            Transforma tu práctica legal con IA
+            {/* ── Iurexia Connect (se mudó aquí desde la portada el 3-oct-2026) ── */}
+            <Seccion tono="blanco" espacio="normal" className="border-t border-tinta/[0.07]">
+                <div className="grid items-center gap-10 md:grid-cols-[1fr_auto]">
+                    <div>
+                        <Antetitulo className="mb-4">Iurexia Connect</Antetitulo>
+                        <h2 className="mb-4 font-serif text-display-s font-normal text-tinta [text-wrap:balance] sm:text-display-m">
+                            Cuando el caso necesita un abogado, no sólo una respuesta
                         </h2>
-                    </AnimateOnScroll>
-                    <AnimateOnScroll delay={0.15}>
-                        <p className="text-lg text-piedra-700 mb-8">
-                            Únete a los profesionales del derecho que ya optimizan su trabajo con Iurexia.
+                        <p className="max-w-xl text-[0.9375rem] leading-relaxed text-piedra-700 sm:text-base">
+                            La orientación con IA resuelve la duda; hay asuntos que además necesitan quien los lleve. Connect
+                            une las dos cosas en un mismo lugar: quien consulta encuentra un abogado con cédula verificada, y
+                            quien ejerce recibe asuntos que ya llegan con el problema planteado.
                         </p>
-                    </AnimateOnScroll>
-                    <AnimateOnScroll delay={0.3} direction="scale">
-                        <Link
-                            href="/chat"
-                            className={clasesBoton()}
-                        >
-                            Probar Gratis
-                            <ArrowRight className="w-5 h-5" />
-                        </Link>
-                    </AnimateOnScroll>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        <Boton href="/connect">Conocer Connect</Boton>
+                        <Boton href="/login" variante="secundario">Registrarme como abogado</Boton>
+                    </div>
                 </div>
-            </section>
+            </Seccion>
+
+            <CierreCTA titulo="Transforma tu práctica legal con IA" entrada="Únete a los profesionales del derecho que ya optimizan su trabajo con Iurexia." />
 
             {/* Nota de uso responsable */}
             <section className="py-8 bg-cream-200">

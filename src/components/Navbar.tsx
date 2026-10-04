@@ -53,18 +53,18 @@ const MENUS: Record<IdMenu, Menu> = {
                 titulo: 'La plataforma',
                 opciones: [
                     { href: '/plataforma', titulo: 'Visión general', texto: 'De la investigación al escrito listo para presentar, en un solo lugar.' },
-                    { href: '/chat', titulo: 'Consulta jurídica', texto: 'Cada respuesta con su fundamento y cada cita verificada contra su fuente.' },
-                    { href: '/plataforma#esfuerzo-de-redaccion', titulo: 'Redacción de escritos', texto: 'Demandas y escritos completos, editables y listos para descargar en Word.' },
+                    { href: '/plataforma/consulta', titulo: 'Consulta jurídica', texto: 'Cada respuesta con su fundamento y cada cita verificada contra su fuente.' },
+                    { href: '/plataforma/redaccion', titulo: 'Redacción de escritos', texto: 'Demandas y escritos completos, editables y listos para descargar en Word.' },
                     { href: '/normativa', titulo: 'Normativa', texto: 'Legislación federal y de las 32 entidades, artículo por artículo.' },
                 ],
             },
             {
                 titulo: 'El espacio de trabajo',
                 opciones: [
-                    { href: '/plataforma#demos', titulo: 'Carpetas y seguimiento', texto: 'Cada asunto en su carpeta y sus expedientes vigilados ante el PJF.' },
-                    { href: '/plataforma#flujos-de-trabajo', titulo: 'Flujos de trabajo', texto: 'Los escritos de siempre, guiados paso a paso.' },
+                    { href: '/plataforma/carpetas', titulo: 'Carpetas y seguimiento', texto: 'Cada asunto en su carpeta y sus expedientes vigilados ante el PJF.' },
+                    { href: '/plataforma/redaccion#flujos', titulo: 'Flujos de trabajo', texto: 'Los escritos de siempre, guiados paso a paso.' },
                     { href: '/agente', titulo: 'Agente de amparo', texto: 'La demanda de amparo indirecto, estructurada parte por parte.' },
-                    { href: '/plataforma#jurimetria', titulo: 'Jurimetría y precedentes', texto: 'Cómo han resuelto los tribunales asuntos como el suyo.' },
+                    { href: '/plataforma/consulta#precedentes', titulo: 'Jurimetría y precedentes', texto: 'Cómo han resuelto los tribunales asuntos como el suyo.' },
                 ],
             },
         ],

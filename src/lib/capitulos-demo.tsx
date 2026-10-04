@@ -43,7 +43,7 @@ export const CONSULTA: Capitulo = {
     gancho: 'La respuesta abre el PDF oficial en su página.',
     titulo: (
         <>
-            Pregunta, y <span className="text-accent-gold">comprueba la fuente</span>
+            Pregunta, y comprueba la fuente
         </>
     ),
     entradilla:
@@ -62,7 +62,7 @@ export const REDACCION: Capitulo = {
     gancho: 'La demanda entera y, de ahí, a tu Word.',
     titulo: (
         <>
-            Redacta el amparo y <span className="text-accent-gold">llévatelo a tu Word</span>
+            Redacta el amparo y llévatelo a tu Word
         </>
     ),
     entradilla:
@@ -86,7 +86,7 @@ export const CARPETAS: Capitulo = {
     gancho: 'Lee tu expediente y te dice qué falta.',
     titulo: (
         <>
-            Mete el asunto en una <span className="text-accent-gold">carpeta que piensa</span>
+            Mete el asunto en una carpeta que piensa
         </>
     ),
     entradilla:
@@ -110,7 +110,7 @@ export const SEGUIMIENTO: Capitulo = {
     titulo: (
         <>
             Deja de entrar cada mañana.{' '}
-            <span className="text-accent-gold">Te avisamos nosotros</span>
+            Te avisamos nosotros
         </>
     ),
     entradilla:
@@ -134,7 +134,7 @@ export const SENTENCIAS: Capitulo = {
     titulo: (
         <>
             Proyecta la sentencia.{' '}
-            <span className="text-accent-gold">El criterio sigue siendo tuyo</span>
+            El criterio sigue siendo tuyo
         </>
     ),
     entradilla:

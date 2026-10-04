@@ -8,6 +8,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const publicRoutes = [
         { path: '', priority: 1.0, changefreq: 'weekly' as const },
         { path: '/plataforma', priority: 0.9, changefreq: 'monthly' as const },
+        { path: '/plataforma/consulta', priority: 0.8, changefreq: 'monthly' as const },
+        { path: '/plataforma/redaccion', priority: 0.8, changefreq: 'monthly' as const },
+        { path: '/plataforma/carpetas', priority: 0.8, changefreq: 'monthly' as const },
         { path: '/connect', priority: 0.9, changefreq: 'weekly' as const },
         { path: '/soluciones', priority: 0.8, changefreq: 'monthly' as const },
         { path: '/salvame', priority: 0.8, changefreq: 'monthly' as const },

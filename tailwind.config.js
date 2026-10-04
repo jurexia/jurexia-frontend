@@ -90,6 +90,11 @@ module.exports = {
                     '0%, 100%': { opacity: '1' },
                     '50%': { opacity: '0.7' },
                 },
+                // La barra de avance de los testimonios (components/web/Testimonios).
+                avance: {
+                    '0%': { width: '0%' },
+                    '100%': { width: '100%' },
+                },
             },
         },
     },

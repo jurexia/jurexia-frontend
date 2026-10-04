@@ -21,13 +21,14 @@ const COLUMNAS: { titulo: string; enlaces: [string, string][] }[] = [
     {
         titulo: 'Plataforma',
         enlaces: [
-            ['Consulta jurídica', '/chat'],
-            ['Redacción de escritos', '/plataforma'],
-            ['Taller de sentencias', '/redaccionsentencias'],
+            ['Visión general', '/plataforma'],
+            ['Consulta jurídica', '/plataforma/consulta'],
+            ['Redacción y flujos', '/plataforma/redaccion'],
+            ['Carpetas y seguimiento', '/plataforma/carpetas'],
+            ['Jurimetría y precedentes', '/plataforma/consulta#precedentes'],
             ['Agente de amparo', '/agente'],
-            ['Jurimetría y precedentes', '/soluciones'],
+            ['Taller de sentencias', '/redaccionsentencias'],
             ['Normativa', '/normativa'],
-            ['Leyes estatales', '/leyesestatales'],
         ],
     },
     {
