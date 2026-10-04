@@ -75,7 +75,7 @@ export default function HeroVideo() {
 
             {/* ── Contenido ── */}
             <div className="relative z-20 mx-auto w-full max-w-7xl px-4 pb-16 pt-28 sm:px-6 lg:px-8 lg:pb-20 lg:pt-24">
-                <div className="max-w-2xl">
+                <div className="max-w-2xl aparecer">
                     <h1 className="font-serif text-[2.6rem] font-normal leading-[1.04] tracking-[-0.02em] text-white sm:text-display-l lg:text-display-xl">
                         El ejercicio,
                         <br />

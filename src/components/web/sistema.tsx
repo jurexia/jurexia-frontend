@@ -8,9 +8,10 @@ import type { ReactNode } from 'react';
    botón y 8 colores de texto en todo su sitio; la web de Iurexia, 13, 9 y 21.
    La diferencia no era el gusto, era la falta de reglas. Estas son las reglas:
 
-   · Títulos siempre en Playfair 400, en cinco tamaños (tailwind: display-*),
+   · Títulos siempre en peso 400, en cinco tamaños (tailwind: display-*),
      sin palabras resaltadas en dorado. El dorado queda para el «ia» de la
-     marca y los detalles finos.
+     marca y los detalles finos. La letra es Newsreader desde la segunda
+     vuelta (src/lib/fuentes-web.ts); la marca sigue en Playfair.
    · Dos botones —el principal en tinta y el de contorno— y dos alturas: 48 px
      en la página, 36 px en la barra. Un solo radio, rounded-lg: sin óvalos
      (regla de David desde la barra de agosto).
@@ -26,10 +27,12 @@ const FONDO: Record<Tono, string> = {
     tinta: 'bg-tinta text-cream-100',
 };
 
+// En teléfono, dos secciones amplias seguidas dejaban casi 200 px de vacío,
+// que al deslizar parece una página rota: allí el aire es la mitad.
 const ESPACIO = {
-    compacto: 'py-14 sm:py-20',
-    normal: 'py-20 sm:py-28',
-    amplio: 'py-24 sm:py-32',
+    compacto: 'py-12 sm:py-20',
+    normal: 'py-14 sm:py-28',
+    amplio: 'py-16 sm:py-32',
 } as const;
 
 const ANCHO = {

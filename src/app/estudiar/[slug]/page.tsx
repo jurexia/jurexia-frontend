@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import PieDePagina from '@/components/PieDePagina';
 import VideoLeccion from '@/components/estudiar/VideoLeccion';
 import { CopiarTexto, MarcarEstudiada, PreguntasParaPensar } from '@/components/estudiar/Estudio';
+import { claseWeb } from '@/lib/fuentes-web';
 import {
     LECCIONES,
     duracionISO,
@@ -95,7 +96,7 @@ export default function LeccionPage({ params }: { params: { slug: string } }) {
     };
 
     return (
-        <main>
+        <main className={claseWeb}>
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
             <Navbar plataforma />
 

@@ -12,10 +12,11 @@ import Navbar from '@/components/Navbar';
 import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 
 import { clasesBoton } from '@/components/web/sistema';
+import { claseWeb } from '@/lib/fuentes-web';
 export default function SecretariosPage() {
 
     return (
-        <main className="min-h-screen bg-[#0f0e0d] text-white overflow-hidden">
+        <main className={`${claseWeb} min-h-screen bg-[#0f0e0d] text-white overflow-hidden`}>
             <Navbar />
 
             {/* ═══ HERO SECTION ═══ */}
@@ -567,7 +568,7 @@ export default function SecretariosPage() {
                             El wordmark se sostiene solo — es la marca, y ponerle
                             delante un icono genérico de bufete la rebaja. */}
                         <div className="flex justify-center items-center mb-8">
-                            <span className="font-serif text-4xl font-semibold tracking-tight">Iurex<span className="text-[#c9a962]">ia</span></span>
+                            <span className="font-marca text-4xl font-semibold tracking-tight">Iurex<span className="text-[#c9a962]">ia</span></span>
                         </div>
                     </AnimateOnScroll>
                     <AnimateOnScroll delay={0.1}>
@@ -601,7 +602,7 @@ export default function SecretariosPage() {
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                         <div className="flex items-center">
-                            <span className="font-serif text-lg font-semibold">Iurex<span className="text-[#c9a962]">ia</span></span>
+                            <span className="font-marca text-lg font-semibold">Iurex<span className="text-[#c9a962]">ia</span></span>
                         </div>
                         <div className="flex items-center gap-6">
                             <Link href="/precios" className="text-sm text-white/45 hover:text-white/75 transition-colors">

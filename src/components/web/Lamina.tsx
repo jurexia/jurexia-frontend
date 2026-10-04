@@ -11,7 +11,12 @@ import { useEffect, useRef, type ReactNode } from 'react';
 
    Se dibuja en un canvas: no pesa nada, sale nítido a cualquier tamaño y cada
    lámina varía con su `semilla`. Mientras el canvas no ha pintado, se ve el
-   color de fondo: la página en reposo nunca queda en blanco. */
+   color de fondo: la página en reposo nunca queda en blanco.
+
+   Desde la segunda vuelta (3-oct-2026) puede llevar, en vez del guilloché, una
+   de las obras propias de public/web/arte (grabado y carboncillo de
+   arquitectura jurídica, generadas con el visto bueno de David), con un velo
+   que asegura que el texto de encima se lea. */
 
 export type Patron = 'roseta' | 'ondas';
 export type TonoLamina = 'tinta' | 'piedra' | 'marfil';
@@ -120,16 +125,37 @@ function dibujar(lienzo: HTMLCanvasElement, patron: Patron, tono: TonoLamina, se
     });
 }
 
+// El velo sobre una obra: para que el texto que va encima se lea, o para bajarle el contraste.
+const VELO: Record<'arriba' | 'suave', Record<TonoLamina, string>> = {
+    arriba: {
+        tinta: 'linear-gradient(180deg, rgba(15,14,13,0.92) 0%, rgba(15,14,13,0.72) 40%, rgba(15,14,13,0.25) 100%)',
+        piedra: 'linear-gradient(180deg, rgba(239,236,230,0.94) 0%, rgba(239,236,230,0.7) 40%, rgba(239,236,230,0.2) 100%)',
+        marfil: 'linear-gradient(180deg, rgba(239,236,230,0.94) 0%, rgba(239,236,230,0.7) 40%, rgba(239,236,230,0.2) 100%)',
+    },
+    suave: {
+        tinta: 'linear-gradient(180deg, rgba(15,14,13,0.35), rgba(15,14,13,0.45))',
+        piedra: 'linear-gradient(180deg, rgba(239,236,230,0.25), rgba(239,236,230,0.35))',
+        marfil: 'linear-gradient(180deg, rgba(239,236,230,0.25), rgba(239,236,230,0.35))',
+    },
+};
+
 export default function Lamina({
     patron = 'roseta',
     tono = 'tinta',
     semilla = 7,
+    arte,
+    velo = 'suave',
+    prioridad = false,
     className = '',
     children,
 }: {
     patron?: Patron;
     tono?: TonoLamina;
     semilla?: number;
+    /** Una de las obras de public/web/arte: si se da, sustituye al guilloché. */
+    arte?: string;
+    velo?: 'arriba' | 'suave';
+    prioridad?: boolean;
     className?: string;
     children?: ReactNode;
 }) {
@@ -137,7 +163,7 @@ export default function Lamina({
 
     useEffect(() => {
         const el = lienzo.current;
-        if (!el) return;
+        if (!el || arte) return;
         let cuadro = 0;
         const pintar = () => {
             cancelAnimationFrame(cuadro);
@@ -150,11 +176,19 @@ export default function Lamina({
             cancelAnimationFrame(cuadro);
             obs.disconnect();
         };
-    }, [patron, tono, semilla]);
+    }, [patron, tono, semilla, arte]);
 
     return (
         <div className={`relative isolate overflow-hidden ${className}`} style={{ backgroundColor: FONDO[tono] }}>
-            <canvas ref={lienzo} aria-hidden className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
+            {arte ? (
+                <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={arte} alt="" aria-hidden loading={prioridad ? 'eager' : 'lazy'} decoding="async" className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover" />
+                    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: VELO[velo][tono] }} />
+                </>
+            ) : (
+                <canvas ref={lienzo} aria-hidden className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
+            )}
             <div aria-hidden className="pointer-events-none absolute inset-0 -z-10" style={{ background: LUZ[tono] }} />
             {children}
         </div>

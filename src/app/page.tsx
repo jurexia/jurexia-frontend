@@ -12,9 +12,10 @@ import Lamina from '@/components/web/Lamina';
 import AcordeonModulos, { type ItemModulo } from '@/components/web/AcordeonModulos';
 import Testimonios from '@/components/web/Testimonios';
 import Comparativa from '@/components/web/Comparativa';
-import { BloqueSeguridad, Cifras, CierreCTA } from '@/components/web/bloques';
+import { BloqueSeguridad, Captura, Cifras, CierreCTA } from '@/components/web/bloques';
 import { Antetitulo, Boton, Encabezado, Seccion } from '@/components/web/sistema';
 
+import { claseWeb } from '@/lib/fuentes-web';
 /* ═══ LA PORTADA (rehecha el 3-oct-2026, fase 2 del rediseño) ═══
    Tras el barrido de harvey.ai, David: «adelante con todos los cambios pero no
    quites logos, ya le hace falta un nuevo estilo a la página».
@@ -80,7 +81,7 @@ const MODULOS: ItemModulo[] = [
 
 export default function HomePage() {
     return (
-        <main className="min-h-screen">
+        <main className={`${claseWeb} min-h-screen`}>
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{
@@ -100,6 +101,29 @@ export default function HomePage() {
             {/* 1. El vídeo de la bandera: no se toca (David, 3-oct-2026). */}
             <HeroVideo />
 
+            {/* El producto, sin bajar: como en harvey.ai, la plataforma real se
+                ve desde la primera pantalla. Se monta sobre el borde inferior
+                del vídeo, que ya funde a crema, sin tapar el titular ni los
+                botones (el solape es menor en pantallas bajas y en teléfono). */}
+            <div className="relative z-20 -mt-10 px-4 sm:-mt-20 sm:px-6 lg:-mt-28 lg:px-8">
+                <div className="mx-auto max-w-6xl aparecer [animation-delay:350ms]">
+                    <Lamina tono="tinta" arte="/web/arte/biblioteca.webp" prioridad className="rounded-2xl shadow-[0_40px_90px_-35px_rgba(15,14,13,0.55)]">
+                        <div className="px-3 pt-5 sm:px-10 sm:pt-10 lg:px-16">
+                            <div className="mx-auto max-w-5xl translate-y-px">
+                                <Captura
+                                    src="/web/producto/consulta.webp"
+                                    alt="Una consulta resuelta en Iurexia: 12 citas, las 12 verificadas, agrupadas por fuente oficial, con 8 tesis confirmadas en el Semanario."
+                                    ancho={2000}
+                                    alto={1250}
+                                    barra="iurexia.com/chat"
+                                    prioridad
+                                />
+                            </div>
+                        </div>
+                    </Lamina>
+                </div>
+            </div>
+
             {/* 2. «Iurexia, now powered by OpenAI». */}
             <AnuncioOpenAI />
 
@@ -117,7 +141,7 @@ export default function HomePage() {
                     entrada="Abogados, despachos y secretarios del Poder Judicial trabajan en Iurexia con el derecho mexicano verificado detrás de cada respuesta."
                 />
                 <div className="mt-14 grid gap-5 lg:grid-cols-2">
-                    <Lamina tono="tinta" patron="roseta" semilla={3} className="flex flex-col rounded-2xl">
+                    <Lamina tono="tinta" arte="/web/arte/biblioteca.webp" velo="arriba" className="flex flex-col rounded-2xl">
                         <div className="p-8 sm:p-10">
                             <Antetitulo oscuro>Para abogados y despachos</Antetitulo>
                             <h3 className="mt-4 max-w-md font-serif text-display-xs font-normal text-cream-100 [text-wrap:balance] sm:text-display-s">
@@ -146,7 +170,7 @@ export default function HomePage() {
                         </div>
                     </Lamina>
 
-                    <Lamina tono="tinta" patron="ondas" semilla={9} className="flex flex-col rounded-2xl">
+                    <Lamina tono="tinta" arte="/web/arte/columnata.webp" velo="arriba" className="flex flex-col rounded-2xl">
                         <div className="p-8 sm:p-10">
                             <Antetitulo oscuro>Para el Poder Judicial de la Federación</Antetitulo>
                             <h3 className="mt-4 max-w-md font-serif text-display-xs font-normal text-cream-100 [text-wrap:balance] sm:text-display-s">

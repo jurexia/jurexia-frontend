@@ -12,6 +12,7 @@ import Lamina from '@/components/web/Lamina';
 import { BloqueSeguridad, Captura, Cifras, CierreCTA, OtrosModulos } from '@/components/web/bloques';
 import { Antetitulo, Boton, clasesBoton, Encabezado, Entrada, Seccion, Titulo } from '@/components/web/sistema';
 
+import { claseWeb } from '@/lib/fuentes-web';
 /* ═══ /PLATAFORMA (rehecha el 3-oct-2026, fase 3 del rediseño) ═══
    Tenía 17 secciones y casi 12,000 px de alto: cada función con su propio
    bloque, su dibujo y su lista. Ahora es la puerta de la plataforma, como la
@@ -44,7 +45,7 @@ const FUENTES: [string, string][] = [
 
 export default function PlataformaPage() {
     return (
-        <main className="min-h-screen bg-cream-300">
+        <main className={`${claseWeb} min-h-screen bg-cream-300`}>
             <Navbar />
 
             {/* La promesa y el producto */}
@@ -52,7 +53,7 @@ export default function PlataformaPage() {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <Antetitulo className="mb-5">Plataforma</Antetitulo>
                     <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
-                        <Titulo como="h1" escala="portada">Una plataforma para todo el trabajo jurídico</Titulo>
+                        <Titulo como="h1" escala="portada" className="aparecer">Una plataforma para todo el trabajo jurídico</Titulo>
                         <div>
                             <Entrada>
                                 De la primera pregunta al escrito presentado y al expediente vigilado: investigación con fuentes
@@ -66,7 +67,7 @@ export default function PlataformaPage() {
                             </div>
                         </div>
                     </div>
-                    <Lamina tono="tinta" patron="roseta" semilla={21} className="mt-14 rounded-2xl">
+                    <Lamina tono="tinta" arte="/web/arte/columnata.webp" prioridad className="mt-14 rounded-2xl">
                         <div className="px-4 pt-8 sm:px-12 sm:pt-14 lg:px-20">
                             <div className="mx-auto max-w-5xl translate-y-px">
                                 <Captura

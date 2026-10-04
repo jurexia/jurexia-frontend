@@ -83,9 +83,22 @@ const MENUS: Record<IdMenu, Menu> = {
             {
                 titulo: 'Para quién',
                 opciones: [
-                    { href: '/soluciones', titulo: 'Abogados y despachos', texto: 'Investigación, redacción y seguimiento para la práctica diaria.' },
+                    { href: '/soluciones/litigantes', titulo: 'Abogados litigantes', texto: 'Investigación, redacción y seguimiento de tus propios asuntos.' },
+                    { href: '/soluciones/despachos', titulo: 'Despachos', texto: 'Más asuntos con el mismo equipo, con fuentes comprobables.' },
+                    { href: '/soluciones/corporativos', titulo: 'Áreas jurídicas de empresa', texto: 'Consultas del negocio, contratos y dictámenes internos.' },
                     { href: '/secretarios', titulo: 'Secretarios del PJF', texto: 'El estudio de fondo y la jurisprudencia para el proyecto de sentencia.' },
-                    { href: '/vitrina', titulo: 'Vitrina de despachos', texto: 'Aparezca entre los despachos que trabajan con Iurexia.' },
+                    { href: '/soluciones/academia', titulo: 'Estudiantes y docentes', texto: 'Consulta con fuentes oficiales y lecciones con su lectura.' },
+                ],
+            },
+            {
+                titulo: 'Por materia',
+                opciones: [
+                    { href: '/soluciones/amparo', titulo: 'Amparo', texto: 'Plazos, jurisprudencia y la demanda, parte por parte.' },
+                    { href: '/soluciones/laboral', titulo: 'Laboral', texto: 'Despido, ofrecimiento de trabajo y seguridad social.' },
+                    { href: '/soluciones/penal', titulo: 'Penal', texto: 'Sistema acusatorio, medidas cautelares y teoría del caso.' },
+                    { href: '/soluciones/civil-y-familiar', titulo: 'Civil y familiar', texto: 'Contratos, sucesiones, alimentos y divorcio.' },
+                    { href: '/soluciones/fiscal-y-administrativo', titulo: 'Fiscal y administrativo', texto: 'Créditos fiscales y juicio contencioso.' },
+                    { href: '/soluciones/mercantil', titulo: 'Mercantil', texto: 'Títulos de crédito, sociedades y contratos.' },
                 ],
             },
         ],
@@ -104,6 +117,7 @@ const MENUS: Record<IdMenu, Menu> = {
             {
                 titulo: 'Aprender',
                 opciones: [
+                    { href: '/recursos', titulo: 'Todos los recursos', texto: 'Lecciones, guías y lo último, en un solo lugar.' },
                     { href: 'https://www.youtube.com/@iurexia', titulo: 'Canal de YouTube', texto: 'Conocimiento jurídico en video.', externo: true },
                     { href: '/ultimo', titulo: 'Lo último', texto: 'Comunicados de la Corte, tesis de la semana y el DOF.' },
                     { href: '/tutorial', titulo: 'Cómo usar el chat', texto: 'El nuevo chat, explicado en video.' },
@@ -329,7 +343,7 @@ export default function Navbar({ sobreOscuro = false, plataforma = false }: { so
                         <Link href="/" className="flex flex-col items-start gap-1" aria-label="Iurexia — inicio. Now powered by OpenAI">
                             {/* La marca no cambia nunca de tipografía: Playfair/Georgia 600. */}
                             <span
-                                className={`font-serif text-2xl font-semibold leading-none transition-colors duration-300 ${
+                                className={`font-marca text-2xl font-semibold leading-none transition-colors duration-300 ${
                                     enClaro ? 'text-white' : 'text-charcoal-900'
                                 }`}
                             >

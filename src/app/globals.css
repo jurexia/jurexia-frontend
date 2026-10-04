@@ -2299,3 +2299,41 @@ html.con-barra-trabajo {
 html.con-barra-trabajo .solo-publico {
   display: none;
 }
+
+/* ═══ La letra de la web pública (3-oct-2026, opción B) ═══
+   Cada página pública lleva `.web` en su <main> (src/lib/fuentes-web.ts): ahí
+   los títulos pasan a Newsreader y el texto a Inter Tight. La plataforma no
+   lleva la clase y conserva su letra. La marca se fija aparte con --font-marca,
+   que se calcula en la raíz, cuando --font-serif todavía es Playfair. */
+:root {
+  --font-marca: var(--font-serif);
+}
+
+.web {
+  --font-serif: var(--font-titulo);
+  --font-sans: var(--font-texto);
+  font-family: var(--font-texto), 'Inter', system-ui, sans-serif;
+}
+
+.web h1,
+.web h2,
+.web h3,
+.web h4,
+.web h5,
+.web h6 {
+  letter-spacing: -0.015em;
+}
+
+/* La entrada de los titulares al cargar (sólo en la web pública y sólo si el
+   sistema no pide menos movimiento). Nada se esconde esperando al scroll: la
+   página en reposo se lee entera; esto sólo suaviza el primer instante. */
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .web .aparecer {
+    animation: aparecer 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}

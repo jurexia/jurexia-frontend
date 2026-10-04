@@ -34,7 +34,9 @@ const COLUMNAS: { titulo: string; enlaces: [string, string][] }[] = [
     {
         titulo: 'Para quién',
         enlaces: [
-            ['Abogados y despachos', '/soluciones'],
+            ['Soluciones', '/soluciones'],
+            ['Abogados litigantes', '/soluciones/litigantes'],
+            ['Despachos', '/soluciones/despachos'],
             ['Secretarios del PJF', '/secretarios'],
             ['Directorio Connect', '/connect'],
             ['Vitrina de despachos', '/vitrina'],
@@ -45,6 +47,7 @@ const COLUMNAS: { titulo: string; enlaces: [string, string][] }[] = [
     {
         titulo: 'Aprender',
         enlaces: [
+            ['Recursos', '/recursos'],
             ['Estudiar y pensar', '/estudiar'],
             ['Canal de YouTube', REDES.youtube],
             ['Lo último', '/ultimo'],
@@ -74,7 +77,7 @@ export default function PieDePagina({ className = '' }: { className?: string }) 
             <div className="mx-auto max-w-6xl px-4">
                 <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.35fr_repeat(4,1fr)]">
                     <div className="max-w-xs sm:col-span-2 md:col-span-1">
-                        <span className="font-serif text-2xl font-semibold tracking-wide text-charcoal-900">
+                        <span className="font-marca text-2xl font-semibold tracking-wide text-charcoal-900">
                             Iurex<span className="text-accent-gold">ia</span>
                         </span>
                         <LemaOpenAI tamano="text-[11px]" className="mt-2" />

@@ -4,6 +4,7 @@ import { ArrowRight, BookOpenText, FileText, Play } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import PieDePagina, { IconoYouTube } from '@/components/PieDePagina';
 import { EstadoEstreno, MarcaEstudiada, ProgresoEstudio } from '@/components/estudiar/Estudio';
+import { claseWeb } from '@/lib/fuentes-web';
 import {
     CANAL_YOUTUBE,
     EJES,
@@ -58,7 +59,7 @@ export default function EstudiarPage() {
         .sort((a, b) => clave(a.termino).localeCompare(clave(b.termino), 'es'));
 
     return (
-        <main>
+        <main className={claseWeb}>
             <Navbar plataforma />
 
             {/* ── Cabecera ── */}

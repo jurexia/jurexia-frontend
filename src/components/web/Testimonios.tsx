@@ -49,7 +49,7 @@ export default function Testimonios() {
 
     const t = TESTIMONIOS[actual];
     return (
-        <section aria-label="Testimonios" className="bg-white py-24 sm:py-32" onMouseEnter={() => setPausa(true)} onMouseLeave={() => setPausa(false)}>
+        <section aria-label="Testimonios" className="bg-white py-16 sm:py-32" onMouseEnter={() => setPausa(true)} onMouseLeave={() => setPausa(false)}>
             <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
                 <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">Lo que dicen quienes lo usan</p>
                 <figure className="mt-8 min-h-[16rem] sm:min-h-[14rem]" aria-live="polite">

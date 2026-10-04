@@ -12,7 +12,8 @@ export const metadata: Metadata = {
     title: TITULO,
     description: DESCRIPCION,
     alternates: { canonical: '/plataforma/redaccion' },
-    openGraph: { siteName: 'Iurexia', locale: 'es_MX', type: 'website', images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Iurexia' }], title: TITULO, description: DESCRIPCION, url: '/plataforma/redaccion' },
+    openGraph: { siteName: 'Iurexia', locale: 'es_MX', type: 'website', images: [{ url: '/og/redaccion.jpg', width: 1200, height: 630, alt: 'Iurexia' }], title: TITULO, description: DESCRIPCION, url: '/plataforma/redaccion' },
+    twitter: { card: 'summary_large_image', images: ['/og/redaccion.jpg'] },
 };
 
 /* Los siete flujos que arrancan en el chat (25-sep-2026). */
@@ -32,6 +33,7 @@ export default function RedaccionPage() {
             ruta="/plataforma/redaccion"
             nombre="Redacción"
             titulo="Del encargo al escrito terminado"
+            heroArte="/web/arte/grabado.webp"
             entrada="Pide la demanda, la contestación o el recurso, elige con qué esfuerzo se redacta y recibe un escrito completo, fundamentado con artículos y tesis verificados contra el acervo, editable y listo para llevar a Word."
             visual={{ tipo: 'video', src: '/demo/redaccion.mp4', poster: '/demo/redaccion-poster.jpg' }}
             beneficios={[
@@ -57,6 +59,7 @@ export default function RedaccionPage() {
                         alto: 700,
                         alt: 'El selector «Esfuerzo de redacción» abierto en la caja del chat: Básico, Pro y Platinum, con Platinum marcado.',
                     },
+                    lamina: { tono: 'piedra', arte: '/web/arte/escritorio.webp' },
                 },
                 {
                     id: 'flujos',
@@ -71,7 +74,7 @@ export default function RedaccionPage() {
                         alto: 1385,
                         alt: 'Los flujos de trabajo: la demanda de amparo indirecto en cuatro partes, cada una con los datos que necesita.',
                     },
-                    lamina: { tono: 'tinta', patron: 'roseta' },
+                    lamina: { tono: 'tinta', arte: '/web/arte/biblioteca.webp' },
                 },
             ]}
         >

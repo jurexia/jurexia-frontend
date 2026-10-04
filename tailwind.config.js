@@ -71,6 +71,8 @@ module.exports = {
                 // La letra de lectura de «Estudiar y pensar» (la de los PDF). La
                 // variable sólo existe dentro de /estudiar; fuera cae en Georgia.
                 lectura: ['var(--font-lectura)', 'Newsreader', 'Georgia', 'serif'],
+                // La marca «Iurexia»: Playfair 600 siempre, también dentro de `.web`.
+                marca: ['var(--font-marca)', 'Playfair Display', 'Georgia', 'serif'],
             },
             animation: {
                 'fade-in': 'fadeIn 0.5s ease-out',

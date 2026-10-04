@@ -1,355 +1,121 @@
-'use client';
-
 import Link from 'next/link';
-import { ArrowRight, Zap, Users, Shield, FileSearch, Gavel, FileCheck, Compass, BookOpen, MapPin, CheckCircle, Lock, Eye, Server, TrendingUp, PenTool } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import PieDePagina from '@/components/PieDePagina';
+import BotonProbar from '@/components/BotonProbar';
+import Lamina from '@/components/web/Lamina';
+import { BloqueSeguridad, Captura, CierreCTA } from '@/components/web/bloques';
+import { Antetitulo, Boton, clasesBoton, Entrada, Seccion, Titulo } from '@/components/web/sistema';
+import { MATERIAS, PERFILES } from '@/lib/soluciones';
+import { claseWeb } from '@/lib/fuentes-web';
 
-import { Antetitulo, Boton, clasesBoton, Seccion } from '@/components/web/sistema';
-import { CierreCTA } from '@/components/web/bloques';
+/* ═══ /SOLUCIONES (rehecha el 3-oct-2026, segunda vuelta) ═══
+   Antes: una página con tarjetas de iconos que repetían la plataforma. Ahora
+   es el índice que Harvey tiene en «Solutions»: por perfil (quién lo usa) y
+   por materia (para qué práctica), y cada tarjeta lleva a su página
+   (/soluciones/[slug], con los datos en src/lib/soluciones.ts). Connect, que
+   salió de la portada, vive aquí. */
+
 export default function SolucionesPage() {
     return (
-        <main className="min-h-screen bg-cream-300">
+        <main className={`${claseWeb} min-h-screen bg-cream-300`}>
             <Navbar />
 
-            {/* Hero Section */}
-            <section className="pt-32 pb-20 px-4">
-                <div className="max-w-5xl mx-auto text-center">
-                    <AnimateOnScroll delay={0}>
-                        <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">SOLUCIONES</p>
-                    </AnimateOnScroll>
-                    <AnimateOnScroll delay={0.1}>
-                        <h1 className="font-serif text-[2.6rem] leading-[1.05] sm:text-display-l lg:text-display-xl font-normal text-tinta mb-8 [text-wrap:balance]">
-                            Del rezago a la
-                            <br />
-                            estrategia legal
-                        </h1>
-                    </AnimateOnScroll>
-                    <AnimateOnScroll delay={0.2}>
-                        <p className="text-xl text-piedra-700 max-w-3xl mx-auto mb-12">
-                            Iurexia transforma tareas rutinarias en ventajas estratégicas para tu práctica jurídica.
-                            Acelera tu trabajo legal con precisión y fundamento.
-                        </p>
-                    </AnimateOnScroll>
-                </div>
-            </section>
-
-            {/* Three Key Benefits */}
-            <section className="py-16 bg-white border-t border-black/5 overflow-hidden">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {[
-                            { icon: <Zap className="w-8 h-8" />, title: 'Optimiza procesos repetitivos', description: 'Libera tiempo de tareas de alto volumen para enfocarte en iniciativas de alto impacto que impulsen decisiones, gestionen riesgos y acompañen la ejecución de estrategias.' },
-                            { icon: <Users className="w-8 h-8" />, title: 'Amplía tu alcance profesional', description: 'Atiende más materias, jurisdicciones y clientes sin fragmentar herramientas. Una sola plataforma para todo el derecho mexicano.' },
-                            { icon: <Shield className="w-8 h-8" />, title: 'Crece con certeza jurídica', description: 'Fundamenta decisiones rápidas y claras para clientes que innovan: cierra negocios, integra proveedores y lanza proyectos con respaldo legal sólido.' },
-                        ].map((card, i) => (
-                            <AnimateOnScroll key={card.title} delay={i * 0.15}>
-                                <BenefitCard {...card} />
-                            </AnimateOnScroll>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ── Por perfil ──
-                Añadido el 3-ago-2026. Es lo que la página no tenía y Harvey sí:
-                que cada visitante se reconozca en una línea antes de leer nada
-                más. Los cinco perfiles son los que la plataforma atiende de
-                verdad —el de secretarios existe como plan (ultra_secretarios) y
-                tiene su propia herramienta, el redactor de sentencias. */}
-            <section className="py-20 bg-cream-300 border-t border-black/5">
-                <div className="max-w-6xl mx-auto px-4">
-                    <AnimateOnScroll>
-                        <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-3 text-center [text-wrap:balance]">
-                            Encuentra tu perfil
-                        </h2>
-                        <p className="text-center text-piedra-700 mb-12 max-w-2xl mx-auto">
-                            La misma base de datos, distintas formas de trabajarla.
-                        </p>
-                    </AnimateOnScroll>
-
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {[
-                            {
-                                perfil: 'Litigante',
-                                titulo: 'Gana el argumento antes de escribirlo',
-                                texto: 'Precedentes de Tribunales Colegiados, jurisprudencia y la legislación de tu estado, con el artículo citado y su documento oficial.',
-                                herramientas: ['Precedentes', 'Jurimetría', 'Escrito legal'],
-                            },
-                            {
-                                perfil: 'Despacho',
-                                titulo: 'Más asuntos sin más nómina',
-                                texto: 'Reduce las horas no facturables de investigación y redacción. Cada abogado atiende más materias y más jurisdicciones sin cambiar de herramienta.',
-                                herramientas: ['Carpetas', 'Redacción Pro', 'Análisis'],
-                            },
-                            {
-                                perfil: 'Abogado in-house',
-                                titulo: 'Resuelve dentro antes de pagar fuera',
-                                texto: 'Responde a las consultas de las demás áreas con fundamento propio y baja el gasto en despachos externos en las primeras fases.',
-                                herramientas: ['Fuentes', 'Normativa', 'Carpetas'],
-                            },
-                            {
-                                perfil: 'Secretario del PJF',
-                                titulo: 'Del expediente al proyecto',
-                                texto: 'Un borrador de sentencia estructurado a partir del acto reclamado y los agravios, con los precedentes del circuito a la vista.',
-                                herramientas: ['Redactor de sentencias', 'Precedentes'],
-                                beta: true,
-                            },
-                            {
-                                perfil: 'Persona sin abogado',
-                                titulo: 'Entiende dónde estás parado',
-                                texto: 'Explicaciones en lenguaje llano sobre tu situación, los pasos posibles y, cuando hace falta, un abogado verificado.',
-                                herramientas: ['Chat', 'Connect'],
-                            },
-                            {
-                                perfil: 'Urgencia',
-                                titulo: 'Un amparo cuando no hay tiempo',
-                                texto: 'Sálvame redacta una demanda de amparo indirecto para una detención en curso, lista para presentar.',
-                                herramientas: ['Sálvame'],
-                                urgente: true,
-                            },
-                        ].map((p, i) => (
-                            <AnimateOnScroll key={p.perfil} delay={i * 0.08}>
-                                <div className={`h-full rounded-xl border bg-white p-6 transition-colors duration-300 ${
-                                    p.urgente
-                                        ? 'border-red-700/20 hover:border-red-700/40'
-                                        : 'border-cream-400 hover:border-accent-gold/50'
-                                }`}>
-                                    <div className="mb-3 flex items-center gap-2">
-                                        <span className={`text-[11px] font-semibold uppercase tracking-[0.12em] ${p.urgente ? 'text-charcoal-800' : 'text-accent-brown'}`}>
-                                            {p.perfil}
-                                        </span>
-                                        {p.beta && (
-                                            <span className="rounded border border-accent-gold/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-gold">
-                                                Beta
-                                            </span>
-                                        )}
-                                    </div>
-                                    <h3 className="font-serif text-xl font-normal text-tinta mb-2.5">{p.titulo}</h3>
-                                    <p className="text-[0.9375rem] leading-relaxed text-piedra-700 mb-4">{p.texto}</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {p.herramientas.map((h) => (
-                                            <span key={h} className="rounded-md border border-charcoal-900/10 px-2 py-1 text-[11px] font-medium text-charcoal-700">
-                                                {h}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </AnimateOnScroll>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Use Cases Section */}
-            <section className="py-24 bg-cream-300 overflow-hidden">
-                <div className="max-w-6xl mx-auto px-4">
-                    <AnimateOnScroll>
-                        <div className="text-center mb-16">
-                            <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">APLICACIONES</p>
-                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-6 [text-wrap:balance]">
-                                Cómo usan Iurexia los profesionales
-                            </h2>
-                            <p className="text-xl text-piedra-700 max-w-2xl mx-auto">
-                                Desde investigación hasta análisis de demandas, Iurexia potencia cada etapa del trabajo legal.
-                            </p>
-                        </div>
-                    </AnimateOnScroll>
-
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[
-                            { icon: <FileSearch className="w-6 h-6" />, title: 'Síntesis de información', description: 'Analiza contratos, actualizaciones regulatorias y hallazgos clave para decisiones informadas, con citas verificables de documentos fuente.' },
-                            { icon: <Gavel className="w-6 h-6" />, title: 'Litigio y gestión de riesgos', description: 'Recibe insights sobre estrategias recomendadas para litigio, e identifica responsabilidades y riesgos potenciales en tu caso.' },
-                            { icon: <FileCheck className="w-6 h-6" />, title: 'Cumplimiento normativo', description: 'Analiza regulaciones vigentes, rastrea cambios en el tiempo y asegura que políticas internas estén alineadas con requisitos legales.' },
-                            { icon: <BookOpen className="w-6 h-6" />, title: 'Análisis de demandas', description: 'Revisa demandas contra criterios específicos, identifica fortalezas, debilidades y recibe sugerencias de mejora con fundamento.' },
-                            { icon: <MapPin className="w-6 h-6" />, title: 'Investigación jurisprudencial', description: 'Encuentra tesis y jurisprudencia aplicable con precisión milimétrica, filtrada por jurisdicción y materia.' },
-                            { icon: <Compass className="w-6 h-6" />, title: 'Orientación para no-abogados', description: 'Ubica situaciones jurídicas, explica rutas posibles y organiza información para que un abogado ejecute con claridad.' },
-                            { icon: <BookOpen className="w-6 h-6" />, title: 'Precedentes Judiciales', description: 'Busca entre 111,000+ sentencias reales de Tribunales Colegiados. Encuentra el precedente exacto por materia, acto reclamado o sentido del fallo — el corpus crece cada mes.' },
-                            { icon: <PenTool className="w-6 h-6" />, title: 'Redacción Pro', description: 'Motor de razonamiento profundo que genera textos legales de calidad significativamente superior: argumentación coherente, subsunción jurídica completa y prosa de nivel SCJN. Exclusivo Pro y Platinum.' },
-                            { icon: <TrendingUp className="w-6 h-6" />, title: 'Jurimetría predictiva', description: 'Sube el acto reclamado y los agravios: la IA predice el sentido probable (Concede / Niega / Sobresee) con estadísticas reales de precedentes, análisis argumento por argumento y narrativa judicial. Exclusivo Platinum.' },
-                        ].map((card, i) => (
-                            <AnimateOnScroll key={card.title} delay={i * 0.1}>
-                                <UseCaseCard {...card} />
-                            </AnimateOnScroll>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Platform Features */}
-            <section className="py-24 bg-charcoal-900 text-white overflow-hidden">
-                <div className="max-w-6xl mx-auto px-4">
-                    <AnimateOnScroll>
-                        <div className="text-center mb-16">
-                            <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-white/55">PLATAFORMA</p>
-                            <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal mb-6 [text-wrap:balance]">
-                                Herramientas diseñadas para el éxito
-                            </h2>
-                            <p className="text-xl text-white/55 max-w-2xl mx-auto">
-                                Cada funcionalidad de Iurexia está construida específicamente para el sistema jurídico mexicano.
-                            </p>
-                        </div>
-                    </AnimateOnScroll>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {[
-                            { title: 'Búsqueda Híbrida', description: 'Combina búsqueda semántica con precisión técnica para encontrar exactamente lo que necesitas.', href: '/plataforma#busqueda-hibrida' },
-                            { title: 'Agente de Análisis', description: 'Analiza demandas y documentos automáticamente, identificando fortalezas, debilidades y oportunidades.', href: '/plataforma#agente-analisis' },
-                            { title: 'Filtros Jurisdiccionales', description: 'Resultados precisos por estado. Solo la normativa aplicable a tu jurisdicción, más la federal.', href: '/plataforma#filtros-jurisdiccionales' },
-                            { title: 'Precedentes Judiciales', description: 'Corpus vivo de 111K+ sentencias reales con búsqueda semántica. Encuentra el precedente exacto para fundamentar tu estrategia.', href: '/plataforma#precedentes' },
-                            { title: 'Redacción Pro', description: 'Motor de razonamiento profundo que genera argumentaciones de nivel SCJN. Calidad significativamente superior al modo normal. Exclusivo Pro y Platinum.', href: '/plataforma#redaccion-pro' },
-                            { title: 'Jurimetría', description: 'Predicción estadística del sentido probable de un amparo basada en precedentes reales. Exclusivo Platinum.', href: '/plataforma#jurimetria' },
-                        ].map((card, i) => (
-                            <AnimateOnScroll key={card.title} delay={i * 0.15}>
-                                <PlatformFeatureCard {...card} />
-                            </AnimateOnScroll>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Security Section */}
-            <section className="py-16 bg-white border-t border-black/5 overflow-hidden">
-                <div className="max-w-6xl mx-auto px-4">
-                    <AnimateOnScroll>
-                        <div className="text-center mb-12">
-                            <h3 className="font-serif text-2xl md:text-3xl font-normal text-tinta mb-4">
-                                Seguridad de nivel empresarial
-                            </h3>
-                            <p className="text-piedra-700 max-w-2xl mx-auto">
-                                Iurexia cumple con los estándares más altos de seguridad y privacidad para proteger tu información.
-                            </p>
-                        </div>
-                    </AnimateOnScroll>
-
-                    <div className="flex flex-wrap justify-center gap-6 md:gap-12">
-                        {[
-                            { icon: <Lock className="w-5 h-5" />, label: 'Cifrado TLS 256-bit' },
-                            { icon: <Eye className="w-5 h-5" />, label: 'Sin entrenamiento en tus datos' },
-                            { icon: <Server className="w-5 h-5" />, label: 'Datos protegidos' },
-                            { icon: <Shield className="w-5 h-5" />, label: 'Pagos seguros con Stripe' },
-                        ].map((badge, i) => (
-                            <AnimateOnScroll key={badge.label} delay={i * 0.1} direction="scale">
-                                <SecurityBadge {...badge} />
-                            </AnimateOnScroll>
-                        ))}
-                    </div>
-
-                    <AnimateOnScroll delay={0.4}>
-                        <div className="text-center mt-8">
-                            <Link
-                                href="/seguridad"
-                                className="text-accent-brown font-medium hover:underline inline-flex items-center gap-1"
-                            >
-                                Más sobre seguridad
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-                    </AnimateOnScroll>
-                </div>
-            </section>
-
-            {/* Premium Legal Assistance Section */}
-            <section className="py-24 bg-cream-200 border-t border-accent-gold/20 overflow-hidden">
-                <div className="max-w-6xl mx-auto px-4">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        {/* Content */}
-                        <AnimateOnScroll direction="left">
-                            <div>
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-gold text-charcoal-900 text-sm font-semibold rounded-lg mb-6">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    EXCLUSIVO PLATINUM
-                                </div>
-                                <h2 className="font-serif text-[2.1rem] leading-[1.1] sm:text-display-m font-normal text-tinta mb-6 [text-wrap:balance]">
-                                    Asesoría legal
-                                    <br />
-                                    
-                                        personalizada
-                                    
-                                </h2>
-                                <p className="text-lg text-piedra-700 mb-8 leading-relaxed">
-                                    Más allá de la tecnología, Iurexia te conecta con <strong>abogados altamente especializados</strong> que refinan contigo la estrategia legal que ideaste en la plataforma. Una consulta directa desde la plataforma para pulir cada detalle de tu caso.
-                                </p>
-
-                                <div className="space-y-4 mb-8">
-                                    {[
-                                        { icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', title: 'Consulta directa mediante la plataforma', desc: 'Escribe a un especialista que conoce tu caso y afina tu estrategia directamente desde Iurexia.' },
-                                        { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', title: 'Contrato de servicios profesionales', desc: 'Formalidad y respaldo legal en cada interacción con el equipo de Iurexia.' },
-                                        { icon: 'M13 10V3L4 14h7v7l9-11h-7z', title: 'Experiencia especializada', desc: 'Abogados con dominio profundo del derecho mexicano para orientarte con precisión.' },
-                                    ].map((item, i) => (
-                                        <AnimateOnScroll key={i} delay={0.2 + i * 0.1}>
-                                            <div className="flex items-start gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0">
-                                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-medium text-charcoal-900">{item.title}</h4>
-                                                    <p className="text-piedra-700 text-sm">{item.desc}</p>
-                                                </div>
-                                            </div>
-                                        </AnimateOnScroll>
-                                    ))}
-                                </div>
-
-                                <Link
-                                    href="/precios"
-                                    className={clasesBoton()}
-                                >
-                                    Conocer Plan Platinum
-                                    <ArrowRight className="w-5 h-5" />
-                                </Link>
+            {/* La promesa */}
+            <section className="pt-28 sm:pt-32">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <Antetitulo className="mb-5">Soluciones</Antetitulo>
+                    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
+                        <Titulo como="h1" escala="portada" className="aparecer">Para cada práctica y cada perfil</Titulo>
+                        <div>
+                            <Entrada>
+                                Litigantes, despachos, áreas jurídicas de empresa, estudiantes y el Poder Judicial: cada uno
+                                usa Iurexia a su manera, sobre el mismo derecho mexicano verificado.
+                            </Entrada>
+                            <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row">
+                                <BotonProbar className={clasesBoton()} sub="Sin correo, sin tarjeta." subClassName="text-xs text-piedra-600">
+                                    Probar sin registrarme
+                                </BotonProbar>
+                                <Boton href="/precios" variante="secundario">Ver planes</Boton>
                             </div>
-                        </AnimateOnScroll>
-
-                        {/* Visual Element */}
-                        <AnimateOnScroll direction="right" delay={0.2}>
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-accent-gold/15 rounded-3xl blur-3xl"></div>
-                                <div className="relative bg-white rounded-3xl p-8 shadow-xl border border-accent-gold/20">
-                                    <div className="text-center mb-6">
-                                        <div className="w-20 h-20 mx-auto rounded-full bg-accent-gold/10 flex items-center justify-center mb-4">
-                                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="font-serif text-2xl font-normal text-tinta mb-2">
-                                            Equipo Legal Iurexia
-                                        </h3>
-                                        <p className="text-piedra-600 text-sm">
-                                            Especialistas a tu disposición
-                                        </p>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-3 p-4 bg-accent-gold/[0.07] rounded-xl">
-                                            <div className="w-3 h-3 rounded-full bg-charcoal-900 animate-pulse"></div>
-                                            <span className="text-charcoal-700 font-medium">Disponible para consultas</span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4 text-center">
-                                            <div className="p-4 bg-piedra-50 rounded-xl">
-                                                <p className="text-2xl font-bold text-charcoal-900">VIP</p>
-                                                <p className="text-xs text-piedra-600">Soporte dedicado</p>
-                                            </div>
-                                            <div className="p-4 bg-piedra-50 rounded-xl">
-                                                <p className="text-2xl font-bold text-charcoal-900">700</p>
-                                                <p className="text-xs text-piedra-600">Consultas/mes</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </AnimateOnScroll>
+                        </div>
                     </div>
+                    <Lamina tono="piedra" arte="/web/arte/fachada.webp" prioridad className="mt-14 rounded-2xl">
+                        <div className="px-4 pt-8 sm:px-12 sm:pt-14 lg:px-20">
+                            <div className="mx-auto max-w-5xl translate-y-px">
+                                <Captura
+                                    src="/web/producto/carpetas.webp"
+                                    alt="Mis carpetas inteligentes: cada asunto con sus documentos y su avance."
+                                    ancho={2000}
+                                    alto={1250}
+                                    barra="iurexia.com/carpetas"
+                                    prioridad
+                                />
+                            </div>
+                        </div>
+                    </Lamina>
                 </div>
             </section>
 
-            {/* ── Iurexia Connect (se mudó aquí desde la portada el 3-oct-2026) ── */}
-            <Seccion tono="blanco" espacio="normal" className="border-t border-tinta/[0.07]">
+            {/* Por perfil */}
+            <Seccion tono="marfil" espacio="amplio">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <Antetitulo className="mb-4">Por perfil</Antetitulo>
+                        <Titulo escala="bloque">Quién trabaja con Iurexia</Titulo>
+                    </div>
+                </div>
+                <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+                    {PERFILES.map((p) => (
+                        <Link key={p.slug} href={`/soluciones/${p.slug}`} className="group flex flex-col overflow-hidden rounded-xl border border-tinta/10 bg-white transition-colors hover:border-tinta/25">
+                            <div className="aspect-[4/3] overflow-hidden bg-piedra-100">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={p.arte} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                            </div>
+                            <div className="flex flex-1 flex-col p-5">
+                                <p className="font-serif text-xl font-normal text-tinta">{p.nombre}</p>
+                                <p className="mt-2 flex-1 text-[14px] leading-relaxed text-piedra-600">{p.resumen}</p>
+                                <span className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-tinta group-hover:underline group-hover:underline-offset-4">
+                                    Conocer <ArrowRight className="h-4 w-4" aria-hidden />
+                                </span>
+                            </div>
+                        </Link>
+                    ))}
+                    <Link href="/secretarios" className="group flex flex-col overflow-hidden rounded-xl border border-tinta/10 bg-white transition-colors hover:border-tinta/25">
+                        <div className="aspect-[4/3] overflow-hidden bg-tinta">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/web/arte/columnata.webp" alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                        </div>
+                        <div className="flex flex-1 flex-col p-5">
+                            <p className="font-serif text-xl font-normal text-tinta">Poder Judicial</p>
+                            <p className="mt-2 flex-1 text-[14px] leading-relaxed text-piedra-600">El taller de sentencias del secretario, con su propio plan para servidores públicos.</p>
+                            <span className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-tinta group-hover:underline group-hover:underline-offset-4">
+                                Conocer <ArrowRight className="h-4 w-4" aria-hidden />
+                            </span>
+                        </div>
+                    </Link>
+                </div>
+            </Seccion>
+
+            {/* Por materia */}
+            <Seccion tono="blanco" espacio="amplio">
+                <Antetitulo className="mb-4">Por materia</Antetitulo>
+                <Titulo escala="bloque" className="max-w-2xl">La práctica que llevas, con su ley y su jurisprudencia</Titulo>
+                <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-tinta/10 bg-tinta/10 sm:grid-cols-2 lg:grid-cols-3">
+                    {MATERIAS.map((m) => (
+                        <Link key={m.slug} href={`/soluciones/${m.slug}`} className="group flex flex-col bg-white p-7 transition-colors hover:bg-cream-300">
+                            <p className="font-serif text-[1.75rem] font-normal leading-tight text-tinta">{m.nombre}</p>
+                            <p className="mt-3 flex-1 text-[14.5px] leading-relaxed text-piedra-600">{m.resumen}</p>
+                            <span className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-tinta group-hover:underline group-hover:underline-offset-4">
+                                Conocer <ArrowRight className="h-4 w-4" aria-hidden />
+                            </span>
+                        </Link>
+                    ))}
+                </div>
+            </Seccion>
+
+            {/* Iurexia Connect (se mudó aquí desde la portada) */}
+            <Seccion tono="marfil" espacio="normal" className="border-t border-tinta/[0.07]">
                 <div className="grid items-center gap-10 md:grid-cols-[1fr_auto]">
                     <div>
                         <Antetitulo className="mb-4">Iurexia Connect</Antetitulo>
@@ -357,9 +123,9 @@ export default function SolucionesPage() {
                             Cuando el caso necesita un abogado, no sólo una respuesta
                         </h2>
                         <p className="max-w-xl text-[0.9375rem] leading-relaxed text-piedra-700 sm:text-base">
-                            La orientación con IA resuelve la duda; hay asuntos que además necesitan quien los lleve. Connect
-                            une las dos cosas en un mismo lugar: quien consulta encuentra un abogado con cédula verificada, y
-                            quien ejerce recibe asuntos que ya llegan con el problema planteado.
+                            La orientación con IA resuelve la duda; hay asuntos que además necesitan quien los lleve. Connect une
+                            las dos cosas en un mismo lugar: quien consulta encuentra un abogado con cédula verificada, y quien
+                            ejerce recibe asuntos que ya llegan con el problema planteado.
                         </p>
                     </div>
                     <div className="flex flex-col gap-3">
@@ -369,70 +135,18 @@ export default function SolucionesPage() {
                 </div>
             </Seccion>
 
-            <CierreCTA titulo="Transforma tu práctica legal con IA" entrada="Únete a los profesionales del derecho que ya optimizan su trabajo con Iurexia." />
+            <BloqueSeguridad />
 
-            {/* Nota de uso responsable */}
-            <section className="py-8 bg-cream-200">
-                <div className="max-w-4xl mx-auto text-center px-4">
-                    <p className="text-sm text-piedra-600">
-                        <strong>Nota de uso responsable:</strong> Iurexia no presta servicios legales directamente, ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis; la estrategia y ejecución siempre deben ser acompañadas por un abogado.
-                    </p>
-                </div>
+            <section className="border-t border-white/[0.06] bg-tinta">
+                <p className="mx-auto max-w-4xl px-4 py-8 text-center text-[13px] leading-relaxed text-white/45">
+                    <span className="text-white/70">Nota de uso responsable:</span> Iurexia no presta servicios legales
+                    directamente ni pretende sustituir la asesoría profesional: orienta, organiza y fortalece el análisis;
+                    la estrategia y su ejecución siempre deben ir acompañadas por un abogado.
+                </p>
             </section>
 
-            {/* Footer */}
+            <CierreCTA titulo="Transforma tu práctica legal con IA" entrada="Únete a los profesionales del derecho que ya optimizan su trabajo con Iurexia." />
             <PieDePagina />
         </main>
-    );
-}
-
-/* ───────── Subcomponents ───────── */
-
-function BenefitCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-    return (
-        <div className="p-8 rounded-2xl bg-cream-300 hover:shadow-lg transition-all duration-300">
-            <div className="text-accent-brown mb-4">{icon}</div>
-            <h3 className="font-serif text-xl font-normal text-tinta mb-3">{title}</h3>
-            <p className="text-piedra-700 leading-relaxed">{description}</p>
-        </div>
-    );
-}
-
-function UseCaseCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
-    return (
-        <div className="p-6 bg-white rounded-2xl border border-black/5 hover:shadow-lg hover:border-accent-brown/20 transition-all duration-300">
-            <div className="w-12 h-12 rounded-xl bg-accent-brown/10 flex items-center justify-center text-accent-brown mb-4">
-                {icon}
-            </div>
-            <h3 className="font-serif text-lg font-normal text-tinta mb-2">{title}</h3>
-            <p className="text-sm text-piedra-700 leading-relaxed">{description}</p>
-        </div>
-    );
-}
-
-function PlatformFeatureCard({ title, description, href }: { title: string; description: string; href: string }) {
-    return (
-        <Link
-            href={href}
-            className="block p-8 rounded-2xl bg-charcoal-800 hover:bg-charcoal-700 transition-all duration-300 group"
-        >
-            <h3 className="text-xl font-normal text-white mb-3 group-hover:text-accent-brown transition-colors">
-                {title}
-            </h3>
-            <p className="text-white/55 mb-4">{description}</p>
-            <span className="text-accent-brown font-medium inline-flex items-center gap-1 text-sm">
-                Ver más
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </span>
-        </Link>
-    );
-}
-
-function SecurityBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
-    return (
-        <div className="flex items-center gap-2 text-charcoal-700">
-            <div className="text-accent-gold">{icon}</div>
-            <span className="text-sm font-medium">{label}</span>
-        </div>
     );
 }

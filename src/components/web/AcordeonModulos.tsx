@@ -101,7 +101,7 @@ export default function AcordeonModulos({ items }: { items: ItemModulo[] }) {
             </ul>
 
             <div className="hidden lg:sticky lg:top-28 lg:block">
-                <Lamina tono="tinta" patron="roseta" semilla={5} className="rounded-2xl">
+                <Lamina tono="tinta" arte="/web/arte/grabado.webp" className="rounded-2xl">
                     <div className="flex aspect-[16/11] items-center justify-center p-8 xl:p-10">
                         {items.map((it, i) => (
                             <div key={it.id} className={i === activo ? 'flex h-full w-full items-center justify-center' : 'hidden'}>

@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/useAuth';
 import Navbar from '@/components/Navbar';
 
 import { clasesBoton } from '@/components/web/sistema';
+import { claseWeb } from '@/lib/fuentes-web';
 /* Reescrita el 3-ago-2026. La página era la única del sitio en azul: 62
    estilos en línea con hex a mano (#60a5fa, #2563eb, degradados azul→dorado)
    que el barrido de paleta no podía tocar porque no eran clases de Tailwind.
@@ -25,7 +26,7 @@ export default function ConnectPage() {
     };
 
     return (
-        <main className="min-h-screen bg-cream-300">
+        <main className={`${claseWeb} min-h-screen bg-cream-300`}>
             <Navbar />
 
             {/* ── Hero ── */}

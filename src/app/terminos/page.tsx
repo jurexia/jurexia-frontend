@@ -5,11 +5,12 @@ import Navbar from '@/components/Navbar';
 import PieDePagina from '@/components/PieDePagina';
 import { Scale } from 'lucide-react';
 
+import { claseWeb } from '@/lib/fuentes-web';
 export default function TerminosPage() {
     const fechaActualizacion = "28 de septiembre de 2026";
 
     return (
-        <main className="min-h-screen bg-cream-300">
+        <main className={`${claseWeb} min-h-screen bg-cream-300`}>
             {/* La barra de la web, la misma de todas las páginas (3-oct-2026).
                 Antes ésta llevaba la suya: la marca y «Volver al inicio». */}
             <Navbar />

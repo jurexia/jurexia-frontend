@@ -13,6 +13,7 @@ import Image from 'next/image';
 import PieDePagina from '@/components/PieDePagina';
 
 import { clasesBoton } from '@/components/web/sistema';
+import { claseWeb } from '@/lib/fuentes-web';
 /* ═══════════════════════════════════════════════════════════════════════════
    SUSCRIBIRSE A ULTRA SECRETARIOS
    ═══════════════════════════════════════════════════════════════════════════
@@ -68,7 +69,7 @@ export default function PreciosPage() {
     const isAnnual = billingPeriod === 'annual';
 
     return (
-        <main className="min-h-screen bg-cream-300">
+        <main className={`${claseWeb} min-h-screen bg-cream-300`}>
             <Navbar />
 
             {/* Hero Section */}
@@ -362,7 +363,7 @@ export default function PreciosPage() {
                                         </p>
                                         <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0f0e0d] p-4 shadow-[0_20px_50px_-24px_rgba(0,0,0,0.9)]">
                                             <div className="flex items-center gap-2 border-b border-white/[0.07] pb-2.5">
-                                                <span className="font-serif text-[13px] font-semibold text-white">
+                                                <span className="font-marca text-[13px] font-semibold text-white">
                                                     Iurex<span className="text-accent-gold">ia</span>
                                                 </span>
                                                 <span className="text-[9px] uppercase tracking-[0.14em] text-white/40">

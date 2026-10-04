@@ -6,7 +6,8 @@ export const metadata: Metadata = {
     title: 'Planes y precios | Iurexia',
     description: 'Empieza gratis. Planes Básico, Pro y Platinum para investigación, redacción y flujos de trabajo jurídicos en México.',
     alternates: { canonical: '/precios' },
-    openGraph: { siteName: 'Iurexia', locale: 'es_MX', type: 'website', images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Iurexia' }], title: 'Planes y precios | Iurexia', description: 'Empieza gratis. Planes Básico, Pro y Platinum para investigación, redacción y flujos de trabajo jurídicos en México.', url: '/precios' },
+    openGraph: { siteName: 'Iurexia', locale: 'es_MX', type: 'website', images: [{ url: '/og/precios.jpg', width: 1200, height: 630, alt: 'Iurexia' }], title: 'Planes y precios | Iurexia', description: 'Empieza gratis. Planes Básico, Pro y Platinum para investigación, redacción y flujos de trabajo jurídicos en México.', url: '/precios' },
+    twitter: { card: 'summary_large_image', images: ['/og/precios.jpg'] },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

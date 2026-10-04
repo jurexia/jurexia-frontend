@@ -11,7 +11,8 @@ export const metadata: Metadata = {
     title: TITULO,
     description: DESCRIPCION,
     alternates: { canonical: '/plataforma/consulta' },
-    openGraph: { siteName: 'Iurexia', locale: 'es_MX', type: 'website', images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Iurexia' }], title: TITULO, description: DESCRIPCION, url: '/plataforma/consulta' },
+    openGraph: { siteName: 'Iurexia', locale: 'es_MX', type: 'website', images: [{ url: '/og/consulta.jpg', width: 1200, height: 630, alt: 'Iurexia' }], title: TITULO, description: DESCRIPCION, url: '/plataforma/consulta' },
+    twitter: { card: 'summary_large_image', images: ['/og/consulta.jpg'] },
 };
 
 /* Preguntas reales de la cuenta demo: las mismas que se ven en las capturas. */
@@ -28,6 +29,7 @@ export default function ConsultaPage() {
             ruta="/plataforma/consulta"
             nombre="Consulta"
             titulo="Cada respuesta, con su fuente"
+            heroArte="/web/arte/biblioteca.webp"
             entrada="Pregunta como se lo plantearías a un colega. Iurexia fija la jurisdicción, recorre la legislación federal y de las 32 entidades, la jurisprudencia y los precedentes, y responde con cada cita verificada contra su documento oficial."
             visual={{
                 tipo: 'imagen',
@@ -55,6 +57,7 @@ export default function ConsultaPage() {
                         alto: 1406,
                         alt: 'El visor de la fuente: el artículo 19 de la Constitución resaltado en la página 23 de 414 del PDF oficial, con los botones para descargar, imprimir o abrir en otra pestaña.',
                     },
+                    lamina: { tono: 'piedra', arte: '/web/arte/manuscrito.webp' },
                 },
                 {
                     id: 'busqueda-hibrida',
@@ -67,7 +70,7 @@ export default function ConsultaPage() {
                         'Bloque de constitucionalidad: tratados y criterios de la Corte Interamericana',
                     ],
                     visual: { tipo: 'video', src: '/demo/consulta.mp4', poster: '/demo/consulta-poster.jpg' },
-                    lamina: { tono: 'tinta', patron: 'roseta' },
+                    lamina: { tono: 'tinta', arte: '/web/arte/columnata.webp' },
                 },
                 {
                     id: 'precedentes',
@@ -83,6 +86,7 @@ export default function ConsultaPage() {
                             </div>
                         ),
                     },
+                    lamina: { tono: 'piedra', arte: '/web/arte/fachada.webp' },
                 },
             ]}
         >

@@ -6,7 +6,8 @@ export const metadata: Metadata = {
     title: 'Seguridad y privacidad | Iurexia',
     description: 'Cómo protege Iurexia tus consultas y documentos: cifrado en tránsito, sin entrenamiento con tus datos y borrado cuando tú quieras.',
     alternates: { canonical: '/seguridad' },
-    openGraph: { siteName: 'Iurexia', locale: 'es_MX', type: 'website', images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Iurexia' }], title: 'Seguridad y privacidad | Iurexia', description: 'Cómo protege Iurexia tus consultas y documentos: cifrado en tránsito, sin entrenamiento con tus datos y borrado cuando tú quieras.', url: '/seguridad' },
+    openGraph: { siteName: 'Iurexia', locale: 'es_MX', type: 'website', images: [{ url: '/og/seguridad.jpg', width: 1200, height: 630, alt: 'Iurexia' }], title: 'Seguridad y privacidad | Iurexia', description: 'Cómo protege Iurexia tus consultas y documentos: cifrado en tránsito, sin entrenamiento con tus datos y borrado cuando tú quieras.', url: '/seguridad' },
+    twitter: { card: 'summary_large_image', images: ['/og/seguridad.jpg'] },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

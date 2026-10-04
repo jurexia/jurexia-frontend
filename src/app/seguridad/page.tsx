@@ -8,43 +8,36 @@ import { AnimateOnScroll } from '@/hooks/useScrollAnimation';
 import PieDePagina from '@/components/PieDePagina';
 
 import { clasesBoton } from '@/components/web/sistema';
+import Lamina from '@/components/web/Lamina';
+import { claseWeb } from '@/lib/fuentes-web';
 /* ───────── Page ───────── */
 export default function SeguridadPage() {
     return (
-        <main className="min-h-screen bg-cream-300">
+        <main className={`${claseWeb} min-h-screen bg-cream-300`}>
             <Navbar />
 
-            {/* Hero Section */}
-            <section className="pt-32 pb-20 px-4">
-                <div className="max-w-5xl mx-auto text-center">
-                    <AnimateOnScroll delay={0}>
-                        <p className="mb-4 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">SEGURIDAD</p>
-                    </AnimateOnScroll>
-                    <AnimateOnScroll delay={0.1}>
-                        <h1 className="font-serif text-[2.6rem] leading-[1.05] sm:text-display-l lg:text-display-xl font-normal text-tinta mb-8 [text-wrap:balance]">
-                            Protección de
-                            <br />
-                            nivel empresarial
+            {/* La promesa (segunda vuelta del rediseño, 3-oct-2026: la cabecera de
+                las demás páginas; los textos y los sellos son los mismos de antes) */}
+            <section className="pt-28 sm:pt-32">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <p className="mb-5 text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">Seguridad</p>
+                    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
+                        <h1 className="aparecer font-serif text-[2.6rem] font-normal leading-[1.05] tracking-[-0.02em] text-tinta [text-wrap:balance] sm:text-display-l lg:text-display-xl">
+                            Protección de nivel empresarial
                         </h1>
-                    </AnimateOnScroll>
-                    <AnimateOnScroll delay={0.2}>
-                        <p className="text-xl text-piedra-700 max-w-3xl mx-auto mb-12">
+                        <p className="aparecer text-[1.0625rem] leading-relaxed text-piedra-700 [animation-delay:120ms] sm:text-lg">
                             Tu información legal es confidencial. Iurexia está diseñada con los más altos estándares de seguridad para proteger tus consultas, documentos y transacciones.
                         </p>
-                    </AnimateOnScroll>
-                </div>
-            </section>
-
-            {/* Security Badges */}
-            <section className="py-8 bg-charcoal-900 overflow-hidden">
-                <div className="max-w-5xl mx-auto px-4">
-                    <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-                        {['Cifrado TLS 256-bit', 'Datos en México', 'Pagos seguros con Stripe', 'Sin entrenamiento en tus datos'].map((label, i) => (
-                            <AnimateOnScroll key={label} delay={i * 0.1} direction="scale">
-                                <SecurityBadge label={label} />
-                            </AnimateOnScroll>
-                        ))}
                     </div>
+                    <Lamina tono="tinta" arte="/web/arte/columnata.webp" velo="suave" prioridad className="mt-14 rounded-2xl">
+                        <div className="grid gap-3 p-6 sm:grid-cols-2 sm:p-12 lg:grid-cols-4 lg:p-16">
+                            {['Cifrado TLS 256-bit', 'Datos en México', 'Pagos seguros con Stripe', 'Sin entrenamiento en tus datos'].map((label) => (
+                                <div key={label} className="flex min-h-[8rem] items-end rounded-xl bg-tinta/70 p-6 ring-1 ring-white/10 backdrop-blur-sm">
+                                    <p className="font-serif text-[1.35rem] font-normal leading-snug text-cream-100">{label}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </Lamina>
                 </div>
             </section>
 

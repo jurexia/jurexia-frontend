@@ -8,6 +8,7 @@ import VideoEnVista from '@/components/web/VideoEnVista';
 import { BloqueSeguridad, Captura, CierreCTA, Miga, OtrosModulos } from '@/components/web/bloques';
 import { Antetitulo, Boton, clasesBoton, Entrada, Seccion, Titulo } from '@/components/web/sistema';
 
+import { claseWeb } from '@/lib/fuentes-web';
 /* ═══ LA PLANTILLA DE CADA MÓDULO (3-oct-2026, fase 3) ═══
    La de harvey.ai para Agents, Vault o Litigation, adaptada: migas; la promesa
    en tres a seis palabras con la explicación al lado; el producto real sobre
@@ -27,7 +28,7 @@ export type FilaModulo = {
     texto: ReactNode;
     puntos?: string[];
     visual: Visual;
-    lamina?: { tono?: TonoLamina; patron?: Patron; semilla?: number };
+    lamina?: { tono?: TonoLamina; patron?: Patron; semilla?: number; arte?: string };
 };
 
 export type BeneficioModulo = { Icono: LucideIcon; titulo: string; texto: string };
@@ -66,6 +67,9 @@ export default function PlantillaModulo({
     titulo,
     entrada,
     visual,
+    heroArte,
+    heroTono = 'tinta',
+    migas,
     beneficios,
     filas,
     children,
@@ -77,22 +81,27 @@ export default function PlantillaModulo({
     titulo: string;
     entrada: ReactNode;
     visual: Visual;
+    /** La obra de fondo del producto en la cabecera (public/web/arte). */
+    heroArte?: string;
+    heroTono?: TonoLamina;
+    /** Las migas, si no son «Plataforma › nombre» (las de Soluciones). */
+    migas?: { href?: string; texto: string }[];
     beneficios: BeneficioModulo[];
     filas: FilaModulo[];
     /** Secciones propias del módulo, entre las filas y los cierres. */
     children?: ReactNode;
 }) {
     return (
-        <main className="min-h-screen bg-cream-300">
+        <main className={`${claseWeb} min-h-screen bg-cream-300`}>
             <Navbar />
 
             {/* La promesa y el producto */}
             <section className="pt-28 sm:pt-32">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <Miga pasos={[{ href: '/plataforma', texto: 'Plataforma' }, { texto: nombre }]} />
+                    <Miga pasos={migas ?? [{ href: '/plataforma', texto: 'Plataforma' }, { texto: nombre }]} />
                     <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
-                        <Titulo como="h1" escala="portada">{titulo}</Titulo>
-                        <div>
+                        <Titulo como="h1" escala="portada" className="aparecer">{titulo}</Titulo>
+                        <div className="aparecer [animation-delay:120ms]">
                             <Entrada>{entrada}</Entrada>
                             <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row">
                                 <BotonProbar className={clasesBoton()} sub="Sin correo, sin tarjeta." subClassName="text-xs text-piedra-600">
@@ -102,7 +111,7 @@ export default function PlantillaModulo({
                             </div>
                         </div>
                     </div>
-                    <Lamina tono="tinta" patron="roseta" semilla={ruta.length * 3} className="mt-14 rounded-2xl">
+                    <Lamina tono={heroTono} patron="roseta" semilla={ruta.length * 3} arte={heroArte} prioridad className="mt-14 rounded-2xl">
                         <div className="px-4 pt-8 sm:px-12 sm:pt-14 lg:px-20">
                             <div className="mx-auto max-w-5xl translate-y-px">
                                 <PintarVisual visual={visual} prioridad />
@@ -147,7 +156,7 @@ export default function PlantillaModulo({
                                 )}
                             </div>
                             <div className={invertida ? 'lg:order-1' : ''}>
-                                <Lamina tono={f.lamina?.tono ?? 'piedra'} patron={f.lamina?.patron ?? 'ondas'} semilla={f.lamina?.semilla ?? 13 + i * 7} className="rounded-2xl">
+                                <Lamina tono={f.lamina?.tono ?? 'piedra'} patron={f.lamina?.patron ?? 'ondas'} semilla={f.lamina?.semilla ?? 13 + i * 7} arte={f.lamina?.arte} className="rounded-2xl">
                                     <div className="flex items-center justify-center p-6 sm:p-10">
                                         <div className="w-full">
                                             <PintarVisual visual={f.visual} />
