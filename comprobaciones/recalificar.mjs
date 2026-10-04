@@ -1078,7 +1078,7 @@ const botonDe = (arbol, re) => buscar(arbol, (n) => n.type === 'button' && re.te
     pedidos.length = 0;
     const props2 = baseDecision({ onGenerar: (f) => pedidos.push(f), recalificadas: { p1: FALLO } });
     a = pintarDecision(props2);
-    botonDe(a, /^Generar sentencia en versión moderna$/).props.onClick();
+    botonDe(a, /^o en versión moderna$/).props.onClick();
     a = repintarDecision(props2);
     botonDe(a, /^Generar así$/).props.onClick();
     ok(pedidos.join() === 'moderna', 'la versión moderna detenida sale moderna');
@@ -1271,27 +1271,31 @@ const botonDe = (arbol, re) => buscar(arbol, (n) => n.type === 'button' && re.te
         tocados: new Set(), abrirCorreccion: 0,
         propuesta: { ...baseDecision().propuesta, global: GL, estado: 'lista', formato: 3, preguntas: [] },
     });
+    // UN SOLO CAMINO (4-oct-2026, David: «una vez que confirmo el sentido genero el proyecto y
+    // punto»): la tarjeta ya no genera; «Generar el proyecto» espera a que se confirme el sentido.
     let a = pintarDecision(props);
-    const b = botonDe(a, /^Aceptar y generar$/);
-    ok(!!b, 'con la probabilidad, la tarjeta ofrece «Aceptar y generar»');
-    b.props.onClick();
-    ok(pedidos.length === 0, 'el clic no genera en el acto: espera al pintado siguiente');
+    ok(!botonDe(a, /^Aceptar y generar$/), 'la tarjeta ya no ofrece «Aceptar y generar»');
+    const gen0 = botonDe(a, /^Generar el proyecto$/);
+    ok(!!gen0 && gen0.props.disabled === true, 'sin confirmar el sentido, «Generar el proyecto» está apagado');
+    botonDe(a, /^Confirmar este sentido$/).props.onClick();
     a = repintarDecision(props);
-    ok(vueltas.join() === 'propuesta' && pedidos.join() === 'estandar',
-       'fija la vía propuesta y, en el pintado siguiente, genera la estándar');
-    a = repintarDecision(props);
-    ok(pedidos.length === 1, 'y una sola vez');
-    // Si algo impide generar (los conceptos de un sobreseimiento que se levanta), no genera.
+    ok(vueltas.join() === 'propuesta' && pedidos.length === 0, 'confirmar fija la vía propuesta y no genera por sí solo');
+    const gen1 = botonDe(a, /^Generar el proyecto$/);
+    ok(!!gen1 && !gen1.props.disabled, 'confirmado el sentido, se enciende «Generar el proyecto»');
+    gen1.props.onClick();
+    ok(pedidos.join() === 'estandar', 'y genera la estándar, una vez');
+    // La moderna, en el enlace pequeño.
+    pedidos.length = 0;
+    botonDe(a, /^o en versión moderna$/).props.onClick();
+    ok(pedidos.join() === 'moderna', 'el enlace pequeño genera la versión moderna');
+    // Si algo impide generar (los conceptos de un sobreseimiento que se levanta), no se enciende.
     pedidos.length = 0;
     const p2 = { ...props, propuesta: { ...props.propuesta, necesitaConceptos: true } };
     a = pintarDecision(p2);
-    botonDe(a, /^Aceptar y generar$/).props.onClick();
+    botonDe(a, /^Confirmar este sentido$/).props.onClick();
     a = repintarDecision(p2);
-    ok(pedidos.length === 0, 'si algo impide generar, «Aceptar y generar» no genera (la tarjeta final dice por qué)');
-    // Sin probabilidad (servidor anterior) la tarjeta local no recomienda: no hay botón.
-    const p3 = { ...props, propuesta: { ...props.propuesta, global: { ...GL, probabilidad: null } } };
-    a = pintarDecision(p3);
-    ok(!botonDe(a, /^Aceptar y generar$/), 'sin probabilidad ni recomendación, no hay «Aceptar y generar»');
+    ok(botonDe(a, /^Generar el proyecto$/).props.disabled === true && pedidos.length === 0,
+       'si algo impide generar, confirmar no basta (la tarjeta final dice por qué)');
 }
 
 fs.rmSync(TMP, { recursive: true, force: true });

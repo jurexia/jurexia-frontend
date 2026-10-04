@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Loader2, PenLine, Sparkles, ChevronRight, AlertTriangle, Zap } from 'lucide-react';
+import { Check, Loader2, PenLine, Sparkles, ChevronRight, AlertTriangle } from 'lucide-react';
 import { cn, Pastilla } from './primitivas';
 import type { ProblemaJuridico, TarjetaDecision } from './tipos';
 import type { RespuestaPropuesta, ViaProtectora, FormatoSentencia,
               PropuestaSuplencia, DecisionSuplencia, TesisDelAcervo,
               OrigenDelActoReclamado, RespuestaAPregunta } from './api';
-import { conSentido, esFormatoNuevo } from './api';
+import { conSentido } from './api';
 import PreguntasParaTi from './PreguntasParaTi';
 import { generarDetenidoPorPreguntas } from './trasLasPreguntas';
 import { FINAS, grupoDe, legible } from './calificaciones';
@@ -732,8 +732,17 @@ export default function Decision({
        Con las indispensables sin contestar sólo genera lo que él dictó. */
     const detenidoPorPreguntas = generarDetenidoPorPreguntas({
         esperaRespuestas, enGlobal, globalDictado, problemas, tocados });
+    /* PRIMERO SE CONFIRMA EL SENTIDO (4-oct-2026, David: «una vez que confirmo
+       el sentido genero el proyecto y punto»). Con la propuesta del motor en la
+       tarjeta del principal, el proyecto no se genera con un sentido que nadie
+       confirmó: «Así va a salir» dice que falta ese paso. Problema por problema
+       (sin vías que confirmar) sigue como estaba. */
+    const exigeConfirmar = enGlobal && !!global && !!tarjetaVista?.vias?.propuesta && problemas.length > 0;
+    // Si él dictó el global (su criterio, o lo que contestó a una pregunta),
+    // ya confirmó: no se le pide dos veces.
+    const faltaConfirmar = exigeConfirmar && !viaConfirmada && !globalDictado;
     const puedeGenerar = !generando && !proponiendo && listoParaGenerar && !faltaRazon && !bloqueaConceptos
-        && !detenidoPorPreguntas;
+        && !detenidoPorPreguntas && !faltaConfirmar;
     const alguienSeAparta = enGlobal ? globalSeAparta : seAparta.some(Boolean);
     /* El porcentaje del sentido que viaja en «todo el asunto» (2-oct-2026):
        null sin probabilidad, como antes. */
@@ -849,26 +858,15 @@ export default function Decision({
         setFormatoPulsado(f);
         onGenerar(f);
     };
-    /* ═══ «ACEPTAR Y GENERAR» (2-oct-2026) ═══
-       David: «la propuesta de resolución para que el secretario pueda generar
-       el proyecto en automático». Fija la vía propuesta y genera. NO se
-       encadenan las dos llamadas: el estado que fija `resolverAsi` (la vía, el
-       sentido y la razón de la página) no ha llegado cuando arrancaría la
-       generación —page.tsx lo dice junto a «Genera todo el proyecto»—. Se deja
-       una marca y el efecto genera en el pintado siguiente, con el estado ya
-       puesto; si para entonces algo impide generar (conceptos que faltan, una
-       razón que escribir), no se genera: la pantalla ya bajó a «Así va a salir»,
-       donde se dice por qué. */
-    const [generarTrasAceptar, setGenerarTrasAceptar] = useState(false);
-    const aceptarYGenerar = () => {
-        resolverAsi();
-        setGenerarTrasAceptar(true);
-    };
-    useEffect(() => {
-        if (!generarTrasAceptar) return;
-        setGenerarTrasAceptar(false);
-        if (viaActiva === 'propuesta' && puedeGenerar) generar('estandar');
-    }, [generarTrasAceptar]); // eslint-disable-line react-hooks/exhaustive-deps
+    /* ═══ UN SOLO CAMINO: CONFIRMAR EL SENTIDO Y GENERAR (4-oct-2026) ═══
+       David: «al generar la propuesta hay muchos botones que me posibilitan
+       generar el proyecto. Esto es confuso. Debe ser simple: una vez que
+       confirmo el sentido genero el proyecto y punto. La opción de proyecto en
+       versión moderna sólo dala en un pequeño botón». Se fue «Aceptar y generar»
+       de la tarjeta del principal (2-oct-2026): con él había tres botones que
+       generaban. Ahora la tarjeta sólo confirma el sentido, y el proyecto se
+       genera en un solo sitio —«Así va a salir», donde se ven los puntos
+       resolutivos antes de pulsar—. */
     const generarAsi = () => {
         const f = pedidoDetenido?.formato ?? 'estandar';
         setPendientesVistos(firmaGen);
@@ -914,25 +912,24 @@ export default function Decision({
                     'disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none')}>
             {generando && formatoPulsado === 'estandar'
                 ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {generando && formatoPulsado === 'estandar' ? 'Escribiendo el proyecto…'
-                : alguienSeAparta ? 'Generar con mi criterio'
-                /* «Aceptar» sólo de lo que la tarjeta enseña como propuesta:
-                   con la deliberación, el eco del motor puede ser otra vía. */
-                : global && viaActiva === 'propuesta' ? 'Aceptar y generar el proyecto' : 'Generar el proyecto'}
+            {generando && formatoPulsado === 'estandar' ? 'Escribiendo el proyecto…' : 'Generar el proyecto'}
         </button>
     );
+    /* LA VERSIÓN MODERNA, DISCRETA (4-oct-2026, David: «la opción de proyecto en
+       versión moderna sólo dala en un pequeño botón, que no aparezca como
+       posibilidad a simple vista»). Un enlace pequeño junto al botón; lo que
+       entrega va en su `title`. */
     const botonModerna = (
         <button type="button" onClick={() => generar('moderna')}
                 disabled={!puedeGenerar}
+                title="Versión moderna: atiende el problema central de forma exhaustiva y con menos texto; cada punto abre con su pregunta y enseguida se responde. Consume un proyecto, igual que la estándar."
                 className={cn(
-                    'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-5 py-2 text-center text-[14px] font-semibold leading-snug transition',
-                    'border-accent-gold/45 bg-accent-gold/[0.06] text-accent-gold',
-                    'hover:-translate-y-px hover:border-accent-gold/70 hover:bg-accent-gold/[0.1]',
-                    'disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40')}>
+                    'inline-flex items-center gap-1 px-1 text-[12px] text-white/45 underline-offset-2 transition',
+                    'hover:text-white/75 hover:underline',
+                    'disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline')}>
             {generando && formatoPulsado === 'moderna'
-                ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-            {generando && formatoPulsado === 'moderna'
-                ? 'Escribiendo la versión moderna…' : 'Generar sentencia en versión moderna'}
+                ? <><Loader2 className="h-3 w-3 animate-spin" /> Escribiendo la versión moderna…</>
+                : 'o en versión moderna'}
         </button>
     );
 
@@ -980,9 +977,9 @@ export default function Decision({
                     puedeVerComoSale={listoParaGenerar}
                     origen={origen}
                     probabilidadMotor={global?.probabilidad ?? null}
-                    /* Sólo con el formato 3 (3-oct-2026): con las banderas
-                       apagadas la tarjeta queda como ayer, sin este botón. */
-                    onAceptarYGenerar={global && esFormatoNuevo(propuesta?.formato) ? aceptarYGenerar : undefined}
+                    /* SIN «ACEPTAR Y GENERAR» (4-oct-2026, David: «una vez que
+                       confirmo el sentido genero el proyecto y punto»): la
+                       tarjeta confirma el sentido; se genera en «Así va a salir». */
                     generando={generando}
                     esperaRespuestas={esperaRespuestas} />
             )}
@@ -1606,30 +1603,17 @@ export default function Decision({
                         {botonGenerar(true)}
                         {botonModerna}
                     </div>
-                    {/* QUÉ ENTREGA CADA UNO, dicho antes de pulsar. */}
-                    <dl className="mt-3 grid gap-2 sm:grid-cols-2">
-                        <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3.5 py-2.5">
-                            <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/55">Formato estándar</dt>
-                            <dd className="mt-1 text-[12px] leading-relaxed text-white/60">
-                                Concepto por concepto, con la fórmula del oficio: «Sobre el primer
-                                {esRecurso ? ' agravio' : ' concepto de violación'}, en el que
-                                {esRecurso ? ' la parte recurrente' : ' la quejosa'} sostiene… Se considera
-                                infundado. Lo anterior…». Extensión y resúmenes completos.
-                            </dd>
-                        </div>
-                        <div className="rounded-xl border border-accent-gold/25 bg-accent-gold/[0.04] px-3.5 py-2.5">
-                            <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-accent-gold/85">Versión moderna</dt>
-                            <dd className="mt-1 text-[12px] leading-relaxed text-white/65">
-                                Atiende el problema jurídico central de forma exhaustiva y con
-                                argumentación de alto nivel, pero prescinde de lo irrelevante: cada
-                                punto abre con su pregunta y enseguida se responde. Hechos, sentencia y
-                                {esRecurso ? ' agravios' : ' conceptos'} se sintetizan a lo que es materia
-                                de estudio. Contesta todos los planteamientos, con menos texto.
-                            </dd>
-                        </div>
-                    </dl>
+                    {/* FALTA CONFIRMAR EL SENTIDO (4-oct-2026): se dice junto al
+                        botón, con un enlace a la tarjeta donde se confirma. */}
+                    {faltaConfirmar && (
+                        <p data-falta-confirmar className="mt-2 text-[12px] leading-relaxed text-amber-200/85">
+                            Primero confirma el sentido en la tarjeta del{' '}
+                            <a href="#problema-principal" className="underline underline-offset-2 hover:text-amber-100">problema principal</a>;
+                            después generas aquí el proyecto.
+                        </p>
+                    )}
                     <p className="mt-2 text-[12px] text-white/40">
-                        Cualquiera de las dos consume un proyecto de tu contador.
+                        Generar consume un proyecto de tu contador.
                     </p>
                 </div>
             )}

@@ -335,7 +335,7 @@ export default function ProblemaPrincipal({
     onResolverAsi, onResolverOpuesta, onMiCriterio, onResolverSolucion,
     onRedactarOpuesta, redactando = false,
     onProponer, puedeVerComoSale = false, origen = null,
-    probabilidadMotor = null, onAceptarYGenerar, generando = false, esperaRespuestas = false,
+    probabilidadMotor = null, esperaRespuestas = false,
 }: {
     tarjeta: TarjetaDecision;
     esRecurso: boolean;
@@ -378,9 +378,8 @@ export default function ProblemaPrincipal({
      *  CONTRATO A): el porcentaje si la tarjeta no lo trae, y si la
      *  probabilidad volteó lo que leía el motor. */
     probabilidadMotor?: ProbabilidadDelSentido | null;
-    /** «ACEPTAR Y GENERAR»: fija la vía propuesta y genera el proyecto de una
-     *  vez (2-oct-2026). Sin él no se pinta. */
-    onAceptarYGenerar?: () => void;
+    /** Se generaba desde aquí con «Aceptar y generar» hasta el 4-oct-2026; se
+     *  conserva en el contrato para no romper a quien lo pase. */
     generando?: boolean;
     /** La propuesta espera las respuestas del secretario (estado «preguntas»). */
     esperaRespuestas?: boolean;
@@ -421,7 +420,7 @@ export default function ProblemaPrincipal({
                     doradoAsi ? 'border-accent-gold/45 bg-accent-gold/[0.08] font-semibold text-accent-gold hover:bg-accent-gold/[0.14]'
                               : 'border-white/15 bg-white/[0.05] font-medium text-white/90 hover:bg-white/[0.08]')}>
             {viaElegida && viaActiva === 'propuesta' && <Check className="h-4 w-4" />}
-            {neutras ? 'Resolver por la vía A' : 'Resolver así'}
+            {neutras ? 'Resolver por la vía A' : 'Confirmar este sentido'}
         </button>
     ) : null;
     const botonOpuesta = hayGlobal ? (
@@ -444,21 +443,13 @@ export default function ProblemaPrincipal({
             Resolver con mi criterio
         </button>
     );
-    /* «ACEPTAR Y GENERAR» (2-oct-2026): la propuesta, de un clic hasta el
-       .docx. Va primero y es el único relleno en dorado; «Resolver así» sigue
-       para quien quiere ver antes cómo sale. Sólo cuando la tarjeta
-       recomienda la propuesta: sin recomendación (reñido o no alcanza en un
-       servidor anterior) aceptar a ciegas sería lo que la tarjeta dice que no. */
-    const botonAceptar = recomienda && onAceptarYGenerar ? (
-        <button key="aceptar" type="button" onClick={onAceptarYGenerar} disabled={generando}
-                data-aceptar-y-generar
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-b from-[#e3c98a] to-accent-gold px-4
-                           text-[14px] font-semibold text-charcoal-900 transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40">
-            {generando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {generando ? 'Escribiendo el proyecto…' : 'Aceptar y generar'}
-        </button>
-    ) : null;
-    const botones = noAlcanza ? [botonCriterio, botonAsi, botonOpuesta] : [botonAceptar, botonAsi, botonOpuesta, botonCriterio];
+    /* SIN «ACEPTAR Y GENERAR» (4-oct-2026). David: «al generar la propuesta hay
+       muchos botones que me posibilitan generar el proyecto. Esto es confuso.
+       Debe ser simple: una vez que confirmo el sentido genero el proyecto y
+       punto». La tarjeta confirma el sentido («Confirmar este sentido», «en
+       sentido opuesto» o «con mi criterio»); el proyecto se genera en un solo
+       sitio, «Así va a salir», con los puntos resolutivos a la vista. */
+    const botones = noAlcanza ? [botonCriterio, botonAsi, botonOpuesta] : [botonAsi, botonOpuesta, botonCriterio];
 
     const rotuloVia = viaActiva === 'propuesta' ? 'la propuesta' : viaActiva === 'contraria' ? 'la contraria' : 'tu criterio';
 
@@ -496,6 +487,17 @@ export default function ProblemaPrincipal({
                     )}
                 </p>
             )}
+            {/* QUÉ RESOLVIÓ EL JUZGADO, SI NO SALIÓ DE SUS PUNTOS (4-oct-2026, AR
+                380/2025): las dos vías dependen de ese dato y en la 380 la
+                propuesta confirmó un sobreseimiento que nadie decretó. Se dice
+                arriba y a la vista, no dentro de la burbuja de avisos. */}
+            {(t.ficha?.avisos || []).filter((a) => a.startsWith('COMPRUEBA QUÉ RESOLVIÓ EL JUZGADO')).map((a) => (
+                <p key={a} data-aviso-a-quo role="alert"
+                   className="mt-2 flex gap-1.5 rounded-lg border border-amber-300/40 bg-amber-300/[0.06] px-2.5 py-1.5 text-[12px] leading-relaxed text-amber-100/90">
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
+                    <span>{a}</span>
+                </p>
+            ))}
 
             {/* ── 1 · EL PRINCIPAL ── */}
             {p ? (
@@ -816,8 +818,8 @@ export default function ProblemaPrincipal({
                         lo que viaja sin elegir es el eco del motor: decirlo, no
                         dejar que parezca la misma cosa. */}
                     {viaActiva !== 'propuesta' && propuestaDelJuez(t)
-                        ? 'Mientras no elijas, viaja la propuesta del motor, que no es la de la primera columna: si generas así, sale con la del motor.'
-                        : 'Mientras no elijas, en pantalla está la propuesta del motor: si generas así, sale con ella.'}
+                        ? 'Confirma el sentido para generar: la propuesta del motor no es la de la primera columna.'
+                        : 'Confirma el sentido para generar el proyecto: es el único paso antes de «Generar el proyecto».'}
                 </p>
             )}
             <div className="mt-3 flex gap-2 border-l-2 border-amber-400/40 bg-amber-400/[0.04] py-2 pl-2.5 pr-3">

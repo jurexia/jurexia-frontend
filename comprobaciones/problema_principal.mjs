@@ -433,11 +433,12 @@ const props = (t, extra = {}) => ({
        'A: el rótulo y la pregunta del principal');
     ok(h.includes('Te propongo') && h.includes('¿O resolverías en sentido opuesto?') && !h.includes('Vía A'),
        'A: claro → «Te propongo» y «¿O resolverías…?»');
-    ok(/border-accent-gold/.test(boton(h, 'Resolver así')), 'A: «Resolver así» en oro');
+    // 4-oct-2026: «Resolver así» se llama «Confirmar este sentido» (David: «una vez que confirmo el sentido genero el proyecto»).
+    ok(/border-accent-gold/.test(boton(h, 'Confirmar este sentido')), 'A: «Confirmar este sentido» en oro');
     ok(!/border-accent-gold/.test(boton(h, 'Resolver en sentido opuesto')), 'A: la opuesta en negro');
     ok(h.includes('Resolver con mi criterio'), 'A: el tercer botón');
     const b = fila3(h);
-    ok(b.indexOf('Resolver así') < b.indexOf('Resolver en sentido opuesto')
+    ok(b.indexOf('Confirmar este sentido') < b.indexOf('Resolver en sentido opuesto')
        && b.indexOf('Resolver en sentido opuesto') < b.indexOf('Resolver con mi criterio'), 'A: el orden de los botones');
     ok(chip(h) === 'vía: la propuesta · sin confirmar', 'A: el chip de la vía, sin confirmar');
     const A = columna(h, 'propuesta'), B = columna(h, 'opuesta');
@@ -547,7 +548,7 @@ const props = (t, extra = {}) => ({
 {   /* G · sin propuesta global */
     const h = muestra('G · sin propuesta global', pintar(React.createElement(PP, props(base({ vias: { propuesta: base().vias.propuesta, opuesta: null } }),
                                                    { hayGlobal: false }))));
-    ok(h.includes('El motor propone para este problema') && !h.includes('¿O resolverías') && !h.includes('Resolver así'),
+    ok(h.includes('El motor propone para este problema') && !h.includes('¿O resolverías') && !h.includes('Confirmar este sentido'),
        'G: el principal con su propuesta por problema, sin contraria ni «resolver así»');
     ok(h.includes('Resolver con mi criterio') && h.includes('propuso problema por problema'), 'G: su criterio y el porqué');
     ok(!chip(h), 'G: sin vías no hay chip de vía');
@@ -727,7 +728,7 @@ module.exports = { __R: R, useState, useRef, useEffect, useMemo, useCallback, cr
     ok(chip(h) === 'vía: la contraria · sin confirmar', 'D6: el chip dice lo que viaja (la contraria), no «la propuesta»');
     ok(!h.includes('Aceptar y generar el proyecto') && h.includes('Generar el proyecto'),
        'D6: sin «Aceptar» de una vía que no es la que se enseña como propuesta');
-    ok(h.includes('que no es la de la primera columna'), 'D6: se dice que lo que viaja no es la primera columna');
+    ok(h.includes('no es la de la primera columna'), 'D6: se dice que lo que viaja no es la primera columna');
     const fin = h.slice(h.indexOf('id="asi-sale"'));
     const p2 = fin.slice(fin.indexOf('¿P2?'), fin.indexOf('¿P3?'));
     ok(p2.includes('Infundado') && !p2.includes('innecesario'),
@@ -1011,10 +1012,12 @@ const FICHA_631 = {
     const A = columna(h, 'propuesta');
     ok(A.includes('Te propongo · 68 %') && !h.includes('Vía A') && !h.includes('Vía B'),
        'P: «Te propongo · 68 %» aunque sea reñido; ya no «Vía A / Vía B»');
-    ok(/border-accent-gold/.test(boton(h, 'Resolver así')) && !h.includes('Resolver por la vía A'),
-       'P: «Resolver así» en dorado aunque el estado sea reñido');
-    ok(boton(h, 'Aceptar y generar').includes('data-aceptar-y-generar') && fila3(h).indexOf('Aceptar y generar') < fila3(h).indexOf('Resolver así'),
-       'P: «Aceptar y generar», primero');
+    ok(/border-accent-gold/.test(boton(h, 'Confirmar este sentido')) && !h.includes('Resolver por la vía A'),
+       'P: «Confirmar este sentido» en dorado aunque el estado sea reñido');
+    // 4-oct-2026: sin «Aceptar y generar»; la tarjeta sólo confirma el sentido.
+    ok(!h.includes('Aceptar y generar') && !h.includes('data-aceptar-y-generar')
+       && fila3(h).indexOf('Confirmar este sentido') < fila3(h).indexOf('Resolver en sentido opuesto'),
+       'P: sin «Aceptar y generar»: «Confirmar este sentido» va primero y nada genera desde la tarjeta');
     ok(h.includes('Reñido: las dos vías se sostienen; te propongo la más probable.') && !h.includes('Ninguna se rotula'),
        'P: el estado queda como grado de certeza y ya no quita la recomendación');
     ok(h.includes('data-por-que-lado') && h.includes('Por qué este lado') && h.includes('Tasa del tribunal y dos precedentes (prueba).'),
@@ -1022,7 +1025,7 @@ const FICHA_631 = {
     ok(!h.includes('data-volteo'), 'P: sin volteo, no hay línea de volteo');
     const na = pintar(React.createElement(PP, props(base({ estado: 'no_alcanza', recomendada: 'propuesta', probabilidad: PROB }),
                                                     { onAceptarYGenerar: () => {} })));
-    ok(na.includes('Certeza baja') && fila3(na).indexOf('Aceptar y generar') < fila3(na).indexOf('Resolver con mi criterio')
+    ok(na.includes('Certeza baja') && fila3(na).indexOf('Confirmar este sentido') < fila3(na).indexOf('Resolver con mi criterio')
        && !/border-accent-gold/.test(boton(na, 'Resolver con mi criterio')),
        'P: «no alcanza» con recomendación: certeza baja, la propuesta primero y «mi criterio» sin dorar');
     // EL VOLTEO, con la probabilidad de la propuesta (CONTRATO A).
@@ -1075,8 +1078,8 @@ const FICHA_631 = {
         modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global', globalDictado: false })));
     ok(dl.includes('data-preguntas="afinar"') && !dl.includes('Constancias del juicio de origen')
        && !dl.includes('constancia que el motor considera'), 'P: con preguntas, las constancias viejas no se piden');
-    ok(columna(dl, 'propuesta').includes('Te propongo · 68 %') && dl.includes('data-aceptar-y-generar'),
-       'P: la tarjeta local con la probabilidad de la propuesta y «Aceptar y generar»');
+    ok(columna(dl, 'propuesta').includes('Te propongo · 68 %') && !dl.includes('data-aceptar-y-generar'),
+       'P: la tarjeta local con la probabilidad de la propuesta, sin «Aceptar y generar» (4-oct-2026)');
     const fin = dl.slice(dl.indexOf('id="asi-sale"'));
     ok(fin.includes('data-probabilidad-asi-sale') && fin.includes('Es el lado más probable según el examen de las dos vías: 68 %.'),
        'P: «Así va a salir» dice la probabilidad de lo que viaja');
@@ -1092,7 +1095,7 @@ const FICHA_631 = {
 
     /* ═══ REVISIÓN ADVERSARIAL (3-oct-2026) ═══ */
     const generarDe = (x) => {
-        const k = x.indexOf('Generar sentencia en versión moderna');
+        const k = x.indexOf('o en versión moderna');
         return k < 0 ? '' : x.slice(x.lastIndexOf('<button', k), k);
     };
     // «Aceptar y generar» sólo con el formato 3: con las banderas apagadas
@@ -1102,7 +1105,7 @@ const FICHA_631 = {
     ok(!f2.includes('data-aceptar-y-generar'), 'R1: formato 2: sin «Aceptar y generar» (idéntico a hoy)');
     const f3 = pintar(React.createElement(Decision, { ...comunes, propuesta: { ...PROPUESTA, formato: 3 }, tarjeta: base(),
         modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global' }));
-    ok(f3.includes('data-aceptar-y-generar'), 'R1: formato 3: con «Aceptar y generar»');
+    ok(!f3.includes('data-aceptar-y-generar'), 'R1: formato 3: tampoco «Aceptar y generar» (4-oct-2026: un solo botón que genera)');
     // «Generar» no se enciende con el eco del motor mientras la propuesta espera respuestas.
     const ecoG = pintar(React.createElement(Decision, { ...comunes, propuesta: espera, tarjeta: null,
         modo: 'global', sentidoGlobal: 'fundado', razonGlobal: 'razón del motor anterior', globalDictado: false }));
@@ -1122,8 +1125,15 @@ const FICHA_631 = {
     ok(generarDe(suyoP) && !/disabled=""/.test(generarDe(suyoP)), 'R4: todos marcados por él: puede generar');
     const listoG = pintar(React.createElement(Decision, { ...comunes, propuesta: lista, tarjeta: null,
         modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'razón global', globalDictado: false }));
-    ok(!/disabled=""/.test(generarDe(listoG)) && !listoG.includes('data-detenido-por-preguntas'),
-       'R4: con la propuesta «lista», el eco del motor genera como siempre');
+    // 4-oct-2026 (David: «una vez que confirmo el sentido genero el proyecto y punto»): con la
+    // propuesta «lista», el eco del motor YA NO genera sin que él confirme el sentido; se dice junto al botón.
+    ok(/disabled=""/.test(generarDe(listoG)) && listoG.includes('data-falta-confirmar')
+       && !listoG.includes('data-detenido-por-preguntas'),
+       'R4: con la propuesta «lista», sin confirmar el sentido no se genera, y se dice por qué');
+    const dictadoG = pintar(React.createElement(Decision, { ...comunes, propuesta: lista, tarjeta: null,
+        modo: 'global', sentidoGlobal: 'infundado', razonGlobal: 'su razón', globalDictado: true }));
+    ok(!/disabled=""/.test(generarDe(dictadoG)) && !dictadoG.includes('data-falta-confirmar'),
+       'R4: si él dictó el global, ya confirmó: se genera sin pedírselo dos veces');
 }
 
 const iHtml = process.argv.indexOf('--html');
