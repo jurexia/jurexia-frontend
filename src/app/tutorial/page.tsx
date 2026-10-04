@@ -22,12 +22,12 @@ export const metadata: Metadata = {
     openGraph: {
         title: TITULO,
         description: DESCRIPCION,
-        url: 'https://iurexia.com/tutorial',
+        url: 'https://www.iurexia.com/tutorial',
         siteName: 'Iurexia',
         locale: 'es_MX',
         type: 'video.other',
         images: [{ url: '/video/tutorial-nuevo-chat-og.jpg', width: 1200, height: 630, alt: 'El nuevo chat de Iurexia' }],
-        videos: [{ url: 'https://iurexia.com/video/tutorial-nuevo-chat.mp4', type: 'video/mp4', width: 1920, height: 1080 }],
+        videos: [{ url: 'https://www.iurexia.com/video/tutorial-nuevo-chat.mp4', type: 'video/mp4', width: 1920, height: 1080 }],
     },
     twitter: {
         card: 'summary_large_image',
@@ -42,10 +42,10 @@ const VIDEO_LD = {
     '@type': 'VideoObject',
     name: 'Tutorial del nuevo chat de Iurexia',
     description: DESCRIPCION,
-    thumbnailUrl: ['https://iurexia.com/video/tutorial-nuevo-chat-og.jpg'],
+    thumbnailUrl: ['https://www.iurexia.com/video/tutorial-nuevo-chat-og.jpg'],
     uploadDate: '2026-09-27',
     duration: 'PT1M25S',
-    contentUrl: 'https://iurexia.com/video/tutorial-nuevo-chat.mp4',
+    contentUrl: 'https://www.iurexia.com/video/tutorial-nuevo-chat.mp4',
     inLanguage: 'es-MX',
 };
 

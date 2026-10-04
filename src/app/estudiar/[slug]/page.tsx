@@ -40,7 +40,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
         openGraph: {
             title: `${l.tituloPlano} · Lección ${numeroDe(l)}`,
             description: descripcion,
-            url: `https://iurexia.com/estudiar/${l.slug}`,
+            url: `https://www.iurexia.com/estudiar/${l.slug}`,
             siteName: 'Iurexia',
             locale: 'es_MX',
             type: 'article',
@@ -60,7 +60,7 @@ export default function LeccionPage({ params }: { params: { slug: string } }) {
     const eje = ejeDe(l);
     const numero = numeroDe(l);
     const { anterior, siguiente } = vecinas(l);
-    const url = `https://iurexia.com/estudiar/${l.slug}`;
+    const url = `https://www.iurexia.com/estudiar/${l.slug}`;
     const cita = `Iurexia, «${plano(l.titulo)}. ${plano(l.subtitulo)}», Estudiar y pensar, lección ${numero}: video (${reloj(l.duracion)}) y material de lectura, actualizado al ${l.actualizado}. ${url}`;
 
     const jsonLd = {
@@ -77,20 +77,20 @@ export default function LeccionPage({ params }: { params: { slug: string } }) {
                 learningResourceType: ['Lección en video', 'Material de lectura'],
                 isAccessibleForFree: true,
                 keywords: l.claves.join(', '),
-                isPartOf: { '@type': 'Course', name: 'Estudiar y pensar', url: 'https://iurexia.com/estudiar', provider: { '@type': 'Organization', name: 'Iurexia', url: 'https://iurexia.com' } },
-                hasPart: [{ '@type': 'DigitalDocument', name: `Material de lectura: ${l.tituloPlano}`, encodingFormat: 'application/pdf', url: `https://iurexia.com${l.lectura.pdf}`, numberOfPages: l.lectura.paginas }],
+                isPartOf: { '@type': 'Course', name: 'Estudiar y pensar', url: 'https://www.iurexia.com/estudiar', provider: { '@type': 'Organization', name: 'Iurexia', url: 'https://www.iurexia.com' } },
+                hasPart: [{ '@type': 'DigitalDocument', name: `Material de lectura: ${l.tituloPlano}`, encodingFormat: 'application/pdf', url: `https://www.iurexia.com${l.lectura.pdf}`, numberOfPages: l.lectura.paginas }],
             },
             {
                 '@type': 'VideoObject',
                 name: l.tituloVideo,
                 description: l.resumenPlano,
-                thumbnailUrl: l.miniatura ? [`https://iurexia.com${l.miniatura}`] : undefined,
+                thumbnailUrl: l.miniatura ? [`https://www.iurexia.com${l.miniatura}`] : undefined,
                 uploadDate: l.publicado,
                 duration: duracionISO(l.duracion),
                 embedUrl: `https://www.youtube-nocookie.com/embed/${l.youtube}`,
                 contentUrl: `https://www.youtube.com/watch?v=${l.youtube}`,
                 inLanguage: 'es-MX',
-                publisher: { '@type': 'Organization', name: 'Iurexia', url: 'https://iurexia.com' },
+                publisher: { '@type': 'Organization', name: 'Iurexia', url: 'https://www.iurexia.com' },
             },
         ],
     };

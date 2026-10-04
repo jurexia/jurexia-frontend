@@ -23,7 +23,10 @@ import { WakeUpProvider } from '@/components/WakeUpProvider'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://iurexia.com'),
+    // El dominio que sirve Vercel es www (iurexia.com redirige ahí). Canonical, og:url, sitemap y
+    // datos estructurados tienen que declarar ESE dominio: si declaran el que redirige, Google
+    // recibe dos señales contrarias sobre cuál es la página buena.
+    metadataBase: new URL('https://www.iurexia.com'),
     title: 'Iurexia - Inteligencia Artificial para el Derecho Mexicano',
     description: 'La IA jurídica más precisa para México. Investigación legal, análisis de documentos y conexión con abogados verificados. Especializada en legislación mexicana.',
     keywords: ['iurexia', 'inteligencia artificial derecho mexicano', 'ia juridica mexico', 'asistente legal inteligencia artificial', 'abogado virtual mexico', 'jurisprudencia mexico', 'legal tech mexico', 'analisis documentos legales', 'codigo civil mexico', 'derecho mexicano ia', 'busqueda juridica mexico'],
@@ -39,7 +42,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Iurexia - IA Jurídica para México',
         description: 'Investigación legal, análisis de documentos y conexión con abogados verificados. La inteligencia artificial más precisa para el sistema jurídico mexicano.',
-        url: 'https://iurexia.com',
+        url: 'https://www.iurexia.com',
         siteName: 'Iurexia',
         locale: 'es_MX',
         type: 'website',
@@ -96,11 +99,11 @@ export default function RootLayout({
                             "@context": "https://schema.org",
                             "@type": "Organization",
                             "name": "Iurexia",
-                            "url": "https://iurexia.com",
-                            "logo": "https://iurexia.com/icon.png",
+                            "url": "https://www.iurexia.com",
+                            "logo": "https://www.iurexia.com/icon.png",
                             "description": "La IA jurídica más precisa para México. Investigación legal, análisis de documentos y conexión con abogados verificados.",
                             "sameAs": [
-                                "https://iurexia.com"
+                                "https://www.iurexia.com"
                             ]
                         })
                     }}

@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://iurexia.com/sitemap.xml
+Sitemap: https://www.iurexia.com/sitemap.xml
 
 # Bloquear rutas privadas y API
 Disallow: /api/
@@ -13,7 +13,8 @@ Disallow: /admin/
 Disallow: /perfil/
 Disallow: /auth/
 Disallow: /checkout/
-Disallow: /_next/
+# /_next/ NO se bloquea: ahí van el CSS, el JavaScript y las imágenes optimizadas, y Google
+# necesita descargarlos para ver la página como la ve un visitante.
 Disallow: /static/
 
 # Permitir páginas públicas explícitamente

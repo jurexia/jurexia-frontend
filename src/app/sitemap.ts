@@ -2,7 +2,8 @@ import { MetadataRoute } from 'next'
 import { LECCIONES } from '@/lib/estudiar/catalogo'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://iurexia.com'
+    // El dominio que sirve Vercel (iurexia.com redirige a www); el mismo que metadataBase en layout.tsx.
+    const baseUrl = 'https://www.iurexia.com'
 
     // Rutas públicas que queremos que Google indexe
     const publicRoutes = [

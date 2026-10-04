@@ -28,7 +28,7 @@ export const metadata: Metadata = {
         title: 'Estudiar y pensar · Iurexia',
         description:
             'Lecciones de derecho mexicano en video, cada una con su material de lectura en PDF y sus fuentes.',
-        url: 'https://iurexia.com/estudiar',
+        url: 'https://www.iurexia.com/estudiar',
         siteName: 'Iurexia',
         locale: 'es_MX',
         type: 'website',
