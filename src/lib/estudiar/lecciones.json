@@ -4820,6 +4820,481 @@
    "portada": "/estudiar/portadas/inimputabilidad.webp",
    "miniatura": "/estudiar/miniaturas/inimputabilidad.webp",
    "miniatura640": "/estudiar/miniaturas/inimputabilidad-640.webp"
+  },
+  {
+   "id": "v77",
+   "slug": "lo-que-la-policia-no-puede-hacer",
+   "eje": "penal",
+   "publicada": true,
+   "youtube": "LQwpLPRR6P4",
+   "publicado": "2026-10-08T17:00:00-06:00",
+   "tituloVideo": "7 cosas que la policía NO puede hacerte (y los casos que lo probaron)",
+   "duracion": 864,
+   "capitulosVideo": [
+    {
+     "segundo": 0,
+     "titulo": "Tres abusos, tres documentos"
+    },
+    {
+     "segundo": 31,
+     "titulo": "Siete reglas, cada una con su sentencia"
+    },
+    {
+     "segundo": 58,
+     "titulo": "Regla 1: Xalapa y el delito de ultrajes"
+    },
+    {
+     "segundo": 114,
+     "titulo": "La Corte invalida el artículo 331 (10-1)"
+    },
+    {
+     "segundo": 165,
+     "titulo": "Regla 2: Zapopan y la «actitud evasiva»"
+    },
+    {
+     "segundo": 210,
+     "titulo": "Ni nervios ni «corazonadas»"
+    },
+    {
+     "segundo": 275,
+     "titulo": "Regla 3: el celular, sólo con orden de un juez"
+    },
+    {
+     "segundo": 342,
+     "titulo": "Regla 4: el desvío al cuartel"
+    },
+    {
+     "segundo": 408,
+     "titulo": "Regla 5: Jacinta, Alberta y Teresa"
+    },
+    {
+     "segundo": 470,
+     "titulo": "«Un solo inocente en prisión…»"
+    },
+    {
+     "segundo": 531,
+     "titulo": "Regla 6: las confesiones de Juana Hilda"
+    },
+    {
+     "segundo": 572,
+     "titulo": "Si no hay juicio justo, no hay sanción justa"
+    },
+    {
+     "segundo": 628,
+     "titulo": "Regla 7: el montaje del 9 de diciembre de 2005"
+    },
+    {
+     "segundo": 679,
+     "titulo": "El efecto corruptor"
+    },
+    {
+     "segundo": 743,
+     "titulo": "¿Se puede grabar a la policía?"
+    },
+    {
+     "segundo": 776,
+     "titulo": "Qué hacer si le pasa a usted"
+    },
+    {
+     "segundo": 818,
+     "titulo": "Por qué estas reglas protegen a todos"
+    }
+   ],
+   "titulo": "Lo que la policía no puede hacer",
+   "tituloPlano": "Lo que la policía no puede hacer",
+   "subtitulo": "Siete reglas del debido proceso penal, cada una con su caso y su sentencia",
+   "corto": "Policía y abuso de autoridad",
+   "nivel": "licenciatura",
+   "actualizado": "5 de octubre de 2026",
+   "claves": [
+    "legalidad penal",
+    "taxatividad",
+    "control preventivo provisional",
+    "sospecha razonable",
+    "inviolabilidad de las comunicaciones",
+    "puesta a disposición inmediata",
+    "presunción de inocencia",
+    "prueba ilícita",
+    "efecto corruptor",
+    "amparo contra la incomunicación"
+   ],
+   "resumen": "Siete límites a la actuación policial en México, cada uno con un caso real y la sentencia que lo resolvió: los ultrajes de Veracruz, la «actitud evasiva» de Zapopan, el celular, el desvío a un cuartel, Jacinta, Alberta y Teresa, las confesiones de Juana Hilda González Lomelí y el montaje del caso Cassez. Cierra con lo que la ley permite hacer: grabar, pedir el motivo, promover amparo y presentar una queja.",
+   "resumenPlano": "Siete límites a la actuación policial en México, cada uno con un caso real y la sentencia que lo resolvió: los ultrajes de Veracruz, la «actitud evasiva» de Zapopan, el celular, el desvío a un cuartel, Jacinta, Alberta y Teresa, las confesiones de Juana Hilda González Lomelí y el montaje del caso Cassez. Cierra con lo que la ley permite hacer: grabar, pedir el motivo, promover amparo y presentar una queja.",
+   "ideas": [
+    "Un delito que no describe con precisión lo que castiga viola la taxatividad y deja al policía decidir qué es delito.",
+    "El nerviosismo o la apariencia no justifican una revisión: la sospecha razonable se explica con hechos verificables.",
+    "Revisar el contenido de un teléfono exige autorización de un juez federal.",
+    "Lo obtenido durante una retención indebida es ilícito, y una confesión arrancada no vale.",
+    "Exponer al detenido como culpable viola la presunción de inocencia y puede contaminar todo el proceso."
+   ],
+   "secciones": [
+    "Introducción: siete reglas, siete sentencias",
+    "Regla 1. Un delito tiene que decir con claridad qué castiga",
+    "Regla 2. El nerviosismo, por sí solo, no justifica una revisión",
+    "Regla 3. El celular, sólo con orden de un juez",
+    "Regla 4. Sin desvíos antes del Ministerio Público",
+    "Regla 5. Sin una acusación que se sostenga, no hay condena",
+    "Regla 6. Una confesión arrancada no vale",
+    "Regla 7. Ni exhibición ni montaje",
+    "Lo que sí puede hacer: grabar, preguntar, no consentir",
+    "Los remedios: el amparo y la queja",
+    "Conclusión"
+   ],
+   "anexos": [
+    "Glosario",
+    "Preguntas para el repaso",
+    "Fuentes"
+   ],
+   "semblanzas": [],
+   "documentos": [
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "1a./J. 54/2014 (10a.), registro digital 2006867",
+     "extracto": "«…al legislador le es exigible la emisión de normas claras, precisas y exactas respecto de la conducta reprochable, así como de la consecuencia jurídica por la comisión de un ilícito […]. Es decir, la descripción típica no debe ser de tal manera vaga, imprecisa, abierta o amplia, al grado de permitir la arbitrariedad en su aplicación.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Acción de inconstitucionalidad",
+     "titulo": "AI 59/2021 y su acumulada 66/2021, resolutivo quinto de la sentencia de 1 de marzo de 2022",
+     "extracto": "«Se declara la invalidez de los artículos 331 y 371, fracción II, del Código Penal para el Estado Libre y Soberano de Veracruz de Ignacio de la Llave, reformados mediante el Decreto Número 848 […], la cual surtirá sus efectos retroactivos a la fecha que se precisa en este fallo…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Amparo directo en revisión",
+     "titulo": "ADR 6695/2015, Primera Sala, 13 de julio de 2016",
+     "extracto": "«…la referencia a una actitud sospechosa, nerviosa o a cualquier motivo relacionado con la apariencia de una persona, no es una causa válida para impulsar una detención amparada bajo el concepto “flagrancia”.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "etiqueta": "Diario Oficial",
+     "titulo": "AI 10/2014 y su acumulada 11/2014 (DOF, 25 de junio de 2018), párrafo 104",
+     "extracto": "«Igualmente sería intolerable justificar una inspección bajo “corazonadas” o “porque se veía sospechoso” o aduciendo amplia experiencia policiaca o protocolos de actuación generales.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Jurisprudencia",
+     "titulo": "1a./J. 115/2012 (10a.), registro digital 2002741",
+     "extracto": "«…el ámbito de protección del derecho a la inviolabilidad de las comunicaciones privadas se extiende a los datos almacenados en tal dispositivo, ya sea en forma de texto, audio, imagen o video. […] si la autoridad encargada de la investigación, al detenerla, advierte que trae consigo un teléfono móvil, está facultada para decretar su aseguramiento y solicitar a la autoridad judicial la intervención de las comunicaciones privadas […]; sin embargo, si se realiza esa actividad sin autorización judicial, cualquier prueba que se extraiga, o bien, la que derive de ésta, será considerada como ilícita y no tendrá valor jurídico alguno.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Tesis aislada",
+     "titulo": "1a. CCII/2014 (10a.), registro digital 2006471",
+     "extracto": "«…si la prolongación injustificada de la detención generó la producción e introducción de datos de prueba, éstos deben declararse ilícitos…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Acta de sesión",
+     "titulo": "Primera Sala, sesión pública del 28 de abril de 2010 (apelación 2/2010)",
+     "extracto": "«…si los policías como lo afirman fueron privados de su libertad para pedir un rescate en dinero ¿por qué no reportaron el evento ante sus superiores jerárquicos? […] en tan sólo tres horas fue factible reunir la suma de setenta mil pesos para cubrir el supuesto rescate, acudiendo tan sólo a la buena voluntad y al peculio de los miembros de corporaciones policiacas, lo cual puede parecer loable, pero no es verosímil…»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "etiqueta": "Amparo directo",
+     "titulo": "AD 26/2022, Primera Sala, 11 de junio de 2025, párrafo 57",
+     "extracto": "«…en México está prohibido imponer una sanción penal si no es mediante un juicio justo, y no hay juicio justo si la persona solamente es encontrada culpable porque se le forzó a confesar los hechos.»",
+     "traducido": false,
+     "idioma": ""
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "etiqueta": "Tesis aislada",
+     "titulo": "1a. CLXXVIII/2013 (10a.), registro digital 2003695",
+     "extracto": "«…al proporcionar información sobre hechos delictuosos, las autoridades deben abstenerse de deformar la realidad a fin de exponer a una persona frente a la sociedad y, principalmente, frente a las futuras partes del proceso, como los culpables del hecho delictivo.»",
+     "traducido": false,
+     "idioma": ""
+    }
+   ],
+   "cronologias": [
+    {
+     "titulo": "El caso Cassez-Vallarta",
+     "filas": [
+      {
+       "anio": "2005",
+       "texto": "9 de diciembre: detención en una carretera federal (4:30) y escenificación transmitida como si fuera en vivo (6:47)."
+      },
+      {
+       "anio": "2013",
+       "texto": "23 de enero: la Primera Sala concede el amparo a Florence Cassez por tres votos contra dos (ADR 517/2011)."
+      },
+      {
+       "anio": "2024",
+       "texto": "16 de octubre: Genaro García Luna, que dirigía la AFI en 2005, es sentenciado en Nueva York a 460 meses de prisión por narcotráfico y declaraciones falsas."
+      },
+      {
+       "anio": "2025",
+       "texto": "31 de julio: Israel Vallarta es absuelto tras casi veinte años preso sin sentencia; sale libre el 1 de agosto."
+      },
+      {
+       "anio": "2026",
+       "texto": "18 de junio: un tribunal de apelación confirma su absolución."
+      }
+     ]
+    }
+   ],
+   "glosario": [
+    {
+     "termino": "Taxatividad",
+     "definicion": "Exigencia de que el tipo penal describa la conducta prohibida con claridad suficiente para que su destinatario sepa qué está prohibido; deriva del artículo 14 constitucional."
+    },
+    {
+     "termino": "Acción de inconstitucionalidad",
+     "definicion": "Medio de control abstracto que, con la mayoría calificada del Pleno, permite invalidar una norma con efectos generales."
+    },
+    {
+     "termino": "Control preventivo provisional",
+     "definicion": "Restricción temporal a la libertad (alto, revisión) que la policía puede practicar sólo si existe una sospecha razonable, explicable con hechos objetivos."
+    },
+    {
+     "termino": "Sospecha razonable",
+     "definicion": "Conjunto de hechos y circunstancias, objetivos y verificables por un juez, que llevarían a cualquier persona a suponer que se está cometiendo un delito."
+    },
+    {
+     "termino": "Flagrancia",
+     "definicion": "Detención en el momento de cometer el delito o inmediatamente después; no puede fundarse en la apariencia o el nerviosismo."
+    },
+    {
+     "termino": "Puesta a disposición inmediata",
+     "definicion": "Deber de presentar al detenido sin demora ante el Ministerio Público (art. 16 constitucional)."
+    },
+    {
+     "termino": "Prueba ilícita",
+     "definicion": "La obtenida con violación de derechos fundamentales; carece de valor, igual que la que deriva de ella."
+    },
+    {
+     "termino": "Presunción de inocencia",
+     "definicion": "Derecho a ser tratado como inocente mientras no se demuestre la culpabilidad; opera como regla de trato, regla probatoria y estándar de prueba."
+    },
+    {
+     "termino": "Efecto corruptor",
+     "definicion": "Contaminación de todo el proceso provocada por una violación grave de derechos, como un montaje mediático, que priva de fiabilidad a las pruebas."
+    },
+    {
+     "termino": "Arraigo",
+     "definicion": "Medida que permite retener a una persona durante la investigación, antes de ponerla a disposición de un juez."
+    }
+   ],
+   "preguntas": [
+    "¿Por qué la Corte consideró que el delito de ultrajes de Veracruz violaba la taxatividad, si la jurisprudencia admite que el legislador no defina cada palabra del tipo penal?",
+    "¿Qué diferencia hay entre la decisión de 2016 sobre el delito de ultrajes de la Ciudad de México y la de 2022 sobre el de Veracruz, en cuanto a sus efectos?",
+    "¿En qué condiciones puede un comportamiento «evasivo» justificar una revisión, según el ADR 6695/2015? ¿Qué otras dos bases legitiman una revisión?",
+    "¿Qué puede hacer la policía con el teléfono de un detenido sin orden judicial y qué no? ¿Cuál es la única excepción al control judicial previo?",
+    "¿Qué consecuencia probatoria tiene la retención indebida de un detenido, según la tesis 1a. CCII/2014?",
+    "¿Por qué las sentencias de Zapopan y del cuartel no liberaron a los quejosos? ¿Qué ordenaron?",
+    "¿A quién corresponde probar que una confesión fue voluntaria cuando se denuncia coacción, según el AD 26/2022?",
+    "¿Qué es el efecto corruptor y por qué la Corte concedió el amparo a Florence Cassez sin declararla inocente?",
+    "¿Quién puede promover un amparo a nombre de una persona incomunicada y qué debe hacer el juez?"
+   ],
+   "fuentes": [
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, jurisprudencia 1a./J. 54/2014 (10a.), «Principio de legalidad penal en su vertiente de taxatividad…», registro digital 2006867.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006867"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "Comisión Nacional de los Derechos Humanos, Recomendación 146/2021, 21 de diciembre de 2021 (párrs. 19, 24, 61, 102 y 107).",
+     "url": "https://hist.cndh.org.mx/sites/default/files/documentos/2021-12/REC_2021_146.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, acción de inconstitucionalidad 59/2021 y su acumulada 66/2021, puntos resolutivos de la sentencia de 1 de marzo de 2022.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/acuerdos_controversias_constit/documento/2022-07-05/MP_AccInconst-59-2021.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, versión taquigráfica de la sesión pública del 28 de febrero de 2022.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/versiones-taquigraficas/documento/2022-03-01/28%20de%20febrero%20de%202022%20-%20Versi%C3%B3n%20definitiva.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, versión taquigráfica de la sesión pública del 1 de marzo de 2022.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/versiones-taquigraficas/documento/2023-11-13/1%20de%20marzo%20de%202022%20-%20Versi%C3%B3n%20definitiva.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Pleno, versión taquigráfica de la sesión del 7 de marzo de 2016 (amparo directo en revisión 2255/2015).",
+     "url": "https://www.scjn.gob.mx/sites/default/files/versiones-taquigraficas/documento/2016-11-07/07032016PS_0.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 6695/2015, 13 de julio de 2016 (copia del PDF oficial en el acervo de Iurexia).",
+     "url": "https://storage.googleapis.com/iurexia-leyes/sentencias-scjn/PRIMERA_SALA/AMPARO_DIRECTO_EN_REVISI%C3%93N/6695-2015_2015_191231.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, tesis 1a. LXXXIII/2017 (10a.), «Control provisional preventivo. La sospecha razonable…», registro digital 2014689.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2014689"
+    },
+    {
+     "tipo": "dof",
+     "tipoNombre": "Diario Oficial",
+     "referencia": "SCJN, Pleno, acción de inconstitucionalidad 10/2014 y su acumulada 11/2014, <em>Diario Oficial de la Federación</em>, 25 de junio de 2018 (párrs. 102-109).",
+     "url": "https://dof.gob.mx/nota_detalle.php?codigo=5529007&fecha=25/06/2018"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Nacional de Procedimientos Penales, texto vigente, arts. 113, 268 y 291.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CNPP.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, jurisprudencia 1a./J. 115/2012 (10a.), contradicción de tesis 194/2012, registro digital 2002741.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2002741"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, tesis 1a. CCLIII/2015 (10a.), registro digital 2009820.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2009820"
+    },
+    {
+     "tipo": "const",
+     "tipoNombre": "Constitución",
+     "referencia": "Constitución Política de los Estados Unidos Mexicanos, art. 16.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo en revisión 4754/2015, 31 de mayo de 2017 (copia del PDF oficial en el acervo de Iurexia).",
+     "url": "https://storage.googleapis.com/iurexia-leyes/sentencias-scjn/PRIMERA_SALA/AMPARO_DIRECTO_EN_REVISI%C3%93N/4754-2015_2015_186459.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, tesis 1a. CCII/2014 (10a.), registro digital 2006471.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2006471"
+    },
+    {
+     "tipo": "ofi",
+     "tipoNombre": "Documento oficial",
+     "referencia": "Comisión Nacional de los Derechos Humanos, Recomendación 47/2009, 17 de julio de 2009.",
+     "url": "https://www.cndh.org.mx/sites/default/files/doc/Recomendaciones/2009/REC_2009_047.pdf"
+    },
+    {
+     "tipo": "doct",
+     "tipoNombre": "Doctrina",
+     "referencia": "Luis José Béjar Rivera, «Jacinta Francisco Marcial y la reparación del daño por actividad irregular», <em>Praxis de la Justicia Fiscal y Administrativa</em>, núm. 23, Tribunal Federal de Justicia Administrativa.",
+     "url": "http://transparencia.tfja.gob.mx/cesmdfa/01/praxis_act/num_23/1bejar_r23.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, acta de la sesión pública del 28 de abril de 2010 (apelación 2/2010).",
+     "url": "https://scjn.gob.mx/sites/default/files/actas-sesiones-publicas/documento/2016-11-15/acta_sesion_publica_28_04_2010_0.PDF"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, crónica «Libertad a mujeres indígenas por insuficiencia de pruebas».",
+     "url": "https://www.scjn.gob.mx/sites/default/files/cronicas_pleno_salas/documento/2016-11/cr-libertad-mujeres-ind_0.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, amparo directo 26/2022, 11 de junio de 2025 (párrs. 31-34, 44-46, 55-57 y 60; copia del PDF oficial en el acervo de Iurexia).",
+     "url": "https://storage.googleapis.com/iurexia-leyes/sentencias-scjn/PRIMERA_SALA/AMPARO_DIRECTO/26-2022_2022_300705.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, versión taquigráfica de la sesión del 11 de junio de 2025.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/versiones-taquigraficas/documento/2025-06-13/11062025%20PS%20P%C3%9ABLICA.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Dirección General de Estudios, Promoción y Desarrollo de los Derechos Humanos, extracto del amparo directo en revisión 517/2011.",
+     "url": "https://www.scjn.gob.mx/derechos-humanos/sites/default/files/sentencias-emblematicas/resumen/2021-04/Resumen%20ADR517-2011%20DGDH.pdf"
+    },
+    {
+     "tipo": "scjn",
+     "tipoNombre": "Suprema Corte",
+     "referencia": "SCJN, Primera Sala, acta de la sesión pública del 23 de enero de 2013.",
+     "url": "https://www.scjn.gob.mx/sites/default/files/actas-sesiones-publicas/documento/2016-11-14/ActaSesPub20130123_0.pdf"
+    },
+    {
+     "tipo": "tesis",
+     "tipoNombre": "Tesis del Semanario",
+     "referencia": "SCJN, Primera Sala, tesis 1a. CLXXVIII/2013 (10a.), registro digital 2003695.",
+     "url": "https://sjf2.scjn.gob.mx/detalle/tesis/2003695"
+    },
+    {
+     "tipo": "us",
+     "tipoNombre": "Estados Unidos",
+     "referencia": "U.S. Attorney's Office, Eastern District of New York, «Ex-Mexican Secretary of Public Security Genaro Garcia Luna Sentenced to Over 38 Years», 16 de octubre de 2024.",
+     "url": "https://www.justice.gov/usao-edny/pr/ex-mexican-secretary-public-security-genaro-garcia-luna-sentenced-over-38-years"
+    },
+    {
+     "tipo": "prensa",
+     "tipoNombre": "Prensa",
+     "referencia": "<em>El Financiero</em>, «Reafirman libertad para Israel Vallarta: tribunal le da segunda sentencia absolutoria», 18 de junio de 2026.",
+     "url": "https://www.elfinanciero.com.mx/nacional/2026/06/18/reafirman-libertad-para-israel-vallarta-tribunal-le-da-segunda-sentencia-absolutoria/"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley Nacional sobre el Uso de la Fuerza, art. 30.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LNUF.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Código Penal Federal, art. 180.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPF.pdf"
+    },
+    {
+     "tipo": "ley",
+     "tipoNombre": "Ley",
+     "referencia": "Ley de Amparo, arts. 15 y 126.",
+     "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LAmp.pdf"
+    }
+   ],
+   "lectura": {
+    "pdf": "/estudiar/lecturas/iurexia-lo-que-la-policia-no-puede-hacer.pdf",
+    "paginas": 13,
+    "kb": 985,
+    "palabras": 3536,
+    "minutos": 20
+   },
+   "portada": "/estudiar/portadas/lo-que-la-policia-no-puede-hacer.webp",
+   "miniatura": "/estudiar/miniaturas/lo-que-la-policia-no-puede-hacer.webp",
+   "miniatura640": "/estudiar/miniaturas/lo-que-la-policia-no-puede-hacer-640.webp"
   }
  ]
 }
