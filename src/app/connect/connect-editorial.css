@@ -1,0 +1,87 @@
+.connect-editorial {
+  --connect-ink: #171614;
+  --connect-gold: #c8ab73;
+  min-height: 100vh;
+  background: #11110f;
+  color: #f7f2e8;
+  font-family: var(--font-texto), Arial, sans-serif;
+}
+.connect-page { width: min(100%, 1360px); margin: 0 auto; padding: calc(var(--alto-barra, 4rem) + 30px) clamp(16px, 3vw, 46px) 70px; }
+.connect-loading { display: grid; min-height: 100vh; place-items: center; color: #d4c5aa; }
+.connect-hero { position: relative; display: flex; align-items: center; min-height: 355px; overflow: hidden; border: 1px solid #564936; border-radius: 12px; background-color: #171614; background-size: cover; background-position: center; }
+.connect-hero--buscar { background-image: linear-gradient(90deg, #11100e 0%, rgba(17,16,14,.95) 35%, rgba(17,16,14,.37) 78%), url('/web/arte/tintero.webp'); }
+.connect-hero--resultados { min-height: 285px; background-image: linear-gradient(90deg, #11100e 0%, rgba(17,16,14,.94) 38%, rgba(17,16,14,.38) 82%), url('/web/arte/claustro.webp'); }
+.connect-hero__content { position: relative; z-index: 1; width: min(720px, 100%); padding: clamp(28px, 4vw, 55px); }
+.connect-eyebrow { display: inline-block; color: var(--connect-gold); font-size: 10px; font-weight: 700; letter-spacing: .23em; line-height: 1.4; }
+.connect-hero h1 { margin-top: 15px; color: #faf7ef; font-family: var(--font-titulo), Georgia, serif; font-size: clamp(42px, 5.3vw, 72px); font-weight: 400; letter-spacing: -.045em; line-height: 1.02; }
+.connect-hero h1 em { color: #e3c994; font-weight: 400; }
+.connect-hero p { max-width: 570px; margin-top: 19px; color: #d2cabe; font-size: clamp(13px, 1.2vw, 16px); line-height: 1.62; }
+.connect-hero__back { display: inline-block; margin-bottom: 10px; padding-bottom: 3px; border-bottom: 1px solid #bdab86; color: #e4d4b6; font-size: 12px; text-decoration: none; }
+.connect-hero__back:hover { color: #fff; }
+.connect-search-panel, .connect-results-panel { margin-top: 28px; padding: clamp(22px, 3.4vw, 44px); border: 1px solid #d9d3c6; border-radius: 10px; background: #f5f3ed; color: var(--connect-ink); }
+.connect-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 25px; margin-bottom: 29px; padding-bottom: 24px; border-bottom: 1px solid #ddd8cc; }
+.connect-section-heading .connect-eyebrow { color: #9f7f49; }
+.connect-section-heading h2 { margin-top: 8px; color: var(--connect-ink); font-family: var(--font-titulo), Georgia, serif; font-size: clamp(31px, 3.3vw, 46px); font-weight: 400; letter-spacing: -.035em; line-height: 1.08; }
+.connect-section-heading > p { max-width: 340px; color: #69645c; font-size: 13px; line-height: 1.55; }
+.connect-search-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(170px, 220px) auto; align-items: end; gap: 13px; }
+.connect-field label { display: block; margin-bottom: 8px; color: #6f6659; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.connect-field input, .connect-field select, .connect-modal input, .connect-modal textarea { width: 100%; min-height: 53px; padding: 13px 15px; border: 1px solid #cec6b7; border-radius: 5px; background: #fffefa; color: var(--connect-ink); font-size: 14px; outline: none; }
+.connect-field input:focus, .connect-field select:focus, .connect-modal input:focus, .connect-modal textarea:focus { border-color: #a5844f; box-shadow: 0 0 0 3px rgba(200,171,115,.19); }
+.connect-field input::placeholder, .connect-modal input::placeholder, .connect-modal textarea::placeholder { color: #9f998f; }
+.connect-primary-button, .connect-secondary-button { display: inline-flex; min-height: 53px; align-items: center; justify-content: center; padding: 12px 23px; border: 1px solid #171614; border-radius: 5px; background: #171614; color: #f7f2e8; font-size: 13px; font-weight: 600; text-align: center; text-decoration: none; transition: background .2s ease, border-color .2s ease; }
+.connect-primary-button:hover { border-color: #3b352b; background: #3b352b; }
+.connect-primary-button:disabled { cursor: wait; opacity: .65; }
+.connect-secondary-button { border-color: #cabda6; background: transparent; color: #29251f; }
+.connect-secondary-button:hover { border-color: #8f7c5d; background: #eee8dc; }
+.connect-examples { display: flex; flex-wrap: wrap; align-items: start; gap: 13px 22px; margin-top: 29px; padding-top: 22px; border-top: 1px solid #e3ded4; }
+.connect-examples > span { padding-top: 7px; color: #777067; font-size: 12px; }
+.connect-examples > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.connect-examples button { padding: 7px 11px; border: 1px solid #d2c9b9; border-radius: 4px; background: #fbf9f4; color: #4d463d; font-size: 12px; text-align: left; }
+.connect-examples button:hover { border-color: #ab8d5c; background: #eee8dc; }
+.connect-footer-note { margin-top: 22px; color: #958b7a; font-size: 11px; letter-spacing: .03em; text-align: center; }
+.connect-results-summary { color: #69645c; font-size: 13px; }
+.connect-results-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 19px; }
+.connect-lawyer-card { display: flex; min-width: 0; height: 100%; flex-direction: column; overflow: hidden; border: 1px solid #ddd5c7; border-radius: 7px; background: #fffefa; box-shadow: 0 7px 20px rgba(32,26,16,.05); }
+.connect-lawyer-art { position: relative; display: flex; min-height: 146px; align-items: end; justify-content: space-between; padding: 16px; background-color: #1a1916; background-size: cover; background-position: center; }
+.connect-lawyer-art::before { position: absolute; inset: 0; content: ''; background: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.65)); }
+.connect-lawyer-art > * { position: relative; z-index: 1; }
+.connect-lawyer-avatar { display: grid; width: 48px; height: 48px; flex: 0 0 48px; overflow: hidden; place-items: center; border: 1px solid rgba(240,223,185,.7); border-radius: 4px; background: #2e2922; color: #f3e4c8; font-family: var(--font-titulo), Georgia, serif; font-size: 19px; }
+.connect-lawyer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.connect-lawyer-match { padding: 6px 8px; border: 1px solid rgba(232,211,168,.6); border-radius: 3px; background: rgba(22,20,16,.72); color: #f3dfb4; font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+.connect-lawyer-body { display: flex; min-height: 260px; flex: 1; flex-direction: column; padding: 21px; }
+.connect-lawyer-body h3 { overflow: hidden; color: #1c1a17; font-family: var(--font-titulo), Georgia, serif; font-size: 25px; font-weight: 400; letter-spacing: -.025em; line-height: 1.08; text-overflow: ellipsis; }
+.connect-lawyer-meta { margin-top: 8px; color: #71695e; font-size: 11px; line-height: 1.55; }
+.connect-lawyer-verified { display: inline-block; margin-top: 10px; color: #816434; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.connect-lawyer-specialties { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 16px; }
+.connect-lawyer-specialties span { padding: 5px 7px; border: 1px solid #d9d0bf; border-radius: 3px; background: #f8f5ee; color: #5d5345; font-size: 10px; }
+.connect-lawyer-bio { display: -webkit-box; overflow: hidden; margin-top: 16px; color: #6a6359; font-size: 12px; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.connect-lawyer-contact { display: block; margin-top: 11px; color: #554a38; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.connect-lawyer-card .connect-primary-button { width: 100%; min-height: 43px; margin-top: auto; font-size: 12px; }
+.connect-lawyer-footer { margin-top: auto; padding-top: 20px; }
+.connect-loading-state, .connect-empty-state { padding: 60px 20px; color: #69645c; text-align: center; }
+.connect-empty-state h3 { color: #1c1a17; font-family: var(--font-titulo), Georgia, serif; font-size: 32px; font-weight: 400; }
+.connect-empty-state p { max-width: 460px; margin: 11px auto 24px; font-size: 13px; line-height: 1.6; }
+.connect-modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; overflow-y: auto; place-items: center; padding: 18px; background: rgba(0,0,0,.75); }
+.connect-modal { position: relative; width: min(100%, 550px); max-height: calc(100vh - 36px); overflow-y: auto; border: 1px solid #d3c9b7; border-radius: 8px; background: #f5f3ed; color: #1c1a17; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+.connect-modal-header { padding: 23px 28px; border-bottom: 1px solid #dcd5c7; }
+.connect-modal-header h2, .connect-modal-success h2 { font-family: var(--font-titulo), Georgia, serif; font-size: 29px; font-weight: 400; }
+.connect-modal-header p, .connect-modal-success p { margin-top: 6px; color: #6e665b; font-size: 12px; line-height: 1.55; }
+.connect-modal-close { position: absolute; top: 14px; right: 17px; color: #665c4f; font-size: 22px; line-height: 1; }
+.connect-modal form { display: grid; gap: 16px; padding: 25px 28px 28px; }
+.connect-modal label { display: block; margin-bottom: 7px; color: #635b50; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.connect-modal textarea { min-height: 106px; resize: vertical; }
+.connect-modal-note { color: #777067; font-size: 11px; line-height: 1.5; }
+.connect-modal-error { padding: 11px 12px; border: 1px solid #cdaaa0; border-radius: 4px; background: #f9eee9; color: #904f3d; font-size: 12px; }
+.connect-modal-success { padding: 50px 28px; text-align: center; }
+.connect-modal-success .connect-primary-button { margin-top: 23px; }
+@media (max-width: 1040px) { .connect-results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 850px) { .connect-search-form { grid-template-columns: 1fr 1fr; } .connect-field--query { grid-column: 1 / -1; } }
+@media (max-width: 700px) {
+  .connect-page { padding-top: calc(var(--alto-barra, 4rem) + 16px); }
+  .connect-hero { min-height: 350px; }
+  .connect-hero__content { padding: 29px 23px; }
+  .connect-section-heading { display: block; }
+  .connect-section-heading > p { margin-top: 12px; }
+  .connect-results-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) { .connect-search-form { grid-template-columns: 1fr; } .connect-field--query { grid-column: auto; } .connect-modal-header, .connect-modal form { padding-left: 20px; padding-right: 20px; } }

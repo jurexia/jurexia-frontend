@@ -2,16 +2,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import {
-    Search, MapPin, Shield, BadgeCheck, Users, ArrowRight,
-    Check, X, Loader2, Phone, Mail, MessageSquare,
-    CheckCircle2, Star, ChevronLeft
-} from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/useAuth';
 import { useRequireAuth } from '@/lib/useAuth';
 import { LawyerProfile, sendConnectRequest } from '@/lib/api';
 import Navbar from '@/components/Navbar';
+import { fuenteTitulo, fuenteTexto } from '@/lib/fuentes-web';
+import '../connect-editorial.css';
 
 // Mexican states for filter
 const ESTADOS = [
@@ -69,7 +65,6 @@ function ResultadosContent() {
     const estado = searchParams.get('estado') || '';
 
     const [lawyers, setLawyers] = useState<LawyerProfile[]>([]);
-    const [allLawyers, setAllLawyers] = useState<LawyerProfile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [totalResults, setTotalResults] = useState(0);
     const [contactLawyer, setContactLawyer] = useState<LawyerProfile | null>(null);
@@ -171,7 +166,6 @@ function ResultadosContent() {
                         phone: (row.phone || undefined) as string | undefined,
                         phone_visible: (row.phone_visible || false) as boolean,
                     }));
-                    setAllLawyers(mapped);
 
                     // Score all lawyers
                     const scored = mapped.map(lawyer => ({
@@ -211,99 +205,52 @@ function ResultadosContent() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query, estado]);
 
+
     const estadoLabel = ESTADOS.find(e => e.value === estado)?.label || '';
 
     return (
-        <div style={{ backgroundColor: '#0A0A0A', minHeight: '100vh', color: '#f5f5f5', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
-            <Navbar />
-
-            {/* Header */}
-            <section style={{ paddingTop: '100px', paddingBottom: '32px', paddingLeft: '24px', paddingRight: '24px', borderBottom: '1px solid #1A1A1A' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                    <Link
-                        href="/connect"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#888', fontSize: '0.875rem', marginBottom: '24px', textDecoration: 'none', transition: 'color 0.2s' }}
-                        onMouseOver={(e) => e.currentTarget.style.color = '#fff'}
-                        onMouseOut={(e) => e.currentTarget.style.color = '#888'}
-                    >
-                        <ChevronLeft className="w-4 h-4" />
-                        Volver a Connect
-                    </Link>
-
-                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                        <div>
-                            <h1 style={{ fontSize: '1.75rem', fontWeight: 600, color: '#fff', marginBottom: '8px' }}>
-                                Resultados para: <span style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #d4af37 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>&ldquo;{query}&rdquo;</span>
-                            </h1>
-                            {estadoLabel && (
-                                <div className="flex items-center gap-2" style={{ color: '#888', fontSize: '0.875rem' }}>
-                                    <MapPin className="w-4 h-4" />
-                                    <span>Filtrado por {estadoLabel}</span>
-                                </div>
-                            )}
-                        </div>
-                        {!isLoading && (
-                            <p style={{ fontSize: '0.875rem', color: '#888' }}>
-                                {totalResults} abogado{totalResults !== 1 ? 's' : ''} verificado{totalResults !== 1 ? 's' : ''} — ordenados por relevancia
-                            </p>
-                        )}
+        <div className={'connect-editorial ' + fuenteTitulo.variable + ' ' + fuenteTexto.variable}>
+            <Navbar plataforma />
+            <main className="connect-page">
+                <header className="connect-hero connect-hero--resultados">
+                    <div className="connect-hero__content">
+                        <Link href="/connect/buscar" className="connect-hero__back">Volver a la búsqueda</Link>
+                        <br />
+                        <span className="connect-eyebrow">IUREXIA CONNECT / DIRECTORIO VERIFICADO</span>
+                        <h1>{query ? <>Profesionales para <em>su asunto.</em></> : <>Encuentre representación <em>con criterio.</em></>}</h1>
+                        <p>{query ? 'Búsqueda: “' + query + '”' : 'Explore los perfiles profesionales disponibles.'}{estadoLabel ? ' · ' + estadoLabel : ''}</p>
                     </div>
-                </div>
-            </section>
+                </header>
 
-            {/* Results Grid */}
-            <section style={{ padding: '40px 24px 80px' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                    {isLoading && (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
-                            <div style={{ width: '48px', height: '48px', border: '3px solid rgba(59,130,246,0.2)', borderTopColor: '#3b82f6', borderRadius: '50%', marginBottom: '16px' }} className="animate-spin" />
-                            <p style={{ color: '#888' }}>Analizando perfiles de abogados verificados...</p>
+                <section className="connect-results-panel">
+                    <div className="connect-section-heading">
+                        <div>
+                            <span className="connect-eyebrow">02 / DIRECTORIO</span>
+                            <h2>Abogados disponibles</h2>
                         </div>
-                    )}
-
-                    {!isLoading && lawyers.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '64px 0', background: '#111', borderRadius: '24px', border: '1px solid #222' }}>
-                            <div style={{ width: '64px', height: '64px', margin: '0 auto 16px', background: '#222', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Users className="w-8 h-8 text-gray-500" />
-                            </div>
-                            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#f5f5f5', marginBottom: '8px' }}>
-                                Sin resultados
-                            </h3>
-                            <p style={{ color: '#888', maxWidth: '400px', margin: '0 auto', marginBottom: '24px' }}>
-                                No encontramos abogados exactos para tu búsqueda. El directorio Premium se está construyendo — pronto habrá más profesionales.
-                            </p>
-                            <Link
-                                href="/connect"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 24px', background: '#2563EB', color: '#fff', borderRadius: '12px', fontWeight: 500, textDecoration: 'none' }}
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                                Intentar otra búsqueda
-                            </Link>
+                        {!isLoading && <p className="connect-results-summary">{totalResults} abogado{totalResults !== 1 ? 's' : ''} en esta búsqueda</p>}
+                    </div>
+                    {isLoading ? (
+                        <div className="connect-loading-state">Buscando perfiles profesionales…</div>
+                    ) : lawyers.length === 0 ? (
+                        <div className="connect-empty-state">
+                            <h3>Sin resultados por ahora</h3>
+                            <p>Pruebe con una descripción más amplia o consulte el directorio sin filtrar por estado.</p>
+                            <Link href="/connect/buscar" className="connect-secondary-button">Intentar otra búsqueda</Link>
                         </div>
-                    )}
-
-                    {!isLoading && lawyers.length > 0 && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {lawyers.map((lawyer) => (
-                                <LawyerCard
-                                    key={lawyer.id}
-                                    lawyer={lawyer}
-                                    onContact={() => setContactLawyer(lawyer)}
-                                />
+                    ) : (
+                        <div className="connect-results-grid">
+                            {lawyers.map((lawyer, index) => (
+                                <LawyerCard key={lawyer.id} lawyer={lawyer} artIndex={index} onContact={() => setContactLawyer(lawyer)} />
                             ))}
                         </div>
                     )}
-                </div>
-            </section>
+                </section>
+                <p className="connect-footer-note">Perfiles profesionales con cédula verificada · La búsqueda es gratuita</p>
+            </main>
 
-            {/* Contact Request Modal */}
             {contactLawyer && (
-                <ContactModal
-                    lawyer={contactLawyer}
-                    searchQuery={query}
-                    userId={user?.id}
-                    onClose={() => setContactLawyer(null)}
-                />
+                <ContactModal lawyer={contactLawyer} searchQuery={query} userId={user?.id} onClose={() => setContactLawyer(null)} />
             )}
         </div>
     );
@@ -311,122 +258,56 @@ function ResultadosContent() {
 
 export default function ResultadosPage() {
     return (
-        <Suspense fallback={
-            <div style={{ backgroundColor: '#0A0A0A', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ width: '48px', height: '48px', border: '3px solid rgba(59,130,246,0.2)', borderTopColor: '#3b82f6', borderRadius: '50%' }} className="animate-spin" />
-            </div>
-        }>
+        <Suspense fallback={<div className="connect-editorial connect-loading">Cargando directorio…</div>}>
             <ResultadosContent />
         </Suspense>
     );
 }
 
-// ─────────────────────────────────────────
-// Lawyer Card Component
-// ─────────────────────────────────────────
+const ARTES_ABOGADOS = [
+    '/web/arte/escalinata.webp',
+    '/web/arte/archivo.webp',
+    '/web/arte/columnata.webp',
+    '/web/arte/biblioteca.webp',
+    '/web/arte/claustro.webp',
+    '/web/arte/boveda.webp',
+];
 
-function LawyerCard({ lawyer, onContact }: { lawyer: LawyerProfile; onContact: () => void }) {
+function LawyerCard({ lawyer, artIndex, onContact }: { lawyer: LawyerProfile; artIndex: number; onContact: () => void }) {
     const estadoRaw = lawyer.office_address?.estado || '';
     const municipio = lawyer.office_address?.municipio || '';
     const estadoNormalized = estadoRaw.toUpperCase().replace(/\s+/g, '_');
     const estadoLabel = ESTADOS.find(e => e.value === estadoNormalized || e.value === estadoRaw)?.label || estadoRaw;
     const location = [municipio, estadoLabel].filter(Boolean).join(', ');
     const isVerified = lawyer.verification_status === 'verified';
-    const matchScore = lawyer.score || 0;
-    const initials = lawyer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    const matchScore = Math.max(0, Math.min(100, Math.round(lawyer.score || 0)));
+    const initials = lawyer.full_name.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
     return (
-        <div style={{ background: '#111', borderRadius: '24px', border: '1px solid #222', padding: '24px', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            {/* Match Score Badge */}
-            {matchScore > 0 && (
-                <div style={{ position: 'absolute', top: '16px', right: '16px', padding: '4px 10px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 'bold', background: matchScore >= 50 ? 'rgba(34, 197, 94, 0.1)' : matchScore >= 30 ? 'rgba(217, 119, 6, 0.1)' : 'rgba(255, 255, 255, 0.05)', color: matchScore >= 50 ? '#4ade80' : matchScore >= 30 ? '#fbbf24' : '#a3a3a3', border: '1px solid', borderColor: matchScore >= 50 ? 'rgba(34, 197, 94, 0.2)' : matchScore >= 30 ? 'rgba(217, 119, 6, 0.2)' : 'rgba(255, 255, 255, 0.1)' }}>
-                    {matchScore}% match
-                </div>
-            )}
-            {/* Header */}
-            <div className="flex items-start gap-4 mb-4" style={{ paddingRight: matchScore > 0 ? '70px' : '0' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #222 0%, #111 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '1.125rem', flexShrink: 0, border: '1px solid #333' }}>
-                    {initials}
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                        <h3 style={{ fontWeight: 600, color: '#f5f5f5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {lawyer.full_name}
-                        </h3>
-                        {isVerified && (
-                            <span title="Cédula verificada"><BadgeCheck className="w-5 h-5 text-accent-gold flex-shrink-0" /></span>
-                        )}
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#a3a3a3', marginTop: '2px' }}>
-                        Cédula: {lawyer.cedula_number}
-                    </p>
-                    {location && (
-                        <div className="flex items-center gap-1 mt-1" style={{ fontSize: '0.75rem', color: '#666' }}>
-                            <MapPin className="w-3 h-3" />
-                            <span>{location}</span>
-                        </div>
-                    )}
-                </div>
+        <article className="connect-lawyer-card">
+            <div className="connect-lawyer-art" style={{ backgroundImage: 'url(' + ARTES_ABOGADOS[artIndex % ARTES_ABOGADOS.length] + ')' }}>
+                <span className="connect-lawyer-avatar">
+                    {lawyer.avatar_url ? <img src={lawyer.avatar_url} alt="" /> : initials}
+                </span>
+                {matchScore > 0 && <span className="connect-lawyer-match">{matchScore}% de afinidad</span>}
             </div>
-
-            {/* Specialties */}
-            {lawyer.specialties.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                    {lawyer.specialties.slice(0, 4).map((spec, i) => (
-                        <span key={i} style={{ fontSize: '0.75rem', fontWeight: 500, padding: '4px 10px', borderRadius: '8px', background: '#1A1A1A', color: '#ccc', border: '1px solid #333' }}>
-                            {spec}
-                        </span>
-                    ))}
-                    {lawyer.specialties.length > 4 && (
-                        <span style={{ fontSize: '0.75rem', color: '#888', padding: '4px 8px' }}>
-                            +{lawyer.specialties.length - 4} más
-                        </span>
-                    )}
-                </div>
-            )}
-
-            {/* Phone */}
-            {lawyer.phone_visible && lawyer.phone && (
-                <div className="flex items-center gap-2 mb-3" style={{ fontSize: '0.875rem', color: '#a3a3a3' }}>
-                    <Phone className="w-4 h-4 text-accent-gold" />
-                    <a href={`tel:${lawyer.phone}`} style={{ textDecoration: 'none', color: '#a3a3a3' }} onMouseOver={(e) => e.currentTarget.style.color = '#fff'} onMouseOut={(e) => e.currentTarget.style.color = '#a3a3a3'}>
-                        {lawyer.phone}
-                    </a>
-                </div>
-            )}
-
-            {lawyer.bio && (
-                <div style={{ maxHeight: '120px', overflowY: 'auto', marginBottom: '16px', flexGrow: 1, paddingRight: '4px' }}>
-                    <p style={{ fontSize: '0.875rem', color: '#888', lineHeight: '1.5', margin: 0 }}>
-                        {lawyer.bio}
-                    </p>
-                </div>
-            )}
-
-            <div style={{ marginTop: 'auto' }}>
-                {/* Match Score Bar */}
-                {lawyer.score !== undefined && (
-                    <div className="flex items-center gap-2 mb-4">
-                        <div style={{ flex: 1, height: '6px', background: '#222', borderRadius: '9999px', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)', borderRadius: '9999px', width: `${Math.round(lawyer.score * 100)}%` }} />
-                        </div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#666' }}>
-                            {Math.round(lawyer.score * 100)}% match
-                        </span>
+            <div className="connect-lawyer-body">
+                <h3>{lawyer.full_name}</h3>
+                <p className="connect-lawyer-meta">{location || 'México'}{lawyer.cedula_number ? ' · Cédula ' + lawyer.cedula_number : ''}</p>
+                {isVerified && <span className="connect-lawyer-verified">Cédula verificada</span>}
+                {lawyer.specialties.length > 0 && (
+                    <div className="connect-lawyer-specialties">
+                        {lawyer.specialties.slice(0, 4).map((spec, i) => <span key={i}>{spec}</span>)}
+                        {lawyer.specialties.length > 4 && <span>+{lawyer.specialties.length - 4} más</span>}
                     </div>
                 )}
-
-                <button
-                    onClick={onContact}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', background: '#222', color: '#fff', borderRadius: '12px', fontSize: '0.875rem', fontWeight: 500, border: '1px solid #333', cursor: 'pointer', transition: 'all 0.2s' }}
-                    onMouseOver={(e) => { e.currentTarget.style.background = '#3b82f6'; e.currentTarget.style.borderColor = '#3b82f6'; }}
-                    onMouseOut={(e) => { e.currentTarget.style.background = '#222'; e.currentTarget.style.borderColor = '#333'; }}
-                >
-                    <span>Contactar</span>
-                    <ArrowRight className="w-4 h-4" />
-                </button>
+                {lawyer.bio && <p className="connect-lawyer-bio">{lawyer.bio}</p>}
+                {lawyer.phone_visible && lawyer.phone && <a className="connect-lawyer-contact" href={'tel:' + lawyer.phone}>{lawyer.phone}</a>}
+                <div className="connect-lawyer-footer">
+                    <button type="button" className="connect-primary-button" onClick={onContact}>Contactar al profesional</button>
+                </div>
             </div>
-        </div>
+        </article>
     );
 }
 
@@ -471,67 +352,45 @@ function ContactModal({ lawyer, searchQuery, userId, onClose }: { lawyer: Lawyer
         }
     };
 
-    const initials = lawyer.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-            <div style={{ position: 'relative', background: '#0f0f0f', border: '1px solid #333', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)', width: '100%', maxWidth: '512px', maxHeight: '90vh', overflowY: 'auto' }}>
-                <button onClick={onClose} style={{ position: 'absolute', top: '16px', right: '16px', padding: '4px', color: '#888', background: 'transparent', border: 'none', cursor: 'pointer', zIndex: 10 }} onMouseOver={(e) => e.currentTarget.style.color = '#fff'} onMouseOut={(e) => e.currentTarget.style.color = '#888'}>
-                    <X className="w-5 h-5" />
-                </button>
-
+        <div className="connect-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+            <div className="connect-modal" role="dialog" aria-modal="true" aria-labelledby="connect-contact-title">
+                <button type="button" className="connect-modal-close" onClick={onClose} aria-label="Cerrar">×</button>
                 {sent ? (
-                    <div style={{ padding: '32px', textAlign: 'center' }}>
-                        <div style={{ width: '64px', height: '64px', margin: '0 auto 16px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <CheckCircle2 className="w-8 h-8 text-accent-gold" />
-                        </div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#fff', marginBottom: '8px' }}>¡Solicitud enviada!</h3>
-                        <p style={{ color: '#888', marginBottom: '24px' }}>Tu solicitud fue enviada a <strong>{lawyer.full_name}</strong>. El abogado recibirá una notificación y podrá contactarte directamente.</p>
-                        <button onClick={onClose} style={{ padding: '10px 24px', background: '#333', color: '#fff', borderRadius: '12px', fontWeight: 500, border: 'none', cursor: 'pointer' }} onMouseOver={(e) => e.currentTarget.style.background = '#444'} onMouseOut={(e) => e.currentTarget.style.background = '#333'}>Cerrar</button>
+                    <div className="connect-modal-success">
+                        <span className="connect-eyebrow">SOLICITUD ENVIADA</span>
+                        <h2 id="connect-contact-title">El primer paso está dado.</h2>
+                        <p>Enviamos su solicitud a {lawyer.full_name}. Podrá contactarle directamente.</p>
+                        <button type="button" className="connect-primary-button" onClick={onClose}>Cerrar</button>
                     </div>
                 ) : (
                     <>
-                        <div style={{ padding: '24px', paddingBottom: '16px', borderBottom: '1px solid #222' }}>
-                            <div className="flex items-center gap-3">
-                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #1A1A1A 0%, #000000 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>{initials}</div>
-                                <div>
-                                    <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#fff' }}>Contactar a {lawyer.full_name}</h2>
-                                    <p style={{ fontSize: '0.75rem', color: '#888' }}>{lawyer.specialties.slice(0, 3).join(' · ')}</p>
-                                </div>
-                            </div>
+                        <div className="connect-modal-header">
+                            <span className="connect-eyebrow">IUREXIA CONNECT</span>
+                            <h2 id="connect-contact-title">Contactar a {lawyer.full_name}</h2>
+                            <p>{lawyer.specialties.slice(0, 3).join(' · ')}</p>
                         </div>
-                        <form onSubmit={handleSubmit} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <form onSubmit={handleSubmit}>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#ccc', marginBottom: '6px' }}>Nombre completo *</label>
-                                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Tu nombre completo" style={{ width: '100%', padding: '12px 16px', background: '#111', border: '1px solid #333', borderRadius: '12px', color: '#fff', outline: 'none' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#333'} required />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#ccc', marginBottom: '6px' }}><Mail className="w-3.5 h-3.5 inline mr-1 opacity-50" /> Email *</label>
-                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" style={{ width: '100%', padding: '12px 16px', background: '#111', border: '1px solid #333', borderRadius: '12px', color: '#fff', outline: 'none' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#333'} required />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#ccc', marginBottom: '6px' }}><Phone className="w-3.5 h-3.5 inline mr-1 opacity-50" /> Teléfono *</label>
-                                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="55 1234 5678" style={{ width: '100%', padding: '12px 16px', background: '#111', border: '1px solid #333', borderRadius: '12px', color: '#fff', outline: 'none' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#333'} required />
-                                </div>
+                                <label htmlFor="connect-contact-name">Nombre completo *</label>
+                                <input id="connect-contact-name" type="text" value={name} onChange={event => setName(event.target.value)} placeholder="Su nombre completo" required />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#ccc', marginBottom: '6px' }}><MessageSquare className="w-3.5 h-3.5 inline mr-1 opacity-50" /> Describe tu caso *</label>
-                                <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Describe brevemente tu situación legal para que el abogado pueda evaluar tu caso..." rows={4} style={{ width: '100%', padding: '12px 16px', background: '#111', border: '1px solid #333', borderRadius: '12px', color: '#fff', outline: 'none', resize: 'none' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#333'} required />
+                                <label htmlFor="connect-contact-email">Correo electrónico *</label>
+                                <input id="connect-contact-email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="correo@ejemplo.com" required />
                             </div>
-                            {error && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem', color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', padding: '12px 16px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                                    <X className="w-4 h-4 flex-shrink-0" /><span>{error}</span>
-                                </div>
-                            )}
-                            <p style={{ fontSize: '0.75rem', color: '#666' }}>
-                                Tu información será compartida únicamente con el abogado seleccionado.
-                                Al enviar, aceptas nuestros <Link href="/terminos" className="underline hover:text-gray-400">Términos</Link> y <Link href="/privacidad" className="underline hover:text-gray-400">Política de Privacidad</Link>.
-                            </p>
-                            <button type="submit" disabled={sending} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: '#3b82f6', color: '#fff', borderRadius: '12px', fontWeight: 500, cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.7 : 1, marginTop: '8px', border: 'none' }}>
-                                {sending ? (<><Loader2 className="w-4 h-4 animate-spin" /><span>Enviando...</span></>) : (<><ArrowRight className="w-4 h-4" /><span>Enviar solicitud</span></>)}
-                            </button>
+                            <div>
+                                <label htmlFor="connect-contact-phone">Teléfono *</label>
+                                <input id="connect-contact-phone" type="tel" value={phone} onChange={event => setPhone(event.target.value)} placeholder="55 1234 5678" required />
+                            </div>
+                            <div>
+                                <label htmlFor="connect-contact-message">Describa su caso *</label>
+                                <textarea id="connect-contact-message" value={message} onChange={event => setMessage(event.target.value)} placeholder="Comparta lo necesario para que el abogado pueda evaluar su asunto." rows={4} required />
+                            </div>
+                            {error && <p className="connect-modal-error" role="alert">{error}</p>}
+                            <p className="connect-modal-note">Su información se compartirá únicamente con el profesional seleccionado. Al enviar acepta nuestros <Link href="/terminos">Términos</Link> y <Link href="/privacidad">Aviso de privacidad</Link>.</p>
+                            <button type="submit" disabled={sending} className="connect-primary-button">{sending ? 'Enviando…' : 'Enviar solicitud'}</button>
                         </form>
                     </>
                 )}
