@@ -1,0 +1,245 @@
+.perfil-page {
+  position: relative;
+  isolation: isolate;
+  color: #eee9dd;
+  background:
+    radial-gradient(ellipse 54% 28% at 91% 4%, rgba(173, 138, 73, .22), transparent 72%),
+    radial-gradient(ellipse 44% 35% at 7% 52%, rgba(78, 91, 84, .16), transparent 74%),
+    linear-gradient(145deg, #101412 0%, #171a18 48%, #0e1110 100%);
+}
+
+.perfil-page::before {
+  position: fixed;
+  inset: 0 0 0 17rem;
+  z-index: -1;
+  pointer-events: none;
+  content: '';
+  opacity: .24;
+  background-image: repeating-linear-gradient(113deg, transparent 0 104px, rgba(228, 206, 159, .045) 105px, transparent 106px 210px);
+}
+
+.perfil-main { position: relative; }
+
+.perfil-intro {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #a9aaa3;
+  font-size: .84rem;
+}
+.perfil-eyebrow,
+.perfil-hero-label {
+  color: #d9bd82;
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .23em;
+}
+
+.perfil-hero {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(224, 195, 135, .29);
+  background:
+    radial-gradient(ellipse 60% 110% at 89% 44%, rgba(165, 132, 68, .24), transparent 72%),
+    linear-gradient(118deg, #222520 0%, #171b19 55%, #24231d 100%);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .21), inset 0 1px rgba(255, 255, 255, .07);
+}
+.perfil-hero::before {
+  position: absolute;
+  top: -12rem;
+  right: -4.5rem;
+  width: 31rem;
+  height: 31rem;
+  content: '';
+  border-radius: 50%;
+  opacity: .64;
+  background: repeating-radial-gradient(circle, transparent 0 27px, rgba(224, 195, 135, .16) 28px, transparent 29px 49px);
+  mask-image: linear-gradient(90deg, transparent, #000 43%);
+  pointer-events: none;
+}
+.perfil-hero::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  opacity: .38;
+  background: linear-gradient(130deg, rgba(255, 255, 255, .055), transparent 40%);
+  pointer-events: none;
+}
+.perfil-hero-content { position: relative; z-index: 1; min-height: 10.5rem; }
+.perfil-monogram {
+  background: linear-gradient(145deg, rgba(241, 219, 168, .18), rgba(255, 255, 255, .03));
+  border: 1px solid rgba(228, 202, 146, .55);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .19);
+}
+.perfil-plan-badge {
+  background: rgba(22, 23, 21, .65);
+  border: 1px solid rgba(224, 195, 135, .24);
+  backdrop-filter: blur(10px);
+}
+
+.perfil-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+}
+.perfil-shortcuts a {
+  padding: .55rem .9rem;
+  border: 1px solid rgba(225, 209, 171, .18);
+  border-radius: 999px;
+  color: #d8d5ca;
+  background: rgba(255, 255, 255, .035);
+  font-size: .78rem;
+  transition: border-color .18s, background .18s, color .18s;
+}
+.perfil-shortcuts a:hover,
+.perfil-shortcuts a:focus-visible {
+  color: #f4e5c3;
+  border-color: rgba(225, 197, 137, .52);
+  background: rgba(217, 189, 130, .11);
+  outline: 2px solid #d9bd82;
+  outline-offset: 2px;
+}
+.perfil-grid-item,
+.perfil-connect { min-width: 0; scroll-margin-top: 6rem; }
+.perfil-section-title { padding: 1.25rem .2rem .05rem; }
+.perfil-section-title span {
+  color: #c8aa70;
+  font-size: .64rem;
+  font-weight: 700;
+  letter-spacing: .21em;
+}
+.perfil-section-title h2 {
+  margin-top: .35rem;
+  color: #f1eee4;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+  font-weight: 500;
+}
+
+.perfil-card,
+.perfil-connect > section,
+.perfil-admin > section {
+  position: relative;
+  height: 100%;
+  color: #edeae1;
+  background: linear-gradient(155deg, rgba(37, 41, 38, .97), rgba(24, 28, 26, .98));
+  border: 1px solid rgba(215, 203, 171, .13);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .12), inset 0 1px rgba(255, 255, 255, .04);
+}
+.perfil-card:hover,
+.perfil-connect > section:hover,
+.perfil-admin > section:hover { border-color: rgba(224, 195, 135, .28); }
+.perfil-card-rule { height: 2px; opacity: .85; }
+.perfil-card--rojo { margin-top: .25rem; }
+
+.perfil-card :is(.text-charcoal-900, .text-charcoal-800, .text-charcoal-700),
+.perfil-connect :is(.text-charcoal-900, .text-charcoal-800, .text-charcoal-700),
+.perfil-admin :is(.text-charcoal-900, .text-charcoal-800, .text-charcoal-700) { color: #f0ede3 !important; }
+.perfil-card :is(.text-charcoal-600, .text-charcoal-500),
+.perfil-connect :is(.text-charcoal-600, .text-charcoal-500),
+.perfil-admin :is(.text-charcoal-600, .text-charcoal-500) { color: #c3c5bb !important; }
+.perfil-card .text-charcoal-400,
+.perfil-connect .text-charcoal-400,
+.perfil-admin .text-charcoal-400 { color: #9da39b !important; }
+.perfil-card :is(.border-cream-300, .border-cream-400, .border-charcoal-300),
+.perfil-connect :is(.border-cream-300, .border-cream-400, .border-charcoal-300),
+.perfil-admin :is(.border-cream-300, .border-cream-400, .border-charcoal-300) { border-color: rgba(220, 213, 190, .22) !important; }
+.perfil-card :is(.bg-cream-50, .bg-cream-100, .bg-cream-300, .bg-gray-50, .bg-white),
+.perfil-connect :is(.bg-cream-50, .bg-cream-100, .bg-cream-300, .bg-gray-50, .bg-white),
+.perfil-admin :is(.bg-cream-50, .bg-cream-100, .bg-cream-300, .bg-gray-50, .bg-white) { background: rgba(255, 255, 255, .045) !important; }
+.perfil-card :is(input, textarea, select),
+.perfil-connect :is(input, textarea, select),
+.perfil-admin :is(input, textarea, select) {
+  color: #f2eee3;
+  background: #202522;
+  border-color: rgba(220, 213, 190, .21);
+}
+.perfil-card :is(input, textarea, select):disabled { color: #c9cbc1; background: rgba(255, 255, 255, .035); }
+.perfil-card :is(input, textarea, select)::placeholder,
+.perfil-connect :is(input, textarea, select)::placeholder,
+.perfil-admin :is(input, textarea, select)::placeholder { color: #a5aaa2; opacity: 1; }
+.perfil-card :is(input, textarea, select):focus-visible,
+.perfil-connect :is(input, textarea, select):focus-visible,
+.perfil-admin :is(input, textarea, select):focus-visible { outline: 2px solid #c9a962; outline-offset: 1px; }
+.perfil-card select option,
+.perfil-connect select option,
+.perfil-admin select option { color: #141816; background: #f5f0e5; }
+
+.perfil-card button.bg-charcoal-900,
+.perfil-connect button.bg-charcoal-900,
+.perfil-admin button.bg-blue-600 {
+  color: #171a17 !important;
+  background: #d9bd82 !important;
+}
+.perfil-card button.bg-charcoal-900:hover,
+.perfil-connect button.bg-charcoal-900:hover,
+.perfil-admin button.bg-blue-600:hover { background: #e8d3a4 !important; }
+.perfil-card button.border-charcoal-300 { color: #eee6d3 !important; background: rgba(255, 255, 255, .035); }
+.perfil-card .text-green-600,
+.perfil-connect .text-green-600 { color: #a8cfad !important; }
+.perfil-card .text-red-500,
+.perfil-card .text-red-600,
+.perfil-card .text-red-700 { color: #e5a3a0 !important; }
+.perfil-card .bg-amber-50,
+.perfil-card .bg-red-50 { background: rgba(183, 143, 82, .12) !important; }
+.perfil-card .bg-cream-300.rounded-full { background: rgba(255, 255, 255, .13) !important; }
+.perfil-card .bg-accent-gold.h-3 { background: linear-gradient(90deg, #ad8745, #e9d39f) !important; }
+.perfil-card .text-cream-100 { color: #f4efe4; }
+.perfil-card .text-accent-brown,
+.perfil-card .text-amber-700 { color: #dfc38b !important; }
+.perfil-card .perfil-plan-pill {
+  color: #efdfb7 !important;
+  background: rgba(217, 189, 130, .15) !important;
+  border: 1px solid rgba(217, 189, 130, .3);
+}
+.perfil-card .bg-blue-600 { background: #bd9d61 !important; }
+.perfil-card button.bg-blue-600 { color: #171a17 !important; }
+.perfil-card .text-blue-700 { color: #d9bd82 !important; }
+.perfil-card .bg-blue-100 { background: rgba(217, 189, 130, .12) !important; }
+.perfil-card .border-red-200,
+.perfil-card .border-amber-200 { border-color: rgba(220, 190, 137, .25) !important; }
+
+.perfil-account-alert {
+  background: linear-gradient(120deg, #2e2b20, #25251f);
+  border-color: rgba(217, 189, 130, .45);
+}
+.perfil-account-alert :is(.text-charcoal-900, .text-charcoal-700) { color: #f1e9d6 !important; }
+.perfil-account-alert .text-accent-brown { color: #efd6a0 !important; }
+
+.perfil-connect > section { margin-bottom: 0; border-radius: 1rem; }
+.perfil-connect > section.bg-white { background: linear-gradient(155deg, #252924, #191e1b) !important; }
+.perfil-connect > section .bg-gradient-to-br { background: rgba(217, 189, 130, .07) !important; border-color: rgba(217, 189, 130, .2) !important; }
+.perfil-connect > section .text-blue-600,
+.perfil-connect > section .text-blue-700 { color: #d9bd82 !important; }
+.perfil-connect > section .border-blue-100,
+.perfil-connect > section .border-blue-200 { border-color: rgba(217, 189, 130, .19) !important; }
+.perfil-connect > section .bg-blue-50 { background: rgba(217, 189, 130, .08) !important; }
+.perfil-connect > section :is(button.bg-blue-600, .bg-blue-600) { background: #bd9d61 !important; color: #171a17 !important; }
+.perfil-connect > section :is(.bg-blue-100, .bg-blue-50) { background: rgba(217, 189, 130, .1) !important; }
+
+.perfil-admin > section { border-radius: 1rem; }
+.perfil-admin > section.bg-white { background: linear-gradient(155deg, #252924, #191e1b) !important; }
+.perfil-admin :is(.text-blue-600, .text-blue-700) { color: #d9bd82 !important; }
+.perfil-admin :is(.bg-blue-50, .bg-blue-100) { background: rgba(217, 189, 130, .1) !important; }
+.perfil-admin :is(.border-blue-100, .border-blue-200) { border-color: rgba(217, 189, 130, .24) !important; }
+
+.perfil-delete-dialog {
+  color: #eee9dd;
+  background: linear-gradient(155deg, #292b27, #191d1a);
+  border: 1px solid rgba(215, 203, 171, .2);
+}
+.perfil-delete-dialog :is(.text-charcoal-900, .text-charcoal-700) { color: #f0ede3 !important; }
+.perfil-delete-dialog .text-charcoal-600 { color: #c3c5bb !important; }
+.perfil-delete-dialog input { color: #f0ede3; background: #202522; border-color: rgba(220, 213, 190, .25); }
+.perfil-delete-dialog .bg-red-100 { color: #f1c2bd; background: rgba(192, 92, 81, .2); }
+.perfil-delete-dialog button.border-charcoal-300 { background: rgba(255, 255, 255, .04); }
+
+@media (max-width: 640px) {
+  .perfil-intro { display: block; }
+  .perfil-intro p { margin-top: .4rem; }
+  .perfil-page::before { left: 0; }
+  .perfil-hero::before { right: -13rem; opacity: .38; }
+  .perfil-shortcuts { flex-wrap: nowrap; overflow-x: auto; padding-bottom: .25rem; }
+  .perfil-shortcuts a { flex: 0 0 auto; }
+}
