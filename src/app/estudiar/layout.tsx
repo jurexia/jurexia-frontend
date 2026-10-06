@@ -9,8 +9,8 @@ import { Newsreader } from 'next/font/google';
    controles siguen en la letra de la casa. */
 const lectura = Newsreader({
     subsets: ['latin', 'latin-ext'],
-    weight: ['400', '500'],
     style: ['normal', 'italic'],
+    axes: ['opsz'],
     display: 'swap',
     variable: '--font-lectura',
     // next/font no trae las medidas de Newsreader para calcular el respaldo
