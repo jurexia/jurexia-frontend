@@ -206,7 +206,7 @@ function ResultadosContent() {
     }, [query, estado]);
 
 
-    const estadoLabel = ESTADOS.find(e => e.value === estado)?.label || '';
+    const estadoLabel = estado ? ESTADOS.find(e => e.value === estado)?.label || estado : '';
 
     return (
         <div className={'connect-editorial ' + fuenteTitulo.variable + ' ' + fuenteTexto.variable}>
