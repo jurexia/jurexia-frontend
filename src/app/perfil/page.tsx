@@ -12,17 +12,16 @@ import { Insignia, nivelDePlan } from '@/components/Insignia';
 import { updatePassword } from '@/lib/supabase';
 import ConnectLawyerSection from '@/components/ConnectLawyerSection';
 import AdminLawyerPanel from '@/components/AdminLawyerPanel';
-import './perfil.css';
 
 const ADMIN_EMAIL = 'administracion@iurexia.com';
 
 const planColors: Record<string, { bg: string; text: string; label: string }> = {
-    gratuito: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Gratuito' },
-    pro_monthly: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Pro Mensual' },
-    pro_annual: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Pro Anual' },
-    platinum_monthly: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum Mensual' },
-    platinum_annual: { bg: 'bg-gradient-to-r from-amber-100 to-orange-100', text: 'text-amber-700', label: 'Platinum Anual' },
-    ultra_secretarios: { bg: 'bg-gradient-to-r from-purple-100 to-indigo-100', text: 'text-purple-700', label: 'Ultra Secretarios' },
+    gratuito: { bg: 'bg-piedra-100 border border-piedra-200', text: 'text-piedra-700', label: 'Gratuito' },
+    pro_monthly: { bg: 'bg-cream-100 border border-accent-gold/40', text: 'text-charcoal-900', label: 'Pro Mensual' },
+    pro_annual: { bg: 'bg-cream-100 border border-accent-gold/40', text: 'text-charcoal-900', label: 'Pro Anual' },
+    platinum_monthly: { bg: 'bg-charcoal-900', text: 'text-accent-gold', label: 'Platinum Mensual' },
+    platinum_annual: { bg: 'bg-charcoal-900', text: 'text-accent-gold', label: 'Platinum Anual' },
+    ultra_secretarios: { bg: 'bg-charcoal-950 border border-accent-gold/60', text: 'text-white', label: 'Ultra Secretarios' },
 };
 
 const REGIMENES_FISCALES = [
@@ -52,7 +51,7 @@ const USOS_CFDI = [
  * una columna larguísima: no había forma de saber de un vistazo dónde está
  * cada cosa. Aquí el color no decora, CLASIFICA — cada naturaleza de dato
  * tiene el suyo, y se queda en el icono y en una línea superior de 2px, nunca
- * en el fondo. Así la página sigue siendo de Iurexia: carbón, piedra y oro.
+ * en el fondo. Así la página sigue siendo de Iurexia: crema, carbón y oro.
  *
  * Por qué estos colores:
  *   oro     — la suscripción. Es el color de la casa y marca lo que vale.
@@ -86,11 +85,11 @@ function textoInvitacion(nombre: string | null | undefined, codigo: string, cons
 }
 
 const ACENTO = {
-    carbon: { linea: '#c5aa76', chip: 'rgba(217,190,133,0.11)', icono: '#dfc797' },
-    oro: { linea: '#d9bd82', chip: 'rgba(217,190,133,0.16)', icono: '#e6cb93' },
-    azul: { linea: '#9bb8b2', chip: 'rgba(155,184,178,0.12)', icono: '#b2d3ca' },
-    pizarra: { linea: '#a9aaa0', chip: 'rgba(169,170,160,0.12)', icono: '#c8c9bd' },
-    rojo: { linea: '#bd7976', chip: 'rgba(189,121,118,0.12)', icono: '#e7aaa5' },
+    carbon: { linea: '#0f0e0d', chip: 'rgba(15,14,13,0.05)', icono: '#0f0e0d' },
+    oro: { linea: '#c9a962', chip: 'rgba(201,169,98,0.12)', icono: '#8a6d2e' },
+    azul: { linea: '#2c5282', chip: 'rgba(44,82,130,0.08)', icono: '#2c5282' },
+    pizarra: { linea: '#6c6861', chip: 'rgba(108,104,97,0.08)', icono: '#4d4a44' },
+    rojo: { linea: '#b91c1c', chip: 'rgba(185,28,28,0.08)', icono: '#b91c1c' },
 } as const;
 
 function Tarjeta({
@@ -111,25 +110,23 @@ function Tarjeta({
     const c = ACENTO[acento];
     return (
         <section
-            className={`perfil-card perfil-card--${acento} overflow-hidden rounded-2xl`}
+            className="overflow-hidden rounded-2xl bg-white border border-piedra-200 shadow-sm transition-shadow hover:shadow-md"
         >
-            <div className="perfil-card-rule" style={{ background: c.linea }} />
-            <div className="px-5 py-5 sm:px-7 sm:py-7">
-                <div className="mb-6 flex items-start gap-3.5">
+            <div style={{ height: 2, background: c.linea, opacity: 0.85 }} />
+            <div className="px-5 py-5 sm:px-6 sm:py-6">
+                <div className="mb-4 flex items-start gap-3.5">
                     <span
-                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
                         style={{ background: c.chip }}
                     >
                         <Icono className="h-[18px] w-[18px]" style={{ color: c.icono }} strokeWidth={1.9} />
                     </span>
                     <div className="min-w-0 flex-1">
-                        <h2
-                            className="font-serif text-[1.35rem] font-medium leading-tight text-charcoal-900"
-                        >
+                        <h2 className="font-serif text-[1.125rem] font-medium leading-tight text-charcoal-900">
                             {titulo}
                         </h2>
                         {descripcion && (
-                            <p className="mt-1 text-[0.8125rem] leading-snug text-charcoal-500">
+                            <p className="mt-0.5 text-xs text-piedra-600">
                                 {descripcion}
                             </p>
                         )}
@@ -330,7 +327,7 @@ export default function PerfilPage() {
     // Show skeleton ONLY while auth is initializing
     if (loading) {
         return (
-            <div className="min-h-screen bg-cream-200">
+            <div className="min-h-screen bg-cream-300">
                 <Navbar plataforma />
                 <div className="max-w-4xl mx-auto px-4 py-12">
                     <div className="animate-pulse space-y-6">
@@ -350,10 +347,10 @@ export default function PerfilPage() {
     // Authenticated but profile failed to load — show retry UI
     if (!profile) {
         return (
-            <div className="min-h-screen bg-cream-200">
+            <div className="min-h-screen bg-cream-300">
                 <Navbar plataforma />
                 <div className="max-w-4xl mx-auto px-4 py-12">
-                    <div className="bg-white rounded-2xl shadow-sm border border-cream-300 p-8 text-center">
+                    <div className="bg-white rounded-2xl shadow-sm border border-piedra-200 p-8 text-center">
                         <p className="text-charcoal-700 mb-4">
                             No se pudo cargar tu perfil. Esto puede ocurrir por una conexión lenta.
                         </p>
@@ -636,25 +633,39 @@ export default function PerfilPage() {
     };
 
     return (
-        <div className="perfil-page min-h-screen">
+        <div className="min-h-screen bg-cream-300">
             <Navbar plataforma />
 
             {/* pt-24: el encabezado fijo tapaba «Mi Perfil». */}
-            <main className="perfil-main mx-auto max-w-6xl px-4 pb-20 pt-24 sm:px-6">
-                <div className="perfil-intro mb-5">
-                    <span className="perfil-eyebrow">SU ESPACIO EN IUREXIA</span>
-                    <p>Identidad, actividad y preferencias en un solo lugar.</p>
+            <main className="mx-auto max-w-5xl px-4 pb-20 pt-24 sm:px-6">
+                {/* ── Encabezado de página institucional ────────────────────────── */}
+                <div className="mb-6">
+                    <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-piedra-600">
+                        Cuenta y preferencias
+                    </p>
+                    <h1 className="mt-1 font-serif text-3xl font-normal text-charcoal-900 sm:text-4xl tracking-tight">
+                        Mi perfil
+                    </h1>
+                    <p className="mt-1.5 text-sm text-piedra-600">
+                        Gestione su suscripción, datos personales, facturación y preferencias de la plataforma.
+                    </p>
                 </div>
+
                 {/* ── Identidad ──────────────────────────────────────────────
                     Quién eres y en qué plan estás, de un vistazo y sin
-                    competir con nada. Antes esto vivía dentro de una tarjeta
-                    más, al mismo nivel que los datos fiscales. */}
+                    competir con nada. */}
                 <div
-                    className="perfil-hero mb-7 overflow-hidden rounded-3xl"
+                    className="mb-8 overflow-hidden rounded-2xl"
+                    style={{
+                        background: 'linear-gradient(135deg, #161817 0%, #202422 55%, #161817 100%)',
+                        border: '1px solid rgba(201,169,98,0.22)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+                    }}
                 >
-                    <div className="perfil-hero-content flex flex-col items-center gap-5 px-6 py-9 text-center sm:flex-row sm:items-center sm:gap-6 sm:px-9 sm:text-left">
+                    <div className="flex flex-col items-center gap-5 px-6 py-7 text-center sm:flex-row sm:items-center sm:gap-6 sm:px-8 sm:text-left">
                         <div
-                            className="perfil-monogram flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-full font-serif text-[1.5rem] font-medium text-white"
+                            className="flex h-[64px] w-[64px] flex-shrink-0 items-center justify-center rounded-xl font-serif text-2xl font-medium text-accent-gold"
+                            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(201,169,98,0.3)' }}
                         >
                             {(profile?.full_name || user.email || '?')
                                 .split(' ').filter(Boolean).slice(0, 2)
@@ -662,40 +673,32 @@ export default function PerfilPage() {
                         </div>
 
                         <div className="min-w-0 flex-1">
-                            <p className="perfil-hero-label">PERFIL PERSONAL</p>
-                            <h1
-                                className="truncate font-serif text-[1.75rem] font-medium text-white sm:text-[2.1rem]"
+                            <h2
+                                className="truncate font-serif text-2xl font-normal text-white sm:text-3xl"
                             >
                                 {profile?.full_name || 'Su perfil'}
-                            </h1>
-                            <p className="mt-0.5 truncate text-[0.8125rem]" style={{ color: 'rgba(255,255,255,0.66)' }}>
+                            </h2>
+                            <p className="mt-1 truncate text-xs text-piedra-300">
                                 {user.email}
                             </p>
                         </div>
 
                         {/* La insignia dice el plan sin una palabra. */}
-                        <div className="perfil-plan-badge flex flex-shrink-0 items-center gap-2.5 rounded-full px-4 py-2.5">
-                            <Insignia nivel={nivelDePlan(profile?.subscription_type)} tam={22} animada />
-                            <span className="text-[0.8125rem] font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                        <div className="flex flex-shrink-0 items-center gap-2.5 rounded-lg border border-white/10 bg-white/5 px-3.5 py-2">
+                            <Insignia nivel={nivelDePlan(profile?.subscription_type)} tam={20} animada />
+                            <span className="text-xs font-medium text-piedra-200">
                                 {planColors[profile?.subscription_type || 'gratuito']?.label ?? 'Gratuito'}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <nav className="perfil-shortcuts mb-8" aria-label="Secciones del perfil">
-                    <a href="#perfil-datos">Mis datos</a>
-                    <a href="#perfil-suscripcion">Suscripción</a>
-                    {isPro && <a href="#perfil-profesional">Perfil profesional</a>}
-                    <a href="#perfil-seguridad">Seguridad</a>
-                </nav>
-
                 {/* Aviso de cuenta duplicada. Va arriba del todo porque quien
                     llega aquí creyendo que perdió su plan tiene que verlo antes
                     que nada — si no, escribe a soporte convencido de que se lo
                     quitamos. Salió de un caso real. */}
                 {otraCuenta?.hay_otra && (
-                    <div className="perfil-account-alert mb-6 p-5 rounded-2xl border border-accent-gold/60 bg-cream-100">
+                    <div className="mb-6 p-5 rounded-2xl border border-accent-gold/60 bg-cream-100">
                         <p className="text-charcoal-900 font-medium mb-2">
                             Tiene otra cuenta con plan de pago
                         </p>
@@ -716,17 +719,15 @@ export default function PerfilPage() {
                     </div>
                 )}
 
-                {/* Las tarjetas se agrupan por cuenta, práctica y configuración.
-                    En escritorio se muestran en dos columnas; en móvil, en una. */}
-                <div className="perfil-grid grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
-
-                <div className="perfil-section-title lg:col-span-2">
-                    <span>01 / CUENTA</span>
-                    <h2>Su información esencial</h2>
-                </div>
+                {/* ── Rejilla ──────────────────────────────────────────────
+                    Antes era UNA columna de nueve tarjetas idénticas: había
+                    que rodar toda la página para saber qué hay. En escritorio
+                    van a dos columnas, y sólo lo que de verdad manda —la
+                    suscripción y el programa de referidos— ocupa el ancho.
+                    En móvil vuelve a una sola, que es lo que cabe. */}
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
 
                 {/* Información Personal */}
-                <div id="perfil-datos" className="perfil-grid-item">
                 <Tarjeta icono={User} titulo="Información personal" acento="carbon"
                     descripcion="Cómo aparece en la plataforma">
 
@@ -835,41 +836,38 @@ export default function PerfilPage() {
                         </div>
                     </div>
                 </Tarjeta>
-                </div>
 
                 {/* Mi Suscripción */}
-                <div id="perfil-suscripcion" className="perfil-grid-item">
+                <div className="lg:col-span-2">
                 <Tarjeta icono={CreditCard} titulo="Mi suscripción" acento="oro"
                     descripcion="Su plan y el consumo del periodo">
 
                     <div className="space-y-4">
                         {/* Plan actual */}
                         <div className="flex items-center gap-3">
-                            <span className={`perfil-plan-pill px-4 py-2 rounded-full text-sm font-semibold ${planStyle.bg} ${planStyle.text}`}>
+                            <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${planStyle.bg} ${planStyle.text}`}>
                                 Plan {planStyle.label}
                             </span>
                             {canceloSuscripcion ? (
-                                <span className="text-sm text-amber-700 flex items-center gap-1">
-                                    <Check className="w-4 h-4" />
+                                <span className="text-xs font-medium text-amber-800 flex items-center gap-1.5">
+                                    <Check className="w-3.5 h-3.5 text-amber-700" />
                                     Cancelada
                                 </span>
                             ) : (
-                                <span className="text-sm text-green-600 flex items-center gap-1">
-                                    <Check className="w-4 h-4" />
+                                <span className="text-xs font-medium text-charcoal-700 flex items-center gap-1.5">
+                                    <Check className="w-3.5 h-3.5 text-accent-gold" />
                                     Activo
                                 </span>
                             )}
                         </div>
 
-                        {/* LA CANCELACIÓN, A LA VISTA (26-sep-2026): quien canceló
-                            tiene que leer aquí mismo que se registró, hasta cuándo
-                            conserva lo pagado y que no habrá más cobros. */}
+                        {/* LA CANCELACIÓN, A LA VISTA (26-sep-2026) */}
                         {canceloSuscripcion && (
-                            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
-                                <p className="font-semibold">Su suscripción está cancelada.</p>
-                                <p>
+                            <div className="rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3.5 text-sm leading-relaxed text-amber-950">
+                                <p className="font-semibold text-amber-950">Su suscripción está cancelada.</p>
+                                <p className="text-xs text-amber-900 mt-1">
                                     Conserva su acceso completo hasta el{' '}
-                                    <strong>{accesoHasta ?? 'final de su periodo pagado'}</strong>.
+                                    <strong className="text-amber-950">{accesoHasta ?? 'final de su periodo pagado'}</strong>.
                                     No habrá ningún cobro más.
                                 </p>
                             </div>
@@ -888,13 +886,13 @@ export default function PerfilPage() {
 
                             {profile.queries_limit !== -1 && (
                                 <>
-                                    <div className="w-full bg-cream-300 rounded-full h-3 overflow-hidden">
+                                    <div className="w-full bg-piedra-100 rounded-full h-2.5 overflow-hidden border border-piedra-200">
                                         <div
-                                            className="bg-accent-gold h-3 rounded-full transition-all duration-300"
+                                            className="bg-charcoal-900 h-2.5 rounded-full transition-all duration-300"
                                             style={{ width: `${Math.min(queryPercentage, 100)}%` }}
                                         />
                                     </div>
-                                    <p className="text-xs text-charcoal-500 mt-1">
+                                    <p className="text-xs text-piedra-600 mt-1.5">
                                         {queryPercentage.toFixed(0)}% utilizado
                                     </p>
                                 </>
@@ -1147,34 +1145,9 @@ export default function PerfilPage() {
                     )}
                 </Tarjeta>
 
-                {/* Datos de cuenta junto a los fiscales: ambos son ajustes
-                    administrativos y completan la segunda fila. */}
-                <Tarjeta icono={Shield} titulo="Detalles de cuenta" acento="pizarra"
-                    descripcion="Identificadores y estado de verificación">
-                    <div className="space-y-3">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-charcoal-600">ID de usuario</span>
-                            <span className="text-charcoal-900 font-mono text-xs">{user.id.substring(0, 20)}...</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-charcoal-600">Cuenta creada</span>
-                            <span className="text-charcoal-900">{formatDate(user.created_at)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm items-center">
-                            <span className="text-charcoal-600">Email verificado</span>
-                            <span className="text-green-600 flex items-center gap-1"><Check className="w-4 h-4" />Verificado</span>
-                        </div>
-                    </div>
-                </Tarjeta>
-
-                <div className="perfil-section-title lg:col-span-2">
-                    <span>02 / SU PRÁCTICA</span>
-                    <h2>Conexiones y recomendaciones</h2>
-                </div>
-
                 {/* IUREXIA Connect — Solo para PRO/Platinum */}
                 {isPro && (
-                    <div id="perfil-profesional" className="perfil-connect lg:col-span-2">
+                    <div className="lg:col-span-2">
                     <ConnectLawyerSection
                         userId={user.id}
                         userName={profile.full_name || user.email || ''}
@@ -1185,8 +1158,35 @@ export default function PerfilPage() {
 
                 {/* Admin: Registro de Abogados — Solo para admin */}
                 {user.email === ADMIN_EMAIL && (
-                    <div className="perfil-admin lg:col-span-2"><AdminLawyerPanel /></div>
+                    <div className="lg:col-span-2"><AdminLawyerPanel /></div>
                 )}
+
+                {/* Detalles de Cuenta */}
+                <Tarjeta icono={Shield} titulo="Detalles de cuenta" acento="pizarra"
+                    descripcion="Identificadores y estado de verificación">
+
+                    <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-charcoal-600">ID de usuario</span>
+                            <span className="text-charcoal-900 font-mono text-xs">
+                                {user.id.substring(0, 20)}...
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-charcoal-600">Cuenta creada</span>
+                            <span className="text-charcoal-900">
+                                {formatDate(user.created_at)}
+                            </span>
+                        </div>
+                        <div className="flex justify-between text-sm items-center">
+                            <span className="text-charcoal-600">Email verificado</span>
+                            <span className="text-green-600 flex items-center gap-1">
+                                <Check className="w-4 h-4" />
+                                Verificado
+                            </span>
+                        </div>
+                    </div>
+                </Tarjeta>
 
                 {/* Regale Iurexia.
                     Ahora la ve CUALQUIER usuario, no sólo quien paga: el
@@ -1364,11 +1364,6 @@ export default function PerfilPage() {
                 )}
 
 
-                <div className="perfil-section-title lg:col-span-2">
-                    <span>03 / CONFIGURACIÓN</span>
-                    <h2>Preferencias y acceso</h2>
-                </div>
-
                 {/* Tratamiento profesional. El nombre no dice el género, y
                     llamarle «El abogado» a una abogada en cada consulta es
                     peor que no personalizar: por eso lo elige cada quien, y
@@ -1407,7 +1402,6 @@ export default function PerfilPage() {
                     updatePassword() ya existía en lib/supabase, pero no había
                     ninguna pantalla que lo llamara. Sin esto, cambiar de
                     contraseña obligaba a fingir que se había olvidado. */}
-                <div id="perfil-seguridad" className="perfil-grid-item">
                 <Tarjeta icono={KeyRound} titulo="Contraseña" acento="pizarra"
                     descripcion="Acceso a su cuenta">
 
@@ -1449,7 +1443,6 @@ export default function PerfilPage() {
                         </button>
                     </div>
                 </Tarjeta>
-                </div>
 
                 </div>
 
@@ -1489,7 +1482,7 @@ export default function PerfilPage() {
             {/* Delete Modal */}
             {showDeleteModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="perfil-delete-dialog bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <AlertTriangle className="w-6 h-6 text-red-600" />
                             <h3 className="font-serif text-2xl font-medium text-charcoal-900">
