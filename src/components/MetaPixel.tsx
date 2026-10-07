@@ -28,7 +28,12 @@ import {
     type SesionParaAlta,
 } from '@/lib/origen-alta';
 
-const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || '';
+// El ID del píxel es público (viaja en cada página que lo carga), así que va escrito aquí como valor por
+// omisión: el conjunto de datos «Iurexia web», creado el 6-oct-2026. La variable de entorno lo sustituye, y
+// NEXT_PUBLIC_META_PIXEL_ID=0 lo apaga sin desplegar código nuevo.
+const PIXEL_ID_IUREXIA = '1408384650791902';
+const PIXEL_ENV = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
+const PIXEL_ID = PIXEL_ENV === '0' ? '' : PIXEL_ENV || PIXEL_ID_IUREXIA;
 
 let iniciado = false;
 

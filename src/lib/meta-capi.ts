@@ -60,7 +60,11 @@ export interface ConfigMeta {
 
 export function configDelEntorno(): ConfigMeta {
     return {
-        pixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || undefined,
+        // el mismo valor por omisión que MetaPixel.tsx (el ID es público); «0» lo apaga
+        pixelId: (() => {
+            const v = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
+            return v === '0' ? undefined : v || '1408384650791902';
+        })(),
         token: process.env.META_CAPI_TOKEN?.trim() || undefined,
         testEventCode: process.env.META_CAPI_TEST_EVENT_CODE?.trim() || undefined,
     };
