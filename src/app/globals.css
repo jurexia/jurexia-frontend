@@ -2380,3 +2380,45 @@ html.con-barra-trabajo .solo-publico {
     transform: none !important;
   }
 }
+
+/* ═══ El desfile de despachos (5-oct-2026) ═══
+   La franja de logotipos bajo el vídeo del inicio (DespachosVitrina.tsx)
+   desfila de izquierda a derecha: la pista lleva la lista dos veces y se
+   corre media pista; la duración la calcula el componente según el ancho
+   (--duracion), para que la velocidad no dependa de cuántos despachos haya.
+   Se detiene al pasar el puntero. Con «reducir movimiento» no se mueve: una
+   fila centrada, sin las copias. */
+@keyframes desfile {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+.desfile {
+  --escala-desfile: 1;
+  animation: desfile var(--duracion, 90s) linear infinite;
+}
+
+/* En teléfono, a tamaño completo cabía un logotipo y medio: allí van al 70 %. */
+@media (max-width: 639px) {
+  .desfile {
+    --escala-desfile: 0.7;
+  }
+}
+
+.desfile-marco:hover .desfile {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desfile {
+    animation: none;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 1.5rem;
+  }
+
+  .desfile [data-copia] {
+    display: none;
+  }
+}
