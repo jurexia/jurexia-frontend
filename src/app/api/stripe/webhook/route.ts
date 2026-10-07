@@ -16,6 +16,7 @@ import {
 } from '@/lib/supabase-admin';
 import { guardarTarjetaQuePague, suscripcionDeLaFactura } from '@/lib/cobro-pendiente';
 import { avisarSuspension } from '@/lib/correo/suspension';
+import { conTope, medirCompraMeta } from '@/lib/meta-capi';
 import { Resend } from 'resend';
 
 // Disable body parsing, we need the raw body for webhook verification
@@ -487,6 +488,23 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     } catch (err) {
         // Don't fail the checkout completion if auto-cancel fails
         console.error(`⚠️ Auto-cancel of old subscriptions failed for ${email}:`, err);
+    }
+
+    // ── META: Purchase + Subscribe por la API de Conversiones ───────
+    // Después de retirar la suscripción anterior, para no contar como compra
+    // un «downgrade» que se acaba de revertir (ese camino sale con `return`
+    // arriba). NUNCA rompe ni retrasa el webhook: `medirCompraMeta` no lanza,
+    // su fetch se corta a los 3 s, y `conTope` suelta todo a los 4 s aunque la
+    // consulta a Supabase se quede colgada. Sin `META_CAPI_TOKEN` no hace nada.
+    try {
+        await conTope(medirCompraMeta({
+            admin: getSupabaseAdmin(),
+            sesion: session,
+            email,
+            plan: subscriptionType,
+        }), 4000);
+    } catch {
+        // inalcanzable: medirCompraMeta y conTope no lanzan
     }
 
     // ── AUTO-SEND Welcome Email ─────────────────────────────────

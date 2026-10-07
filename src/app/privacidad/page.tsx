@@ -7,7 +7,7 @@ import { Shield } from 'lucide-react';
 
 import { claseWeb } from '@/lib/fuentes-web';
 export default function PrivacidadPage() {
-    const fechaActualizacion = "4 de febrero de 2026";
+    const fechaActualizacion = "6 de octubre de 2026";
 
     return (
         <main className={`${claseWeb} min-h-screen bg-cream-300`}>
@@ -115,6 +115,7 @@ export default function PrivacidadPage() {
                                 <li>Envío de comunicaciones sobre nuevas funcionalidades</li>
                                 <li>Análisis estadísticos para mejora del servicio</li>
                                 <li>Encuestas de satisfacción</li>
+                                <li>Medición y optimización de nuestros anuncios en Meta (ver sección VII)</li>
                             </ul>
                         </section>
 
@@ -232,8 +233,33 @@ export default function PrivacidadPage() {
                             </h2>
                             <p className="text-charcoal-700 leading-relaxed mb-4">
                                 Utilizamos cookies esenciales para el funcionamiento de la plataforma y cookies
-                                de autenticación para mantener su sesión activa. No utilizamos cookies de
-                                publicidad ni compartimos información con redes publicitarias.
+                                de autenticación para mantener su sesión activa. Las cookies analíticas y de
+                                marketing sólo se activan si usted las acepta en el aviso de cookies.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                <strong>Píxel de Meta y API de Conversiones.</strong> Si acepta las cookies de
+                                Marketing, usamos el píxel de Meta (Facebook e Instagram) y su API de Conversiones
+                                para medir la eficacia de nuestros anuncios. El píxel registra las visitas a las
+                                páginas de iurexia.com. Cuando usted se registra o contrata un plan, además,
+                                compartimos con Meta Platforms, Inc. identificadores cifrados (hash), como su
+                                correo electrónico y su identificador de usuario, junto con datos técnicos de su
+                                navegador (dirección IP, agente de usuario e identificadores de las cookies de
+                                Meta) y, al contratar, el importe y la moneda del pago. La finalidad es
+                                exclusivamente la medición y optimización publicitaria.
+                            </p>
+                            <p className="text-charcoal-700 leading-relaxed mb-4">
+                                Puede oponerse en cualquier momento: rechazando las cookies de Marketing en{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => window.dispatchEvent(new Event('iurexia:abrir-cookies'))}
+                                    className="text-accent-brown hover:underline"
+                                >
+                                    sus preferencias de cookies
+                                </button>
+                                , desde la configuración de anuncios de su cuenta de Meta, o escribiendo a{' '}
+                                <a href="mailto:soporte@iurexia.com" className="text-accent-brown hover:underline">
+                                    soporte@iurexia.com
+                                </a>.
                             </p>
                         </section>
 
