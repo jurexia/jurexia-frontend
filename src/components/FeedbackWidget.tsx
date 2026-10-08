@@ -9,13 +9,20 @@
  * hay —contesta al instante y, si no puede, escala al equipo con la
  * conversación entera.
  *
- * Y no estorba: la burbuja se arrastra a donde el usuario quiera y recuerda el
+ * Y no estorba: el botón se arrastra a donde el usuario quiera y recuerda el
  * sitio. Pero NUNCA desaparece —cerrar sólo repliega el panel—, porque tras
  * escalar un caso el abogado se quedaba sin canal para la siguiente duda.
+ *
+ * MOVIBLE DE VERDAD (7-oct-2026). David: «el botón de soporte hazlo movible».
+ * Ya se podía mover, pero por un asa INVISIBLE hasta pasar el ratón encima: en
+ * el teléfono no existía y en la computadora nadie la encontraba. Ahora se
+ * arrastra el propio botón —con el dedo o con el ratón—; un toque sin moverlo
+ * lo abre. El panel se abre del lado en el que está el botón y también se
+ * arrastra por su cabecera. Y, como la barra del chat, sin iconos: el botón
+ * dice «Soporte» y los controles dicen lo que hacen.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, X, Send, RotateCcw, GripHorizontal } from 'lucide-react';
 
 interface FeedbackWidgetProps {
     userId?: string;
@@ -37,23 +44,52 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
     const [pensando, setPensando] = useState(false);
     const [cerrado, setCerrado] = useState(false);
 
-    // Posición de la burbuja: derecha/abajo en píxeles desde la esquina.
+    // Posición del botón: su esquina inferior derecha, en píxeles desde la
+    // esquina inferior derecha de la ventana. Se guarda igual que antes, así
+    // que quien ya lo había movido lo encuentra donde lo dejó.
     const [pos, setPos] = useState({ derecha: 24, abajo: 24 });
-    const arrastre = useRef<{ x: number; y: number; d: number; b: number } | null>(null);
+    const posRef = useRef(pos);
+    posRef.current = pos;
+    const arrastre = useRef<{ x: number; y: number; d: number; b: number; movido: boolean } | null>(null);
+    const suprimirClic = useRef(false);
     const [arrastrando, setArrastrando] = useState(false);
+    const [ventana, setVentana] = useState({ ancho: 1280, alto: 800 });
+    const botonRef = useRef<HTMLButtonElement>(null);
+    // La última medida del botón: con el panel abierto el botón no está
+    // montado, y el panel necesita saber dónde estaba y cuánto medía.
+    const tamBoton = useRef({ ancho: 104, alto: 40 });
 
     const finRef = useRef<HTMLDivElement>(null);
     const entradaRef = useRef<HTMLTextAreaElement>(null);
+
+    /* Nunca fuera de la pantalla: se recorta a 8 px de cada borde, con la
+       medida real del botón. */
+    const recortar = useCallback((p: { derecha: number; abajo: number }) => {
+        const r = botonRef.current?.getBoundingClientRect();
+        if (r && r.width) tamBoton.current = { ancho: r.width, alto: r.height };
+        const { ancho, alto } = tamBoton.current;
+        return {
+            derecha: Math.round(Math.min(Math.max(p.derecha, 8), window.innerWidth - ancho - 8)),
+            abajo: Math.round(Math.min(Math.max(p.abajo, 8), window.innerHeight - alto - 8)),
+        };
+    }, []);
 
     useEffect(() => {
         try {
             const g = localStorage.getItem(CLAVE_POSICION);
             if (g) {
                 const p = JSON.parse(g);
-                if (typeof p.derecha === 'number' && typeof p.abajo === 'number') setPos(p);
+                if (typeof p.derecha === 'number' && typeof p.abajo === 'number') setPos(recortar(p));
             }
         } catch { }
-    }, []);
+        const medir = () => {
+            setVentana({ ancho: window.innerWidth, alto: window.innerHeight });
+            setPos(p => recortar(p));
+        };
+        medir();
+        window.addEventListener('resize', medir);
+        return () => window.removeEventListener('resize', medir);
+    }, [recortar]);
 
     useEffect(() => {
         finRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -63,35 +99,54 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
         if (abierto) setTimeout(() => entradaRef.current?.focus(), 250);
     }, [abierto]);
 
-    // ── Arrastre de la burbuja ────────────────────────────────────────
-    // Se mide contra la ventana y se recorta a los bordes: no puede quedar
-    // fuera de la pantalla ni tapando el borde del navegador.
-    const alMover = useCallback((e: PointerEvent) => {
-        if (!arrastre.current) return;
-        const dx = arrastre.current.x - e.clientX;
-        const dy = arrastre.current.y - e.clientY;
-        setPos({
-            derecha: Math.min(Math.max(arrastre.current.d + dx, 8), window.innerWidth - 80),
-            abajo: Math.min(Math.max(arrastre.current.b + dy, 8), window.innerHeight - 80),
-        });
-    }, []);
-
-    const alSoltar = useCallback(() => {
+    // ── Arrastre: del botón y de la cabecera del panel ────────────────
+    // Hasta que el puntero se mueve 4 px no es arrastre, es un toque; así el
+    // clic sigue abriendo el panel y un pulso tembloroso no lo mueve.
+    const alPresionar = (e: React.PointerEvent<HTMLElement>) => {
+        if (e.button !== 0) return;
+        if (e.currentTarget.tagName !== 'BUTTON' && (e.target as HTMLElement).closest('button, textarea')) return;
+        arrastre.current = { x: e.clientX, y: e.clientY, d: posRef.current.derecha, b: posRef.current.abajo, movido: false };
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch { }
+    };
+    const alArrastrar = (e: React.PointerEvent<HTMLElement>) => {
+        const a = arrastre.current;
+        if (!a) return;
+        const dx = a.x - e.clientX;
+        const dy = a.y - e.clientY;
+        if (!a.movido && Math.hypot(dx, dy) < 4) return;
+        if (!a.movido) { a.movido = true; setArrastrando(true); }
+        setPos(recortar({ derecha: a.d + dx, abajo: a.b + dy }));
+    };
+    const alSoltar = (e: React.PointerEvent<HTMLElement>) => {
+        const a = arrastre.current;
         arrastre.current = null;
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { }
+        if (!a?.movido) return;
+        suprimirClic.current = true;
         setArrastrando(false);
-        window.removeEventListener('pointermove', alMover);
-        window.removeEventListener('pointerup', alSoltar);
-        setPos(p => {
-            try { localStorage.setItem(CLAVE_POSICION, JSON.stringify(p)); } catch { }
-            return p;
-        });
-    }, [alMover]);
+        try { localStorage.setItem(CLAVE_POSICION, JSON.stringify(posRef.current)); } catch { }
+    };
+    const alPulsarBoton = () => {
+        if (suprimirClic.current) { suprimirClic.current = false; return; }
+        const r = botonRef.current?.getBoundingClientRect();
+        if (r && r.width) tamBoton.current = { ancho: r.width, alto: r.height };
+        setAbierto(true);
+    };
 
-    const empezarArrastre = (e: React.PointerEvent) => {
-        arrastre.current = { x: e.clientX, y: e.clientY, d: pos.derecha, b: pos.abajo };
-        setArrastrando(true);
-        window.addEventListener('pointermove', alMover);
-        window.addEventListener('pointerup', alSoltar);
+    /* El panel se abre del lado del botón: si el botón está a la izquierda,
+       el panel crece hacia la derecha; si está arriba, hacia abajo. Y siempre
+       dentro de la ventana, a 16 px de los bordes. */
+    const anchoPanel = Math.min(380, ventana.ancho - 32);
+    const altoPanel = Math.min(560, ventana.alto - 100);
+    const derechaBoton = ventana.ancho - pos.derecha;
+    const pieBoton = ventana.alto - pos.abajo;
+    const anchoBoton = tamBoton.current.ancho;
+    const altoBoton = tamBoton.current.alto;
+    const izquierdaPanel = derechaBoton - anchoBoton / 2 > ventana.ancho / 2 ? derechaBoton - anchoPanel : derechaBoton - anchoBoton;
+    const arribaPanel = pieBoton - altoBoton / 2 > ventana.alto / 2 ? pieBoton - altoPanel : pieBoton - altoBoton;
+    const panel = {
+        left: Math.min(Math.max(izquierdaPanel, 16), Math.max(16, ventana.ancho - anchoPanel - 16)),
+        top: Math.min(Math.max(arribaPanel, 16), Math.max(16, ventana.alto - altoPanel - 16)),
     };
 
     /* El botón NUNCA desaparece. Antes podía ocultarse por toda la visita y,
@@ -138,38 +193,23 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
 
     return (
         <>
-            {/* ── Burbuja ─────────────────────────────────────────────── */}
+            {/* ── El botón ─────────────────────────────────────────────── */}
             {!abierto && (
-                <div
-                    className="fixed z-[90] flex flex-col items-center gap-1.5"
-                    style={{ right: pos.derecha, bottom: pos.abajo }}
+                <button
+                    ref={botonRef}
+                    onPointerDown={alPresionar}
+                    onPointerMove={alArrastrar}
+                    onPointerUp={alSoltar}
+                    onPointerCancel={alSoltar}
+                    onClick={alPulsarBoton}
+                    aria-label="Soporte de Iurexia (se puede arrastrar)"
+                    title="Soporte — arrástrelo para moverlo"
+                    className="soporte-boton fixed z-[90]"
+                    data-arrastrando={arrastrando ? 'si' : undefined}
+                    style={{ right: pos.derecha, bottom: pos.abajo, touchAction: 'none' }}
                 >
-                    {/* Asa de arrastre: sólo aparece al acercar el cursor, para
-                        no ensuciar la pantalla cuando no se usa. */}
-                    <button
-                        onPointerDown={empezarArrastre}
-                        aria-label="Mover el botón de soporte"
-                        title="Arrastre para moverlo"
-                        className="opacity-0 transition-opacity hover:opacity-100 focus:opacity-100"
-                        style={{ cursor: arrastrando ? 'grabbing' : 'grab', touchAction: 'none' }}
-                    >
-                        <GripHorizontal className="h-4 w-4" style={{ color: 'rgba(26,26,26,0.35)' }} />
-                    </button>
-
-                    <div className="relative">
-                        <button
-                            onClick={() => setAbierto(true)}
-                            aria-label="Soporte de Iurexia"
-                            className="flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
-                            style={{
-                                background: 'linear-gradient(135deg, #2a2a2c 0%, #1a1a1a 100%)',
-                                border: '1px solid rgba(201,169,98,0.35)',
-                            }}
-                        >
-                            <MessageCircle className="h-5 w-5" style={{ color: '#c9a962' }} />
-                        </button>
-                    </div>
-                </div>
+                    Soporte
+                </button>
             )}
 
             {/* ── Panel ───────────────────────────────────────────────── */}
@@ -177,18 +217,23 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                 <div
                     className="fixed z-[90] flex flex-col overflow-hidden rounded-2xl shadow-2xl"
                     style={{
-                        right: Math.min(pos.derecha, 24),
-                        bottom: Math.min(pos.abajo, 24),
-                        width: 'min(380px, calc(100vw - 32px))',
-                        height: 'min(560px, calc(100vh - 100px))',
+                        left: panel.left,
+                        top: panel.top,
+                        width: anchoPanel,
+                        height: altoPanel,
                         background: 'linear-gradient(180deg, #1c1c1e 0%, #141415 100%)',
                         border: '1px solid rgba(201,169,98,0.28)',
                     }}
                 >
-                    {/* Cabecera */}
+                    {/* Cabecera: también es el asa para mover el panel */}
                     <div
-                        className="flex flex-shrink-0 items-center gap-3 px-4 py-3"
-                        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+                        onPointerDown={alPresionar}
+                        onPointerMove={alArrastrar}
+                        onPointerUp={alSoltar}
+                        onPointerCancel={alSoltar}
+                        title="Arrastre para mover el panel"
+                        className="flex flex-shrink-0 select-none items-center gap-3 px-4 py-3"
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', cursor: arrastrando ? 'grabbing' : 'grab', touchAction: 'none' }}
                     >
                         <span
                             className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-semibold"
@@ -203,18 +248,16 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                             </p>
                         </div>
                         {turnos.length > 1 && (
-                            <button onClick={reiniciar} aria-label="Nueva consulta"
+                            <button onClick={reiniciar}
                                 title="Empezar una consulta nueva"
-                                className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
-                                style={{ color: 'rgba(255,255,255,0.45)' }}>
-                                <RotateCcw className="h-3.5 w-3.5" />
+                                className="soporte-control">
+                                Nueva
                             </button>
                         )}
-                        <button onClick={() => setAbierto(false)} aria-label="Cerrar"
+                        <button onClick={() => setAbierto(false)}
                             title="Replegar (el botón sigue disponible)"
-                            className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
-                            style={{ color: 'rgba(255,255,255,0.45)' }}>
-                            <X className="h-4 w-4" />
+                            className="soporte-control">
+                            Cerrar
                         </button>
                     </div>
 
@@ -262,12 +305,7 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                                     Su caso ya está con el equipo. Le escribirán a{' '}
                                     <span style={{ color: '#c9a962' }}>{userEmail || 'su correo'}</span>.
                                 </p>
-                                <button
-                                    onClick={reiniciar}
-                                    className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[0.75rem] font-medium transition-colors"
-                                    style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.85)' }}
-                                >
-                                    <RotateCcw className="h-3 w-3" />
+                                <button onClick={reiniciar} className="soporte-control mt-2.5">
                                     Tengo otra consulta
                                 </button>
                             </div>
@@ -290,11 +328,9 @@ export default function FeedbackWidget({ userId, userEmail, userName, plan }: Fe
                                 <button
                                     onClick={enviar}
                                     disabled={!texto.trim() || pensando}
-                                    aria-label="Enviar"
-                                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity disabled:opacity-30"
-                                    style={{ background: 'linear-gradient(135deg,#c9a962,#8b7355)' }}
+                                    className="soporte-enviar"
                                 >
-                                    <Send className="h-3.5 w-3.5" style={{ color: '#1a1a1a' }} />
+                                    Enviar
                                 </button>
                             </div>
                         )}

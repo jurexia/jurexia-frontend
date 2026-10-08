@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, FileText, Gavel, MoreHorizontal, Newspaper, Plus } from 'lucide-react';
 
 import ChatSidebar from '@/components/ChatSidebar';
 import NuevaCarpetaModal from '@/components/NuevaCarpetaModal';
@@ -40,8 +39,6 @@ type Memoria = { uid: string; conversations: Conversation[]; carpetas: Expedient
    Para que no parpadee vacía, se recuerda lo último que se cargó (sólo en
    memoria, y sólo del mismo usuario) mientras llega lo nuevo. */
 let memoria: Memoria | null = null;
-
-const BOTON = 'relative inline-flex h-8 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-lg text-[0.8125rem] font-medium transition-colors';
 
 export default function MarcoTrabajo() {
     const router = useRouter();
@@ -187,78 +184,84 @@ export default function MarcoTrabajo() {
             {/* El encabezado del chat, con las mismas medidas: h-14, controles de
                 h-8 y un solo radio. En el teléfono deja sitio a la izquierda
                 para el botón que abre la lateral. */}
-            <header className="fixed left-0 right-0 top-0 z-30 h-14 border-b border-black/5 bg-cream-300/80 backdrop-blur-md transition-[left] duration-300 md:left-[var(--sidebar-w,18rem)]">
+            <header className="barra-trabajo fixed left-0 right-0 top-0 z-30 h-14 border-b border-black/5 bg-cream-300/80 backdrop-blur-md transition-[left] duration-300 md:left-[var(--sidebar-w,18rem)]">
                 <div className="flex h-full min-w-0 items-center justify-between gap-2 pl-14 pr-3 sm:pr-4 md:pl-4">
+                    {/* Con relieve y sin iconos, como el chat (7-oct-2026; ver
+                        `.relieve` en globals.css). La herramienta en la que se
+                        está queda pulsada y con su raya de oro. */}
                     <nav aria-label="Herramientas" className="flex min-w-0 items-center gap-1.5">
                         <Link
                             href="/carpetas"
                             aria-current={enTrabajo ? 'page' : undefined}
-                            title="Mi trabajo"
-                            className={`${BOTON} bg-charcoal-900 px-2.5 text-white hover:bg-charcoal-800 sm:px-3`}
+                            title="Mi trabajo — sus carpetas y lo que ha guardado"
+                            className="relieve relieve-tinta px-2.5 sm:px-3"
                         >
-                            <FileText className="h-3.5 w-3.5 text-accent-gold" />
-                            <span className="hidden sm:inline">Mi trabajo</span>
+                            Mi trabajo
                             {enTrabajo && <Activo />}
                         </Link>
                         <Link
                             href="/ultimo"
                             aria-current={enUltimo ? 'page' : undefined}
                             title="Lo último — Corte, tesis de la semana, Diario Oficial e IA"
-                            className={`${BOTON} border border-accent-gold/40 bg-accent-gold/10 px-2.5 text-charcoal-900 hover:bg-accent-gold/20 sm:px-3`}
+                            className="relieve relieve-oro bt-ultimo"
                         >
-                            <Newspaper className="h-3.5 w-3.5 text-accent-gold" />
-                            <span className="hidden sm:inline">Lo último</span>
+                            Lo último
                             {enUltimo && <Activo />}
                         </Link>
                         <Link
                             href="/normativa"
                             aria-current={enNormativa ? 'page' : undefined}
-                            title="Normativa"
-                            className={`${BOTON} hidden border border-charcoal-900/10 px-3 text-charcoal-800 hover:border-charcoal-900/25 hover:bg-charcoal-900/[0.03] md:inline-flex`}
+                            title="Normativa — el acervo de leyes"
+                            className="relieve relieve-papel bt-ancha"
                         >
-                            <BookOpen className="h-3.5 w-3.5" />
                             Normativa
                             {enNormativa && <Activo />}
                         </Link>
                         <Link
                             href={rutaPJF}
                             title={accesoPJF ? 'Redactor PJF — crea un proyecto de sentencia' : 'Redactor PJF — del plan Ultra Secretarios'}
-                            className={`${BOTON} hidden bg-charcoal-900 px-3 text-white hover:bg-charcoal-800 md:inline-flex`}
+                            className="relieve relieve-tinta bt-ancha"
                         >
-                            <Gavel className="h-3.5 w-3.5 text-accent-gold" />
                             Redactor PJF
+                            {!accesoPJF && <span className="relieve-plan">Ultra</span>}
                         </Link>
 
                         {/* Lo que no cabe en el teléfono */}
-                        <div className="relative md:hidden">
+                        <div className="bt-mas relative">
                             <button
                                 type="button"
                                 onClick={() => setMenuMas((v) => !v)}
                                 aria-label="Más herramientas"
                                 aria-expanded={menuMas}
-                                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-charcoal-900/10 text-charcoal-900/70 transition-colors hover:bg-charcoal-900/[0.04]"
+                                className="relieve relieve-papel px-2.5"
                             >
-                                <MoreHorizontal className="h-4 w-4" />
+                                Más
                             </button>
                             {menuMas && (
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setMenuMas(false)} />
-                                    <div className="absolute left-0 top-9 z-50 w-52 overflow-hidden rounded-xl border border-charcoal-900/10 bg-white shadow-lg">
+                                    <div className="lamina-relieve absolute left-0 top-10 z-50 w-56 overflow-hidden rounded-xl p-1.5">
+                                        <Link
+                                            href="/ultimo"
+                                            onClick={() => setMenuMas(false)}
+                                            className="bt-menu-ultimo rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-charcoal-900/[0.045]"
+                                        >
+                                            Lo último
+                                        </Link>
                                         <Link
                                             href="/normativa"
                                             onClick={() => setMenuMas(false)}
-                                            className="flex items-center gap-2.5 px-3.5 py-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]"
+                                            className="flex rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-charcoal-900/[0.045]"
                                         >
-                                            <BookOpen className="h-4 w-4 text-charcoal-900/50" />
                                             Normativa
                                         </Link>
                                         <Link
                                             href={rutaPJF}
                                             onClick={() => setMenuMas(false)}
-                                            className="flex items-center gap-2.5 border-t border-charcoal-900/[0.06] px-3.5 py-3 text-[0.8125rem] font-medium text-charcoal-800 transition-colors hover:bg-charcoal-900/[0.04]"
+                                            className="flex items-center justify-between rounded-lg px-3 py-2.5 text-[0.8125rem] font-medium text-charcoal-900 transition-colors hover:bg-charcoal-900/[0.045]"
                                         >
-                                            <Gavel className={`h-4 w-4 ${accesoPJF ? 'text-accent-gold' : 'text-charcoal-900/50'}`} />
                                             Redactor PJF
+                                            {!accesoPJF && <span className="relieve-plan">Ultra</span>}
                                         </Link>
                                     </div>
                                 </>
@@ -270,14 +273,14 @@ export default function MarcoTrabajo() {
                         <Link
                             href="/salvame"
                             title="Sálvame — ayuda urgente"
-                            className={`${BOTON} border border-red-700/25 bg-red-50/60 px-2.5 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-red-700 hover:bg-red-50`}
+                            className="relieve relieve-rojo px-2.5 sm:px-3"
                         >
-                            <Plus className="h-3.5 w-3.5 stroke-[3]" />
-                            <span className="hidden lg:inline">Sálvame</span>
+                            Sálvame
                         </Link>
                         {limite > 0 && (
+                            /* El contador no se pulsa: va hundido, no en relieve. */
                             <div
-                                className="hidden h-8 shrink-0 items-center gap-2 rounded-lg border border-charcoal-900/10 px-3 text-[0.8125rem] lg:flex"
+                                className="hundido bt-cuenta gap-2 px-3 text-[0.8125rem]"
                                 title={`Consultas usadas este mes: ${usadas} de ${limite}`}
                             >
                                 <span className={`font-semibold tabular-nums ${quedan <= 1 ? 'text-red-700' : 'text-charcoal-900'}`}>
@@ -317,5 +320,5 @@ export default function MarcoTrabajo() {
 /* La herramienta en la que se está: una raya de oro al pie del botón, que cae
    sobre el borde inferior del encabezado, como la pestaña activa de la web. */
 function Activo() {
-    return <span aria-hidden className="pointer-events-none absolute -bottom-[12px] left-1 right-1 h-[2px] rounded-full bg-accent-gold" />;
+    return <span aria-hidden className="pointer-events-none absolute -bottom-[11px] left-1 right-1 h-[2px] rounded-full bg-accent-gold" />;
 }
