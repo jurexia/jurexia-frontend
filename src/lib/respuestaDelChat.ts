@@ -18,6 +18,7 @@
  */
 
 import { UUID_CITA, expandirCitasAgrupadas, numerarCitasDelChat, quitarBloques, sinComentarios } from '@/lib/idsDeCita';
+import { separarMemoriaLlena } from '@/lib/memoria-llena';
 import type { CamposCoidh } from '@/lib/coidh';
 import type { CamposDoctrina } from '@/lib/doctrina';
 import type { CamposVigencia } from '@/lib/vigencia';
@@ -151,7 +152,10 @@ export type PrecedenteMeta = { id: string; holding: string; ref: string; origen:
 /** El texto de la respuesta, sin marcadores y con las citas numeradas; lo
  *  que traían los marcadores, aparte. */
 export function procesarRespuesta(contenido: string) {
-    let content = contenido;
+    // La memoria llena (7-oct-2026): fuera del texto antes que nada, y lo que
+    // dice va aparte; el aviso lo pinta la burbuja. Ver `@/lib/memoria-llena`.
+    const { memoria: memoriaLlena, texto } = separarMemoriaLlena(contenido);
+    let content = texto;
 
     // Extract thinking content (chain-of-thought from thinking mode)
     let thinking = '';
@@ -292,7 +296,9 @@ export function procesarRespuesta(contenido: string) {
         }
     }
 
-    return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing, precedentesMeta };
+    // `memoriaLlena` sólo cuando viene: sin el marcador la salida es la de
+    // siempre, y `comprobaciones/redos_pintado.mjs` la sigue comparando igual.
+    return { processedContent: content, docIdMap, thinkingContent: thinking, citationMeta, isSynthesizing, precedentesMeta, ...(memoriaLlena ? { memoriaLlena } : {}) };
 }
 
 /**

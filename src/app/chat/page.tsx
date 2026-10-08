@@ -76,6 +76,14 @@ import { contextoDeCarpeta, contextoDeConsulta, olvidarContextoCarpeta } from '@
 import type { CamposCoidh } from '@/lib/coidh';
 import type { CamposDoctrina } from '@/lib/doctrina';
 import LemaOpenAI from '@/components/LemaOpenAI';
+import { traeMemoriaLlena } from '@/lib/memoria-llena';
+import {
+    aperturaDeContinuacion,
+    esAperturaDeContinuacion,
+    historialParaAnalisis,
+    mensajeConDocumento,
+    pedirContinuacion,
+} from '@/lib/memoria-conversacion';
 
 /* Identifica una respuesta por su propio texto. `Message` no lleva id y el
    índice de la lista se mueve al llegar mensajes nuevos; la huella del texto,
@@ -842,6 +850,13 @@ export default function ChatPage() {
             setQueriesUsed(prev => prev + 1);
         }
 
+        /* LA CONVERSACIÓN VIAJA CON EL DOCUMENTO (7-oct-2026). Una abogada
+           trabajó una conversación larga y cada adjunto la contradecía: este
+           camino mandaba el archivo y la instrucción, nunca lo hablado. Se toma
+           lo que hay en pantalla ANTES de añadir este mensaje, que es lo que el
+           API espera en `historial`. */
+        const previos = messagesRef.current;
+
         // Add user message to chat
         const userMsg = { role: 'user' as const, content: displayMessage };
         /* Lo que se guarda puede no ser `userMsg` tal cual: si el servidor
@@ -898,6 +913,8 @@ export default function ChatPage() {
         }
         // El selector «Fuentes» vale también con documento adjunto.
         formData.append('fuentes', fuentesElegidas().join(','));
+        const historial = historialParaAnalisis(previos);
+        if (historial) formData.append('historial', historial);
 
         // El análisis de un documento adjunto también nace en el panel.
         if (!constructorAbiertoRef.current) setDocumentoAbierto(true);
@@ -980,12 +997,11 @@ export default function ChatPage() {
                                    mensaje —la burbuja no lo enseña— y viaja en el
                                    historial de los turnos siguientes. */
                                 const d = data.documento as { nombre?: string; texto: string; recortado?: boolean };
-                                const aviso = d.recortado ? '; es la primera parte, el documento es más largo' : '';
+                                // El formato vive en `mensajeConDocumento`: la conversación
+                                // que continúa otra (7-oct-2026) arranca con el mismo.
                                 userMsgGuardado = {
                                     ...userMsg,
-                                    content: `${displayMessage}\n\n<!-- DOCUMENTO_INICIO -->\n`
-                                        + `CONTENIDO DEL DOCUMENTO ADJUNTO «${d.nombre || file.name}» (texto leído por Iurexia${aviso}):\n\n`
-                                        + `${d.texto}\n<!-- DOCUMENTO_FIN -->`,
+                                    content: mensajeConDocumento(displayMessage, d.nombre || file.name, d.texto, d.recortado),
                                 };
                                 const conTexto = userMsgGuardado;
                                 setMessages(prev => prev.map(m => (m === userMsg ? conTexto : m)));
@@ -1119,6 +1135,76 @@ export default function ChatPage() {
             }
         }
     }, [user, activeConversationId, selectedEstado, queriesLimit, queriesUsed, setMessages, vincularNueva]);
+
+    /* ═══ CONTINUAR EN UNA CONVERSACIÓN NUEVA (7-oct-2026) ═══════════════
+       El botón del aviso de memoria llena (`AvisoMemoriaLlena`). El API
+       resume lo trabajado (`/conversacion/continuar`, 20-60 s) y la
+       conversación nueva arranca con ese resumen como documento adjunto
+       —oculto en el mensaje, igual que el texto leído de un adjunto—, de modo
+       que viaja completo en el historial de cada turno siguiente. La
+       conversación se crea DESPUÉS de tener el resumen: si falla, no queda
+       una vacía en la barra. El error sube al aviso, que lo enseña. */
+    const continuandoRef = useRef(false);
+    const continuarEnConversacionNueva = useCallback(async () => {
+        if (!user) throw new Error('Inicie sesión para continuar.');
+        if (isLoading || isDocumentAnalyzing || analisisEnVuelo) {
+            throw new Error('Espere a que termine la respuesta en curso.');
+        }
+        if (continuandoRef.current) return;
+        continuandoRef.current = true;
+        try {
+            const titulo = conversations.find(c => c.id === activeConversationId)?.title ?? '';
+            const resumen = await pedirContinuacion({ userId: user.id, titulo, mensajes: messagesRef.current });
+            const conv = await createConversation(selectedEstado || undefined);
+            if (!conv) throw new Error('No se pudo crear la conversación nueva. Vuelva a intentarlo.');
+
+            const apertura = aperturaDeContinuacion(resumen.documento);
+            const bienvenida: Message | null = resumen.bienvenida.trim()
+                ? { role: 'assistant', content: resumen.bienvenida }
+                : null;
+            // La continuación se queda en la carpeta de la conversación de
+            // origen: su expediente sigue viajando como contexto. El flujo no:
+            // el agente era de aquélla.
+            if (carpetaActivaId) {
+                setVinculos(prev => ({ ...prev, [conv.id]: { expedienteId: carpetaActivaId, flujo: null } }));
+                void vincularConsulta(conv.id, { expedienteId: carpetaActivaId, flujo: null });
+            }
+            setCarpetaNueva(null);
+            setFlujoNuevo(null);
+            setActiveConvId(conv.id);
+            setActiveConversationId(conv.id);
+            limpiarPasos();
+            setMessages(bienvenida ? [apertura, bienvenida] : [apertura]);
+
+            if (bienvenida) await addMessageBatch(conv.id, apertura, bienvenida);
+            else await addMessageToConversation(conv.id, apertura);
+            // Después de guardar: el primer par pone su propio título.
+            if (resumen.titulo) await updateConversationTitle(conv.id, resumen.titulo);
+            setConversations(await getConversations());
+            void sincronizarCuota();
+            // El cursor en la caja: lo siguiente es la pregunta del abogado.
+            window.setTimeout(() => pieRef.current?.querySelector('textarea')?.focus(), 50);
+        } finally {
+            continuandoRef.current = false;
+        }
+    }, [user, isLoading, isDocumentAnalyzing, analisisEnVuelo, conversations, activeConversationId,
+        selectedEstado, carpetaActivaId, limpiarPasos, setMessages, sincronizarCuota]);
+
+    /* El aviso de memoria llena sale sólo en la ÚLTIMA respuesta que lo trae:
+       si varias lo traen, no tiene caso repetirlo en cada respuesta vieja. */
+    const indiceAvisoMemoria = useMemo(() => {
+        for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'assistant' && traeMemoriaLlena(messages[i].content)) return i;
+        }
+        return -1;
+    }, [messages]);
+
+    /* LA BIENVENIDA DE UNA CONTINUACIÓN se lee en el hilo, no en el documento:
+       el dossier es lo que se redacta desde aquí, y no debe empezar con un
+       saludo ni llevarlo al Word. */
+    const esBienvenidaDeContinuacion = useCallback(
+        (i: number) => i === 1 && messages[1]?.role === 'assistant' && esAperturaDeContinuacion(messages[0]),
+        [messages]);
 
     /* ═══ EL AGENTE DE LOS FLUJOS (25-sep-2026) ═══════════════════════════
        El flujo ya no es una consulta con pasos escritos: es un agente que
@@ -1323,8 +1409,10 @@ export default function ChatPage() {
     const bloquesDocumento = useMemo(() => {
         const trabajando = isLoading || isDocumentAnalyzing || analisisEnVuelo;
         const salida: { id: string; markdown: string }[] = [];
+        const continuacion = esAperturaDeContinuacion(messages[0]);
         messages.forEach((m, i) => {
             if (m.role !== 'assistant' || !m.content.trim()) return;
+            if (continuacion && i === 1) return;   // la bienvenida no es del dossier
             if (trabajando && i === messages.length - 1) return;   // la que llega va aparte
             salida.push({ id: `m${i}`, markdown: m.content });
         });
@@ -1346,7 +1434,9 @@ export default function ChatPage() {
     }, [messages, isLoading, isDocumentAnalyzing, analisisEnVuelo]);
     const hayDocumento = bloquesDocumento.length > 0 || vivoDocumento !== null;
     const tituloDocumento = useMemo(() => {
-        const primera = messages.find((m) => m.role === 'user');
+        // En una continuación, la apertura es «Continúo el trabajo…»: el
+        // nombre lo da la primera pregunta de verdad.
+        const primera = messages.find((m) => m.role === 'user' && !esAperturaDeContinuacion(m));
         if (!primera) return 'Documento de Iurexia';
         /* La auditoría de un proyecto (29-sep-2026): su primer renglón es
            «Archivo: proyecto.pdf», que como nombre del Word no vale. */
@@ -1799,9 +1889,12 @@ export default function ChatPage() {
                             {messages.map((message, index) => {
                                 // Count assistant messages up to this point
                                 const assistantCount = messages.slice(0, index + 1).filter(m => m.role === 'assistant').length;
+                                // La bienvenida de una continuación se lee en el hilo, como en el modo básico.
+                                const bienvenida = esBienvenidaDeContinuacion(index);
                                 return (
                                     <div key={index} className={message.role === 'user' && index > 0 ? 'pt-4' : undefined}>
-                                        <ChatMessage message={message} enDocumento={!modoBasico && message.role === 'assistant'} basico={modoBasico} onVerDocumento={verDocumento} onDesarrollar={modoBasico ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing || analisisEnVuelo) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento} />
+                                        <ChatMessage message={message} enDocumento={!modoBasico && !bienvenida && message.role === 'assistant'} basico={modoBasico || bienvenida} onVerDocumento={verDocumento} onDesarrollar={modoBasico || bienvenida ? undefined : desarrollarDesdeFundamento} isStreaming={(isLoading || isDocumentAnalyzing || analisisEnVuelo) && index === messages.length - 1 && message.role === 'assistant'} onCitationClick={handleCitationClick} nombre={profile?.full_name} avatarUrl={profile?.avatar_url} tratamiento={profile?.tratamiento} onLlevarAlDocumento={llevarAlDocumento}
+                                            avisoMemoria={index === indiceAvisoMemoria} onContinuarEnNueva={continuarEnConversacionNueva} />
                                     </div>
                                 );
                             })}

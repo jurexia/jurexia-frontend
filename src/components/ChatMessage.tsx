@@ -14,6 +14,8 @@ import { enlaceBJV, esDoctrina } from '@/lib/doctrina';
 import { FuentesPorInstitucion } from '@/components/documento/FuentesPorInstitucion';
 import { type FuenteMarcador, type MetaDelServidor, type PrecedenteMeta, filterDocumentContent, formatMarkdown, limpiarMarcadoresInternos, limpiarParaExportar, procesarRespuesta, textoParaCopiar } from '@/lib/respuestaDelChat';
 import { textoDelAviso } from '@/lib/fallosChat';
+import AvisoMemoriaLlena from '@/components/AvisoMemoriaLlena';
+import type { MemoriaLlena } from '@/lib/memoria-llena';
 
 interface ChatMessageProps {
     message: Message;
@@ -37,6 +39,12 @@ interface ChatMessageProps {
      *  no hay verificación contra el acervo que sellar, y las fuentes ya van
      *  escritas con su registro al pie de la respuesta. Ver `@/lib/gratis`. */
     basico?: boolean;
+    /** MEMORIA LLENA (7-oct-2026): si este mensaje trae el marcador, ¿se pinta
+     *  aquí el aviso? La página lo enciende sólo en el último que lo trae, para
+     *  no repetirlo en cada respuesta vieja. Ver `AvisoMemoriaLlena`. */
+    avisoMemoria?: boolean;
+    /** «Continuar en una conversación nueva» del aviso de memoria llena. */
+    onContinuarEnNueva?: () => Promise<void>;
 }
 
 // UUID regex for document IDs
@@ -52,13 +60,13 @@ const TRATAMIENTOS_CHAT: Record<string, string> = {
 
 
 
-export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, onDesarrollar, enDocumento = false, onVerDocumento , basico = false }: ChatMessageProps) {
+export default function ChatMessage({ message, isStreaming = false, onCitationClick, nombre, avatarUrl, tratamiento, onLlevarAlDocumento, onDesarrollar, enDocumento = false, onVerDocumento , basico = false, avisoMemoria = false, onContinuarEnNueva }: ChatMessageProps) {
     const isUser = message.role === 'user';
     const contentRef = useRef<HTMLDivElement>(null);
 
     // Extract unique document IDs, thinking content, and create numbered references
-    const { processedContent, docIdMap, thinkingContent, citationMeta: metaDelServidor, isSynthesizing, precedentesMeta } = useMemo(() => {
-        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as MetaDelServidor | null, isSynthesizing: false, precedentesMeta: null as PrecedenteMeta[] | null };
+    const { processedContent, docIdMap, thinkingContent, citationMeta: metaDelServidor, isSynthesizing, precedentesMeta, memoriaLlena } = useMemo(() => {
+        if (isUser) return { processedContent: message.content, docIdMap: new Map<string, number>(), thinkingContent: '', citationMeta: null as MetaDelServidor | null, isSynthesizing: false, precedentesMeta: null as PrecedenteMeta[] | null, memoriaLlena: null as MemoriaLlena | null };
         return procesarRespuesta(message.content || '');
     }, [message.content, isUser]);
 
@@ -926,6 +934,11 @@ export default function ChatMessage({ message, isStreaming = false, onCitationCl
                     </div>
                 ) : (
                     <>
+                        {/* La memoria llena, ARRIBA de la respuesta: antes de leerla
+                            hay que saber que lo más antiguo se leyó abreviado. */}
+                        {memoriaLlena && avisoMemoria && (
+                            <AvisoMemoriaLlena memoria={memoriaLlena} onContinuar={onContinuarEnNueva} ocupado={isStreaming} />
+                        )}
                         {/* Insignia del escalón con el que se redactó la respuesta.
                             Platinum manda sobre Pro: el backend enciende ambas
                             banderas y aquí gana la que de verdad corrió. */}

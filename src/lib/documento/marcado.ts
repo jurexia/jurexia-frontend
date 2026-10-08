@@ -18,8 +18,9 @@ const ABRE_RAZON = '<!--thinking-->';
 const CIERRA_RAZON = '<!--/thinking-->';
 /** Los marcadores que pueden quedar partidos al final del texto que llega:
  *  los del razonamiento y los que traen identificadores. Un «<!--» del
- *  modelo no es ninguno de ellos y no se toca (`sinMarcadorAbiertoAlFinal`). */
-const MARCADORES_PARTIBLES: readonly string[] = ['thinking', '/thinking', 'THINKING_START', 'THINKING_END', ...MARCADORES_CON_IDS]
+ *  modelo no es ninguno de ellos y no se toca (`sinMarcadorAbiertoAlFinal`).
+ *  Y el de la memoria llena (7-oct-2026): partido, la hoja enseñaría su JSON. */
+const MARCADORES_PARTIBLES: readonly string[] = ['thinking', '/thinking', 'THINKING_START', 'THINKING_END', 'MEMORIA_LLENA', ...MARCADORES_CON_IDS]
 
 /**
  * EL RAZONAMIENTO NO ENTRA AL ESCRITO, NI A MEDIAS. El chat lo transmite en vivo
